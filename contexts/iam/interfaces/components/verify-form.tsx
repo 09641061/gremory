@@ -4,10 +4,11 @@ import {
   CardContent,
 } from "@/contexts/shared/interfaces/components/ui/card";
 import { Input } from "@/contexts/shared/interfaces/components/ui/input";
+import { confirmEmailSignInAction } from "../actions/confirm-email-sign-in.action";
 
 const verificationSlots = ["1", "2", "3", "4", "5", "6"];
 
-export function VerifyForm() {
+export function VerifyForm({ email }: { email: string }) {
   return (
     <main className="flex min-h-screen items-center justify-center bg-background px-4 py-6 text-foreground">
       <section className="w-full max-w-[416px] text-center">
@@ -22,10 +23,12 @@ export function VerifyForm() {
 
         <Card className="rounded-[17px] border border-[#d5d5d5] bg-card px-7 py-7 shadow-[0_1px_2px_rgb(0_0_0_/_0.02)] ring-0 sm:px-[27px]">
           <CardContent className="p-0">
+            <form action={confirmEmailSignInAction}>
+              <input type="hidden" name="email" value={email} readOnly />
             <p className="text-[14px] leading-5 text-foreground">
               To continue, click the link sent to
               <br />
-              <span className="font-medium">email@example.com</span>
+              <span className="font-medium">{email}</span>
             </p>
 
             <div className="mt-5 text-left">
@@ -37,6 +40,7 @@ export function VerifyForm() {
                 {verificationSlots.map((slot) => (
                   <Input
                     key={slot}
+                    name="code"
                     aria-label={`Verification digit ${slot}`}
                     inputMode="numeric"
                     maxLength={1}
@@ -48,11 +52,12 @@ export function VerifyForm() {
             </div>
 
             <Button
-              type="button"
+              type="submit"
               className="mt-4 h-[42px] w-full rounded-[9px] text-[14px] font-semibold"
             >
               Verify code
             </Button>
+            </form>
 
             <div className="mt-4 flex flex-col items-center">
               <Button
