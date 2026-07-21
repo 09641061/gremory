@@ -1,0 +1,81 @@
+import "server-only";
+
+import type { AuthenticationSession } from "../../domain/model/entities/authentication-session";
+import type { IamAuthenticationCommandService } from "../../domain/services/iam-authentication-command.service";
+import type { ConfirmEmailSignInCommand } from "../../domain/model/commands/confirm-email-sign-in.command";
+import type { RequestEmailSignInCommand } from "../../domain/model/commands/request-email-sign-in.command";
+import type { SignOutCommand } from "../../domain/model/commands/sign-out.command";
+
+type AuthResponse = {
+  accessToken: string;
+  refreshToken: string;
+  expiresIn: number;
+};
+
+const apiBaseUrl = process.env.API_BASE_URL ?? "http://localhost:8080";
+
+export class IamApiGateway implements IamAuthenticationCommandService {
+  async requestEmailSignIn(
+    command: RequestEmailSignInCommand
+  ): Promise<void> {
+    const response = await fetch(`${apiBaseUrl}/api/v1/auth/sign-in`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: command.email.value }),
+      cache: "no-store",
+    });
+
+    if (!response.ok) {
+      throw new Error(await readError(response));
+    }
+  }
+
+  async confirmEmailSignIn(
+    command: ConfirmEmailSignInCommand
+  ): Promise<AuthenticationSession> {
+    const response = await fetch(`${apiBaseUrl}/api/v1/auth/confirm`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email: command.email.value,
+        code: command.code,
+      }),
+      cache: "no-store",
+    });
+
+    if (!response.ok) {
+      throw new Error(await readError(response));
+    }
+
+    const data = (await response.json()) as AuthResponse;
+    return {
+      accessToken: data.accessToken,
+      refreshToken: data.refreshToken,
+      expiresIn: data.expiresIn,
+    };
+  }
+
+  async signOut(command: SignOutCommand): Promise<void> {
+    const response = await fetch(`${apiBaseUrl}/api/v1/auth/sign-out`, {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${command.accessToken}`,
+        "X-Refresh-Token": command.refreshToken,
+      },
+      cache: "no-store",
+    });
+
+    if (!response.ok) {
+      throw new Error(await readError(response));
+    }
+  }
+}
+
+async function readError(response: Response): Promise<string> {
+  try {
+    const body = (await response.json()) as { message?: string };
+    return body.message ?? "Authentication request failed";
+  } catch {
+    return "Authentication request failed";
+  }
+}
