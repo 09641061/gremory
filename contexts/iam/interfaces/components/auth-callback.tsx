@@ -13,9 +13,9 @@ export function AuthCallback() {
     const expiresIn = params.get("expires_in");
 
     if (accessToken && refreshToken) {
-      window.sessionStorage.setItem("takodu.access_token", accessToken);
-      window.sessionStorage.setItem("takodu.refresh_token", refreshToken);
-      if (expiresIn) window.sessionStorage.setItem("takodu.expires_in", expiresIn);
+      window.localStorage.setItem("takodu.access_token", accessToken);
+      window.localStorage.setItem("takodu.refresh_token", refreshToken);
+      if (expiresIn) window.localStorage.setItem("takodu.expires_in", expiresIn);
     }
 
     router.replace("/");

@@ -4,6 +4,7 @@ import type { AuthenticationSession } from "../../domain/model/entities/authenti
 import type { IamAuthenticationCommandService } from "../../domain/services/iam-authentication-command.service";
 import type { ConfirmEmailSignInCommand } from "../../domain/model/commands/confirm-email-sign-in.command";
 import type { RequestEmailSignInCommand } from "../../domain/model/commands/request-email-sign-in.command";
+import type { SignOutCommand } from "../../domain/model/commands/sign-out.command";
 
 type AuthResponse = {
   accessToken: string;
@@ -52,6 +53,21 @@ export class IamApiGateway implements IamAuthenticationCommandService {
       refreshToken: data.refreshToken,
       expiresIn: data.expiresIn,
     };
+  }
+
+  async signOut(command: SignOutCommand): Promise<void> {
+    const response = await fetch(`${apiBaseUrl}/api/v1/auth/sign-out`, {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${command.accessToken}`,
+        "X-Refresh-Token": command.refreshToken,
+      },
+      cache: "no-store",
+    });
+
+    if (!response.ok) {
+      throw new Error(await readError(response));
+    }
   }
 }
 
