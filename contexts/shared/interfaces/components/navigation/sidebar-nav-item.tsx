@@ -10,18 +10,20 @@ export interface SidebarNavItemProps {
   icon: LucideIcon;
   label: string;
   isActive?: boolean;
+  isCollapsed?: boolean;
   onClick?: () => void;
   className?: string;
 }
 
 /**
- * SidebarNavItem component representing an individual navigation link item.
+ * SidebarNavItem component representing an individual navigation link item, supporting collapsed mode.
  */
 export function SidebarNavItem({
   href,
   icon: Icon,
   label,
   isActive = false,
+  isCollapsed = false,
   onClick,
   className,
 }: SidebarNavItemProps) {
@@ -29,8 +31,10 @@ export function SidebarNavItem({
     <Link
       href={href}
       onClick={onClick}
+      title={isCollapsed ? label : undefined}
       className={cn(
         "group flex items-center gap-3.5 px-3.5 py-2.5 rounded-lg font-medium text-sm transition-all duration-150 ease-in-out active:scale-95 select-none",
+        isCollapsed ? "justify-center px-2" : "justify-start",
         isActive
           ? "bg-primary/10 text-primary font-semibold shadow-xs dark:bg-primary/20"
           : "text-muted-foreground hover:bg-accent/60 hover:text-foreground",
@@ -43,7 +47,7 @@ export function SidebarNavItem({
           isActive ? "text-primary" : "text-muted-foreground group-hover:text-foreground"
         )}
       />
-      <span>{label}</span>
+      {!isCollapsed && <span className="whitespace-nowrap overflow-hidden">{label}</span>}
     </Link>
   );
 }

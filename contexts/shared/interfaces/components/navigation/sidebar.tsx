@@ -9,10 +9,12 @@ import {
   Settings,
   Menu,
   X,
+  PanelLeftClose,
 } from "lucide-react";
 import { SidebarBrand } from "./sidebar-brand";
 import { SidebarNavItem } from "./sidebar-nav-item";
 import { SidebarFooter } from "./sidebar-footer";
+import { useSidebar } from "./sidebar-context";
 import { cn } from "@/lib/utils";
 
 const NAV_ITEMS = [
@@ -43,27 +45,30 @@ interface SidebarProps {
 }
 
 /**
- * Main responsive Sidebar component supporting desktop layout and mobile drawer menu.
+ * Main responsive Sidebar component supporting collapse/expand interactions and mobile drawer mode.
  */
 export function Sidebar({ className }: SidebarProps) {
   const pathname = usePathname();
+  const { isCollapsed, toggleCollapse } = useSidebar();
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const closeMobile = () => setMobileOpen(false);
 
   return (
     <>
-      {/* Mobile menu toggle button */}
-      <div className="lg:hidden fixed top-3 left-4 z-50">
-        <button
-          type="button"
-          onClick={() => setMobileOpen(!mobileOpen)}
-          aria-label="Toggle navigation menu"
-          className="flex size-10 items-center justify-center rounded-lg bg-card border border-border shadow-xs hover:bg-accent text-foreground transition-colors"
-        >
-          {mobileOpen ? <X className="size-5" /> : <Menu className="size-5" />}
-        </button>
-      </div>
+      {/* Mobile trigger button (top left corner, visible only when mobile drawer is closed) */}
+      {!mobileOpen && (
+        <div className="lg:hidden fixed top-3 left-4 z-50">
+          <button
+            type="button"
+            onClick={() => setMobileOpen(true)}
+            aria-label="Open navigation menu"
+            className="flex size-10 items-center justify-center rounded-lg bg-card border border-border shadow-xs hover:bg-accent text-foreground transition-colors cursor-pointer"
+          >
+            <Menu className="size-5" />
+          </button>
+        </div>
+      )}
 
       {/* Mobile backdrop overlay */}
       {mobileOpen && (
@@ -73,22 +78,55 @@ export function Sidebar({ className }: SidebarProps) {
         />
       )}
 
-      {/* Main Sidebar Container (Desktop & Mobile Drawer) */}
+      {/* Main Sidebar Container */}
       <aside
         className={cn(
-          "flex flex-col h-screen w-64 bg-card border-r border-border p-4 z-40 transition-transform duration-200 ease-in-out",
-          // Desktop: fixed to the left
+          "flex flex-col h-screen bg-card border-r border-border p-3.5 z-40 transition-all duration-300 ease-in-out select-none",
+          // Desktop width: w-20 when collapsed, w-64 when expanded
+          isCollapsed ? "lg:w-20" : "lg:w-64",
+          // Desktop: fixed left positioning
           "hidden lg:flex lg:fixed lg:top-0 lg:left-0",
-          // Mobile: sliding drawer
+          // Mobile: full drawer (always expanded w-64 for legibility on touch screens)
           mobileOpen
-            ? "flex fixed top-0 left-0 translate-x-0 shadow-2xl"
+            ? "flex fixed top-0 left-0 w-64 translate-x-0 shadow-2xl"
             : "-translate-x-full lg:translate-x-0",
           className
         )}
       >
-        {/* Brand Header */}
-        <div className="pt-2 pb-6 px-1">
-          <SidebarBrand />
+        {/* Top Header with Brand and Collapse Toggle */}
+        <div
+          className={cn(
+            "pt-1 pb-5 flex items-center justify-between",
+            isCollapsed && "flex-col gap-3 pt-2 pb-4"
+          )}
+        >
+          <SidebarBrand
+            isCollapsed={mobileOpen ? false : isCollapsed}
+            onExpand={toggleCollapse}
+          />
+
+          {/* Desktop Collapse Toggle Button (shown when expanded) */}
+          {!isCollapsed && (
+            <button
+              type="button"
+              onClick={toggleCollapse}
+              title="Collapse sidebar"
+              aria-label="Collapse sidebar"
+              className="hidden lg:flex size-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-accent hover:text-foreground transition-colors cursor-pointer"
+            >
+              <PanelLeftClose className="size-5" />
+            </button>
+          )}
+
+          {/* Mobile Close Button inside Drawer Header (top right corner of open drawer) */}
+          <button
+            type="button"
+            onClick={closeMobile}
+            aria-label="Close navigation menu"
+            className="lg:hidden flex size-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-accent hover:text-foreground transition-colors cursor-pointer"
+          >
+            <X className="size-5" />
+          </button>
         </div>
 
         {/* Primary Navigation Menu */}
@@ -105,6 +143,7 @@ export function Sidebar({ className }: SidebarProps) {
                 icon={item.icon}
                 label={item.label}
                 isActive={isActive}
+                isCollapsed={mobileOpen ? false : isCollapsed}
                 onClick={closeMobile}
               />
             );
@@ -112,7 +151,11 @@ export function Sidebar({ className }: SidebarProps) {
         </nav>
 
         {/* Sidebar Footer Controls */}
-        <SidebarFooter currentPathname={pathname} onItemClick={closeMobile} />
+        <SidebarFooter
+          currentPathname={pathname}
+          isCollapsed={mobileOpen ? false : isCollapsed}
+          onItemClick={closeMobile}
+        />
       </aside>
     </>
   );
