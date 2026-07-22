@@ -6,12 +6,7 @@ import type { ConfirmEmailSignInCommand } from "../../domain/model/commands/conf
 import type { RequestEmailSignInCommand } from "../../domain/model/commands/request-email-sign-in.command";
 import type { SignOutCommand } from "../../domain/model/commands/sign-out.command";
 import type { VerifyMagicLinkCommand } from "../../domain/model/commands/verify-magic-link.command";
-
-type AuthResponse = {
-  accessToken: string;
-  refreshToken: string;
-  expiresIn: number;
-};
+import { authenticationSessionSchema } from "../../interfaces/rest/schemas/authentication.schemas";
 
 const apiBaseUrl = process.env.API_BASE_URL ?? "http://localhost:8080";
 
@@ -48,12 +43,7 @@ export class IamApiGateway implements IamAuthenticationCommandService {
       throw new Error(await readError(response));
     }
 
-    const data = (await response.json()) as AuthResponse;
-    return {
-      accessToken: data.accessToken,
-      refreshToken: data.refreshToken,
-      expiresIn: data.expiresIn,
-    };
+    return authenticationSessionSchema.parse(await response.json());
   }
 
   async signOut(command: SignOutCommand): Promise<void> {
@@ -83,12 +73,7 @@ export class IamApiGateway implements IamAuthenticationCommandService {
       throw new Error(await readError(response));
     }
 
-    const data = (await response.json()) as AuthResponse;
-    return {
-      accessToken: data.accessToken,
-      refreshToken: data.refreshToken,
-      expiresIn: data.expiresIn,
-    };
+    return authenticationSessionSchema.parse(await response.json());
   }
 }
 

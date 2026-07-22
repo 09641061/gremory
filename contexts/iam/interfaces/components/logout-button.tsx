@@ -11,27 +11,14 @@ export function LogoutButton() {
   const [error, setError] = useState<string | null>(null);
 
   function handleLogout() {
-    const accessToken = window.localStorage.getItem("takodu.access_token");
-    const refreshToken = window.localStorage.getItem("takodu.refresh_token");
-
-    if (!accessToken || !refreshToken) {
-      window.localStorage.clear();
-      router.replace("/login");
-      return;
-    }
-
     startTransition(async () => {
-      const result = await signOutAction(accessToken, refreshToken);
+      const result = await signOutAction();
 
       if (result.status === "error") {
         setError(result.error);
         return;
       }
 
-      window.localStorage.removeItem("takodu.access_token");
-      window.localStorage.removeItem("takodu.refresh_token");
-      window.localStorage.removeItem("takodu.expires_in");
-      document.cookie = "takodu.access_token=; Max-Age=0; Path=/; SameSite=Lax";
       router.replace("/login");
     });
   }

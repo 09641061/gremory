@@ -13,10 +13,16 @@ export function AuthCallback() {
     const expiresIn = params.get("expires_in");
 
     if (accessToken && refreshToken) {
-      window.localStorage.setItem("takodu.access_token", accessToken);
-      window.localStorage.setItem("takodu.refresh_token", refreshToken);
-      if (expiresIn) window.localStorage.setItem("takodu.expires_in", expiresIn);
-      document.cookie = `takodu.access_token=${encodeURIComponent(accessToken)}; Max-Age=86400; Path=/; SameSite=Lax`;
+      void fetch("/api/iam/auth/session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          accessToken,
+          refreshToken,
+          expiresIn: expiresIn ? Number(expiresIn) : undefined,
+        }),
+      }).then(() => router.replace("/"));
+      return;
     }
 
     router.replace("/");

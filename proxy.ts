@@ -1,10 +1,9 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-
-const sessionCookie = "takodu.access_token";
+import { iamCookies } from "@/contexts/iam/interfaces/cookies";
 
 export function proxy(request: NextRequest) {
-  const hasSession = Boolean(request.cookies.get(sessionCookie)?.value);
+  const hasSession = Boolean(request.cookies.get(iamCookies.accessToken)?.value);
   const { pathname } = request.nextUrl;
 
   if (pathname === "/" && !hasSession) {
