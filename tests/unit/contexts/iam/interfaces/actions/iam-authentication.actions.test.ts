@@ -25,6 +25,7 @@ function form(values: Record<string, string>) {
 describe("IAM Server Actions", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.spyOn(console, "error").mockImplementation(() => undefined);
     mocks.cookies.get.mockReturnValue(undefined);
     mocks.service.requestEmailSignIn.mockResolvedValue(undefined);
     mocks.service.confirmEmailSignIn.mockResolvedValue({ accessToken: "a", refreshToken: "r", expiresIn: 3600 });
@@ -78,5 +79,69 @@ describe("IAM Server Actions", () => {
     // Assert
     expect(result).toEqual({ status: "success", error: null });
     expect(mocks.service.signOut).toHaveBeenCalledWith({ accessToken: "a", refreshToken: "r" });
+  });
+
+  it("should return an error when requesting sign-in fails in the application service", async () => {
+    // Arrange
+    mocks.service.requestEmailSignIn.mockRejectedValue(new Error("API unavailable"));
+
+    // Act
+    const result = await requestEmailSignInAction(
+      { status: "idle", error: null },
+      form({ email: "user@example.com" })
+    );
+
+    // Assert
+    expect(result.status).toBe("error");
+    expect(mocks.cookies.set).not.toHaveBeenCalled();
+    expect(redirect).not.toHaveBeenCalled();
+  });
+
+  it("should return an error when resending the email fails in the application service", async () => {
+    // Arrange
+    mocks.service.requestEmailSignIn.mockRejectedValue(new Error("API unavailable"));
+
+    // Act
+    const result = await resendEmailSignInAction(
+      { status: "idle", error: null },
+      form({ email: "user@example.com" })
+    );
+
+    // Assert
+    expect(result).toEqual({
+      status: "error",
+      error: "Unable to resend the sign-in email. Please try again.",
+    });
+  });
+
+  it("should return an error and preserve cookies when code confirmation fails", async () => {
+    // Arrange
+    mocks.service.confirmEmailSignIn.mockRejectedValue(new Error("Invalid code"));
+
+    // Act
+    const result = await confirmEmailSignInAction(
+      { status: "idle", error: null },
+      form({ email: "user@example.com", code: "123456" })
+    );
+
+    // Assert
+    expect(result).toEqual({
+      status: "error",
+      error: "Unable to verify the code. Check it and try again.",
+    });
+    expect(mocks.cookies.delete).not.toHaveBeenCalled();
+  });
+
+  it("should return an error and keep cookies when sign-out fails", async () => {
+    // Arrange
+    mocks.cookies.get.mockReturnValueOnce({ value: "a" }).mockReturnValueOnce({ value: "r" });
+    mocks.service.signOut.mockRejectedValue(new Error("API unavailable"));
+
+    // Act
+    const result = await signOutAction();
+
+    // Assert
+    expect(result).toEqual({ status: "error", error: "Unable to sign out. Please try again." });
+    expect(mocks.cookies.delete).not.toHaveBeenCalled();
   });
 });

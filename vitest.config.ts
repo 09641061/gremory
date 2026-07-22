@@ -16,5 +16,11 @@ export default defineConfig({
     include: ["tests/**/*.test.ts", "tests/**/*.test.tsx"],
     setupFiles: ["tests/setup.ts"],
     restoreMocks: true,
+    coverage: {
+      provider: "v8",
+      include: ["contexts/iam/**/*.ts", "contexts/iam/**/*.tsx"],
+      exclude: ["**/*.test.*"],
+      reporter: ["text", "html"],
+    },
   },
 });

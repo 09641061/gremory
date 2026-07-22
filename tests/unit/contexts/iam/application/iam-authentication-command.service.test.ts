@@ -43,4 +43,21 @@ describe("IamAuthenticationCommandServiceImpl", () => {
     await expect(service.signOut({ accessToken: "a", refreshToken: "r" }))
       .rejects.toThrow("Gateway unavailable");
   });
+
+  it("should delegate magic-link verification when the token is valid", async () => {
+    // Arrange
+    const session = { accessToken: "a", refreshToken: "r", expiresIn: 3600 };
+    const gateway = {
+      requestEmailSignIn: vi.fn(), confirmEmailSignIn: vi.fn(), signOut: vi.fn(),
+      verifyMagicLink: vi.fn().mockResolvedValue(session),
+    };
+    const service = new IamAuthenticationCommandServiceImpl(gateway);
+
+    // Act
+    const result = await service.verifyMagicLink({ token: "magic-token" });
+
+    // Assert
+    expect(result).toEqual(session);
+    expect(gateway.verifyMagicLink).toHaveBeenCalledWith({ token: "magic-token" });
+  });
 });

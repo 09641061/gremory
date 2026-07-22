@@ -27,4 +27,21 @@ describe("IAM session route", () => {
     expect(cookieStore.delete).toHaveBeenCalledWith(iamSessionCookies.pendingEmail);
     expect(cookieStore.delete).toHaveBeenCalledTimes(4);
   });
+
+  it("should not create an expiry cookie when expiresIn is omitted", async () => {
+    // Arrange
+    const cookieStore = { set: vi.fn(), delete: vi.fn() };
+    vi.mocked(cookies).mockResolvedValue(cookieStore as never);
+    const request = new Request("http://localhost", {
+      method: "POST",
+      body: JSON.stringify({ accessToken: "a", refreshToken: "r" }),
+    });
+
+    // Act
+    await createSessionRoute(request);
+
+    // Assert
+    expect(cookieStore.set).toHaveBeenCalledTimes(2);
+    expect(cookieStore.set).not.toHaveBeenCalledWith(iamSessionCookies.expiresIn, expect.anything(), expect.anything());
+  });
 });
