@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { createIamAuthenticationCommandService } from "../../application/internal/commandservices/iam-authentication-command.service";
 import { VerifyForm } from "./verify-form";
 
-export async function VerifyPage({
+export async function Verify({
   searchParams,
 }: {
   searchParams: Promise<{ email?: string; token?: string }>;

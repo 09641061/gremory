@@ -31,6 +31,7 @@ export function LogoutButton() {
       window.localStorage.removeItem("takodu.access_token");
       window.localStorage.removeItem("takodu.refresh_token");
       window.localStorage.removeItem("takodu.expires_in");
+      document.cookie = "takodu.access_token=; Max-Age=0; Path=/; SameSite=Lax";
       router.replace("/login");
     });
   }

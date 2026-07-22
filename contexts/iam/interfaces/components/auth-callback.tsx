@@ -16,6 +16,7 @@ export function AuthCallback() {
       window.localStorage.setItem("takodu.access_token", accessToken);
       window.localStorage.setItem("takodu.refresh_token", refreshToken);
       if (expiresIn) window.localStorage.setItem("takodu.expires_in", expiresIn);
+      document.cookie = `takodu.access_token=${encodeURIComponent(accessToken)}; Max-Age=86400; Path=/; SameSite=Lax`;
     }
 
     router.replace("/");

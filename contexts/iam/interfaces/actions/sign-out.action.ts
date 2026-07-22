@@ -21,9 +21,10 @@ export async function signOutAction(
     await createIamAuthenticationCommandService().signOut(input.data);
     return { status: "success", error: null };
   } catch (error) {
+    console.error("Sign out failed", error);
     return {
       status: "error",
-      error: error instanceof Error ? error.message : "Unable to sign out",
+      error: "Unable to sign out. Please try again.",
     };
   }
 }

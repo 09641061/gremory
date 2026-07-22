@@ -25,7 +25,7 @@ export function AuthForm() {
         message={state.status === "error" ? state.error : undefined}
       />
       <main className="flex min-h-screen items-center justify-center bg-background px-4 py-6 text-foreground">
-      <section className="w-full max-w-[416px] text-center">
+        <section className="w-full max-w-[416px] text-center">
         <header className="mb-5">
           <h1 className="text-[27px] font-bold leading-tight tracking-[-0.03em]">
             Continue to Takodu
@@ -35,7 +35,7 @@ export function AuthForm() {
           </p>
         </header>
 
-      <Card className="rounded-lg border-border bg-card p-7 shadow-sm ring-0">
+          <Card className="rounded-lg border-border bg-card p-7 shadow-sm ring-0">
           <CardContent className="p-0">
           <form action={startGoogleAuthAction}>
             <Button
@@ -76,9 +76,9 @@ export function AuthForm() {
             By continuing, you agree to our{" "}
             <span className="font-semibold">Terms and Privacy Policy</span>.
           </p>
-          </CardContent>
-        </Card>
-      </section>
+            </CardContent>
+          </Card>
+        </section>
       </main>
     </>
   );
