@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { Spinner } from "@/contexts/shared/interfaces/components/ui/spinner";
 
 export function AuthCallback() {
   const router = useRouter();
@@ -13,13 +14,28 @@ export function AuthCallback() {
     const expiresIn = params.get("expires_in");
 
     if (accessToken && refreshToken) {
-      window.localStorage.setItem("takodu.access_token", accessToken);
-      window.localStorage.setItem("takodu.refresh_token", refreshToken);
-      if (expiresIn) window.localStorage.setItem("takodu.expires_in", expiresIn);
+      void fetch("/api/iam/auth/session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          accessToken,
+          refreshToken,
+          expiresIn: expiresIn ? Number(expiresIn) : undefined,
+        }),
+      }).then(() => router.replace("/"));
+      return;
     }
 
     router.replace("/");
   }, [router]);
 
-  return null;
+  return (
+    <main
+      className="flex min-h-screen items-center justify-center bg-background text-foreground"
+      aria-live="polite"
+    >
+      <Spinner className="size-8" />
+      <span className="sr-only">Signing you in</span>
+    </main>
+  );
 }
