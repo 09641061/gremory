@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { CircleAlertIcon } from "lucide-react";
 import { createPortal } from "react-dom";
 import { cn } from "@/lib/utils";
@@ -17,6 +17,11 @@ export function ErrorAlert({
   title: string;
   message?: string;
 }) {
+  const mounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  );
   const [dismissedMessage, setDismissedMessage] = useState<string | null>(null);
 
   useEffect(() => {
@@ -30,6 +35,7 @@ export function ErrorAlert({
   }, [message, dismissedMessage]);
 
   if (
+    !mounted ||
     typeof document === "undefined" ||
     !message ||
     message === dismissedMessage
