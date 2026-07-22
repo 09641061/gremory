@@ -28,4 +28,35 @@ describe("VerifyForm", () => {
     await user.type(first, "1");
     expect(second).toHaveFocus();
   });
+
+  it("should distribute pasted digits across the verification inputs", async () => {
+    // Arrange
+    const user = userEvent.setup();
+    render(<VerifyForm email="user@example.com" />);
+    const first = screen.getByRole("textbox", { name: "Verification digit 1" });
+
+    // Act
+    await user.click(first);
+    await user.paste("12a3456");
+
+    // Assert
+    expect(first).toHaveValue("1");
+    expect(screen.getByRole("textbox", { name: "Verification digit 2" })).toHaveValue("2");
+    expect(screen.getByRole("textbox", { name: "Verification digit 6" })).toHaveValue("6");
+  });
+
+  it("should move focus backwards when backspace is pressed on an empty digit", async () => {
+    // Arrange
+    const user = userEvent.setup();
+    render(<VerifyForm email="user@example.com" />);
+    const first = screen.getByRole("textbox", { name: "Verification digit 1" });
+    const second = screen.getByRole("textbox", { name: "Verification digit 2" });
+
+    // Act
+    await user.click(second);
+    await user.keyboard("{Backspace}");
+
+    // Assert
+    expect(first).toHaveFocus();
+  });
 });

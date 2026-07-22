@@ -15,6 +15,7 @@ import { requestEmailSignInAction } from "@/contexts/iam/interfaces/actions/requ
 import { resendEmailSignInAction } from "@/contexts/iam/interfaces/actions/resend-email-sign-in.action";
 import { confirmEmailSignInAction } from "@/contexts/iam/interfaces/actions/confirm-email-sign-in.action";
 import { signOutAction } from "@/contexts/iam/interfaces/actions/sign-out.action";
+import { startGoogleAuthAction } from "@/contexts/iam/interfaces/actions/start-google-auth.action";
 
 function form(values: Record<string, string>) {
   const data = new FormData();
@@ -143,5 +144,15 @@ describe("IAM Server Actions", () => {
     // Assert
     expect(result).toEqual({ status: "error", error: "Unable to sign out. Please try again." });
     expect(mocks.cookies.delete).not.toHaveBeenCalled();
+  });
+
+  it("should redirect to the Google authorization endpoint", async () => {
+    // Act
+    await startGoogleAuthAction();
+
+    // Assert
+    expect(redirect).toHaveBeenCalledWith(
+      "http://localhost:8080/api/v1/auth/google/authorize"
+    );
   });
 });
