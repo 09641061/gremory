@@ -6,7 +6,7 @@ describe("IamAuthenticationCommandServiceImpl", () => {
     // Arrange
     const gateway = {
       requestEmailSignIn: vi.fn().mockResolvedValue(undefined),
-      confirmEmailSignIn: vi.fn(), signOut: vi.fn(), verifyMagicLink: vi.fn(),
+      confirmEmailSignIn: vi.fn(), refreshSession: vi.fn(), signOut: vi.fn(), verifyMagicLink: vi.fn(),
     };
     const service = new IamAuthenticationCommandServiceImpl(gateway);
     const command = { email: createEmail("user@example.com") };
@@ -21,7 +21,7 @@ describe("IamAuthenticationCommandServiceImpl", () => {
     const session = { accessToken: "a", refreshToken: "r", expiresIn: 3600 };
     const gateway = {
       requestEmailSignIn: vi.fn(), confirmEmailSignIn: vi.fn().mockResolvedValue(session),
-      signOut: vi.fn(), verifyMagicLink: vi.fn(),
+      refreshSession: vi.fn(), signOut: vi.fn(), verifyMagicLink: vi.fn(),
     };
     const service = new IamAuthenticationCommandServiceImpl(gateway);
     const command = { email: createEmail("user@example.com"), code: "123456" };
@@ -36,7 +36,7 @@ describe("IamAuthenticationCommandServiceImpl", () => {
     // Arrange
     const gateway = {
       requestEmailSignIn: vi.fn(), confirmEmailSignIn: vi.fn(),
-      signOut: vi.fn().mockRejectedValue(new Error("Gateway unavailable")), verifyMagicLink: vi.fn(),
+      refreshSession: vi.fn(), signOut: vi.fn().mockRejectedValue(new Error("Gateway unavailable")), verifyMagicLink: vi.fn(),
     };
     const service = new IamAuthenticationCommandServiceImpl(gateway);
     // Act / Assert
@@ -49,7 +49,7 @@ describe("IamAuthenticationCommandServiceImpl", () => {
     const session = { accessToken: "a", refreshToken: "r", expiresIn: 3600 };
     const gateway = {
       requestEmailSignIn: vi.fn(), confirmEmailSignIn: vi.fn(), signOut: vi.fn(),
-      verifyMagicLink: vi.fn().mockResolvedValue(session),
+      refreshSession: vi.fn(), verifyMagicLink: vi.fn().mockResolvedValue(session),
     };
     const service = new IamAuthenticationCommandServiceImpl(gateway);
 
@@ -59,5 +59,23 @@ describe("IamAuthenticationCommandServiceImpl", () => {
     // Assert
     expect(result).toEqual(session);
     expect(gateway.verifyMagicLink).toHaveBeenCalledWith({ token: "magic-token" });
+  });
+
+  it("should return the refreshed session when the refresh token is valid", async () => {
+    // Arrange
+    const session = { accessToken: "new-access", refreshToken: "new-refresh", expiresIn: 600 };
+    const gateway = {
+      requestEmailSignIn: vi.fn(), confirmEmailSignIn: vi.fn(),
+      refreshSession: vi.fn().mockResolvedValue(session), signOut: vi.fn(), verifyMagicLink: vi.fn(),
+    };
+    const service = new IamAuthenticationCommandServiceImpl(gateway);
+    const command = { refreshToken: "refresh-token" };
+
+    // Act
+    const result = await service.refreshSession(command);
+
+    // Assert
+    expect(result).toEqual(session);
+    expect(gateway.refreshSession).toHaveBeenCalledWith(command);
   });
 });

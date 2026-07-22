@@ -1,4 +1,4 @@
 export type SignOutCommand = Readonly<{
-  accessToken: string;
+  accessToken?: string;
   refreshToken: string;
 }>;

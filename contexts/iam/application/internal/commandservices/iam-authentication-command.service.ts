@@ -3,6 +3,7 @@ import "server-only";
 import type { AuthenticationSession } from "../../../domain/model/entities/authentication-session";
 import type { ConfirmEmailSignInCommand } from "../../../domain/model/commands/confirm-email-sign-in.command";
 import type { RequestEmailSignInCommand } from "../../../domain/model/commands/request-email-sign-in.command";
+import type { RefreshSessionCommand } from "../../../domain/model/commands/refresh-session.command";
 import type { SignOutCommand } from "../../../domain/model/commands/sign-out.command";
 import type { VerifyMagicLinkCommand } from "../../../domain/model/commands/verify-magic-link.command";
 import type { IamAuthenticationCommandService } from "../../../domain/services/iam-authentication-command.service";
@@ -21,6 +22,10 @@ export class IamAuthenticationCommandServiceImpl
     command: ConfirmEmailSignInCommand
   ): Promise<AuthenticationSession> {
     return this.gateway.confirmEmailSignIn(command);
+  }
+
+  refreshSession(command: RefreshSessionCommand): Promise<AuthenticationSession> {
+    return this.gateway.refreshSession(command);
   }
 
   signOut(command: SignOutCommand): Promise<void> {

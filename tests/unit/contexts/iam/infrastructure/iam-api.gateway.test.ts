@@ -27,6 +27,27 @@ describe("IamApiGateway", () => {
     expect(result).toEqual(session);
   });
 
+  it("should request and parse a new session when refreshing with a valid token", async () => {
+    // Arrange
+    const session = { accessToken: "new-access", refreshToken: "new-refresh", expiresIn: 600 };
+    const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify(session), { status: 200 }));
+    vi.stubGlobal("fetch", fetchMock);
+    const gateway = new IamApiGateway();
+
+    // Act
+    const result = await gateway.refreshSession({ refreshToken: "refresh-token" });
+
+    // Assert
+    expect(result).toEqual(session);
+    expect(fetchMock).toHaveBeenCalledWith(
+      "http://localhost:8080/api/v1/auth/refresh",
+      expect.objectContaining({
+        method: "POST",
+        body: JSON.stringify({ refreshToken: "refresh-token" }),
+      })
+    );
+  });
+
   it("should throw the API message when sign-out fails", async () => {
     // Arrange
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(JSON.stringify({ message: "Session expired" }), { status: 401 })));
