@@ -14,6 +14,9 @@ export interface SidebarNavItemProps {
   className?: string;
 }
 
+/**
+ * SidebarNavItem component representing an individual navigation link item.
+ */
 export function SidebarNavItem({
   href,
   icon: Icon,

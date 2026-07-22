@@ -12,6 +12,9 @@ interface SidebarFooterProps {
   className?: string;
 }
 
+/**
+ * SidebarFooter component containing help center and sign-out controls.
+ */
 export function SidebarFooter({
   currentPathname,
   onItemClick,

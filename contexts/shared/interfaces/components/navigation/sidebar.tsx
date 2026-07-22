@@ -42,6 +42,9 @@ interface SidebarProps {
   className?: string;
 }
 
+/**
+ * Main responsive Sidebar component supporting desktop layout and mobile drawer menu.
+ */
 export function Sidebar({ className }: SidebarProps) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -50,7 +53,7 @@ export function Sidebar({ className }: SidebarProps) {
 
   return (
     <>
-      {/* Botón de gatillo para pantallas móviles */}
+      {/* Mobile menu toggle button */}
       <div className="lg:hidden fixed top-3 left-4 z-50">
         <button
           type="button"
@@ -62,7 +65,7 @@ export function Sidebar({ className }: SidebarProps) {
         </button>
       </div>
 
-      {/* Backdrop overlay para móvil */}
+      {/* Mobile backdrop overlay */}
       {mobileOpen && (
         <div
           onClick={closeMobile}
@@ -70,25 +73,25 @@ export function Sidebar({ className }: SidebarProps) {
         />
       )}
 
-      {/* Sidebar Principal (Escritorio y Móvil Drawer) */}
+      {/* Main Sidebar Container (Desktop & Mobile Drawer) */}
       <aside
         className={cn(
           "flex flex-col h-screen w-64 bg-card border-r border-border p-4 z-40 transition-transform duration-200 ease-in-out",
-          // Escritorio: fijo a la izquierda
+          // Desktop: fixed to the left
           "hidden lg:flex lg:fixed lg:top-0 lg:left-0",
-          // Móvil: drawer deslizante
+          // Mobile: sliding drawer
           mobileOpen
             ? "flex fixed top-0 left-0 translate-x-0 shadow-2xl"
             : "-translate-x-full lg:translate-x-0",
           className
         )}
       >
-        {/* Cabecera / Marca */}
+        {/* Brand Header */}
         <div className="pt-2 pb-6 px-1">
           <SidebarBrand />
         </div>
 
-        {/* Menú Principal */}
+        {/* Primary Navigation Menu */}
         <nav className="flex flex-col gap-1.5 flex-1 overflow-y-auto">
           {NAV_ITEMS.map((item) => {
             const isActive =
@@ -108,7 +111,7 @@ export function Sidebar({ className }: SidebarProps) {
           })}
         </nav>
 
-        {/* Sección Inferior / Footer */}
+        {/* Sidebar Footer Controls */}
         <SidebarFooter currentPathname={pathname} onItemClick={closeMobile} />
       </aside>
     </>

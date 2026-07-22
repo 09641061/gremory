@@ -7,15 +7,15 @@ export default function BillingPage() {
         <div>
           <h1 className="text-2xl font-bold text-foreground">Billing Management</h1>
           <p className="text-sm text-muted-foreground">
-            Gestiona tu plan de suscripción, método de pago e historial de facturación.
+            Manage your subscription plan, payment methods, and invoice history.
           </p>
         </div>
       </div>
 
       <div className="rounded-xl border border-border bg-card p-6 shadow-xs">
-        <h2 className="text-lg font-semibold mb-2">Página de Facturación (Billing)</h2>
+        <h2 className="text-lg font-semibold mb-2">Billing Dashboard</h2>
         <p className="text-muted-foreground text-sm">
-          La barra lateral (Sidebar) ya está conectada y activa.
+          The navigation Sidebar is active and fully connected.
         </p>
       </div>
     </div>

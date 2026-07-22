@@ -1,6 +1,9 @@
 import React from "react";
 import { Sidebar } from "@/contexts/shared/interfaces/components/navigation";
 
+/**
+ * Main dashboard layout wrapper rendering the responsive Sidebar and main content canvas.
+ */
 export default function DashboardLayout({
   children,
 }: {
@@ -8,10 +11,10 @@ export default function DashboardLayout({
 }) {
   return (
     <div className="min-h-screen bg-background text-foreground flex">
-      {/* Componente de Navegación Lateral */}
+      {/* Navigation Sidebar */}
       <Sidebar />
 
-      {/* Contenido Principal con margen a la izquierda para escritorio */}
+      {/* Main Content Canvas with left margin offset for desktop */}
       <main className="flex-1 lg:ml-64 p-6 transition-all duration-200">
         {children}
       </main>
