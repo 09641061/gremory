@@ -5,6 +5,7 @@ import type { IamAuthenticationCommandService } from "../../domain/services/iam-
 import type { ConfirmEmailSignInCommand } from "../../domain/model/commands/confirm-email-sign-in.command";
 import type { RequestEmailSignInCommand } from "../../domain/model/commands/request-email-sign-in.command";
 import type { SignOutCommand } from "../../domain/model/commands/sign-out.command";
+import type { VerifyMagicLinkCommand } from "../../domain/model/commands/verify-magic-link.command";
 
 type AuthResponse = {
   accessToken: string;
@@ -68,6 +69,26 @@ export class IamApiGateway implements IamAuthenticationCommandService {
     if (!response.ok) {
       throw new Error(await readError(response));
     }
+  }
+
+  async verifyMagicLink(
+    command: VerifyMagicLinkCommand
+  ): Promise<AuthenticationSession> {
+    const response = await fetch(
+      `${apiBaseUrl}/api/v1/auth/magic-link?token=${encodeURIComponent(command.token)}`,
+      { cache: "no-store" }
+    );
+
+    if (!response.ok) {
+      throw new Error(await readError(response));
+    }
+
+    const data = (await response.json()) as AuthResponse;
+    return {
+      accessToken: data.accessToken,
+      refreshToken: data.refreshToken,
+      expiresIn: data.expiresIn,
+    };
   }
 }
 

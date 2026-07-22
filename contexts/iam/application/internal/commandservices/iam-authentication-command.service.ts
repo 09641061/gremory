@@ -4,6 +4,7 @@ import type { AuthenticationSession } from "../../../domain/model/entities/authe
 import type { ConfirmEmailSignInCommand } from "../../../domain/model/commands/confirm-email-sign-in.command";
 import type { RequestEmailSignInCommand } from "../../../domain/model/commands/request-email-sign-in.command";
 import type { SignOutCommand } from "../../../domain/model/commands/sign-out.command";
+import type { VerifyMagicLinkCommand } from "../../../domain/model/commands/verify-magic-link.command";
 import type { IamAuthenticationCommandService } from "../../../domain/services/iam-authentication-command.service";
 import { IamApiGateway } from "../../../infrastructure/gateways/iam-api.gateway";
 
@@ -24,6 +25,10 @@ export class IamAuthenticationCommandServiceImpl
 
   signOut(command: SignOutCommand): Promise<void> {
     return this.gateway.signOut(command);
+  }
+
+  verifyMagicLink(command: VerifyMagicLinkCommand) {
+    return this.gateway.verifyMagicLink(command);
   }
 }
 

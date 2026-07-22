@@ -1,13 +1,30 @@
+"use client";
+
+import { useActionState } from "react";
 import { GoogleIcon } from "./icons/google";
+import { ErrorAlert } from "@/contexts/shared/interfaces/components/ui/error";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import { Card, CardContent } from "@/contexts/shared/interfaces/components/ui/card";
 import { Input } from "@/contexts/shared/interfaces/components/ui/input";
-import { requestEmailSignInAction } from "../actions/request-email-sign-in.action";
+import {
+  requestEmailSignInAction,
+  type RequestEmailSignInActionState,
+} from "../actions/request-email-sign-in.action";
 import { startGoogleAuthAction } from "../actions/start-google-auth.action";
 
 export function AuthForm() {
+  const [state, formAction, pending] = useActionState(
+    requestEmailSignInAction,
+    { status: "idle", error: null } satisfies RequestEmailSignInActionState
+  );
+
   return (
-    <main className="flex min-h-screen items-center justify-center bg-background px-4 py-6 text-foreground">
+    <>
+      <ErrorAlert
+        title="Unable to continue"
+        message={state.status === "error" ? state.error : undefined}
+      />
+      <main className="flex min-h-screen items-center justify-center bg-background px-4 py-6 text-foreground">
       <section className="w-full max-w-[416px] text-center">
         <header className="mb-5">
           <h1 className="text-[27px] font-bold leading-tight tracking-[-0.03em]">
@@ -37,7 +54,7 @@ export function AuthForm() {
             <span className="h-px flex-1 bg-[#687080]" />
           </div>
 
-          <form action={requestEmailSignInAction}>
+          <form action={formAction}>
             <Input
               name="email"
               type="email"
@@ -48,9 +65,10 @@ export function AuthForm() {
 
             <Button
               type="submit"
+              disabled={pending}
               className="mt-4 h-[42px] w-full rounded-[9px] bg-primary px-4 text-[14px] font-semibold text-primary-foreground hover:bg-primary/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
             >
-              Continue with email
+              {pending ? "Sending..." : "Continue with email"}
             </Button>
           </form>
 
@@ -61,6 +79,7 @@ export function AuthForm() {
           </CardContent>
         </Card>
       </section>
-    </main>
+      </main>
+    </>
   );
 }
