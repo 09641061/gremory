@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { CircleAlertIcon } from "lucide-react";
 import { createPortal } from "react-dom";
+import { cn } from "@/lib/utils";
 import {
   Alert,
   AlertDescription,
@@ -39,11 +40,17 @@ export function ErrorAlert({
   return createPortal(
     <Alert
       variant="destructive"
-      className="!fixed !right-4 !top-4 !z-[9999] w-[calc(100%-2rem)] max-w-sm text-left shadow-lg"
+      className={cn(
+        "!fixed !right-4 !top-4 !z-[9999] w-[calc(100%-2rem)] max-w-sm",
+        "gap-2 rounded-lg border-border bg-card p-4",
+        "text-left text-card-foreground shadow-md"
+      )}
     >
-      <CircleAlertIcon />
-      <AlertTitle>{title}</AlertTitle>
-      <AlertDescription>{message}</AlertDescription>
+      <CircleAlertIcon className="text-muted-foreground" />
+      <AlertTitle className="text-sm leading-5">{title}</AlertTitle>
+      <AlertDescription className="leading-5 text-muted-foreground">
+        {message}
+      </AlertDescription>
     </Alert>,
     document.body
   );

@@ -23,7 +23,7 @@ export default function Error({
       <button
         type="button"
         onClick={reset}
-        className="fixed right-4 top-28 z-50 rounded-md border px-3 py-1.5 text-sm font-medium"
+        className="fixed right-4 top-28 z-50 rounded-md border-border bg-card px-3 py-1.5 text-sm font-medium text-foreground"
       >
         Try again
       </button>

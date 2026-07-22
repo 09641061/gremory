@@ -35,23 +35,23 @@ export function AuthForm() {
           </p>
         </header>
 
-        <Card className="rounded-[17px] border border-[#d5d5d5] bg-card px-7 py-7 shadow-[0_1px_2px_rgb(0_0_0_/_0.02)] ring-0 sm:px-[27px]">
+      <Card className="rounded-lg border-border bg-card p-7 shadow-sm ring-0">
           <CardContent className="p-0">
           <form action={startGoogleAuthAction}>
             <Button
               type="submit"
               variant="outline"
-              className="h-[42px] w-full rounded-[9px] border-[#384152] bg-card px-4 text-[14px] font-medium text-foreground hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+              className="h-10 w-full rounded-md border-border bg-card px-4 text-sm font-medium text-foreground hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
             >
               <GoogleIcon className="size-[19px]" />
               <span>Continue with Google</span>
             </Button>
           </form>
 
-          <div className="my-5 flex items-center gap-3 text-[12px] font-medium text-foreground">
-            <span className="h-px flex-1 bg-[#687080]" />
+          <div className="my-5 flex items-center gap-3 text-xs font-medium text-foreground">
+            <span className="h-px flex-1 bg-border" />
             <span>OR</span>
-            <span className="h-px flex-1 bg-[#687080]" />
+            <span className="h-px flex-1 bg-border" />
           </div>
 
           <form action={formAction}>
@@ -60,13 +60,13 @@ export function AuthForm() {
               type="email"
               placeholder="Enter your email"
               aria-label="Email address"
-              className="h-[42px] rounded-[9px] border-[#384152] bg-card px-3 text-[14px] text-foreground placeholder:text-foreground/90 focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30"
+              className="h-10 rounded-md border-border bg-card px-3 text-sm text-foreground placeholder:text-foreground/90 focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30"
             />
 
             <Button
               type="submit"
               disabled={pending}
-              className="mt-4 h-[42px] w-full rounded-[9px] bg-primary px-4 text-[14px] font-semibold text-primary-foreground hover:bg-primary/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+              className="mt-4 h-10 w-full rounded-md bg-primary px-4 text-sm font-semibold text-primary-foreground hover:bg-primary/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
             >
               {pending ? "Sending..." : "Continue with email"}
             </Button>

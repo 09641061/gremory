@@ -86,7 +86,7 @@ export function VerifyForm({
           </p>
         </header>
 
-        <Card className="rounded-[17px] border border-[#d5d5d5] bg-card px-7 py-7 shadow-[0_1px_2px_rgb(0_0_0_/_0.02)] ring-0 sm:px-[27px]">
+        <Card className="rounded-lg border-border bg-card p-7 shadow-sm ring-0">
           <CardContent className="p-0">
             <form action={formAction}>
               <input type="hidden" name="email" value={email} readOnly />
@@ -117,7 +117,7 @@ export function VerifyForm({
                     onChange={(event) => handleChange(index, event.target.value)}
                     onKeyDown={(event) => handleKeyDown(index, event)}
                     onPaste={(event) => handlePaste(index, event)}
-                    className="h-[42px] rounded-[9px] border-[#384152] bg-card p-0 text-center text-[14px] text-foreground focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/30"
+                    className="h-10 rounded-md border-border bg-card p-0 text-center text-sm text-foreground focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/30"
                   />
                   ))}
                 </div>
@@ -126,7 +126,7 @@ export function VerifyForm({
               <Button
                 type="submit"
                 disabled={pending}
-                className="mt-4 h-[42px] w-full rounded-[9px] text-[14px] font-semibold"
+                className="mt-4 h-10 w-full rounded-md text-sm font-semibold"
               >
                 {pending ? "Verifying..." : "Verify code"}
               </Button>
