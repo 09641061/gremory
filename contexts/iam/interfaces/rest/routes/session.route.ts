@@ -1,20 +1,16 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { iamCookies } from "../../cookies";
+import {
+  iamSessionCookieOptions,
+  iamSessionCookies,
+} from "../../../infrastructure/session/iam-session-cookie";
 
 const sessionSchema = z.object({
   accessToken: z.string().min(1),
   refreshToken: z.string().min(1),
   expiresIn: z.coerce.number().int().positive().optional(),
 });
-
-const cookieOptions = {
-  httpOnly: true,
-  secure: process.env.NODE_ENV === "production",
-  sameSite: "lax" as const,
-  path: "/",
-};
 
 export async function createSessionRoute(request: Request) {
   const input = sessionSchema.safeParse(await request.json());
@@ -24,18 +20,18 @@ export async function createSessionRoute(request: Request) {
   }
 
   const cookieStore = await cookies();
-  cookieStore.set(iamCookies.accessToken, input.data.accessToken, {
-    ...cookieOptions,
+  cookieStore.set(iamSessionCookies.accessToken, input.data.accessToken, {
+    ...iamSessionCookieOptions,
     maxAge: 60 * 60 * 24,
   });
-  cookieStore.set(iamCookies.refreshToken, input.data.refreshToken, {
-    ...cookieOptions,
+  cookieStore.set(iamSessionCookies.refreshToken, input.data.refreshToken, {
+    ...iamSessionCookieOptions,
     maxAge: 60 * 60 * 24 * 30,
   });
 
   if (input.data.expiresIn !== undefined) {
-    cookieStore.set(iamCookies.expiresIn, String(input.data.expiresIn), {
-      ...cookieOptions,
+    cookieStore.set(iamSessionCookies.expiresIn, String(input.data.expiresIn), {
+      ...iamSessionCookieOptions,
       maxAge: 60 * 60 * 24,
     });
   }
@@ -45,8 +41,9 @@ export async function createSessionRoute(request: Request) {
 
 export async function clearSessionRoute() {
   const cookieStore = await cookies();
-  cookieStore.delete(iamCookies.accessToken);
-  cookieStore.delete(iamCookies.refreshToken);
-  cookieStore.delete(iamCookies.expiresIn);
+  cookieStore.delete(iamSessionCookies.accessToken);
+  cookieStore.delete(iamSessionCookies.refreshToken);
+  cookieStore.delete(iamSessionCookies.expiresIn);
+  cookieStore.delete(iamSessionCookies.pendingEmail);
   return new Response(null, { status: 204 });
 }

@@ -2,6 +2,7 @@
 
 import { ClipboardEvent, KeyboardEvent, useRef, useState } from "react";
 import { useActionState } from "react";
+import { useRouter } from "next/navigation";
 import { ErrorAlert } from "@/contexts/shared/interfaces/components/ui/error";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import {
@@ -13,9 +14,17 @@ import {
   confirmEmailSignInAction,
   type ConfirmEmailSignInActionState,
 } from "../actions/confirm-email-sign-in.action";
+import {
+  resendEmailSignInAction,
+  type ResendEmailSignInActionState,
+} from "../actions/resend-email-sign-in.action";
 
 const verificationCodeLength = 6;
 const initialActionState: ConfirmEmailSignInActionState = {
+  status: "idle",
+  error: null,
+};
+const initialResendState: ResendEmailSignInActionState = {
   status: "idle",
   error: null,
 };
@@ -27,6 +36,7 @@ export function VerifyForm({
   email: string;
   initialError?: string;
 }) {
+  const router = useRouter();
   const [digits, setDigits] = useState<string[]>(
     Array(verificationCodeLength).fill("")
   );
@@ -34,6 +44,10 @@ export function VerifyForm({
   const [state, formAction, pending] = useActionState(
     confirmEmailSignInAction,
     initialActionState
+  );
+  const [resendState, resendAction, resendPending] = useActionState(
+    resendEmailSignInAction,
+    initialResendState
   );
 
   function handleChange(index: number, value: string) {
@@ -75,7 +89,11 @@ export function VerifyForm({
     <>
       <ErrorAlert
         title="Verification failed"
-        message={initialError ?? (state.status === "error" ? state.error : undefined)}
+        message={
+          initialError ??
+          (state.status === "error" ? state.error : undefined) ??
+          (resendState.status === "error" ? resendState.error : undefined)
+        }
       />
       <main className="flex min-h-screen items-center justify-center bg-background px-4 py-6 text-foreground">
         <section className="w-full max-w-[416px] text-center">
@@ -135,17 +153,22 @@ export function VerifyForm({
               </form>
 
               <div className="mt-4 flex flex-col items-center">
-                <Button
-                  type="button"
-                  variant="link"
-                  className="h-auto p-0 text-[14px] font-semibold text-accent-foreground hover:bg-transparent hover:text-accent-foreground hover:underline"
-                >
-                  Resend email
-                </Button>
+                <form action={resendAction}>
+                  <input type="hidden" name="email" value={email} readOnly />
+                  <Button
+                    type="submit"
+                    variant="link"
+                    disabled={resendPending}
+                    className="h-auto p-0 text-[14px] font-semibold text-accent-foreground hover:bg-transparent hover:text-accent-foreground hover:underline"
+                  >
+                    {resendPending ? "Resending..." : "Resend email"}
+                  </Button>
+                </form>
 
                 <Button
                   type="button"
                   variant="link"
+                  onClick={() => router.push("/login")}
                   className="mt-3 h-auto p-0 text-[14px] font-semibold text-muted-foreground hover:bg-transparent hover:text-muted-foreground hover:underline"
                 >
                   Use a different email

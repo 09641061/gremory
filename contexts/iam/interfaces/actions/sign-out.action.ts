@@ -2,7 +2,7 @@
 
 import { cookies } from "next/headers";
 import { createIamAuthenticationCommandService } from "../../application/internal/commandservices/iam-authentication-command.service";
-import { iamCookies } from "../cookies";
+import { iamSessionCookies } from "../../infrastructure/session/iam-session-cookie";
 import { signOutSchema } from "../rest/schemas/sign-out.schema";
 
 export type SignOutActionResult =
@@ -12,8 +12,8 @@ export type SignOutActionResult =
 export async function signOutAction(): Promise<SignOutActionResult> {
   const cookieStore = await cookies();
   const input = signOutSchema.safeParse({
-    accessToken: cookieStore.get(iamCookies.accessToken)?.value,
-    refreshToken: cookieStore.get(iamCookies.refreshToken)?.value,
+    accessToken: cookieStore.get(iamSessionCookies.accessToken)?.value,
+    refreshToken: cookieStore.get(iamSessionCookies.refreshToken)?.value,
   });
 
   if (!input.success) {
@@ -22,9 +22,9 @@ export async function signOutAction(): Promise<SignOutActionResult> {
 
   try {
     await createIamAuthenticationCommandService().signOut(input.data);
-    cookieStore.delete(iamCookies.accessToken);
-    cookieStore.delete(iamCookies.refreshToken);
-    cookieStore.delete(iamCookies.expiresIn);
+    cookieStore.delete(iamSessionCookies.accessToken);
+    cookieStore.delete(iamSessionCookies.refreshToken);
+    cookieStore.delete(iamSessionCookies.expiresIn);
     return { status: "success", error: null };
   } catch (error) {
     console.error("Sign out failed", error);

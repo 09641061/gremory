@@ -1,8 +1,10 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 import { createEmail } from "../../domain/model/valueobjects/email";
 import { createIamAuthenticationCommandService } from "../../application/internal/commandservices/iam-authentication-command.service";
+import { iamSessionCookies } from "../../infrastructure/session/iam-session-cookie";
 import { confirmEmailSignInSchema } from "../rest/schemas/authentication.schemas";
 import type { AuthenticationSession } from "../../domain/model/entities/authentication-session";
 
@@ -26,6 +28,7 @@ export async function confirmEmailSignInAction(
       email: createEmail(input.email),
       code: input.code,
     });
+    (await cookies()).delete(iamSessionCookies.pendingEmail);
   } catch (error) {
     console.error("Confirm email sign-in failed", error);
     return {

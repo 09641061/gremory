@@ -1,8 +1,13 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 import { createEmail } from "../../domain/model/valueobjects/email";
 import { createIamAuthenticationCommandService } from "../../application/internal/commandservices/iam-authentication-command.service";
+import {
+  iamSessionCookieOptions,
+  iamSessionCookies,
+} from "../../infrastructure/session/iam-session-cookie";
 import { requestEmailSignInSchema } from "../rest/schemas/authentication.schemas";
 
 export type RequestEmailSignInActionState =
@@ -21,9 +26,7 @@ export async function requestEmailSignInAction(
     });
     email = input.email;
 
-    await createIamAuthenticationCommandService().requestEmailSignIn({
-      email: createEmail(input.email),
-    });
+    await sendSignInEmail(input.email);
 
   } catch (error) {
     console.error("Request email sign-in failed", error);
@@ -34,4 +37,16 @@ export async function requestEmailSignInAction(
   }
 
   redirect(`/auth/verify?email=${encodeURIComponent(email)}`);
+}
+
+export async function sendSignInEmail(email: string) {
+  await createIamAuthenticationCommandService().requestEmailSignIn({
+    email: createEmail(email),
+  });
+
+  const cookieStore = await cookies();
+  cookieStore.set(iamSessionCookies.pendingEmail, email, {
+    ...iamSessionCookieOptions,
+    maxAge: 60 * 10,
+  });
 }

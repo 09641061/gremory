@@ -1,9 +1,11 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { iamCookies } from "@/contexts/iam/interfaces/cookies";
+import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-session-cookie";
 
 export function proxy(request: NextRequest) {
-  const hasSession = Boolean(request.cookies.get(iamCookies.accessToken)?.value);
+  const hasSession = Boolean(
+    request.cookies.get(iamSessionCookies.accessToken)?.value
+  );
   const { pathname } = request.nextUrl;
 
   if (pathname === "/" && !hasSession) {
