@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { Spinner } from "@/contexts/shared/interfaces/components/ui/spinner";
 
 export function AuthCallback() {
   const router = useRouter();
@@ -28,5 +29,13 @@ export function AuthCallback() {
     router.replace("/");
   }, [router]);
 
-  return null;
+  return (
+    <main
+      className="flex min-h-screen items-center justify-center bg-background text-foreground"
+      aria-live="polite"
+    >
+      <Spinner className="size-8" />
+      <span className="sr-only">Signing you in</span>
+    </main>
+  );
 }

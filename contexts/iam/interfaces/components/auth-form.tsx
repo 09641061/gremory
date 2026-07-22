@@ -1,16 +1,43 @@
 "use client";
 
 import { useActionState } from "react";
+import { useFormStatus } from "react-dom";
 import { GoogleIcon } from "./icons/google";
 import { ErrorAlert } from "@/contexts/shared/interfaces/components/ui/error";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import { Card, CardContent } from "@/contexts/shared/interfaces/components/ui/card";
 import { Input } from "@/contexts/shared/interfaces/components/ui/input";
+import { Spinner } from "@/contexts/shared/interfaces/components/ui/spinner";
 import {
   requestEmailSignInAction,
   type RequestEmailSignInActionState,
 } from "../actions/request-email-sign-in.action";
 import { startGoogleAuthAction } from "../actions/start-google-auth.action";
+
+function GoogleSubmitButton() {
+  const { pending } = useFormStatus();
+
+  return (
+    <Button
+      type="submit"
+      variant="outline"
+      disabled={pending}
+      className="h-10 w-full rounded-md border-border bg-card px-4 text-sm font-medium text-foreground hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+    >
+      {pending ? (
+        <>
+          <Spinner data-icon="inline-start" />
+          Connecting...
+        </>
+      ) : (
+        <>
+          <GoogleIcon className="size-[19px]" />
+          <span>Continue with Google</span>
+        </>
+      )}
+    </Button>
+  );
+}
 
 export function AuthForm() {
   const [state, formAction, pending] = useActionState(
@@ -38,14 +65,7 @@ export function AuthForm() {
           <Card className="rounded-lg border-border bg-card p-7 shadow-sm ring-0">
           <CardContent className="p-0">
           <form action={startGoogleAuthAction}>
-            <Button
-              type="submit"
-              variant="outline"
-              className="h-10 w-full rounded-md border-border bg-card px-4 text-sm font-medium text-foreground hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-            >
-              <GoogleIcon className="size-[19px]" />
-              <span>Continue with Google</span>
-            </Button>
+            <GoogleSubmitButton />
           </form>
 
           <div className="my-5 flex items-center gap-3 text-xs font-medium text-foreground">
@@ -68,7 +88,14 @@ export function AuthForm() {
               disabled={pending}
               className="mt-4 h-10 w-full rounded-md bg-primary px-4 text-sm font-semibold text-primary-foreground hover:bg-primary/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
             >
-              {pending ? "Sending..." : "Continue with email"}
+              {pending ? (
+                <>
+                  <Spinner data-icon="inline-start" />
+                  Sending...
+                </>
+              ) : (
+                "Continue with email"
+              )}
             </Button>
           </form>
 

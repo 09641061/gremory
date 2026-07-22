@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
+import { Spinner } from "@/contexts/shared/interfaces/components/ui/spinner";
 import { signOutAction } from "../actions/sign-out.action";
 
 export function LogoutButton() {
@@ -26,7 +27,14 @@ export function LogoutButton() {
   return (
     <div className="flex flex-col items-center gap-2">
       <Button type="button" variant="outline" onClick={handleLogout} disabled={pending}>
-        {pending ? "Signing out..." : "Log out"}
+        {pending ? (
+          <>
+            <Spinner data-icon="inline-start" />
+            Signing out...
+          </>
+        ) : (
+          "Log out"
+        )}
       </Button>
       {error ? <p className="text-sm text-muted-foreground">{error}</p> : null}
     </div>

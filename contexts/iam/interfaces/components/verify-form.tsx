@@ -5,6 +5,7 @@ import { useActionState } from "react";
 import { useRouter } from "next/navigation";
 import { ErrorAlert } from "@/contexts/shared/interfaces/components/ui/error";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
+import { Spinner } from "@/contexts/shared/interfaces/components/ui/spinner";
 import {
   Card,
   CardContent,
@@ -148,7 +149,14 @@ export function VerifyForm({
                   disabled={pending}
                   className="mt-4 h-10 w-full rounded-md text-sm font-semibold"
                 >
-                  {pending ? "Verifying..." : "Verify code"}
+                  {pending ? (
+                    <>
+                      <Spinner data-icon="inline-start" />
+                      Verifying...
+                    </>
+                  ) : (
+                    "Verify code"
+                  )}
                 </Button>
               </form>
 
@@ -161,7 +169,14 @@ export function VerifyForm({
                     disabled={resendPending}
                     className="h-auto p-0 text-[14px] font-semibold text-accent-foreground hover:bg-transparent hover:text-accent-foreground hover:underline"
                   >
-                    {resendPending ? "Resending..." : "Resend email"}
+                    {resendPending ? (
+                      <>
+                        <Spinner data-icon="inline-start" />
+                        Resending...
+                      </>
+                    ) : (
+                      "Resend email"
+                    )}
                   </Button>
                 </form>
 
