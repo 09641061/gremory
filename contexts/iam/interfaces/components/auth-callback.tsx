@@ -14,15 +14,34 @@ export function AuthCallback() {
     const expiresIn = params.get("expires_in");
 
     if (accessToken && refreshToken) {
-      void fetch("/api/iam/auth/session", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          accessToken,
-          refreshToken,
-          expiresIn: expiresIn ? Number(expiresIn) : undefined,
-        }),
-      }).then(() => router.replace("/"));
+      void (async () => {
+        try {
+          const sessionResponse = await fetch("/api/iam/auth/session", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              accessToken,
+              refreshToken,
+              expiresIn: expiresIn ? Number(expiresIn) : undefined,
+            }),
+          });
+
+          if (!sessionResponse.ok) {
+            router.replace("/login");
+            return;
+          }
+
+          const subscriptionResponse = await fetch("/api/billing/subscription/status", {
+            cache: "no-store",
+          });
+          const subscription = subscriptionResponse.ok
+            ? ((await subscriptionResponse.json()) as { active?: boolean })
+            : { active: false };
+          router.replace(subscription.active === true ? "/dashboard" : "/subscribe");
+        } catch {
+          router.replace("/subscribe");
+        }
+      })();
       return;
     }
 

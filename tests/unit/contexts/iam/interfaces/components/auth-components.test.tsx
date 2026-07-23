@@ -64,10 +64,12 @@ describe("IAM client components", () => {
     expect(mocks.router.replace).not.toHaveBeenCalled();
   });
 
-  it("should persist callback tokens and navigate home when the hash contains tokens", async () => {
+  it("should persist callback tokens and redirect to subscribe when there is no active plan", async () => {
     // Arrange
     window.location.hash = "#access_token=a&refresh_token=r&expires_in=3600";
-    const fetchMock = vi.fn().mockResolvedValue(new Response(null, { status: 204 }));
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(new Response(null, { status: 204 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ active: false }), { status: 200 }));
     vi.stubGlobal("fetch", fetchMock);
 
     // Act
@@ -81,7 +83,11 @@ describe("IAM client components", () => {
         body: JSON.stringify({ accessToken: "a", refreshToken: "r", expiresIn: 3600 }),
       })
     ));
-    await waitFor(() => expect(mocks.router.replace).toHaveBeenCalledWith("/"));
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledWith(
+      "/api/billing/subscription/status",
+      { cache: "no-store" },
+    ));
+    await waitFor(() => expect(mocks.router.replace).toHaveBeenCalledWith("/subscribe"));
   });
 
   it("should navigate home when the callback hash does not contain tokens", async () => {

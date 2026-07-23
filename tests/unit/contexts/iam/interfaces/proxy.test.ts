@@ -25,6 +25,9 @@ function requestWithSession(accessToken: string, refreshToken = "refresh-token")
 describe("IAM session proxy", () => {
   beforeEach(() => {
     mocks.refreshSession.mockReset();
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({ active: true, status: "ACTIVE" }), { status: 200 }),
+    ));
   });
 
   it("should refresh the session and update cookies when the access token is about to expire", async () => {
@@ -45,7 +48,7 @@ describe("IAM session proxy", () => {
     expect(response.cookies.get("takodu.refresh_token")?.value).toBe("new-refresh-token");
   });
 
-  it("should continue without refreshing when the access token remains valid", async () => {
+  it("should redirect an active session from home to the dashboard", async () => {
     // Arrange
     const nowInSeconds = Math.floor(Date.now() / 1000);
     const request = requestWithSession(tokenWithExpiration(nowInSeconds + 600));
@@ -55,7 +58,8 @@ describe("IAM session proxy", () => {
 
     // Assert
     expect(mocks.refreshSession).not.toHaveBeenCalled();
-    expect(response.status).toBe(200);
+    expect(response.status).toBe(307);
+    expect(response.headers.get("location")).toBe("http://localhost/dashboard");
   });
 
   it("should clear the session and redirect to login when refresh is rejected", async () => {
