@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
+import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
 import type { BillingCycleType } from "../../../domain/model/value-objects/billing-cycle";
 import { getCurrencySymbol, type CurrencyCode } from "../../../domain/model/value-objects/currency";
 import { ListPlansQueryService } from "../../../application/internal/queryservices/list-plans-query.service";
@@ -58,6 +60,17 @@ export function SubscribeView() {
 
   return (
     <main className="relative min-h-screen pb-24 overflow-hidden bg-background text-foreground">
+      {/* Back to Login Navigation Link pegged to the top-left corner */}
+      <div className="absolute top-6 left-6 sm:left-8 z-20">
+        <Link
+          href="/login"
+          className="inline-flex items-center gap-2 text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors cursor-pointer group"
+        >
+          <ArrowLeft className="size-4 transition-transform group-hover:-translate-x-1" />
+          <span>Back to Sign In</span>
+        </Link>
+      </div>
+
       {/* Floating ErrorAlert Notification with unique key for re-triggering on repetitive clicks */}
       {feedbackMessage && (
         <ErrorAlert
