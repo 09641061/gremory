@@ -95,7 +95,7 @@ export function PlanCard({
             <span className="text-3xl sm:text-4xl font-extrabold text-foreground tracking-tight">
               {currencySymbol}{displayPrice.toFixed(0)}
             </span>
-            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+            <span className="text-xs font-medium text-muted-foreground">
               {currency} / month
             </span>
           </div>
