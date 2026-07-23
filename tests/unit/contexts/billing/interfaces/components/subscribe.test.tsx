@@ -1,7 +1,7 @@
 /** @vitest-environment jsdom */
 import { render, screen, fireEvent } from "@testing-library/react";
 import { describe, it, expect, vi } from "vitest";
-import { PlansView } from "@/contexts/billing/interfaces/components/plans/plans-view";
+import { SubscribeView } from "@/contexts/billing/interfaces/components/subscribe/subscribe-view";
 
 vi.mock("@/contexts/billing/interfaces/actions/create-subscription.action", () => ({
   createSubscriptionAction: vi.fn().mockResolvedValue({
@@ -31,36 +31,35 @@ vi.mock("@stripe/react-stripe-js", () => ({
   useElements: () => ({ getElement: vi.fn() }),
 }));
 
-
-describe("PlansView Component", () => {
-  it("renders main title 'Choose your plan'", () => {
-    render(<PlansView />);
-    expect(screen.getByText("Choose your plan")).toBeDefined();
+describe("SubscribeView Component", () => {
+  it("renders main title 'Choose the plan that fits you'", () => {
+    render(<SubscribeView />);
+    expect(screen.getByText("Choose the plan that fits you")).toBeDefined();
   });
 
-  it("renders Standard and Premium plan cards", () => {
-    render(<PlansView />);
-    expect(screen.getByText("Standard")).toBeDefined();
-    expect(screen.getByText("Premium")).toBeDefined();
+  it("renders Standart and Premium button labels", () => {
+    render(<SubscribeView />);
+    expect(screen.getByRole("button", { name: "Get Standart plan" })).toBeDefined();
+    expect(screen.getByRole("button", { name: "Get Premium plan" })).toBeDefined();
   });
 
   it("toggles billing cycle between Monthly and Annual", () => {
-    render(<PlansView />);
+    render(<SubscribeView />);
     const toggleButton = screen.getByRole("switch", { name: "Toggle annual billing" });
 
     // Initially monthly
-    expect(screen.getByText(/75\.00/)).toBeDefined();
+    expect(screen.getByText(/\$20/)).toBeDefined();
 
-    // Toggle to annual (750 / 12 = 62.50)
+    // Toggle to annual (200 / 12 = 17)
     fireEvent.click(toggleButton);
-    expect(screen.getByText(/62\.50/)).toBeDefined();
+    expect(screen.getByText(/\$17/)).toBeDefined();
   });
 
   it("switches currency between PEN, USD, and EUR", () => {
-    render(<PlansView />);
-    const usdButton = screen.getByRole("button", { name: /USD/ });
+    render(<SubscribeView />);
+    const penButton = screen.getByRole("button", { name: /PEN/ });
 
-    fireEvent.click(usdButton);
-    expect(screen.getByText(/20\.00/)).toBeDefined();
+    fireEvent.click(penButton);
+    expect(screen.getByText(/75/)).toBeDefined();
   });
 });

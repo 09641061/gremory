@@ -1,6 +1,7 @@
 import React from "react";
-import { PlansView } from "@/contexts/billing/interfaces/components/plans/plans-view";
+import { SubscribeView } from "@/contexts/billing/interfaces/components/subscribe/subscribe-view";
 
-export default function PlansPage() {
-  return <PlansView />;
+export default function SubscribePage() {
+  return <SubscribeView />;
 }
+

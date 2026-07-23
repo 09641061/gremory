@@ -5,7 +5,7 @@ import type { BillingCycle, Currency } from "../../../domain/model/commands/crea
 import { CurrencySelector } from "./currency-selector";
 import { cn } from "@/lib/utils";
 
-interface PlansHeroProps {
+interface SubscribeHeroProps {
   billingCycle: BillingCycle;
   selectedCurrency: Currency;
   onCycleToggle: () => void;
@@ -13,20 +13,20 @@ interface PlansHeroProps {
 }
 
 /**
- * PlansHero section displaying the header title, annual/monthly toggle, and currency selector.
+ * SubscribeHero section displaying header title, subtitle, cycle toggle, and currency selector.
  */
-export function PlansHero({
+export function SubscribeHero({
   billingCycle,
   selectedCurrency,
   onCycleToggle,
   onCurrencyChange,
-}: PlansHeroProps) {
+}: SubscribeHeroProps) {
   const isAnnual = billingCycle === "ANNUAL";
 
   return (
-    <section className="max-w-4xl mx-auto px-4 pt-12 md:pt-16 text-center">
-      <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-foreground mb-4">
-        Choose your plan
+    <section className="max-w-4xl mx-auto px-4 pt-8 text-center">
+      <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-foreground mb-3">
+        Choose the plan that fits you
       </h1>
       <p className="text-base md:text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
         Scale your billing infrastructure with Takodu. From single shops to enterprise-level multi-establishment management, we have the right tools for your growth.
