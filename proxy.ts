@@ -57,7 +57,7 @@ export async function proxy(request: NextRequest) {
 }
 
 function isPrivateRoute(pathname: string) {
-  return ["/dashboard", "/analytics", "/schedule", "/crm", "/catalog", "/team"].some(
+  return ["/dashboard", "/analytics", "/schedule", "/crm", "/catalog", "/team", "/settings"].some(
     (route) => pathname === route || pathname.startsWith(`${route}/`),
   );
 }
@@ -108,5 +108,5 @@ function redirectToLogin(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/", "/login", "/subscribe", "/dashboard/:path*", "/analytics/:path*", "/schedule/:path*", "/crm/:path*", "/catalog/:path*", "/team/:path*"],
+  matcher: ["/", "/login", "/subscribe", "/dashboard/:path*", "/analytics/:path*", "/schedule/:path*", "/crm/:path*", "/catalog/:path*", "/team/:path*", "/settings/:path*"],
 };
