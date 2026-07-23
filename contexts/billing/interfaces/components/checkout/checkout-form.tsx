@@ -114,16 +114,14 @@ export function CheckoutForm({
           onClick={onClose}
           disabled={isProcessing}
           variant="outline"
-          size="lg"
-          className="flex-1 py-3 px-4 rounded-xl border border-border text-foreground hover:bg-muted font-medium text-sm transition-colors cursor-pointer disabled:opacity-50"
+          className="h-10 flex-1 rounded-md px-4 text-sm"
         >
           Cancel
         </Button>
         <Button
           type="submit"
           disabled={!stripe || isProcessing}
-          size="lg"
-          className="flex-1 py-3 px-4 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 font-semibold text-sm transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+          className="h-10 flex-1 rounded-md px-4 text-sm font-semibold shadow-md"
         >
           {isProcessing ? (
             <>

@@ -3,6 +3,11 @@
 import React from "react";
 import { AlertCircle } from "lucide-react";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
+import {
+  Alert,
+  AlertDescription,
+  AlertTitle,
+} from "@/contexts/shared/interfaces/components/ui/alert";
 
 interface PaymentErrorViewProps {
   message?: string;
@@ -12,19 +17,19 @@ interface PaymentErrorViewProps {
 export function PaymentErrorView({ message, onClose }: PaymentErrorViewProps) {
   return (
     <div className="space-y-4 py-5 text-center">
-      <div className="mx-auto size-12 rounded-full bg-destructive/10 text-destructive flex items-center justify-center">
-        <AlertCircle className="size-6" />
-      </div>
-      <p className="text-sm font-medium text-foreground">
-        {message ??
-          "Could not retrieve payment credentials. Please try again or contact support."}
-      </p>
+      <Alert variant="destructive" className="justify-items-center border-destructive/20 bg-destructive/10 text-center">
+        <AlertCircle className="size-5" />
+        <AlertTitle>Payment unavailable</AlertTitle>
+        <AlertDescription className="text-destructive">
+          {message ??
+            "Could not retrieve payment credentials. Please try again or contact support."}
+        </AlertDescription>
+      </Alert>
       <Button
         type="button"
         onClick={onClose}
         variant="secondary"
-        size="lg"
-        className="mt-4 rounded-md px-4 text-sm font-medium text-foreground"
+        className="h-10 rounded-md px-4 text-sm"
       >
         Close
       </Button>
