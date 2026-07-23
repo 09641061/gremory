@@ -59,7 +59,7 @@ export function SubscribeView() {
   };
 
   return (
-    <main className="relative min-h-screen pb-24 overflow-hidden bg-background text-foreground">
+    <main className="relative flex min-h-screen flex-col items-center justify-center gap-10 overflow-hidden bg-background px-4 py-12 text-foreground">
       {/* Back to Login Navigation Link pegged to the top-left corner */}
       <div className="absolute top-6 left-6 sm:left-8 z-20">
         <Link
@@ -90,7 +90,7 @@ export function SubscribeView() {
       />
 
       {/* Pricing Cards Grid */}
-      <section className="max-w-5xl mx-auto px-4 mt-10 grid grid-cols-1 md:grid-cols-2 gap-8 items-stretch">
+      <section className="grid w-full max-w-5xl grid-cols-1 items-stretch gap-8 md:grid-cols-2">
         {plans.map((plan) => {
           const displayPrice = billingCycle === "ANNUAL" ? plan.annualPricePerMonth : plan.monthlyPrice;
           return (
