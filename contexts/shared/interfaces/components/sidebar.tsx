@@ -7,8 +7,10 @@ import {
   Building2,
   CalendarDays,
   ChevronsUpDown,
+  ContactRound,
   LayoutGrid,
-  WalletCards,
+  Package,
+  Users,
 } from "lucide-react";
 
 import {
@@ -21,8 +23,10 @@ import { cn } from "@/lib/utils";
 const navigation = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutGrid },
   { label: "Schedule", href: "/schedule", icon: CalendarDays },
+  { label: "CRM", href: "/crm", icon: ContactRound },
+  { label: "Catalog", href: "/catalog", icon: Package },
+  { label: "Team", href: "/team", icon: Users },
   { label: "Analytics", href: "/analytics", icon: BarChart3 },
-  { label: "Plans", href: "/plans", icon: WalletCards },
 ];
 
 export function Sidebar() {
