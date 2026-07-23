@@ -10,7 +10,7 @@ import type { SubscriptionResponse } from "../../../infrastructure/gateways/bill
 import { ErrorAlert } from "@/contexts/shared/interfaces/components/ui/error";
 import { SubscribeHero } from "./subscribe-hero";
 import { PlanCard } from "./plan-card";
-import { PaymentModal } from "./payment-modal";
+import { PaymentModal } from "../checkout/payment-modal";
 
 interface ActivePaymentState {
   clientSecret: string | null | undefined;
