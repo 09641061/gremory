@@ -1,5 +1,5 @@
 import React from "react";
-import { PlansView } from "@/contexts/billing/interfaces/components/plans";
+import { PlansView } from "@/contexts/billing/interfaces/components/plans/plans-view";
 
 export const metadata = {
   title: "Takodu | Plans & Pricing",

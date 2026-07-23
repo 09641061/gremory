@@ -2,10 +2,19 @@
 
 import React, { useState, useMemo } from "react";
 import type { BillingCycleType } from "../../../domain/model/value-objects/billing-cycle";
-import type { CurrencyCode } from "../../../domain/model/value-objects/currency";
+import { getCurrencySymbol, type CurrencyCode } from "../../../domain/model/value-objects/currency";
 import { ListPlansQueryService } from "../../../application/internal/queryservices/list-plans-query.service";
+import type { SubscriptionResponse } from "../../../infrastructure/gateways/billing-api.gateway";
 import { PlansHero } from "./plans-hero";
 import { PlanCard } from "./plan-card";
+import { StripePaymentModal } from "./stripe-payment-modal";
+
+interface ActivePaymentState {
+  clientSecret: string | null | undefined;
+  stripePublicKey: string | null | undefined;
+  planName: string;
+  amountFormatted: string;
+}
 
 /**
  * PlansView component rendering the standalone plan selection interface.
@@ -14,6 +23,7 @@ export function PlansView() {
   const [billingCycle, setBillingCycle] = useState<BillingCycleType>("MONTHLY");
   const [currency, setCurrency] = useState<CurrencyCode>("PEN");
   const [feedbackMessage, setFeedbackMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [paymentModalState, setPaymentModalState] = useState<ActivePaymentState | null>(null);
 
   const toggleCycle = () => {
     setBillingCycle((prev) => (prev === "MONTHLY" ? "ANNUAL" : "MONTHLY"));
@@ -24,6 +34,20 @@ export function PlansView() {
     () => queryService.getAvailablePlans(currency, billingCycle),
     [queryService, currency, billingCycle]
   );
+
+  const handlePlanSuccess = (planName: string, displayPrice: number, data: unknown) => {
+    setFeedbackMessage(null);
+    const response = data as SubscriptionResponse | undefined;
+    const symbol = getCurrencySymbol(currency);
+    const amountFormatted = `${symbol} ${displayPrice.toFixed(2)} ${currency}`;
+
+    setPaymentModalState({
+      clientSecret: response?.clientSecret,
+      stripePublicKey: response?.stripePublicKey,
+      planName,
+      amountFormatted,
+    });
+  };
 
   return (
     <main className="relative min-h-screen pb-24 overflow-hidden bg-background text-foreground">
@@ -66,34 +90,44 @@ export function PlansView() {
 
       {/* Pricing Cards Grid */}
       <section className="max-w-6xl mx-auto px-4 mt-12 grid grid-cols-1 md:grid-cols-2 gap-8 items-stretch">
-        {plans.map((plan) => (
-          <PlanCard
-            key={plan.id}
-            planId={plan.id}
-            name={plan.name}
-            description={plan.description}
-            monthlyPrice={plan.monthlyPrice}
-            annualPricePerMonth={plan.annualPricePerMonth}
-            currency={currency}
-            billingCycle={billingCycle}
-            features={[...plan.features]}
-            isPopular={plan.isPopular}
-            buttonLabel={plan.id === 2 ? "Upgrade to Premium" : "Start with Standard"}
-            onSuccess={() =>
-              setFeedbackMessage({
-                type: "success",
-                text: `Selected ${plan.name} plan successfully!`,
-              })
-            }
-            onError={(err) =>
-              setFeedbackMessage({
-                type: "error",
-                text: err || "Failed to process plan selection",
-              })
-            }
-          />
-        ))}
+        {plans.map((plan) => {
+          const displayPrice = billingCycle === "ANNUAL" ? plan.annualPricePerMonth : plan.monthlyPrice;
+          return (
+            <PlanCard
+              key={plan.id}
+              planId={plan.id}
+              name={plan.name}
+              description={plan.description}
+              monthlyPrice={plan.monthlyPrice}
+              annualPricePerMonth={plan.annualPricePerMonth}
+              currency={currency}
+              billingCycle={billingCycle}
+              features={[...plan.features]}
+              isPopular={plan.isPopular}
+              buttonLabel={plan.id === 2 ? "Upgrade to Premium" : "Start with Standard"}
+              onSuccess={(data) => handlePlanSuccess(plan.name, displayPrice, data)}
+              onError={(err) =>
+                setFeedbackMessage({
+                  type: "error",
+                  text: err || "Failed to process plan selection",
+                })
+              }
+            />
+          );
+        })}
       </section>
+
+      {/* Embedded Stripe Payment Modal */}
+      {paymentModalState && (
+        <StripePaymentModal
+          isOpen={Boolean(paymentModalState)}
+          onClose={() => setPaymentModalState(null)}
+          clientSecret={paymentModalState.clientSecret}
+          stripePublicKey={paymentModalState.stripePublicKey}
+          planName={paymentModalState.planName}
+          amountFormatted={paymentModalState.amountFormatted}
+        />
+      )}
     </main>
   );
 }

@@ -6,10 +6,31 @@ import { PlansView } from "@/contexts/billing/interfaces/components/plans/plans-
 vi.mock("@/contexts/billing/interfaces/actions/create-subscription.action", () => ({
   createSubscriptionAction: vi.fn().mockResolvedValue({
     status: "success",
-    data: { planId: 1, billingCycle: "ANNUAL", currency: "PEN", ownerId: "owner_123", prepared: true },
+    data: {
+      id: "sub_123",
+      ownerId: "owner_123",
+      planId: 1,
+      billingCycle: "ANNUAL",
+      status: "PENDING",
+      clientSecret: "pi_123_secret_456",
+      stripePublicKey: "pk_test_123",
+    },
     error: null,
   }),
 }));
+
+vi.mock("@stripe/stripe-js", () => ({
+  loadStripe: vi.fn().mockResolvedValue({}),
+}));
+
+vi.mock("@stripe/react-stripe-js", () => ({
+  Elements: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  PaymentElement: () => <div data-testid="payment-element">Stripe Payment Element</div>,
+  CardElement: () => <div data-testid="card-element">Stripe Card Element</div>,
+  useStripe: () => ({ confirmCardPayment: vi.fn() }),
+  useElements: () => ({ getElement: vi.fn() }),
+}));
+
 
 describe("PlansView Component", () => {
   it("renders main title 'Choose your plan'", () => {

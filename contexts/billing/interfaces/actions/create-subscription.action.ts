@@ -1,34 +1,42 @@
 "use server";
 
-import { CreateSubscriptionCommandService, type CreateSubscriptionResult } from "../../application/internal/commandservices/create-subscription-command.service";
+import { cookies } from "next/headers";
+import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-session-cookie";
+import { BillingApiGateway, type SubscriptionResponse } from "../../infrastructure/gateways/billing-api.gateway";
 import type { BillingCycleType } from "../../domain/model/value-objects/billing-cycle";
 import type { CurrencyCode } from "../../domain/model/value-objects/currency";
 
 export type CreateSubscriptionActionResult =
-  | { status: "success"; data: CreateSubscriptionResult; error: null }
+  | { status: "success"; data: SubscriptionResponse; error: null }
   | { status: "error"; data: null; error: string };
 
 export interface CreateSubscriptionInput {
   planId: number;
   billingCycle: BillingCycleType;
   currency: CurrencyCode;
-  ownerId?: string;
 }
 
-const DEFAULT_OWNER_ID = "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11";
-
 /**
- * Server Action executing plan selection action without triggering external API calls.
+ * Server action to initiate plan subscription creation calling the backend API.
  */
 export async function createSubscriptionAction(
   input: CreateSubscriptionInput
 ): Promise<CreateSubscriptionActionResult> {
   try {
-    const ownerId = input.ownerId ?? DEFAULT_OWNER_ID;
+    const cookieStore = await cookies();
+    const accessToken = cookieStore.get(iamSessionCookies.accessToken)?.value;
 
-    const commandService = new CreateSubscriptionCommandService();
-    const result = commandService.handle({
-      ownerId,
+    if (!accessToken) {
+      return {
+        status: "error",
+        data: null,
+        error: "Debes iniciar sesión para seleccionar un plan de suscripción.",
+      };
+    }
+
+    const gateway = new BillingApiGateway();
+    const result = await gateway.createSubscription(accessToken, {
+      ownerId: "",
       planId: input.planId,
       billingCycle: input.billingCycle,
       currency: input.currency,
@@ -39,7 +47,7 @@ export async function createSubscriptionAction(
     return {
       status: "error",
       data: null,
-      error: error instanceof Error ? error.message : "Failed to process plan selection",
+      error: error instanceof Error ? error.message : "Error al procesar la selección del plan",
     };
   }
 }
