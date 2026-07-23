@@ -63,8 +63,8 @@ export function Sidebar() {
       </Card>
 
       <nav aria-label="Módulos" className="mt-5">
-        <p className="mb-2 px-2 text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
-          Módulos
+        <p className="mb-2 px-2 text-xs font-semibold text-foreground">
+          Workspace
         </p>
         <ul className="space-y-1">
           {navigation.map(({ label, href, icon: Icon }) => {
