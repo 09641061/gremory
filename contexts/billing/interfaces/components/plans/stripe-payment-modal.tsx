@@ -62,7 +62,7 @@ function CheckoutForm({
       if (result.error) {
         setErrorMessage(
           result.error.message ??
-            "No se pudo procesar el pago con la tarjeta ingresada. Verifica los datos e inténtalo de nuevo."
+            "Could not process payment with the provided card. Please verify your details and try again."
         );
         setIsProcessing(false);
       } else if (
@@ -82,7 +82,7 @@ function CheckoutForm({
       }
     } catch {
       setErrorMessage(
-        "Ocurrió un inconveniente al procesar la transacción. Por favor intenta nuevamente."
+        "An issue occurred while processing the transaction. Please try again."
       );
       setIsProcessing(false);
     }
@@ -94,9 +94,9 @@ function CheckoutForm({
         <div className="mx-auto size-14 rounded-full bg-primary/10 text-primary flex items-center justify-center">
           <CheckCircle2 className="size-8" />
         </div>
-        <h3 className="text-xl font-bold text-foreground">¡Pago Confirmado!</h3>
+        <h3 className="text-xl font-bold text-foreground">Payment Confirmed!</h3>
         <p className="text-sm text-muted-foreground">
-          Tu suscripción ha sido procesada exitosamente. Redirigiendo al panel de control...
+          Your subscription has been processed successfully. Redirecting to dashboard...
         </p>
       </div>
     );
@@ -106,7 +106,7 @@ function CheckoutForm({
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="p-4 rounded-xl bg-white border border-slate-200 shadow-xs">
         <label className="block text-xs font-semibold text-slate-700 mb-2">
-          Detalles de Tarjeta
+          Card Details
         </label>
 
         <CardElement
@@ -143,7 +143,7 @@ function CheckoutForm({
           disabled={isProcessing}
           className="flex-1 py-3 px-4 rounded-xl border border-border text-foreground hover:bg-muted font-medium text-sm transition-colors cursor-pointer disabled:opacity-50"
         >
-          Cancelar
+          Cancel
         </button>
         <button
           type="submit"
@@ -153,12 +153,12 @@ function CheckoutForm({
           {isProcessing ? (
             <>
               <Loader2 className="size-4 animate-spin" />
-              <span>Procesando...</span>
+              <span>Processing...</span>
             </>
           ) : (
             <>
               <Lock className="size-4" />
-              <span>Pagar {amountFormatted ? amountFormatted : ""}</span>
+              <span>Pay {amountFormatted ? amountFormatted : ""}</span>
             </>
           )}
         </button>
@@ -181,7 +181,7 @@ export function StripePaymentModal({
   onClose,
   clientSecret,
   stripePublicKey,
-  planName = "Suscripción",
+  planName = "Subscription",
   amountFormatted,
 }: StripePaymentModalProps) {
   if (!isOpen) return null;
@@ -194,9 +194,9 @@ export function StripePaymentModal({
         {/* Header */}
         <div className="flex items-center justify-between pb-6 border-b border-border mb-6">
           <div>
-            <h3 className="text-xl font-bold text-foreground">Completar Suscripción</h3>
+            <h3 className="text-xl font-bold text-foreground">Complete Subscription</h3>
             <p className="text-xs text-muted-foreground mt-0.5">
-              Plan seleccionado: <span className="font-semibold text-foreground">{planName}</span>
+              Selected plan: <span className="font-semibold text-foreground">{planName}</span>
             </p>
           </div>
           <button
@@ -215,14 +215,14 @@ export function StripePaymentModal({
               <AlertCircle className="size-6" />
             </div>
             <p className="text-sm font-medium text-foreground">
-              No se pudieron obtener las credenciales de pago. Por favor, intenta de nuevo o ponte en contacto con soporte.
+              Could not retrieve payment credentials. Please try again or contact support.
             </p>
             <button
               type="button"
               onClick={onClose}
               className="mt-4 px-6 py-2.5 rounded-xl bg-secondary/20 hover:bg-secondary/30 text-foreground font-medium text-sm transition-colors cursor-pointer"
             >
-              Cerrar
+              Close
             </button>
           </div>
         ) : (
@@ -240,7 +240,6 @@ export function StripePaymentModal({
               },
             }}
           >
-
             <CheckoutForm
               onClose={onClose}
               clientSecret={clientSecret!}

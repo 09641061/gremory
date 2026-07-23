@@ -30,7 +30,7 @@ export async function createSubscriptionAction(
       return {
         status: "error",
         data: null,
-        error: "Debes iniciar sesión para seleccionar un plan de suscripción.",
+        error: "You must be signed in to select a subscription plan.",
       };
     }
 
@@ -47,7 +47,8 @@ export async function createSubscriptionAction(
     return {
       status: "error",
       data: null,
-      error: error instanceof Error ? error.message : "Error al procesar la selección del plan",
+      error: error instanceof Error ? error.message : "An error occurred while processing the plan selection.",
     };
   }
+
 }
