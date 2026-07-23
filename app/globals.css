@@ -9,8 +9,12 @@
   --card-foreground: oklch(0.2084 0.0417 266.3592);
   --primary: oklch(0.7031 0.1568 159.1518);
   --primary-foreground: oklch(0.9851 0 0);
+  --secondary: oklch(0.9683 0.0069 247.8956);
+  --secondary-foreground: oklch(0.2084 0.0417 266.3592);
   --muted: oklch(0.9683 0.0069 247.8956);
   --muted-foreground: oklch(0.5542 0.046 257.5261);
+  --destructive: oklch(0.5771 0.2152 27.325);
+  --destructive-foreground: oklch(0.9851 0 0);
   --accent: oklch(0.9443 0.0553 152.3679);
   --accent-foreground: oklch(0.4126 0.1089 151.8574);
   --border: oklch(0.9288 0.0126 255.5078);
@@ -26,8 +30,12 @@
   --card-foreground: oklch(0.9851 0 0);
   --primary: oklch(0.7031 0.1568 159.1518);
   --primary-foreground: oklch(0.9851 0 0);
+  --secondary: oklch(0.2686 0 0);
+  --secondary-foreground: oklch(0.9851 0 0);
   --muted: oklch(0.2686 0 0);
   --muted-foreground: oklch(0.709 0 0);
+  --destructive: oklch(0.704 0.191 22.216);
+  --destructive-foreground: oklch(0.9851 0 0);
   --accent: oklch(0.3245 0.0547 152.393);
   --accent-foreground: oklch(0.7031 0.1568 159.1518);
   --border: oklch(0.2768 0 0);
@@ -42,8 +50,12 @@
   --color-card-foreground: var(--card-foreground);
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
   --color-border: var(--border);
@@ -64,5 +76,20 @@
   body {
     margin: 0;
     @apply bg-background text-foreground font-sans;
+  }
+}
+
+@layer components {
+  .page-title {
+    font-size: 27px;
+    line-height: 1.1;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+  }
+
+  .page-description {
+    font-size: 14px;
+    line-height: 1.25rem;
+    color: var(--muted-foreground);
   }
 }

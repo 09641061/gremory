@@ -8,6 +8,8 @@ import { createSubscriptionAction } from "../../actions/create-subscription.acti
 import { StandardIcon } from "../icons/standart";
 import { PremiumIcon } from "../icons/premium";
 import { cn } from "@/lib/utils";
+import { Button } from "@/contexts/shared/interfaces/components/ui/button";
+import { Card } from "@/contexts/shared/interfaces/components/ui/card";
 
 interface PlanCardProps {
   planId: number;
@@ -36,7 +38,6 @@ export function PlanCard({
   currency,
   billingCycle,
   features,
-  isPopular = false,
   buttonLabel,
   onSuccess,
   onError,
@@ -67,10 +68,9 @@ export function PlanCard({
   };
 
   return (
-    <div
+    <Card
       className={cn(
-        "relative rounded-3xl p-8 transition-all duration-300 flex flex-col justify-between bg-card border border-border shadow-sm hover:shadow-md",
-        isPopular && "ring-2 ring-primary/20 border-primary/50"
+        "relative rounded-lg p-7 transition-all duration-300 justify-between border-border shadow-sm hover:shadow-md"
       )}
     >
       <div>
@@ -85,14 +85,14 @@ export function PlanCard({
 
         {/* Plan Title & Short Description */}
         <div className="mb-6">
-          <h2 className="text-2xl font-bold text-foreground tracking-tight">{name}</h2>
+          <h2 className="text-xl font-bold text-foreground tracking-tight">{name}</h2>
           <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed">{description}</p>
         </div>
 
         {/* Price Display */}
         <div className="mb-6">
           <div className="flex items-baseline gap-2">
-            <span className="text-4xl sm:text-5xl font-extrabold text-foreground tracking-tight">
+            <span className="text-3xl sm:text-4xl font-extrabold text-foreground tracking-tight">
               {currencySymbol}{displayPrice.toFixed(0)}
             </span>
             <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
@@ -107,26 +107,28 @@ export function PlanCard({
         </div>
 
         {/* Action Button */}
-        <button
+        <Button
           type="button"
           disabled={isPending}
           onClick={handleSelectPlan}
-          className="w-full py-3 px-6 rounded-xl border border-foreground/30 hover:border-foreground bg-background text-foreground hover:bg-muted font-semibold text-sm transition-all duration-150 active:scale-[0.99] disabled:opacity-50 select-none cursor-pointer flex items-center justify-center gap-2 shadow-xs"
+          variant="outline"
+          size="lg"
+          className="w-full rounded-md border-border bg-background px-4 text-sm font-semibold text-foreground hover:bg-muted transition-all duration-150 active:scale-[0.99] shadow-xs"
         >
           {isPending ? (
             <Loader2 className="size-4 animate-spin" />
           ) : (
             <span>{defaultButtonText}</span>
           )}
-        </button>
+        </Button>
 
         {/* Divider */}
         <div className="border-t border-border my-6" />
 
         {/* Features Header */}
         <div className="mb-4">
-          <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-            {planId === 2 ? "EVERYTHING IN FERVIENTE" : "INCLUDES"}
+          <span className="text-sm font-medium text-muted-foreground">
+            Includes
           </span>
         </div>
 
@@ -134,18 +136,12 @@ export function PlanCard({
         <ul className="space-y-3 mb-2">
           {features.map((feature, idx) => (
             <li key={idx} className="flex items-start gap-3 text-sm text-foreground">
-              {planId === 2 ? (
-                <div className="size-5 rounded-full bg-emerald-100 dark:bg-emerald-950/80 text-emerald-600 flex items-center justify-center shrink-0 mt-0.5">
-                  <Check className="size-3.5 stroke-[3]" />
-                </div>
-              ) : (
-                <Check className="size-4 text-foreground/80 shrink-0 mt-0.5 stroke-[2.5]" />
-              )}
+              <Check className="size-4 text-foreground/80 shrink-0 mt-0.5 stroke-[2.5]" />
               <span className="leading-snug">{feature}</span>
             </li>
           ))}
         </ul>
       </div>
-    </div>
+    </Card>
   );
 }

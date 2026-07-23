@@ -64,10 +64,11 @@ export function SubscribeView() {
       <div className="absolute top-6 left-6 sm:left-8 z-20">
         <Link
           href="/login"
-          className="inline-flex items-center gap-2 text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors cursor-pointer group"
+          aria-label="Back to Sign In"
+          title="Back to Sign In"
+          className="inline-flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors cursor-pointer group"
         >
           <ArrowLeft className="size-4 transition-transform group-hover:-translate-x-1" />
-          <span>Back to Sign In</span>
         </Link>
       </div>
 
@@ -75,7 +76,7 @@ export function SubscribeView() {
       {feedbackMessage && (
         <ErrorAlert
           key={feedbackMessage.id}
-          title={feedbackMessage.type === "error" ? "Acceso Requerido" : "Notificación"}
+          title={feedbackMessage.type === "error" ? "Sign-in Required" : "Notification"}
           message={feedbackMessage.text}
         />
       )}

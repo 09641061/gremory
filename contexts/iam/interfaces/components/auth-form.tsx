@@ -54,10 +54,10 @@ export function AuthForm() {
       <main className="flex min-h-screen items-center justify-center bg-background px-4 py-6 text-foreground">
         <section className="w-full max-w-[416px] text-center">
         <header className="mb-5">
-          <h1 className="text-[27px] font-bold leading-tight tracking-[-0.03em]">
+          <h1 className="page-title">
             Continue to Takodu
           </h1>
-          <p className="mt-2 text-[14px] leading-5 text-muted-foreground">
+          <p className="page-description mt-2">
             Sign in or create your account with Google or email.
           </p>
         </header>

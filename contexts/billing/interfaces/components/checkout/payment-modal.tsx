@@ -7,6 +7,8 @@ import { X } from "lucide-react";
 import { CheckoutForm } from "./checkout-form";
 import { PaymentSuccessView } from "./payment-success-view";
 import { PaymentErrorView } from "./payment-error-view";
+import { Button } from "@/contexts/shared/interfaces/components/ui/button";
+import { Card } from "@/contexts/shared/interfaces/components/ui/card";
 
 interface PaymentModalProps {
   isOpen: boolean;
@@ -42,22 +44,30 @@ export function PaymentModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-md animate-in fade-in duration-200">
-      <div className="relative w-full max-w-lg bg-card border border-border rounded-3xl shadow-2xl p-6 sm:p-8 overflow-hidden">
+      <Card
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="payment-modal-title"
+        className="relative w-full max-w-lg rounded-lg border-border p-7 shadow-xl"
+      >
         {/* Header */}
         <div className="flex items-center justify-between pb-6 border-b border-border mb-6">
           <div>
-            <h3 className="text-xl font-bold text-foreground">Complete Subscription</h3>
+            <h3 id="payment-modal-title" className="text-xl font-bold text-foreground">Complete Subscription</h3>
             <p className="text-xs text-muted-foreground mt-0.5">
               Selected plan: <span className="font-semibold text-foreground">{planName}</span>
             </p>
           </div>
-          <button
+          <Button
             type="button"
             onClick={onClose}
-            className="p-2 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
+            variant="ghost"
+            size="icon"
+            aria-label="Close payment modal"
+            className="rounded-full text-muted-foreground hover:text-foreground"
           >
             <X className="size-5" />
-          </button>
+          </Button>
         </div>
 
         {/* Content */}
@@ -88,7 +98,7 @@ export function PaymentModal({
             />
           </Elements>
         )}
-      </div>
+      </Card>
     </div>
   );
 }
