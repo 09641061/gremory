@@ -16,7 +16,7 @@ import { buttonVariants } from "@/contexts/shared/interfaces/components/ui/butto
 import { cn } from "@/lib/utils";
 
 const navigation = [
-  { label: "Chat", href: "/chat", icon: MessageCircle },
+  { label: "New Chat", href: "/chat", icon: MessageCircle },
   { label: "Schedule", href: "/schedule", icon: CalendarDays },
   { label: "CRM", href: "/crm", icon: ContactRound },
   { label: "Catalog", href: "/catalog", icon: Package },
@@ -30,9 +30,6 @@ export function Sidebar() {
   return (
     <aside className="fixed bottom-0 left-0 top-14 z-20 hidden w-60 shrink-0 border-r border-border/60 bg-background px-3 py-3 md:flex md:flex-col">
       <nav aria-label="Módulos" className="mt-2">
-        <p className="mb-2 px-2 text-xs font-semibold text-foreground">
-          Workspace
-        </p>
         <ul className="space-y-1">
           {navigation.map(({ label, href, icon: Icon }) => {
             const active = pathname === href || pathname.startsWith(`${href}/`);

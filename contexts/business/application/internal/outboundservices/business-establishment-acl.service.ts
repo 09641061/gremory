@@ -1,30 +1,27 @@
 import "server-only";
 
-import { createOrganizationQueryService } from "../commandservices/organization-command.service";
-import { createEstablishmentQueryService } from "../commandservices/establishment-command.service";
+import { createOrganizationQueryService } from "../queryservices/organization-query.service";
+import { createEstablishmentQueryService } from "../queryservices/establishment-query.service";
 
+/**
+ * Consumer-facing ACL used by other contexts that only need an establishment id.
+ * It deliberately exposes a primitive and never leaks Business entities.
+ */
 export class BusinessEstablishmentAclService {
   async getActiveEstablishmentIdForUser(token?: string): Promise<string | null> {
     try {
-      const orgQueryService = createOrganizationQueryService();
-      const org = await orgQueryService.getMyOrganization(token);
-
-      const establishmentQueryService = createEstablishmentQueryService();
-      const establishmentsPage = await establishmentQueryService.getByOrganization(
-        org.props.id.value,
-        0,
-        1,
+      const organization = await createOrganizationQueryService().getMyOrganization({}, token);
+      const establishments = await createEstablishmentQueryService().getByOrganization(
+        { organizationId: organization.props.id.value, page: 0, size: 1 },
         token
       );
-
-      const activeEst = establishmentsPage.content.find((e) => e.props.active) ?? establishmentsPage.content[0];
-      return activeEst ? activeEst.props.id.value : null;
+      return establishments.content[0]?.props.id.value ?? null;
     } catch {
       return null;
     }
   }
 }
 
-export function createBusinessEstablishmentAclService() {
+export function createBusinessEstablishmentAclService(): BusinessEstablishmentAclService {
   return new BusinessEstablishmentAclService();
 }

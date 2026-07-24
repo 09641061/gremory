@@ -14,8 +14,8 @@ export default function AppLayout({
 }) {
   return (
     <div className="min-h-screen bg-background text-foreground flex">
-      <Sidebar />
       <Header />
+      <Sidebar />
       <main className="flex-1 p-6 pt-16 lg:ml-60">{children}</main>
     </div>
   );

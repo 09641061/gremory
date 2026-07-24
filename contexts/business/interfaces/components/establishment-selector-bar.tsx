@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Building2Icon, StoreIcon, ChevronDownIcon } from "lucide-react";
+import { Building2Icon, ChevronDownIcon, StoreIcon } from "lucide-react";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 
 export type EstablishmentOption = {
@@ -29,17 +29,19 @@ export function EstablishmentSelectorBar({
   const [isOpen, setIsOpen] = useState(false);
 
   const activeEstablishment = organizations
-    .flatMap((org) => org.establishments)
-    .find((est) => est.id === selectedEstablishmentId);
+    .flatMap((organization) => organization.establishments)
+    .find((establishment) => establishment.id === selectedEstablishmentId);
 
-  const activeOrg = organizations.find((org) =>
-    org.establishments.some((est) => est.id === selectedEstablishmentId)
+  const activeOrganization = organizations.find((organization) =>
+    organization.establishments.some(
+      (establishment) => establishment.id === selectedEstablishmentId,
+    ),
   );
 
   return (
-    <div className="relative z-30 bg-muted/60 border-b border-border px-4 py-2 flex items-center justify-between text-xs">
+    <div className="relative z-30 flex items-center justify-between border-b border-border bg-muted/60 px-4 py-2 text-xs">
       <div className="flex items-center gap-2 text-muted-foreground">
-        <span className="bg-amber-500/10 text-amber-600 font-semibold px-2 py-0.5 rounded border border-amber-500/20">
+        <span className="rounded border border-amber-500/20 bg-amber-500/10 px-2 py-0.5 font-semibold text-amber-600">
           TEMP UI
         </span>
         <span>Active Scope:</span>
@@ -49,51 +51,52 @@ export function EstablishmentSelectorBar({
         <Button
           variant="outline"
           size="sm"
-          onClick={() => setIsOpen(!isOpen)}
-          className="h-8 gap-2 border-border bg-card text-foreground hover:bg-muted font-normal text-xs"
+          onClick={() => setIsOpen((open) => !open)}
+          className="h-8 gap-2 border-border bg-card text-xs font-normal text-foreground hover:bg-muted"
         >
           <Building2Icon className="size-3.5 text-[#00b77a]" />
-          <span className="font-semibold">{activeOrg?.name ?? "No Organization"}</span>
+          <span className="font-semibold">{activeOrganization?.name ?? "No Organization"}</span>
           <span className="text-muted-foreground">/</span>
           <StoreIcon className="size-3.5 text-sky-600" />
           <span>{activeEstablishment?.name ?? "Select Establishment"}</span>
-          <ChevronDownIcon className="size-3.5 text-muted-foreground ml-1" />
+          <ChevronDownIcon className="ml-1 size-3.5 text-muted-foreground" />
         </Button>
 
         {isOpen && (
-          <div className="absolute right-0 top-full mt-1 w-64 bg-card border border-border rounded-lg shadow-lg p-2 space-y-2 max-h-60 overflow-y-auto">
+          <div className="absolute right-0 top-full z-40 mt-1 max-h-60 w-64 space-y-2 overflow-y-auto rounded-lg border border-border bg-card p-2 shadow-lg">
             {organizations.length === 0 ? (
-              <div className="p-2 text-center text-muted-foreground text-xs">
+              <div className="p-2 text-center text-xs text-muted-foreground">
                 No organizations found for this user.
               </div>
             ) : (
-              organizations.map((org) => (
-                <div key={org.id} className="space-y-1">
-                  <div className="px-2 py-1 font-semibold text-muted-foreground text-[11px] uppercase tracking-wider flex items-center gap-1.5">
+              organizations.map((organization) => (
+                <div key={organization.id} className="space-y-1">
+                  <div className="flex items-center gap-1.5 px-2 py-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                     <Building2Icon className="size-3 text-[#00b77a]" />
-                    <span>{org.name}</span>
+                    <span>{organization.name}</span>
                   </div>
-                  {org.establishments.length === 0 ? (
-                    <div className="pl-4 text-xs text-muted-foreground italic">
+                  {organization.establishments.length === 0 ? (
+                    <div className="pl-4 text-xs italic text-muted-foreground">
                       No establishments
                     </div>
                   ) : (
-                    org.establishments.map((est) => (
+                    organization.establishments.map((establishment) => (
                       <button
-                        key={est.id}
+                        key={establishment.id}
+                        type="button"
                         onClick={() => {
-                          onSelectEstablishment(est.id);
+                          onSelectEstablishment(establishment.id);
                           setIsOpen(false);
                         }}
-                        className={`w-full text-left pl-6 pr-3 py-1.5 rounded text-xs flex items-center justify-between transition-colors ${
-                          selectedEstablishmentId === est.id
-                            ? "bg-[#00b77a] text-white font-medium"
+                        className={`flex w-full items-center justify-between rounded py-1.5 pl-6 pr-3 text-left text-xs transition-colors ${
+                          selectedEstablishmentId === establishment.id
+                            ? "bg-[#00b77a] font-medium text-white"
                             : "text-foreground hover:bg-muted"
                         }`}
                       >
-                        <span className="truncate">{est.name}</span>
-                        {selectedEstablishmentId === est.id && (
-                          <span className="text-[10px] uppercase font-bold">Active</span>
+                        <span className="truncate">{establishment.name}</span>
+                        {selectedEstablishmentId === establishment.id && (
+                          <span className="text-[10px] font-bold uppercase">Active</span>
                         )}
                       </button>
                     ))

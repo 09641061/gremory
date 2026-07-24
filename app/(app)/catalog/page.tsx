@@ -33,10 +33,10 @@ export default async function CatalogPage({ searchParams }: CatalogPageProps) {
     organizations = [
       {
         id: myOrg.props.id.value,
-        name: myOrg.props.name,
+        name: myOrg.props.name.value,
         establishments: estPage.content.map((e) => ({
           id: e.props.id.value,
-          name: e.props.name,
+          name: e.props.name.value,
         })),
       },
     ];
