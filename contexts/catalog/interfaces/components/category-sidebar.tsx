@@ -1,7 +1,16 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
-import { PlusIcon, FolderIcon } from "lucide-react";
+import {
+  PlusIcon,
+  FolderIcon,
+  FolderXIcon,
+  MenuIcon,
+  XIcon,
+  GripVerticalIcon,
+  PencilIcon,
+} from "lucide-react";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 
 export type CategoryDTO = {
@@ -23,6 +32,8 @@ interface CategorySidebarProps {
   onSelectService: (id: string) => void;
   onSelectCategory: (id?: string) => void;
   onOpenCreateCategoryModal: () => void;
+  onOpenEditCategoryModal: (category: CategoryDTO) => void;
+  onMoveServiceCategory?: (serviceId: string, newCategoryId: string) => void;
 }
 
 export function CategorySidebar({
@@ -33,18 +44,60 @@ export function CategorySidebar({
   onSelectService,
   onSelectCategory,
   onOpenCreateCategoryModal,
+  onOpenEditCategoryModal,
+  onMoveServiceCategory,
 }: CategorySidebarProps) {
-  return (
-    <aside className="w-[260px] bg-card border-r border-border flex flex-col shrink-0 h-full">
+  const [draggedServiceId, setDraggedServiceId] = useState<string | null>(null);
+  const [dragOverCategoryId, setDragOverCategoryId] = useState<string | null>(null);
+  const [isMobileOpen, setIsMobileOpen] = useState(false);
+
+  const handleDragStart = (e: React.DragEvent, serviceId: string) => {
+    e.dataTransfer.setData("text/plain", serviceId);
+    setDraggedServiceId(serviceId);
+  };
+
+  const handleDragOver = (e: React.DragEvent, categoryId: string) => {
+    e.preventDefault();
+    setDragOverCategoryId(categoryId);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragOverCategoryId(null);
+  };
+
+  const handleDrop = (e: React.DragEvent, categoryId: string) => {
+    e.preventDefault();
+    const serviceId = e.dataTransfer.getData("text/plain") || draggedServiceId;
+    if (serviceId && onMoveServiceCategory) {
+      onMoveServiceCategory(serviceId, categoryId);
+    }
+    setDraggedServiceId(null);
+    setDragOverCategoryId(null);
+  };
+
+  const sidebarContent = (
+    <aside className="w-full md:w-[260px] bg-card border-r border-border flex flex-col shrink-0 h-full">
       <div className="p-4 flex flex-col gap-4 border-b border-border">
         <div className="flex items-center justify-between">
           <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
             Categories
           </span>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setIsMobileOpen(false)}
+            className="md:hidden h-8 w-8 text-muted-foreground"
+          >
+            <XIcon className="size-4" />
+          </Button>
         </div>
 
         <Button
-          onClick={onOpenCreateCategoryModal}
+          onClick={() => {
+            setIsMobileOpen(false);
+            onOpenCreateCategoryModal();
+          }}
           className="w-full bg-[#00b77a] hover:bg-[#00b77a]/90 text-white font-medium gap-2"
         >
           <PlusIcon className="size-4" />
@@ -53,77 +106,137 @@ export function CategorySidebar({
       </div>
 
       <nav className="flex-1 overflow-y-auto p-2 space-y-1">
-        <button
-          onClick={() => onSelectCategory(undefined)}
-          className={`w-full flex items-center gap-3 px-3 py-2 text-sm rounded-md transition-colors ${
-            !selectedCategoryId
-              ? "bg-primary/10 text-primary font-semibold"
-              : "text-foreground hover:bg-muted"
-          }`}
-        >
-          <FolderIcon className="size-4 text-muted-foreground" />
-          <span>All Services</span>
-        </button>
+        {categories.length === 0 ? (
+          <div className="p-6 text-center text-muted-foreground flex flex-col items-center justify-center space-y-2">
+            <FolderXIcon className="size-8 opacity-40 text-muted-foreground" />
+            <p className="text-xs font-medium">No categories available</p>
+          </div>
+        ) : (
+          categories.map((cat) => {
+            const isCatSelected = selectedCategoryId === cat.id;
+            const catServices = services.filter((s) => s.categoryId === cat.id);
+            const isTarget = dragOverCategoryId === cat.id;
 
-        {categories.map((cat) => {
-          const isCatSelected = selectedCategoryId === cat.id;
-          const catServices = services.filter((s) => s.categoryId === cat.id);
-
-          return (
-            <div key={cat.id} className="space-y-1">
+            return (
               <div
-                className={`w-full flex items-center justify-between px-3 py-2 text-sm rounded-md transition-colors ${
-                  isCatSelected
-                    ? "bg-primary/10 text-primary font-semibold"
-                    : "text-foreground hover:bg-muted"
+                key={cat.id}
+                onDragOver={(e) => handleDragOver(e, cat.id)}
+                onDragLeave={handleDragLeave}
+                onDrop={(e) => handleDrop(e, cat.id)}
+                className={`space-y-1 rounded-md transition-all ${
+                  isTarget ? "ring-2 ring-[#00b77a] bg-[#00b77a]/10" : ""
                 }`}
               >
-                <button
-                  onClick={() => onSelectCategory(cat.id)}
-                  className="flex items-center gap-3 truncate flex-1 text-left"
+                <div
+                  className={`w-full flex items-center justify-between px-3 py-2 text-sm rounded-md transition-colors group/row ${
+                    isCatSelected
+                      ? "bg-primary/10 text-primary font-semibold"
+                      : "text-foreground hover:bg-muted"
+                  }`}
                 >
-                  <FolderIcon className="size-4 text-muted-foreground shrink-0" />
-                  <span className="truncate">{cat.name}</span>
-                </button>
+                  <button
+                    onClick={() => {
+                      onSelectCategory(cat.id);
+                    }}
+                    className="flex items-center gap-3 truncate flex-1 text-left"
+                  >
+                    <FolderIcon className="size-4 text-muted-foreground shrink-0" />
+                    <span className="truncate">{cat.name}</span>
+                  </button>
 
-                <div className="flex items-center gap-1.5 shrink-0">
-                  <span className="text-xs text-muted-foreground">
-                    {catServices.length}
-                  </span>
-                  <Link href={`/catalog/new?categoryId=${cat.id}`} passHref>
+                  <div className="flex items-center gap-1 shrink-0">
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-6 w-6 text-primary hover:bg-primary/20"
-                      title="New Service"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onOpenEditCategoryModal(cat);
+                      }}
+                      className="h-6 w-6 text-muted-foreground opacity-0 group-hover/row:opacity-100 hover:text-foreground transition-opacity"
+                      title="Edit Category Name"
                     >
-                      <PlusIcon className="size-3.5" />
+                      <PencilIcon className="size-3" />
                     </Button>
-                  </Link>
-                </div>
-              </div>
 
-              {isCatSelected && (
-                <div className="pl-6 space-y-1">
-                  {catServices.map((svc) => (
-                    <button
-                      key={svc.id}
-                      onClick={() => onSelectService(svc.id)}
-                      className={`w-full text-left px-3 py-1.5 text-xs rounded-md transition-colors ${
-                        selectedServiceId === svc.id
-                          ? "bg-[#00b77a] text-white font-medium"
-                          : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                      }`}
-                    >
-                      {svc.name}
-                    </button>
-                  ))}
+                    <span className="text-xs text-muted-foreground">
+                      {catServices.length}
+                    </span>
+                    <Link href={`/catalog/new?categoryId=${cat.id}`} passHref>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setIsMobileOpen(false)}
+                        className="h-6 w-6 text-primary hover:bg-primary/20"
+                        title="New Service"
+                      >
+                        <PlusIcon className="size-3.5" />
+                      </Button>
+                    </Link>
+                  </div>
                 </div>
-              )}
-            </div>
-          );
-        })}
+
+                {isCatSelected && (
+                  <div className="pl-6 space-y-1">
+                    {catServices.map((svc) => (
+                      <div
+                        key={svc.id}
+                        draggable
+                        onDragStart={(e) => handleDragStart(e, svc.id)}
+                        className="group flex items-center gap-1 cursor-grab active:cursor-grabbing"
+                      >
+                        <GripVerticalIcon className="size-3 text-muted-foreground/40 group-hover:text-[#00b77a] transition-colors shrink-0" />
+                        <button
+                          onClick={() => {
+                            onSelectService(svc.id);
+                            setIsMobileOpen(false);
+                          }}
+                          className={`w-full text-left px-2 py-1.5 text-xs rounded-md transition-colors truncate ${
+                            selectedServiceId === svc.id
+                              ? "bg-[#00b77a] text-white font-medium"
+                              : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                          }`}
+                        >
+                          {svc.name}
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })
+        )}
       </nav>
     </aside>
+  );
+
+  return (
+    <>
+      {/* Mobile Toggle Button */}
+      <div className="md:hidden p-3 bg-card border-b border-border flex items-center justify-between">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setIsMobileOpen(true)}
+          className="gap-2 text-xs"
+        >
+          <MenuIcon className="size-4" />
+          <span>Categories ({categories.length})</span>
+        </Button>
+      </div>
+
+      {/* Desktop Sidebar */}
+      <div className="hidden md:block h-full">{sidebarContent}</div>
+
+      {/* Mobile Drawer Overlay */}
+      {isMobileOpen && (
+        <div className="fixed inset-0 z-50 flex md:hidden bg-black/50 backdrop-blur-sm">
+          <div className="w-[280px] h-full bg-card shadow-xl animate-in slide-in-from-left">
+            {sidebarContent}
+          </div>
+          <div className="flex-1" onClick={() => setIsMobileOpen(false)} />
+        </div>
+      )}
+    </>
   );
 }

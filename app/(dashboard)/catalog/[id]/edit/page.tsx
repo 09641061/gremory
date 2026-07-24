@@ -1,4 +1,7 @@
+import { createBusinessEstablishmentAclService } from "@/contexts/business/application/internal/outboundservices/business-establishment-acl.service";
+import { createCatalogServiceQueryService } from "@/contexts/catalog/application/internal/commandservices/catalog-service-command.service";
 import { EditServiceForm } from "@/contexts/catalog/interfaces/components/edit-service-form";
+import type { DetailedServiceDTO } from "@/contexts/catalog/interfaces/components/service-detail-view";
 
 export const revalidate = 0;
 
@@ -9,23 +12,40 @@ interface EditCatalogServicePageProps {
 export default async function EditCatalogServicePage({ params }: EditCatalogServicePageProps) {
   const { id } = await params;
 
-  const mockCategories = [
-    { id: "c9d8e7f6-5a4b-3c2d-1e0f-9a8b7c6d5e4f", name: "Barbería & Capilar" },
-    { id: "c1d2e3f4-5a6b-7c8d-9e0f-1a2b3c4d5e6f", name: "Tratamientos Faciales" },
-  ];
+  const aclService = createBusinessEstablishmentAclService();
+  const establishmentId = await aclService.getActiveEstablishmentIdForUser();
 
-  const mockService = {
-    id,
-    name: "Corte de Cabello Ejecutivo",
-    description: "Incluye lavado, asesoría de imagen y peinado con cera mate.",
-    price: 45.0,
-    durationMinutes: 30,
-    preparationMinutes: 5,
-    cleanupMinutes: 5,
-    preServiceInstructions: "Llegar 5 minutos antes.",
-    postServiceRecommendations: "Usar champú libre de sulfatos.",
-    status: "ACTIVE" as const,
-  };
+  let service: DetailedServiceDTO | null = null;
 
-  return <EditServiceForm service={mockService} categories={mockCategories} />;
+  if (establishmentId) {
+    try {
+      const serviceQueryService = createCatalogServiceQueryService();
+      const catalogService = await serviceQueryService.getById(id, establishmentId);
+      service = {
+        id: catalogService.props.id.value,
+        name: catalogService.props.name,
+        description: catalogService.props.description,
+        price: catalogService.props.price.amount,
+        durationMinutes: catalogService.props.durationMinutes,
+        preparationMinutes: catalogService.props.preparationMinutes,
+        cleanupMinutes: catalogService.props.cleanupMinutes,
+        categoryId: catalogService.props.categoryId,
+        preServiceInstructions: catalogService.props.preServiceInstructions,
+        postServiceRecommendations: catalogService.props.postServiceRecommendations,
+        status: catalogService.props.status,
+      };
+    } catch {
+      service = null;
+    }
+  }
+
+  if (!service) {
+    return (
+      <div className="flex items-center justify-center min-h-screen text-muted-foreground">
+        Service not found or failed to load.
+      </div>
+    );
+  }
+
+  return <EditServiceForm service={service} />;
 }

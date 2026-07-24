@@ -1,5 +1,7 @@
 import "server-only";
 
+import { cookies } from "next/headers";
+import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-session-cookie";
 import { CatalogService } from "../../domain/model/entities/catalog-service.entity";
 import { createCatalogServiceId } from "../../domain/model/valueobjects/catalog-service-id.vo";
 import { createPrice } from "../../domain/model/valueobjects/price.vo";
@@ -50,6 +52,16 @@ function mapServiceToEntity(raw: RawCatalogService): CatalogService {
   });
 }
 
+async function resolveAccessToken(providedToken?: string): Promise<string | undefined> {
+  if (providedToken) return providedToken;
+  try {
+    const cookieStore = await cookies();
+    return cookieStore.get(iamSessionCookies.accessToken)?.value;
+  } catch {
+    return undefined;
+  }
+}
+
 export class CatalogServiceApiGateway
   implements CatalogServiceCommandService, CatalogServiceQueryService
 {
@@ -57,6 +69,7 @@ export class CatalogServiceApiGateway
     params: CatalogServiceSearchParams,
     token?: string
   ): Promise<PageResponse<CatalogService>> {
+    const authToken = await resolveAccessToken(token);
     const query = new URLSearchParams();
     query.append("establishmentId", params.establishmentId);
     if (params.categoryId) query.append("categoryId", params.categoryId);
@@ -70,7 +83,7 @@ export class CatalogServiceApiGateway
     query.append("size", String(params.size ?? 20));
 
     const headers: HeadersInit = {};
-    if (token) headers.Authorization = `Bearer ${token}`;
+    if (authToken) headers.Authorization = `Bearer ${authToken}`;
 
     const res = await fetch(`${apiBaseUrl}/api/catalog/services?${query.toString()}`, {
       headers,
@@ -87,8 +100,9 @@ export class CatalogServiceApiGateway
   }
 
   async getById(id: string, establishmentId: string, token?: string): Promise<CatalogService> {
+    const authToken = await resolveAccessToken(token);
     const headers: HeadersInit = {};
-    if (token) headers.Authorization = `Bearer ${token}`;
+    if (authToken) headers.Authorization = `Bearer ${authToken}`;
 
     const res = await fetch(
       `${apiBaseUrl}/api/catalog/services/${id}?establishmentId=${establishmentId}`,
@@ -100,8 +114,9 @@ export class CatalogServiceApiGateway
   }
 
   async create(command: CreateCatalogServiceCommand, token?: string): Promise<CatalogService> {
+    const authToken = await resolveAccessToken(token);
     const headers: HeadersInit = { "Content-Type": "application/json" };
-    if (token) headers.Authorization = `Bearer ${token}`;
+    if (authToken) headers.Authorization = `Bearer ${authToken}`;
 
     const res = await fetch(`${apiBaseUrl}/api/catalog/services`, {
       method: "POST",
@@ -119,8 +134,9 @@ export class CatalogServiceApiGateway
   }
 
   async update(command: UpdateCatalogServiceCommand, token?: string): Promise<CatalogService> {
+    const authToken = await resolveAccessToken(token);
     const headers: HeadersInit = { "Content-Type": "application/json" };
-    if (token) headers.Authorization = `Bearer ${token}`;
+    if (authToken) headers.Authorization = `Bearer ${authToken}`;
 
     const { id, ...payload } = command;
     const res = await fetch(`${apiBaseUrl}/api/catalog/services/${id}`, {
@@ -139,8 +155,9 @@ export class CatalogServiceApiGateway
   }
 
   async changeStatus(command: ChangeCatalogServiceStatusCommand, token?: string): Promise<void> {
+    const authToken = await resolveAccessToken(token);
     const headers: HeadersInit = {};
-    if (token) headers.Authorization = `Bearer ${token}`;
+    if (authToken) headers.Authorization = `Bearer ${authToken}`;
 
     const res = await fetch(
       `${apiBaseUrl}/api/catalog/services/${command.id}/status?active=${command.active}`,
@@ -151,8 +168,9 @@ export class CatalogServiceApiGateway
   }
 
   async delete(command: DeleteCatalogServiceCommand, token?: string): Promise<void> {
+    const authToken = await resolveAccessToken(token);
     const headers: HeadersInit = {};
-    if (token) headers.Authorization = `Bearer ${token}`;
+    if (authToken) headers.Authorization = `Bearer ${authToken}`;
 
     const res = await fetch(`${apiBaseUrl}/api/catalog/services/${command.id}`, {
       method: "DELETE",

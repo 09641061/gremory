@@ -1,42 +1,87 @@
-import { CatalogLayout } from "@/contexts/catalog/interfaces/components/catalog-layout";
+import { createOrganizationQueryService } from "@/contexts/business/application/internal/commandservices/organization-command.service";
+import { createEstablishmentQueryService } from "@/contexts/business/application/internal/commandservices/establishment-command.service";
+import { createBusinessEstablishmentAclService } from "@/contexts/business/application/internal/outboundservices/business-establishment-acl.service";
+import { createCatalogServiceQueryService } from "@/contexts/catalog/application/internal/commandservices/catalog-service-command.service";
+import { createServiceCategoryQueryService } from "@/contexts/catalog/application/internal/commandservices/service-category-command.service";
+import { CatalogClientWrapper } from "@/contexts/catalog/interfaces/components/catalog-client-wrapper";
 import type { DetailedServiceDTO } from "@/contexts/catalog/interfaces/components/service-detail-view";
 import type { CategoryDTO } from "@/contexts/catalog/interfaces/components/category-sidebar";
+import type { OrganizationOption } from "@/contexts/business/interfaces/components/establishment-selector-bar";
 
 export const revalidate = 0;
 
-export default async function CatalogPage() {
-  // Demo mock data fallback when backend is offline
-  const mockCategories: CategoryDTO[] = [
-    { id: "c9d8e7f6-5a4b-3c2d-1e0f-9a8b7c6d5e4f", name: "Barbería & Capilar" },
-    { id: "c1d2e3f4-5a6b-7c8d-9e0f-1a2b3c4d5e6f", name: "Tratamientos Faciales" },
-  ];
+interface CatalogPageProps {
+  searchParams: Promise<{ establishmentId?: string }>;
+}
 
-  const mockServices: DetailedServiceDTO[] = [
-    {
-      id: "a1b2c3d4-e5f6-7890-abcd-123456789012",
-      name: "Corte de Cabello Ejecutivo",
-      description: "Incluye lavado, asesoría de imagen y peinado con cera mate. Un servicio integral diseñado para el profesional moderno.",
-      price: 45.0,
-      durationMinutes: 30,
-      preparationMinutes: 5,
-      cleanupMinutes: 5,
-      preServiceInstructions: "Llegar 5 minutos antes con el cabello seco.",
-      postServiceRecommendations: "Usar champú libre de sulfatos.",
-      status: "ACTIVE",
-    },
-    {
-      id: "b2c3d4e5-f6a7-8901-bcde-234567890123",
-      name: "Corte Premium & Barba Express",
-      description: "Servicio completo de corte premium con ritual de toalla caliente y perfilado de barba.",
-      price: 65.0,
-      durationMinutes: 45,
-      preparationMinutes: 10,
-      cleanupMinutes: 5,
-      preServiceInstructions: "Avisar sobre alergias a productos cosmeticos.",
-      postServiceRecommendations: "Hidratar piel diariamente.",
-      status: "ACTIVE",
-    },
-  ];
+export default async function CatalogPage({ searchParams }: CatalogPageProps) {
+  const { establishmentId: paramEstId } = await searchParams;
 
-  return <CatalogLayout categories={mockCategories} services={mockServices} />;
+  const aclService = createBusinessEstablishmentAclService();
+  const defaultEstId = await aclService.getActiveEstablishmentIdForUser();
+  const establishmentId = paramEstId ?? defaultEstId ?? undefined;
+
+  // Fetch user organizations and establishments for the temporary selector bar
+  let organizations: OrganizationOption[] = [];
+  try {
+    const orgQueryService = createOrganizationQueryService();
+    const myOrg = await orgQueryService.getMyOrganization();
+    
+    const estQueryService = createEstablishmentQueryService();
+    const estPage = await estQueryService.getByOrganization(myOrg.props.id.value, 0, 50);
+
+    organizations = [
+      {
+        id: myOrg.props.id.value,
+        name: myOrg.props.name,
+        establishments: estPage.content.map((e) => ({
+          id: e.props.id.value,
+          name: e.props.name,
+        })),
+      },
+    ];
+  } catch {
+    organizations = [];
+  }
+
+  let categories: CategoryDTO[] = [];
+  let services: DetailedServiceDTO[] = [];
+
+  if (establishmentId) {
+    try {
+      const categoryQueryService = createServiceCategoryQueryService();
+      const categoriesPage = await categoryQueryService.list(establishmentId, 0, 100);
+      categories = categoriesPage.content.map((c) => ({
+        id: c.props.id.value,
+        name: c.props.name,
+      }));
+
+      const serviceQueryService = createCatalogServiceQueryService();
+      const servicesPage = await serviceQueryService.search({ establishmentId, page: 0, size: 100 });
+      services = servicesPage.content.map((s) => ({
+        id: s.props.id.value,
+        name: s.props.name,
+        description: s.props.description,
+        price: s.props.price.amount,
+        durationMinutes: s.props.durationMinutes,
+        preparationMinutes: s.props.preparationMinutes,
+        cleanupMinutes: s.props.cleanupMinutes,
+        categoryId: s.props.categoryId,
+        preServiceInstructions: s.props.preServiceInstructions,
+        postServiceRecommendations: s.props.postServiceRecommendations,
+        status: s.props.status,
+      }));
+    } catch {
+      // Fallback arrays remain empty on fetch failure
+    }
+  }
+
+  return (
+    <CatalogClientWrapper
+      initialEstablishmentId={establishmentId}
+      organizations={organizations}
+      initialCategories={categories}
+      initialServices={services}
+    />
+  );
 }

@@ -1,7 +1,8 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { XIcon } from "lucide-react";
 import { ErrorAlert } from "@/contexts/shared/interfaces/components/ui/error";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
@@ -17,14 +18,20 @@ import type { DetailedServiceDTO } from "./service-detail-view";
 
 interface EditServiceFormProps {
   service: DetailedServiceDTO;
-  categories: Array<{ id: string; name: string }>;
 }
 
-export function EditServiceForm({ service, categories }: EditServiceFormProps) {
+export function EditServiceForm({ service }: EditServiceFormProps) {
+  const router = useRouter();
   const [state, formAction, pending] = useActionState(
     updateCatalogServiceAction,
     { status: "idle", error: null } satisfies CatalogServiceActionResult
   );
+
+  useEffect(() => {
+    if (state.status === "success") {
+      router.push("/catalog");
+    }
+  }, [state.status, router]);
 
   return (
     <>
@@ -46,9 +53,11 @@ export function EditServiceForm({ service, categories }: EditServiceFormProps) {
         <main className="flex-1 max-w-[800px] w-full mx-auto px-4 py-8 pb-32">
           <form action={formAction} id="edit-service-form" className="space-y-6">
             <input type="hidden" name="id" value={service.id} />
+            {service.categoryId && (
+              <input type="hidden" name="categoryId" value={service.categoryId} />
+            )}
 
             <GeneralInfoSection
-              categories={categories}
               defaultValues={{
                 name: service.name,
                 description: service.description,

@@ -1,7 +1,8 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { XIcon } from "lucide-react";
 import { ErrorAlert } from "@/contexts/shared/interfaces/components/ui/error";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
@@ -14,18 +15,23 @@ import {
   type CreateCatalogServiceActionState,
 } from "../actions/create-catalog-service.action";
 
-// TODO: Replace with dynamic establishment ID from context/session
-const MOCK_ESTABLISHMENT_ID = "11223344-5566-7788-9900-aabbccddeeff";
-
 interface CreateServiceFormProps {
-  categories: Array<{ id: string; name: string }>;
+  establishmentId: string;
+  categoryId?: string;
 }
 
-export function CreateServiceForm({ categories }: CreateServiceFormProps) {
+export function CreateServiceForm({ establishmentId, categoryId }: CreateServiceFormProps) {
+  const router = useRouter();
   const [state, formAction, pending] = useActionState(
     createCatalogServiceAction,
     { status: "idle", data: null, error: null } satisfies CreateCatalogServiceActionState
   );
+
+  useEffect(() => {
+    if (state.status === "success") {
+      router.push("/catalog");
+    }
+  }, [state.status, router]);
 
   return (
     <>
@@ -48,9 +54,10 @@ export function CreateServiceForm({ categories }: CreateServiceFormProps) {
         {/* Form Main Canvas */}
         <main className="flex-1 max-w-[800px] w-full mx-auto px-4 py-8 pb-32">
           <form action={formAction} id="create-service-form" className="space-y-6">
-            <input type="hidden" name="establishmentId" value={MOCK_ESTABLISHMENT_ID} />
+            <input type="hidden" name="establishmentId" value={establishmentId} />
+            {categoryId && <input type="hidden" name="categoryId" value={categoryId} />}
 
-            <GeneralInfoSection categories={categories} />
+            <GeneralInfoSection />
             <FinancialsAndLogisticsSection />
             <InstructionsSection />
           </form>

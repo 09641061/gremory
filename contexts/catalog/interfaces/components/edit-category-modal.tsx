@@ -6,48 +6,48 @@ import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import { Input } from "@/contexts/shared/interfaces/components/ui/input";
 import { Label } from "@/contexts/shared/interfaces/components/ui/label";
 import { Spinner } from "@/contexts/shared/interfaces/components/ui/spinner";
-import { useCreateServiceCategory } from "../../application/use-cases/use-create-service-category";
+import { useUpdateServiceCategory } from "../../application/use-cases/use-update-service-category";
 
-interface CreateCategoryModalProps {
+interface EditCategoryModalProps {
   isOpen: boolean;
   onClose: () => void;
-  establishmentId?: string;
+  category: { id: string; name: string } | null;
 }
 
-export function CreateCategoryModal({
+export function EditCategoryModal({
   isOpen,
   onClose,
-  establishmentId,
-}: CreateCategoryModalProps) {
-  const { state, formAction, pending } = useCreateServiceCategory(onClose);
+  category,
+}: EditCategoryModalProps) {
+  const { state, formAction, pending } = useUpdateServiceCategory(onClose);
 
-  if (!isOpen) return null;
+  if (!isOpen || !category) return null;
 
   return (
     <>
       <ErrorAlert
-        title="Failed to create category"
+        title="Failed to update category"
         message={state.status === "error" ? (state.error ?? undefined) : undefined}
       />
 
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
         <div className="w-full max-w-md bg-card border border-border rounded-xl shadow-lg overflow-hidden">
           <header className="flex justify-between items-center px-6 py-4 border-b border-border">
-            <h2 className="text-lg font-bold text-[#00b77a]">New Category</h2>
+            <h2 className="text-lg font-bold text-[#00b77a]">Edit Category</h2>
             <Button variant="ghost" size="icon" onClick={onClose} className="rounded-full h-8 w-8">
               <XIcon className="size-4" />
             </Button>
           </header>
 
           <form action={formAction} className="p-6 space-y-4">
-            <input type="hidden" name="establishmentId" value={establishmentId ?? ""} />
+            <input type="hidden" name="id" value={category.id} />
 
             <div className="space-y-2">
-              <Label htmlFor="category-name">Category Name</Label>
+              <Label htmlFor="edit-category-name">Category Name</Label>
               <Input
-                id="category-name"
+                id="edit-category-name"
                 name="name"
-                placeholder="e.g. Barbering & Haircut"
+                defaultValue={category.name}
                 required
                 className="bg-card border-border"
               />
@@ -68,7 +68,7 @@ export function CreateCategoryModal({
                     Saving...
                   </>
                 ) : (
-                  "Save Category"
+                  "Save Changes"
                 )}
               </Button>
             </div>
