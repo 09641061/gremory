@@ -1,5 +1,7 @@
 import "server-only";
 
+import { cookies } from "next/headers";
+import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-session-cookie";
 import { ServiceCategory } from "../../domain/model/entities/service-category.entity";
 import { createCategoryId } from "../../domain/model/valueobjects/category-id.vo";
 import type {
@@ -29,6 +31,16 @@ function mapCategoryToEntity(raw: RawServiceCategory): ServiceCategory {
   });
 }
 
+async function resolveAccessToken(providedToken?: string): Promise<string | undefined> {
+  if (providedToken) return providedToken;
+  try {
+    const cookieStore = await cookies();
+    return cookieStore.get(iamSessionCookies.accessToken)?.value;
+  } catch {
+    return undefined;
+  }
+}
+
 export class ServiceCategoryApiGateway
   implements ServiceCategoryCommandService, ServiceCategoryQueryService
 {
@@ -38,8 +50,9 @@ export class ServiceCategoryApiGateway
     size = 20,
     token?: string
   ): Promise<PageResponse<ServiceCategory>> {
+    const authToken = await resolveAccessToken(token);
     const headers: HeadersInit = {};
-    if (token) headers.Authorization = `Bearer ${token}`;
+    if (authToken) headers.Authorization = `Bearer ${authToken}`;
 
     const res = await fetch(
       `${apiBaseUrl}/api/catalog/categories?establishmentId=${establishmentId}&page=${page}&size=${size}`,
@@ -56,8 +69,9 @@ export class ServiceCategoryApiGateway
   }
 
   async create(command: CreateServiceCategoryCommand, token?: string): Promise<ServiceCategory> {
+    const authToken = await resolveAccessToken(token);
     const headers: HeadersInit = { "Content-Type": "application/json" };
-    if (token) headers.Authorization = `Bearer ${token}`;
+    if (authToken) headers.Authorization = `Bearer ${authToken}`;
 
     const res = await fetch(`${apiBaseUrl}/api/catalog/categories`, {
       method: "POST",
@@ -75,8 +89,9 @@ export class ServiceCategoryApiGateway
   }
 
   async update(command: UpdateServiceCategoryCommand, token?: string): Promise<ServiceCategory> {
+    const authToken = await resolveAccessToken(token);
     const headers: HeadersInit = { "Content-Type": "application/json" };
-    if (token) headers.Authorization = `Bearer ${token}`;
+    if (authToken) headers.Authorization = `Bearer ${authToken}`;
 
     const res = await fetch(`${apiBaseUrl}/api/catalog/categories/${command.id}`, {
       method: "PUT",
@@ -91,8 +106,9 @@ export class ServiceCategoryApiGateway
   }
 
   async delete(command: DeleteServiceCategoryCommand, token?: string): Promise<void> {
+    const authToken = await resolveAccessToken(token);
     const headers: HeadersInit = {};
-    if (token) headers.Authorization = `Bearer ${token}`;
+    if (authToken) headers.Authorization = `Bearer ${authToken}`;
 
     const res = await fetch(`${apiBaseUrl}/api/catalog/categories/${command.id}`, {
       method: "DELETE",

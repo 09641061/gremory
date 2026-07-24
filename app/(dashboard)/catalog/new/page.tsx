@@ -1,12 +1,22 @@
+import { createBusinessEstablishmentAclService } from "@/contexts/business/application/internal/outboundservices/business-establishment-acl.service";
 import { CreateServiceForm } from "@/contexts/catalog/interfaces/components/create-service-form";
 
 export const revalidate = 0;
 
-export default async function NewCatalogServicePage() {
-  const mockCategories = [
-    { id: "c9d8e7f6-5a4b-3c2d-1e0f-9a8b7c6d5e4f", name: "Barbería & Capilar" },
-    { id: "c1d2e3f4-5a6b-7c8d-9e0f-1a2b3c4d5e6f", name: "Tratamientos Faciales" },
-  ];
+interface NewCatalogServicePageProps {
+  searchParams: Promise<{ categoryId?: string }>;
+}
 
-  return <CreateServiceForm categories={mockCategories} />;
+export default async function NewCatalogServicePage({ searchParams }: NewCatalogServicePageProps) {
+  const { categoryId } = await searchParams;
+
+  const aclService = createBusinessEstablishmentAclService();
+  const establishmentId = await aclService.getActiveEstablishmentIdForUser();
+
+  return (
+    <CreateServiceForm
+      establishmentId={establishmentId ?? ""}
+      categoryId={categoryId}
+    />
+  );
 }

@@ -6,15 +6,13 @@ import { Input } from "@/contexts/shared/interfaces/components/ui/input";
 import { Label } from "@/contexts/shared/interfaces/components/ui/label";
 
 interface GeneralInfoSectionProps {
-  categories: Array<{ id: string; name: string }>;
   defaultValues?: {
     name?: string;
     description?: string;
-    categoryId?: string | null;
   };
 }
 
-export function GeneralInfoSection({ categories, defaultValues }: GeneralInfoSectionProps) {
+export function GeneralInfoSection({ defaultValues }: GeneralInfoSectionProps) {
   return (
     <Card className="rounded-lg border-border bg-card p-6">
       <CardContent className="p-0 space-y-6">
@@ -47,23 +45,6 @@ export function GeneralInfoSection({ categories, defaultValues }: GeneralInfoSec
               required
               className="w-full rounded-md border border-border bg-card p-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00b77a]"
             />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="categoryId">Category</Label>
-            <select
-              id="categoryId"
-              name="categoryId"
-              defaultValue={defaultValues?.categoryId ?? ""}
-              className="w-full h-10 rounded-md border border-border bg-card px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00b77a]"
-            >
-              <option value="">Select Category (Optional)</option>
-              {categories.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name}
-                </option>
-              ))}
-            </select>
           </div>
         </div>
       </CardContent>
