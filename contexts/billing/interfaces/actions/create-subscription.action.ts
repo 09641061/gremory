@@ -36,7 +36,6 @@ export async function createSubscriptionAction(
 
     const gateway = new BillingApiGateway();
     const result = await gateway.createSubscription(accessToken, {
-      ownerId: "",
       planId: input.planId,
       billingCycle: input.billingCycle,
       currency: input.currency,

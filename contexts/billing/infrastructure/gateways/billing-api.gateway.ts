@@ -51,7 +51,7 @@ export class BillingApiGateway {
       body: JSON.stringify({
         planId: command.planId,
         billingCycle: command.billingCycle,
-        currency: command.currency ?? "PEN",
+        currency: command.currency ?? "USD",
         successUrl: command.successUrl,
         cancelUrl: command.cancelUrl,
       }),

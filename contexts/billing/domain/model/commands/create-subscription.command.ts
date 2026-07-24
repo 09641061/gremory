@@ -5,7 +5,6 @@ import type { CurrencyCode } from "../value-objects/currency";
 export type { BillingCycleType as BillingCycle, CurrencyCode as Currency };
 
 export interface CreateSubscriptionCommand {
-  ownerId: string;
   planId: number;
   billingCycle: BillingCycleType;
   currency?: CurrencyCode;

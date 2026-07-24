@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState } from "react";
-import { useRouter } from "next/navigation";
 import { CardElement, useStripe, useElements } from "@stripe/react-stripe-js";
 import { Lock, Loader2, AlertCircle } from "lucide-react";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
@@ -27,8 +26,6 @@ export function CheckoutForm({
 }: CheckoutFormProps) {
   const stripe = useStripe();
   const elements = useElements();
-  const router = useRouter();
-
   const [isProcessing, setIsProcessing] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -62,9 +59,6 @@ export function CheckoutForm({
         setIsProcessing(false);
       } else {
         onSuccessStateChange?.();
-        setTimeout(() => {
-          router.push("/dashboard");
-        }, 1500);
       }
     } catch {
       setErrorMessage(

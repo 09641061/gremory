@@ -37,9 +37,9 @@ describe("SubscribeView Component", () => {
     expect(screen.getByText("Choose the plan that fits you")).toBeDefined();
   });
 
-  it("renders Standart and Premium button labels", () => {
+  it("renders Standard and Premium button labels", () => {
     render(<SubscribeView />);
-    expect(screen.getByRole("button", { name: "Get Standart plan" })).toBeDefined();
+    expect(screen.getByRole("button", { name: "Get Standard plan" })).toBeDefined();
     expect(screen.getByRole("button", { name: "Get Premium plan" })).toBeDefined();
   });
 
