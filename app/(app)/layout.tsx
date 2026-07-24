@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { Header } from "@/contexts/shared/interfaces/components/header";
 import { Sidebar } from "@/contexts/shared/interfaces/components/sidebar";
 
 /**
@@ -14,7 +15,8 @@ export default function AppLayout({
   return (
     <div className="min-h-screen bg-background text-foreground flex">
       <Sidebar />
-      <main className="flex-1 p-6 lg:ml-60">{children}</main>
+      <Header />
+      <main className="flex-1 p-6 pt-16 lg:ml-60">{children}</main>
     </div>
   );
 }

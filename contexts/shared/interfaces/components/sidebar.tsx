@@ -28,12 +28,8 @@ export function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="fixed inset-y-0 left-0 z-20 hidden w-60 shrink-0 border-r border-border/60 bg-background px-3 py-3 md:flex md:flex-col">
-      <h1 className="mb-4 px-2 text-lg font-bold leading-tight tracking-[-0.03em] text-foreground">
-        Takodu
-      </h1>
-
-      <nav aria-label="Módulos" className="mt-5">
+    <aside className="fixed bottom-0 left-0 top-14 z-20 hidden w-60 shrink-0 border-r border-border/60 bg-background px-3 py-3 md:flex md:flex-col">
+      <nav aria-label="Módulos" className="mt-2">
         <p className="mb-2 px-2 text-xs font-semibold text-foreground">
           Workspace
         </p>
