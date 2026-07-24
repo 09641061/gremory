@@ -25,10 +25,10 @@ export function SubscribeHero({
 
   return (
     <section className="max-w-4xl mx-auto px-4 pt-8 text-center">
-      <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-foreground mb-3">
+      <h1 className="page-title mb-3 text-foreground">
         Choose the plan that fits you
       </h1>
-      <p className="text-base md:text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+      <p className="page-description mx-auto max-w-2xl">
         Scale your billing infrastructure with Takodu. From single shops to enterprise-level multi-establishment management, we have the right tools for your growth.
       </p>
 
@@ -58,7 +58,7 @@ export function SubscribeHero({
           >
             <span
               className={cn(
-                "pointer-events-none inline-block size-5 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out",
+                "pointer-events-none inline-block size-5 transform rounded-full bg-primary-foreground shadow-md ring-0 transition duration-200 ease-in-out",
                 isAnnual ? "translate-x-5" : "translate-x-0"
               )}
             />

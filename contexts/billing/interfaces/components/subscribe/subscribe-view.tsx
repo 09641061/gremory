@@ -10,7 +10,7 @@ import type { SubscriptionResponse } from "../../../infrastructure/gateways/bill
 import { ErrorAlert } from "@/contexts/shared/interfaces/components/ui/error";
 import { SubscribeHero } from "./subscribe-hero";
 import { PlanCard } from "./plan-card";
-import { PaymentModal } from "./payment-modal";
+import { PaymentModal } from "../checkout/payment-modal";
 
 interface ActivePaymentState {
   clientSecret: string | null | undefined;
@@ -59,15 +59,16 @@ export function SubscribeView() {
   };
 
   return (
-    <main className="relative min-h-screen pb-24 overflow-hidden bg-background text-foreground">
+    <main className="relative flex min-h-screen flex-col items-center justify-center gap-10 overflow-hidden bg-background px-4 py-12 text-foreground">
       {/* Back to Login Navigation Link pegged to the top-left corner */}
       <div className="absolute top-6 left-6 sm:left-8 z-20">
         <Link
           href="/login"
-          className="inline-flex items-center gap-2 text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors cursor-pointer group"
+          aria-label="Back to Sign In"
+          title="Back to Sign In"
+          className="inline-flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors cursor-pointer group"
         >
           <ArrowLeft className="size-4 transition-transform group-hover:-translate-x-1" />
-          <span>Back to Sign In</span>
         </Link>
       </div>
 
@@ -75,7 +76,7 @@ export function SubscribeView() {
       {feedbackMessage && (
         <ErrorAlert
           key={feedbackMessage.id}
-          title={feedbackMessage.type === "error" ? "Acceso Requerido" : "Notificación"}
+          title={feedbackMessage.type === "error" ? "Sign-in Required" : "Notification"}
           message={feedbackMessage.text}
         />
       )}
@@ -89,7 +90,7 @@ export function SubscribeView() {
       />
 
       {/* Pricing Cards Grid */}
-      <section className="max-w-5xl mx-auto px-4 mt-10 grid grid-cols-1 md:grid-cols-2 gap-8 items-stretch">
+      <section className="grid w-full max-w-5xl grid-cols-1 items-stretch gap-8 md:grid-cols-2">
         {plans.map((plan) => {
           const displayPrice = billingCycle === "ANNUAL" ? plan.annualPricePerMonth : plan.monthlyPrice;
           return (

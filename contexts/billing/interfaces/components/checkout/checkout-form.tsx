@@ -4,6 +4,13 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { CardElement, useStripe, useElements } from "@stripe/react-stripe-js";
 import { Lock, Loader2, AlertCircle } from "lucide-react";
+import { Button } from "@/contexts/shared/interfaces/components/ui/button";
+import { Card } from "@/contexts/shared/interfaces/components/ui/card";
+import { Label } from "@/contexts/shared/interfaces/components/ui/label";
+import {
+  Alert,
+  AlertDescription,
+} from "@/contexts/shared/interfaces/components/ui/alert";
 
 interface CheckoutFormProps {
   onClose: () => void;
@@ -69,10 +76,10 @@ export function CheckoutForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="p-4 rounded-xl bg-white border border-slate-200 shadow-xs">
-        <label className="block text-xs font-semibold text-slate-700 mb-2">
+      <Card className="rounded-lg border-border p-4 shadow-xs">
+        <Label className="mb-2 text-xs text-foreground">
           Card Details
-        </label>
+        </Label>
 
         <CardElement
           options={{
@@ -92,28 +99,29 @@ export function CheckoutForm({
             },
           }}
         />
-      </div>
+      </Card>
 
       {errorMessage && (
-        <div className="p-3.5 rounded-xl text-sm bg-destructive/10 border border-destructive/20 text-destructive flex items-start gap-2.5">
+        <Alert variant="destructive" className="rounded-lg border-destructive/20 bg-destructive/10 p-3.5 text-destructive">
           <AlertCircle className="size-5 shrink-0 mt-0.5" />
-          <span>{errorMessage}</span>
-        </div>
+          <AlertDescription className="text-destructive">{errorMessage}</AlertDescription>
+        </Alert>
       )}
 
       <div className="flex items-center gap-3 pt-2">
-        <button
+        <Button
           type="button"
           onClick={onClose}
           disabled={isProcessing}
-          className="flex-1 py-3 px-4 rounded-xl border border-border text-foreground hover:bg-muted font-medium text-sm transition-colors cursor-pointer disabled:opacity-50"
+          variant="outline"
+          className="h-10 flex-1 rounded-md px-4 text-sm"
         >
           Cancel
-        </button>
-        <button
+        </Button>
+        <Button
           type="submit"
           disabled={!stripe || isProcessing}
-          className="flex-1 py-3 px-4 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 font-semibold text-sm transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+          className="h-10 flex-1 rounded-md px-4 text-sm font-semibold shadow-md"
         >
           {isProcessing ? (
             <>
@@ -126,7 +134,7 @@ export function CheckoutForm({
               <span>Pay {amountFormatted ? amountFormatted : ""}</span>
             </>
           )}
-        </button>
+        </Button>
       </div>
     </form>
   );

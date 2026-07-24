@@ -3,6 +3,7 @@
 import React from "react";
 import { SUPPORTED_CURRENCIES, type CurrencyCode } from "../../../domain/model/value-objects/currency";
 import { cn } from "@/lib/utils";
+import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 
 interface CurrencySelectorProps {
   selectedCurrency: CurrencyCode;
@@ -19,25 +20,27 @@ export function CurrencySelector({
   className = "",
 }: CurrencySelectorProps) {
   return (
-    <div className={cn("inline-flex items-center p-1 bg-secondary/15 rounded-lg gap-1 border border-border/40", className)}>
+    <div className={cn("inline-flex items-center p-1 bg-muted/50 rounded-lg gap-1 border border-border/40", className)}>
       {SUPPORTED_CURRENCIES.map(({ code, symbol, label }) => {
         const isSelected = selectedCurrency === code;
 
         return (
-          <button
+          <Button
             key={code}
             type="button"
+            variant={isSelected ? "outline" : "ghost"}
+            size="sm"
             onClick={() => onCurrencyChange(code)}
             className={cn(
-              "px-2.5 py-1 text-xs font-semibold rounded-md transition-all duration-150 select-none cursor-pointer",
+              "h-7 px-2.5 text-xs font-semibold transition-all duration-150",
               isSelected
-                ? "bg-card text-foreground shadow-xs border border-border font-bold"
-                : "text-muted-foreground hover:text-foreground"
+                ? "font-bold shadow-xs"
+                : "text-muted-foreground"
             )}
           >
             <span className="opacity-75 mr-1">{symbol}</span>
             {label}
-          </button>
+          </Button>
         );
       })}
     </div>
