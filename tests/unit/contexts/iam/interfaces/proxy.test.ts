@@ -75,4 +75,26 @@ describe("IAM session proxy", () => {
     expect(response.headers.get("location")).toBe("http://localhost/login");
     expect(response.cookies.get("takodu.access_token")?.value).toBe("");
   });
+
+  it("should share one refresh request between concurrent requests", async () => {
+    const nowInSeconds = Math.floor(Date.now() / 1000);
+    let resolveRefresh: ((value: { accessToken: string; refreshToken: string; expiresIn: number }) => void) | undefined;
+    mocks.refreshSession.mockReturnValue(new Promise((resolve) => {
+      resolveRefresh = resolve;
+    }));
+
+    const first = proxy(requestWithSession(tokenWithExpiration(nowInSeconds + 10)));
+    const second = proxy(requestWithSession(tokenWithExpiration(nowInSeconds + 10)));
+
+    expect(mocks.refreshSession).toHaveBeenCalledTimes(1);
+
+    resolveRefresh?.({
+      accessToken: "new-access-token",
+      refreshToken: "new-refresh-token",
+      expiresIn: 600,
+    });
+
+    await Promise.all([first, second]);
+    expect(mocks.refreshSession).toHaveBeenCalledTimes(1);
+  });
 });

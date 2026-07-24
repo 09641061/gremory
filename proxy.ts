@@ -3,6 +3,8 @@ import type { NextRequest } from "next/server";
 import { createIamAuthenticationCommandService } from "@/contexts/iam/application/internal/commandservices/iam-authentication-command.service";
 import { hasActiveSubscription } from "@/contexts/billing/domain/services/subscription-access.policy";
 import { shouldRefreshAccessToken } from "@/contexts/iam/domain/services/iam-access-token-refresh.policy";
+import { coordinateRefresh } from "@/contexts/iam/infrastructure/session/iam-refresh-coordinator";
+import type { AuthenticationSession } from "@/contexts/iam/domain/model/entities/authentication-session";
 import {
   iamSessionCookieOptions,
   iamSessionCookies,
@@ -90,13 +92,15 @@ function redirectWithCookies(request: NextRequest, path: string, response: NextR
 }
 
 async function refreshAccessToken(refreshToken: string) {
-  try {
-    return await createIamAuthenticationCommandService().refreshSession({
-      refreshToken,
-    });
-  } catch {
-    return null;
-  }
+  return coordinateRefresh(refreshToken, async (token): Promise<AuthenticationSession | null> => {
+    try {
+      return await createIamAuthenticationCommandService().refreshSession({
+        refreshToken: token,
+      });
+    } catch {
+      return null;
+    }
+  });
 }
 
 function redirectToLogin(request: NextRequest) {
