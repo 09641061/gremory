@@ -27,7 +27,7 @@ export function PaymentSuccessView() {
 
         if (cancelled) return;
         if (status.active === true) {
-          router.replace("/dashboard");
+          router.replace("/chat");
           return;
         }
 
@@ -63,8 +63,8 @@ export function PaymentSuccessView() {
             : "Your payment was received. Activation is taking longer than usual."}
         </AlertDescription>
       </Alert>
-      <Button type="button" variant="outline" onClick={() => router.replace("/dashboard")}>
-        Continue to dashboard
+      <Button type="button" variant="outline" onClick={() => router.replace("/chat")}>
+        Continue to chat
       </Button>
     </div>
   );

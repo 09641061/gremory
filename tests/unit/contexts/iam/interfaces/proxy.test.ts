@@ -59,7 +59,7 @@ describe("IAM session proxy", () => {
     // Assert
     expect(mocks.refreshSession).not.toHaveBeenCalled();
     expect(response.status).toBe(307);
-    expect(response.headers.get("location")).toBe("http://localhost/dashboard");
+    expect(response.headers.get("location")).toBe("http://localhost/chat");
   });
 
   it("should clear the session and redirect to login when refresh is rejected", async () => {

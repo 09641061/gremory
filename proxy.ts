@@ -46,7 +46,7 @@ export async function proxy(request: NextRequest) {
   const activeSubscription = await hasSubscriptionAccess(accessToken);
 
   if (activeSubscription && (pathname === "/" || pathname === "/login" || pathname === "/subscribe")) {
-    return redirectWithCookies(request, "/dashboard", response);
+    return redirectWithCookies(request, "/chat", response);
   }
 
   if (!activeSubscription && (pathname === "/" || pathname === "/login" || isPrivateRoute(pathname))) {
@@ -57,7 +57,7 @@ export async function proxy(request: NextRequest) {
 }
 
 function isPrivateRoute(pathname: string) {
-  return ["/dashboard", "/analytics", "/schedule", "/crm", "/catalog", "/team", "/settings"].some(
+  return ["/chat", "/analytics", "/schedule", "/crm", "/catalog", "/team", "/settings"].some(
     (route) => pathname === route || pathname.startsWith(`${route}/`),
   );
 }
@@ -108,5 +108,5 @@ function redirectToLogin(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/", "/login", "/subscribe", "/dashboard/:path*", "/analytics/:path*", "/schedule/:path*", "/crm/:path*", "/catalog/:path*", "/team/:path*", "/settings/:path*"],
+  matcher: ["/", "/login", "/subscribe", "/chat/:path*", "/analytics/:path*", "/schedule/:path*", "/crm/:path*", "/catalog/:path*", "/team/:path*", "/settings/:path*"],
 };

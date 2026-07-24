@@ -24,7 +24,7 @@ export async function createOrganizationAction(
   try {
     const service = createOrganizationCommandService();
     const result = await service.create(parsed.data);
-    revalidatePath("/dashboard");
+    revalidatePath("/chat");
     return { status: "success", data: { id: result.props.id.value }, error: null };
   } catch (err) {
     return {
@@ -48,7 +48,7 @@ export async function updateOrganizationAction(
   try {
     const service = createOrganizationCommandService();
     await service.update(parsed.data);
-    revalidatePath("/dashboard");
+    revalidatePath("/chat");
     return { status: "success", error: null };
   } catch (err) {
     return {

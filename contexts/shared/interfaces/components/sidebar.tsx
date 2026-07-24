@@ -6,7 +6,7 @@ import {
   BarChart3,
   CalendarDays,
   ContactRound,
-  LayoutGrid,
+  MessageCircle,
   Package,
   Settings,
   Users,
@@ -16,7 +16,7 @@ import { buttonVariants } from "@/contexts/shared/interfaces/components/ui/butto
 import { cn } from "@/lib/utils";
 
 const navigation = [
-  { label: "Dashboard", href: "/dashboard", icon: LayoutGrid },
+  { label: "Chat", href: "/chat", icon: MessageCircle },
   { label: "Schedule", href: "/schedule", icon: CalendarDays },
   { label: "CRM", href: "/crm", icon: ContactRound },
   { label: "Catalog", href: "/catalog", icon: Package },

@@ -37,7 +37,7 @@ export function AuthCallback() {
           const subscription = subscriptionResponse.ok
             ? ((await subscriptionResponse.json()) as { active?: boolean })
             : { active: false };
-          router.replace(subscription.active === true ? "/dashboard" : "/subscribe");
+          router.replace(subscription.active === true ? "/chat" : "/subscribe");
         } catch {
           router.replace("/subscribe");
         }

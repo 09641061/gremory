@@ -32,7 +32,7 @@ export async function createEstablishmentAction(
       ...parsed.data,
       photoUrl: parsed.data.photoUrl || null,
     });
-    revalidatePath("/dashboard");
+    revalidatePath("/chat");
     return { status: "success", data: { id: result.props.id.value }, error: null };
   } catch (err) {
     return {
@@ -64,7 +64,7 @@ export async function updateEstablishmentAction(
       ...parsed.data,
       photoUrl: parsed.data.photoUrl || null,
     });
-    revalidatePath("/dashboard");
+    revalidatePath("/chat");
     return { status: "success", error: null };
   } catch (err) {
     return {
@@ -78,7 +78,7 @@ export async function deleteEstablishmentAction(id: string): Promise<Establishme
   try {
     const service = createEstablishmentCommandService();
     await service.delete({ id });
-    revalidatePath("/dashboard");
+    revalidatePath("/chat");
     return { status: "success", error: null };
   } catch (err) {
     return {

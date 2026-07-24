@@ -4,9 +4,9 @@ import React from "react";
 import { Sidebar } from "@/contexts/shared/interfaces/components/sidebar";
 
 /**
- * Main dashboard layout wrapper rendering the responsive Sidebar and main content canvas.
+ * Main app layout wrapper rendering the responsive Sidebar and main content canvas.
  */
-export default function DashboardLayout({
+export default function AppLayout({
   children,
 }: {
   children: React.ReactNode;
