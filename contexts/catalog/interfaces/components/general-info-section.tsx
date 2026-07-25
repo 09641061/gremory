@@ -17,7 +17,7 @@ export function GeneralInfoSection({ defaultValues }: GeneralInfoSectionProps) {
     <Card className="rounded-lg border-border bg-card p-6">
       <CardContent className="p-0 space-y-6">
         <div className="flex items-center gap-3 border-b border-border pb-3">
-          <InfoIcon className="size-5 text-[#00b77a]" />
+          <InfoIcon className="size-5 text-primary" />
           <h2 className="text-lg font-semibold text-foreground">General Information</h2>
         </div>
 
@@ -43,7 +43,7 @@ export function GeneralInfoSection({ defaultValues }: GeneralInfoSectionProps) {
               placeholder="Describe main service details..."
               defaultValue={defaultValues?.description}
               required
-              className="w-full rounded-md border border-border bg-card p-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00b77a]"
+              className="w-full rounded-md border border-border bg-card p-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
             />
           </div>
         </div>

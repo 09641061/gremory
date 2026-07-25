@@ -33,13 +33,13 @@ export function EditCategoryModal({
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
         <div className="w-full max-w-md bg-card border border-border rounded-xl shadow-lg overflow-hidden">
           <header className="flex justify-between items-center px-6 py-4 border-b border-border">
-            <h2 className="text-lg font-bold text-[#00b77a]">Edit Category</h2>
+            <h2 className="text-lg font-bold text-primary">Edit Category</h2>
             <Button variant="ghost" size="icon" onClick={onClose} className="rounded-full h-8 w-8">
               <XIcon className="size-4" />
             </Button>
           </header>
 
-          <form action={formAction} className="p-6 space-y-4">
+          <form action={formAction} key={category.id} className="p-6 space-y-4">
             <input type="hidden" name="id" value={category.id} />
 
             <div className="space-y-2">
@@ -60,7 +60,7 @@ export function EditCategoryModal({
               <Button
                 type="submit"
                 disabled={pending}
-                className="bg-[#00b77a] hover:bg-[#00b77a]/90 text-white font-medium"
+                className="bg-primary hover:bg-primary/90 text-primary-foreground font-medium"
               >
                 {pending ? (
                   <>

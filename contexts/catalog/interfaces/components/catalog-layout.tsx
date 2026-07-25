@@ -1,20 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { CategorySidebar, type CategoryDTO, type ServiceSummaryDTO } from "./category-sidebar";
 import { ServiceDetailView, type DetailedServiceDTO } from "./service-detail-view";
 import { CreateCategoryModal } from "./create-category-modal";
 import { EditCategoryModal } from "./edit-category-modal";
-import {
-  EstablishmentSelectorBar,
-  type OrganizationOption,
-} from "@/contexts/business/interfaces/components/business/establishment-selector-bar";
 import { updateCatalogServiceAction } from "../actions/manage-catalog-service.actions";
 
 interface CatalogLayoutProps {
   categories: CategoryDTO[];
   services: DetailedServiceDTO[];
-  organizations?: OrganizationOption[];
   activeEstablishmentId?: string;
   onSelectEstablishment?: (establishmentId: string) => void;
 }
@@ -22,7 +17,6 @@ interface CatalogLayoutProps {
 export function CatalogLayout({
   categories,
   services: initialServices,
-  organizations = [],
   activeEstablishmentId,
   onSelectEstablishment,
 }: CatalogLayoutProps) {
@@ -33,6 +27,20 @@ export function CatalogLayout({
   const [selectedServiceId, setSelectedServiceId] = useState<string | undefined>(
     initialServices[0]?.id
   );
+
+  // Sync state with server-side props updates (triggered by router.refresh())
+  useEffect(() => {
+    setServicesList(initialServices);
+    if (initialServices.length > 0 && !initialServices.some(s => s.id === selectedServiceId)) {
+      setSelectedServiceId(initialServices[0].id);
+    }
+  }, [initialServices, selectedServiceId]);
+
+  useEffect(() => {
+    if (categories.length > 0 && !categories.some(c => c.id === selectedCategoryId)) {
+      setSelectedCategoryId(categories[0].id);
+    }
+  }, [categories, selectedCategoryId]);
 
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<CategoryDTO | null>(null);
@@ -68,15 +76,6 @@ export function CatalogLayout({
 
   return (
     <div className="flex flex-col h-screen overflow-hidden bg-background">
-      {/* Temporary Establishment Selector Bar */}
-      {organizations.length > 0 && onSelectEstablishment && (
-        <EstablishmentSelectorBar
-          organizations={organizations}
-          selectedEstablishmentId={activeEstablishmentId}
-          onSelectEstablishment={onSelectEstablishment}
-        />
-      )}
-
       <div className="flex flex-col md:flex-row flex-1 overflow-hidden">
         <CategorySidebar
           categories={categories}

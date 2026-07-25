@@ -21,7 +21,7 @@ export function FinancialsAndLogisticsSection({ defaultValues }: FinancialsAndLo
       <Card className="rounded-lg border-border bg-card p-6">
         <CardContent className="p-0 space-y-4">
           <div className="flex items-center gap-3 border-b border-border pb-3">
-            <CreditCardIcon className="size-5 text-[#00b77a]" />
+            <CreditCardIcon className="size-5 text-primary" />
             <h2 className="text-lg font-semibold text-foreground">Financials</h2>
           </div>
 
@@ -50,7 +50,7 @@ export function FinancialsAndLogisticsSection({ defaultValues }: FinancialsAndLo
       <Card className="rounded-lg border-border bg-card p-6">
         <CardContent className="p-0 space-y-4">
           <div className="flex items-center gap-3 border-b border-border pb-3">
-            <ClockIcon className="size-5 text-[#00b77a]" />
+            <ClockIcon className="size-5 text-primary" />
             <h2 className="text-lg font-semibold text-foreground">Logistics</h2>
           </div>
 

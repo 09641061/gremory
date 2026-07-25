@@ -16,7 +16,7 @@ export function InstructionsSection({ defaultValues }: InstructionsSectionProps)
     <Card className="rounded-lg border-border bg-card p-6">
       <CardContent className="p-0 space-y-4">
         <div className="flex items-center gap-3 border-b border-border pb-3">
-          <ClipboardListIcon className="size-5 text-[#00b77a]" />
+          <ClipboardListIcon className="size-5 text-primary" />
           <h2 className="text-lg font-semibold text-foreground">Instructions</h2>
         </div>
 
@@ -29,7 +29,7 @@ export function InstructionsSection({ defaultValues }: InstructionsSectionProps)
               rows={2}
               placeholder="e.g. Arrive 5 minutes prior..."
               defaultValue={defaultValues?.preServiceInstructions ?? ""}
-              className="w-full rounded-md border border-border bg-card p-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00b77a]"
+              className="w-full rounded-md border border-border bg-card p-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
             />
           </div>
           <div className="space-y-2">
@@ -40,7 +40,7 @@ export function InstructionsSection({ defaultValues }: InstructionsSectionProps)
               rows={2}
               placeholder="e.g. Avoid washing hair for 12 hours..."
               defaultValue={defaultValues?.postServiceRecommendations ?? ""}
-              className="w-full rounded-md border border-border bg-card p-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00b77a]"
+              className="w-full rounded-md border border-border bg-card p-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
             />
           </div>
         </div>

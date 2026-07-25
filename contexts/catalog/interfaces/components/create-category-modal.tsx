@@ -33,7 +33,7 @@ export function CreateCategoryModal({
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
         <div className="w-full max-w-md bg-card border border-border rounded-xl shadow-lg overflow-hidden">
           <header className="flex justify-between items-center px-6 py-4 border-b border-border">
-            <h2 className="text-lg font-bold text-[#00b77a]">New Category</h2>
+            <h2 className="text-lg font-bold text-primary">New Category</h2>
             <Button variant="ghost" size="icon" onClick={onClose} className="rounded-full h-8 w-8">
               <XIcon className="size-4" />
             </Button>
@@ -60,7 +60,7 @@ export function CreateCategoryModal({
               <Button
                 type="submit"
                 disabled={pending}
-                className="bg-[#00b77a] hover:bg-[#00b77a]/90 text-white font-medium"
+                className="bg-primary hover:bg-primary/90 text-primary-foreground font-medium"
               >
                 {pending ? (
                   <>
