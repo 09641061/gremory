@@ -12,5 +12,4 @@ export const confirmEmailSignInSchema = z.object({
 export const authenticationSessionSchema = z.object({
   accessToken: z.string().min(1),
   refreshToken: z.string().min(1),
-  expiresIn: z.number().int().positive(),
 });

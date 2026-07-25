@@ -11,7 +11,6 @@ export function AuthCallback() {
     const params = new URLSearchParams(window.location.hash.slice(1));
     const accessToken = params.get("access_token");
     const refreshToken = params.get("refresh_token");
-    const expiresIn = params.get("expires_in");
 
     if (accessToken && refreshToken) {
       void (async () => {
@@ -22,7 +21,6 @@ export function AuthCallback() {
             body: JSON.stringify({
               accessToken,
               refreshToken,
-              expiresIn: expiresIn ? Number(expiresIn) : undefined,
             }),
           });
 
@@ -31,15 +29,12 @@ export function AuthCallback() {
             return;
           }
 
-          const subscriptionResponse = await fetch("/api/billing/subscription/status", {
-            cache: "no-store",
-          });
-          const subscription = subscriptionResponse.ok
-            ? ((await subscriptionResponse.json()) as { active?: boolean })
-            : { active: false };
-          router.replace(subscription.active === true ? "/chat" : "/subscribe");
+          // The proxy is the single route decision point. It validates the
+          // new session and sends users without an active subscription to
+          // /subscribe.
+          router.replace("/chat");
         } catch {
-          router.replace("/subscribe");
+          router.replace("/login");
         }
       })();
       return;

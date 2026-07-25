@@ -18,7 +18,7 @@ describe("IamApiGateway", () => {
 
   it("should parse a valid authentication session when confirmation succeeds", async () => {
     // Arrange
-    const session = { accessToken: "a", refreshToken: "r", expiresIn: 3600 };
+    const session = { accessToken: "a", refreshToken: "r" };
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(JSON.stringify(session), { status: 200 })));
     const gateway = new IamApiGateway();
     // Act
@@ -29,7 +29,7 @@ describe("IamApiGateway", () => {
 
   it("should request and parse a new session when refreshing with a valid token", async () => {
     // Arrange
-    const session = { accessToken: "new-access", refreshToken: "new-refresh", expiresIn: 600 };
+    const session = { accessToken: "new-access", refreshToken: "new-refresh" };
     const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify(session), { status: 200 }));
     vi.stubGlobal("fetch", fetchMock);
     const gateway = new IamApiGateway();
@@ -77,7 +77,7 @@ describe("IamApiGateway", () => {
 
   it("should return a session when the magic-link response is valid", async () => {
     // Arrange
-    const session = { accessToken: "a", refreshToken: "r", expiresIn: 3600 };
+    const session = { accessToken: "a", refreshToken: "r" };
     const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify(session), { status: 200 }));
     vi.stubGlobal("fetch", fetchMock);
     const gateway = new IamApiGateway();

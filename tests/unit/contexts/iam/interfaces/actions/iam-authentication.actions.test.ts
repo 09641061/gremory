@@ -29,7 +29,7 @@ describe("IAM Server Actions", () => {
     vi.spyOn(console, "error").mockImplementation(() => undefined);
     mocks.cookies.get.mockReturnValue(undefined);
     mocks.service.requestEmailSignIn.mockResolvedValue(undefined);
-    mocks.service.confirmEmailSignIn.mockResolvedValue({ accessToken: "a", refreshToken: "r", expiresIn: 3600 });
+    mocks.service.confirmEmailSignIn.mockResolvedValue({ accessToken: "a", refreshToken: "r" });
     mocks.service.signOut.mockResolvedValue(undefined);
   });
 
@@ -61,7 +61,7 @@ describe("IAM Server Actions", () => {
     await confirmEmailSignInAction({ status: "idle", error: null }, form({ email: "user@example.com", code: "123456" }));
     // Assert
     expect(mocks.cookies.delete).toHaveBeenCalledWith(iamSessionCookies.pendingEmail);
-    expect(redirect).toHaveBeenCalledWith("/auth/callback#access_token=a&refresh_token=r&expires_in=3600");
+    expect(redirect).toHaveBeenCalledWith("/auth/callback#access_token=a&refresh_token=r");
   });
 
   it("should return a missing-token error and skip the service when no session exists", async () => {

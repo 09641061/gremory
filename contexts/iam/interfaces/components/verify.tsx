@@ -33,7 +33,7 @@ export async function Verify({
     }
 
     redirect(
-      `/auth/callback#access_token=${encodeURIComponent(session.accessToken)}&refresh_token=${encodeURIComponent(session.refreshToken)}&expires_in=${session.expiresIn}`
+      `/auth/callback#access_token=${encodeURIComponent(session.accessToken)}&refresh_token=${encodeURIComponent(session.refreshToken)}`
     );
   }
 

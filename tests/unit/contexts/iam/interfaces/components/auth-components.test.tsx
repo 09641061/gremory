@@ -64,12 +64,11 @@ describe("IAM client components", () => {
     expect(mocks.router.replace).not.toHaveBeenCalled();
   });
 
-  it("should persist callback tokens and redirect to subscribe when there is no active plan", async () => {
+  it("should persist callback tokens and let the proxy decide the destination", async () => {
     // Arrange
-    window.location.hash = "#access_token=a&refresh_token=r&expires_in=3600";
+    window.location.hash = "#access_token=a&refresh_token=r";
     const fetchMock = vi.fn()
-      .mockResolvedValueOnce(new Response(null, { status: 204 }))
-      .mockResolvedValueOnce(new Response(JSON.stringify({ active: false }), { status: 200 }));
+      .mockResolvedValueOnce(new Response(null, { status: 204 }));
     vi.stubGlobal("fetch", fetchMock);
 
     // Act
@@ -80,14 +79,10 @@ describe("IAM client components", () => {
       "/api/iam/auth/session",
       expect.objectContaining({
         method: "POST",
-        body: JSON.stringify({ accessToken: "a", refreshToken: "r", expiresIn: 3600 }),
+        body: JSON.stringify({ accessToken: "a", refreshToken: "r" }),
       })
     ));
-    await waitFor(() => expect(fetchMock).toHaveBeenCalledWith(
-      "/api/billing/subscription/status",
-      { cache: "no-store" },
-    ));
-    await waitFor(() => expect(mocks.router.replace).toHaveBeenCalledWith("/subscribe"));
+    await waitFor(() => expect(mocks.router.replace).toHaveBeenCalledWith("/chat"));
   });
 
   it("should navigate home when the callback hash does not contain tokens", async () => {

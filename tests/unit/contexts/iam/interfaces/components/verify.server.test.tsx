@@ -29,14 +29,14 @@ describe("Verify server component", () => {
 
   it("should verify a magic link and redirect to the callback when the token is valid", async () => {
     // Arrange
-    mocks.service.verifyMagicLink.mockResolvedValue({ accessToken: "a", refreshToken: "r", expiresIn: 3600 });
+    mocks.service.verifyMagicLink.mockResolvedValue({ accessToken: "a", refreshToken: "r" });
 
     // Act
     await Verify({ searchParams: Promise.resolve({ token: "magic-token" }) });
 
     // Assert
     expect(mocks.service.verifyMagicLink).toHaveBeenCalledWith({ token: "magic-token" });
-    expect(redirect).toHaveBeenCalledWith("/auth/callback#access_token=a&refresh_token=r&expires_in=3600");
+    expect(redirect).toHaveBeenCalledWith("/auth/callback#access_token=a&refresh_token=r");
   });
 
   it("should render the verification form with an error when magic-link verification fails", async () => {

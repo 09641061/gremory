@@ -9,7 +9,6 @@ import {
 const sessionSchema = z.object({
   accessToken: z.string().min(1),
   refreshToken: z.string().min(1),
-  expiresIn: z.coerce.number().int().positive().optional(),
 });
 
 export async function createSessionRoute(request: Request) {
@@ -29,13 +28,6 @@ export async function createSessionRoute(request: Request) {
     maxAge: 60 * 60 * 24 * 30,
   });
 
-  if (input.data.expiresIn !== undefined) {
-    cookieStore.set(iamSessionCookies.expiresIn, String(input.data.expiresIn), {
-      ...iamSessionCookieOptions,
-      maxAge: 60 * 60 * 24,
-    });
-  }
-
   return new Response(null, { status: 204 });
 }
 
@@ -43,7 +35,6 @@ export async function clearSessionRoute() {
   const cookieStore = await cookies();
   cookieStore.delete(iamSessionCookies.accessToken);
   cookieStore.delete(iamSessionCookies.refreshToken);
-  cookieStore.delete(iamSessionCookies.expiresIn);
   cookieStore.delete(iamSessionCookies.pendingEmail);
   return new Response(null, { status: 204 });
 }
