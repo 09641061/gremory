@@ -91,6 +91,18 @@ describe("IAM session proxy", () => {
     expect(response.cookies.get("takodu.access_token")?.value).toBe("");
   });
 
+  it.each(["/organizations", "/establishments"])(
+    "should protect the business route %s",
+    async (pathname) => {
+      mocks.resolveSession.mockResolvedValue({ status: "unauthenticated" });
+
+      const response = await proxy(requestWithSession(null, null, pathname));
+
+      expect(response.status).toBe(307);
+      expect(response.headers.get("location")).toBe("http://localhost/login");
+    },
+  );
+
   it("should refresh when only the refresh-token cookie remains", async () => {
     mocks.resolveSession.mockResolvedValue({
       status: "authenticated",

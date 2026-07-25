@@ -1,23 +1,20 @@
-import React from "react";
-import { Header } from "@/contexts/shared/interfaces/components/header";
-import { OrganizationSelector } from "@/contexts/business/interfaces/components/organization-selector";
-import { Sidebar } from "@/contexts/shared/interfaces/components/sidebar";
-import { createOrganizationQueryService } from "@/contexts/business/application/internal/queryservices/organization-query.service";
+import type { ReactNode } from "react";
 import { createEstablishmentQueryService } from "@/contexts/business/application/internal/queryservices/establishment-query.service";
+import { createOrganizationQueryService } from "@/contexts/business/application/internal/queryservices/organization-query.service";
+import { OrganizationSelector } from "@/contexts/business/interfaces/components/organization-selector";
+import { Header } from "@/contexts/shared/interfaces/components/header";
 
-/**
- * Main app layout wrapper rendering the responsive Sidebar and main content canvas.
- */
-export default async function AppLayout({
+export default async function ProtectedLayout({
   children,
 }: {
-  children: React.ReactNode;
+  children: ReactNode;
 }) {
   let organization: { id: string; name: string } | undefined;
   let establishments: { id: string; name: string }[] = [];
 
   try {
-    const currentOrganization = await createOrganizationQueryService().getMyOrganization();
+    const currentOrganization =
+      await createOrganizationQueryService().getMyOrganization();
     organization = {
       id: currentOrganization.props.id.value,
       name: currentOrganization.props.name.value,
@@ -32,11 +29,11 @@ export default async function AppLayout({
       name: establishment.props.name.value,
     }));
   } catch {
-    // Keep the app shell available when Business data is unavailable.
+    // Keep protected pages available when Business data is unavailable.
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground flex">
+    <div className="flex min-h-screen bg-background text-foreground">
       <Header
         organizationSlot={
           <OrganizationSelector
@@ -47,8 +44,7 @@ export default async function AppLayout({
         establishments={establishments}
         initialEstablishmentId={establishments[0]?.id}
       />
-      <Sidebar />
-      <main className="flex-1 p-6 pt-16 lg:ml-60">{children}</main>
+      {children}
     </div>
   );
 }

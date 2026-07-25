@@ -61,9 +61,17 @@ export async function proxy(request: NextRequest) {
 }
 
 function isPrivateRoute(pathname: string) {
-  return ["/chat", "/analytics", "/schedule", "/crm", "/catalog", "/team", "/settings"].some(
-    (route) => pathname === route || pathname.startsWith(`${route}/`),
-  );
+  return [
+    "/chat",
+    "/analytics",
+    "/schedule",
+    "/crm",
+    "/catalog",
+    "/team",
+    "/settings",
+    "/organizations",
+    "/establishments",
+  ].some((route) => pathname === route || pathname.startsWith(`${route}/`));
 }
 
 type SubscriptionAccess = "active" | "inactive" | "unauthenticated" | "unavailable";
@@ -106,5 +114,18 @@ function redirectToLogin(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/", "/login", "/subscribe", "/chat/:path*", "/analytics/:path*", "/schedule/:path*", "/crm/:path*", "/catalog/:path*", "/team/:path*", "/settings/:path*"],
+  matcher: [
+    "/",
+    "/login",
+    "/subscribe",
+    "/chat/:path*",
+    "/analytics/:path*",
+    "/schedule/:path*",
+    "/crm/:path*",
+    "/catalog/:path*",
+    "/team/:path*",
+    "/settings/:path*",
+    "/organizations/:path*",
+    "/establishments/:path*",
+  ],
 };
