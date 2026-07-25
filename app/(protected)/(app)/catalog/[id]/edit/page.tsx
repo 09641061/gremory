@@ -3,8 +3,6 @@ import { createCatalogServiceQueryService } from "@/contexts/catalog/application
 import { EditServiceForm } from "@/contexts/catalog/interfaces/components/edit-service-form";
 import type { DetailedServiceDTO } from "@/contexts/catalog/interfaces/components/service-detail-view";
 
-export const revalidate = 0;
-
 interface EditCatalogServicePageProps {
   params: Promise<{ id: string }>;
 }

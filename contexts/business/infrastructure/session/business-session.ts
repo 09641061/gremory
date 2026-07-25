@@ -8,8 +8,8 @@ export async function getBusinessAccessToken(providedToken?: string): Promise<st
   return (await cookies()).get(iamSessionCookies.accessToken)?.value;
 }
 
-export async function requireBusinessAccessToken(): Promise<string> {
-  const token = await getBusinessAccessToken();
+export async function requireBusinessAccessToken(providedToken?: string): Promise<string> {
+  const token = await getBusinessAccessToken(providedToken);
   if (!token) throw new Error("Authentication is required");
   return token;
 }

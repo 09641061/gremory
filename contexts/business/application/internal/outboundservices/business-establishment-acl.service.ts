@@ -10,12 +10,17 @@ import { createEstablishmentQueryService } from "../queryservices/establishment-
 export class BusinessEstablishmentAclService {
   async getActiveEstablishmentIdForUser(token?: string): Promise<string | null> {
     try {
-      const organization = await createOrganizationQueryService().getMyOrganization({}, token);
-      const establishments = await createEstablishmentQueryService().getByOrganization(
-        { organizationId: organization.props.id.value, page: 0, size: 1 },
-        token
-      );
-      return establishments.content[0]?.props.id.value ?? null;
+      const organization = await createOrganizationQueryService(
+        token,
+      ).getMyOrganization();
+      const establishments = await createEstablishmentQueryService(
+        token,
+      ).getByOrganization({
+        organizationId: organization.id,
+        page: 0,
+        size: 1,
+      });
+      return establishments.content[0]?.id ?? null;
     } catch {
       return null;
     }

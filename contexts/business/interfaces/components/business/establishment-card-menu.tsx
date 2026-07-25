@@ -3,7 +3,10 @@
 import { useRef, useState } from "react";
 import Link from "next/link";
 import { MoreVertical, Pencil, Trash2 } from "lucide-react";
-import { Button } from "@/contexts/shared/interfaces/components/ui/button";
+import {
+  Button,
+  buttonVariants,
+} from "@/contexts/shared/interfaces/components/ui/button";
 import { useSelectorMenu } from "../use-selector-menu";
 import { DeleteEstablishmentDialog } from "./delete-establishment-dialog";
 
@@ -38,7 +41,11 @@ export function EstablishmentCardMenu({
           <Link
             href={`/establishments/${establishmentId}/edit`}
             onClick={() => setOpen(false)}
-            className="flex w-full items-center gap-2 rounded-md px-2 py-2 text-left text-sm text-foreground hover:bg-muted"
+            className={buttonVariants({
+              variant: "ghost",
+              className:
+                "h-auto w-full justify-start gap-2 rounded-md px-2 py-2 text-sm",
+            })}
           >
             <Pencil className="size-4" />
             Edit

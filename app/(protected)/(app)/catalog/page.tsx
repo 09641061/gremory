@@ -1,14 +1,12 @@
-import { createOrganizationQueryService } from "@/contexts/business/application/internal/commandservices/organization-command.service";
-import { createEstablishmentQueryService } from "@/contexts/business/application/internal/commandservices/establishment-command.service";
+import { createOrganizationQueryService } from "@/contexts/business/application/internal/queryservices/organization-query.service";
+import { createEstablishmentQueryService } from "@/contexts/business/application/internal/queryservices/establishment-query.service";
 import { createBusinessEstablishmentAclService } from "@/contexts/business/application/internal/outboundservices/business-establishment-acl.service";
 import { createCatalogServiceQueryService } from "@/contexts/catalog/application/internal/commandservices/catalog-service-command.service";
 import { createServiceCategoryQueryService } from "@/contexts/catalog/application/internal/commandservices/service-category-command.service";
 import { CatalogClientWrapper } from "@/contexts/catalog/interfaces/components/catalog-client-wrapper";
 import type { DetailedServiceDTO } from "@/contexts/catalog/interfaces/components/service-detail-view";
 import type { CategoryDTO } from "@/contexts/catalog/interfaces/components/category-sidebar";
-import type { OrganizationOption } from "@/contexts/business/interfaces/components/bussines/establishment-selector-bar";
-
-export const revalidate = 0;
+import type { OrganizationOption } from "@/contexts/business/interfaces/components/business/establishment-selector-bar";
 
 interface CatalogPageProps {
   searchParams: Promise<{ establishmentId?: string }>;
@@ -28,15 +26,19 @@ export default async function CatalogPage({ searchParams }: CatalogPageProps) {
     const myOrg = await orgQueryService.getMyOrganization();
     
     const estQueryService = createEstablishmentQueryService();
-    const estPage = await estQueryService.getByOrganization(myOrg.props.id.value, 0, 50);
+    const estPage = await estQueryService.getByOrganization({
+      organizationId: myOrg.id,
+      page: 0,
+      size: 50,
+    });
 
     organizations = [
       {
-        id: myOrg.props.id.value,
-        name: myOrg.props.name.value,
+        id: myOrg.id,
+        name: myOrg.name,
         establishments: estPage.content.map((e) => ({
-          id: e.props.id.value,
-          name: e.props.name.value,
+          id: e.id,
+          name: e.name,
         })),
       },
     ];

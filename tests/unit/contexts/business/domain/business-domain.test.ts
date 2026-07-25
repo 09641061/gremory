@@ -39,13 +39,13 @@ describe("Business entities", () => {
 
     organization.rename("New name");
 
-    expect(organization.props.name.value).toBe("New name");
+    expect(organization.name.value).toBe("New name");
   });
 
   it("shouldUpdateEstablishmentDetailsWhenValuesAreValid", () => {
     const establishment = Establishment.create({
       id: createEstablishmentId(establishmentId),
-      organizationId,
+      organizationId: createOrganizationId(organizationId),
       name: createEstablishmentName("Old shop"),
       photoUrl: createEstablishmentPhoto(null),
       active: true,
@@ -53,7 +53,7 @@ describe("Business entities", () => {
 
     establishment.update("New shop", "https://example.com/shop.png");
 
-    expect(establishment.props.name.value).toBe("New shop");
-    expect(establishment.props.photoUrl.value).toBe("https://example.com/shop.png");
+    expect(establishment.name.value).toBe("New shop");
+    expect(establishment.photoUrl.value).toBe("https://example.com/shop.png");
   });
 });

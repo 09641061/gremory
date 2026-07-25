@@ -2,6 +2,11 @@
 
 import { revalidatePath } from "next/cache";
 import { createEstablishmentCommandService } from "../../application/internal/commandservices/establishment-command.service";
+import {
+  createEstablishmentCommand,
+  deleteEstablishmentCommand,
+  updateEstablishmentCommand,
+} from "../../domain/model/commands/business.commands";
 import { requireBusinessAccessToken } from "../../infrastructure/session/business-session";
 import {
   createEstablishmentSchema,
@@ -22,9 +27,11 @@ export async function createEstablishmentAction(
 
   try {
     const token = await requireBusinessAccessToken();
-    const establishment = await createEstablishmentCommandService().create(parsed.data, token);
+    const establishmentId = await createEstablishmentCommandService(token).create(
+      createEstablishmentCommand(parsed.data),
+    );
     revalidateBusinessViews();
-    return { status: "success", data: { id: establishment.props.id.value }, error: null };
+    return { status: "success", data: { id: establishmentId.value }, error: null };
   } catch (error) {
     return actionError(error);
   }
@@ -43,9 +50,11 @@ export async function updateEstablishmentAction(
 
   try {
     const token = await requireBusinessAccessToken();
-    const establishment = await createEstablishmentCommandService().update(parsed.data, token);
+    const establishmentId = await createEstablishmentCommandService(token).update(
+      updateEstablishmentCommand(parsed.data),
+    );
     revalidateBusinessViews();
-    return { status: "success", data: { id: establishment.props.id.value }, error: null };
+    return { status: "success", data: { id: establishmentId.value }, error: null };
   } catch (error) {
     return actionError(error);
   }
@@ -61,7 +70,9 @@ export async function deleteEstablishmentAction(
 
   try {
     const token = await requireBusinessAccessToken();
-    await createEstablishmentCommandService().delete({ id: parsed.data }, token);
+    await createEstablishmentCommandService(token).delete(
+      deleteEstablishmentCommand({ id: parsed.data }),
+    );
     revalidateBusinessViews();
     return { status: "success", data: null, error: null };
   } catch (error) {
@@ -71,6 +82,5 @@ export async function deleteEstablishmentAction(
 
 function revalidateBusinessViews() {
   revalidatePath("/catalog");
-  revalidatePath("/dashboard");
   revalidatePath("/establishments");
 }

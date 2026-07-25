@@ -8,7 +8,7 @@ import { EditCategoryModal } from "./edit-category-modal";
 import {
   EstablishmentSelectorBar,
   type OrganizationOption,
-} from "@/contexts/business/interfaces/components/bussines/establishment-selector-bar";
+} from "@/contexts/business/interfaces/components/business/establishment-selector-bar";
 import { updateCatalogServiceAction } from "../actions/manage-catalog-service.actions";
 
 interface CatalogLayoutProps {

@@ -16,6 +16,10 @@ import {
 } from "@/contexts/shared/interfaces/components/ui/alert-dialog";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import { Spinner } from "@/contexts/shared/interfaces/components/ui/spinner";
+import {
+  Alert,
+  AlertDescription,
+} from "@/contexts/shared/interfaces/components/ui/alert";
 
 interface DeleteEstablishmentDialogProps {
   establishmentId: string;
@@ -57,7 +61,9 @@ export function DeleteEstablishmentDialog({
               .
             </AlertDialogDescription>
             {state.status === "error" && (
-              <p className="text-sm text-destructive">{state.error}</p>
+              <Alert variant="destructive">
+                <AlertDescription>{state.error}</AlertDescription>
+              </Alert>
             )}
           </AlertDialogHeader>
           <AlertDialogFooter>

@@ -2,6 +2,11 @@
 
 import { revalidatePath } from "next/cache";
 import { createOrganizationCommandService } from "../../application/internal/commandservices/organization-command.service";
+import {
+  createOrganizationCommand,
+  deleteOrganizationCommand,
+  updateOrganizationCommand,
+} from "../../domain/model/commands/business.commands";
 import { requireBusinessAccessToken } from "../../infrastructure/session/business-session";
 import { createOrganizationSchema, updateOrganizationSchema } from "../rest/schemas/organization.schemas";
 import {
@@ -18,9 +23,11 @@ export async function createOrganizationAction(
 
   try {
     const token = await requireBusinessAccessToken();
-    const organization = await createOrganizationCommandService().create(parsed.data, token);
+    const organizationId = await createOrganizationCommandService(token).create(
+      createOrganizationCommand(parsed.data),
+    );
     revalidateBusinessViews();
-    return { status: "success", data: { id: organization.props.id.value }, error: null };
+    return { status: "success", data: { id: organizationId.value }, error: null };
   } catch (error) {
     return actionError(error);
   }
@@ -38,9 +45,11 @@ export async function updateOrganizationAction(
 
   try {
     const token = await requireBusinessAccessToken();
-    const organization = await createOrganizationCommandService().update(parsed.data, token);
+    const organizationId = await createOrganizationCommandService(token).update(
+      updateOrganizationCommand(parsed.data),
+    );
     revalidateBusinessViews();
-    return { status: "success", data: { id: organization.props.id.value }, error: null };
+    return { status: "success", data: { id: organizationId.value }, error: null };
   } catch (error) {
     return actionError(error);
   }
@@ -56,7 +65,9 @@ export async function deleteOrganizationAction(
 
   try {
     const token = await requireBusinessAccessToken();
-    await createOrganizationCommandService().delete({ id: parsed.data }, token);
+    await createOrganizationCommandService(token).delete(
+      deleteOrganizationCommand({ id: parsed.data }),
+    );
     revalidateBusinessViews();
     return { status: "success", data: null, error: null };
   } catch (error) {
@@ -66,5 +77,6 @@ export async function deleteOrganizationAction(
 
 function revalidateBusinessViews() {
   revalidatePath("/catalog");
-  revalidatePath("/dashboard");
+  revalidatePath("/organizations");
+  revalidatePath("/establishments");
 }

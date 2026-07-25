@@ -2,62 +2,67 @@ import "server-only";
 
 import { Organization } from "../../domain/model/entities/organization.entity";
 import { createOrganizationId } from "../../domain/model/valueobjects/organization-id.vo";
-import { createOrganizationName } from "../../domain/model/valueobjects/organization-name.vo";
-import type {
-  OrganizationCommandService,
-  OrganizationQueryService,
-} from "../../domain/services/business.services";
-import type {
-  CreateOrganizationCommand,
-  UpdateOrganizationCommand,
-  DeleteOrganizationCommand,
-} from "../../domain/model/commands/business.commands";
-import type {
-  GetMyOrganizationQuery,
-  GetOrganizationByIdQuery,
-} from "../../domain/model/queries/business.queries";
+import { createOrganizationName, type OrganizationName } from "../../domain/model/valueobjects/organization-name.vo";
+import type { OrganizationRepository } from "../../domain/services/business.repositories";
+import type { OrganizationId } from "../../domain/model/valueobjects/organization-id.vo";
 import type { OrganizationResource } from "../../interfaces/rest/resources/business.resources";
-import { businessDelete, businessGet, businessPost, businessPut } from "../http/business-api.client";
-import { getBusinessAccessToken } from "../session/business-session";
+import {
+  BusinessApiError,
+  businessDelete,
+  businessGet,
+  businessPost,
+  businessPut,
+} from "../http/business-api.client";
+import { requireBusinessAccessToken } from "../session/business-session";
 import { businessApiConfig } from "../config/business-api.config";
 
-export class OrganizationApiGateway implements OrganizationCommandService, OrganizationQueryService {
-  async create(command: CreateOrganizationCommand, token?: string): Promise<Organization> {
-    const authToken = await getBusinessAccessToken(token);
-    const resource = await businessPost<OrganizationResource>(businessApiConfig.routes.organizations, command, authToken);
+export class OrganizationApiGateway implements OrganizationRepository {
+  constructor(private readonly providedToken?: string) {}
+
+  async create(name: OrganizationName): Promise<Organization> {
+    const authToken = await requireBusinessAccessToken(this.providedToken);
+    const resource = await businessPost<OrganizationResource>(
+      businessApiConfig.routes.organizations,
+      { name: name.value },
+      authToken,
+    );
     return toOrganization(resource);
   }
 
-  async getMyOrganization(_query: GetMyOrganizationQuery = {}, token?: string): Promise<Organization> {
-    void _query;
-    const authToken = await getBusinessAccessToken(token);
+  async findMine(): Promise<Organization> {
+    const authToken = await requireBusinessAccessToken(this.providedToken);
     const resource = await businessGet<OrganizationResource>(businessApiConfig.routes.organizations, authToken);
     return toOrganization(resource);
   }
 
-  async getById(query: GetOrganizationByIdQuery, token?: string): Promise<Organization> {
-    const authToken = await getBusinessAccessToken(token);
-    const resource = await businessGet<OrganizationResource>(
-      `${businessApiConfig.routes.organizations}/${encodeURIComponent(query.id)}`,
-      authToken
-    );
-    return toOrganization(resource);
+  async findById(id: OrganizationId): Promise<Organization | null> {
+    const authToken = await requireBusinessAccessToken(this.providedToken);
+    try {
+      const resource = await businessGet<OrganizationResource>(
+        `${businessApiConfig.routes.organizations}/${encodeURIComponent(id.value)}`,
+        authToken
+      );
+      return toOrganization(resource);
+    } catch (error) {
+      if (error instanceof BusinessApiError && error.status === 404) return null;
+      throw error;
+    }
   }
 
-  async update(command: UpdateOrganizationCommand, token?: string): Promise<Organization> {
-    const authToken = await getBusinessAccessToken(token);
+  async save(organization: Organization): Promise<Organization> {
+    const authToken = await requireBusinessAccessToken(this.providedToken);
     const resource = await businessPut<OrganizationResource>(
-      `${businessApiConfig.routes.organizations}/${encodeURIComponent(command.id)}`,
-      { name: command.name },
+      `${businessApiConfig.routes.organizations}/${encodeURIComponent(organization.id.value)}`,
+      { name: organization.name.value },
       authToken
     );
     return toOrganization(resource);
   }
 
-  async delete(command: DeleteOrganizationCommand, token?: string): Promise<void> {
-    const authToken = await getBusinessAccessToken(token);
+  async delete(id: OrganizationId): Promise<void> {
+    const authToken = await requireBusinessAccessToken(this.providedToken);
     await businessDelete(
-      `${businessApiConfig.routes.organizations}/${encodeURIComponent(command.id)}`,
+      `${businessApiConfig.routes.organizations}/${encodeURIComponent(id.value)}`,
       authToken
     );
   }

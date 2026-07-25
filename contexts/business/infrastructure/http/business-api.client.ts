@@ -35,6 +35,8 @@ export async function businessRequest<T>(path: string, options: BusinessRequestO
     ...requestInit,
     headers: Object.fromEntries(headers.entries()),
     body: requestBody,
+    // Business reads are scoped to the authenticated user. Keep them dynamic;
+    // Cache Components still provides PPR through the route Suspense boundaries.
     cache: "no-store",
   });
 

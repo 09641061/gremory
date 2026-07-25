@@ -1,8 +1,6 @@
 import { createBusinessEstablishmentAclService } from "@/contexts/business/application/internal/outboundservices/business-establishment-acl.service";
 import { CreateServiceForm } from "@/contexts/catalog/interfaces/components/create-service-form";
 
-export const revalidate = 0;
-
 interface NewCatalogServicePageProps {
   searchParams: Promise<{ categoryId?: string }>;
 }
