@@ -14,7 +14,7 @@ import {
   businessPut,
 } from "../http/business-api.client";
 import { requireBusinessAccessToken } from "../session/business-session";
-import { businessApiConfig } from "../config/business-api.config";
+import { apiConfig } from "@/api.config";
 
 export class OrganizationApiGateway implements OrganizationRepository {
   constructor(private readonly providedToken?: string) {}
@@ -22,7 +22,7 @@ export class OrganizationApiGateway implements OrganizationRepository {
   async create(name: OrganizationName): Promise<Organization> {
     const authToken = await requireBusinessAccessToken(this.providedToken);
     const resource = await businessPost<OrganizationResource>(
-      businessApiConfig.routes.organizations,
+      apiConfig.routes.organizations,
       { name: name.value },
       authToken,
     );
@@ -31,7 +31,7 @@ export class OrganizationApiGateway implements OrganizationRepository {
 
   async findMine(): Promise<Organization> {
     const authToken = await requireBusinessAccessToken(this.providedToken);
-    const resource = await businessGet<OrganizationResource>(businessApiConfig.routes.organizations, authToken);
+    const resource = await businessGet<OrganizationResource>(apiConfig.routes.organizations, authToken);
     return toOrganization(resource);
   }
 
@@ -39,7 +39,7 @@ export class OrganizationApiGateway implements OrganizationRepository {
     const authToken = await requireBusinessAccessToken(this.providedToken);
     try {
       const resource = await businessGet<OrganizationResource>(
-        `${businessApiConfig.routes.organizations}/${encodeURIComponent(id.value)}`,
+        `${apiConfig.routes.organizations}/${encodeURIComponent(id.value)}`,
         authToken
       );
       return toOrganization(resource);
@@ -52,7 +52,7 @@ export class OrganizationApiGateway implements OrganizationRepository {
   async save(organization: Organization): Promise<Organization> {
     const authToken = await requireBusinessAccessToken(this.providedToken);
     const resource = await businessPut<OrganizationResource>(
-      `${businessApiConfig.routes.organizations}/${encodeURIComponent(organization.id.value)}`,
+      `${apiConfig.routes.organizations}/${encodeURIComponent(organization.id.value)}`,
       { name: organization.name.value },
       authToken
     );
@@ -62,7 +62,7 @@ export class OrganizationApiGateway implements OrganizationRepository {
   async delete(id: OrganizationId): Promise<void> {
     const authToken = await requireBusinessAccessToken(this.providedToken);
     await businessDelete(
-      `${businessApiConfig.routes.organizations}/${encodeURIComponent(id.value)}`,
+      `${apiConfig.routes.organizations}/${encodeURIComponent(id.value)}`,
       authToken
     );
   }

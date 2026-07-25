@@ -17,8 +17,8 @@ import type {
   ChangeCatalogServiceStatusCommand,
   DeleteCatalogServiceCommand,
 } from "../../domain/model/commands/catalog-service.commands";
-
-const apiBaseUrl = process.env.API_BASE_URL ?? "http://localhost:8080";
+import { apiConfig } from "@/api.config";
+import { apiClient } from "@/contexts/shared/infrastructure/http/api-client";
 
 type RawCatalogService = {
   id: string;
@@ -82,17 +82,14 @@ export class CatalogServiceApiGateway
     query.append("page", String(params.page ?? 0));
     query.append("size", String(params.size ?? 20));
 
-    const headers: HeadersInit = {};
-    if (authToken) headers.Authorization = `Bearer ${authToken}`;
+    const data = await apiClient.get<PageResponse<RawCatalogService>>(
+      `${apiConfig.routes.catalogServices}?${query}`,
+      {
+        token: authToken,
+        errorMessage: "Failed to fetch catalog services",
+      },
+    );
 
-    const res = await fetch(`${apiBaseUrl}/api/catalog/services?${query.toString()}`, {
-      headers,
-      cache: "no-store",
-    });
-
-    if (!res.ok) throw new Error("Failed to fetch catalog services");
-
-    const data: PageResponse<RawCatalogService> = await res.json();
     return {
       ...data,
       content: data.content.map(mapServiceToEntity),
@@ -101,83 +98,65 @@ export class CatalogServiceApiGateway
 
   async getById(id: string, establishmentId: string, token?: string): Promise<CatalogService> {
     const authToken = await resolveAccessToken(token);
-    const headers: HeadersInit = {};
-    if (authToken) headers.Authorization = `Bearer ${authToken}`;
-
-    const res = await fetch(
-      `${apiBaseUrl}/api/catalog/services/${id}?establishmentId=${establishmentId}`,
-      { headers, cache: "no-store" }
+    const query = new URLSearchParams({ establishmentId });
+    const resource = await apiClient.get<RawCatalogService>(
+      `${apiConfig.routes.catalogServices}/${encodeURIComponent(id)}?${query}`,
+      {
+        token: authToken,
+        errorMessage: "Service not found",
+      },
     );
-
-    if (!res.ok) throw new Error("Service not found");
-    return mapServiceToEntity(await res.json());
+    return mapServiceToEntity(resource);
   }
 
   async create(command: CreateCatalogServiceCommand, token?: string): Promise<CatalogService> {
     const authToken = await resolveAccessToken(token);
-    const headers: HeadersInit = { "Content-Type": "application/json" };
-    if (authToken) headers.Authorization = `Bearer ${authToken}`;
-
-    const res = await fetch(`${apiBaseUrl}/api/catalog/services`, {
-      method: "POST",
-      headers,
-      body: JSON.stringify(command),
-      cache: "no-store",
-    });
-
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.message || "Failed to create catalog service");
-    }
-
-    return mapServiceToEntity(await res.json());
+    const resource = await apiClient.post<RawCatalogService>(
+      apiConfig.routes.catalogServices,
+      command,
+      {
+        token: authToken,
+        errorMessage: "Failed to create catalog service",
+      },
+    );
+    return mapServiceToEntity(resource);
   }
 
   async update(command: UpdateCatalogServiceCommand, token?: string): Promise<CatalogService> {
     const authToken = await resolveAccessToken(token);
-    const headers: HeadersInit = { "Content-Type": "application/json" };
-    if (authToken) headers.Authorization = `Bearer ${authToken}`;
-
     const { id, ...payload } = command;
-    const res = await fetch(`${apiBaseUrl}/api/catalog/services/${id}`, {
-      method: "PUT",
-      headers,
-      body: JSON.stringify(payload),
-      cache: "no-store",
-    });
-
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.message || "Failed to update service");
-    }
-
-    return mapServiceToEntity(await res.json());
+    const resource = await apiClient.put<RawCatalogService>(
+      `${apiConfig.routes.catalogServices}/${encodeURIComponent(id)}`,
+      payload,
+      {
+        token: authToken,
+        errorMessage: "Failed to update service",
+      },
+    );
+    return mapServiceToEntity(resource);
   }
 
   async changeStatus(command: ChangeCatalogServiceStatusCommand, token?: string): Promise<void> {
     const authToken = await resolveAccessToken(token);
-    const headers: HeadersInit = {};
-    if (authToken) headers.Authorization = `Bearer ${authToken}`;
-
-    const res = await fetch(
-      `${apiBaseUrl}/api/catalog/services/${command.id}/status?active=${command.active}`,
-      { method: "PATCH", headers, cache: "no-store" }
+    const query = new URLSearchParams({ active: String(command.active) });
+    await apiClient.patch<void>(
+      `${apiConfig.routes.catalogServices}/${encodeURIComponent(command.id)}/status?${query}`,
+      undefined,
+      {
+        token: authToken,
+        errorMessage: "Failed to change service status",
+      },
     );
-
-    if (!res.ok) throw new Error("Failed to change service status");
   }
 
   async delete(command: DeleteCatalogServiceCommand, token?: string): Promise<void> {
     const authToken = await resolveAccessToken(token);
-    const headers: HeadersInit = {};
-    if (authToken) headers.Authorization = `Bearer ${authToken}`;
-
-    const res = await fetch(`${apiBaseUrl}/api/catalog/services/${command.id}`, {
-      method: "DELETE",
-      headers,
-      cache: "no-store",
-    });
-
-    if (!res.ok) throw new Error("Failed to delete service");
+    await apiClient.delete<void>(
+      `${apiConfig.routes.catalogServices}/${encodeURIComponent(command.id)}`,
+      {
+        token: authToken,
+        errorMessage: "Failed to delete service",
+      },
+    );
   }
 }

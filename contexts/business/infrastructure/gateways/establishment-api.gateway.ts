@@ -18,7 +18,7 @@ import {
   businessPut,
 } from "../http/business-api.client";
 import { requireBusinessAccessToken } from "../session/business-session";
-import { businessApiConfig } from "../config/business-api.config";
+import { apiConfig } from "@/api.config";
 
 export class EstablishmentApiGateway implements EstablishmentRepository {
   constructor(private readonly providedToken?: string) {}
@@ -30,7 +30,7 @@ export class EstablishmentApiGateway implements EstablishmentRepository {
   ): Promise<Establishment> {
     const authToken = await requireBusinessAccessToken(this.providedToken);
     const resource = await businessPost<EstablishmentResource>(
-      businessApiConfig.routes.establishments,
+      apiConfig.routes.establishments,
       {
         organizationId: organizationId.value,
         name: name.value,
@@ -45,7 +45,7 @@ export class EstablishmentApiGateway implements EstablishmentRepository {
     const authToken = await requireBusinessAccessToken(this.providedToken);
     try {
       const resource = await businessGet<EstablishmentResource>(
-        `${businessApiConfig.routes.establishments}/${encodeURIComponent(id.value)}`,
+        `${apiConfig.routes.establishments}/${encodeURIComponent(id.value)}`,
         authToken
       );
       return toEstablishment(resource);
@@ -66,7 +66,7 @@ export class EstablishmentApiGateway implements EstablishmentRepository {
       size: String(size),
     });
     const resource = await businessGet<PageResource<EstablishmentResource>>(
-      `${businessApiConfig.routes.establishments}/organization/${encodeURIComponent(organizationId.value)}?${params}`,
+      `${apiConfig.routes.establishments}/organization/${encodeURIComponent(organizationId.value)}?${params}`,
       authToken
     );
     return {
@@ -78,7 +78,7 @@ export class EstablishmentApiGateway implements EstablishmentRepository {
   async save(establishment: Establishment): Promise<Establishment> {
     const authToken = await requireBusinessAccessToken(this.providedToken);
     const resource = await businessPut<EstablishmentResource>(
-      `${businessApiConfig.routes.establishments}/${encodeURIComponent(establishment.id.value)}`,
+      `${apiConfig.routes.establishments}/${encodeURIComponent(establishment.id.value)}`,
       {
         name: establishment.name.value,
         photoUrl: establishment.photoUrl.value,
@@ -91,7 +91,7 @@ export class EstablishmentApiGateway implements EstablishmentRepository {
   async delete(id: EstablishmentId): Promise<void> {
     const authToken = await requireBusinessAccessToken(this.providedToken);
     await businessDelete(
-      `${businessApiConfig.routes.establishments}/${encodeURIComponent(id.value)}`,
+      `${apiConfig.routes.establishments}/${encodeURIComponent(id.value)}`,
       authToken
     );
   }

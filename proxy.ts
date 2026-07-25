@@ -4,6 +4,8 @@ import { createIamSessionQueryService } from "@/contexts/iam/application/interna
 import { hasActiveSubscription } from "@/contexts/billing/domain/services/subscription-access.policy";
 import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-session-cookie";
 import { continueRequestWithSession } from "@/contexts/iam/interfaces/proxy/iam-session-request";
+import { apiConfig } from "@/api.config";
+import { ApiError, apiClient } from "@/contexts/shared/infrastructure/http/api-client";
 
 export async function proxy(request: NextRequest) {
   let accessToken = request.cookies.get(iamSessionCookies.accessToken)?.value;
@@ -77,21 +79,16 @@ function isPrivateRoute(pathname: string) {
 type SubscriptionAccess = "active" | "inactive" | "unauthenticated" | "unavailable";
 async function getSubscriptionAccess(accessToken: string): Promise<SubscriptionAccess> {
   try {
-    const response = await fetch(
-      `${process.env.API_BASE_URL ?? "http://localhost:8080"}/api/billing/subscriptions`,
-      {
-        headers: { Authorization: `Bearer ${accessToken}` },
-        cache: "no-store",
-      },
+    const subscription = await apiClient.get<{ active?: boolean; status?: string }>(
+      apiConfig.routes.subscriptions,
+      { token: accessToken },
     );
-
-    if (response.status === 401) return "unauthenticated";
-    if (response.status === 404) return "inactive";
-    if (!response.ok) return "unavailable";
-    return hasActiveSubscription((await response.json()) as { active?: boolean; status?: string })
+    return hasActiveSubscription(subscription)
       ? "active"
       : "inactive";
-  } catch {
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 401) return "unauthenticated";
+    if (error instanceof ApiError && error.status === 404) return "inactive";
     return "unavailable";
   }
 }

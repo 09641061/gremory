@@ -10,15 +10,12 @@ import type { VerifyMagicLinkCommand } from "../../domain/model/commands/verify-
 import type { IamAuthenticationQueryService } from "../../application/services/iam-authentication-query.service";
 import type { AccessTokenVerification } from "../../application/model/resolved-session";
 import { authenticationSessionSchema } from "../../interfaces/rest/schemas/authentication.schemas";
+import { apiConfig } from "@/api.config";
+import { ApiError, apiClient } from "@/contexts/shared/infrastructure/http/api-client";
 
-const apiBaseUrl = process.env.API_BASE_URL ?? "http://localhost:8080";
-
-export class IamApiError extends Error {
-  constructor(
-    message: string,
-    public readonly status: number,
-  ) {
-    super(message);
+export class IamApiError extends ApiError {
+  constructor(message: string, status: number, details?: unknown) {
+    super(message, status, details);
     this.name = "IamApiError";
   }
 }
@@ -29,67 +26,61 @@ export class IamApiGateway
   async requestEmailSignIn(
     command: RequestEmailSignInCommand
   ): Promise<void> {
-    const response = await fetch(`${apiBaseUrl}/api/v1/auth/sign-in`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email: command.email.value }),
-      cache: "no-store",
-    });
-
-    if (!response.ok) {
-      throw new IamApiError(await readError(response), response.status);
-    }
+    await apiClient.post<void>(
+      apiConfig.routes.authentication.signIn,
+      { email: command.email.value },
+      {
+        errorMessage: "Authentication request failed",
+        errorType: IamApiError,
+      },
+    );
   }
 
   async confirmEmailSignIn(
     command: ConfirmEmailSignInCommand
   ): Promise<AuthenticationSession> {
-    const response = await fetch(`${apiBaseUrl}/api/v1/auth/confirm`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
+    const session = await apiClient.post<unknown>(
+      apiConfig.routes.authentication.confirm,
+      {
         email: command.email.value,
         code: command.code,
-      }),
-      cache: "no-store",
-    });
+      },
+      {
+        errorMessage: "Authentication request failed",
+        errorType: IamApiError,
+      },
+    );
 
-    if (!response.ok) {
-      throw new IamApiError(await readError(response), response.status);
-    }
-
-    return authenticationSessionSchema.parse(await response.json());
+    return authenticationSessionSchema.parse(session);
   }
 
   async refreshSession(
     command: RefreshSessionCommand
   ): Promise<AuthenticationSession> {
-    const response = await fetch(`${apiBaseUrl}/api/v1/auth/refresh`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ refreshToken: command.refreshToken }),
-      cache: "no-store",
-    });
+    const session = await apiClient.post<unknown>(
+      apiConfig.routes.authentication.refresh,
+      { refreshToken: command.refreshToken },
+      {
+        errorMessage: "Authentication request failed",
+        errorType: IamApiError,
+      },
+    );
 
-    if (!response.ok) {
-      throw new IamApiError(await readError(response), response.status);
-    }
-
-    return authenticationSessionSchema.parse(await response.json());
+    return authenticationSessionSchema.parse(session);
   }
 
   async verifyAccessToken(accessToken: string): Promise<AccessTokenVerification> {
     try {
-      const response = await fetch(`${apiBaseUrl}/api/v1/auth/verify`, {
-        headers: { Authorization: `Bearer ${accessToken}` },
-        cache: "no-store",
+      await apiClient.request<void>(apiConfig.routes.authentication.verify, {
+        token: accessToken,
+        errorMessage: "Authentication verification failed",
+        errorType: IamApiError,
       });
-
-      if (response.status === 400 || response.status === 401) {
+      return "authenticated";
+    } catch (error) {
+      if (error instanceof ApiError && (error.status === 400 || error.status === 401)) {
         return "unauthenticated";
       }
-      return response.ok ? "authenticated" : "unavailable";
-    } catch {
       return "unavailable";
     }
   }
@@ -102,38 +93,24 @@ export class IamApiGateway
       headers.Authorization = `Bearer ${command.accessToken}`;
     }
 
-    const response = await fetch(`${apiBaseUrl}/api/v1/auth/sign-out`, {
-      method: "DELETE",
+    await apiClient.delete<void>(apiConfig.routes.authentication.signOut, {
       headers,
-      cache: "no-store",
+      errorMessage: "Authentication request failed",
+      errorType: IamApiError,
     });
-
-    if (!response.ok) {
-      throw new IamApiError(await readError(response), response.status);
-    }
   }
 
   async verifyMagicLink(
     command: VerifyMagicLinkCommand
   ): Promise<AuthenticationSession> {
-    const response = await fetch(
-      `${apiBaseUrl}/api/v1/auth/magic-link?token=${encodeURIComponent(command.token)}`,
-      { cache: "no-store" }
+    const session = await apiClient.request<unknown>(
+      `${apiConfig.routes.authentication.magicLink}?token=${encodeURIComponent(command.token)}`,
+      {
+        errorMessage: "Authentication request failed",
+        errorType: IamApiError,
+      },
     );
 
-    if (!response.ok) {
-      throw new IamApiError(await readError(response), response.status);
-    }
-
-    return authenticationSessionSchema.parse(await response.json());
-  }
-}
-
-async function readError(response: Response): Promise<string> {
-  try {
-    const body = (await response.json()) as { message?: string };
-    return body.message ?? "Authentication request failed";
-  } catch {
-    return "Authentication request failed";
+    return authenticationSessionSchema.parse(session);
   }
 }
