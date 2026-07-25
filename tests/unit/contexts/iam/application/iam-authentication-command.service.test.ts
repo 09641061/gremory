@@ -18,7 +18,7 @@ describe("IamAuthenticationCommandServiceImpl", () => {
 
   it("should return the gateway session when confirmation succeeds", async () => {
     // Arrange
-    const session = { accessToken: "a", refreshToken: "r", expiresIn: 3600 };
+    const session = { accessToken: "a", refreshToken: "r" };
     const gateway = {
       requestEmailSignIn: vi.fn(), confirmEmailSignIn: vi.fn().mockResolvedValue(session),
       refreshSession: vi.fn(), signOut: vi.fn(), verifyMagicLink: vi.fn(),
@@ -46,7 +46,7 @@ describe("IamAuthenticationCommandServiceImpl", () => {
 
   it("should delegate magic-link verification when the token is valid", async () => {
     // Arrange
-    const session = { accessToken: "a", refreshToken: "r", expiresIn: 3600 };
+    const session = { accessToken: "a", refreshToken: "r" };
     const gateway = {
       requestEmailSignIn: vi.fn(), confirmEmailSignIn: vi.fn(), signOut: vi.fn(),
       refreshSession: vi.fn(), verifyMagicLink: vi.fn().mockResolvedValue(session),
@@ -63,7 +63,7 @@ describe("IamAuthenticationCommandServiceImpl", () => {
 
   it("should return the refreshed session when the refresh token is valid", async () => {
     // Arrange
-    const session = { accessToken: "new-access", refreshToken: "new-refresh", expiresIn: 600 };
+    const session = { accessToken: "new-access", refreshToken: "new-refresh" };
     const gateway = {
       requestEmailSignIn: vi.fn(), confirmEmailSignIn: vi.fn(),
       refreshSession: vi.fn().mockResolvedValue(session), signOut: vi.fn(), verifyMagicLink: vi.fn(),

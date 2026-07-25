@@ -1,127 +1,78 @@
 import "server-only";
 
-import { cookies } from "next/headers";
-import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-session-cookie";
 import { Organization } from "../../domain/model/entities/organization.entity";
 import { createOrganizationId } from "../../domain/model/valueobjects/organization-id.vo";
-import type {
-  OrganizationCommandService,
-  OrganizationQueryService,
-} from "../../domain/services/business.services";
-import type {
-  CreateOrganizationCommand,
-  UpdateOrganizationCommand,
-  DeleteOrganizationCommand,
-} from "../../domain/model/commands/business.commands";
+import { createOrganizationName, type OrganizationName } from "../../domain/model/valueobjects/organization-name.vo";
+import type { OrganizationRepository } from "../../domain/services/business.repositories";
+import type { OrganizationId } from "../../domain/model/valueobjects/organization-id.vo";
+import type { OrganizationResource } from "../../interfaces/rest/resources/business.resources";
+import {
+  BusinessApiError,
+  businessDelete,
+  businessGet,
+  businessPost,
+  businessPut,
+} from "../http/business-api.client";
+import { requireBusinessAccessToken } from "../session/business-session";
+import { apiConfig } from "@/api.config";
 
-const apiBaseUrl = process.env.API_BASE_URL ?? "http://localhost:8080";
+export class OrganizationApiGateway implements OrganizationRepository {
+  constructor(private readonly providedToken?: string) {}
 
-type RawOrganization = {
-  id: string;
-  ownerId: string;
-  name: string;
-  active: boolean;
-};
+  async create(name: OrganizationName): Promise<Organization> {
+    const authToken = await requireBusinessAccessToken(this.providedToken);
+    const resource = await businessPost<OrganizationResource>(
+      apiConfig.routes.organizations,
+      { name: name.value },
+      authToken,
+    );
+    return toOrganization(resource);
+  }
 
-function mapOrganizationToEntity(raw: RawOrganization): Organization {
+  async findMine(): Promise<Organization> {
+    const authToken = await requireBusinessAccessToken(this.providedToken);
+    const resource = await businessGet<OrganizationResource>(apiConfig.routes.organizations, authToken);
+    return toOrganization(resource);
+  }
+
+  async findById(id: OrganizationId): Promise<Organization | null> {
+    const authToken = await requireBusinessAccessToken(this.providedToken);
+    try {
+      const resource = await businessGet<OrganizationResource>(
+        `${apiConfig.routes.organizations}/${encodeURIComponent(id.value)}`,
+        authToken
+      );
+      return toOrganization(resource);
+    } catch (error) {
+      if (error instanceof BusinessApiError && error.status === 404) return null;
+      throw error;
+    }
+  }
+
+  async save(organization: Organization): Promise<Organization> {
+    const authToken = await requireBusinessAccessToken(this.providedToken);
+    const resource = await businessPut<OrganizationResource>(
+      `${apiConfig.routes.organizations}/${encodeURIComponent(organization.id.value)}`,
+      { name: organization.name.value },
+      authToken
+    );
+    return toOrganization(resource);
+  }
+
+  async delete(id: OrganizationId): Promise<void> {
+    const authToken = await requireBusinessAccessToken(this.providedToken);
+    await businessDelete(
+      `${apiConfig.routes.organizations}/${encodeURIComponent(id.value)}`,
+      authToken
+    );
+  }
+}
+
+function toOrganization(resource: OrganizationResource): Organization {
   return Organization.create({
-    id: createOrganizationId(raw.id),
-    ownerId: raw.ownerId,
-    name: raw.name,
-    active: raw.active,
+    id: createOrganizationId(resource.id),
+    ownerId: resource.ownerId,
+    name: createOrganizationName(resource.name),
+    active: true,
   });
-}
-
-async function resolveAccessToken(providedToken?: string): Promise<string | undefined> {
-  if (providedToken) return providedToken;
-  try {
-    const cookieStore = await cookies();
-    return cookieStore.get(iamSessionCookies.accessToken)?.value;
-  } catch {
-    return undefined;
-  }
-}
-
-export class OrganizationApiGateway implements OrganizationCommandService, OrganizationQueryService {
-  async getMyOrganization(token?: string): Promise<Organization> {
-    const authToken = await resolveAccessToken(token);
-    const headers: HeadersInit = {};
-    if (authToken) headers.Authorization = `Bearer ${authToken}`;
-
-    const res = await fetch(`${apiBaseUrl}/api/business/organizations`, {
-      headers,
-      cache: "no-store",
-    });
-
-    if (!res.ok) throw new Error("Organization not found for user");
-    return mapOrganizationToEntity(await res.json());
-  }
-
-  async getById(id: string, token?: string): Promise<Organization> {
-    const authToken = await resolveAccessToken(token);
-    const headers: HeadersInit = {};
-    if (authToken) headers.Authorization = `Bearer ${authToken}`;
-
-    const res = await fetch(`${apiBaseUrl}/api/business/organizations/${id}`, {
-      headers,
-      cache: "no-store",
-    });
-
-    if (!res.ok) throw new Error("Organization not found");
-    return mapOrganizationToEntity(await res.json());
-  }
-
-  async create(command: CreateOrganizationCommand, token?: string): Promise<Organization> {
-    const authToken = await resolveAccessToken(token);
-    const headers: HeadersInit = { "Content-Type": "application/json" };
-    if (authToken) headers.Authorization = `Bearer ${authToken}`;
-
-    const res = await fetch(`${apiBaseUrl}/api/business/organizations`, {
-      method: "POST",
-      headers,
-      body: JSON.stringify(command),
-      cache: "no-store",
-    });
-
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.message || "Failed to create organization");
-    }
-
-    return mapOrganizationToEntity(await res.json());
-  }
-
-  async update(command: UpdateOrganizationCommand, token?: string): Promise<Organization> {
-    const authToken = await resolveAccessToken(token);
-    const headers: HeadersInit = { "Content-Type": "application/json" };
-    if (authToken) headers.Authorization = `Bearer ${authToken}`;
-
-    const res = await fetch(`${apiBaseUrl}/api/business/organizations/${command.id}`, {
-      method: "PUT",
-      headers,
-      body: JSON.stringify({ name: command.name }),
-      cache: "no-store",
-    });
-
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.message || "Failed to update organization");
-    }
-
-    return mapOrganizationToEntity(await res.json());
-  }
-
-  async delete(command: DeleteOrganizationCommand, token?: string): Promise<void> {
-    const authToken = await resolveAccessToken(token);
-    const headers: HeadersInit = {};
-    if (authToken) headers.Authorization = `Bearer ${authToken}`;
-
-    const res = await fetch(`${apiBaseUrl}/api/business/organizations/${command.id}`, {
-      method: "DELETE",
-      headers,
-      cache: "no-store",
-    });
-
-    if (!res.ok) throw new Error("Failed to delete organization");
-  }
 }

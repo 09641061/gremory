@@ -1,55 +1,47 @@
 import "server-only";
 
 import type {
-  EstablishmentCommandService,
-  EstablishmentQueryService,
-  PageResponse,
-} from "../../../domain/services/business.services";
-import type { Establishment } from "../../../domain/model/entities/establishment.entity";
-import type {
   CreateEstablishmentCommand,
-  UpdateEstablishmentCommand,
   DeleteEstablishmentCommand,
+  UpdateEstablishmentCommand,
 } from "../../../domain/model/commands/business.commands";
+import { createEstablishmentId } from "../../../domain/model/valueobjects/establishment-id.vo";
+import { createEstablishmentName } from "../../../domain/model/valueobjects/establishment-name.vo";
+import { createEstablishmentPhoto } from "../../../domain/model/valueobjects/establishment-photo.vo";
+import { createOrganizationId } from "../../../domain/model/valueobjects/organization-id.vo";
+import type { EstablishmentRepository } from "../../../domain/services/business.repositories";
+import type { EstablishmentCommandService } from "../../services/business.services";
 import { EstablishmentApiGateway } from "../../../infrastructure/gateways/establishment-api.gateway";
 
 export class EstablishmentCommandServiceImpl implements EstablishmentCommandService {
-  constructor(private readonly gateway: EstablishmentApiGateway) {}
+  constructor(private readonly establishments: EstablishmentRepository) {}
 
-  create(command: CreateEstablishmentCommand, token?: string): Promise<Establishment> {
-    return this.gateway.create(command, token);
+  async create(command: CreateEstablishmentCommand) {
+    const establishment = await this.establishments.create(
+      createOrganizationId(command.organizationId),
+      createEstablishmentName(command.name),
+      createEstablishmentPhoto(command.photoUrl),
+    );
+    return establishment.id;
   }
 
-  update(command: UpdateEstablishmentCommand, token?: string): Promise<Establishment> {
-    return this.gateway.update(command, token);
+  async update(command: UpdateEstablishmentCommand) {
+    const establishment = await this.establishments.findById(
+      createEstablishmentId(command.id),
+    );
+    if (!establishment) throw new Error("Establishment not found");
+    establishment.update(command.name, command.photoUrl);
+    const saved = await this.establishments.save(establishment);
+    return saved.id;
   }
 
-  delete(command: DeleteEstablishmentCommand, token?: string): Promise<void> {
-    return this.gateway.delete(command, token);
-  }
-}
-
-export class EstablishmentQueryServiceImpl implements EstablishmentQueryService {
-  constructor(private readonly gateway: EstablishmentApiGateway) {}
-
-  getByOrganization(
-    organizationId: string,
-    page?: number,
-    size?: number,
-    token?: string
-  ): Promise<PageResponse<Establishment>> {
-    return this.gateway.getByOrganization(organizationId, page, size, token);
-  }
-
-  getById(id: string, token?: string): Promise<Establishment> {
-    return this.gateway.getById(id, token);
+  delete(command: DeleteEstablishmentCommand) {
+    return this.establishments.delete(createEstablishmentId(command.id));
   }
 }
 
-export function createEstablishmentCommandService() {
-  return new EstablishmentCommandServiceImpl(new EstablishmentApiGateway());
-}
-
-export function createEstablishmentQueryService() {
-  return new EstablishmentQueryServiceImpl(new EstablishmentApiGateway());
+export function createEstablishmentCommandService(
+  token?: string,
+): EstablishmentCommandService {
+  return new EstablishmentCommandServiceImpl(new EstablishmentApiGateway(token));
 }

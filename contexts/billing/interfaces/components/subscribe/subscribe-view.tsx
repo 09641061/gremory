@@ -40,8 +40,8 @@ export function SubscribeView() {
 
   const queryService = useMemo(() => new ListPlansQueryService(), []);
   const plans = useMemo(
-    () => queryService.getAvailablePlans(currency, billingCycle),
-    [queryService, currency, billingCycle]
+    () => queryService.getAvailablePlans(currency),
+    [queryService, currency]
   );
 
   const handlePlanSuccess = (planName: string, displayPrice: number, data: unknown) => {
@@ -97,7 +97,7 @@ export function SubscribeView() {
             <PlanCard
               key={plan.id}
               planId={plan.id}
-              name={plan.name === "Standard" ? "Standart" : plan.name}
+              name={plan.name}
               description={plan.description}
               monthlyPrice={plan.monthlyPrice}
               annualPricePerMonth={plan.annualPricePerMonth}
@@ -105,7 +105,7 @@ export function SubscribeView() {
               billingCycle={billingCycle}
               features={[...plan.features]}
               isPopular={plan.isPopular}
-              buttonLabel={plan.id === 2 ? "Get Premium plan" : "Get Standart plan"}
+              buttonLabel={`Get ${plan.name} plan`}
               onSuccess={(data) => handlePlanSuccess(plan.name, displayPrice, data)}
               onError={(err) =>
                 setFeedbackMessage({
@@ -127,6 +127,7 @@ export function SubscribeView() {
       {/* Embedded Payment Modal */}
       {paymentModalState && (
         <PaymentModal
+          key={paymentModalState.clientSecret ?? paymentModalState.planName}
           isOpen={Boolean(paymentModalState)}
           onClose={() => setPaymentModalState(null)}
           clientSecret={paymentModalState.clientSecret}

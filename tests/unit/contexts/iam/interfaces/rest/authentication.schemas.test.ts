@@ -9,7 +9,7 @@ describe("IAM authentication schemas", () => {
     expect(confirmEmailSignInSchema.safeParse({ email: "user@example.com", code: "12a" }).success).toBe(false);
   });
 
-  it("should reject a session with a non-positive expiry", () => {
-    expect(authenticationSessionSchema.safeParse({ accessToken: "a", refreshToken: "r", expiresIn: 0 }).success).toBe(false);
+  it("should accept a session without an expiry field", () => {
+    expect(authenticationSessionSchema.safeParse({ accessToken: "a", refreshToken: "r" }).success).toBe(true);
   });
 });

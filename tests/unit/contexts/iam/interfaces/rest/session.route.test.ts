@@ -14,7 +14,7 @@ describe("IAM session route", () => {
   it("should store tokens and return no content when the session body is valid", async () => {
     const cookieStore = { set: vi.fn(), delete: vi.fn() };
     vi.mocked(cookies).mockResolvedValue(cookieStore as never);
-    const response = await createSessionRoute(new Request("http://localhost", { method: "POST", body: JSON.stringify({ accessToken: "a", refreshToken: "r", expiresIn: 3600 }) }));
+    const response = await createSessionRoute(new Request("http://localhost", { method: "POST", body: JSON.stringify({ accessToken: "a", refreshToken: "r" }) }));
     expect(response.status).toBe(204);
     expect(cookieStore.set).toHaveBeenCalledWith(iamSessionCookies.accessToken, "a", expect.objectContaining({ maxAge: 86400 }));
     expect(cookieStore.set).toHaveBeenCalledWith(iamSessionCookies.refreshToken, "r", expect.objectContaining({ maxAge: 2592000 }));
@@ -25,10 +25,10 @@ describe("IAM session route", () => {
     vi.mocked(cookies).mockResolvedValue(cookieStore as never);
     await clearSessionRoute();
     expect(cookieStore.delete).toHaveBeenCalledWith(iamSessionCookies.pendingEmail);
-    expect(cookieStore.delete).toHaveBeenCalledTimes(4);
+    expect(cookieStore.delete).toHaveBeenCalledTimes(3);
   });
 
-  it("should not create an expiry cookie when expiresIn is omitted", async () => {
+  it("should only create access and refresh cookies", async () => {
     // Arrange
     const cookieStore = { set: vi.fn(), delete: vi.fn() };
     vi.mocked(cookies).mockResolvedValue(cookieStore as never);
@@ -40,8 +40,6 @@ describe("IAM session route", () => {
     // Act
     await createSessionRoute(request);
 
-    // Assert
     expect(cookieStore.set).toHaveBeenCalledTimes(2);
-    expect(cookieStore.set).not.toHaveBeenCalledWith(iamSessionCookies.expiresIn, expect.anything(), expect.anything());
   });
 });

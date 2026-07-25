@@ -1,141 +1,108 @@
 import "server-only";
 
-import { cookies } from "next/headers";
-import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-session-cookie";
 import { Establishment } from "../../domain/model/entities/establishment.entity";
-import { createEstablishmentId } from "../../domain/model/valueobjects/establishment-id.vo";
+import { createEstablishmentId, type EstablishmentId } from "../../domain/model/valueobjects/establishment-id.vo";
+import { createEstablishmentName, type EstablishmentName } from "../../domain/model/valueobjects/establishment-name.vo";
+import { createEstablishmentPhoto, type EstablishmentPhoto } from "../../domain/model/valueobjects/establishment-photo.vo";
+import { createOrganizationId, type OrganizationId } from "../../domain/model/valueobjects/organization-id.vo";
 import type {
-  EstablishmentCommandService,
-  EstablishmentQueryService,
-  PageResponse,
-} from "../../domain/services/business.services";
-import type {
-  CreateEstablishmentCommand,
-  UpdateEstablishmentCommand,
-  DeleteEstablishmentCommand,
-} from "../../domain/model/commands/business.commands";
+  EstablishmentRepository,
+  PageResult,
+} from "../../domain/services/business.repositories";
+import type { EstablishmentResource, PageResource } from "../../interfaces/rest/resources/business.resources";
+import {
+  BusinessApiError,
+  businessDelete,
+  businessGet,
+  businessPost,
+  businessPut,
+} from "../http/business-api.client";
+import { requireBusinessAccessToken } from "../session/business-session";
+import { apiConfig } from "@/api.config";
 
-const apiBaseUrl = process.env.API_BASE_URL ?? "http://localhost:8080";
+export class EstablishmentApiGateway implements EstablishmentRepository {
+  constructor(private readonly providedToken?: string) {}
 
-type RawEstablishment = {
-  id: string;
-  organizationId: string;
-  name: string;
-  photoUrl?: string | null;
-  active: boolean;
-};
-
-function mapEstablishmentToEntity(raw: RawEstablishment): Establishment {
-  return Establishment.create({
-    id: createEstablishmentId(raw.id),
-    organizationId: raw.organizationId,
-    name: raw.name,
-    photoUrl: raw.photoUrl ?? null,
-    active: raw.active,
-  });
-}
-
-async function resolveAccessToken(providedToken?: string): Promise<string | undefined> {
-  if (providedToken) return providedToken;
-  try {
-    const cookieStore = await cookies();
-    return cookieStore.get(iamSessionCookies.accessToken)?.value;
-  } catch {
-    return undefined;
-  }
-}
-
-export class EstablishmentApiGateway implements EstablishmentCommandService, EstablishmentQueryService {
-  async getByOrganization(
-    organizationId: string,
-    page = 0,
-    size = 20,
-    token?: string
-  ): Promise<PageResponse<Establishment>> {
-    const authToken = await resolveAccessToken(token);
-    const headers: HeadersInit = {};
-    if (authToken) headers.Authorization = `Bearer ${authToken}`;
-
-    const res = await fetch(
-      `${apiBaseUrl}/api/business/establishments/organization/${organizationId}?page=${page}&size=${size}`,
-      { headers, cache: "no-store" }
+  async create(
+    organizationId: OrganizationId,
+    name: EstablishmentName,
+    photoUrl: EstablishmentPhoto,
+  ): Promise<Establishment> {
+    const authToken = await requireBusinessAccessToken(this.providedToken);
+    const resource = await businessPost<EstablishmentResource>(
+      apiConfig.routes.establishments,
+      {
+        organizationId: organizationId.value,
+        name: name.value,
+        photoUrl: photoUrl.value,
+      },
+      authToken,
     );
+    return toEstablishment(resource);
+  }
 
-    if (!res.ok) throw new Error("Failed to fetch establishments for organization");
+  async findById(id: EstablishmentId): Promise<Establishment | null> {
+    const authToken = await requireBusinessAccessToken(this.providedToken);
+    try {
+      const resource = await businessGet<EstablishmentResource>(
+        `${apiConfig.routes.establishments}/${encodeURIComponent(id.value)}`,
+        authToken
+      );
+      return toEstablishment(resource);
+    } catch (error) {
+      if (error instanceof BusinessApiError && error.status === 404) return null;
+      throw error;
+    }
+  }
 
-    const data: PageResponse<RawEstablishment> = await res.json();
+  async findByOrganization(
+    organizationId: OrganizationId,
+    page: number,
+    size: number,
+  ): Promise<PageResult<Establishment>> {
+    const authToken = await requireBusinessAccessToken(this.providedToken);
+    const params = new URLSearchParams({
+      page: String(page),
+      size: String(size),
+    });
+    const resource = await businessGet<PageResource<EstablishmentResource>>(
+      `${apiConfig.routes.establishments}/organization/${encodeURIComponent(organizationId.value)}?${params}`,
+      authToken
+    );
     return {
-      ...data,
-      content: data.content.map(mapEstablishmentToEntity),
+      ...resource,
+      content: resource.content.map(toEstablishment),
     };
   }
 
-  async getById(id: string, token?: string): Promise<Establishment> {
-    const authToken = await resolveAccessToken(token);
-    const headers: HeadersInit = {};
-    if (authToken) headers.Authorization = `Bearer ${authToken}`;
-
-    const res = await fetch(`${apiBaseUrl}/api/business/establishments/${id}`, {
-      headers,
-      cache: "no-store",
-    });
-
-    if (!res.ok) throw new Error("Establishment not found");
-    return mapEstablishmentToEntity(await res.json());
+  async save(establishment: Establishment): Promise<Establishment> {
+    const authToken = await requireBusinessAccessToken(this.providedToken);
+    const resource = await businessPut<EstablishmentResource>(
+      `${apiConfig.routes.establishments}/${encodeURIComponent(establishment.id.value)}`,
+      {
+        name: establishment.name.value,
+        photoUrl: establishment.photoUrl.value,
+      },
+      authToken
+    );
+    return toEstablishment(resource);
   }
 
-  async create(command: CreateEstablishmentCommand, token?: string): Promise<Establishment> {
-    const authToken = await resolveAccessToken(token);
-    const headers: HeadersInit = { "Content-Type": "application/json" };
-    if (authToken) headers.Authorization = `Bearer ${authToken}`;
-
-    const res = await fetch(`${apiBaseUrl}/api/business/establishments`, {
-      method: "POST",
-      headers,
-      body: JSON.stringify(command),
-      cache: "no-store",
-    });
-
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.message || "Failed to create establishment");
-    }
-
-    return mapEstablishmentToEntity(await res.json());
+  async delete(id: EstablishmentId): Promise<void> {
+    const authToken = await requireBusinessAccessToken(this.providedToken);
+    await businessDelete(
+      `${apiConfig.routes.establishments}/${encodeURIComponent(id.value)}`,
+      authToken
+    );
   }
+}
 
-  async update(command: UpdateEstablishmentCommand, token?: string): Promise<Establishment> {
-    const authToken = await resolveAccessToken(token);
-    const headers: HeadersInit = { "Content-Type": "application/json" };
-    if (authToken) headers.Authorization = `Bearer ${authToken}`;
-
-    const { id, ...payload } = command;
-    const res = await fetch(`${apiBaseUrl}/api/business/establishments/${id}`, {
-      method: "PUT",
-      headers,
-      body: JSON.stringify(payload),
-      cache: "no-store",
-    });
-
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.message || "Failed to update establishment");
-    }
-
-    return mapEstablishmentToEntity(await res.json());
-  }
-
-  async delete(command: DeleteEstablishmentCommand, token?: string): Promise<void> {
-    const authToken = await resolveAccessToken(token);
-    const headers: HeadersInit = {};
-    if (authToken) headers.Authorization = `Bearer ${authToken}`;
-
-    const res = await fetch(`${apiBaseUrl}/api/business/establishments/${command.id}`, {
-      method: "DELETE",
-      headers,
-      cache: "no-store",
-    });
-
-    if (!res.ok) throw new Error("Failed to delete establishment");
-  }
+function toEstablishment(resource: EstablishmentResource): Establishment {
+  return Establishment.create({
+    id: createEstablishmentId(resource.id),
+    organizationId: createOrganizationId(resource.organizationId),
+    name: createEstablishmentName(resource.name),
+    photoUrl: createEstablishmentPhoto(resource.photoUrl),
+    active: true,
+  });
 }

@@ -6,7 +6,7 @@ import {
   BarChart3,
   CalendarDays,
   ContactRound,
-  LayoutGrid,
+  MessageCircle,
   Package,
   Settings,
   Users,
@@ -16,7 +16,7 @@ import { buttonVariants } from "@/contexts/shared/interfaces/components/ui/butto
 import { cn } from "@/lib/utils";
 
 const navigation = [
-  { label: "Dashboard", href: "/dashboard", icon: LayoutGrid },
+  { label: "New Chat", href: "/chat", icon: MessageCircle },
   { label: "Schedule", href: "/schedule", icon: CalendarDays },
   { label: "CRM", href: "/crm", icon: ContactRound },
   { label: "Catalog", href: "/catalog", icon: Package },
@@ -28,15 +28,8 @@ export function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="fixed inset-y-0 left-0 z-20 hidden w-60 shrink-0 border-r border-border/60 bg-background px-3 py-3 md:flex md:flex-col">
-      <h1 className="mb-4 px-2 text-lg font-bold leading-tight tracking-[-0.03em] text-foreground">
-        Takodu
-      </h1>
-
-      <nav aria-label="Módulos" className="mt-5">
-        <p className="mb-2 px-2 text-xs font-semibold text-foreground">
-          Workspace
-        </p>
+    <aside className="fixed bottom-0 left-0 top-14 z-20 hidden w-60 shrink-0 border-r border-border/60 bg-background px-3 py-3 md:flex md:flex-col">
+      <nav aria-label="Módulos" className="mt-2">
         <ul className="space-y-1">
           {navigation.map(({ label, href, icon: Icon }) => {
             const active = pathname === href || pathname.startsWith(`${href}/`);

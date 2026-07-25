@@ -1,12 +1,12 @@
 import { z } from "zod";
 
 export const createOrganizationSchema = z.object({
-  name: z.string().min(1, "Organization name is required").max(150, "Maximum 150 characters"),
+  name: z.string().trim().min(1, "Organization name is required").max(150),
 });
 
 export const updateOrganizationSchema = z.object({
   id: z.string().uuid("Invalid organization ID"),
-  name: z.string().min(1, "Organization name is required").max(150, "Maximum 150 characters"),
+  name: z.string().trim().min(1, "Organization name is required").max(150),
 });
 
 export type CreateOrganizationInput = z.infer<typeof createOrganizationSchema>;

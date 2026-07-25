@@ -2,7 +2,6 @@ import { Plan } from "../../../domain/model/entities/plan";
 import { createPlanId } from "../../../domain/model/value-objects/plan-id";
 import { PlanPricingPolicy } from "../../../domain/services/plan-pricing-policy";
 import type { CurrencyCode } from "../../../domain/model/value-objects/currency";
-import type { BillingCycleType } from "../../../domain/model/value-objects/billing-cycle";
 
 export interface PlanReadModel {
   id: number;
@@ -18,8 +17,7 @@ export class ListPlansQueryService {
   private readonly pricingPolicy = new PlanPricingPolicy();
 
   public getAvailablePlans(
-    currencyCode: CurrencyCode,
-    billingCycle: BillingCycleType
+    currencyCode: CurrencyCode
   ): PlanReadModel[] {
     const standardPlan = new Plan(
       createPlanId(1),

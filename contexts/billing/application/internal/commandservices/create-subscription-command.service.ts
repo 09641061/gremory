@@ -7,7 +7,6 @@ export interface CreateSubscriptionResult {
   planId: number;
   billingCycle: string;
   currency: string;
-  ownerId: string;
   prepared: boolean;
 }
 
@@ -18,13 +17,12 @@ export class CreateSubscriptionCommandService {
   public handle(command: CreateSubscriptionCommand): CreateSubscriptionResult {
     const planId = createPlanId(command.planId);
     const cycle = createBillingCycle(command.billingCycle);
-    const currency = createCurrency(command.currency ?? "PEN");
+    const currency = createCurrency(command.currency ?? "USD");
 
     return {
       planId: planId.value,
       billingCycle: cycle.value,
       currency: currency.value,
-      ownerId: command.ownerId,
       prepared: true,
     };
   }

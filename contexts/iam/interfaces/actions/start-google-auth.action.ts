@@ -1,8 +1,9 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { apiConfig } from "@/api.config";
+import { apiClient } from "@/contexts/shared/infrastructure/http/api-client";
 
 export async function startGoogleAuthAction() {
-  const apiBaseUrl = process.env.API_BASE_URL ?? "http://localhost:8080";
-  redirect(`${apiBaseUrl}/api/v1/auth/google/authorize`);
+  redirect(apiClient.buildUrl(apiConfig.routes.authentication.googleAuthorize));
 }

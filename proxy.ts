@@ -1,12 +1,11 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { createIamAuthenticationCommandService } from "@/contexts/iam/application/internal/commandservices/iam-authentication-command.service";
+import { createIamSessionQueryService } from "@/contexts/iam/application/internal/queryservices/iam-session-query.service";
 import { hasActiveSubscription } from "@/contexts/billing/domain/services/subscription-access.policy";
-import { shouldRefreshAccessToken } from "@/contexts/iam/domain/services/iam-access-token-refresh.policy";
-import {
-  iamSessionCookieOptions,
-  iamSessionCookies,
-} from "@/contexts/iam/infrastructure/session/iam-session-cookie";
+import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-session-cookie";
+import { continueRequestWithSession } from "@/contexts/iam/interfaces/proxy/iam-session-request";
+import { apiConfig } from "@/api.config";
+import { ApiError, apiClient } from "@/contexts/shared/infrastructure/http/api-client";
 
 export async function proxy(request: NextRequest) {
   let accessToken = request.cookies.get(iamSessionCookies.accessToken)?.value;
@@ -14,39 +13,46 @@ export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   let response: NextResponse | null = null;
 
-  if (!accessToken) {
-    if (pathname === "/" || isPrivateRoute(pathname)) {
-      return NextResponse.redirect(new URL("/login", request.url));
-    }
+  // Login must remain reachable even when the browser still sends cookies for
+  // a session revoked by a login in another browser.
+  if (pathname === "/login") {
     return NextResponse.next();
   }
 
-  if (accessToken && shouldRefreshAccessToken(accessToken)) {
-    const session = refreshToken ? await refreshAccessToken(refreshToken) : null;
-    if (!session) {
+  const session = await createIamSessionQueryService().resolveSession({
+    accessToken,
+    refreshToken,
+  });
+
+  if (session.status === "unauthenticated") {
+    if (accessToken || refreshToken || pathname === "/" || isPrivateRoute(pathname)) {
       return redirectToLogin(request);
     }
+    return NextResponse.next();
+  }
+  if (session.status === "unavailable") return NextResponse.next();
 
-    accessToken = session.accessToken;
-    response = NextResponse.next();
-    response.cookies.set(iamSessionCookies.accessToken, session.accessToken, {
-      ...iamSessionCookieOptions,
-      maxAge: session.expiresIn,
-    });
-    response.cookies.set(iamSessionCookies.refreshToken, session.refreshToken, {
-      ...iamSessionCookieOptions,
-      maxAge: 60 * 60 * 24 * 30,
-    });
-    response.cookies.set(iamSessionCookies.expiresIn, String(session.expiresIn), {
-      ...iamSessionCookieOptions,
-      maxAge: session.expiresIn,
-    });
+  accessToken = session.accessToken;
+  if (session.rotatedSession) {
+    response = continueRequestWithSession(request, session.rotatedSession);
   }
 
-  const activeSubscription = await hasSubscriptionAccess(accessToken);
+  const subscriptionAccess = await getSubscriptionAccess(accessToken);
+
+  if (subscriptionAccess === "unauthenticated") {
+    return redirectToLogin(request);
+  }
+
+  // Do not convert an API outage into a false "no subscription" decision.
+  // Protected backend endpoints remain the final authorization boundary.
+  if (subscriptionAccess === "unavailable") {
+    return response ?? NextResponse.next();
+  }
+
+  const activeSubscription = subscriptionAccess === "active";
 
   if (activeSubscription && (pathname === "/" || pathname === "/login" || pathname === "/subscribe")) {
-    return redirectWithCookies(request, "/dashboard", response);
+    return redirectWithCookies(request, "/chat", response);
   }
 
   if (!activeSubscription && (pathname === "/" || pathname === "/login" || isPrivateRoute(pathname))) {
@@ -57,25 +63,33 @@ export async function proxy(request: NextRequest) {
 }
 
 function isPrivateRoute(pathname: string) {
-  return ["/dashboard", "/analytics", "/schedule", "/crm", "/catalog", "/team", "/settings"].some(
-    (route) => pathname === route || pathname.startsWith(`${route}/`),
-  );
+  return [
+    "/chat",
+    "/analytics",
+    "/schedule",
+    "/crm",
+    "/catalog",
+    "/team",
+    "/settings",
+    "/organizations",
+    "/establishments",
+  ].some((route) => pathname === route || pathname.startsWith(`${route}/`));
 }
 
-async function hasSubscriptionAccess(accessToken: string) {
+type SubscriptionAccess = "active" | "inactive" | "unauthenticated" | "unavailable";
+async function getSubscriptionAccess(accessToken: string): Promise<SubscriptionAccess> {
   try {
-    const response = await fetch(
-      `${process.env.API_BASE_URL ?? "http://localhost:8080"}/api/billing/subscriptions`,
-      {
-        headers: { Authorization: `Bearer ${accessToken}` },
-        cache: "no-store",
-      },
+    const subscription = await apiClient.get<{ active?: boolean; status?: string }>(
+      apiConfig.routes.subscriptions,
+      { token: accessToken },
     );
-
-    if (!response.ok) return false;
-    return hasActiveSubscription((await response.json()) as { active?: boolean; status?: string });
-  } catch {
-    return false;
+    return hasActiveSubscription(subscription)
+      ? "active"
+      : "inactive";
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 401) return "unauthenticated";
+    if (error instanceof ApiError && error.status === 404) return "inactive";
+    return "unavailable";
   }
 }
 
@@ -89,24 +103,26 @@ function redirectWithCookies(request: NextRequest, path: string, response: NextR
   return redirectResponse;
 }
 
-async function refreshAccessToken(refreshToken: string) {
-  try {
-    return await createIamAuthenticationCommandService().refreshSession({
-      refreshToken,
-    });
-  } catch {
-    return null;
-  }
-}
-
 function redirectToLogin(request: NextRequest) {
   const response = NextResponse.redirect(new URL("/login", request.url));
   response.cookies.delete(iamSessionCookies.accessToken);
   response.cookies.delete(iamSessionCookies.refreshToken);
-  response.cookies.delete(iamSessionCookies.expiresIn);
   return response;
 }
 
 export const config = {
-  matcher: ["/", "/login", "/subscribe", "/dashboard/:path*", "/analytics/:path*", "/schedule/:path*", "/crm/:path*", "/catalog/:path*", "/team/:path*", "/settings/:path*"],
+  matcher: [
+    "/",
+    "/login",
+    "/subscribe",
+    "/chat/:path*",
+    "/analytics/:path*",
+    "/schedule/:path*",
+    "/crm/:path*",
+    "/catalog/:path*",
+    "/team/:path*",
+    "/settings/:path*",
+    "/organizations/:path*",
+    "/establishments/:path*",
+  ],
 };

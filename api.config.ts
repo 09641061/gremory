@@ -1,0 +1,27 @@
+import "server-only";
+
+const baseUrl = process.env.API_BASE_URL ?? "http://localhost:8080";
+
+export const apiConfig = Object.freeze({
+  baseUrl: baseUrl.replace(/\/+$/, ""),
+  routes: Object.freeze({
+    authentication: Object.freeze({
+      root: "/api/v1/auth",
+      signIn: "/api/v1/auth/sign-in",
+      confirm: "/api/v1/auth/confirm",
+      refresh: "/api/v1/auth/refresh",
+      verify: "/api/v1/auth/verify",
+      signOut: "/api/v1/auth/sign-out",
+      magicLink: "/api/v1/auth/magic-link",
+      googleAuthorize: "/api/v1/auth/google/authorize",
+    }),
+    organizations: "/api/business/organizations",
+    establishments: "/api/business/establishments",
+    subscriptions: "/api/billing/subscriptions",
+    invoices: "/api/billing/invoices",
+    catalogCategories: "/api/catalog/categories",
+    catalogServices: "/api/catalog/services",
+    devices: "/api/devices",
+    notifications: "/api/notifications",
+  }),
+});

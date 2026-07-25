@@ -14,8 +14,8 @@ import type {
   DeleteServiceCategoryCommand,
 } from "../../domain/model/commands/service-category.commands";
 import type { PageResponse } from "../../domain/services/catalog-service.services";
-
-const apiBaseUrl = process.env.API_BASE_URL ?? "http://localhost:8080";
+import { apiConfig } from "@/api.config";
+import { apiClient } from "@/contexts/shared/infrastructure/http/api-client";
 
 type RawServiceCategory = {
   id: string;
@@ -51,17 +51,19 @@ export class ServiceCategoryApiGateway
     token?: string
   ): Promise<PageResponse<ServiceCategory>> {
     const authToken = await resolveAccessToken(token);
-    const headers: HeadersInit = {};
-    if (authToken) headers.Authorization = `Bearer ${authToken}`;
-
-    const res = await fetch(
-      `${apiBaseUrl}/api/catalog/categories?establishmentId=${establishmentId}&page=${page}&size=${size}`,
-      { headers, cache: "no-store" }
+    const query = new URLSearchParams({
+      establishmentId,
+      page: String(page),
+      size: String(size),
+    });
+    const data = await apiClient.get<PageResponse<RawServiceCategory>>(
+      `${apiConfig.routes.catalogCategories}?${query}`,
+      {
+        token: authToken,
+        errorMessage: "Failed to list categories",
+      },
     );
 
-    if (!res.ok) throw new Error("Failed to list categories");
-
-    const data: PageResponse<RawServiceCategory> = await res.json();
     return {
       ...data,
       content: data.content.map(mapCategoryToEntity),
@@ -70,52 +72,38 @@ export class ServiceCategoryApiGateway
 
   async create(command: CreateServiceCategoryCommand, token?: string): Promise<ServiceCategory> {
     const authToken = await resolveAccessToken(token);
-    const headers: HeadersInit = { "Content-Type": "application/json" };
-    if (authToken) headers.Authorization = `Bearer ${authToken}`;
-
-    const res = await fetch(`${apiBaseUrl}/api/catalog/categories`, {
-      method: "POST",
-      headers,
-      body: JSON.stringify(command),
-      cache: "no-store",
-    });
-
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.message || "Failed to create category");
-    }
-
-    return mapCategoryToEntity(await res.json());
+    const resource = await apiClient.post<RawServiceCategory>(
+      apiConfig.routes.catalogCategories,
+      command,
+      {
+        token: authToken,
+        errorMessage: "Failed to create category",
+      },
+    );
+    return mapCategoryToEntity(resource);
   }
 
   async update(command: UpdateServiceCategoryCommand, token?: string): Promise<ServiceCategory> {
     const authToken = await resolveAccessToken(token);
-    const headers: HeadersInit = { "Content-Type": "application/json" };
-    if (authToken) headers.Authorization = `Bearer ${authToken}`;
-
-    const res = await fetch(`${apiBaseUrl}/api/catalog/categories/${command.id}`, {
-      method: "PUT",
-      headers,
-      body: JSON.stringify({ name: command.name }),
-      cache: "no-store",
-    });
-
-    if (!res.ok) throw new Error("Failed to update category");
-
-    return mapCategoryToEntity(await res.json());
+    const resource = await apiClient.put<RawServiceCategory>(
+      `${apiConfig.routes.catalogCategories}/${encodeURIComponent(command.id)}`,
+      { name: command.name },
+      {
+        token: authToken,
+        errorMessage: "Failed to update category",
+      },
+    );
+    return mapCategoryToEntity(resource);
   }
 
   async delete(command: DeleteServiceCategoryCommand, token?: string): Promise<void> {
     const authToken = await resolveAccessToken(token);
-    const headers: HeadersInit = {};
-    if (authToken) headers.Authorization = `Bearer ${authToken}`;
-
-    const res = await fetch(`${apiBaseUrl}/api/catalog/categories/${command.id}`, {
-      method: "DELETE",
-      headers,
-      cache: "no-store",
-    });
-
-    if (!res.ok) throw new Error("Failed to delete category");
+    await apiClient.delete<void>(
+      `${apiConfig.routes.catalogCategories}/${encodeURIComponent(command.id)}`,
+      {
+        token: authToken,
+        errorMessage: "Failed to delete category",
+      },
+    );
   }
 }

@@ -1,49 +1,43 @@
 import "server-only";
 
 import type {
-  OrganizationCommandService,
-  OrganizationQueryService,
-} from "../../../domain/services/business.services";
-import type { Organization } from "../../../domain/model/entities/organization.entity";
-import type {
   CreateOrganizationCommand,
-  UpdateOrganizationCommand,
   DeleteOrganizationCommand,
+  UpdateOrganizationCommand,
 } from "../../../domain/model/commands/business.commands";
+import { createOrganizationId } from "../../../domain/model/valueobjects/organization-id.vo";
+import { createOrganizationName } from "../../../domain/model/valueobjects/organization-name.vo";
+import type { OrganizationRepository } from "../../../domain/services/business.repositories";
+import type { OrganizationCommandService } from "../../services/business.services";
 import { OrganizationApiGateway } from "../../../infrastructure/gateways/organization-api.gateway";
 
 export class OrganizationCommandServiceImpl implements OrganizationCommandService {
-  constructor(private readonly gateway: OrganizationApiGateway) {}
+  constructor(private readonly organizations: OrganizationRepository) {}
 
-  create(command: CreateOrganizationCommand, token?: string): Promise<Organization> {
-    return this.gateway.create(command, token);
+  async create(command: CreateOrganizationCommand) {
+    const organization = await this.organizations.create(
+      createOrganizationName(command.name),
+    );
+    return organization.id;
   }
 
-  update(command: UpdateOrganizationCommand, token?: string): Promise<Organization> {
-    return this.gateway.update(command, token);
+  async update(command: UpdateOrganizationCommand) {
+    const organization = await this.organizations.findById(
+      createOrganizationId(command.id),
+    );
+    if (!organization) throw new Error("Organization not found");
+    organization.rename(command.name);
+    const saved = await this.organizations.save(organization);
+    return saved.id;
   }
 
-  delete(command: DeleteOrganizationCommand, token?: string): Promise<void> {
-    return this.gateway.delete(command, token);
-  }
-}
-
-export class OrganizationQueryServiceImpl implements OrganizationQueryService {
-  constructor(private readonly gateway: OrganizationApiGateway) {}
-
-  getMyOrganization(token?: string): Promise<Organization> {
-    return this.gateway.getMyOrganization(token);
-  }
-
-  getById(id: string, token?: string): Promise<Organization> {
-    return this.gateway.getById(id, token);
+  delete(command: DeleteOrganizationCommand) {
+    return this.organizations.delete(createOrganizationId(command.id));
   }
 }
 
-export function createOrganizationCommandService() {
-  return new OrganizationCommandServiceImpl(new OrganizationApiGateway());
-}
-
-export function createOrganizationQueryService() {
-  return new OrganizationQueryServiceImpl(new OrganizationApiGateway());
+export function createOrganizationCommandService(
+  token?: string,
+): OrganizationCommandService {
+  return new OrganizationCommandServiceImpl(new OrganizationApiGateway(token));
 }

@@ -1,18 +1,45 @@
 import type { EstablishmentId } from "../valueobjects/establishment-id.vo";
+import type { OrganizationId } from "../valueobjects/organization-id.vo";
+import { createEstablishmentName, type EstablishmentName } from "../valueobjects/establishment-name.vo";
+import { createEstablishmentPhoto, type EstablishmentPhoto } from "../valueobjects/establishment-photo.vo";
 
 export interface EstablishmentProps {
   id: EstablishmentId;
-  organizationId: string;
-  name: string;
-  photoUrl?: string | null;
+  organizationId: OrganizationId;
+  name: EstablishmentName;
+  photoUrl: EstablishmentPhoto;
   active: boolean;
 }
 
 export class Establishment {
-  constructor(public readonly props: EstablishmentProps) {}
+  private constructor(
+    public readonly id: EstablishmentId,
+    public readonly organizationId: OrganizationId,
+    private currentName: EstablishmentName,
+    private currentPhotoUrl: EstablishmentPhoto,
+    public readonly active: boolean,
+  ) {}
 
   static create(props: EstablishmentProps): Establishment {
-    if (!props.name.trim()) throw new Error("Establishment name cannot be empty");
-    return new Establishment(props);
+    return new Establishment(
+      props.id,
+      props.organizationId,
+      props.name,
+      props.photoUrl ?? createEstablishmentPhoto(),
+      props.active,
+    );
+  }
+
+  get name(): EstablishmentName {
+    return this.currentName;
+  }
+
+  get photoUrl(): EstablishmentPhoto {
+    return this.currentPhotoUrl;
+  }
+
+  update(name: string, photoUrl?: string | null): void {
+    this.currentName = createEstablishmentName(name);
+    this.currentPhotoUrl = createEstablishmentPhoto(photoUrl);
   }
 }
