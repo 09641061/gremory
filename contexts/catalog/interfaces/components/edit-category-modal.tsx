@@ -8,26 +8,35 @@ import { Label } from "@/contexts/shared/interfaces/components/ui/label";
 import { Spinner } from "@/contexts/shared/interfaces/components/ui/spinner";
 import { useUpdateServiceCategory } from "../../application/use-cases/use-update-service-category";
 
+import { useDeleteServiceCategory } from "../../application/use-cases/use-delete-service-category";
+
 interface EditCategoryModalProps {
   isOpen: boolean;
   onClose: () => void;
   category: { id: string; name: string } | null;
+  servicesCount: number;
 }
 
 export function EditCategoryModal({
   isOpen,
   onClose,
   category,
+  servicesCount,
 }: EditCategoryModalProps) {
-  const { state, formAction, pending } = useUpdateServiceCategory(onClose);
+  const { state: updateState, formAction, pending: updatePending } = useUpdateServiceCategory(onClose);
+  const { deleteCategory, pending: deletePending, state: deleteState } = useDeleteServiceCategory(onClose);
 
   if (!isOpen || !category) return null;
+
+  // Combined error states to display in the modal
+  const errorState = updateState.status === "error" ? updateState : deleteState.status === "error" ? deleteState : null;
+  const isActionPending = updatePending || deletePending;
 
   return (
     <>
       <ErrorAlert
-        title="Failed to update category"
-        message={state.status === "error" ? (state.error ?? undefined) : undefined}
+        title="Failed to process category request"
+        message={errorState ? (errorState.error ?? undefined) : undefined}
       />
 
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
@@ -53,24 +62,50 @@ export function EditCategoryModal({
               />
             </div>
 
-            <div className="flex justify-end gap-3 pt-4 border-t border-border">
-              <Button type="button" variant="ghost" onClick={onClose}>
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                disabled={pending}
-                className="bg-primary hover:bg-primary/90 text-primary-foreground font-medium"
-              >
-                {pending ? (
-                  <>
-                    <Spinner data-icon="inline-start" />
-                    Saving...
-                  </>
-                ) : (
-                  "Save Changes"
-                )}
-              </Button>
+
+
+            <div className="flex justify-between items-center pt-4 border-t border-border mt-4">
+              {/* Show delete button only if there are no associated services */}
+              {servicesCount === 0 ? (
+                <Button
+                  type="button"
+                  variant="destructive"
+                  disabled={isActionPending}
+                  onClick={() => deleteCategory(category.id)}
+                  className="bg-destructive hover:bg-destructive/90 text-destructive-foreground text-xs"
+                >
+                  {deletePending ? (
+                    <>
+                      <Spinner data-icon="inline-start" />
+                      Deleting...
+                    </>
+                  ) : (
+                    "Delete Category"
+                  )}
+                </Button>
+              ) : (
+                <div /> // Placeholder to align submit buttons to the right
+              )}
+
+              <div className="flex gap-3">
+                <Button type="button" variant="ghost" onClick={onClose}>
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={isActionPending}
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground font-medium"
+                >
+                  {updatePending ? (
+                    <>
+                      <Spinner data-icon="inline-start" />
+                      Saving...
+                    </>
+                  ) : (
+                    "Save Changes"
+                  )}
+                </Button>
+              </div>
             </div>
           </form>
         </div>

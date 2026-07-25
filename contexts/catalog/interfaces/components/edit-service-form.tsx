@@ -10,6 +10,7 @@ import { GeneralInfoSection } from "./general-info-section";
 import { FinancialsAndLogisticsSection } from "./financials-and-logistics-section";
 import { InstructionsSection } from "./instructions-section";
 import { useUpdateCatalogService } from "../../application/use-cases/use-update-catalog-service";
+import { useDeleteCatalogService } from "../../application/use-cases/use-delete-catalog-service";
 import type { DetailedServiceDTO } from "./service-detail-view";
 
 interface EditServiceFormProps {
@@ -18,15 +19,22 @@ interface EditServiceFormProps {
 
 export function EditServiceForm({ service }: EditServiceFormProps) {
   const router = useRouter();
-  const { state, formAction, pending } = useUpdateCatalogService(() => {
+  const { state: updateState, formAction, pending: updatePending } = useUpdateCatalogService(() => {
     router.push("/catalog");
   });
+  const { deleteService, pending: deletePending, state: deleteState } = useDeleteCatalogService(() => {
+    router.push("/catalog");
+  });
+
+  // Combined error and loading state for actions
+  const errorState = updateState.status === "error" ? updateState : deleteState.status === "error" ? deleteState : null;
+  const isActionPending = updatePending || deletePending;
 
   return (
     <>
       <ErrorAlert
-        title="Failed to update service"
-        message={state.status === "error" ? (state.error ?? undefined) : undefined}
+        title="Failed to process service request"
+        message={errorState ? (errorState.error ?? undefined) : undefined}
       />
 
       <div className="bg-background text-foreground flex flex-col">
@@ -41,7 +49,7 @@ export function EditServiceForm({ service }: EditServiceFormProps) {
             </Link>
           </div>
 
-          <form action={formAction} id="edit-service-form" className="space-y-6">
+          <form action={formAction} key={service.id} id="edit-service-form" className="space-y-6">
             <input type="hidden" name="id" value={service.id} />
             {service.categoryId && (
               <input type="hidden" name="categoryId" value={service.categoryId} />
@@ -72,26 +80,45 @@ export function EditServiceForm({ service }: EditServiceFormProps) {
 
             {/* Actions Inside Form */}
             <div className="flex justify-between items-center pt-6 border-t border-border mt-8">
-              <Link href="/catalog" passHref>
-                <Button type="button" variant="ghost" className="text-muted-foreground">
-                  Cancel
-                </Button>
-              </Link>
-
               <Button
-                type="submit"
-                disabled={pending}
-                className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-8"
+                type="button"
+                variant="destructive"
+                disabled={isActionPending}
+                onClick={() => deleteService(service.id)}
+                className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
               >
-                {pending ? (
+                {deletePending ? (
                   <>
                     <Spinner data-icon="inline-start" />
-                    Saving...
+                    Deleting...
                   </>
                 ) : (
-                  "Save Changes"
+                  "Delete Service"
                 )}
               </Button>
+
+              <div className="flex gap-3">
+                <Link href="/catalog" passHref>
+                  <Button type="button" variant="ghost" className="text-muted-foreground">
+                    Cancel
+                  </Button>
+                </Link>
+
+                <Button
+                  type="submit"
+                  disabled={isActionPending}
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-8"
+                >
+                  {updatePending ? (
+                    <>
+                      <Spinner data-icon="inline-start" />
+                      Saving...
+                    </>
+                  ) : (
+                    "Save Changes"
+                  )}
+                </Button>
+              </div>
             </div>
           </form>
         </main>

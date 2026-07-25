@@ -14,12 +14,14 @@ export function CatalogClientWrapper({
   initialCategories,
   initialServices,
 }: CatalogClientWrapperProps) {
-  // Use initialEstablishmentId directly as key in layout, removing unused setState
   const activeEstablishmentId = initialEstablishmentId;
+
+  // Derive a key from establishment ID and services payload to remount layout when services change
+  const layoutKey = `${activeEstablishmentId}_${JSON.stringify(initialServices.map(s => `${s.id}_${s.categoryId}`))}`;
 
   return (
     <CatalogLayout
-      key={activeEstablishmentId} // Force component remount and state reset on establishment change
+      key={layoutKey} // Remounts layout and updates state when establishment or services list changes
       categories={initialCategories}
       services={initialServices}
       activeEstablishmentId={activeEstablishmentId}
