@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { CategorySidebar, type CategoryDTO, type ServiceSummaryDTO } from "./category-sidebar";
 import { ServiceDetailView, type DetailedServiceDTO } from "./service-detail-view";
 import { CreateCategoryModal } from "./create-category-modal";
@@ -11,14 +11,12 @@ interface CatalogLayoutProps {
   categories: CategoryDTO[];
   services: DetailedServiceDTO[];
   activeEstablishmentId?: string;
-  onSelectEstablishment?: (establishmentId: string) => void;
 }
 
 export function CatalogLayout({
   categories,
   services: initialServices,
   activeEstablishmentId,
-  onSelectEstablishment,
 }: CatalogLayoutProps) {
   const [servicesList, setServicesList] = useState<DetailedServiceDTO[]>(initialServices);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | undefined>(
@@ -27,20 +25,6 @@ export function CatalogLayout({
   const [selectedServiceId, setSelectedServiceId] = useState<string | undefined>(
     initialServices[0]?.id
   );
-
-  // Sync state with server-side props updates (triggered by router.refresh())
-  useEffect(() => {
-    setServicesList(initialServices);
-    if (initialServices.length > 0 && !initialServices.some(s => s.id === selectedServiceId)) {
-      setSelectedServiceId(initialServices[0].id);
-    }
-  }, [initialServices, selectedServiceId]);
-
-  useEffect(() => {
-    if (categories.length > 0 && !categories.some(c => c.id === selectedCategoryId)) {
-      setSelectedCategoryId(categories[0].id);
-    }
-  }, [categories, selectedCategoryId]);
 
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<CategoryDTO | null>(null);
