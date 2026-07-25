@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Building2Icon, ChevronDownIcon, StoreIcon } from "lucide-react";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 
@@ -27,6 +27,29 @@ export function EstablishmentSelectorBar({
   onSelectEstablishment,
 }: EstablishmentSelectorBarProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const selectorRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    function handleOutsideClick(event: MouseEvent) {
+      if (!selectorRef.current?.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    }
+
+    function handleEscape(event: KeyboardEvent) {
+      if (event.key === "Escape") setIsOpen(false);
+    }
+
+    document.addEventListener("mousedown", handleOutsideClick);
+    document.addEventListener("keydown", handleEscape);
+
+    return () => {
+      document.removeEventListener("mousedown", handleOutsideClick);
+      document.removeEventListener("keydown", handleEscape);
+    };
+  }, [isOpen]);
 
   const activeEstablishment = organizations
     .flatMap((organization) => organization.establishments)
@@ -47,7 +70,7 @@ export function EstablishmentSelectorBar({
         <span>Active Scope:</span>
       </div>
 
-      <div className="relative">
+      <div ref={selectorRef} className="relative">
         <Button
           variant="outline"
           size="sm"

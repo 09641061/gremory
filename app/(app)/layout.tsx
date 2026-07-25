@@ -1,5 +1,6 @@
 import React from "react";
 import { Header } from "@/contexts/shared/interfaces/components/header";
+import { OrganizationSelector } from "@/contexts/business/interfaces/components/organization-selector";
 import { Sidebar } from "@/contexts/shared/interfaces/components/sidebar";
 import { createOrganizationQueryService } from "@/contexts/business/application/internal/queryservices/organization-query.service";
 import { createEstablishmentQueryService } from "@/contexts/business/application/internal/queryservices/establishment-query.service";
@@ -37,7 +38,12 @@ export default async function AppLayout({
   return (
     <div className="min-h-screen bg-background text-foreground flex">
       <Header
-        organization={organization}
+        organizationSlot={
+          <OrganizationSelector
+            organization={organization}
+            organizations={organization ? [organization] : []}
+          />
+        }
         establishments={establishments}
         initialEstablishmentId={establishments[0]?.id}
       />
