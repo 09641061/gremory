@@ -34,7 +34,7 @@ export function ServiceDetailView({ service }: ServiceDetailViewProps) {
             <span
               className={`px-2.5 py-0.5 text-xs font-semibold rounded uppercase tracking-wide border ${
                 service.status === "ACTIVE"
-                  ? "bg-[#00b77a]/10 text-[#00b77a] border-[#00b77a]/20"
+                  ? "bg-primary/10 text-primary border-primary/20"
                   : "bg-muted text-muted-foreground border-border"
               }`}
             >
@@ -45,7 +45,7 @@ export function ServiceDetailView({ service }: ServiceDetailViewProps) {
 
         <Link href={`/catalog/${service.id}/edit`}>
           <Button variant="outline" className="gap-2 border-border bg-card hover:bg-muted">
-            <EditIcon className="size-4 text-[#00b77a]" />
+            <EditIcon className="size-4 text-primary" />
             <span>Edit Service</span>
           </Button>
         </Link>
@@ -103,10 +103,10 @@ export function ServiceDetailView({ service }: ServiceDetailViewProps) {
                   <span className="text-xs font-semibold uppercase text-muted-foreground">Preparation</span>
                   <span className="text-xl font-bold text-foreground mt-1">{service.preparationMinutes} min</span>
                 </div>
-                <div className="flex flex-col items-center p-4 bg-[#00b77a]/5 rounded-lg border border-[#00b77a]/20">
-                  <TimerIcon className="size-5 text-[#00b77a] mb-2" />
+                <div className="flex flex-col items-center p-4 bg-primary/5 rounded-lg border border-primary/20">
+                  <TimerIcon className="size-5 text-primary mb-2" />
                   <span className="text-xs font-semibold uppercase text-muted-foreground">Duration</span>
-                  <span className="text-xl font-bold text-[#00b77a] mt-1">{service.durationMinutes} min</span>
+                  <span className="text-xl font-bold text-primary mt-1">{service.durationMinutes} min</span>
                 </div>
                 <div className="flex flex-col items-center p-4 bg-muted/40 rounded-lg border border-border">
                   <SparklesIcon className="size-5 text-rose-500 mb-2" />
@@ -123,13 +123,13 @@ export function ServiceDetailView({ service }: ServiceDetailViewProps) {
           <Card className="rounded-xl border-border bg-card relative overflow-hidden">
             <CardHeader className="border-b border-border pb-4 flex flex-row items-center justify-between">
               <CardTitle className="text-lg font-semibold">Pricing</CardTitle>
-              <CreditCardIcon className="size-5 text-[#00b77a]" />
+              <CreditCardIcon className="size-5 text-primary" />
             </CardHeader>
             <CardContent className="p-6 flex flex-col">
               <label className="text-xs font-semibold uppercase text-muted-foreground mb-1">
                 Retail Price
               </label>
-              <span className="text-3xl font-bold text-[#00b77a]">
+              <span className="text-3xl font-bold text-primary">
                 ${service.price.toFixed(2)}
               </span>
             </CardContent>

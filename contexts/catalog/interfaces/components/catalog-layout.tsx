@@ -5,26 +5,18 @@ import { CategorySidebar, type CategoryDTO, type ServiceSummaryDTO } from "./cat
 import { ServiceDetailView, type DetailedServiceDTO } from "./service-detail-view";
 import { CreateCategoryModal } from "./create-category-modal";
 import { EditCategoryModal } from "./edit-category-modal";
-import {
-  EstablishmentSelectorBar,
-  type OrganizationOption,
-} from "@/contexts/business/interfaces/components/business/establishment-selector-bar";
 import { updateCatalogServiceAction } from "../actions/manage-catalog-service.actions";
 
 interface CatalogLayoutProps {
   categories: CategoryDTO[];
   services: DetailedServiceDTO[];
-  organizations?: OrganizationOption[];
   activeEstablishmentId?: string;
-  onSelectEstablishment?: (establishmentId: string) => void;
 }
 
 export function CatalogLayout({
   categories,
   services: initialServices,
-  organizations = [],
   activeEstablishmentId,
-  onSelectEstablishment,
 }: CatalogLayoutProps) {
   const [servicesList, setServicesList] = useState<DetailedServiceDTO[]>(initialServices);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | undefined>(
@@ -68,15 +60,6 @@ export function CatalogLayout({
 
   return (
     <div className="flex flex-col h-screen overflow-hidden bg-background">
-      {/* Temporary Establishment Selector Bar */}
-      {organizations.length > 0 && onSelectEstablishment && (
-        <EstablishmentSelectorBar
-          organizations={organizations}
-          selectedEstablishmentId={activeEstablishmentId}
-          onSelectEstablishment={onSelectEstablishment}
-        />
-      )}
-
       <div className="flex flex-col md:flex-row flex-1 overflow-hidden">
         <CategorySidebar
           categories={categories}
@@ -110,6 +93,11 @@ export function CatalogLayout({
           isOpen={!!editingCategory}
           onClose={() => setEditingCategory(null)}
           category={editingCategory}
+          servicesCount={
+            editingCategory
+              ? servicesList.filter((s) => s.categoryId === editingCategory.id).length
+              : 0
+          }
         />
       </div>
     </div>

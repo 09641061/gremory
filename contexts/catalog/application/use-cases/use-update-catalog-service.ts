@@ -3,15 +3,15 @@
 import { useActionState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
-  createServiceCategoryAction,
-  type CategoryActionResult,
-} from "../../interfaces/actions/manage-service-category.actions";
+  updateCatalogServiceAction,
+  type CatalogServiceActionResult,
+} from "../../interfaces/actions/manage-catalog-service.actions";
 
-export function useCreateServiceCategory(onSuccess?: () => void) {
+export function useUpdateCatalogService(onSuccess?: () => void) {
   const router = useRouter();
   const [state, formAction, pending] = useActionState(
-    createServiceCategoryAction,
-    { status: "idle", error: null } satisfies CategoryActionResult
+    updateCatalogServiceAction,
+    { status: "idle", error: null } satisfies CatalogServiceActionResult
   );
 
   useEffect(() => {
