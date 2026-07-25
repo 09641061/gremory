@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import type { ReactNode } from "react";
 import { EstablishmentSelector } from "@/contexts/business/interfaces/components/establishment-selector";
@@ -35,7 +36,12 @@ export function Header({
   return (
     <header className="fixed inset-x-0 top-0 z-30 flex h-14 items-center border-b border-border/60 bg-background px-6">
       <div className="flex items-center gap-5 text-sm text-foreground">
-        <span className="text-base font-semibold text-foreground">Takodu</span>
+        <Link
+          href="/chat"
+          className="text-base font-semibold text-foreground"
+        >
+          Takodu
+        </Link>
 
         <div className="flex items-center gap-1">
         <span className="text-muted-foreground">/</span>
@@ -47,7 +53,7 @@ export function Header({
           establishments={establishments}
           selectedEstablishmentId={selectedEstablishmentId}
           onSelect={selectEstablishment}
-          onNew={() => router.push("/bussines")}
+          onNew={() => router.push("/establishments")}
         />
         </div>
       </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { ChevronDown, Store } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import { SearchableOptions } from "./searchable-options";
@@ -21,6 +22,7 @@ export function EstablishmentSelector({
   onSelect,
   onNew,
 }: EstablishmentSelectorProps) {
+  const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState("");
   const selectorRef = useRef<HTMLDivElement>(null);
@@ -59,12 +61,22 @@ export function EstablishmentSelector({
             search={search}
             onSearchChange={setSearch}
             onSelect={selectEstablishment}
-            onSelectAll={() => setIsOpen(false)}
+            onSelectAll={() => {
+              setIsOpen(false);
+              router.push("/establishments");
+            }}
             allLabel="All Establishments"
             searchPlaceholder="Find establishment..."
             emptyMessage="No establishments found"
             newLabel="New establishment"
-            onNew={onNew ? () => { onNew(); setIsOpen(false); } : undefined}
+            onNew={() => {
+              setIsOpen(false);
+              if (onNew) {
+                onNew();
+                return;
+              }
+              router.push("/establishments");
+            }}
           />
         </div>
       )}

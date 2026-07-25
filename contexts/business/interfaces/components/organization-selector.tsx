@@ -1,6 +1,7 @@
 "use client";
 
 import { Building2, ChevronDown } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import { SearchableOptions } from "./searchable-options";
@@ -20,6 +21,7 @@ export function OrganizationSelector({
   organization,
   organizations = organization ? [organization] : [],
 }: OrganizationSelectorProps) {
+  const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState("");
   const selectorRef = useRef<HTMLDivElement>(null);
@@ -48,12 +50,18 @@ export function OrganizationSelector({
             search={search}
             onSearchChange={setSearch}
             onSelect={() => setIsOpen(false)}
-            onSelectAll={() => setIsOpen(false)}
+            onSelectAll={() => {
+              setIsOpen(false);
+              router.push("/organizations");
+            }}
             allLabel="All Organizations"
             searchPlaceholder="Find organization..."
             emptyMessage="No organizations found"
             newLabel="New organization"
-            onNew={() => setIsOpen(false)}
+            onNew={() => {
+              setIsOpen(false);
+              router.push("/organizations");
+            }}
           />
         </div>
       )}
