@@ -1,13 +1,9 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { createIamAuthenticationCommandService } from "@/contexts/iam/application/internal/commandservices/iam-authentication-command.service";
+import { createIamSessionQueryService } from "@/contexts/iam/application/internal/queryservices/iam-session-query.service";
 import { hasActiveSubscription } from "@/contexts/billing/domain/services/subscription-access.policy";
-import { coordinateRefresh } from "@/contexts/iam/infrastructure/session/iam-refresh-coordinator";
-import type { AuthenticationSession } from "@/contexts/iam/domain/model/entities/authentication-session";
-import {
-  iamSessionCookieOptions,
-  iamSessionCookies,
-} from "@/contexts/iam/infrastructure/session/iam-session-cookie";
+import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-session-cookie";
+import { continueRequestWithSession } from "@/contexts/iam/interfaces/proxy/iam-session-request";
 
 export async function proxy(request: NextRequest) {
   let accessToken = request.cookies.get(iamSessionCookies.accessToken)?.value;
@@ -21,37 +17,22 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  if (!accessToken) {
-    if (pathname === "/" || isPrivateRoute(pathname)) {
-      return NextResponse.redirect(new URL("/login", request.url));
+  const session = await createIamSessionQueryService().resolveSession({
+    accessToken,
+    refreshToken,
+  });
+
+  if (session.status === "unauthenticated") {
+    if (accessToken || refreshToken || pathname === "/" || isPrivateRoute(pathname)) {
+      return redirectToLogin(request);
     }
     return NextResponse.next();
   }
+  if (session.status === "unavailable") return NextResponse.next();
 
-  let authenticationAccess = await verifyAccessToken(accessToken);
-
-  if (authenticationAccess === "unauthenticated") {
-    const session = refreshToken ? await refreshAccessToken(refreshToken) : null;
-    if (!session) return redirectToLogin(request);
-
-    accessToken = session.accessToken;
-    response = NextResponse.next();
-    response.cookies.set(iamSessionCookies.accessToken, session.accessToken, {
-      ...iamSessionCookieOptions,
-      maxAge: 60 * 60 * 24,
-    });
-    response.cookies.set(iamSessionCookies.refreshToken, session.refreshToken, {
-      ...iamSessionCookieOptions,
-      maxAge: 60 * 60 * 24 * 30,
-    });
-
-    // Retry exactly once with the rotated access token.
-    authenticationAccess = await verifyAccessToken(accessToken);
-    if (authenticationAccess === "unauthenticated") return redirectToLogin(request);
-  }
-
-  if (authenticationAccess === "unavailable") {
-    return response ?? NextResponse.next();
+  accessToken = session.accessToken;
+  if (session.rotatedSession) {
+    response = continueRequestWithSession(request, session.rotatedSession);
   }
 
   const subscriptionAccess = await getSubscriptionAccess(accessToken);
@@ -86,26 +67,6 @@ function isPrivateRoute(pathname: string) {
 }
 
 type SubscriptionAccess = "active" | "inactive" | "unauthenticated" | "unavailable";
-type AuthenticationAccess = "authenticated" | "unauthenticated" | "unavailable";
-
-async function verifyAccessToken(accessToken: string): Promise<AuthenticationAccess> {
-  try {
-    const response = await fetch(
-      `${process.env.API_BASE_URL ?? "http://localhost:8080"}/api/v1/auth/verify`,
-      {
-        headers: { Authorization: `Bearer ${accessToken}` },
-        cache: "no-store",
-      },
-    );
-
-    if (response.status === 401 || response.status === 400) return "unauthenticated";
-    if (!response.ok) return "unavailable";
-    return "authenticated";
-  } catch {
-    return "unavailable";
-  }
-}
-
 async function getSubscriptionAccess(accessToken: string): Promise<SubscriptionAccess> {
   try {
     const response = await fetch(
@@ -135,18 +96,6 @@ function redirectWithCookies(request: NextRequest, path: string, response: NextR
     }
   }
   return redirectResponse;
-}
-
-async function refreshAccessToken(refreshToken: string) {
-  return coordinateRefresh(refreshToken, async (token): Promise<AuthenticationSession | null> => {
-    try {
-      return await createIamAuthenticationCommandService().refreshSession({
-        refreshToken: token,
-      });
-    } catch {
-      return null;
-    }
-  });
 }
 
 function redirectToLogin(request: NextRequest) {

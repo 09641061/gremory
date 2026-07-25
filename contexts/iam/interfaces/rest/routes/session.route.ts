@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import {
+  iamSessionCookieMaxAge,
   iamSessionCookieOptions,
   iamSessionCookies,
 } from "../../../infrastructure/session/iam-session-cookie";
@@ -21,11 +22,11 @@ export async function createSessionRoute(request: Request) {
   const cookieStore = await cookies();
   cookieStore.set(iamSessionCookies.accessToken, input.data.accessToken, {
     ...iamSessionCookieOptions,
-    maxAge: 60 * 60 * 24,
+    maxAge: iamSessionCookieMaxAge.accessToken,
   });
   cookieStore.set(iamSessionCookies.refreshToken, input.data.refreshToken, {
     ...iamSessionCookieOptions,
-    maxAge: 60 * 60 * 24 * 30,
+    maxAge: iamSessionCookieMaxAge.refreshToken,
   });
 
   return new Response(null, { status: 204 });

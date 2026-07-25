@@ -7,11 +7,25 @@ import type { RequestEmailSignInCommand } from "../../domain/model/commands/requ
 import type { RefreshSessionCommand } from "../../domain/model/commands/refresh-session.command";
 import type { SignOutCommand } from "../../domain/model/commands/sign-out.command";
 import type { VerifyMagicLinkCommand } from "../../domain/model/commands/verify-magic-link.command";
+import type { IamAuthenticationQueryService } from "../../application/services/iam-authentication-query.service";
+import type { AccessTokenVerification } from "../../application/model/resolved-session";
 import { authenticationSessionSchema } from "../../interfaces/rest/schemas/authentication.schemas";
 
 const apiBaseUrl = process.env.API_BASE_URL ?? "http://localhost:8080";
 
-export class IamApiGateway implements IamAuthenticationCommandService {
+export class IamApiError extends Error {
+  constructor(
+    message: string,
+    public readonly status: number,
+  ) {
+    super(message);
+    this.name = "IamApiError";
+  }
+}
+
+export class IamApiGateway
+  implements IamAuthenticationCommandService, IamAuthenticationQueryService
+{
   async requestEmailSignIn(
     command: RequestEmailSignInCommand
   ): Promise<void> {
@@ -23,7 +37,7 @@ export class IamApiGateway implements IamAuthenticationCommandService {
     });
 
     if (!response.ok) {
-      throw new Error(await readError(response));
+      throw new IamApiError(await readError(response), response.status);
     }
   }
 
@@ -41,7 +55,7 @@ export class IamApiGateway implements IamAuthenticationCommandService {
     });
 
     if (!response.ok) {
-      throw new Error(await readError(response));
+      throw new IamApiError(await readError(response), response.status);
     }
 
     return authenticationSessionSchema.parse(await response.json());
@@ -58,10 +72,26 @@ export class IamApiGateway implements IamAuthenticationCommandService {
     });
 
     if (!response.ok) {
-      throw new Error(await readError(response));
+      throw new IamApiError(await readError(response), response.status);
     }
 
     return authenticationSessionSchema.parse(await response.json());
+  }
+
+  async verifyAccessToken(accessToken: string): Promise<AccessTokenVerification> {
+    try {
+      const response = await fetch(`${apiBaseUrl}/api/v1/auth/verify`, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+        cache: "no-store",
+      });
+
+      if (response.status === 400 || response.status === 401) {
+        return "unauthenticated";
+      }
+      return response.ok ? "authenticated" : "unavailable";
+    } catch {
+      return "unavailable";
+    }
   }
 
   async signOut(command: SignOutCommand): Promise<void> {
@@ -79,7 +109,7 @@ export class IamApiGateway implements IamAuthenticationCommandService {
     });
 
     if (!response.ok) {
-      throw new Error(await readError(response));
+      throw new IamApiError(await readError(response), response.status);
     }
   }
 
@@ -92,7 +122,7 @@ export class IamApiGateway implements IamAuthenticationCommandService {
     );
 
     if (!response.ok) {
-      throw new Error(await readError(response));
+      throw new IamApiError(await readError(response), response.status);
     }
 
     return authenticationSessionSchema.parse(await response.json());

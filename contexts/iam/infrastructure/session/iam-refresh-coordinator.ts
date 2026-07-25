@@ -4,7 +4,13 @@ import type { AuthenticationSession } from "../../domain/model/entities/authenti
 
 type RefreshOperation = Promise<AuthenticationSession | null>;
 
-const inFlightRefreshes = new Map<string, RefreshOperation>();
+type RefreshEntry = {
+  operation: RefreshOperation;
+  expiresAt: number | null;
+};
+
+const rotatedSessionReuseWindowMs = 5_000;
+const refreshes = new Map<string, RefreshEntry>();
 
 /**
  * Shares one refresh request between concurrent server requests that received
@@ -14,22 +20,37 @@ export function coordinateRefresh(
   refreshToken: string,
   refresh: (refreshToken: string) => RefreshOperation,
 ): RefreshOperation {
-  const current = inFlightRefreshes.get(refreshToken);
-  if (current) return current;
+  const current = refreshes.get(refreshToken);
+  if (current && (current.expiresAt === null || current.expiresAt > Date.now())) {
+    return current.operation;
+  }
+  if (current) refreshes.delete(refreshToken);
 
   const operation = refresh(refreshToken);
-  inFlightRefreshes.set(refreshToken, operation);
+  const entry: RefreshEntry = { operation, expiresAt: null };
+  refreshes.set(refreshToken, entry);
 
   void operation.then(
-    () => removeIfCurrent(refreshToken, operation),
-    () => removeIfCurrent(refreshToken, operation),
+    (session) => {
+      if (!session) {
+        removeIfCurrent(refreshToken, entry);
+        return;
+      }
+
+      entry.expiresAt = Date.now() + rotatedSessionReuseWindowMs;
+      setTimeout(
+        () => removeIfCurrent(refreshToken, entry),
+        rotatedSessionReuseWindowMs,
+      ).unref?.();
+    },
+    () => removeIfCurrent(refreshToken, entry),
   );
 
   return operation;
 }
 
-function removeIfCurrent(refreshToken: string, operation: RefreshOperation) {
-  if (inFlightRefreshes.get(refreshToken) === operation) {
-    inFlightRefreshes.delete(refreshToken);
+function removeIfCurrent(refreshToken: string, entry: RefreshEntry) {
+  if (refreshes.get(refreshToken) === entry) {
+    refreshes.delete(refreshToken);
   }
 }

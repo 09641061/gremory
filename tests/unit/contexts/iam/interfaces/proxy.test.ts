@@ -2,24 +2,36 @@ import { NextRequest } from "next/server";
 import { proxy } from "@/proxy";
 
 const mocks = vi.hoisted(() => ({
-  refreshSession: vi.fn(),
+  resolveSession: vi.fn(),
 }));
 
-vi.mock("@/contexts/iam/application/internal/commandservices/iam-authentication-command.service", () => ({
-  createIamAuthenticationCommandService: () => mocks,
+vi.mock("@/contexts/iam/application/internal/queryservices/iam-session-query.service", () => ({
+  createIamSessionQueryService: () => mocks,
 }));
 
-function requestWithSession(accessToken = "access-token", refreshToken = "refresh-token") {
-  return new NextRequest("http://localhost/", {
-    headers: {
-      cookie: `takodu.access_token=${accessToken}; takodu.refresh_token=${refreshToken}`,
-    },
+function requestWithSession(
+  accessToken: string | null = "access-token",
+  refreshToken: string | null = "refresh-token",
+  pathname = "/",
+) {
+  const cookie = [
+    accessToken ? `takodu.access_token=${accessToken}` : null,
+    refreshToken ? `takodu.refresh_token=${refreshToken}` : null,
+  ].filter(Boolean).join("; ");
+
+  return new NextRequest(`http://localhost${pathname}`, {
+    headers: cookie ? { cookie } : undefined,
   });
 }
 
 describe("IAM session proxy", () => {
   beforeEach(() => {
-    mocks.refreshSession.mockReset();
+    mocks.resolveSession.mockReset();
+    mocks.resolveSession.mockResolvedValue({
+      status: "authenticated",
+      accessToken: "access-token",
+      rotatedSession: null,
+    });
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(
       new Response(JSON.stringify({ active: true, status: "ACTIVE" }), { status: 200 }),
     ));
@@ -27,22 +39,30 @@ describe("IAM session proxy", () => {
 
   it("should refresh the session and update cookies when verification rejects the token", async () => {
     // Arrange
-    vi.stubGlobal("fetch", vi.fn()
-      .mockResolvedValueOnce(new Response(null, { status: 401 }))
-      .mockResolvedValueOnce(new Response(null, { status: 200 }))
-      .mockResolvedValueOnce(new Response(JSON.stringify({ active: true, status: "ACTIVE" }), { status: 200 })));
-    mocks.refreshSession.mockResolvedValue({
+    mocks.resolveSession.mockResolvedValue({
+      status: "authenticated",
       accessToken: "new-access-token",
-      refreshToken: "new-refresh-token",
+      rotatedSession: {
+        accessToken: "new-access-token",
+        refreshToken: "new-refresh-token",
+      },
     });
 
     // Act
-    const response = await proxy(requestWithSession());
+    const response = await proxy(
+      requestWithSession("access-token", "refresh-token", "/chat"),
+    );
 
     // Assert
-    expect(mocks.refreshSession).toHaveBeenCalledWith({ refreshToken: "refresh-token" });
+    expect(mocks.resolveSession).toHaveBeenCalledWith({
+      accessToken: "access-token",
+      refreshToken: "refresh-token",
+    });
     expect(response.cookies.get("takodu.access_token")?.value).toBe("new-access-token");
     expect(response.cookies.get("takodu.refresh_token")?.value).toBe("new-refresh-token");
+    expect(response.headers.get("x-middleware-request-cookie")).toContain(
+      "takodu.access_token=new-access-token",
+    );
   });
 
   it("should redirect an active session from home to the dashboard", async () => {
@@ -53,15 +73,14 @@ describe("IAM session proxy", () => {
     const response = await proxy(request);
 
     // Assert
-    expect(mocks.refreshSession).not.toHaveBeenCalled();
+    expect(mocks.resolveSession).toHaveBeenCalledTimes(1);
     expect(response.status).toBe(307);
     expect(response.headers.get("location")).toBe("http://localhost/chat");
   });
 
   it("should clear the session and redirect to login when refresh is rejected", async () => {
     // Arrange
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(null, { status: 401 })));
-    mocks.refreshSession.mockRejectedValue(new Error("Refresh token expired"));
+    mocks.resolveSession.mockResolvedValue({ status: "unauthenticated" });
 
     // Act
     const response = await proxy(requestWithSession());
@@ -72,33 +91,24 @@ describe("IAM session proxy", () => {
     expect(response.cookies.get("takodu.access_token")?.value).toBe("");
   });
 
-  it("should share one refresh request between concurrent requests", async () => {
-    let verificationCalls = 0;
-    vi.stubGlobal("fetch", vi.fn().mockImplementation(() => {
-      verificationCalls += 1;
-      return Promise.resolve(
-        new Response(
-          verificationCalls <= 2 ? null : JSON.stringify({ active: true, status: "ACTIVE" }),
-          { status: verificationCalls <= 2 ? 401 : 200 },
-        ),
-      );
-    }));
-    let resolveRefresh: ((value: { accessToken: string; refreshToken: string }) => void) | undefined;
-    mocks.refreshSession.mockReturnValue(new Promise((resolve) => {
-      resolveRefresh = resolve;
-    }));
-
-    const first = proxy(requestWithSession());
-    const second = proxy(requestWithSession());
-
-    expect(mocks.refreshSession).toHaveBeenCalledTimes(1);
-
-    resolveRefresh?.({
+  it("should refresh when only the refresh-token cookie remains", async () => {
+    mocks.resolveSession.mockResolvedValue({
+      status: "authenticated",
       accessToken: "new-access-token",
-      refreshToken: "new-refresh-token",
+      rotatedSession: {
+        accessToken: "new-access-token",
+        refreshToken: "new-refresh-token",
+      },
     });
 
-    await Promise.all([first, second]);
-    expect(mocks.refreshSession).toHaveBeenCalledTimes(1);
+    const response = await proxy(requestWithSession(null, "refresh-token"));
+
+    expect(mocks.resolveSession).toHaveBeenCalledWith({
+      accessToken: undefined,
+      refreshToken: "refresh-token",
+    });
+    expect(response.cookies.get("takodu.access_token")?.value).toBe("new-access-token");
+    expect(response.status).toBe(307);
+    expect(response.headers.get("location")).toBe("http://localhost/chat");
   });
 });

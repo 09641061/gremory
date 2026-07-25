@@ -12,3 +12,8 @@ export const iamSessionCookieOptions = {
   sameSite: "lax" as const,
   path: "/",
 };
+
+export const iamSessionCookieMaxAge = {
+  accessToken: 60 * 60 * 24,
+  refreshToken: 60 * 60 * 24 * 30,
+} as const;
