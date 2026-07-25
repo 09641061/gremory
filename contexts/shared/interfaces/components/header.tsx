@@ -1,9 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { ChevronDown, Store } from "lucide-react";
 import type { ReactNode } from "react";
+import { EstablishmentSelector } from "@/contexts/business/interfaces/components/establishment-selector";
 
 export type HeaderEstablishment = {
   id: string;
@@ -24,42 +23,13 @@ export function Header({
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const [isEstablishmentMenuOpen, setIsEstablishmentMenuOpen] = useState(false);
-  const establishmentSelectorRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!isEstablishmentMenuOpen) return;
-
-    function handleOutsidePointer(event: PointerEvent) {
-      if (!establishmentSelectorRef.current?.contains(event.target as Node)) {
-        setIsEstablishmentMenuOpen(false);
-      }
-    }
-
-    function handleEscape(event: KeyboardEvent) {
-      if (event.key === "Escape") setIsEstablishmentMenuOpen(false);
-    }
-
-    document.addEventListener("pointerdown", handleOutsidePointer, true);
-    document.addEventListener("keydown", handleEscape);
-
-    return () => {
-      document.removeEventListener("pointerdown", handleOutsidePointer, true);
-      document.removeEventListener("keydown", handleEscape);
-    };
-  }, [isEstablishmentMenuOpen]);
 
   const selectedEstablishmentId =
     searchParams.get("establishmentId") ?? initialEstablishmentId;
-  const activeEstablishment = establishments.find(
-    (establishment) => establishment.id === selectedEstablishmentId,
-  );
-
   function selectEstablishment(establishmentId: string) {
     const params = new URLSearchParams(searchParams.toString());
     params.set("establishmentId", establishmentId);
     router.push(`${pathname}?${params.toString()}`);
-    setIsEstablishmentMenuOpen(false);
   }
 
   return (
@@ -73,40 +43,12 @@ export function Header({
 
         <span className="text-muted-foreground">/</span>
 
-        <div ref={establishmentSelectorRef} className="relative">
-          <button
-            type="button"
-            onClick={() => setIsEstablishmentMenuOpen((open) => !open)}
-            className="flex h-9 items-center gap-2 rounded-md px-2 font-medium hover:bg-muted"
-          >
-            <Store className="size-4 text-muted-foreground" />
-            <span className="max-w-44 truncate">
-              {activeEstablishment?.name ?? "Select establishment"}
-            </span>
-            <ChevronDown className="size-3.5 text-muted-foreground" />
-          </button>
-
-          {isEstablishmentMenuOpen && (
-            <div className="absolute left-0 top-full mt-1 max-h-64 w-64 overflow-y-auto rounded-lg border border-border bg-card p-2 shadow-lg">
-              {establishments.length > 0 ? (
-                establishments.map((establishment) => (
-                  <button
-                    key={establishment.id}
-                    type="button"
-                    onClick={() => selectEstablishment(establishment.id)}
-                    className={`w-full rounded-md px-2 py-2 text-left text-sm hover:bg-muted ${
-                      establishment.id === selectedEstablishmentId ? "bg-muted font-medium" : ""
-                    }`}
-                  >
-                    {establishment.name}
-                  </button>
-                ))
-              ) : (
-                <div className="px-2 py-2 text-sm text-muted-foreground">No establishments</div>
-              )}
-            </div>
-          )}
-        </div>
+        <EstablishmentSelector
+          establishments={establishments}
+          selectedEstablishmentId={selectedEstablishmentId}
+          onSelect={selectEstablishment}
+          onNew={() => router.push("/bussines")}
+        />
         </div>
       </div>
     </header>

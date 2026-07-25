@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { Building2Icon, ChevronDownIcon, StoreIcon } from "lucide-react";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
+import { useSelectorMenu } from "./use-selector-menu";
 
 export type EstablishmentOption = {
   id: string;
@@ -29,27 +30,7 @@ export function EstablishmentSelectorBar({
   const [isOpen, setIsOpen] = useState(false);
   const selectorRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    if (!isOpen) return;
-
-    function handleOutsidePointer(event: PointerEvent) {
-      if (!selectorRef.current?.contains(event.target as Node)) {
-        setIsOpen(false);
-      }
-    }
-
-    function handleEscape(event: KeyboardEvent) {
-      if (event.key === "Escape") setIsOpen(false);
-    }
-
-    document.addEventListener("pointerdown", handleOutsidePointer, true);
-    document.addEventListener("keydown", handleEscape);
-
-    return () => {
-      document.removeEventListener("pointerdown", handleOutsidePointer, true);
-      document.removeEventListener("keydown", handleEscape);
-    };
-  }, [isOpen]);
+  useSelectorMenu(isOpen, setIsOpen, selectorRef);
 
   const activeEstablishment = organizations
     .flatMap((organization) => organization.establishments)
