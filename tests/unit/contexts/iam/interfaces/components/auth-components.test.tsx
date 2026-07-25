@@ -85,6 +85,22 @@ describe("IAM client components", () => {
     await waitFor(() => expect(mocks.router.replace).toHaveBeenCalledWith("/chat"));
   });
 
+  it("should return to the invitation after authentication", async () => {
+    // Arrange
+    window.location.hash = "#access_token=a&refresh_token=r";
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(null, { status: 204 })));
+
+    // Act
+    render(<AuthCallback returnTo="/invitations/accept?token=raw-token" />);
+
+    // Assert
+    await waitFor(() =>
+      expect(mocks.router.replace).toHaveBeenCalledWith(
+        "/invitations/accept?token=raw-token",
+      ),
+    );
+  });
+
   it("should navigate home when the callback hash does not contain tokens", async () => {
     // Arrange
     window.location.hash = "";

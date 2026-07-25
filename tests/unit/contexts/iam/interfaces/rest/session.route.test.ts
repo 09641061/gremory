@@ -25,7 +25,8 @@ describe("IAM session route", () => {
     vi.mocked(cookies).mockResolvedValue(cookieStore as never);
     await clearSessionRoute();
     expect(cookieStore.delete).toHaveBeenCalledWith(iamSessionCookies.pendingEmail);
-    expect(cookieStore.delete).toHaveBeenCalledTimes(3);
+    expect(cookieStore.delete).toHaveBeenCalledWith(iamSessionCookies.returnTo);
+    expect(cookieStore.delete).toHaveBeenCalledTimes(4);
   });
 
   it("should only create access and refresh cookies", async () => {

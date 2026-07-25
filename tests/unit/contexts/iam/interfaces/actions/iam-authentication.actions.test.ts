@@ -148,11 +148,48 @@ describe("IAM Server Actions", () => {
 
   it("should redirect to the Google authorization endpoint", async () => {
     // Act
-    await startGoogleAuthAction();
+    await startGoogleAuthAction(form({}));
 
     // Assert
     expect(redirect).toHaveBeenCalledWith(
       "http://localhost:8080/api/v1/auth/google/authorize"
     );
+  });
+
+  it("should preserve a safe return path during email sign-in", async () => {
+    // Arrange
+    const returnTo = "/invitations/accept?token=raw-token";
+
+    // Act
+    await requestEmailSignInAction(
+      { status: "idle", error: null },
+      form({ email: "user@example.com", returnTo }),
+    );
+
+    // Assert
+    expect(mocks.cookies.set).toHaveBeenCalledWith(
+      iamSessionCookies.returnTo,
+      returnTo,
+      expect.objectContaining({ maxAge: 600 }),
+    );
+    expect(redirect).toHaveBeenCalledWith(
+      "/auth/verify?email=user%40example.com&next=%2Finvitations%2Faccept%3Ftoken%3Draw-token",
+    );
+  });
+
+  it("should ignore an external return path during email sign-in", async () => {
+    // Act
+    await requestEmailSignInAction(
+      { status: "idle", error: null },
+      form({ email: "user@example.com", returnTo: "https://evil.example/path" }),
+    );
+
+    // Assert
+    expect(mocks.cookies.set).not.toHaveBeenCalledWith(
+      iamSessionCookies.returnTo,
+      expect.anything(),
+      expect.anything(),
+    );
+    expect(redirect).toHaveBeenCalledWith("/auth/verify?email=user%40example.com");
   });
 });
