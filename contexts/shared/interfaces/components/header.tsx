@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import type { ReactNode } from "react";
-import { EstablishmentSelector } from "@/contexts/business/interfaces/components/establishment-selector";
+import { EstablishmentSelector } from "@/contexts/business/interfaces/components/bussines/establishment-selector";
 
 export type HeaderEstablishment = {
   id: string;
@@ -53,7 +53,7 @@ export function Header({
           establishments={establishments}
           selectedEstablishmentId={selectedEstablishmentId}
           onSelect={selectEstablishment}
-          onNew={() => router.push("/establishments")}
+          onNew={() => router.push("/establishments/new")}
         />
         </div>
       </div>

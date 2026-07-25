@@ -72,4 +72,5 @@ export async function deleteEstablishmentAction(
 function revalidateBusinessViews() {
   revalidatePath("/catalog");
   revalidatePath("/dashboard");
+  revalidatePath("/establishments");
 }

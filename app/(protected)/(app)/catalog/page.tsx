@@ -6,7 +6,7 @@ import { createServiceCategoryQueryService } from "@/contexts/catalog/applicatio
 import { CatalogClientWrapper } from "@/contexts/catalog/interfaces/components/catalog-client-wrapper";
 import type { DetailedServiceDTO } from "@/contexts/catalog/interfaces/components/service-detail-view";
 import type { CategoryDTO } from "@/contexts/catalog/interfaces/components/category-sidebar";
-import type { OrganizationOption } from "@/contexts/business/interfaces/components/establishment-selector-bar";
+import type { OrganizationOption } from "@/contexts/business/interfaces/components/bussines/establishment-selector-bar";
 
 export const revalidate = 0;
 

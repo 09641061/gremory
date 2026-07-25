@@ -3,7 +3,7 @@
 import { useRef, useState } from "react";
 import { Building2Icon, ChevronDownIcon, StoreIcon } from "lucide-react";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
-import { useSelectorMenu } from "./use-selector-menu";
+import { useSelectorMenu } from "../use-selector-menu";
 
 export type EstablishmentOption = {
   id: string;
@@ -45,7 +45,7 @@ export function EstablishmentSelectorBar({
   return (
     <div className="relative z-30 flex items-center justify-between border-b border-border bg-muted/60 px-4 py-2 text-xs">
       <div className="flex items-center gap-2 text-muted-foreground">
-        <span className="rounded border border-amber-500/20 bg-amber-500/10 px-2 py-0.5 font-semibold text-amber-600">
+        <span className="rounded border border-border bg-muted px-2 py-0.5 font-semibold text-muted-foreground">
           TEMP UI
         </span>
         <span>Active Scope:</span>
@@ -58,10 +58,10 @@ export function EstablishmentSelectorBar({
           onClick={() => setIsOpen((open) => !open)}
           className="h-8 gap-2 border-border bg-card text-xs font-normal text-foreground hover:bg-muted"
         >
-          <Building2Icon className="size-3.5 text-[#00b77a]" />
+          <Building2Icon className="size-3.5 text-primary" />
           <span className="font-semibold">{activeOrganization?.name ?? "No Organization"}</span>
           <span className="text-muted-foreground">/</span>
-          <StoreIcon className="size-3.5 text-sky-600" />
+          <StoreIcon className="size-3.5 text-primary" />
           <span>{activeEstablishment?.name ?? "Select Establishment"}</span>
           <ChevronDownIcon className="ml-1 size-3.5 text-muted-foreground" />
         </Button>
@@ -76,7 +76,7 @@ export function EstablishmentSelectorBar({
               organizations.map((organization) => (
                 <div key={organization.id} className="space-y-1">
                   <div className="flex items-center gap-1.5 px-2 py-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                    <Building2Icon className="size-3 text-[#00b77a]" />
+                    <Building2Icon className="size-3 text-primary" />
                     <span>{organization.name}</span>
                   </div>
                   {organization.establishments.length === 0 ? (
@@ -85,24 +85,25 @@ export function EstablishmentSelectorBar({
                     </div>
                   ) : (
                     organization.establishments.map((establishment) => (
-                      <button
+                      <Button
                         key={establishment.id}
                         type="button"
+                        variant="ghost"
                         onClick={() => {
                           onSelectEstablishment(establishment.id);
                           setIsOpen(false);
                         }}
-                        className={`flex w-full items-center justify-between rounded py-1.5 pl-6 pr-3 text-left text-xs transition-colors ${
+                        className={`h-auto w-full justify-between rounded-md py-1.5 pl-6 pr-3 text-left text-xs ${
                           selectedEstablishmentId === establishment.id
-                            ? "bg-[#00b77a] font-medium text-white"
-                            : "text-foreground hover:bg-muted"
+                            ? "bg-primary font-medium text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground"
+                            : "text-foreground"
                         }`}
                       >
                         <span className="truncate">{establishment.name}</span>
                         {selectedEstablishmentId === establishment.id && (
                           <span className="text-[10px] font-bold uppercase">Active</span>
                         )}
-                      </button>
+                      </Button>
                     ))
                   )}
                 </div>

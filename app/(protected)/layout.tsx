@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { createEstablishmentQueryService } from "@/contexts/business/application/internal/queryservices/establishment-query.service";
 import { createOrganizationQueryService } from "@/contexts/business/application/internal/queryservices/organization-query.service";
-import { OrganizationSelector } from "@/contexts/business/interfaces/components/organization-selector";
+import { OrganizationSelector } from "@/contexts/business/interfaces/components/organization/organization-selector";
 import { Header } from "@/contexts/shared/interfaces/components/header";
 
 export default async function ProtectedLayout({

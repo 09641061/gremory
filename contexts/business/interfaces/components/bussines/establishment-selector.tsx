@@ -4,8 +4,8 @@ import { ChevronDown, Store } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
-import { SearchableOptions } from "./searchable-options";
-import { useSelectorMenu } from "./use-selector-menu";
+import { SearchableOptions } from "../searchable-options";
+import { useSelectorMenu } from "../use-selector-menu";
 
 export type EstablishmentSelectorEstablishment = { id: string; name: string };
 
@@ -75,7 +75,7 @@ export function EstablishmentSelector({
                 onNew();
                 return;
               }
-              router.push("/establishments");
+              router.push("/establishments/new");
             }}
           />
         </div>
