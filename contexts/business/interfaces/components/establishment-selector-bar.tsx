@@ -32,7 +32,7 @@ export function EstablishmentSelectorBar({
   useEffect(() => {
     if (!isOpen) return;
 
-    function handleOutsideClick(event: MouseEvent) {
+    function handleOutsidePointer(event: PointerEvent) {
       if (!selectorRef.current?.contains(event.target as Node)) {
         setIsOpen(false);
       }
@@ -42,11 +42,11 @@ export function EstablishmentSelectorBar({
       if (event.key === "Escape") setIsOpen(false);
     }
 
-    document.addEventListener("mousedown", handleOutsideClick);
+    document.addEventListener("pointerdown", handleOutsidePointer, true);
     document.addEventListener("keydown", handleEscape);
 
     return () => {
-      document.removeEventListener("mousedown", handleOutsideClick);
+      document.removeEventListener("pointerdown", handleOutsidePointer, true);
       document.removeEventListener("keydown", handleEscape);
     };
   }, [isOpen]);

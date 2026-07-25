@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { ChevronDown, Store } from "lucide-react";
 import type { ReactNode } from "react";
@@ -25,6 +25,29 @@ export function Header({
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [isEstablishmentMenuOpen, setIsEstablishmentMenuOpen] = useState(false);
+  const establishmentSelectorRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!isEstablishmentMenuOpen) return;
+
+    function handleOutsidePointer(event: PointerEvent) {
+      if (!establishmentSelectorRef.current?.contains(event.target as Node)) {
+        setIsEstablishmentMenuOpen(false);
+      }
+    }
+
+    function handleEscape(event: KeyboardEvent) {
+      if (event.key === "Escape") setIsEstablishmentMenuOpen(false);
+    }
+
+    document.addEventListener("pointerdown", handleOutsidePointer, true);
+    document.addEventListener("keydown", handleEscape);
+
+    return () => {
+      document.removeEventListener("pointerdown", handleOutsidePointer, true);
+      document.removeEventListener("keydown", handleEscape);
+    };
+  }, [isEstablishmentMenuOpen]);
 
   const selectedEstablishmentId =
     searchParams.get("establishmentId") ?? initialEstablishmentId;
@@ -42,15 +65,15 @@ export function Header({
   return (
     <header className="fixed inset-x-0 top-0 z-30 flex h-14 items-center border-b border-border/60 bg-background px-6">
       <div className="flex items-center gap-5 text-sm text-foreground">
-        <span className="text-muted-foreground">/</span>
         <span className="text-base font-semibold text-foreground">Takodu</span>
 
         <div className="flex items-center gap-1">
+        <span className="text-muted-foreground">/</span>
         {organizationSlot}
 
         <span className="text-muted-foreground">/</span>
 
-        <div className="relative">
+        <div ref={establishmentSelectorRef} className="relative">
           <button
             type="button"
             onClick={() => setIsEstablishmentMenuOpen((open) => !open)}
