@@ -1,14 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { TeamUser } from "@/contexts/team/domain/model/entities/team-user.entity";
-import { listTeamUsersQuery } from "@/contexts/team/domain/model/queries/team.queries";
-import { createInvitedEmail } from "@/contexts/team/domain/model/valueobjects/invited-email.vo";
+import { TeamUser } from "@/contexts/workforce/domain/model/entities/team-user.entity";
+import { listTeamUsersQuery } from "@/contexts/workforce/domain/model/queries/team.queries";
+import { createInvitedEmail } from "@/contexts/workforce/domain/model/valueobjects/invited-email.vo";
 import {
   createInvitationId,
   createMemberId,
   createTeamEstablishmentId,
   createTeamOrganizationId,
   createTeamUserId,
-} from "@/contexts/team/domain/model/valueobjects/team-identifiers.vo";
+} from "@/contexts/workforce/domain/model/valueobjects/team-identifiers.vo";
 
 const invitationId = "11111111-1111-4111-8111-111111111111";
 const memberId = "22222222-2222-4222-8222-222222222222";

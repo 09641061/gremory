@@ -119,7 +119,8 @@ function toTeamUser(resource: {
   invitationId: string;
   memberId: string | null;
   userId: string | null;
-  email: string;
+    email: string;
+    role?: string | null;
   organizationId: string;
   establishmentId: string;
   establishmentName: string | null;
@@ -135,6 +136,7 @@ function toTeamUser(resource: {
     memberId: resource.memberId ? createMemberId(resource.memberId) : null,
     userId: resource.userId ? createTeamUserId(resource.userId) : null,
     email: createInvitedEmail(resource.email),
+    role: resource.role,
     organizationId: createTeamOrganizationId(resource.organizationId),
     establishmentId: createTeamEstablishmentId(resource.establishmentId),
     establishmentName: resource.establishmentName,

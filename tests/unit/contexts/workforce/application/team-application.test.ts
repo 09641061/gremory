@@ -1,15 +1,15 @@
 import { describe, expect, it, vi } from "vitest";
-import { TeamCommandServiceImpl } from "@/contexts/team/application/internal/commandservices/team-command.service";
-import { TeamQueryServiceImpl } from "@/contexts/team/application/internal/queryservices/team-query.service";
-import { TeamUser } from "@/contexts/team/domain/model/entities/team-user.entity";
-import { createInvitedEmail } from "@/contexts/team/domain/model/valueobjects/invited-email.vo";
+import { TeamCommandServiceImpl } from "@/contexts/workforce/application/internal/commandservices/team-command.service";
+import { TeamQueryServiceImpl } from "@/contexts/workforce/application/internal/queryservices/team-query.service";
+import { TeamUser } from "@/contexts/workforce/domain/model/entities/team-user.entity";
+import { createInvitedEmail } from "@/contexts/workforce/domain/model/valueobjects/invited-email.vo";
 import {
   createInvitationId,
   createMemberId,
   createTeamEstablishmentId,
   createTeamOrganizationId,
-} from "@/contexts/team/domain/model/valueobjects/team-identifiers.vo";
-import type { TeamRepository } from "@/contexts/team/domain/services/team.repository";
+} from "@/contexts/workforce/domain/model/valueobjects/team-identifiers.vo";
+import type { TeamRepository } from "@/contexts/workforce/domain/services/team.repository";
 
 const invitationId = "11111111-1111-4111-8111-111111111111";
 const memberId = "22222222-2222-4222-8222-222222222222";

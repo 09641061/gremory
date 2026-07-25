@@ -64,6 +64,7 @@ function toTeamUserSummary(
     memberId: user.memberId?.value ?? null,
     userId: user.userId?.value ?? null,
     email: user.email.value,
+    role: user.role,
     organizationId: user.organizationId.value,
     establishmentId: user.establishmentId.value,
     establishmentName: user.establishmentName,

@@ -11,11 +11,11 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock("next/cache", () => ({ revalidatePath: mocks.revalidatePath }));
-vi.mock("@/contexts/team/infrastructure/session/team-session", () => ({
+vi.mock("@/contexts/workforce/infrastructure/session/team-session", () => ({
   requireTeamAccessToken: mocks.requireToken,
 }));
 vi.mock(
-  "@/contexts/team/application/internal/commandservices/team-command.service",
+  "@/contexts/workforce/application/internal/commandservices/team-command.service",
   () => ({ createTeamCommandService: mocks.serviceFactory }),
 );
 
@@ -24,12 +24,12 @@ import {
   inviteTeamUserAction,
   removeTeamMemberAction,
   revokeTeamInvitationAction,
-} from "@/contexts/team/interfaces/actions/team.actions";
-import { initialTeamActionResult } from "@/contexts/team/interfaces/actions/team-action-result";
+} from "@/contexts/workforce/interfaces/actions/team.actions";
+import { initialTeamActionResult } from "@/contexts/workforce/interfaces/actions/team-action-result";
 import {
   createInvitationId,
   createMemberId,
-} from "@/contexts/team/domain/model/valueobjects/team-identifiers.vo";
+} from "@/contexts/workforce/domain/model/valueobjects/team-identifiers.vo";
 
 const invitationId = "11111111-1111-4111-8111-111111111111";
 const memberId = "22222222-2222-4222-8222-222222222222";

@@ -5,6 +5,7 @@ export interface TeamUserSummary {
   memberId: string | null;
   userId: string | null;
   email: string;
+  role: string | null;
   organizationId: string;
   establishmentId: string;
   establishmentName: string | null;

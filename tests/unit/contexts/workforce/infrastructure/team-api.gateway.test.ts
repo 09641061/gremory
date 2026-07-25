@@ -1,12 +1,12 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { TeamApiGateway } from "@/contexts/team/infrastructure/gateways/team-api.gateway";
-import { createInvitedEmail } from "@/contexts/team/domain/model/valueobjects/invited-email.vo";
-import { createInvitationToken } from "@/contexts/team/domain/model/valueobjects/invitation-token.vo";
+import { TeamApiGateway } from "@/contexts/workforce/infrastructure/gateways/team-api.gateway";
+import { createInvitedEmail } from "@/contexts/workforce/domain/model/valueobjects/invited-email.vo";
+import { createInvitationToken } from "@/contexts/workforce/domain/model/valueobjects/invitation-token.vo";
 import {
   createInvitationId,
   createMemberId,
   createTeamEstablishmentId,
-} from "@/contexts/team/domain/model/valueobjects/team-identifiers.vo";
+} from "@/contexts/workforce/domain/model/valueobjects/team-identifiers.vo";
 
 const invitationId = "11111111-1111-4111-8111-111111111111";
 const memberId = "22222222-2222-4222-8222-222222222222";

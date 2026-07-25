@@ -13,6 +13,7 @@ export interface TeamUserProps {
   memberId: MemberId | null;
   userId: TeamUserId | null;
   email: InvitedEmail;
+  role?: string | null;
   organizationId: TeamOrganizationId;
   establishmentId: TeamEstablishmentId;
   establishmentName: string | null;
@@ -30,6 +31,7 @@ export class TeamUser {
     public readonly memberId: MemberId | null,
     public readonly userId: TeamUserId | null,
     public readonly email: InvitedEmail,
+    public readonly role: string | null,
     public readonly organizationId: TeamOrganizationId,
     public readonly establishmentId: TeamEstablishmentId,
     public readonly establishmentName: string | null,
@@ -56,6 +58,7 @@ export class TeamUser {
       props.memberId,
       props.userId,
       props.email,
+      props.role ?? null,
       props.organizationId,
       props.establishmentId,
       normalizeEstablishmentName(props.establishmentName),
