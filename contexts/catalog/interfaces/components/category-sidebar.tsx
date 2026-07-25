@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   PlusIcon,
   FolderIcon,
@@ -47,6 +47,7 @@ export function CategorySidebar({
   onOpenEditCategoryModal,
   onMoveServiceCategory,
 }: CategorySidebarProps) {
+  const router = useRouter();
   const [draggedServiceId, setDraggedServiceId] = useState<string | null>(null);
   const [dragOverCategoryId, setDragOverCategoryId] = useState<string | null>(null);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
@@ -182,17 +183,20 @@ export function CategorySidebar({
                     <span className="text-xs text-muted-foreground">
                       {catServices.length}
                     </span>
-                    <Link href={`/catalog/new?categoryId=${cat.id}`} passHref>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => setIsMobileOpen(false)}
-                        className="h-6 w-6 text-primary hover:bg-primary/20"
-                        title="New Service"
-                      >
-                        <PlusIcon className="size-3.5" />
-                      </Button>
-                    </Link>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setIsMobileOpen(false);
+                        // Navigate programmatically with a timestamp to reset create form instance state
+                        router.push(`/catalog/new?categoryId=${cat.id}&t=${Date.now()}`);
+                      }}
+                      className="h-6 w-6 text-primary hover:bg-primary/20"
+                      title="New Service"
+                    >
+                      <PlusIcon className="size-3.5" />
+                    </Button>
                   </div>
                 </div>
 

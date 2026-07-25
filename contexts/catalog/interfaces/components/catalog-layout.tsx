@@ -83,22 +83,26 @@ export function CatalogLayout({
           )}
         </main>
 
-        <CreateCategoryModal
-          isOpen={isCategoryModalOpen}
-          onClose={() => setIsCategoryModalOpen(false)}
-          establishmentId={activeEstablishmentId}
-        />
+        {isCategoryModalOpen && (
+          <CreateCategoryModal
+            isOpen={isCategoryModalOpen}
+            onClose={() => setIsCategoryModalOpen(false)}
+            establishmentId={activeEstablishmentId}
+          />
+        )}
 
-        <EditCategoryModal
-          isOpen={!!editingCategory}
-          onClose={() => setEditingCategory(null)}
-          category={editingCategory}
-          servicesCount={
-            editingCategory
-              ? servicesList.filter((s) => s.categoryId === editingCategory.id).length
-              : 0
-          }
-        />
+        {editingCategory && (
+          <EditCategoryModal
+            isOpen={!!editingCategory}
+            onClose={() => setEditingCategory(null)}
+            category={editingCategory}
+            servicesCount={
+              editingCategory
+                ? servicesList.filter((s) => s.categoryId === editingCategory.id).length
+                : 0
+            }
+          />
+        )}
       </div>
     </div>
   );
