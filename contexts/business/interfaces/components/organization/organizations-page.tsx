@@ -1,10 +1,47 @@
-export function OrganizationsPage() {
+import { Building2 } from "lucide-react";
+import type { OrganizationSummary } from "../../../application/model/business.read-models";
+import {
+  Card,
+  CardAction,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/contexts/shared/interfaces/components/ui/card";
+import { OrganizationCardMenu } from "./organization-card-menu";
+
+export function OrganizationsPage({
+  organization,
+}: {
+  organization: OrganizationSummary;
+}) {
   return (
-    <section className="mx-auto w-full max-w-6xl">
-      <h1 className="page-title">Organizations</h1>
-      <p className="page-description mt-2">
-        Manage the organizations associated with your account.
-      </p>
+    <section className="mx-auto w-full max-w-6xl space-y-8">
+      <div>
+        <h1 className="page-title">Organizations</h1>
+        <p className="page-description mt-2">
+          Manage the organization associated with your account.
+        </p>
+      </div>
+
+      <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        <Card className="overflow-visible transition-colors hover:ring-foreground/20">
+          <div className="flex h-36 items-center justify-center overflow-hidden rounded-t-xl bg-muted/50">
+            <Building2 className="size-12 text-muted-foreground/50" />
+          </div>
+          <CardHeader>
+            <CardTitle>{organization.name}</CardTitle>
+            <CardDescription>
+              {organization.active ? "Active organization" : "Inactive organization"}
+            </CardDescription>
+            <CardAction>
+              <OrganizationCardMenu
+                organizationId={organization.id}
+                organizationName={organization.name}
+              />
+            </CardAction>
+          </CardHeader>
+        </Card>
+      </div>
     </section>
   );
 }
