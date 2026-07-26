@@ -123,4 +123,54 @@ describe("IAM session proxy", () => {
     expect(response.status).toBe(307);
     expect(response.headers.get("location")).toBe("http://localhost/chat");
   });
+
+  it("should allow an active workforce member without a personal subscription", async () => {
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(new Response(
+        JSON.stringify({ message: "Subscription not found" }),
+        { status: 404, headers: { "Content-Type": "application/json" } },
+      ))
+      .mockResolvedValueOnce(new Response(
+        JSON.stringify({ active: true, member: true }),
+        { status: 200, headers: { "Content-Type": "application/json" } },
+      ));
+    vi.stubGlobal("fetch", fetchMock);
+
+    const response = await proxy(requestWithSession(
+      "access-token",
+      "refresh-token",
+      "/chat",
+    ));
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get("location")).toBeNull();
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      2,
+      "http://localhost:8080/api/workforce/access",
+      expect.objectContaining({
+        headers: { Authorization: "Bearer access-token" },
+      }),
+    );
+  });
+
+  it("should redirect a removed workforce member to subscribe", async () => {
+    vi.stubGlobal("fetch", vi.fn()
+      .mockResolvedValueOnce(new Response(
+        JSON.stringify({ message: "Subscription not found" }),
+        { status: 404, headers: { "Content-Type": "application/json" } },
+      ))
+      .mockResolvedValueOnce(new Response(
+        JSON.stringify({ active: false, member: true }),
+        { status: 200, headers: { "Content-Type": "application/json" } },
+      )));
+
+    const response = await proxy(requestWithSession(
+      "access-token",
+      "refresh-token",
+      "/chat",
+    ));
+
+    expect(response.status).toBe(307);
+    expect(response.headers.get("location")).toBe("http://localhost/subscribe");
+  });
 });

@@ -33,7 +33,7 @@ describe("Invitation acceptance view", () => {
     expect(screen.getByRole("heading", { name: "Join the team" })).toBeVisible();
     expect(screen.getByText("Takodu Studio")).toBeVisible();
     expect(screen.getByText("Miraflores")).toBeVisible();
-    expect(screen.getByText("e***@example.com")).toBeVisible();
+    expect(screen.queryByText("e***@example.com")).not.toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Sign in to accept" })).toHaveAttribute(
       "href",
       "/login?next=%2Finvitations%2Faccept%3Ftoken%3Draw-token",
@@ -63,5 +63,44 @@ describe("Invitation acceptance view", () => {
     expect(
       screen.getByText("This invitation is invalid, expired, or no longer available."),
     ).toBeVisible();
+  });
+
+  it("should offer application access when invitation was already accepted", () => {
+    render(
+      <InvitationAcceptanceView
+        token="accepted-token"
+        invitation={{ ...invitation, status: "ACCEPTED" }}
+        authenticated
+      />,
+    );
+
+    expect(
+      screen.getByRole("heading", { name: "Invitation already accepted" }),
+    ).toBeVisible();
+    expect(screen.getByRole("link", { name: "Continue to Takodu" })).toHaveAttribute(
+      "href",
+      "/chat",
+    );
+    expect(screen.queryByRole("button", { name: "Accept invitation" })).not.toBeInTheDocument();
+  });
+
+  it("should explain when membership was removed after acceptance", () => {
+    render(
+      <InvitationAcceptanceView
+        token="removed-token"
+        invitation={{ ...invitation, status: "REMOVED" }}
+        authenticated
+      />,
+    );
+
+    expect(
+      screen.getByRole("heading", { name: "Workspace access removed" }),
+    ).toBeVisible();
+    expect(
+      screen.getByText(
+        "Your membership is no longer active. Ask the organization owner to send you a new invitation.",
+      ),
+    ).toBeVisible();
+    expect(screen.queryByRole("link", { name: "Continue to Takodu" })).not.toBeInTheDocument();
   });
 });

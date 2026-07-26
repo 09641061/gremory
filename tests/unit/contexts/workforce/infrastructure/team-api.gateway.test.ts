@@ -90,6 +90,31 @@ describe("TeamApiGateway", () => {
     );
   });
 
+  it("should preview an accepted invitation with authentication", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse({
+      organizationId,
+      organizationName: "Takodu Studio",
+      establishmentId,
+      establishmentName: "Miraflores",
+      maskedEmail: "e***@example.com",
+      status: "ACCEPTED",
+      expiresAt: "2026-08-01T10:00:00Z",
+    }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    const result = await new TeamApiGateway("access-token").previewInvitation(
+      createInvitationToken("accepted-token"),
+    );
+
+    expect(result.status).toBe("ACCEPTED");
+    expect(fetchMock).toHaveBeenCalledWith(
+      "http://localhost:8080/api/workforce/invitations/preview?token=accepted-token",
+      expect.objectContaining({
+        headers: { Authorization: "Bearer access-token" },
+      }),
+    );
+  });
+
   it("should accept invitation and return membership identity", async () => {
     const fetchMock = vi.fn().mockResolvedValue(jsonResponse({
       membership: { id: memberId },

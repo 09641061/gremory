@@ -90,6 +90,7 @@ export class TeamApiGateway implements TeamRepository {
     const params = new URLSearchParams({ token: token.value });
     const response = await teamGet<unknown>(
       `${apiConfig.routes.workforce.invitations}/preview?${params}`,
+      this.providedToken,
     );
     const resource = invitationPreviewResourceSchema.parse(response);
     return {

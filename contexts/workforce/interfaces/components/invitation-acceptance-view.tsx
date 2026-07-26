@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Check, Mail, MapPin, Users } from "lucide-react";
+import { Building2, Check, Mail, Store, Users } from "lucide-react";
 import { useActionState } from "react";
 import type { TeamInvitationPreviewView } from "../../application/model/team.read-models";
 import { acceptTeamInvitationAction } from "../actions/team.actions";
@@ -29,16 +29,35 @@ export function InvitationAcceptanceView({
     initialTeamActionResult,
   );
 
-  if (state.status === "success") {
+  if (invitation.status === "REMOVED") {
+    return (
+      <InvitationShell>
+        <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-muted text-muted-foreground">
+          <Users className="size-6" />
+        </div>
+        <h1 className="mt-5 text-2xl font-semibold tracking-tight">Workspace access removed</h1>
+        <p className="mt-2 text-sm leading-6 text-muted-foreground">
+          Your membership is no longer active. Ask the organization owner to send you a new invitation.
+        </p>
+      </InvitationShell>
+    );
+  }
+
+  if (state.status === "success" || invitation.status === "ACCEPTED") {
     return (
       <InvitationShell>
         <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-600">
           <Check className="size-6" />
         </div>
-        <h1 className="mt-5 text-2xl font-semibold tracking-tight">Invitation accepted</h1>
+        <h1 className="mt-5 text-2xl font-semibold tracking-tight">
+          {state.status === "success" ? "Invitation accepted" : "Invitation already accepted"}
+        </h1>
         <p className="mt-2 text-sm leading-6 text-muted-foreground">
           You are now part of {invitation.establishmentName}.
         </p>
+        <Link href="/chat" className={buttonVariants({ className: "mt-6 h-10 w-full" })}>
+          Continue to Takodu
+        </Link>
       </InvitationShell>
     );
   }
@@ -58,16 +77,15 @@ export function InvitationAcceptanceView({
 
       <Card className="mt-6 gap-0 rounded-lg border border-border py-0 text-left shadow-none ring-0">
         <CardHeader className="border-b px-5 py-4">
-          <CardTitle>{invitation.organizationName}</CardTitle>
+          <CardTitle className="flex items-center gap-3">
+            <Building2 className="size-4 text-muted-foreground" />
+            <span>{invitation.organizationName}</span>
+          </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3 px-5 py-4 text-sm">
           <p className="flex items-center gap-3">
-            <MapPin className="size-4 text-muted-foreground" />
+            <Store className="size-4 text-muted-foreground" />
             <span>{invitation.establishmentName}</span>
-          </p>
-          <p className="flex items-center gap-3">
-            <Mail className="size-4 text-muted-foreground" />
-            <span>{invitation.maskedEmail}</span>
           </p>
         </CardContent>
       </Card>

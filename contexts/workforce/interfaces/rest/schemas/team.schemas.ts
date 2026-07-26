@@ -55,7 +55,7 @@ export const invitationPreviewResourceSchema = z.object({
   establishmentId: uuidSchema,
   establishmentName: z.string().min(1),
   maskedEmail: z.string().min(1),
-  status: z.literal("PENDING"),
+  status: z.enum(["PENDING", "ACCEPTED", "REMOVED"]),
   expiresAt: dateTimeSchema,
 });
 

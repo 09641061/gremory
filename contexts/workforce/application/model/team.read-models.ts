@@ -26,7 +26,7 @@ export interface TeamInvitationPreviewView {
   establishmentId: string;
   establishmentName: string;
   maskedEmail: string;
-  status: "PENDING";
+  status: "PENDING" | "ACCEPTED" | "REMOVED";
   expiresAt: string;
 }
 

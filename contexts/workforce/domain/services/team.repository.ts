@@ -34,7 +34,7 @@ export interface TeamInvitationPreview {
   establishmentId: TeamEstablishmentId;
   establishmentName: string;
   maskedEmail: string;
-  status: "PENDING";
+  status: "PENDING" | "ACCEPTED" | "REMOVED";
   expiresAt: Date;
 }
 

@@ -16,14 +16,15 @@ export default async function InvitationAcceptPage({
 
   if (!token) return <InvitationUnavailableView />;
 
+  const accessToken = await getTeamAccessToken();
   let invitation: TeamInvitationPreviewView;
   try {
-    invitation = await createTeamQueryService().previewInvitation({ token });
+    invitation = await createTeamQueryService(accessToken).previewInvitation({ token });
   } catch {
     return <InvitationUnavailableView />;
   }
 
-  const authenticated = Boolean(await getTeamAccessToken());
+  const authenticated = Boolean(accessToken);
   return (
     <InvitationAcceptanceView
       token={token}
