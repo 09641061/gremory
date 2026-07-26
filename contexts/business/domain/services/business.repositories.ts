@@ -19,11 +19,9 @@ export interface PageResult<T> {
 }
 
 export interface OrganizationRepository {
-  create(name: OrganizationName): Promise<Organization>;
   findMine(): Promise<Organization>;
   findById(id: OrganizationId): Promise<Organization | null>;
   save(organization: Organization): Promise<Organization>;
-  delete(id: OrganizationId): Promise<void>;
 }
 
 export interface EstablishmentRepository {

@@ -21,9 +21,7 @@ import type {
 } from "../model/business.read-models";
 
 export interface OrganizationCommandService {
-  create(command: CreateOrganizationCommand): Promise<OrganizationId>;
   update(command: UpdateOrganizationCommand): Promise<OrganizationId>;
-  delete(command: DeleteOrganizationCommand): Promise<void>;
 }
 
 export interface OrganizationQueryService {

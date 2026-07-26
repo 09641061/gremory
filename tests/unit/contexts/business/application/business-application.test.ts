@@ -19,17 +19,18 @@ const organizationId = "11111111-1111-4111-8111-111111111111";
 const establishmentId = "22222222-2222-4222-8222-222222222222";
 
 describe("Business command services", () => {
-  it("normalizes organization input before creating it", async () => {
+  it("normalizes organization input before updating it", async () => {
     const repository = organizationRepository();
-    const create = vi
-      .spyOn(repository, "create")
-      .mockImplementation(async (name) => organization(name.value));
+    const save = vi
+      .spyOn(repository, "save")
+      .mockImplementation(async (value) => value);
 
-    const id = await new OrganizationCommandServiceImpl(repository).create({
-      name: "  Acme  ",
+    const id = await new OrganizationCommandServiceImpl(repository).update({
+      id: organizationId,
+      name: "Acme Group",
     });
 
-    expect(create).toHaveBeenCalledWith(createOrganizationName("Acme"));
+    expect(save).toHaveBeenCalled();
     expect(id.value).toBe(organizationId);
   });
 
@@ -124,11 +125,9 @@ function establishment(name: string, photoUrl: string | null) {
 
 function organizationRepository(): OrganizationRepository {
   return {
-    create: vi.fn(async (name) => organization(name.value)),
     findMine: vi.fn(async () => organization("Acme")),
     findById: vi.fn(async () => organization("Acme")),
     save: vi.fn(async (value) => value),
-    delete: vi.fn(async () => undefined),
   };
 }
 
