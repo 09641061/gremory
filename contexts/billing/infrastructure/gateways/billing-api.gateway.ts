@@ -101,4 +101,14 @@ export class BillingApiGateway {
       errorMessage: "Failed to fetch invoices",
     });
   }
+
+  async getInvoiceById(accessToken: string, invoiceId: string): Promise<InvoiceResponse> {
+    return apiClient.get<InvoiceResponse>(
+      `${apiConfig.routes.invoices}/${encodeURIComponent(invoiceId)}`,
+      {
+        token: accessToken,
+        errorMessage: "Failed to fetch invoice",
+      },
+    );
+  }
 }

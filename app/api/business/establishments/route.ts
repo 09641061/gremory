@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
 import { createEstablishmentCommand } from "@/contexts/business/domain/model/commands/business.commands";
 import { createEstablishmentCommandService } from "@/contexts/business/application/internal/commandservices/establishment-command.service";
+import { createEstablishmentQueryService } from "@/contexts/business/application/internal/queryservices/establishment-query.service";
 import { createEstablishmentSchema } from "@/contexts/business/interfaces/rest/schemas/establishment.schemas";
+import { requireBusinessAccessToken } from "@/contexts/business/infrastructure/session/business-session";
 
 export async function POST(request: Request) {
   try {
@@ -15,11 +17,23 @@ export async function POST(request: Request) {
       return validationErrorResponse(parsed.error.issues[0]?.message);
     }
 
-    const establishmentId = await createEstablishmentCommandService().create(
+    const token = await requireBusinessAccessToken();
+    const establishmentId = await createEstablishmentCommandService(token).create(
       createEstablishmentCommand(parsed.data),
     );
 
-    return NextResponse.json({ id: establishmentId.value }, { status: 201 });
+    const establishment = await createEstablishmentQueryService(token).getById({
+      id: establishmentId.value,
+    });
+
+    if (!establishment) {
+      return NextResponse.json(
+        { message: "Establishment not found" },
+        { status: 404 },
+      );
+    }
+
+    return NextResponse.json(establishment, { status: 201 });
   } catch (error) {
     return routeErrorResponse(error);
   }

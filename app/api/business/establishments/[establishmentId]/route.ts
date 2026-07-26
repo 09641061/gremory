@@ -111,11 +111,21 @@ export async function PUT(
     }
 
     const token = await requireBusinessAccessToken();
-    const establishmentIdResult = await createEstablishmentCommandService(token).update(
+    await createEstablishmentCommandService(token).update(
       updateEstablishmentCommand(parsed.data),
     );
 
-    return NextResponse.json({ id: establishmentIdResult.value });
+    const establishment = await createEstablishmentQueryService(token).getById({
+      id: idParsed.data,
+    });
+    if (!establishment) {
+      return NextResponse.json(
+        { message: "Establishment not found" },
+        { status: 404 },
+      );
+    }
+
+    return NextResponse.json(establishment);
   } catch (error) {
     return routeErrorResponse(error);
   }

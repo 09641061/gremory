@@ -68,7 +68,6 @@ describe("Business query services", () => {
       id: organizationId,
       ownerId: organizationId,
       name: "Acme",
-      active: true,
     });
     expect(result).not.toBeInstanceOf(Organization);
   });
@@ -97,7 +96,6 @@ describe("Business query services", () => {
         organizationId,
         name: "Main store",
         photoUrl: null,
-        active: true,
       },
     ]);
     expect(result.content[0]).not.toBeInstanceOf(Establishment);

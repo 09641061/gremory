@@ -57,6 +57,5 @@ function toEstablishmentSummary(
     organizationId: establishment.organizationId.value,
     name: establishment.name.value,
     photoUrl: establishment.photoUrl.value,
-    active: establishment.active,
   };
 }

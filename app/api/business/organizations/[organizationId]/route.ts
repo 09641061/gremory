@@ -107,11 +107,21 @@ export async function PUT(
     }
 
     const token = await requireBusinessAccessToken();
-    const organizationIdResult = await createOrganizationCommandService(token).update(
+    await createOrganizationCommandService(token).update(
       updateOrganizationCommand(parsed.data),
     );
 
-    return NextResponse.json({ id: organizationIdResult.value });
+    const organization = await createOrganizationQueryService(token).getById({
+      id: idParsed.data,
+    });
+    if (!organization) {
+      return NextResponse.json(
+        { message: "Organization not found" },
+        { status: 404 },
+      );
+    }
+
+    return NextResponse.json(organization);
   } catch (error) {
     return routeErrorResponse(error);
   }
