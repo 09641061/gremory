@@ -5,7 +5,7 @@ import {
   createWorkforceRoleRoute,
   listWorkforceRolePermissionsRoute,
   listWorkforceRolesRoute,
-  updateWorkforceRoleRoute,
+  patchWorkforceRoleRoute,
 } from "@/contexts/workforce/interfaces/rest/routes/workforce-role.route";
 
 const mocks = vi.hoisted(() => ({
@@ -15,7 +15,7 @@ const mocks = vi.hoisted(() => ({
     list: vi.fn(),
     permissions: vi.fn(),
     create: vi.fn(),
-    update: vi.fn(),
+    patch: vi.fn(),
     assign: vi.fn(),
     delete: vi.fn(),
   },
@@ -44,17 +44,20 @@ describe("workforce role routes", () => {
       id: "11111111-1111-4111-8111-111111111111",
       getName: () => "Catalog manager",
       getPermissions: () => ["catalog:manage"],
+      isSystemRole: () => false,
     }]);
     mocks.service.permissions.mockResolvedValue(["business:access"]);
     mocks.service.create.mockResolvedValue({
       id: "11111111-1111-4111-8111-111111111111",
       getName: () => "Catalog manager",
       getPermissions: () => ["catalog:manage"],
+      isSystemRole: () => false,
     });
-    mocks.service.update.mockResolvedValue({
+    mocks.service.patch.mockResolvedValue({
       id: "11111111-1111-4111-8111-111111111111",
       getName: () => "Catalog manager",
       getPermissions: () => ["catalog:manage"],
+      isSystemRole: () => false,
     });
     mocks.service.assign.mockResolvedValue(undefined);
     mocks.service.delete.mockResolvedValue(undefined);
@@ -69,6 +72,7 @@ describe("workforce role routes", () => {
         id: "11111111-1111-4111-8111-111111111111",
         name: "Catalog manager",
         permissions: ["catalog:manage"],
+        systemRole: false,
       },
     ]);
   });
@@ -95,20 +99,19 @@ describe("workforce role routes", () => {
     expect(mocks.service.create).toHaveBeenCalledTimes(1);
   });
 
-  it("should update a role", async () => {
-    const response = await updateWorkforceRoleRoute(
+  it("should patch a role", async () => {
+    const response = await patchWorkforceRoleRoute(
       new Request("http://localhost/api/workforce/roles/11111111-1111-4111-8111-111111111111", {
-        method: "PUT",
+        method: "PATCH",
         body: JSON.stringify({
           name: "Catalog manager",
-          permissions: ["catalog:manage"],
         }),
       }),
       "11111111-1111-4111-8111-111111111111",
     );
 
     expect(response.status).toBe(200);
-    expect(mocks.service.update).toHaveBeenCalledTimes(1);
+    expect(mocks.service.patch).toHaveBeenCalledTimes(1);
   });
 
   it("should assign a role to a member", async () => {

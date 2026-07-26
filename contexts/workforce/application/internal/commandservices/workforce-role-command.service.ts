@@ -4,7 +4,7 @@ import type {
   AssignWorkforceRoleCommand,
   DeleteWorkforceRoleCommand,
   CreateWorkforceRoleCommand,
-  UpdateWorkforceRoleCommand,
+  PatchWorkforceRoleCommand,
 } from "../../../domain/model/commands/workforce-role.commands";
 import { WorkforceRole } from "../../../domain/model/entities/workforce-role.entity";
 import type { WorkforcePermission } from "../../../domain/model/enums/workforce-permission";
@@ -20,18 +20,13 @@ export class WorkforceRoleCommandServiceImpl implements WorkforceRoleCommandServ
       WorkforceRole.create({
         name: command.name,
         permissions: [...command.permissions] as WorkforcePermission[],
+        systemRole: false,
       }),
     );
   }
 
-  async update(command: UpdateWorkforceRoleCommand): Promise<WorkforceRole> {
-    return this.roles.save(
-      WorkforceRole.rehydrate({
-        id: command.roleId,
-        name: command.name,
-        permissions: [...command.permissions] as WorkforcePermission[],
-      }),
-    );
+  async patch(command: PatchWorkforceRoleCommand): Promise<WorkforceRole> {
+    return this.roles.patch(command);
   }
 
   delete(command: DeleteWorkforceRoleCommand): Promise<void> {

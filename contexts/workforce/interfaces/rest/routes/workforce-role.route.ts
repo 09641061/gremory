@@ -9,13 +9,14 @@ import {
   deleteWorkforceRoleCommand,
   assignWorkforceRoleCommand,
   createWorkforceRoleCommand,
-  updateWorkforceRoleCommand,
+  patchWorkforceRoleCommand,
 } from "@/contexts/workforce/domain/model/commands/workforce-role.commands";
 import { workforcePermissionCodes } from "@/contexts/workforce/domain/model/enums/workforce-permission";
 import { TeamApiError } from "@/contexts/workforce/infrastructure/gateways/team-api.gateway";
 import { requireTeamAccessToken } from "@/contexts/workforce/infrastructure/session/team-session";
 import {
-  workforceRoleRequestSchema,
+  workforceRoleCreateRequestSchema,
+  workforceRolePatchRequestSchema,
   workforceRoleResourceSchema,
   workforceRoleResourcesSchema,
 } from "../schemas/workforce-role.schemas";
@@ -41,7 +42,7 @@ export async function listWorkforceRolePermissionsRoute() {
 
 export async function createWorkforceRoleRoute(request: Request) {
   try {
-    const parsed = workforceRoleRequestSchema.safeParse(await request.json());
+    const parsed = workforceRoleCreateRequestSchema.safeParse(await request.json());
     if (!parsed.success) {
       return validationErrorResponse(parsed.error.issues[0]?.message);
     }
@@ -58,7 +59,7 @@ export async function createWorkforceRoleRoute(request: Request) {
   }
 }
 
-export async function updateWorkforceRoleRoute(
+export async function patchWorkforceRoleRoute(
   request: Request,
   roleId: string,
 ) {
@@ -67,13 +68,13 @@ export async function updateWorkforceRoleRoute(
     if (!roleIdParsed.success) {
       return validationErrorResponse(roleIdParsed.error.issues[0]?.message);
     }
-    const parsed = workforceRoleRequestSchema.safeParse(await request.json());
+    const parsed = workforceRolePatchRequestSchema.safeParse(await request.json());
     if (!parsed.success) {
       return validationErrorResponse(parsed.error.issues[0]?.message);
     }
 
-    const role = await createWorkforceRoleCommandService(await requireTeamAccessToken()).update(
-      updateWorkforceRoleCommand({
+    const role = await createWorkforceRoleCommandService(await requireTeamAccessToken()).patch(
+      patchWorkforceRoleCommand({
         roleId: roleIdParsed.data,
         ...parsed.data,
       }),
@@ -136,6 +137,7 @@ function roleToResource(role: WorkforceRole) {
     id: role.id ?? "",
     name: role.getName(),
     permissions: [...role.getPermissions()],
+    systemRole: role.isSystemRole(),
   };
 }
 

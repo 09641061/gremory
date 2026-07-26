@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import { WorkforceRoleCommandServiceImpl } from "@/contexts/workforce/application/internal/commandservices/workforce-role-command.service";
 import { WorkforceRoleQueryServiceImpl } from "@/contexts/workforce/application/internal/queryservices/workforce-role-query.service";
 import { WorkforceRole } from "@/contexts/workforce/domain/model/entities/workforce-role.entity";
+import { workforcePermissionCodes } from "@/contexts/workforce/domain/model/enums/workforce-permission";
 import type { WorkforceRoleRepository } from "@/contexts/workforce/domain/services/workforce-role.repository";
 
 describe("Workforce role application services", () => {
@@ -22,19 +23,19 @@ describe("Workforce role application services", () => {
     expect(role.getName()).toBe("Admin");
   });
 
-  it("should save a role update using the provided identity", async () => {
+  it("should patch a role using the provided identity", async () => {
     const repository = roleRepository();
-    const save = vi.spyOn(repository, "save");
+    const patch = vi.spyOn(repository, "patch");
     const service = new WorkforceRoleCommandServiceImpl(repository);
 
-    await service.update({
+    await service.patch({
       roleId: "11111111-1111-4111-8111-111111111111",
       name: "  Receptionist  ",
-      permissions: ["business:access"],
     });
 
-    expect(save).toHaveBeenCalledWith(expect.objectContaining({
-      id: "11111111-1111-4111-8111-111111111111",
+    expect(patch).toHaveBeenCalledWith(expect.objectContaining({
+      roleId: "11111111-1111-4111-8111-111111111111",
+      name: "  Receptionist  ",
     }));
   });
 
@@ -75,14 +76,26 @@ function roleRepository(): WorkforceRoleRepository {
         id: "11111111-1111-4111-8111-111111111111",
         name: "Admin",
         permissions: ["catalog:manage", "business:access"],
+        systemRole: false,
       }),
     ]),
-    permissions: vi.fn(async () => ["business:access", "catalog:manage"]),
+    permissions: vi.fn(async () => [
+      workforcePermissionCodes[0],
+      workforcePermissionCodes[8],
+    ]),
     save: vi.fn(async (role: WorkforceRole) =>
       WorkforceRole.rehydrate({
         id: role.id ?? "11111111-1111-4111-8111-111111111111",
         name: role.getName(),
         permissions: role.getPermissions(),
+        systemRole: false,
+      })),
+    patch: vi.fn(async (command) =>
+      WorkforceRole.rehydrate({
+        id: command.roleId,
+        name: command.name ?? "Admin",
+        permissions: command.permissions ?? ["catalog:manage", "business:access"],
+        systemRole: false,
       })),
     delete: vi.fn(async () => undefined),
     assign: vi.fn(async () => undefined),

@@ -4,6 +4,7 @@ export interface WorkforceRoleResource {
   id: string;
   name: string;
   permissions: ReadonlyArray<WorkforcePermission>;
+  systemRole: boolean;
 }
 
 export interface WorkforceRoleRequest {

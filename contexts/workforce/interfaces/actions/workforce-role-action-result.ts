@@ -14,9 +14,28 @@ export const initialWorkforceRoleActionResult: WorkforceRoleActionResult = {
 };
 
 export function workforceRoleActionError(error: unknown): WorkforceRoleActionResult {
+  if (error instanceof Error) {
+    return {
+      status: "error",
+      data: null,
+      error: error.message,
+    };
+  }
+
+  if (error && typeof error === "object" && "message" in error) {
+    const message = (error as { message?: unknown }).message;
+    if (typeof message === "string" && message.trim()) {
+      return {
+        status: "error",
+        data: null,
+        error: message,
+      };
+    }
+  }
+
   return {
     status: "error",
     data: null,
-    error: error instanceof Error ? error.message : "Unexpected error",
+    error: "Unexpected error",
   };
 }

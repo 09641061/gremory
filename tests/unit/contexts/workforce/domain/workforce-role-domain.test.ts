@@ -10,6 +10,7 @@ describe("Workforce role domain", () => {
     const role = WorkforceRole.create({
       name: "  Catalog Manager  ",
       permissions: ["catalog:manage", "business:access"],
+      systemRole: false,
     });
 
     expect(role.id).toBeNull();
@@ -25,6 +26,7 @@ describe("Workforce role domain", () => {
       WorkforceRole.create({
         name: "   ",
         permissions: ["catalog:manage"],
+        systemRole: false,
       }),
     ).toThrow("Role name is required");
   });

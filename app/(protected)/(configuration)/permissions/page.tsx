@@ -7,6 +7,7 @@ export default async function PermissionsPage() {
     id: role.id,
     name: role.getName(),
     permissions: role.getPermissions(),
+    systemRole: role.isSystemRole(),
   }));
 
   return <PermissionsPageView roles={roles} />;

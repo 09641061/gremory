@@ -3,7 +3,7 @@
 import { useActionState, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { WorkforceRoleSummary } from "@/contexts/workforce/application/model/workforce-role.read-models";
-import { updateWorkforceRoleAction } from "@/contexts/workforce/interfaces/actions/workforce-role.actions";
+import { patchWorkforceRoleAction } from "@/contexts/workforce/interfaces/actions/workforce-role.actions";
 import { initialWorkforceRoleActionResult } from "@/contexts/workforce/interfaces/actions/workforce-role-action-result";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import { Input } from "@/contexts/shared/interfaces/components/ui/input";
@@ -29,7 +29,7 @@ export function EditRoleDialog({ role, open, onOpenChange }: EditRoleDialogProps
   const [name, setName] = useState(role.name);
   const [errorKey, setErrorKey] = useState(0);
   const [state, formAction, pending] = useActionState(
-    updateWorkforceRoleAction,
+    patchWorkforceRoleAction,
     initialWorkforceRoleActionResult,
   );
 
@@ -73,9 +73,6 @@ export function EditRoleDialog({ role, open, onOpenChange }: EditRoleDialogProps
             />
           </div>
 
-          {role.permissions.map((perm) => (
-            <input key={perm} type="hidden" name="permissions" value={perm} />
-          ))}
           <input type="hidden" name="roleId" value={role.id || ""} />
 
           <AlertDialogFooter>

@@ -1,14 +1,14 @@
 import {
   deleteWorkforceRoleRoute,
-  updateWorkforceRoleRoute,
+  patchWorkforceRoleRoute,
 } from "@/contexts/workforce/interfaces/rest/routes/workforce-role.route";
 
-export async function PUT(
+export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ roleId: string }> },
 ) {
   const { roleId } = await params;
-  return updateWorkforceRoleRoute(request, roleId);
+  return patchWorkforceRoleRoute(request, roleId);
 }
 
 export async function DELETE(

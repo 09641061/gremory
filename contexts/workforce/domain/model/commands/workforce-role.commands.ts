@@ -3,10 +3,10 @@ export type CreateWorkforceRoleCommand = Readonly<{
   permissions: ReadonlyArray<string>;
 }>;
 
-export type UpdateWorkforceRoleCommand = Readonly<{
+export type PatchWorkforceRoleCommand = Readonly<{
   roleId: string;
-  name: string;
-  permissions: ReadonlyArray<string>;
+  name?: string;
+  permissions?: ReadonlyArray<string>;
 }>;
 
 export type DeleteWorkforceRoleCommand = Readonly<{
@@ -27,13 +27,14 @@ export function createWorkforceRoleCommand(
   });
 }
 
-export function updateWorkforceRoleCommand(
-  input: UpdateWorkforceRoleCommand,
-): UpdateWorkforceRoleCommand {
+export function patchWorkforceRoleCommand(
+  input: PatchWorkforceRoleCommand,
+): PatchWorkforceRoleCommand {
+  const permissions = input.permissions?.length ? Object.freeze([...input.permissions]) : undefined;
   return Object.freeze({
     roleId: input.roleId,
     name: input.name,
-    permissions: Object.freeze([...input.permissions]),
+    permissions,
   });
 }
 

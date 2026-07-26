@@ -4,6 +4,7 @@ export interface WorkforceRoleProps {
   id: string | null;
   name: string;
   permissions: ReadonlyArray<WorkforcePermission>;
+  systemRole: boolean;
 }
 
 export class WorkforceRole {
@@ -11,16 +12,17 @@ export class WorkforceRole {
     public readonly id: string | null,
     private name: string,
     private permissions: WorkforcePermission[],
+    private readonly systemRole: boolean,
   ) {}
 
   static create(props: Omit<WorkforceRoleProps, "id">): WorkforceRole {
     const normalized = normalizeRole(props.name, props.permissions);
-    return new WorkforceRole(null, normalized.name, normalized.permissions);
+    return new WorkforceRole(null, normalized.name, normalized.permissions, props.systemRole);
   }
 
   static rehydrate(props: WorkforceRoleProps): WorkforceRole {
     const normalized = normalizeRole(props.name, props.permissions);
-    return new WorkforceRole(props.id, normalized.name, normalized.permissions);
+    return new WorkforceRole(props.id, normalized.name, normalized.permissions, props.systemRole);
   }
 
   rename(name: string): void {
@@ -38,6 +40,10 @@ export class WorkforceRole {
 
   getPermissions(): ReadonlyArray<WorkforcePermission> {
     return Object.freeze([...this.permissions]);
+  }
+
+  isSystemRole(): boolean {
+    return this.systemRole;
   }
 }
 

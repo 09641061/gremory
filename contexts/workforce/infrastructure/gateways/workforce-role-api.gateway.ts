@@ -5,12 +5,15 @@ import { WorkforceRole } from "../../domain/model/entities/workforce-role.entity
 import type {
   AssignWorkforceRoleCommand,
   DeleteWorkforceRoleCommand,
+  PatchWorkforceRoleCommand,
 } from "../../domain/model/commands/workforce-role.commands";
 import type { WorkforceRoleRepository } from "../../domain/services/workforce-role.repository";
 import type { WorkforceRoleResource } from "../../interfaces/rest/resources/workforce-role.resources";
 import { requireTeamAccessToken } from "../session/team-session";
-import { teamDelete, teamGet, teamPost, teamPut } from "../http/team-api.client";
+import { teamDelete, teamGet, teamPatch, teamPost, teamPut } from "../http/team-api.client";
 import {
+  workforceRoleCreateRequestSchema,
+  workforceRolePatchRequestSchema,
   workforceRolePageResourceSchema,
   workforceRolePermissionsSchema,
   workforceRoleResourcesSchema,
@@ -34,17 +37,25 @@ export class WorkforceRoleApiGateway implements WorkforceRoleRepository {
 
   async save(role: WorkforceRole) {
     const token = await requireTeamAccessToken(this.providedToken);
-    const body = {
+    const body = workforceRoleCreateRequestSchema.parse({
       name: role.getName(),
       permissions: [...role.getPermissions()],
-    };
-    const response = role.id
-      ? await teamPut<unknown>(
-          `${apiConfig.routes.workforce.roles}/${encodeURIComponent(role.id)}`,
-          body,
-          token,
-        )
-      : await teamPost<unknown>(apiConfig.routes.workforce.roles, body, token);
+    });
+    const response = await teamPost<unknown>(apiConfig.routes.workforce.roles, body, token);
+    return toRole(workforceRoleResourceSchema.parse(response));
+  }
+
+  async patch(command: PatchWorkforceRoleCommand) {
+    const token = await requireTeamAccessToken(this.providedToken);
+    const body = workforceRolePatchRequestSchema.parse({
+      name: command.name,
+      permissions: command.permissions,
+    });
+    const response = await teamPatch<unknown>(
+      `${apiConfig.routes.workforce.roles}/${encodeURIComponent(command.roleId)}`,
+      body,
+      token,
+    );
     return toRole(workforceRoleResourceSchema.parse(response));
   }
 
@@ -71,5 +82,6 @@ function toRole(resource: WorkforceRoleResource) {
     id: resource.id,
     name: resource.name,
     permissions: resource.permissions,
+    systemRole: resource.systemRole,
   });
 }

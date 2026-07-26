@@ -42,22 +42,19 @@ describe("WorkforceRoleApiGateway", () => {
     expect(role.id).toBe("11111111-1111-4111-8111-111111111111");
   });
 
-  it("should update a role using PUT", async () => {
+  it("should patch a role using PATCH", async () => {
     const fetchMock = vi.fn().mockResolvedValue(jsonResponse(roleResource()));
     vi.stubGlobal("fetch", fetchMock);
 
     const gateway = new WorkforceRoleApiGateway("access-token");
-    await gateway.save({
-      id: "11111111-1111-4111-8111-111111111111",
-      getName: () => "Catalog manager",
-      getPermissions: () => ["catalog:manage"],
-      rename: vi.fn(),
-      replacePermissions: vi.fn(),
-    } as never);
+    await gateway.patch({
+      roleId: "11111111-1111-4111-8111-111111111111",
+      name: "Catalog manager",
+    });
 
     expect(fetchMock).toHaveBeenCalledWith(
       "http://localhost:8080/api/workforce/roles/11111111-1111-4111-8111-111111111111",
-      expect.objectContaining({ method: "PUT" }),
+      expect.objectContaining({ method: "PATCH" }),
     );
   });
 
@@ -108,6 +105,7 @@ function roleResource() {
     id: "11111111-1111-4111-8111-111111111111",
     name: "Catalog manager",
     permissions: ["catalog:manage", "business:access"],
+    systemRole: false,
   };
 }
 

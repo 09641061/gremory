@@ -18,6 +18,7 @@ export function RoleRow({ role }: RoleRowProps) {
   const menuRef = useRef<HTMLDivElement>(null);
   const roleId = role.id;
   const canEdit = roleId !== null;
+  const canDelete = roleId !== null && !role.systemRole;
 
   useEffect(() => {
     if (!menuOpen) return;
@@ -86,13 +87,15 @@ export function RoleRow({ role }: RoleRowProps) {
               type="button"
               variant="ghost"
               className="h-auto w-full justify-start gap-2 rounded-md px-2 py-2 text-sm text-destructive hover:bg-destructive/10 hover:text-destructive"
+              disabled={!canDelete}
               onClick={() => {
+                if (!canDelete) return;
                 setMenuOpen(false);
                 setDeleteOpen(true);
               }}
             >
               <Trash2 className="size-4" />
-              Delete
+              {role.systemRole ? "Default role" : "Delete"}
             </Button>
           </div>
         ) : null}
@@ -108,6 +111,7 @@ export function RoleRow({ role }: RoleRowProps) {
           <DeleteRoleDialog
             roleId={roleId}
             roleName={role.name}
+            isSystemRole={role.systemRole}
             open={deleteOpen}
             onOpenChange={setDeleteOpen}
           />

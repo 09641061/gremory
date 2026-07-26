@@ -21,11 +21,12 @@ import { Spinner } from "@/contexts/shared/interfaces/components/ui/spinner";
 interface DeleteRoleDialogProps {
   roleId: string;
   roleName: string;
+  isSystemRole: boolean;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-export function DeleteRoleDialog({ roleId, roleName, open, onOpenChange }: DeleteRoleDialogProps) {
+export function DeleteRoleDialog({ roleId, roleName, isSystemRole, open, onOpenChange }: DeleteRoleDialogProps) {
   const router = useRouter();
   const [errorKey, setErrorKey] = useState(0);
   const [state, formAction, pending] = useActionState(
@@ -59,17 +60,26 @@ export function DeleteRoleDialog({ roleId, roleName, open, onOpenChange }: Delet
             <AlertDialogHeader>
               <AlertDialogTitle>Delete role?</AlertDialogTitle>
               <AlertDialogDescription>
-                This will permanently delete{" "}
-                <span className="font-medium text-foreground">{roleName}</span>.
+                {isSystemRole ? (
+                  <>
+                    <span className="font-medium text-foreground">{roleName}</span> is the default role,
+                    so it cannot be deleted.
+                  </>
+                ) : (
+                  <>
+                    This will permanently delete{" "}
+                    <span className="font-medium text-foreground">{roleName}</span>.
+                  </>
+                )}
               </AlertDialogDescription>
             </AlertDialogHeader>
 
           <AlertDialogFooter>
             <input type="hidden" name="roleId" value={roleId} />
             <AlertDialogCancel disabled={pending}>Cancel</AlertDialogCancel>
-            <Button type="submit" variant="destructive" disabled={pending} className="gap-2">
+            <Button type="submit" variant="destructive" disabled={pending || isSystemRole} className="gap-2">
               {pending ? <Spinner className="size-4" /> : <Trash2 className="size-4" />}
-              {pending ? "Deleting..." : "Delete"}
+              {isSystemRole ? "Protected" : pending ? "Deleting..." : "Delete"}
             </Button>
           </AlertDialogFooter>
         </form>
