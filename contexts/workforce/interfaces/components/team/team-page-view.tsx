@@ -35,7 +35,7 @@ export function TeamPageView({ establishmentId, members }: { establishmentId: st
       </div>
       <div className="overflow-hidden rounded-xl border border-border bg-card shadow-sm">
         <div className="min-w-[720px]">
-          <div className="grid grid-cols-[minmax(420px,1.7fr)_minmax(150px,.55fr)_minmax(170px,.7fr)] border-b border-border px-5 py-4 text-xs font-medium uppercase tracking-[0.12em] text-muted-foreground"><span>Member</span><span>Status</span><span /></div>
+          <div className="grid grid-cols-[minmax(420px,1.7fr)_minmax(150px,.55fr)_minmax(170px,.7fr)] border-b border-border px-5 py-4 text-sm font-medium text-muted-foreground"><span>Member</span><span>Status</span><span /></div>
           {filteredMembers.map((member) => <MemberRow key={member.memberId ?? member.invitationId} member={member} />)}
           {filteredMembers.length === 0 && <div className="px-5 py-10 text-sm text-muted-foreground">No members found.</div>}
           <div className="border-t border-border px-5 py-5 text-sm text-muted-foreground">{members.length} {members.length === 1 ? "member" : "members"}</div>

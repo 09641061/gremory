@@ -3,9 +3,9 @@
 import Link from "next/link";
 import { Building2, Check, Mail, Store, Users } from "lucide-react";
 import { useActionState, useEffect } from "react";
-import type { TeamInvitationPreviewView } from "../../application/model/team.read-models";
-import { acceptTeamInvitationAction } from "../actions/team.actions";
-import { initialTeamActionResult } from "../actions/team-action-result";
+import type { TeamInvitationPreviewView } from "@/contexts/workforce/application/model/team.read-models";
+import { acceptTeamInvitationAction } from "@/contexts/workforce/interfaces/actions/team.actions";
+import { initialTeamActionResult } from "@/contexts/workforce/interfaces/actions/team-action-result";
 import { Button, buttonVariants } from "@/contexts/shared/interfaces/components/ui/button";
 import {
   Card,

@@ -7,7 +7,7 @@ afterEach(() => {
 
 describe("WorkforceRoleApiGateway", () => {
   it("should list roles from the backend", async () => {
-    const fetchMock = vi.fn().mockResolvedValue(jsonResponse([roleResource()]));
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse({ content: [roleResource()] }));
     vi.stubGlobal("fetch", fetchMock);
 
     const roles = await new WorkforceRoleApiGateway("access-token").list();

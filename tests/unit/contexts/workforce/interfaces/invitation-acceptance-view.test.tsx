@@ -3,7 +3,7 @@ import { render, screen } from "@testing-library/react";
 import {
   InvitationAcceptanceView,
   InvitationUnavailableView,
-} from "@/contexts/workforce/interfaces/components/invitation-acceptance-view";
+} from "@/contexts/workforce/interfaces/components/invitations/invitation-acceptance-view";
 import type { TeamInvitationPreviewView } from "@/contexts/workforce/application/model/team.read-models";
 
 vi.mock("@/contexts/workforce/interfaces/actions/team.actions", () => ({
