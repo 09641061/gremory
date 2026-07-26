@@ -9,6 +9,8 @@ import {
   AlertDescription,
   AlertTitle,
 } from "@/contexts/shared/interfaces/components/ui/alert";
+import { hasActiveSubscription } from "@/contexts/billing/domain/services/subscription-access.policy";
+import type { SubscriptionResponse } from "@/contexts/billing/infrastructure/gateways/billing-api.gateway";
 
 export function PaymentSuccessView() {
   const router = useRouter();
@@ -20,13 +22,13 @@ export function PaymentSuccessView() {
 
     const checkSubscription = async () => {
       try {
-        const response = await fetch("/api/billing/subscription/status", { cache: "no-store" });
-        const status = response.ok
-          ? (await response.json()) as { active?: boolean }
-          : { active: false };
+        const response = await fetch("/api/billing/subscriptions", { cache: "no-store" });
+        const subscription = response.ok
+          ? (await response.json()) as SubscriptionResponse
+          : null;
 
         if (cancelled) return;
-        if (status.active === true) {
+        if (hasActiveSubscription(subscription)) {
           router.replace("/chat");
           return;
         }
