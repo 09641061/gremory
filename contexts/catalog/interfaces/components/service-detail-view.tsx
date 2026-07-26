@@ -1,9 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { EditIcon, ClockIcon, TimerIcon, SparklesIcon, CreditCardIcon } from "lucide-react";
+import { EditIcon, ClockIcon, TimerIcon, SparklesIcon, CreditCardIcon, EyeIcon, EyeOffIcon } from "lucide-react";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/contexts/shared/interfaces/components/ui/card";
+import { useChangeCatalogServiceStatus } from "../../application/use-cases/use-change-catalog-service-status";
+import { Spinner } from "@/contexts/shared/interfaces/components/ui/spinner";
+import { ErrorAlert } from "@/contexts/shared/interfaces/components/ui/error";
 
 export type DetailedServiceDTO = {
   id: string;
@@ -24,8 +27,16 @@ interface ServiceDetailViewProps {
 }
 
 export function ServiceDetailView({ service }: ServiceDetailViewProps) {
+  const { changeStatus, pending, state } = useChangeCatalogServiceStatus();
+  const isActive = service.status === "ACTIVE";
+
   return (
-    <div className="max-w-[1200px] mx-auto p-6 space-y-8">
+    <div className="max-w-[1200px] mx-auto p-6 space-y-6">
+      <ErrorAlert
+        title="Failed to change service status"
+        message={state.status === "error" ? (state.error ?? undefined) : undefined}
+      />
+
       {/* Header Actions */}
       <div className="flex justify-between items-start">
         <div>
@@ -33,7 +44,7 @@ export function ServiceDetailView({ service }: ServiceDetailViewProps) {
             <h1 className="text-3xl font-bold text-foreground">{service.name}</h1>
             <span
               className={`px-2.5 py-0.5 text-xs font-semibold rounded uppercase tracking-wide border ${
-                service.status === "ACTIVE"
+                isActive
                   ? "bg-primary/10 text-primary border-primary/20"
                   : "bg-muted text-muted-foreground border-border"
               }`}
@@ -43,12 +54,30 @@ export function ServiceDetailView({ service }: ServiceDetailViewProps) {
           </div>
         </div>
 
-        <Link href={`/catalog/${service.id}/edit`}>
-          <Button variant="outline" className="gap-2 border-border bg-card hover:bg-muted">
-            <EditIcon className="size-4 text-primary" />
-            <span>Edit Service</span>
+        <div className="flex items-center gap-3">
+          <Button
+            variant="outline"
+            disabled={pending}
+            onClick={() => changeStatus(service.id, !isActive)}
+            className="gap-2 border-border bg-card hover:bg-muted"
+          >
+            {pending ? (
+              <Spinner className="size-4" />
+            ) : isActive ? (
+              <EyeOffIcon className="size-4 text-muted-foreground" />
+            ) : (
+              <EyeIcon className="size-4 text-primary" />
+            )}
+            <span>{isActive ? "Deactivate" : "Activate"}</span>
           </Button>
-        </Link>
+
+          <Link href={`/catalog/${service.id}/edit`}>
+            <Button variant="outline" className="gap-2 border-border bg-card hover:bg-muted">
+              <EditIcon className="size-4 text-primary" />
+              <span>Edit Service</span>
+            </Button>
+          </Link>
+        </div>
       </div>
 
       {/* Bento Grid Layout */}
