@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   BarChart3,
@@ -214,6 +215,7 @@ function ChatsSection() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const sectionRef = useRef<HTMLElement | null>(null);
+  const menuRef = useRef<HTMLDivElement | null>(null);
   const activeConversationId = pathname.startsWith("/chat")
     ? searchParams.get("conversationId")
     : null;
@@ -223,6 +225,7 @@ function ChatsSection() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const [menuPosition, setMenuPosition] = useState<{ top: number; left: number } | null>(null);
   const [mutatingConversationId, setMutatingConversationId] = useState<string | null>(null);
   const [renameModalConversation, setRenameModalConversation] =
     useState<AssistantConversationSummary | null>(null);
@@ -237,8 +240,12 @@ function ChatsSection() {
   useEffect(() => {
     function handlePointerDown(event: MouseEvent | TouchEvent) {
       if (!sectionRef.current) return;
+      if (menuRef.current && event.target instanceof Node && menuRef.current.contains(event.target)) {
+        return;
+      }
       if (event.target instanceof Node && sectionRef.current.contains(event.target)) return;
       setOpenMenuId(null);
+      setMenuPosition(null);
     }
 
     if (openMenuId) {
@@ -249,6 +256,22 @@ function ChatsSection() {
     return () => {
       document.removeEventListener("mousedown", handlePointerDown);
       document.removeEventListener("touchstart", handlePointerDown);
+    };
+  }, [openMenuId]);
+
+  useEffect(() => {
+    if (!openMenuId) return;
+
+    function closeMenu() {
+      setOpenMenuId(null);
+      setMenuPosition(null);
+    }
+
+    window.addEventListener("scroll", closeMenu, true);
+    window.addEventListener("resize", closeMenu);
+    return () => {
+      window.removeEventListener("scroll", closeMenu, true);
+      window.removeEventListener("resize", closeMenu);
     };
   }, [openMenuId]);
 
@@ -399,6 +422,7 @@ function ChatsSection() {
     setDeleteModalConversation(conversation);
     setDeleteError(null);
     setOpenMenuId(null);
+    setMenuPosition(null);
   }
 
   async function confirmDeleteConversation() {
@@ -511,11 +535,24 @@ function ChatsSection() {
                           disabled={isMutating}
                           aria-label={`Opciones para ${conversation.title}`}
                           aria-expanded={openMenuId === conversation.id}
-                          onClick={() =>
+                          onClick={(event) => {
+                            const currentTarget = event.currentTarget;
+                            const rect = currentTarget.getBoundingClientRect();
+                            const estimatedMenuHeight = 116;
+                            const estimatedMenuWidth = 176;
+                            const top = Math.max(8, rect.top - estimatedMenuHeight - 8);
+                            const left = Math.max(
+                              8,
+                              Math.min(rect.right - estimatedMenuWidth, window.innerWidth - estimatedMenuWidth - 8),
+                            );
+
+                            setMenuPosition((current) =>
+                              current && openMenuId === conversation.id ? null : { top, left },
+                            );
                             setOpenMenuId((current) =>
                               current === conversation.id ? null : conversation.id,
-                            )
-                          }
+                            );
+                          }}
                           className={cn(
                             "shrink-0 rounded-full border border-transparent text-muted-foreground hover:bg-muted hover:text-foreground",
                             openMenuId === conversation.id && "bg-muted text-foreground",
@@ -524,32 +561,6 @@ function ChatsSection() {
                           <MoreHorizontal className="size-4" />
                         </Button>
 
-                        {openMenuId === conversation.id ? (
-                          <div className="absolute right-0 top-[calc(100%+0.35rem)] z-30 w-44 rounded-2xl border border-border/70 bg-background p-1.5 shadow-xl shadow-black/10">
-                            <button
-                              type="button"
-                              disabled={isMutating}
-                              onClick={() => {
-                                openRenameConversation(conversation);
-                              }}
-                              className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm text-foreground hover:bg-muted disabled:opacity-50"
-                            >
-                              <PencilLine className="size-4 text-muted-foreground" />
-                              <span>Editar nombre</span>
-                            </button>
-                            <button
-                              type="button"
-                              disabled={isMutating}
-                              onClick={() => {
-                                openDeleteConversation(conversation);
-                              }}
-                              className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm text-foreground hover:bg-muted disabled:opacity-50"
-                            >
-                              <Trash2 className="size-4 text-muted-foreground" />
-                              <span>Eliminar</span>
-                            </button>
-                          </div>
-                        ) : null}
                       </div>
                     </li>
                   );
@@ -559,6 +570,52 @@ function ChatsSection() {
           </div>
         </div>
       ) : null}
+
+      {openMenuId && menuPosition
+        ? createPortal(
+            <div
+              ref={menuRef}
+              className="fixed z-[60] w-44 rounded-2xl border border-border/70 bg-background p-1.5 shadow-xl shadow-black/20"
+              style={{ top: `${menuPosition.top}px`, left: `${menuPosition.left}px` }}
+            >
+              {(() => {
+                const conversation = conversations.find((item) => item.id === openMenuId);
+                if (!conversation) return null;
+                const isMutating = mutatingConversationId === conversation.id;
+
+                return (
+                  <>
+                    <button
+                      type="button"
+                      disabled={isMutating}
+                      onClick={() => {
+                        openRenameConversation(conversation);
+                        setMenuPosition(null);
+                      }}
+                      className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm text-foreground hover:bg-muted disabled:opacity-50"
+                    >
+                      <PencilLine className="size-4 text-muted-foreground" />
+                      <span>Editar nombre</span>
+                    </button>
+                    <button
+                      type="button"
+                      disabled={isMutating}
+                      onClick={() => {
+                        openDeleteConversation(conversation);
+                        setMenuPosition(null);
+                      }}
+                      className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm text-foreground hover:bg-muted disabled:opacity-50"
+                    >
+                      <Trash2 className="size-4 text-muted-foreground" />
+                      <span>Eliminar</span>
+                    </button>
+                  </>
+                );
+              })()}
+            </div>,
+            document.body,
+          )
+        : null}
 
       <RenameConversationModal
         open={renameModalConversation !== null}
