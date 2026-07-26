@@ -18,7 +18,18 @@ export function CatalogLayout({
   services: initialServices,
   activeEstablishmentId,
 }: CatalogLayoutProps) {
+  // Local state initialized with server props
   const [servicesList, setServicesList] = useState<DetailedServiceDTO[]>(initialServices);
+  
+  // Track previous initialServices prop value to detect server updates (triggered by router.refresh())
+  const [prevInitialServices, setPrevInitialServices] = useState<DetailedServiceDTO[]>(initialServices);
+
+  // Synchronize local servicesList state with initialServices from Server Component dynamically without useEffect/cascading renders
+  if (initialServices !== prevInitialServices) {
+    setServicesList(initialServices);
+    setPrevInitialServices(initialServices);
+  }
+
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | undefined>(
     categories[0]?.id
   );
@@ -59,8 +70,8 @@ export function CatalogLayout({
   };
 
   return (
-    <div className="flex flex-col h-screen overflow-hidden bg-background">
-      <div className="flex flex-col md:flex-row flex-1 overflow-hidden">
+    <div className="flex flex-col h-[calc(100vh-10rem)] w-full overflow-hidden bg-background">
+      <div className="flex flex-col md:flex-row flex-1 overflow-hidden h-full">
         <CategorySidebar
           categories={categories}
           services={serviceSummaries}
