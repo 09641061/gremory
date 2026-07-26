@@ -8,6 +8,9 @@ import type { SubscriptionResponse } from "@/contexts/billing/infrastructure/gat
 
 import { AssistantChatComposer } from "./assistant-chat-composer";
 import { AssistantChatThread } from "./assistant-chat-thread";
+import {
+  upsertAssistantConversationListItem,
+} from "./assistant-conversation-cache";
 import type { AssistantChatMessage, AssistantConversation } from "./assistant-chat.types";
 
 const conversationsEndpoint = "/api/assistant/conversations";
@@ -206,12 +209,26 @@ export function AssistantChatView() {
   useEffect(() => {
     function handleConversationMutation(event: Event) {
       const customEvent = event as CustomEvent<
+        | { type: "upsert"; conversation: AssistantConversation; moveToFront?: boolean }
         | { type: "rename"; conversationId: string; title: string }
         | { type: "delete"; conversationId: string }
       >;
 
-      if (!selectedConversationId || !customEvent.detail) return;
-      if (customEvent.detail.conversationId !== selectedConversationId) return;
+      if (!customEvent.detail) return;
+
+      if (customEvent.detail.type === "upsert") {
+        if (
+          selectedConversationId &&
+          customEvent.detail.conversation.id === selectedConversationId
+        ) {
+          setActiveConversation(customEvent.detail.conversation);
+        }
+        return;
+      }
+
+      if (!selectedConversationId || customEvent.detail.conversationId !== selectedConversationId) {
+        return;
+      }
 
       if (customEvent.detail.type === "rename") {
         setActiveConversation((current) =>
@@ -246,12 +263,20 @@ export function AssistantChatView() {
         intent?: string | null;
         createdAt: string;
       }>;
-    }>(conversationsEndpoint, {
+      }>(conversationsEndpoint, {
       method: "POST",
       body: JSON.stringify({ title }),
     });
 
-    return normalizeConversation(data);
+    const conversation = normalizeConversation(data);
+    upsertAssistantConversationListItem(conversation, { moveToFront: true });
+    window.dispatchEvent(
+      new CustomEvent("assistant-conversations-updated", {
+        detail: { type: "upsert", conversation, moveToFront: true },
+      }),
+    );
+
+    return conversation;
   }
 
   async function sendMessage() {
@@ -292,6 +317,12 @@ export function AssistantChatView() {
       });
 
       const conversation = normalizeConversation(data);
+      upsertAssistantConversationListItem(conversation, { moveToFront: true });
+      window.dispatchEvent(
+        new CustomEvent("assistant-conversations-updated", {
+          detail: { type: "upsert", conversation, moveToFront: true },
+        }),
+      );
       setDraft("");
       setActiveConversation(conversation);
       router.replace(buildConversationUrl(pathname, conversation.id), { scroll: false });

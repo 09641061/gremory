@@ -31,9 +31,15 @@ import {
 import { Button, buttonVariants } from "@/contexts/shared/interfaces/components/ui/button";
 import { Input } from "@/contexts/shared/interfaces/components/ui/input";
 import type {
-  AssistantConversationPage,
   AssistantConversationSummary,
 } from "@/contexts/assistant/interfaces/components/chat/assistant-chat.types";
+import {
+  ensureAssistantConversationListCached,
+  getAssistantConversationListCache,
+  patchAssistantConversationListItemTitle,
+  removeAssistantConversationListItem,
+  upsertAssistantConversationListItem,
+} from "@/contexts/assistant/interfaces/components/chat/assistant-conversation-cache";
 import { cn } from "@/lib/utils";
 
 const navigation = [
@@ -48,6 +54,7 @@ const navigation = [
 const assistantConversationsEndpoint = "/api/assistant/conversations";
 
 type ConversationMutationEventDetail =
+  | { type: "upsert"; conversation: AssistantConversationSummary; moveToFront?: boolean }
   | { type: "rename"; conversationId: string; title: string }
   | { type: "delete"; conversationId: string };
 
@@ -217,7 +224,6 @@ function ChatsSection() {
   const [error, setError] = useState<string | null>(null);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [mutatingConversationId, setMutatingConversationId] = useState<string | null>(null);
-  const [refreshToken, setRefreshToken] = useState(0);
   const [renameModalConversation, setRenameModalConversation] =
     useState<AssistantConversationSummary | null>(null);
   const [renameTitle, setRenameTitle] = useState("");
@@ -249,47 +255,59 @@ function ChatsSection() {
   useEffect(() => {
     if (!isOpen) return;
 
+    const cached = getAssistantConversationListCache();
+
+    queueMicrotask(() => {
+      setConversations(cached.conversations);
+      setError(cached.error);
+      setIsLoading(!cached.loaded);
+    });
+
+    if (cached.loaded) return;
+
     const controller = new AbortController();
 
-    const loadConversations = async () => {
-      setIsLoading(true);
-      setError(null);
-
-      try {
-        const data = await requestJson<AssistantConversationPage>(
-          `${assistantConversationsEndpoint}?page=0&size=20`,
-          { signal: controller.signal },
-        );
-
+    void ensureAssistantConversationListCached()
+      .then((data) => {
         if (controller.signal.aborted) return;
-        setConversations(data.content ?? []);
-      } catch (requestError) {
+        setConversations(data);
+        setError(null);
+      })
+      .catch((requestError) => {
         if (controller.signal.aborted) return;
         setConversations([]);
         setError(
           requestError instanceof Error ? requestError.message : "No pudimos cargar los chats.",
         );
-      } finally {
+      })
+      .finally(() => {
         if (!controller.signal.aborted) {
-          setIsLoading(false);
+          const nextCache = getAssistantConversationListCache();
+          setIsLoading(nextCache.isLoading);
         }
-      }
-    };
-
-    void loadConversations();
+      });
 
     return () => controller.abort();
-  }, [isOpen, refreshToken]);
+  }, [isOpen]);
 
   useEffect(() => {
     function handleMutation(event: Event) {
       const customEvent = event as CustomEvent<ConversationMutationEventDetail>;
-      if (!customEvent.detail || !activeConversationId) return;
+      if (!customEvent.detail) return;
 
-      if (
-        customEvent.detail.type === "rename" &&
-        customEvent.detail.conversationId === activeConversationId
-      ) {
+      if (customEvent.detail.type === "upsert") {
+        upsertAssistantConversationListItem(customEvent.detail.conversation, {
+          moveToFront: customEvent.detail.moveToFront,
+        });
+        setConversations((current) => {
+          const next = current.filter((item) => item.id !== customEvent.detail.conversation.id);
+          return customEvent.detail.moveToFront
+            ? [customEvent.detail.conversation, ...next]
+            : [...next, customEvent.detail.conversation];
+        });
+      }
+
+      if (customEvent.detail.type === "rename") {
         const { title } = customEvent.detail;
         setConversations((current) =>
           current.map((conversation) =>
@@ -298,13 +316,17 @@ function ChatsSection() {
               : conversation,
           ),
         );
+        patchAssistantConversationListItemTitle(customEvent.detail.conversationId, title);
       }
 
-      if (
-        customEvent.detail.type === "delete" &&
-        customEvent.detail.conversationId === activeConversationId
-      ) {
-        router.replace("/chat", { scroll: false });
+      if (customEvent.detail.type === "delete") {
+        setConversations((current) =>
+          current.filter((conversation) => conversation.id !== customEvent.detail.conversationId),
+        );
+        removeAssistantConversationListItem(customEvent.detail.conversationId);
+        if (customEvent.detail.conversationId === activeConversationId) {
+          router.replace("/chat", { scroll: false });
+        }
       }
     }
 
@@ -351,6 +373,7 @@ function ChatsSection() {
       setConversations((current) =>
         current.map((item) => (item.id === renameModalConversation.id ? updated : item)),
       );
+      patchAssistantConversationListItemTitle(renameModalConversation.id, updated.title);
 
       window.dispatchEvent(
         new CustomEvent<ConversationMutationEventDetail>("assistant-conversations-updated", {
@@ -361,7 +384,6 @@ function ChatsSection() {
           },
         }),
       );
-      setRefreshToken((current) => current + 1);
       setRenameModalConversation(null);
     } catch (requestError) {
       setRenameError(
@@ -398,12 +420,12 @@ function ChatsSection() {
       setConversations((current) =>
         current.filter((item) => item.id !== deleteModalConversation.id),
       );
+      removeAssistantConversationListItem(deleteModalConversation.id);
       window.dispatchEvent(
         new CustomEvent<ConversationMutationEventDetail>("assistant-conversations-updated", {
           detail: { type: "delete", conversationId: deleteModalConversation.id },
         }),
       );
-      setRefreshToken((current) => current + 1);
       setDeleteModalConversation(null);
     } catch (requestError) {
       setDeleteError(
