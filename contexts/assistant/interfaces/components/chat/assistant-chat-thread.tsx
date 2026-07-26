@@ -74,9 +74,6 @@ export function AssistantChatThread({
     <section className="flex min-h-0 min-w-0 flex-col overflow-hidden rounded-3xl border border-border/60 bg-background/95 shadow-sm">
       <div className="flex items-center justify-between gap-4 border-b border-border/60 px-4 py-4 sm:px-6">
         <div className="min-w-0">
-          <p className="text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
-            Conversación activa
-          </p>
           <h1 className="mt-1 truncate text-lg font-semibold text-foreground">
             {conversation?.title ?? "Nuevo chat"}
           </h1>

@@ -16,9 +16,20 @@ import {
   Settings,
   Trash2,
   Users,
+  X,
 } from "lucide-react";
 
+import {
+  AlertDialog,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/contexts/shared/interfaces/components/ui/alert-dialog";
 import { Button, buttonVariants } from "@/contexts/shared/interfaces/components/ui/button";
+import { Input } from "@/contexts/shared/interfaces/components/ui/input";
 import type {
   AssistantConversationPage,
   AssistantConversationSummary,
@@ -70,6 +81,127 @@ async function requestJson<T>(input: RequestInfo | URL, init?: RequestInit): Pro
   return parsed as T;
 }
 
+function RenameConversationModal({
+  open,
+  conversationTitle,
+  value,
+  error,
+  isSaving,
+  onClose,
+  onChange,
+  onSubmit,
+}: {
+  open: boolean;
+  conversationTitle: string;
+  value: string;
+  error: string | null;
+  isSaving: boolean;
+  onClose: () => void;
+  onChange: (value: string) => void;
+  onSubmit: () => void;
+}) {
+  const inputRef = useRef<HTMLInputElement | null>(null);
+
+  useEffect(() => {
+    if (!open) return;
+
+    const timeout = window.setTimeout(() => {
+      inputRef.current?.focus();
+      inputRef.current?.select();
+    }, 0);
+
+    return () => window.clearTimeout(timeout);
+  }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") onClose();
+    }
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [open, onClose]);
+
+  if (!open) return null;
+
+  return (
+    <div className="fixed inset-0 z-50">
+      <button
+        type="button"
+        aria-label="Cerrar modal"
+        className="absolute inset-0 cursor-default bg-black/50"
+        onClick={onClose}
+      />
+      <div className="absolute inset-0 flex items-center justify-center p-4">
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="rename-conversation-title"
+          className="relative w-full max-w-md rounded-2xl border border-border bg-card p-5 text-card-foreground shadow-2xl"
+        >
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className="text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
+                Chat
+              </p>
+              <h2 id="rename-conversation-title" className="mt-1 text-lg font-semibold">
+                Editar nombre
+              </h2>
+            </div>
+
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-xs"
+              onClick={onClose}
+              className="rounded-full text-muted-foreground hover:bg-muted hover:text-foreground"
+              aria-label="Cerrar"
+            >
+              <X className="size-4" />
+            </Button>
+          </div>
+
+          <div className="mt-4 space-y-3">
+            <div className="space-y-2">
+              <label htmlFor="conversation-title" className="text-sm font-medium">
+                Nombre del chat
+              </label>
+              <Input
+                ref={inputRef}
+                id="conversation-title"
+                value={value}
+                onChange={(event) => onChange(event.target.value)}
+                placeholder={conversationTitle}
+                maxLength={200}
+                disabled={isSaving}
+                className="h-10"
+              />
+            </div>
+
+            {error ? <p className="text-sm text-destructive">{error}</p> : null}
+          </div>
+
+          <div className="mt-5 flex items-center justify-end gap-2">
+            <Button type="button" variant="outline" onClick={onClose} disabled={isSaving}>
+              Cancelar
+            </Button>
+            <Button
+              type="button"
+              onClick={onSubmit}
+              disabled={isSaving || !value.trim() || value.trim().length > 200}
+              className="gap-2"
+            >
+              {isSaving ? "Guardando..." : "Guardar"}
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function ChatsSection() {
   const router = useRouter();
   const pathname = usePathname();
@@ -86,6 +218,15 @@ function ChatsSection() {
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [mutatingConversationId, setMutatingConversationId] = useState<string | null>(null);
   const [refreshToken, setRefreshToken] = useState(0);
+  const [renameModalConversation, setRenameModalConversation] =
+    useState<AssistantConversationSummary | null>(null);
+  const [renameTitle, setRenameTitle] = useState("");
+  const [renameError, setRenameError] = useState<string | null>(null);
+  const [isRenameSaving, setIsRenameSaving] = useState(false);
+  const [deleteModalConversation, setDeleteModalConversation] =
+    useState<AssistantConversationSummary | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [isDeleteSaving, setIsDeleteSaving] = useState(false);
 
   useEffect(() => {
     function handlePointerDown(event: MouseEvent | TouchEvent) {
@@ -171,21 +312,36 @@ function ChatsSection() {
     return () => window.removeEventListener("assistant-conversations-updated", handleMutation);
   }, [activeConversationId, router]);
 
-  async function renameConversation(conversation: AssistantConversationSummary) {
-    const nextTitle = window.prompt("Nuevo nombre del chat", conversation.title)?.trim();
+  function openRenameConversation(conversation: AssistantConversationSummary) {
+    setRenameModalConversation(conversation);
+    setRenameTitle(conversation.title);
+    setRenameError(null);
+    setOpenMenuId(null);
+  }
 
-    if (!nextTitle || nextTitle === conversation.title) return;
-    if (nextTitle.length > 200) {
-      setError("El nombre no puede superar 200 caracteres.");
+  async function submitRenameConversation() {
+    if (!renameModalConversation || isRenameSaving) return;
+
+    const nextTitle = renameTitle.trim();
+
+    if (!nextTitle) {
+      setRenameError("El nombre no puede estar vacio.");
       return;
     }
 
-    setMutatingConversationId(conversation.id);
+    if (nextTitle.length > 200) {
+      setRenameError("El nombre no puede superar 200 caracteres.");
+      return;
+    }
+
+    setIsRenameSaving(true);
+    setRenameError(null);
+    setMutatingConversationId(renameModalConversation.id);
     setError(null);
 
     try {
       const updated = await requestJson<AssistantConversationSummary>(
-        `${assistantConversationsEndpoint}/${encodeURIComponent(conversation.id)}`,
+        `${assistantConversationsEndpoint}/${encodeURIComponent(renameModalConversation.id)}`,
         {
           method: "PATCH",
           body: JSON.stringify({ title: nextTitle }),
@@ -193,56 +349,69 @@ function ChatsSection() {
       );
 
       setConversations((current) =>
-        current.map((item) => (item.id === conversation.id ? updated : item)),
+        current.map((item) => (item.id === renameModalConversation.id ? updated : item)),
       );
 
       window.dispatchEvent(
         new CustomEvent<ConversationMutationEventDetail>("assistant-conversations-updated", {
-          detail: { type: "rename", conversationId: conversation.id, title: updated.title },
+          detail: {
+            type: "rename",
+            conversationId: renameModalConversation.id,
+            title: updated.title,
+          },
         }),
       );
       setRefreshToken((current) => current + 1);
+      setRenameModalConversation(null);
     } catch (requestError) {
-      setError(
+      setRenameError(
         requestError instanceof Error ? requestError.message : "No pudimos renombrar el chat.",
       );
     } finally {
+      setIsRenameSaving(false);
       setMutatingConversationId(null);
-      setOpenMenuId(null);
     }
   }
 
-  async function deleteConversation(conversation: AssistantConversationSummary) {
-    const confirmed = window.confirm(`Eliminar "${conversation.title}"? Esta acción no se puede deshacer.`);
-    if (!confirmed) return;
+  function openDeleteConversation(conversation: AssistantConversationSummary) {
+    setDeleteModalConversation(conversation);
+    setDeleteError(null);
+    setOpenMenuId(null);
+  }
 
-    setMutatingConversationId(conversation.id);
+  async function confirmDeleteConversation() {
+    if (!deleteModalConversation || isDeleteSaving) return;
+
+    setIsDeleteSaving(true);
+    setDeleteError(null);
+    setMutatingConversationId(deleteModalConversation.id);
     setError(null);
 
     try {
       await requestJson<void>(
-        `${assistantConversationsEndpoint}/${encodeURIComponent(conversation.id)}`,
+        `${assistantConversationsEndpoint}/${encodeURIComponent(deleteModalConversation.id)}`,
         {
           method: "DELETE",
         },
       );
 
       setConversations((current) =>
-        current.filter((item) => item.id !== conversation.id),
+        current.filter((item) => item.id !== deleteModalConversation.id),
       );
       window.dispatchEvent(
         new CustomEvent<ConversationMutationEventDetail>("assistant-conversations-updated", {
-          detail: { type: "delete", conversationId: conversation.id },
+          detail: { type: "delete", conversationId: deleteModalConversation.id },
         }),
       );
       setRefreshToken((current) => current + 1);
+      setDeleteModalConversation(null);
     } catch (requestError) {
-      setError(
+      setDeleteError(
         requestError instanceof Error ? requestError.message : "No pudimos eliminar el chat.",
       );
     } finally {
+      setIsDeleteSaving(false);
       setMutatingConversationId(null);
-      setOpenMenuId(null);
     }
   }
 
@@ -277,97 +446,149 @@ function ChatsSection() {
       {isOpen ? (
         <div className="mt-2 pl-2">
           <div className="max-h-[18rem] space-y-2 overflow-y-auto pr-1">
-          {isLoading ? (
-            <div className="space-y-1.5">
-              {Array.from({ length: 4 }).map((_, index) => (
-                <div key={index} className="h-10 animate-pulse rounded-md bg-muted/40" />
-              ))}
-            </div>
-          ) : error ? (
-            <p className="rounded-md border border-dashed border-border/60 px-3 py-2 text-xs text-muted-foreground">
-              {error}
-            </p>
-          ) : conversations.length === 0 ? (
-            <p className="rounded-md border border-dashed border-border/60 px-3 py-2 text-xs text-muted-foreground">
-              No hay chats todavia.
-            </p>
-          ) : (
-            <ul className="space-y-1">
-              {conversations.map((conversation) => {
-                const active = conversation.id === activeConversationId;
-                const isMutating = mutatingConversationId === conversation.id;
+            {isLoading ? (
+              <div className="space-y-1.5">
+                {Array.from({ length: 4 }).map((_, index) => (
+                  <div key={index} className="h-10 animate-pulse rounded-md bg-muted/40" />
+                ))}
+              </div>
+            ) : error ? (
+              <p className="rounded-md border border-dashed border-border/60 px-3 py-2 text-xs text-muted-foreground">
+                {error}
+              </p>
+            ) : conversations.length === 0 ? (
+              <p className="rounded-md border border-dashed border-border/60 px-3 py-2 text-xs text-muted-foreground">
+                No hay chats todavia.
+              </p>
+            ) : (
+              <ul className="space-y-1">
+                {conversations.map((conversation) => {
+                  const active = conversation.id === activeConversationId;
+                  const isMutating = mutatingConversationId === conversation.id;
 
-                return (
-                  <li key={conversation.id}>
-                    <div className="relative flex items-center gap-1.5 rounded-2xl">
-                      <Link
-                        href={`/chat?conversationId=${encodeURIComponent(conversation.id)}`}
-                        aria-current={active ? "page" : undefined}
-                        className={cn(
-                          buttonVariants({ variant: "ghost", size: "lg" }),
-                          "min-w-0 flex-1 justify-start gap-2.5 rounded-2xl border border-transparent px-3 py-3 text-left text-sm font-medium text-foreground hover:border-accent/40 hover:bg-accent/70 hover:text-accent-foreground",
-                          active &&
-                            "!border-accent/40 !bg-accent !text-accent-foreground hover:!border-accent/40 hover:!bg-accent hover:!text-accent-foreground",
-                        )}
-                      >
-                        <span className="truncate">{conversation.title}</span>
-                      </Link>
+                  return (
+                    <li key={conversation.id}>
+                      <div className="relative flex items-center gap-1.5 rounded-2xl">
+                        <Link
+                          href={`/chat?conversationId=${encodeURIComponent(conversation.id)}`}
+                          aria-current={active ? "page" : undefined}
+                          className={cn(
+                            buttonVariants({ variant: "ghost", size: "lg" }),
+                            "min-w-0 flex-1 justify-start gap-2.5 rounded-2xl border border-transparent px-3 py-3 text-left text-sm font-medium text-foreground hover:border-accent/40 hover:bg-accent/70 hover:text-accent-foreground",
+                            active &&
+                              "!border-accent/40 !bg-accent !text-accent-foreground hover:!border-accent/40 hover:!bg-accent hover:!text-accent-foreground",
+                          )}
+                        >
+                          <span className="truncate">{conversation.title}</span>
+                        </Link>
 
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon-xs"
-                        disabled={isMutating}
-                        aria-label={`Opciones para ${conversation.title}`}
-                        aria-expanded={openMenuId === conversation.id}
-                        onClick={() =>
-                          setOpenMenuId((current) =>
-                            current === conversation.id ? null : conversation.id,
-                          )
-                        }
-                        className={cn(
-                          "shrink-0 rounded-full border border-transparent text-muted-foreground hover:bg-muted hover:text-foreground",
-                          openMenuId === conversation.id && "bg-muted text-foreground",
-                        )}
-                      >
-                        <MoreHorizontal className="size-4" />
-                      </Button>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon-xs"
+                          disabled={isMutating}
+                          aria-label={`Opciones para ${conversation.title}`}
+                          aria-expanded={openMenuId === conversation.id}
+                          onClick={() =>
+                            setOpenMenuId((current) =>
+                              current === conversation.id ? null : conversation.id,
+                            )
+                          }
+                          className={cn(
+                            "shrink-0 rounded-full border border-transparent text-muted-foreground hover:bg-muted hover:text-foreground",
+                            openMenuId === conversation.id && "bg-muted text-foreground",
+                          )}
+                        >
+                          <MoreHorizontal className="size-4" />
+                        </Button>
 
-                      {openMenuId === conversation.id ? (
-                        <div className="absolute right-0 top-[calc(100%+0.35rem)] z-30 w-44 rounded-2xl border border-border/70 bg-background p-1.5 shadow-xl shadow-black/10">
-                          <button
-                            type="button"
-                            disabled={isMutating}
-                            onClick={() => {
-                              void renameConversation(conversation);
-                            }}
-                            className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm text-foreground hover:bg-muted disabled:opacity-50"
-                          >
-                            <PencilLine className="size-4 text-muted-foreground" />
-                            <span>Editar nombre</span>
-                          </button>
-                          <button
-                            type="button"
-                            disabled={isMutating}
-                            onClick={() => {
-                              void deleteConversation(conversation);
-                            }}
-                            className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm text-foreground hover:bg-muted disabled:opacity-50"
-                          >
-                            <Trash2 className="size-4 text-muted-foreground" />
-                            <span>Eliminar</span>
-                          </button>
-                        </div>
-                      ) : null}
-                    </div>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
+                        {openMenuId === conversation.id ? (
+                          <div className="absolute right-0 top-[calc(100%+0.35rem)] z-30 w-44 rounded-2xl border border-border/70 bg-background p-1.5 shadow-xl shadow-black/10">
+                            <button
+                              type="button"
+                              disabled={isMutating}
+                              onClick={() => {
+                                openRenameConversation(conversation);
+                              }}
+                              className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm text-foreground hover:bg-muted disabled:opacity-50"
+                            >
+                              <PencilLine className="size-4 text-muted-foreground" />
+                              <span>Editar nombre</span>
+                            </button>
+                            <button
+                              type="button"
+                              disabled={isMutating}
+                              onClick={() => {
+                                openDeleteConversation(conversation);
+                              }}
+                              className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm text-foreground hover:bg-muted disabled:opacity-50"
+                            >
+                              <Trash2 className="size-4 text-muted-foreground" />
+                              <span>Eliminar</span>
+                            </button>
+                          </div>
+                        ) : null}
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
           </div>
         </div>
       ) : null}
+
+      <RenameConversationModal
+        open={renameModalConversation !== null}
+        conversationTitle={renameModalConversation?.title ?? ""}
+        value={renameTitle}
+        error={renameError}
+        isSaving={isRenameSaving}
+        onClose={() => {
+          setRenameModalConversation(null);
+          setRenameError(null);
+        }}
+        onChange={setRenameTitle}
+        onSubmit={() => {
+          void submitRenameConversation();
+        }}
+      />
+
+      <AlertDialog
+        open={deleteModalConversation !== null}
+        onOpenChange={(open) => {
+          if (!open) {
+            setDeleteModalConversation(null);
+            setDeleteError(null);
+          }
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Eliminar conversacion?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta accion no se puede deshacer.
+              <span className="mt-1 block font-medium text-foreground">
+                {deleteModalConversation?.title ?? ""}
+              </span>
+            </AlertDialogDescription>
+            {deleteError ? <p className="text-sm text-destructive">{deleteError}</p> : null}
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleteSaving}>Cancelar</AlertDialogCancel>
+            <Button
+              type="button"
+              variant="destructive"
+              disabled={isDeleteSaving}
+              onClick={() => {
+                void confirmDeleteConversation();
+              }}
+            >
+              {isDeleteSaving ? "Eliminando..." : "Eliminar"}
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </section>
   );
 }
@@ -385,9 +606,9 @@ export function Sidebar() {
         <ul className="space-y-1">
           {navigation.map(({ label, href, icon: Icon }) => {
             const active =
-              (href === "/chat"
+              href === "/chat"
                 ? pathname === href && !selectedConversationId
-                : pathname === href || pathname.startsWith(`${href}/`));
+                : pathname === href || pathname.startsWith(`${href}/`);
 
             return (
               <li key={label}>
