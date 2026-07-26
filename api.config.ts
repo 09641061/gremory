@@ -25,6 +25,8 @@ export const apiConfig = Object.freeze({
       invitations: "/api/workforce/invitations",
       members: "/api/workforce/members",
       access: "/api/workforce/access",
+      roles: "/api/workforce/roles",
+      rolePermissions: "/api/workforce/roles/permissions",
     }),
     devices: "/api/devices",
     notifications: "/api/notifications",

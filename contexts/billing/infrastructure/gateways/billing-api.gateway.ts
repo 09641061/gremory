@@ -37,6 +37,17 @@ export interface InvoiceResponse {
   paidDate?: string | null;
 }
 
+export interface PageResponse<T> {
+  content: T[];
+  pageable: {
+    pageNumber: number;
+    pageSize: number;
+  };
+  totalPages: number;
+  totalElements: number;
+  last: boolean;
+}
+
 export class BillingApiGateway {
   async createSubscription(
     accessToken: string,
@@ -79,8 +90,13 @@ export class BillingApiGateway {
     });
   }
 
-  async getInvoices(accessToken: string): Promise<InvoiceResponse[]> {
-    return apiClient.get<InvoiceResponse[]>(`${apiConfig.routes.invoices}/me`, {
+  async getInvoices(accessToken: string, page = 0, size = 20): Promise<PageResponse<InvoiceResponse>> {
+    const query = new URLSearchParams({
+      page: String(page),
+      size: String(size),
+    });
+
+    return apiClient.get<PageResponse<InvoiceResponse>>(`${apiConfig.routes.invoices}?${query}`, {
       token: accessToken,
       errorMessage: "Failed to fetch invoices",
     });

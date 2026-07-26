@@ -1,0 +1,166 @@
+import "server-only";
+
+import { NextResponse } from "next/server";
+import { z } from "zod";
+import { createWorkforceRoleCommandService } from "@/contexts/workforce/application/internal/commandservices/workforce-role-command.service";
+import { createWorkforceRoleQueryService } from "@/contexts/workforce/application/internal/queryservices/workforce-role-query.service";
+import { WorkforceRole } from "@/contexts/workforce/domain/model/entities/workforce-role.entity";
+import {
+  deleteWorkforceRoleCommand,
+  assignWorkforceRoleCommand,
+  createWorkforceRoleCommand,
+  updateWorkforceRoleCommand,
+} from "@/contexts/workforce/domain/model/commands/workforce-role.commands";
+import { workforcePermissionCodes } from "@/contexts/workforce/domain/model/enums/workforce-permission";
+import { TeamApiError } from "@/contexts/workforce/infrastructure/gateways/team-api.gateway";
+import { requireTeamAccessToken } from "@/contexts/workforce/infrastructure/session/team-session";
+import {
+  workforceRoleRequestSchema,
+  workforceRoleResourceSchema,
+  workforceRoleResourcesSchema,
+} from "../schemas/workforce-role.schemas";
+
+const uuidSchema = z.string().uuid();
+
+export async function listWorkforceRolesRoute() {
+  try {
+    const roles = await createWorkforceRoleQueryService(
+      await requireTeamAccessToken(),
+    ).list();
+    return NextResponse.json(
+      workforceRoleResourcesSchema.parse(roles.map(roleToResource)),
+    );
+  } catch (error) {
+    return toRouteErrorResponse(error);
+  }
+}
+
+export async function listWorkforceRolePermissionsRoute() {
+  return NextResponse.json(workforcePermissionCodes);
+}
+
+export async function createWorkforceRoleRoute(request: Request) {
+  try {
+    const parsed = workforceRoleRequestSchema.safeParse(await request.json());
+    if (!parsed.success) {
+      return validationErrorResponse(parsed.error.issues[0]?.message);
+    }
+
+    const role = await createWorkforceRoleCommandService(await requireTeamAccessToken()).create(
+      createWorkforceRoleCommand(parsed.data),
+    );
+    return NextResponse.json(
+      workforceRoleResourceSchema.parse(roleToResource(role)),
+      { status: 201 },
+    );
+  } catch (error) {
+    return toRouteErrorResponse(error);
+  }
+}
+
+export async function updateWorkforceRoleRoute(
+  request: Request,
+  roleId: string,
+) {
+  try {
+    const roleIdParsed = uuidSchema.safeParse(roleId);
+    if (!roleIdParsed.success) {
+      return validationErrorResponse(roleIdParsed.error.issues[0]?.message);
+    }
+    const parsed = workforceRoleRequestSchema.safeParse(await request.json());
+    if (!parsed.success) {
+      return validationErrorResponse(parsed.error.issues[0]?.message);
+    }
+
+    const role = await createWorkforceRoleCommandService(await requireTeamAccessToken()).update(
+      updateWorkforceRoleCommand({
+        roleId: roleIdParsed.data,
+        ...parsed.data,
+      }),
+    );
+    return NextResponse.json(
+      workforceRoleResourceSchema.parse(roleToResource(role)),
+    );
+  } catch (error) {
+    return toRouteErrorResponse(error);
+  }
+}
+
+export async function deleteWorkforceRoleRoute(roleId: string) {
+  try {
+    const roleIdParsed = uuidSchema.safeParse(roleId);
+    if (!roleIdParsed.success) {
+      return validationErrorResponse(roleIdParsed.error.issues[0]?.message);
+    }
+
+    await createWorkforceRoleCommandService(await requireTeamAccessToken()).delete(
+      deleteWorkforceRoleCommand({
+        roleId: roleIdParsed.data,
+      }),
+    );
+    return new Response(null, { status: 204 });
+  } catch (error) {
+    return toRouteErrorResponse(error);
+  }
+}
+
+export async function assignWorkforceRoleRoute(
+  request: Request,
+  memberId: string,
+) {
+  try {
+    const memberIdParsed = uuidSchema.safeParse(memberId);
+    if (!memberIdParsed.success) {
+      return validationErrorResponse(memberIdParsed.error.issues[0]?.message);
+    }
+    const body = await request.json();
+    const roleIdParsed = uuidSchema.safeParse((body as { roleId?: unknown })?.roleId);
+    if (!roleIdParsed.success) {
+      return validationErrorResponse(roleIdParsed.error.issues[0]?.message);
+    }
+
+    await createWorkforceRoleCommandService(await requireTeamAccessToken()).assign(
+      assignWorkforceRoleCommand({
+        memberId: memberIdParsed.data,
+        roleId: roleIdParsed.data,
+      }),
+    );
+    return new Response(null, { status: 204 });
+  } catch (error) {
+    return toRouteErrorResponse(error);
+  }
+}
+
+function roleToResource(role: WorkforceRole) {
+  return {
+    id: role.id ?? "",
+    name: role.getName(),
+    permissions: [...role.getPermissions()],
+  };
+}
+
+function validationErrorResponse(message?: string) {
+  return NextResponse.json({ message: message ?? "Invalid request" }, { status: 400 });
+}
+
+function toRouteErrorResponse(error: unknown): Response {
+  if (error instanceof TeamApiError) {
+    return NextResponse.json(
+      {
+        message: error.message,
+        details: error.details ?? null,
+      },
+      { status: error.status || 500 },
+    );
+  }
+
+  if (error instanceof Error && error.message === "Authentication is required") {
+    return NextResponse.json({ message: error.message }, { status: 401 });
+  }
+
+  if (error instanceof Error) {
+    return NextResponse.json({ message: error.message }, { status: 400 });
+  }
+
+  return NextResponse.json({ message: "Unexpected error" }, { status: 500 });
+}
