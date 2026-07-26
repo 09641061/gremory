@@ -116,7 +116,9 @@ export async function acceptWorkforceInvitationRoute(request: Request) {
   try {
     const token = await requireTeamAccessToken();
     const body = await parseJsonBody(request);
-    const parsed = invitationTokenSchema.safeParse(body?.token);
+    const parsed = invitationTokenSchema.safeParse(
+      (body as { token?: unknown } | undefined)?.token,
+    );
     if (!parsed.success) {
       return validationErrorResponse(parsed.error.issues[0]?.message);
     }

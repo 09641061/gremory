@@ -26,6 +26,10 @@ export const workforceRoleResourceSchema = z.object({
 
 export const workforceRoleResourcesSchema = z.array(workforceRoleResourceSchema);
 
+export const workforceRolePageResourceSchema = z.object({
+  content: z.array(workforceRoleResourceSchema),
+});
+
 export const workforceRolePermissionsSchema = z.array(
   z.enum(workforcePermissionCodes),
 );

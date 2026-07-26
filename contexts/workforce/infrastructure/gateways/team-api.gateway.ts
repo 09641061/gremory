@@ -30,6 +30,7 @@ import {
 } from "../../interfaces/rest/schemas/team.schemas";
 import { teamDelete, teamGet, teamPost } from "../http/team-api.client";
 import { requireTeamAccessToken } from "../session/team-session";
+export { TeamApiError } from "../http/team-api.client";
 
 export class TeamApiGateway implements TeamRepository {
   constructor(private readonly providedToken?: string) {}

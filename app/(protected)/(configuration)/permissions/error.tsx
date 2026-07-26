@@ -4,7 +4,7 @@ import { useEffect, useTransition } from "react";
 import { ErrorAlert } from "@/contexts/shared/interfaces/components/ui/error";
 import { Spinner } from "@/contexts/shared/interfaces/components/ui/spinner";
 
-export default function ProtectedError({
+export default function PermissionsError({
   error,
   reset,
 }: {
@@ -14,15 +14,15 @@ export default function ProtectedError({
   const [isPending, startTransition] = useTransition();
 
   useEffect(() => {
-    console.error("Unexpected protected application error", error);
+    console.error("Unexpected permissions error", error);
   }, [error]);
 
   return (
     <main className="flex min-h-[calc(100vh-4rem)] flex-1 items-center justify-center px-4 text-foreground">
       <div className="flex flex-col items-center gap-4 text-center">
         <ErrorAlert
-          title="Something went wrong"
-          message="We could not complete this request. Please try again."
+          title="Could not load permissions"
+          message="We hit a problem while loading the roles list. Please try again."
         />
         <button
           type="button"

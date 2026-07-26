@@ -5,6 +5,7 @@ import { createWorkforceRoleCommandService } from "../../application/internal/co
 import {
   assignWorkforceRoleCommand,
   createWorkforceRoleCommand,
+  deleteWorkforceRoleCommand,
   updateWorkforceRoleCommand,
 } from "../../domain/model/commands/workforce-role.commands";
 import { requireTeamAccessToken } from "../../infrastructure/session/team-session";
@@ -96,6 +97,29 @@ export async function assignWorkforceRoleAction(
   }
 }
 
+export async function deleteWorkforceRoleAction(
+  _previous: WorkforceRoleActionResult,
+  formData: FormData,
+): Promise<WorkforceRoleActionResult> {
+  const roleIdParsed = assignWorkforceRoleRequestSchema.safeParse({
+    roleId: formData.get("roleId"),
+  });
+  if (!roleIdParsed.success) return workforceRoleActionError(roleIdParsed.error.issues[0]?.message);
+
+  try {
+    const service = createWorkforceRoleCommandService(await requireTeamAccessToken());
+    await service.delete(
+      deleteWorkforceRoleCommand({
+        roleId: roleIdParsed.data.roleId,
+      }),
+    );
+    revalidateWorkforceRoleView();
+    return { status: "success", data: null, error: null };
+  } catch (error) {
+    return workforceRoleActionError(error);
+  }
+}
+
 function parseRolePayload(formData: FormData) {
   const permissions = formData
     .getAll("permissions")
@@ -108,4 +132,5 @@ function parseRolePayload(formData: FormData) {
 
 function revalidateWorkforceRoleView() {
   revalidatePath("/team");
+  revalidatePath("/permissions");
 }

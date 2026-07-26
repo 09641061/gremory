@@ -7,6 +7,7 @@ import type {
   UpdateWorkforceRoleCommand,
 } from "../../../domain/model/commands/workforce-role.commands";
 import { WorkforceRole } from "../../../domain/model/entities/workforce-role.entity";
+import type { WorkforcePermission } from "../../../domain/model/enums/workforce-permission";
 import type { WorkforceRoleRepository } from "../../../domain/services/workforce-role.repository";
 import { WorkforceRoleApiGateway } from "../../../infrastructure/gateways/workforce-role-api.gateway";
 import type { WorkforceRoleCommandService } from "../../services/workforce-role.services";
@@ -18,7 +19,7 @@ export class WorkforceRoleCommandServiceImpl implements WorkforceRoleCommandServ
     return this.roles.save(
       WorkforceRole.create({
         name: command.name,
-        permissions: command.permissions,
+        permissions: [...command.permissions] as WorkforcePermission[],
       }),
     );
   }
@@ -28,7 +29,7 @@ export class WorkforceRoleCommandServiceImpl implements WorkforceRoleCommandServ
       WorkforceRole.rehydrate({
         id: command.roleId,
         name: command.name,
-        permissions: command.permissions,
+        permissions: [...command.permissions] as WorkforcePermission[],
       }),
     );
   }

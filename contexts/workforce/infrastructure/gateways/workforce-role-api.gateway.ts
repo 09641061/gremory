@@ -11,6 +11,7 @@ import type { WorkforceRoleResource } from "../../interfaces/rest/resources/work
 import { requireTeamAccessToken } from "../session/team-session";
 import { teamDelete, teamGet, teamPost, teamPut } from "../http/team-api.client";
 import {
+  workforceRolePageResourceSchema,
   workforceRolePermissionsSchema,
   workforceRoleResourcesSchema,
   workforceRoleResourceSchema,
@@ -22,7 +23,8 @@ export class WorkforceRoleApiGateway implements WorkforceRoleRepository {
   async list() {
     const token = await requireTeamAccessToken(this.providedToken);
     const response = await teamGet<unknown>(apiConfig.routes.workforce.roles, token);
-    return workforceRoleResourcesSchema.parse(response).map(toRole);
+    const page = workforceRolePageResourceSchema.parse(response);
+    return workforceRoleResourcesSchema.parse(page.content).map(toRole);
   }
 
   async permissions() {

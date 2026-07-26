@@ -65,7 +65,7 @@ function normalizeName(value: string): string {
 function normalizePermissions(
   permissions: ReadonlyArray<WorkforcePermission>,
 ): WorkforcePermission[] {
-  if (!permissions || permissions.length === 0) {
+  if (!permissions) {
     throw new Error("Role permissions are required");
   }
   return [...new Set(permissions.map((permission) => permission.trim() as WorkforcePermission))];
