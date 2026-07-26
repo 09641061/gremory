@@ -275,7 +275,8 @@ function ChatsSection() {
       </Button>
 
       {isOpen ? (
-        <div className="mt-2 space-y-2 pl-2">
+        <div className="mt-2 pl-2">
+          <div className="max-h-[18rem] space-y-2 overflow-y-auto pr-1">
           {isLoading ? (
             <div className="space-y-1.5">
               {Array.from({ length: 4 }).map((_, index) => (
@@ -304,8 +305,9 @@ function ChatsSection() {
                         aria-current={active ? "page" : undefined}
                         className={cn(
                           buttonVariants({ variant: "ghost", size: "lg" }),
-                          "min-w-0 flex-1 justify-start gap-2.5 rounded-2xl border border-transparent px-3 py-3 text-left text-sm font-medium text-foreground hover:border-white/10 hover:bg-white/5 hover:text-white",
-                          active && "border-white/10 bg-white/10 text-white",
+                          "min-w-0 flex-1 justify-start gap-2.5 rounded-2xl border border-transparent px-3 py-3 text-left text-sm font-medium text-foreground hover:border-accent/40 hover:bg-accent/70 hover:text-accent-foreground",
+                          active &&
+                            "!border-accent/40 !bg-accent !text-accent-foreground hover:!border-accent/40 hover:!bg-accent hover:!text-accent-foreground",
                         )}
                       >
                         <span className="truncate">{conversation.title}</span>
@@ -363,6 +365,7 @@ function ChatsSection() {
               })}
             </ul>
           )}
+          </div>
         </div>
       ) : null}
     </section>
@@ -371,13 +374,20 @@ function ChatsSection() {
 
 export function Sidebar() {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const selectedConversationId = pathname.startsWith("/chat")
+    ? searchParams.get("conversationId")
+    : null;
 
   return (
     <aside className="fixed bottom-0 left-0 top-14 z-20 hidden w-60 shrink-0 border-r border-border/60 bg-background px-3 py-3 md:flex md:flex-col">
       <nav aria-label="Modulos" className="mt-2">
         <ul className="space-y-1">
           {navigation.map(({ label, href, icon: Icon }) => {
-            const active = pathname === href || pathname.startsWith(`${href}/`);
+            const active =
+              (href === "/chat"
+                ? pathname === href && !selectedConversationId
+                : pathname === href || pathname.startsWith(`${href}/`));
 
             return (
               <li key={label}>
