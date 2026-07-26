@@ -2,15 +2,13 @@ import "server-only";
 
 import { Organization } from "../../domain/model/entities/organization.entity";
 import { createOrganizationId } from "../../domain/model/valueobjects/organization-id.vo";
-import { createOrganizationName, type OrganizationName } from "../../domain/model/valueobjects/organization-name.vo";
+import { createOrganizationName } from "../../domain/model/valueobjects/organization-name.vo";
 import type { OrganizationRepository } from "../../domain/services/business.repositories";
 import type { OrganizationId } from "../../domain/model/valueobjects/organization-id.vo";
 import type { OrganizationResource } from "../../interfaces/rest/resources/business.resources";
 import {
   BusinessApiError,
-  businessDelete,
   businessGet,
-  businessPost,
   businessPut,
 } from "../http/business-api.client";
 import { requireBusinessAccessToken } from "../session/business-session";

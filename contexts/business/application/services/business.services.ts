@@ -1,8 +1,6 @@
 import type {
   CreateEstablishmentCommand,
-  CreateOrganizationCommand,
   DeleteEstablishmentCommand,
-  DeleteOrganizationCommand,
   UpdateEstablishmentCommand,
   UpdateOrganizationCommand,
 } from "../../domain/model/commands/business.commands";

@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect } from "react";
+import { useActionState, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Store } from "lucide-react";
@@ -19,6 +19,8 @@ export function EditEstablishmentForm({
   establishment: { id: string; name: string; photoUrl: string | null };
 }) {
   const router = useRouter();
+  const [name, setName] = useState(establishment.name);
+  const [photoUrl, setPhotoUrl] = useState(establishment.photoUrl ?? "");
   const [state, formAction, pending] = useActionState(
     updateEstablishmentAction,
     initialBusinessActionResult,
@@ -60,7 +62,8 @@ export function EditEstablishmentForm({
                   name="name"
                   required
                   maxLength={100}
-                  defaultValue={establishment.name}
+                  value={name}
+                  onChange={(event) => setName(event.target.value)}
                 />
               </div>
               <div className="space-y-2">
@@ -71,7 +74,8 @@ export function EditEstablishmentForm({
                   id="establishment-photo"
                   name="photoUrl"
                   type="url"
-                  defaultValue={establishment.photoUrl ?? ""}
+                  value={photoUrl}
+                  onChange={(event) => setPhotoUrl(event.target.value)}
                 />
               </div>
               <div className="flex justify-end gap-3 border-t border-border pt-5">

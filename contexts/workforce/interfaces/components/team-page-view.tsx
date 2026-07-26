@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useEffect, useMemo, useState } from "react";
-import { Search, User, UserPlus } from "lucide-react";
+import { Search, Settings2, User, UserPlus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import { Input } from "@/contexts/shared/interfaces/components/ui/input";
@@ -18,6 +18,7 @@ const initialActionState: TeamActionResult = { status: "idle", data: null, error
 export function TeamPageView({ establishmentId, members }: { establishmentId: string | null; members: TeamUserSummary[] }) {
   const [filter, setFilter] = useState("");
   const [inviteOpen, setInviteOpen] = useState(false);
+  const router = useRouter();
   const filteredMembers = useMemo(() => members.filter((member) => member.email.toLowerCase().includes(filter.toLowerCase())), [filter, members]);
 
   return (
@@ -25,6 +26,7 @@ export function TeamPageView({ establishmentId, members }: { establishmentId: st
       <div className="mb-11 flex items-center justify-between gap-4">
         <h1 className="page-title">Team</h1>
         <div className="flex items-center gap-3">
+          <Button type="button" variant="outline" size="sm" className="h-9 gap-2" onClick={() => router.push("/permissions")}><Settings2 className="size-4" />Manage permissions</Button>
           <Button className="h-9 gap-2 bg-emerald-600 text-white hover:bg-emerald-500" onClick={() => setInviteOpen(true)} disabled={!establishmentId}><UserPlus className="size-4" />Invite members</Button>
         </div>
       </div>
