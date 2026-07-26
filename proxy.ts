@@ -37,25 +37,25 @@ export async function proxy(request: NextRequest) {
     response = continueRequestWithSession(request, session.rotatedSession);
   }
 
-  const subscriptionAccess = await getSubscriptionAccess(accessToken);
+  const applicationAccess = await getApplicationAccess(accessToken);
 
-  if (subscriptionAccess === "unauthenticated") {
+  if (applicationAccess === "unauthenticated") {
     return redirectToLogin(request);
   }
 
   // Do not convert an API outage into a false "no subscription" decision.
   // Protected backend endpoints remain the final authorization boundary.
-  if (subscriptionAccess === "unavailable") {
+  if (applicationAccess === "unavailable") {
     return response ?? NextResponse.next();
   }
 
-  const activeSubscription = subscriptionAccess === "active";
+  const activeAccess = applicationAccess === "active";
 
-  if (activeSubscription && (pathname === "/" || pathname === "/login" || pathname === "/subscribe")) {
+  if (activeAccess && (pathname === "/" || pathname === "/login" || pathname === "/subscribe")) {
     return redirectWithCookies(request, "/chat", response);
   }
 
-  if (!activeSubscription && (pathname === "/" || pathname === "/login" || isPrivateRoute(pathname))) {
+  if (!activeAccess && (pathname === "/" || pathname === "/login" || isPrivateRoute(pathname))) {
     return redirectWithCookies(request, "/subscribe", response);
   }
 
@@ -76,7 +76,27 @@ function isPrivateRoute(pathname: string) {
   ].some((route) => pathname === route || pathname.startsWith(`${route}/`));
 }
 
-type SubscriptionAccess = "active" | "inactive" | "unauthenticated" | "unavailable";
+type SubscriptionAccess =
+  | "active"
+  | "inactive"
+  | "unauthenticated"
+  | "unavailable";
+async function getApplicationAccess(accessToken: string): Promise<SubscriptionAccess> {
+  const subscription = await getSubscriptionAccess(accessToken);
+  if (subscription !== "inactive") return subscription;
+
+  try {
+    const workforce = await apiClient.get<{ active?: boolean }>(
+      apiConfig.routes.workforce.access,
+      { token: accessToken },
+    );
+    return workforce.active === true ? "active" : "inactive";
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 401) return "unauthenticated";
+    return "unavailable";
+  }
+}
+
 async function getSubscriptionAccess(accessToken: string): Promise<SubscriptionAccess> {
   try {
     const subscription = await apiClient.get<{ active?: boolean; status?: string }>(

@@ -7,6 +7,7 @@ import { createIamAuthenticationCommandService } from "../../application/interna
 import { iamSessionCookies } from "../../infrastructure/session/iam-session-cookie";
 import { confirmEmailSignInSchema } from "../rest/schemas/authentication.schemas";
 import type { AuthenticationSession } from "../../domain/model/entities/authentication-session";
+import { normalizeAuthReturnPath } from "../../domain/model/valueobjects/auth-return-path";
 
 export type ConfirmEmailSignInActionState =
   | { status: "idle"; error: null }
@@ -17,6 +18,7 @@ export async function confirmEmailSignInAction(
   formData: FormData
 ): Promise<ConfirmEmailSignInActionState> {
   let session: AuthenticationSession | null = null;
+  const returnTo = normalizeAuthReturnPath(formData.get("returnTo"));
 
   try {
     const input = confirmEmailSignInSchema.parse({
@@ -37,7 +39,10 @@ export async function confirmEmailSignInAction(
     };
   }
 
+  const callbackPath = returnTo
+    ? `/auth/callback?next=${encodeURIComponent(returnTo)}`
+    : "/auth/callback";
   redirect(
-    `/auth/callback#access_token=${encodeURIComponent(session!.accessToken)}&refresh_token=${encodeURIComponent(session!.refreshToken)}`
+    `${callbackPath}#access_token=${encodeURIComponent(session!.accessToken)}&refresh_token=${encodeURIComponent(session!.refreshToken)}`
   );
 }

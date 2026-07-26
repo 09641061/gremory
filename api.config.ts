@@ -21,6 +21,11 @@ export const apiConfig = Object.freeze({
     invoices: "/api/billing/invoices",
     catalogCategories: "/api/catalog/categories",
     catalogServices: "/api/catalog/services",
+    workforce: Object.freeze({
+      invitations: "/api/workforce/invitations",
+      members: "/api/workforce/members",
+      access: "/api/workforce/access",
+    }),
     devices: "/api/devices",
     notifications: "/api/notifications",
   }),

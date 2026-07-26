@@ -2,6 +2,7 @@
 
 import { sendSignInEmail } from "./request-email-sign-in.action";
 import { requestEmailSignInSchema } from "../rest/schemas/authentication.schemas";
+import { normalizeAuthReturnPath } from "../../domain/model/valueobjects/auth-return-path";
 
 export type ResendEmailSignInActionState =
   | { status: "idle" | "success"; error: null }
@@ -16,7 +17,10 @@ export async function resendEmailSignInAction(
       email: formData.get("email"),
     });
 
-    await sendSignInEmail(input.email);
+    await sendSignInEmail(
+      input.email,
+      normalizeAuthReturnPath(formData.get("returnTo")),
+    );
     return { status: "success", error: null };
   } catch (error) {
     console.error("Resend email sign-in failed", error);

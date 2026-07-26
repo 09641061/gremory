@@ -32,9 +32,11 @@ const initialResendState: ResendEmailSignInActionState = {
 
 export function VerifyForm({
   email,
+  returnTo,
   initialError,
 }: {
   email: string;
+  returnTo?: string | null;
   initialError?: string;
 }) {
   const router = useRouter();
@@ -112,6 +114,7 @@ export function VerifyForm({
               <form action={formAction}>
                 <input type="hidden" name="email" value={email} readOnly />
                 <input type="hidden" name="code" value={digits.join("")} readOnly />
+                {returnTo ? <input type="hidden" name="returnTo" value={returnTo} /> : null}
                 <p className="text-[14px] leading-5 text-foreground">
                   To continue, click the link sent to
                   <br />
@@ -163,6 +166,7 @@ export function VerifyForm({
               <div className="mt-4 flex flex-col items-center">
                 <form action={resendAction}>
                   <input type="hidden" name="email" value={email} readOnly />
+                  {returnTo ? <input type="hidden" name="returnTo" value={returnTo} /> : null}
                   <Button
                     type="submit"
                     variant="link"
@@ -183,7 +187,7 @@ export function VerifyForm({
                 <Button
                   type="button"
                   variant="link"
-                  onClick={() => router.push("/login")}
+                  onClick={() => router.push(returnTo ? `/login?next=${encodeURIComponent(returnTo)}` : "/login")}
                   className="mt-3 h-auto p-0 text-[14px] font-semibold text-muted-foreground hover:bg-transparent hover:text-muted-foreground hover:underline"
                 >
                   Use a different email

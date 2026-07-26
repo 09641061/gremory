@@ -4,6 +4,7 @@ import { createEstablishmentQueryService } from "@/contexts/business/application
 import { createOrganizationQueryService } from "@/contexts/business/application/internal/queryservices/organization-query.service";
 import { OrganizationSelector } from "@/contexts/business/interfaces/components/organization/organization-selector";
 import { Header } from "@/contexts/shared/interfaces/components/header";
+import { createTeamQueryService } from "@/contexts/workforce/application/internal/queryservices/team-query.service";
 
 export default function ProtectedLayout({
   children,
@@ -48,7 +49,27 @@ async function ProtectedHeader() {
       name: establishment.name,
     }));
   } catch {
-    // Keep protected pages available when Business data is unavailable.
+    // Members do not own the organization, so Business's owner-scoped
+    // endpoints cannot provide their header context. Resolve it from their
+    // active workforce memberships instead.
+    try {
+      const access = await createTeamQueryService().getAccessContext();
+      const firstEstablishment = access.establishments[0];
+      if (firstEstablishment) {
+        organization = {
+          id: firstEstablishment.organizationId,
+          name: firstEstablishment.organizationName,
+        };
+        establishments = access.establishments
+          .filter((item) => item.organizationId === organization?.id)
+          .map((item) => ({
+            id: item.establishmentId,
+            name: item.establishmentName,
+          }));
+      }
+    } catch {
+      // Keep protected pages available when both contexts are unavailable.
+    }
   }
 
   return (

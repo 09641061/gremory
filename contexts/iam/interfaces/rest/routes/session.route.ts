@@ -28,6 +28,7 @@ export async function createSessionRoute(request: Request) {
     ...iamSessionCookieOptions,
     maxAge: iamSessionCookieMaxAge.refreshToken,
   });
+  cookieStore.delete(iamSessionCookies.returnTo);
 
   return new Response(null, { status: 204 });
 }
@@ -37,5 +38,6 @@ export async function clearSessionRoute() {
   cookieStore.delete(iamSessionCookies.accessToken);
   cookieStore.delete(iamSessionCookies.refreshToken);
   cookieStore.delete(iamSessionCookies.pendingEmail);
+  cookieStore.delete(iamSessionCookies.returnTo);
   return new Response(null, { status: 204 });
 }
