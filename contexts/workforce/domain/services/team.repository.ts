@@ -38,6 +38,16 @@ export interface TeamInvitationPreview {
   expiresAt: Date;
 }
 
+export interface TeamAccessContext {
+  active: boolean;
+  establishments: Array<{
+    organizationId: TeamOrganizationId;
+    organizationName: string;
+    establishmentId: TeamEstablishmentId;
+    establishmentName: string;
+  }>;
+}
+
 export interface TeamRepository {
   list(criteria: TeamUserCriteria): Promise<TeamPageResult<TeamUser>>;
   invite(
@@ -48,4 +58,5 @@ export interface TeamRepository {
   removeMember(memberId: MemberId): Promise<void>;
   previewInvitation(token: InvitationToken): Promise<TeamInvitationPreview>;
   acceptInvitation(token: InvitationToken): Promise<MemberId>;
+  getAccessContext(): Promise<TeamAccessContext>;
 }

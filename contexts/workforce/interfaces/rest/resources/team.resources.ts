@@ -49,3 +49,13 @@ export interface InvitationAcceptanceResource {
   };
   alreadyMember: boolean;
 }
+
+export interface WorkforceAccessResource {
+  active: boolean;
+  establishments: Array<{
+    organizationId: string;
+    organizationName: string;
+    establishmentId: string;
+    establishmentName: string;
+  }>;
+}

@@ -65,7 +65,7 @@ describe("Invitation acceptance view", () => {
     ).toBeVisible();
   });
 
-  it("should offer application access when invitation was already accepted", () => {
+  it("should show an accepted invitation as expired when its link is reused", () => {
     render(
       <InvitationAcceptanceView
         token="accepted-token"
@@ -75,12 +75,11 @@ describe("Invitation acceptance view", () => {
     );
 
     expect(
-      screen.getByRole("heading", { name: "Invitation already accepted" }),
+      screen.getByRole("heading", { name: "Invitation expired" }),
     ).toBeVisible();
-    expect(screen.getByRole("link", { name: "Continue to Takodu" })).toHaveAttribute(
-      "href",
-      "/chat",
-    );
+    expect(
+      screen.getByText("This invitation has already been used and is no longer available."),
+    ).toBeVisible();
     expect(screen.queryByRole("button", { name: "Accept invitation" })).not.toBeInTheDocument();
   });
 

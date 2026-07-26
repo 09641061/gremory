@@ -11,6 +11,7 @@ import type {
 import type { InvitationId, MemberId } from "../../domain/model/valueobjects/team-identifiers.vo";
 import type {
   TeamInvitationPreviewView,
+  TeamAccessView,
   TeamPageView,
   TeamUserSummary,
 } from "../model/team.read-models";
@@ -24,6 +25,7 @@ export interface TeamCommandService {
 
 export interface TeamQueryService {
   list(query?: ListTeamUsersQuery): Promise<TeamPageView<TeamUserSummary>>;
+  getAccessContext(): Promise<TeamAccessView>;
   previewInvitation(
     query: PreviewTeamInvitationQuery,
   ): Promise<TeamInvitationPreviewView>;

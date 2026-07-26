@@ -26,6 +26,7 @@ import {
   invitationCreatedResourceSchema,
   invitationPreviewResourceSchema,
   teamPageResourceSchema,
+  workforceAccessResourceSchema,
 } from "../../interfaces/rest/schemas/team.schemas";
 import { teamDelete, teamGet, teamPost } from "../http/team-api.client";
 import { requireTeamAccessToken } from "../session/team-session";
@@ -113,6 +114,24 @@ export class TeamApiGateway implements TeamRepository {
     );
     const resource = invitationAcceptanceResourceSchema.parse(response);
     return createMemberId(resource.membership.id);
+  }
+
+  async getAccessContext() {
+    const accessToken = await requireTeamAccessToken(this.providedToken);
+    const response = await teamGet<unknown>(
+      apiConfig.routes.workforce.access,
+      accessToken,
+    );
+    const resource = workforceAccessResourceSchema.parse(response);
+    return {
+      active: resource.active,
+      establishments: resource.establishments.map((establishment) => ({
+        organizationId: createTeamOrganizationId(establishment.organizationId),
+        organizationName: establishment.organizationName,
+        establishmentId: createTeamEstablishmentId(establishment.establishmentId),
+        establishmentName: establishment.establishmentName,
+      })),
+    };
   }
 }
 

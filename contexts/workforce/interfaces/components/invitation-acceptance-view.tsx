@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { Building2, Check, Mail, Store, Users } from "lucide-react";
-import { useActionState } from "react";
+import { useActionState, useEffect } from "react";
 import type { TeamInvitationPreviewView } from "../../application/model/team.read-models";
 import { acceptTeamInvitationAction } from "../actions/team.actions";
 import { initialTeamActionResult } from "../actions/team-action-result";
@@ -29,6 +29,12 @@ export function InvitationAcceptanceView({
     initialTeamActionResult,
   );
 
+  useEffect(() => {
+    if (state.status === "success") {
+      window.location.assign("/chat");
+    }
+  }, [state.status]);
+
   if (invitation.status === "REMOVED") {
     return (
       <InvitationShell>
@@ -43,21 +49,20 @@ export function InvitationAcceptanceView({
     );
   }
 
-  if (state.status === "success" || invitation.status === "ACCEPTED") {
+  if (invitation.status === "ACCEPTED") {
+    return <InvitationExpiredView />;
+  }
+
+  if (state.status === "success") {
     return (
       <InvitationShell>
         <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-600">
           <Check className="size-6" />
         </div>
-        <h1 className="mt-5 text-2xl font-semibold tracking-tight">
-          {state.status === "success" ? "Invitation accepted" : "Invitation already accepted"}
-        </h1>
+        <h1 className="mt-5 text-2xl font-semibold tracking-tight">Invitation accepted</h1>
         <p className="mt-2 text-sm leading-6 text-muted-foreground">
-          You are now part of {invitation.establishmentName}.
+          Redirecting you to Takodu…
         </p>
-        <Link href="/chat" className={buttonVariants({ className: "mt-6 h-10 w-full" })}>
-          Continue to Takodu
-        </Link>
       </InvitationShell>
     );
   }
@@ -113,6 +118,20 @@ export function InvitationAcceptanceView({
           Sign in to accept
         </Link>
       )}
+    </InvitationShell>
+  );
+}
+
+function InvitationExpiredView() {
+  return (
+    <InvitationShell>
+      <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-muted text-muted-foreground">
+        <Mail className="size-6" />
+      </div>
+      <h1 className="mt-5 text-2xl font-semibold tracking-tight">Invitation expired</h1>
+      <p className="mt-2 text-sm leading-6 text-muted-foreground">
+        This invitation has already been used and is no longer available.
+      </p>
     </InvitationShell>
   );
 }

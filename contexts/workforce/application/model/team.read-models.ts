@@ -30,6 +30,16 @@ export interface TeamInvitationPreviewView {
   expiresAt: string;
 }
 
+export interface TeamAccessView {
+  active: boolean;
+  establishments: Array<{
+    organizationId: string;
+    organizationName: string;
+    establishmentId: string;
+    establishmentName: string;
+  }>;
+}
+
 export interface TeamPageView<T> {
   content: T[];
   number: number;

@@ -65,3 +65,13 @@ export const invitationAcceptanceResourceSchema = z.object({
   }),
   alreadyMember: z.boolean(),
 });
+
+export const workforceAccessResourceSchema = z.object({
+  active: z.boolean(),
+  establishments: z.array(z.object({
+    organizationId: uuidSchema,
+    organizationName: z.string().min(1),
+    establishmentId: uuidSchema,
+    establishmentName: z.string().min(1),
+  })),
+});

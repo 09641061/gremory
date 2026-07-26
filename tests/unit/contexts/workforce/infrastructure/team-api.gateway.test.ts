@@ -136,6 +136,32 @@ describe("TeamApiGateway", () => {
     );
   });
 
+  it("should load member organization and establishment access", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse({
+      active: true,
+      establishments: [{
+        organizationId,
+        organizationName: "Naari",
+        establishmentId,
+        establishmentName: "Main location",
+      }],
+    }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    const result = await new TeamApiGateway("access-token").getAccessContext();
+
+    expect(result.active).toBe(true);
+    expect(result.establishments[0]?.organizationId.value).toBe(organizationId);
+    expect(result.establishments[0]?.establishmentId.value).toBe(establishmentId);
+    expect(fetchMock).toHaveBeenCalledWith(
+      "http://localhost:8080/api/workforce/access",
+      expect.objectContaining({
+        method: "GET",
+        headers: { Authorization: "Bearer access-token" },
+      }),
+    );
+  });
+
   it("should target invitation and membership identifiers for each delete", async () => {
     const fetchMock = vi.fn().mockResolvedValue(new Response(null, { status: 204 }));
     vi.stubGlobal("fetch", fetchMock);

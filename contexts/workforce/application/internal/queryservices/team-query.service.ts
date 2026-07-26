@@ -10,6 +10,7 @@ import { createTeamEstablishmentId } from "../../../domain/model/valueobjects/te
 import type { TeamRepository } from "../../../domain/services/team.repository";
 import { TeamApiGateway } from "../../../infrastructure/gateways/team-api.gateway";
 import type {
+  TeamAccessView,
   TeamInvitationPreviewView,
   TeamUserSummary,
 } from "../../model/team.read-models";
@@ -48,6 +49,19 @@ export class TeamQueryServiceImpl implements TeamQueryService {
       maskedEmail: preview.maskedEmail,
       status: preview.status,
       expiresAt: preview.expiresAt.toISOString(),
+    };
+  }
+
+  async getAccessContext(): Promise<TeamAccessView> {
+    const access = await this.team.getAccessContext();
+    return {
+      active: access.active,
+      establishments: access.establishments.map((establishment) => ({
+        organizationId: establishment.organizationId.value,
+        organizationName: establishment.organizationName,
+        establishmentId: establishment.establishmentId.value,
+        establishmentName: establishment.establishmentName,
+      })),
     };
   }
 }
