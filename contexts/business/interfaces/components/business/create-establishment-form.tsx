@@ -51,7 +51,7 @@ export function CreateEstablishmentForm({ organizationId }: { organizationId: st
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <form action={formAction} className="space-y-5">
+            <form action={formAction} encType="multipart/form-data" className="space-y-5">
               <input type="hidden" name="organizationId" value={organizationId} />
 
               <div className="space-y-2">
@@ -67,16 +67,18 @@ export function CreateEstablishmentForm({ organizationId }: { organizationId: st
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="establishment-photo">
-                  Photo URL{" "}
-                  <span className="text-muted-foreground">(optional)</span>
+                <Label htmlFor="establishment-photo-file">
+                  Photo file <span className="text-muted-foreground">(optional)</span>
                 </Label>
                 <Input
-                  id="establishment-photo"
-                  name="photoUrl"
-                  type="url"
-                  placeholder="https://example.com/photo.jpg"
+                  id="establishment-photo-file"
+                  name="photoFile"
+                  type="file"
+                  accept="image/*"
                 />
+                <p className="text-xs text-muted-foreground">
+                  If you upload a file, it will be sent first and its public URL will be saved.
+                </p>
               </div>
 
               <div className="flex justify-end gap-3 border-t border-border pt-5">

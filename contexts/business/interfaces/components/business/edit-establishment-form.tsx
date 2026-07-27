@@ -20,7 +20,9 @@ export function EditEstablishmentForm({
 }) {
   const router = useRouter();
   const [name, setName] = useState(establishment.name);
-  const [photoUrl, setPhotoUrl] = useState(establishment.photoUrl ?? "");
+  const [currentPhotoUrl, setCurrentPhotoUrl] = useState(establishment.photoUrl);
+  const [isRemovingPhoto, setIsRemovingPhoto] = useState(false);
+  const [photoActionError, setPhotoActionError] = useState<string | null>(null);
   const [state, formAction, pending] = useActionState(
     updateEstablishmentAction,
     initialBusinessActionResult,
@@ -32,6 +34,40 @@ export function EditEstablishmentForm({
       router.refresh();
     }
   }, [router, state.status]);
+
+  async function handleRemovePhoto() {
+    if (!currentPhotoUrl || isRemovingPhoto) return;
+
+    setIsRemovingPhoto(true);
+    setPhotoActionError(null);
+
+    try {
+      const response = await fetch(
+        `/api/business/establishments/${encodeURIComponent(establishment.id)}/photo`,
+        {
+          method: "DELETE",
+          cache: "no-store",
+          credentials: "include",
+        },
+      );
+
+      if (!response.ok) {
+        const data = (await response.json().catch(() => null)) as
+          | { message?: string }
+          | null;
+        throw new Error(data?.message || "Unable to remove the establishment photo");
+      }
+
+      setCurrentPhotoUrl(null);
+      router.refresh();
+    } catch (error) {
+      setPhotoActionError(
+        error instanceof Error ? error.message : "Unable to remove the establishment photo",
+      );
+    } finally {
+      setIsRemovingPhoto(false);
+    }
+  }
 
   return (
     <>
@@ -53,7 +89,7 @@ export function EditEstablishmentForm({
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <form action={formAction} className="space-y-5">
+            <form action={formAction} encType="multipart/form-data" className="space-y-5">
               <input type="hidden" name="id" value={establishment.id} />
               <div className="space-y-2">
                 <Label htmlFor="establishment-name">Name</Label>
@@ -67,16 +103,59 @@ export function EditEstablishmentForm({
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="establishment-photo">
-                  Photo URL <span className="text-muted-foreground">(optional)</span>
+                <Label htmlFor="establishment-photo-file">
+                  Replace photo <span className="text-muted-foreground">(optional)</span>
                 </Label>
                 <Input
-                  id="establishment-photo"
-                  name="photoUrl"
-                  type="url"
-                  value={photoUrl}
-                  onChange={(event) => setPhotoUrl(event.target.value)}
+                  id="establishment-photo-file"
+                  name="photoFile"
+                  type="file"
+                  accept="image/*"
                 />
+                <p className="text-xs text-muted-foreground">
+                  Upload a new image to replace the current one automatically.
+                </p>
+              </div>
+
+              <div className="space-y-3 rounded-2xl border border-border/70 bg-muted/20 p-4">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="space-y-1">
+                    <Label className="text-sm font-medium">Current photo</Label>
+                    <p className="text-xs text-muted-foreground">
+                      You can remove the current image without deleting the establishment.
+                    </p>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      void handleRemovePhoto();
+                    }}
+                    disabled={!currentPhotoUrl || isRemovingPhoto}
+                    className="gap-2 border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                  >
+                    {isRemovingPhoto ? "Removing..." : "Remove photo"}
+                  </Button>
+                </div>
+
+                {photoActionError ? (
+                  <p className="text-sm text-destructive">{photoActionError}</p>
+                ) : null}
+
+                {currentPhotoUrl ? (
+                  <div className="overflow-hidden rounded-xl border border-border/60 bg-background">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={currentPhotoUrl}
+                      alt={establishment.name}
+                      className="h-40 w-full object-cover"
+                    />
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    No photo is currently set for this establishment.
+                  </p>
+                )}
               </div>
               <div className="flex justify-end gap-3 border-t border-border pt-5">
                 <Link href="/establishments" className={buttonVariants({ variant: "ghost" })}>
