@@ -2,7 +2,7 @@
 
 import { useActionState, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Save, ShieldCheck } from "lucide-react";
+import { Save, Search, ShieldCheck } from "lucide-react";
 import type { WorkforcePermission } from "@/contexts/workforce/domain/model/enums/workforce-permission";
 import type { WorkforceRoleSummary } from "@/contexts/workforce/application/model/workforce-role.read-models";
 import { patchWorkforceRoleAction } from "@/contexts/workforce/interfaces/actions/workforce-role.actions";
@@ -10,6 +10,7 @@ import { initialWorkforceRoleActionResult } from "@/contexts/workforce/interface
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import { Card, CardContent } from "@/contexts/shared/interfaces/components/ui/card";
 import { ErrorAlert } from "@/contexts/shared/interfaces/components/ui/error";
+import { Input } from "@/contexts/shared/interfaces/components/ui/input";
 import { Spinner } from "@/contexts/shared/interfaces/components/ui/spinner";
 import { Switch } from "@/contexts/shared/interfaces/components/ui/switch";
 
@@ -23,6 +24,7 @@ export function PermissionsWorkspace({ role, permissions }: PermissionsWorkspace
   const [selectedPermissions, setSelectedPermissions] = useState<ReadonlySet<string>>(
     new Set(role?.permissions ?? []),
   );
+  const [permissionFilter, setPermissionFilter] = useState("");
   const [state, formAction, pending] = useActionState(
     patchWorkforceRoleAction,
     initialWorkforceRoleActionResult,
@@ -32,7 +34,25 @@ export function PermissionsWorkspace({ role, permissions }: PermissionsWorkspace
     if (state.status === "success") router.refresh();
   }, [router, state.status]);
 
-  const groupedPermissions = useMemo(() => groupPermissions(permissions), [permissions]);
+  const filteredGroupedPermissions = useMemo(() => {
+    const normalizedFilter = permissionFilter.trim().toLowerCase();
+    const groupedPermissions = groupPermissions(permissions);
+
+    if (!normalizedFilter) return groupedPermissions;
+
+    return groupedPermissions
+      .map((group) => ({
+        ...group,
+        permissions: group.permissions.filter((permission) => {
+          return (
+            group.label.toLowerCase().includes(normalizedFilter) ||
+            permission.toLowerCase().includes(normalizedFilter) ||
+            permissionLabel(permission).toLowerCase().includes(normalizedFilter)
+          );
+        }),
+      }))
+      .filter((group) => group.permissions.length > 0);
+  }, [permissionFilter, permissions]);
 
   if (!role) {
     return (
@@ -67,46 +87,65 @@ export function PermissionsWorkspace({ role, permissions }: PermissionsWorkspace
               <input key={permission} type="hidden" name="permissions" value={permission} />
             ))}
 
+            <div className="space-y-2">
+              <label className="relative block">
+                <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  value={permissionFilter}
+                  onChange={(event) => setPermissionFilter(event.target.value)}
+                  placeholder="Search permissions"
+                  aria-label="Search permissions"
+                  className="pl-9"
+                />
+              </label>
+            </div>
+
             <div className="space-y-5">
-              {groupedPermissions.map((group) => (
-                <section key={group.label} className="space-y-3">
-                  <h3 className="text-sm font-medium capitalize tracking-wide text-muted-foreground">
-                    {group.label}
-                  </h3>
-                  <div className="grid gap-3">
-                    {group.permissions.map((permission) => {
-                      const checked = selectedPermissions.has(permission);
-                      return (
-                        <label
-                          key={permission}
-                          className={`flex cursor-pointer items-center justify-between gap-4 rounded-lg border p-4 transition-colors ${checked ? "border-primary/40 bg-accent/50" : "border-border hover:bg-muted/40"}`}
-                        >
-                          <span className="min-w-0 space-y-1">
-                            <span className="block text-sm font-medium text-foreground">
-                              {permissionLabel(permission)}
+              {filteredGroupedPermissions.length === 0 ? (
+                <div className="rounded-lg border border-dashed border-border px-4 py-8 text-sm text-muted-foreground">
+                  No permissions found.
+                </div>
+              ) : (
+                filteredGroupedPermissions.map((group) => (
+                  <section key={group.label} className="space-y-3">
+                    <h3 className="text-sm font-medium capitalize tracking-wide text-muted-foreground">
+                      {group.label}
+                    </h3>
+                    <div className="grid gap-3">
+                      {group.permissions.map((permission) => {
+                        const checked = selectedPermissions.has(permission);
+                        return (
+                          <label
+                            key={permission}
+                            className={`flex cursor-pointer items-center justify-between gap-4 rounded-lg border p-4 transition-colors ${checked ? "border-primary/40 bg-accent/50" : "border-border hover:bg-muted/40"}`}
+                          >
+                            <span className="min-w-0 space-y-1">
+                              <span className="block text-sm font-medium text-foreground">
+                                {permissionLabel(permission)}
+                              </span>
+                              <span className="block truncate text-xs text-muted-foreground">
+                                {permission}
+                              </span>
                             </span>
-                            <span className="block truncate text-xs text-muted-foreground">
-                              {permission}
-                            </span>
-                          </span>
-                          <Switch
-                            checked={checked}
-                            onCheckedChange={(nextChecked) => {
-                              setSelectedPermissions((current) => {
-                                const next = new Set(current);
-                                if (nextChecked) next.add(permission);
-                                else next.delete(permission);
-                                return next;
-                              });
-                            }}
-                            aria-label={permissionLabel(permission)}
-                          />
-                        </label>
-                      );
-                    })}
-                  </div>
-                </section>
-              ))}
+                            <Switch
+                              checked={checked}
+                              onCheckedChange={(nextChecked) => {
+                                setSelectedPermissions((current) => {
+                                  const next = new Set(current);
+                                  if (nextChecked) next.add(permission);
+                                  else next.delete(permission);
+                                  return next;
+                                });
+                              }}
+                              aria-label={permissionLabel(permission)}
+                            />
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </section>
+                ))
+              )}
             </div>
 
             <div className="flex items-center justify-end gap-2 pt-5">

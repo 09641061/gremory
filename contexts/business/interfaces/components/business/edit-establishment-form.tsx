@@ -89,7 +89,7 @@ export function EditEstablishmentForm({
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <form action={formAction} encType="multipart/form-data" className="space-y-5">
+            <form action={formAction} className="space-y-5">
               <input type="hidden" name="id" value={establishment.id} />
               <div className="space-y-2">
                 <Label htmlFor="establishment-name">Name</Label>
