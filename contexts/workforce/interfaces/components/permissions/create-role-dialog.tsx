@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Plus } from "lucide-react";
 import { createWorkforceRoleAction } from "@/contexts/workforce/interfaces/actions/workforce-role.actions";
@@ -26,7 +26,6 @@ interface CreateRoleDialogProps {
 
 export function CreateRoleDialog({ open, onOpenChange }: CreateRoleDialogProps) {
   const router = useRouter();
-  const [name, setName] = useState("");
   const [state, formAction, pending] = useActionState(
     createWorkforceRoleAction,
     initialWorkforceRoleActionResult,
@@ -62,8 +61,6 @@ export function CreateRoleDialog({ open, onOpenChange }: CreateRoleDialogProps) 
               <Input
                 id="create-role-name"
                 name="name"
-                value={name}
-                onChange={(event) => setName(event.target.value)}
                 placeholder="e.g. Receptionist"
                 autoFocus
                 required

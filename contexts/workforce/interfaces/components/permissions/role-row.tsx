@@ -48,7 +48,7 @@ export function RoleRow({ role, selected = false, onSelect }: RoleRowProps) {
 
   return (
     <div
-      className={`grid cursor-pointer items-center gap-4 border-b border-border px-5 py-4 transition-colors last:border-b-0 hover:bg-muted/40 sm:grid-cols-[minmax(0,1fr)_auto] ${selected ? "bg-accent/60" : ""}`}
+      className={`grid cursor-pointer items-center gap-4 border-b border-border px-5 py-4 transition-colors last:border-b-0 hover:bg-muted/40 sm:grid-cols-[minmax(0,1fr)_auto] ${selected ? "bg-accent/60" : ""} ${menuOpen ? "relative z-50" : "relative"}`}
       onClick={onSelect}
       onKeyDown={(event) => {
         if (event.key === "Enter" || event.key === " ") {
@@ -88,7 +88,7 @@ export function RoleRow({ role, selected = false, onSelect }: RoleRowProps) {
         </Button>
 
         {menuOpen ? (
-          <div className="absolute right-0 top-full z-40 mt-1 w-40 rounded-lg border border-border bg-card p-1 shadow-lg">
+          <div className="absolute right-0 top-full z-50 mt-1 w-40 rounded-lg border border-border bg-card p-1 shadow-lg">
             <Button
               type="button"
               variant="ghost"

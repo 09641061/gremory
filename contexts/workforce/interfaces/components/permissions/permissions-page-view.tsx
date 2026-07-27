@@ -67,7 +67,7 @@ export function PermissionsPageView({
           }}
         />
 
-        <Card className="overflow-hidden rounded-xl border-border bg-card shadow-sm">
+        <Card className="overflow-visible rounded-xl border-border bg-card shadow-sm">
           <CardContent className="p-0">
             <div className="grid grid-cols-[minmax(0,1fr)_auto] border-b border-border px-5 py-4 text-sm font-medium text-muted-foreground">
               <span>Roles - {roles.length}</span>
