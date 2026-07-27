@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Spinner } from "@/contexts/shared/interfaces/components/ui/spinner";
 
-export function AuthCallback() {
+export function AuthCallback({ returnTo = null }: { returnTo?: string | null }) {
   const router = useRouter();
 
   useEffect(() => {
@@ -25,23 +25,23 @@ export function AuthCallback() {
           });
 
           if (!sessionResponse.ok) {
-            router.replace("/login");
+            router.replace(returnTo ? `/login?next=${encodeURIComponent(returnTo)}` : "/login");
             return;
           }
 
           // The proxy is the single route decision point. It validates the
           // new session and sends users without an active subscription to
           // /subscribe.
-          router.replace("/chat");
+          router.replace(returnTo ?? "/chat");
         } catch {
-          router.replace("/login");
+          router.replace(returnTo ? `/login?next=${encodeURIComponent(returnTo)}` : "/login");
         }
       })();
       return;
     }
 
     router.replace("/");
-  }, [router]);
+  }, [returnTo, router]);
 
   return (
     <main

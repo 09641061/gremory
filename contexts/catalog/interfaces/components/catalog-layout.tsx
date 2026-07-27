@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { CategorySidebar, type CategoryDTO, type ServiceSummaryDTO } from "./category-sidebar";
-import { ServiceDetailView, type DetailedServiceDTO } from "./service-detail-view";
+import { type DetailedServiceDTO } from "./service-detail-view";
+import { EditServiceForm } from "./edit-service-form";
 import { CreateCategoryModal } from "./create-category-modal";
 import { EditCategoryModal } from "./edit-category-modal";
 import { updateCatalogServiceAction } from "../actions/manage-catalog-service.actions";
@@ -18,7 +19,18 @@ export function CatalogLayout({
   services: initialServices,
   activeEstablishmentId,
 }: CatalogLayoutProps) {
+  // Local state initialized with server props
   const [servicesList, setServicesList] = useState<DetailedServiceDTO[]>(initialServices);
+  
+  // Track previous initialServices prop value to detect server updates (triggered by router.refresh())
+  const [prevInitialServices, setPrevInitialServices] = useState<DetailedServiceDTO[]>(initialServices);
+
+  // Synchronize local servicesList state with initialServices from Server Component dynamically without useEffect/cascading renders
+  if (initialServices !== prevInitialServices) {
+    setServicesList(initialServices);
+    setPrevInitialServices(initialServices);
+  }
+
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | undefined>(
     categories[0]?.id
   );
@@ -59,8 +71,8 @@ export function CatalogLayout({
   };
 
   return (
-    <div className="flex flex-col h-screen overflow-hidden bg-background">
-      <div className="flex flex-col md:flex-row flex-1 overflow-hidden">
+    <div className="flex flex-col h-[calc(100vh-10rem)] w-full overflow-hidden bg-background">
+      <div className="flex flex-col md:flex-row flex-1 overflow-hidden h-full">
         <CategorySidebar
           categories={categories}
           services={serviceSummaries}
@@ -75,7 +87,7 @@ export function CatalogLayout({
 
         <main className="flex-1 overflow-y-auto bg-background p-4 md:p-6">
           {selectedService ? (
-            <ServiceDetailView service={selectedService} />
+            <EditServiceForm service={selectedService} />
           ) : (
             <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
               No services available
@@ -83,22 +95,26 @@ export function CatalogLayout({
           )}
         </main>
 
-        <CreateCategoryModal
-          isOpen={isCategoryModalOpen}
-          onClose={() => setIsCategoryModalOpen(false)}
-          establishmentId={activeEstablishmentId}
-        />
+        {isCategoryModalOpen && (
+          <CreateCategoryModal
+            isOpen={isCategoryModalOpen}
+            onClose={() => setIsCategoryModalOpen(false)}
+            establishmentId={activeEstablishmentId}
+          />
+        )}
 
-        <EditCategoryModal
-          isOpen={!!editingCategory}
-          onClose={() => setEditingCategory(null)}
-          category={editingCategory}
-          servicesCount={
-            editingCategory
-              ? servicesList.filter((s) => s.categoryId === editingCategory.id).length
-              : 0
-          }
-        />
+        {editingCategory && (
+          <EditCategoryModal
+            isOpen={!!editingCategory}
+            onClose={() => setEditingCategory(null)}
+            category={editingCategory}
+            servicesCount={
+              editingCategory
+                ? servicesList.filter((s) => s.categoryId === editingCategory.id).length
+                : 0
+            }
+          />
+        )}
       </div>
     </div>
   );

@@ -2,7 +2,6 @@
 
 import React, { useEffect, useState } from "react";
 import { CheckCircle2, Loader2 } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import {
   Alert,
@@ -12,8 +11,14 @@ import {
 import { hasActiveSubscription } from "@/contexts/billing/domain/services/subscription-access.policy";
 import type { SubscriptionResponse } from "@/contexts/billing/infrastructure/gateways/billing-api.gateway";
 
+function continueToChat() {
+  // Use a real navigation so the auth/subscription proxy runs again with
+  // the latest session and subscription state. A client-side transition can
+  // leave the payment modal mounted when the proxy redirects the request.
+  window.location.assign("/chat");
+}
+
 export function PaymentSuccessView() {
-  const router = useRouter();
   const [activationPending, setActivationPending] = useState(true);
 
   useEffect(() => {
@@ -30,6 +35,8 @@ export function PaymentSuccessView() {
         if (cancelled) return;
         if (hasActiveSubscription(subscription)) {
           router.replace("/chat");
+        if (status.active === true) {
+          continueToChat();
           return;
         }
 
@@ -48,7 +55,7 @@ export function PaymentSuccessView() {
     return () => {
       cancelled = true;
     };
-  }, [router]);
+  }, []);
 
   return (
     <div className="space-y-4 py-5 text-center">
@@ -65,8 +72,8 @@ export function PaymentSuccessView() {
             : "Your payment was received. Activation is taking longer than usual."}
         </AlertDescription>
       </Alert>
-      <Button type="button" variant="outline" onClick={() => router.replace("/chat")}>
-        Continue to chat
+      <Button type="button" variant="outline" onClick={continueToChat}>
+        Continue
       </Button>
     </div>
   );

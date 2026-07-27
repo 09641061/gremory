@@ -9,6 +9,7 @@ import {
   iamSessionCookies,
 } from "../../infrastructure/session/iam-session-cookie";
 import { requestEmailSignInSchema } from "../rest/schemas/authentication.schemas";
+import { normalizeAuthReturnPath } from "../../domain/model/valueobjects/auth-return-path";
 
 export type RequestEmailSignInActionState =
   | { status: "idle"; error: null }
@@ -19,6 +20,7 @@ export async function requestEmailSignInAction(
   formData: FormData
 ): Promise<RequestEmailSignInActionState> {
   let email: string;
+  const returnTo = normalizeAuthReturnPath(formData.get("returnTo"));
 
   try {
     const input = requestEmailSignInSchema.parse({
@@ -26,7 +28,7 @@ export async function requestEmailSignInAction(
     });
     email = input.email;
 
-    await sendSignInEmail(input.email);
+    await sendSignInEmail(input.email, returnTo);
 
   } catch (error) {
     console.error("Request email sign-in failed", error);
@@ -36,10 +38,12 @@ export async function requestEmailSignInAction(
     };
   }
 
-  redirect(`/auth/verify?email=${encodeURIComponent(email)}`);
+  const params = new URLSearchParams({ email });
+  if (returnTo) params.set("next", returnTo);
+  redirect(`/auth/verify?${params}`);
 }
 
-export async function sendSignInEmail(email: string) {
+export async function sendSignInEmail(email: string, returnTo: string | null = null) {
   await createIamAuthenticationCommandService().requestEmailSignIn({
     email: createEmail(email),
   });
@@ -49,4 +53,10 @@ export async function sendSignInEmail(email: string) {
     ...iamSessionCookieOptions,
     maxAge: 60 * 10,
   });
+  if (returnTo) {
+    cookieStore.set(iamSessionCookies.returnTo, returnTo, {
+      ...iamSessionCookieOptions,
+      maxAge: 60 * 10,
+    });
+  }
 }

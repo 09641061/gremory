@@ -4,6 +4,7 @@ export const iamSessionCookies = {
   accessToken: "takodu.access_token",
   refreshToken: "takodu.refresh_token",
   pendingEmail: "takodu.pending_email",
+  returnTo: "takodu.auth_return_to",
 } as const;
 
 export const iamSessionCookieOptions = {

@@ -39,7 +39,7 @@ function GoogleSubmitButton() {
   );
 }
 
-export function AuthForm() {
+export function AuthForm({ returnTo = null }: { returnTo?: string | null }) {
   const [state, formAction, pending] = useActionState(
     requestEmailSignInAction,
     { status: "idle", error: null } satisfies RequestEmailSignInActionState
@@ -65,6 +65,7 @@ export function AuthForm() {
           <Card className="rounded-lg border-border bg-card p-7 shadow-sm ring-0">
           <CardContent className="p-0">
           <form action={startGoogleAuthAction}>
+            {returnTo ? <input type="hidden" name="returnTo" value={returnTo} /> : null}
             <GoogleSubmitButton />
           </form>
 
@@ -75,6 +76,7 @@ export function AuthForm() {
           </div>
 
           <form action={formAction}>
+            {returnTo ? <input type="hidden" name="returnTo" value={returnTo} /> : null}
             <Input
               name="email"
               type="email"

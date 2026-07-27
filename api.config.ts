@@ -22,6 +22,11 @@ export const apiConfig = Object.freeze({
     assistantConversations: "/api/assistant/conversations",
     catalogCategories: "/api/catalog/categories",
     catalogServices: "/api/catalog/services",
+    workforce: Object.freeze({
+      invitations: "/api/workforce/invitations",
+      members: "/api/workforce/members",
+      access: "/api/workforce/access",
+    }),
     devices: "/api/devices",
     notifications: "/api/notifications",
   }),
