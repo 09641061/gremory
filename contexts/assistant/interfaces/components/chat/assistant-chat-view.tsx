@@ -193,7 +193,7 @@ export function AssistantChatView() {
         setError(
           requestError instanceof Error
             ? requestError.message
-            : "No pudimos cargar la conversación seleccionada.",
+            : "Could not load the selected conversation.",
         );
       } finally {
         if (!controller.signal.aborted) {
@@ -330,7 +330,7 @@ export function AssistantChatView() {
       setError(
         requestError instanceof Error
           ? requestError.message
-          : "No pudimos enviar el mensaje.",
+          : "Could not send the message.",
       );
     } finally {
       setIsSendingMessage(false);
@@ -352,16 +352,16 @@ export function AssistantChatView() {
         bottomRef={bottomRef}
         error={
           assistantAccessState === "blocked"
-            ? "No hay acceso activo al asistente. Revisa tu sesión o suscripción."
+            ? "You do not have active access to the assistant. Check your session or subscription."
             : error
         }
       />
 
       <ErrorAlert
-        title="Error del asistente"
+        title="Assistant error"
         message={
           assistantAccessState === "blocked"
-            ? "No hay acceso activo al asistente. Revisa tu sesión o suscripción."
+            ? "You do not have active access to the assistant. Check your session or subscription."
             : error ?? undefined
         }
       />
