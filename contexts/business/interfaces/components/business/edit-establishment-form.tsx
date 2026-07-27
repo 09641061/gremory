@@ -20,9 +20,9 @@ export function EditEstablishmentForm({
 }) {
   const router = useRouter();
   const [name, setName] = useState(establishment.name);
+  const [originalPhotoUrl] = useState(establishment.photoUrl);
   const [currentPhotoUrl, setCurrentPhotoUrl] = useState(establishment.photoUrl);
-  const [isRemovingPhoto, setIsRemovingPhoto] = useState(false);
-  const [photoActionError, setPhotoActionError] = useState<string | null>(null);
+  const [photoMarkedForRemoval, setPhotoMarkedForRemoval] = useState(false);
   const [state, formAction, pending] = useActionState(
     updateEstablishmentAction,
     initialBusinessActionResult,
@@ -35,38 +35,17 @@ export function EditEstablishmentForm({
     }
   }, [router, state.status]);
 
-  async function handleRemovePhoto() {
-    if (!currentPhotoUrl || isRemovingPhoto) return;
+  function handleRemovePhoto() {
+    if (!originalPhotoUrl) return;
 
-    setIsRemovingPhoto(true);
-    setPhotoActionError(null);
-
-    try {
-      const response = await fetch(
-        `/api/business/establishments/${encodeURIComponent(establishment.id)}/photo`,
-        {
-          method: "DELETE",
-          cache: "no-store",
-          credentials: "include",
-        },
-      );
-
-      if (!response.ok) {
-        const data = (await response.json().catch(() => null)) as
-          | { message?: string }
-          | null;
-        throw new Error(data?.message || "Unable to remove the establishment photo");
-      }
-
-      setCurrentPhotoUrl(null);
-      router.refresh();
-    } catch (error) {
-      setPhotoActionError(
-        error instanceof Error ? error.message : "Unable to remove the establishment photo",
-      );
-    } finally {
-      setIsRemovingPhoto(false);
+    if (photoMarkedForRemoval) {
+      setCurrentPhotoUrl(originalPhotoUrl);
+      setPhotoMarkedForRemoval(false);
+      return;
     }
+
+    setCurrentPhotoUrl(null);
+    setPhotoMarkedForRemoval(true);
   }
 
   return (
@@ -89,8 +68,10 @@ export function EditEstablishmentForm({
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <form action={formAction} encType="multipart/form-data" className="space-y-5">
+            <form action={formAction} className="space-y-5">
               <input type="hidden" name="id" value={establishment.id} />
+              <input type="hidden" name="currentPhotoUrl" value={originalPhotoUrl ?? ""} />
+              <input type="hidden" name="removePhoto" value={photoMarkedForRemoval ? "true" : "false"} />
               <div className="space-y-2">
                 <Label htmlFor="establishment-name">Name</Label>
                 <Input
@@ -128,19 +109,13 @@ export function EditEstablishmentForm({
                   <Button
                     type="button"
                     variant="outline"
-                    onClick={() => {
-                      void handleRemovePhoto();
-                    }}
-                    disabled={!currentPhotoUrl || isRemovingPhoto}
+                    onClick={handleRemovePhoto}
+                    disabled={!originalPhotoUrl}
                     className="gap-2 border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive"
                   >
-                    {isRemovingPhoto ? "Removing..." : "Remove photo"}
+                    {photoMarkedForRemoval ? "Undo remove" : "Remove photo"}
                   </Button>
                 </div>
-
-                {photoActionError ? (
-                  <p className="text-sm text-destructive">{photoActionError}</p>
-                ) : null}
 
                 {currentPhotoUrl ? (
                   <div className="overflow-hidden rounded-xl border border-border/60 bg-background">
@@ -152,9 +127,14 @@ export function EditEstablishmentForm({
                     />
                   </div>
                 ) : (
-                  <p className="text-sm text-muted-foreground">
-                    No photo is currently set for this establishment.
-                  </p>
+                  <div className="space-y-1 text-sm text-muted-foreground">
+                    <p>
+                      No photo is currently set for this establishment.
+                    </p>
+                    {photoMarkedForRemoval ? (
+                      <p>The current photo will be removed when you save changes.</p>
+                    ) : null}
+                  </div>
                 )}
               </div>
               <div className="flex justify-end gap-3 border-t border-border pt-5">

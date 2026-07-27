@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect } from "react";
+import { useActionState, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Store } from "lucide-react";
@@ -17,6 +17,7 @@ import { Spinner } from "@/contexts/shared/interfaces/components/ui/spinner";
 
 export function CreateEstablishmentForm({ organizationId }: { organizationId: string }) {
   const router = useRouter();
+  const [photoPreviewUrl, setPhotoPreviewUrl] = useState<string | null>(null);
   const [state, formAction, pending] = useActionState(
     createEstablishmentAction,
     initialBusinessActionResult,
@@ -28,6 +29,29 @@ export function CreateEstablishmentForm({ organizationId }: { organizationId: st
       router.refresh();
     }
   }, [router, state.status]);
+
+  useEffect(() => {
+    return () => {
+      if (photoPreviewUrl) {
+        URL.revokeObjectURL(photoPreviewUrl);
+      }
+    };
+  }, [photoPreviewUrl]);
+
+  function handlePhotoChange(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0] ?? null;
+
+    if (photoPreviewUrl) {
+      URL.revokeObjectURL(photoPreviewUrl);
+    }
+
+    if (!file) {
+      setPhotoPreviewUrl(null);
+      return;
+    }
+
+    setPhotoPreviewUrl(URL.createObjectURL(file));
+  }
 
   return (
     <>
@@ -51,7 +75,7 @@ export function CreateEstablishmentForm({ organizationId }: { organizationId: st
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <form action={formAction} encType="multipart/form-data" className="space-y-5">
+            <form action={formAction} className="space-y-5">
               <input type="hidden" name="organizationId" value={organizationId} />
 
               <div className="space-y-2">
@@ -75,10 +99,35 @@ export function CreateEstablishmentForm({ organizationId }: { organizationId: st
                   name="photoFile"
                   type="file"
                   accept="image/*"
+                  onChange={handlePhotoChange}
                 />
                 <p className="text-xs text-muted-foreground">
                   If you upload a file, it will be sent first and its public URL will be saved.
                 </p>
+              </div>
+
+              <div className="space-y-3 rounded-2xl border border-border/70 bg-muted/20 p-4">
+                <div className="space-y-1">
+                  <Label className="text-sm font-medium">Image preview</Label>
+                  <p className="text-xs text-muted-foreground">
+                    This is how the selected image will look before you create the establishment.
+                  </p>
+                </div>
+
+                {photoPreviewUrl ? (
+                  <div className="overflow-hidden rounded-xl border border-border/60 bg-background">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={photoPreviewUrl}
+                      alt="Selected establishment image preview"
+                      className="h-56 w-full object-cover"
+                    />
+                  </div>
+                ) : (
+                  <div className="flex h-56 items-center justify-center rounded-xl border border-dashed border-border/60 bg-background text-sm text-muted-foreground">
+                    No image selected yet.
+                  </div>
+                )}
               </div>
 
               <div className="flex justify-end gap-3 border-t border-border pt-5">

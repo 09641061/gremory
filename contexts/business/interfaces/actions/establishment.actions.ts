@@ -8,6 +8,8 @@ import {
   deleteEstablishmentCommand,
   updateEstablishmentCommand,
 } from "../../domain/model/commands/business.commands";
+import { createEstablishmentId } from "../../domain/model/valueobjects/establishment-id.vo";
+import { EstablishmentApiGateway } from "../../infrastructure/gateways/establishment-api.gateway";
 import { requireBusinessAccessToken } from "../../infrastructure/session/business-session";
 import {
   createEstablishmentSchema,
@@ -54,6 +56,10 @@ function readPhotoFileFromFormData(formData: FormData) {
   return photoFile instanceof File && photoFile.size > 0 ? photoFile : null;
 }
 
+function readBoolFromFormData(formData: FormData, key: string) {
+  return formData.get(key) === "true";
+}
+
 export async function createEstablishmentAction(
   _previous: BusinessActionResult,
   formData: FormData
@@ -93,8 +99,23 @@ export async function updateEstablishmentAction(
 
   try {
     const token = await requireBusinessAccessToken();
+    const removePhoto = readBoolFromFormData(formData, "removePhoto");
+    const currentPhotoUrl = formData.get("currentPhotoUrl");
     const photoFile = readPhotoFileFromFormData(formData);
-    const photoUrl = photoFile ? await uploadEstablishmentPhoto(photoFile, token) : null;
+    const photoUrl = photoFile
+      ? await uploadEstablishmentPhoto(photoFile, token)
+      : removePhoto
+        ? null
+        : typeof currentPhotoUrl === "string" && currentPhotoUrl.trim()
+          ? currentPhotoUrl
+          : null;
+
+    if (removePhoto) {
+      await new EstablishmentApiGateway(token).deletePhoto(
+        createEstablishmentId(parsed.data.id),
+      );
+    }
+
     const establishmentId = await createEstablishmentCommandService(token).update(
       updateEstablishmentCommand({
         ...parsed.data,
