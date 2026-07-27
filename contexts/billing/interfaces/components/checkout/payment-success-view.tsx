@@ -2,19 +2,18 @@
 
 import React, { useEffect, useState } from "react";
 import { CheckCircle2, Loader2 } from "lucide-react";
+
+import { hasActiveSubscription } from "@/contexts/billing/domain/services/subscription-access.policy";
+import type { SubscriptionResponse } from "@/contexts/billing/infrastructure/gateways/billing-api.gateway";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import {
   Alert,
   AlertDescription,
   AlertTitle,
 } from "@/contexts/shared/interfaces/components/ui/alert";
-import { hasActiveSubscription } from "@/contexts/billing/domain/services/subscription-access.policy";
-import type { SubscriptionResponse } from "@/contexts/billing/infrastructure/gateways/billing-api.gateway";
 
 function continueToChat() {
-  // Use a real navigation so the auth/subscription proxy runs again with
-  // the latest session and subscription state. A client-side transition can
-  // leave the payment modal mounted when the proxy redirects the request.
+  // Use a full navigation so auth and subscription proxies re-run with the latest session state.
   window.location.assign("/chat");
 }
 
@@ -28,14 +27,11 @@ export function PaymentSuccessView() {
     const checkSubscription = async () => {
       try {
         const response = await fetch("/api/billing/subscriptions", { cache: "no-store" });
-        const subscription = response.ok
-          ? (await response.json()) as SubscriptionResponse
-          : null;
+        const subscription = response.ok ? ((await response.json()) as SubscriptionResponse) : null;
 
         if (cancelled) return;
+
         if (hasActiveSubscription(subscription)) {
-          router.replace("/chat");
-        if (status.active === true) {
           continueToChat();
           return;
         }
@@ -47,11 +43,14 @@ export function PaymentSuccessView() {
           setActivationPending(false);
         }
       } catch {
-        if (!cancelled) setActivationPending(false);
+        if (!cancelled) {
+          setActivationPending(false);
+        }
       }
     };
 
     void checkSubscription();
+
     return () => {
       cancelled = true;
     };
