@@ -37,7 +37,7 @@ export function EditEstablishmentForm({
 
   useEffect(() => {
     if (state.status === "success") {
-      router.push("/establishments");
+      router.replace("/establishments");
       router.refresh();
     }
   }, [router, state.status]);

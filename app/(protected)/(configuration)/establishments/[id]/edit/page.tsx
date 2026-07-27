@@ -15,7 +15,6 @@ export default async function EditEstablishmentPage({
 
   return (
     <EditEstablishmentForm
-      key={`${establishment.id}:${establishment.name}:${establishment.photoUrl ?? ""}`}
       establishment={{
         id: establishment.id,
         name: establishment.name,
