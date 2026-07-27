@@ -20,10 +20,13 @@ import {
 import type { TeamUserSummary } from "@/contexts/workforce/application/model/team.read-models";
 import type { TeamActionResult } from "@/contexts/workforce/interfaces/actions/team-action-result";
 import { InviteMembersDialog } from "./invite-members-dialog";
+import { assignWorkforceRoleAction, removeWorkforceRoleAssignmentAction } from "@/contexts/workforce/interfaces/actions/workforce-role.actions";
 
 const initialActionState: TeamActionResult = { status: "idle", data: null, error: null };
 
-export function TeamPageView({ establishmentId, members }: { establishmentId: string | null; members: TeamUserSummary[] }) {
+type RoleOption = { id: string; name: string; position: number; systemRole: boolean };
+
+export function TeamPageView({ establishmentId, members, roles, canManageRoles }: { establishmentId: string | null; members: TeamUserSummary[]; roles: RoleOption[]; canManageRoles: boolean }) {
   const [filter, setFilter] = useState("");
   const [inviteOpen, setInviteOpen] = useState(false);
   const router = useRouter();
@@ -37,10 +40,10 @@ export function TeamPageView({ establishmentId, members }: { establishmentId: st
           <p className="page-description mt-2">Manage team members and pending invitations.</p>
         </div>
         <div className="flex items-center gap-3">
-          <Button type="button" variant="outline" className="gap-2" onClick={() => router.push("/permissions")}>
+          {canManageRoles ? <Button type="button" variant="outline" className="gap-2" onClick={() => router.push("/permissions")}>
             <Settings2 className="size-4" />
             Manage permissions
-          </Button>
+          </Button> : null}
           <Button className="gap-2" onClick={() => setInviteOpen(true)} disabled={!establishmentId}>
             <UserPlus className="size-4" />
             Invite members
@@ -64,7 +67,7 @@ export function TeamPageView({ establishmentId, members }: { establishmentId: st
                 <span className="min-w-[116px] text-left" aria-hidden="true" />
               </div>
             </div>
-            {filteredMembers.map((member) => <MemberRow key={member.memberId ?? member.invitationId} member={member} />)}
+            {filteredMembers.map((member) => <MemberRow key={member.memberId ?? member.invitationId} member={member} roles={roles} />)}
             {filteredMembers.length === 0 && <div className="px-5 py-10 text-sm text-muted-foreground">No members found.</div>}
           </div>
         </CardContent>
@@ -74,17 +77,19 @@ export function TeamPageView({ establishmentId, members }: { establishmentId: st
   );
 }
 
-function MemberRow({ member }: { member: TeamUserSummary }) {
+function MemberRow({ member, roles }: { member: TeamUserSummary; roles: RoleOption[] }) {
   const [removeState, removeAction, removePending] = useActionState(removeTeamMemberAction, initialActionState);
   const [revokeState, revokeAction, revokePending] = useActionState(revokeTeamInvitationAction, initialActionState);
+  const [roleState, roleAction, rolePending] = useActionState(assignWorkforceRoleAction, { status: "idle", data: null, error: null } as const);
+  const [removeRoleState, removeRoleAction, removeRolePending] = useActionState(removeWorkforceRoleAssignmentAction, { status: "idle", data: null, error: null } as const);
   const router = useRouter();
   useEffect(() => {
-    if (removeState.status === "success" || revokeState.status === "success") router.refresh();
-  }, [removeState.status, revokeState.status, router]);
+    if ([removeState.status, revokeState.status, roleState.status, removeRoleState.status].includes("success")) router.refresh();
+  }, [removeState.status, revokeState.status, roleState.status, removeRoleState.status, router]);
   const memberId = member.memberId;
   const canRemove = member.canRemoveMembership && memberId !== null;
   const canCancel = member.canRevokeInvitation;
-  const error = removeState.error ?? revokeState.error;
+  const error = removeState.error ?? revokeState.error ?? roleState.error ?? removeRoleState.error;
   return (
     <div className="grid min-h-[96px] grid-cols-[minmax(320px,1.4fr)_minmax(150px,.55fr)_minmax(150px,.55fr)_minmax(170px,.7fr)] items-center border-b border-border px-5 py-4 last:border-b-0">
       <div className="flex items-center gap-4">
@@ -93,7 +98,27 @@ function MemberRow({ member }: { member: TeamUserSummary }) {
         </span>
         <span className="truncate text-[15px] text-foreground">{member.email}</span>
       </div>
-      <span className="text-[15px] text-muted-foreground">{member.roleName}</span>
+      <div className="flex flex-wrap gap-1.5">
+        {member.roles.map((role) => (
+          <form key={role.id} action={removeRoleAction} className="inline-flex items-center">
+            <input type="hidden" name="memberId" value={member.memberId ?? ""} />
+            <input type="hidden" name="roleId" value={role.id} />
+            <button type="submit" disabled={role.systemRole || removeRolePending} className="rounded-full border border-border bg-muted/40 px-2.5 py-1 text-xs text-foreground disabled:cursor-default disabled:opacity-70" title={role.systemRole ? "Everyone is inherited and protected" : "Remove role"}>
+              {role.name}{role.systemRole ? " · base" : " ×"}
+            </button>
+          </form>
+        ))}
+        {member.memberId && roles.some((role) => !role.systemRole && !member.roles.some((assigned) => assigned.id === role.id)) ? (
+          <form action={roleAction} className="inline-flex items-center gap-1">
+            <input type="hidden" name="memberId" value={member.memberId} />
+            <select name="roleId" defaultValue="" disabled={rolePending} className="h-8 rounded-md border border-border bg-background px-2 text-xs">
+              <option value="" disabled>Add role</option>
+              {roles.filter((role) => !role.systemRole && !member.roles.some((assigned) => assigned.id === role.id)).map((role) => <option key={role.id} value={role.id}>{role.position}. {role.name}</option>)}
+            </select>
+            <button type="submit" disabled={rolePending} className="rounded-md border border-border px-2 py-1 text-xs">{rolePending ? "..." : "+"}</button>
+          </form>
+        ) : null}
+      </div>
       <span className="text-[15px] text-muted-foreground">{formatStatus(member.status)}</span>
       <div className="flex flex-col items-end gap-2">
         {canCancel || canRemove ? (

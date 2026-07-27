@@ -5,8 +5,15 @@ export interface WorkforceUserResource {
   memberId: string | null;
   userId: string | null;
   email: string;
-  roleId: string;
-  roleName: string;
+  roleId?: string;
+  roleName?: string;
+  roles: Array<{
+    id: string;
+    name: string;
+    position: number;
+    systemRole: boolean;
+    permissions: string[];
+  }>;
   organizationId: string;
   establishmentId: string;
   establishmentName: string | null;
@@ -58,5 +65,7 @@ export interface WorkforceAccessResource {
     organizationName: string;
     establishmentId: string;
     establishmentName: string;
+    roles: Array<{ id: string; name: string; position: number; systemRole: boolean }>;
+    effectivePermissions: string[];
   }>;
 }

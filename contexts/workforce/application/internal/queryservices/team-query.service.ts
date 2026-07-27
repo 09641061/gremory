@@ -61,6 +61,8 @@ export class TeamQueryServiceImpl implements TeamQueryService {
         organizationName: establishment.organizationName,
         establishmentId: establishment.establishmentId.value,
         establishmentName: establishment.establishmentName,
+        roles: establishment.roles,
+        effectivePermissions: establishment.effectivePermissions,
       })),
     };
   }
@@ -80,6 +82,13 @@ function toTeamUserSummary(
     email: user.email.value,
     roleId: user.roleId.value,
     roleName: user.roleName,
+    roles: user.roles.map((role) => ({
+      id: role.id.value,
+      name: role.name,
+      position: role.position,
+      systemRole: role.systemRole,
+      permissions: role.permissions,
+    })),
     organizationId: user.organizationId.value,
     establishmentId: user.establishmentId.value,
     establishmentName: user.establishmentName,

@@ -17,7 +17,7 @@ export function RoleRow({ role, selected = false, onSelect, onEdit, onDelete }: 
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const roleId = role.id;
-  const canEdit = roleId !== null && !!onEdit;
+  const canEdit = roleId !== null && !role.systemRole && !!onEdit;
   const canDelete = roleId !== null && !role.systemRole && !!onDelete;
 
   useEffect(() => {
@@ -63,6 +63,7 @@ export function RoleRow({ role, selected = false, onSelect, onEdit, onDelete }: 
         </span>
         <div className="min-w-0">
           <p className="truncate text-[15px] font-medium text-foreground">
+            <span className="mr-2 text-xs text-muted-foreground">{role.systemRole ? "∞" : role.position}</span>
             {role.name}
           </p>
         </div>
@@ -97,7 +98,7 @@ export function RoleRow({ role, selected = false, onSelect, onEdit, onDelete }: 
               }}
             >
               <Pencil className="size-4" />
-              Edit
+              {role.systemRole ? "Protected" : "Edit"}
             </Button>
             <Button
               type="button"

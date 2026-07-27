@@ -69,6 +69,8 @@ export function PermissionsWorkspace({ role, permissions, onCancel }: Permission
     );
   }
 
+  const editable = !role.systemRole;
+
   function cancelChanges() {
     setSelectedPermissions(new Set(role?.permissions ?? []));
     onCancel?.();
@@ -132,6 +134,7 @@ export function PermissionsWorkspace({ role, permissions, onCancel }: Permission
                                 </span>
                               </span>
                               <Switch
+                                disabled={!editable}
                                 checked={checked}
                                 onCheckedChange={(nextChecked) => {
                                   setSelectedPermissions((current) => {
@@ -157,9 +160,9 @@ export function PermissionsWorkspace({ role, permissions, onCancel }: Permission
               <Button type="button" variant="ghost" onClick={cancelChanges} disabled={pending}>
                 Cancel
               </Button>
-              <Button type="submit" disabled={pending} className="gap-2">
+              <Button type="submit" disabled={pending || !editable} className="gap-2">
                 {pending ? <Spinner className="size-4" /> : <Save className="size-4" />}
-                {pending ? "Saving..." : "Save"}
+                {pending ? "Saving..." : editable ? "Save" : "Default role is protected"}
               </Button>
             </CardFooter>
           </form>

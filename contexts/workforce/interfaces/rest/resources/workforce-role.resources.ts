@@ -5,11 +5,13 @@ export interface WorkforceRoleResource {
   name: string;
   permissions: ReadonlyArray<WorkforcePermission>;
   systemRole: boolean;
+  position?: number;
 }
 
 export interface WorkforceRoleRequest {
   name: string;
   permissions: ReadonlyArray<WorkforcePermission>;
+  position?: number;
 }
 
 export interface AssignWorkforceRoleRequest {

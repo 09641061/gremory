@@ -10,6 +10,7 @@ import {
   assignWorkforceRoleCommand,
   createWorkforceRoleCommand,
   patchWorkforceRoleCommand,
+  removeWorkforceRoleAssignmentCommand,
 } from "@/contexts/workforce/domain/model/commands/workforce-role.commands";
 import { workforcePermissionCodes } from "@/contexts/workforce/domain/model/enums/workforce-permission";
 import { TeamApiError } from "@/contexts/workforce/infrastructure/gateways/team-api.gateway";
@@ -132,12 +133,29 @@ export async function assignWorkforceRoleRoute(
   }
 }
 
+export async function removeWorkforceRoleAssignmentRoute(memberId: string, roleId: string) {
+  try {
+    const member = uuidSchema.safeParse(memberId);
+    const role = uuidSchema.safeParse(roleId);
+    if (!member.success || !role.success) return validationErrorResponse("Invalid member or role ID");
+    const service = createWorkforceRoleCommandService(await requireTeamAccessToken());
+    if (!service.removeAssignment) throw new Error("Role assignment removal is unavailable");
+    await service.removeAssignment(
+      removeWorkforceRoleAssignmentCommand({ memberId: member.data, roleId: role.data }),
+    );
+    return new Response(null, { status: 204 });
+  } catch (error) {
+    return toRouteErrorResponse(error);
+  }
+}
+
 function roleToResource(role: WorkforceRole) {
   return {
     id: role.id ?? "",
     name: role.getName(),
     permissions: [...role.getPermissions()],
     systemRole: role.isSystemRole(),
+    position: role.position ?? (role.isSystemRole() ? 2_147_483_647 : 1),
   };
 }
 

@@ -27,6 +27,7 @@ interface EditRoleDialogProps {
 export function EditRoleDialog({ role, open, onOpenChange }: EditRoleDialogProps) {
   const router = useRouter();
   const [name, setName] = useState(role.name);
+  const [position, setPosition] = useState(String(role.position));
   const [submitCount, setSubmitCount] = useState(0);
   const [state, formAction, pending] = useActionState(
     patchWorkforceRoleAction,
@@ -69,6 +70,20 @@ export function EditRoleDialog({ role, open, onOpenChange }: EditRoleDialogProps
               placeholder="Role Name"
               required
             />
+          </div>
+
+          <div className="space-y-2">
+            <label htmlFor="edit-role-position" className="text-sm font-medium text-foreground">Hierarchy position</label>
+            <Input
+              id="edit-role-position"
+              name="position"
+              type="number"
+              min={1}
+              value={position}
+              onChange={(e) => setPosition(e.target.value)}
+              required
+            />
+            <p className="text-xs text-muted-foreground">1 is the highest position. Other roles shift automatically.</p>
           </div>
 
           <input type="hidden" name="roleId" value={role.id || ""} />

@@ -73,6 +73,7 @@ describe("workforce role routes", () => {
         name: "Catalog manager",
         permissions: ["catalog:manage"],
         systemRole: false,
+        position: 1,
       },
     ]);
   });

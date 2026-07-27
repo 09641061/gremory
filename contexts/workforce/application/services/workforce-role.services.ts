@@ -1,5 +1,6 @@
 import type {
   AssignWorkforceRoleCommand,
+  RemoveWorkforceRoleAssignmentCommand,
   DeleteWorkforceRoleCommand,
   CreateWorkforceRoleCommand,
   PatchWorkforceRoleCommand,
@@ -12,6 +13,7 @@ export interface WorkforceRoleCommandService {
   patch(command: PatchWorkforceRoleCommand): Promise<WorkforceRole>;
   delete(command: DeleteWorkforceRoleCommand): Promise<void>;
   assign(command: AssignWorkforceRoleCommand): Promise<void>;
+  removeAssignment?(command: RemoveWorkforceRoleAssignmentCommand): Promise<void>;
 }
 
 export interface WorkforceRoleQueryService {

@@ -132,6 +132,8 @@ export class TeamApiGateway implements TeamRepository {
         organizationName: establishment.organizationName,
         establishmentId: createTeamEstablishmentId(establishment.establishmentId),
         establishmentName: establishment.establishmentName,
+        roles: establishment.roles ?? [],
+        effectivePermissions: establishment.effectivePermissions ?? [],
       })),
     };
   }
@@ -142,8 +144,15 @@ function toTeamUser(resource: {
   memberId: string | null;
   userId: string | null;
   email: string;
-  roleId: string;
-  roleName: string;
+  roleId?: string;
+  roleName?: string;
+  roles?: Array<{
+    id: string;
+    name: string;
+    position: number;
+    systemRole: boolean;
+    permissions: string[];
+  }>;
   organizationId: string;
   establishmentId: string;
   establishmentName: string | null;
@@ -154,13 +163,21 @@ function toTeamUser(resource: {
   joinedAt: string | null;
   removedAt: string | null;
 }): TeamUser {
+  const roles = resource.roles ?? (resource.roleId ? [{ id: resource.roleId, name: resource.roleName ?? "Everyone", position: 2_147_483_647, systemRole: true, permissions: [] }] : []);
   return TeamUser.create({
     invitationId: createInvitationId(resource.invitationId),
     memberId: resource.memberId ? createMemberId(resource.memberId) : null,
     userId: resource.userId ? createTeamUserId(resource.userId) : null,
     email: createInvitedEmail(resource.email),
-    roleId: createTeamRoleId(resource.roleId),
-    roleName: resource.roleName,
+    roleId: createTeamRoleId(roles[0]?.id ?? resource.roleId ?? "00000000-0000-4000-8000-000000000000"),
+    roleName: roles[0]?.name ?? resource.roleName ?? "Everyone",
+    roles: roles.map((role) => ({
+      id: createTeamRoleId(role.id),
+      name: role.name,
+      position: role.position,
+      systemRole: role.systemRole,
+      permissions: role.permissions,
+    })),
     organizationId: createTeamOrganizationId(resource.organizationId),
     establishmentId: createTeamEstablishmentId(resource.establishmentId),
     establishmentName: resource.establishmentName,
