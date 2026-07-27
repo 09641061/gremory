@@ -13,7 +13,6 @@ describe("Workforce role application services", () => {
 
     const role = await service.create({
       name: "  Admin  ",
-      permissions: ["catalog:manage", "business:access"],
     });
 
     expect(save).toHaveBeenCalledTimes(1);
@@ -21,6 +20,7 @@ describe("Workforce role application services", () => {
       id: null,
     }));
     expect(role.getName()).toBe("Admin");
+    expect(role.getPermissions()).toEqual([]);
   });
 
   it("should patch a role using the provided identity", async () => {

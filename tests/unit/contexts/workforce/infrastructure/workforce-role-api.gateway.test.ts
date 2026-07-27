@@ -94,9 +94,16 @@ describe("WorkforceRoleApiGateway", () => {
     ]));
     vi.stubGlobal("fetch", fetchMock);
 
-    const permissions = await new WorkforceRoleApiGateway().permissions();
+    const permissions = await new WorkforceRoleApiGateway("access-token").permissions();
 
     expect(permissions).toEqual(["business:access", "catalog:manage"]);
+    expect(fetchMock).toHaveBeenCalledWith(
+      "http://localhost:8080/api/workforce/roles/permissions",
+      expect.objectContaining({
+        method: "GET",
+        headers: { Authorization: "Bearer access-token" },
+      }),
+    );
   });
 });
 

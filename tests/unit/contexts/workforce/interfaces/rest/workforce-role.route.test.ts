@@ -90,7 +90,6 @@ describe("workforce role routes", () => {
         method: "POST",
         body: JSON.stringify({
           name: "Catalog manager",
-          permissions: ["catalog:manage"],
         }),
       }),
     );

@@ -122,18 +122,20 @@ export async function deleteWorkforceRoleAction(
 }
 
 function parseCreateRolePayload(formData: FormData) {
-  const permissions = formData
-    .getAll("permissions")
-    .filter((value): value is string => typeof value === "string");
   return {
     name: formData.get("name"),
-    permissions,
   };
 }
 
 function parsePatchRolePayload(formData: FormData) {
+  const permissions = formData.has("permissionsSubmitted")
+    ? formData
+        .getAll("permissions")
+        .filter((value): value is string => typeof value === "string")
+    : undefined;
   return {
     name: typeof formData.get("name") === "string" ? formData.get("name") : undefined,
+    permissions,
   };
 }
 

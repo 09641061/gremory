@@ -31,7 +31,8 @@ export class WorkforceRoleApiGateway implements WorkforceRoleRepository {
   }
 
   async permissions() {
-    const response = await teamGet<unknown>(apiConfig.routes.workforce.rolePermissions);
+    const token = await requireTeamAccessToken(this.providedToken);
+    const response = await teamGet<unknown>(apiConfig.routes.workforce.rolePermissions, token);
     return workforceRolePermissionsSchema.parse(response);
   }
 
@@ -39,7 +40,6 @@ export class WorkforceRoleApiGateway implements WorkforceRoleRepository {
     const token = await requireTeamAccessToken(this.providedToken);
     const body = workforceRoleCreateRequestSchema.parse({
       name: role.getName(),
-      permissions: [...role.getPermissions()],
     });
     const response = await teamPost<unknown>(apiConfig.routes.workforce.roles, body, token);
     return toRole(workforceRoleResourceSchema.parse(response));

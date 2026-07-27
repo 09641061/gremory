@@ -9,9 +9,11 @@ import { DeleteRoleDialog } from "./delete-role-dialog";
 
 interface RoleRowProps {
   role: WorkforceRoleSummary;
+  selected?: boolean;
+  onSelect?: () => void;
 }
 
-export function RoleRow({ role }: RoleRowProps) {
+export function RoleRow({ role, selected = false, onSelect }: RoleRowProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
@@ -45,7 +47,19 @@ export function RoleRow({ role }: RoleRowProps) {
   }, [menuOpen]);
 
   return (
-    <div className="grid items-center gap-4 border-b border-border px-5 py-4 last:border-b-0 sm:grid-cols-[minmax(0,1fr)_auto]">
+    <div
+      className={`grid cursor-pointer items-center gap-4 border-b border-border px-5 py-4 transition-colors last:border-b-0 hover:bg-muted/40 sm:grid-cols-[minmax(0,1fr)_auto] ${selected ? "bg-accent/60" : ""}`}
+      onClick={onSelect}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          onSelect?.();
+        }
+      }}
+      role="button"
+      tabIndex={0}
+      aria-pressed={selected}
+    >
       <div className="flex min-w-0 items-center gap-3">
         <span className="flex size-10 shrink-0 items-center justify-center rounded-full border border-border bg-muted/40 text-muted-foreground">
           <ShieldCheck className="size-4" />
@@ -57,7 +71,11 @@ export function RoleRow({ role }: RoleRowProps) {
         </div>
       </div>
 
-      <div ref={menuRef} className="relative flex items-center justify-end gap-2">
+      <div
+        ref={menuRef}
+        className="relative flex items-center justify-end gap-2"
+        onClick={(event) => event.stopPropagation()}
+      >
         <Button
           type="button"
           variant="ghost"

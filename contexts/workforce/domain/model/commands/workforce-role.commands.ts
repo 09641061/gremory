@@ -1,6 +1,5 @@
 export type CreateWorkforceRoleCommand = Readonly<{
   name: string;
-  permissions: ReadonlyArray<string>;
 }>;
 
 export type PatchWorkforceRoleCommand = Readonly<{
@@ -23,14 +22,15 @@ export function createWorkforceRoleCommand(
 ): CreateWorkforceRoleCommand {
   return Object.freeze({
     name: input.name,
-    permissions: Object.freeze([...input.permissions]),
   });
 }
 
 export function patchWorkforceRoleCommand(
   input: PatchWorkforceRoleCommand,
 ): PatchWorkforceRoleCommand {
-  const permissions = input.permissions?.length ? Object.freeze([...input.permissions]) : undefined;
+  const permissions = input.permissions === undefined
+    ? undefined
+    : Object.freeze([...input.permissions]);
   return Object.freeze({
     roleId: input.roleId,
     name: input.name,

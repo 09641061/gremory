@@ -1,8 +1,5 @@
 import { z } from "zod";
-import {
-  workforcePermissionCodes,
-  isWorkforcePermission,
-} from "../../../domain/model/enums/workforce-permission";
+import { workforcePermissionCodes, isWorkforcePermission } from "../../../domain/model/enums/workforce-permission";
 
 const uuidSchema = z.string().uuid();
 const workforcePermissionSchema = z.string().refine(isWorkforcePermission, {
@@ -11,7 +8,6 @@ const workforcePermissionSchema = z.string().refine(isWorkforcePermission, {
 
 export const workforceRoleCreateRequestSchema = z.object({
   name: z.string().trim().min(1).max(100),
-  permissions: z.array(workforcePermissionSchema).min(1),
 });
 
 export const workforceRolePatchRequestSchema = z.object({
