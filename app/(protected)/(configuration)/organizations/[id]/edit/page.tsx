@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { createOrganizationQueryService } from "@/contexts/business/application/internal/queryservices/organization-query.service";
-import { EditOrganizationForm } from "@/contexts/business/interfaces/components/organization/edit-organization-form";
+import { EditOrganizationForm } from "@/contexts/business/interfaces/components/organization/edit-organization/edit-organization-form";
 
 export default async function EditOrganizationPage({
   params,

@@ -1,7 +1,7 @@
 import { unstable_noStore as noStore } from "next/cache";
 import { notFound } from "next/navigation";
 import { createEstablishmentQueryService } from "@/contexts/business/application/internal/queryservices/establishment-query.service";
-import { EditEstablishmentForm } from "@/contexts/business/interfaces/components/business/edit-establishment-form";
+import { EditEstablishmentForm } from "@/contexts/business/interfaces/components/establishment/edit-establishment/edit-establishment-form";
 
 export default async function EditEstablishmentPage({
   params,

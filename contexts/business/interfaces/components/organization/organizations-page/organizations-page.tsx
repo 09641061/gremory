@@ -7,7 +7,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/contexts/shared/interfaces/components/ui/card";
-import { OrganizationCardMenu } from "./organization-card-menu";
+import { OrganizationCardMenu } from "../organization-card-menu/organization-card-menu";
 
 export function OrganizationsPage({
   organization,

@@ -3,7 +3,7 @@
 import { useRef, useState } from "react";
 import { Building2Icon, ChevronDownIcon, StoreIcon } from "lucide-react";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
-import { useSelectorMenu } from "../use-selector-menu";
+import { useSelectorMenu } from "../../use-selector-menu";
 
 export type EstablishmentOption = {
   id: string;

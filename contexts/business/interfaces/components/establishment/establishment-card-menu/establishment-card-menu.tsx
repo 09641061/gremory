@@ -7,8 +7,8 @@ import {
   Button,
   buttonVariants,
 } from "@/contexts/shared/interfaces/components/ui/button";
-import { useSelectorMenu } from "../use-selector-menu";
-import { DeleteEstablishmentDialog } from "./delete-establishment-dialog";
+import { useSelectorMenu } from "../../use-selector-menu";
+import { DeleteEstablishmentDialog } from "../delete-establishment-dialog/delete-establishment-dialog";
 
 export function EstablishmentCardMenu({
   establishmentId,

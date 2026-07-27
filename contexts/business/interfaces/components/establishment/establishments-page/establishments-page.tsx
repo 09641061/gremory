@@ -9,7 +9,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/contexts/shared/interfaces/components/ui/card";
-import { EstablishmentCardMenu } from "./establishment-card-menu";
+import { EstablishmentCardMenu } from "../establishment-card-menu/establishment-card-menu";
 
 export type EstablishmentListItem = {
   id: string;

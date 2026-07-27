@@ -1,5 +1,5 @@
 import { createOrganizationQueryService } from "@/contexts/business/application/internal/queryservices/organization-query.service";
-import { OrganizationsPage } from "@/contexts/business/interfaces/components/organization/organizations-page";
+import { OrganizationsPage } from "@/contexts/business/interfaces/components/organization/organizations-page/organizations-page";
 
 export default async function OrganizationsRoutePage() {
   const organization =

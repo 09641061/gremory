@@ -2,17 +2,17 @@
 
 import { useActionState, useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { updateEstablishmentAction } from "../../actions/establishment.actions";
-import { initialBusinessActionResult } from "../../actions/business-action-result";
+import { updateEstablishmentAction } from "../../../actions/establishment.actions";
+import { initialBusinessActionResult } from "../../../actions/business-action-result";
 import { Card, CardContent, CardHeader, CardTitle } from "@/contexts/shared/interfaces/components/ui/card";
 import { ErrorAlert } from "@/contexts/shared/interfaces/components/ui/error";
-import { EditEstablishmentFormActions } from "./edit-establishment/edit-establishment-form-actions";
+import { EditEstablishmentFormActions } from "./edit-establishment-form-actions";
 import {
   EditEstablishmentFormHeader,
   EditEstablishmentSectionTitle,
-} from "./edit-establishment/edit-establishment-form-header";
-import { EditEstablishmentNameField } from "./edit-establishment/edit-establishment-name-field";
-import { EditEstablishmentPhotoSection } from "./edit-establishment/edit-establishment-photo-section";
+} from "./edit-establishment-form-header";
+import { EditEstablishmentNameField } from "./edit-establishment-name-field";
+import { EditEstablishmentPhotoSection } from "./edit-establishment-photo-section";
 
 export function EditEstablishmentForm({
   establishment,
