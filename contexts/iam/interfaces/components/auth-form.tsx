@@ -22,7 +22,7 @@ function GoogleSubmitButton() {
       type="submit"
       variant="outline"
       disabled={pending}
-      className="h-10 w-full rounded-md border-border bg-card px-4 text-sm font-medium text-foreground hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+      className="w-full gap-2"
     >
       {pending ? (
         <>
@@ -31,7 +31,7 @@ function GoogleSubmitButton() {
         </>
       ) : (
         <>
-          <GoogleIcon className="size-[19px]" />
+          <GoogleIcon className="size-4" />
           <span>Continue with Google</span>
         </>
       )}
@@ -82,13 +82,12 @@ export function AuthForm({ returnTo = null }: { returnTo?: string | null }) {
               type="email"
               placeholder="Enter your email"
               aria-label="Email address"
-              className="h-10 rounded-md border-border bg-card px-3 text-sm text-foreground placeholder:text-foreground/90 focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30"
             />
 
             <Button
               type="submit"
               disabled={pending}
-              className="mt-4 h-10 w-full rounded-md bg-primary px-4 text-sm font-semibold text-primary-foreground hover:bg-primary/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+              className="mt-4 w-full"
             >
               {pending ? (
                 <>

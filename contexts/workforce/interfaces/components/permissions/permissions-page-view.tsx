@@ -31,7 +31,7 @@ export function PermissionsPageView({
 
   return (
     <section className="mx-auto flex w-full max-w-7xl flex-col gap-6 lg:flex-row">
-      <div className="w-full space-y-8 lg:flex-1">
+      <div className="w-full space-y-6 lg:flex-1">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <h1 className="page-title">Permissions</h1>
@@ -42,17 +42,17 @@ export function PermissionsPageView({
         </div>
 
         <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:items-center">
-          <label className="relative block w-full max-w-[440px]">
+          <label className="relative block w-full max-w-xs">
             <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               value={filter}
               onChange={(event) => setFilter(event.target.value)}
               placeholder="Search roles"
               aria-label="Search roles"
-              className="h-9 pl-9"
+              className="pl-9"
             />
           </label>
-          <Button type="button" onClick={() => setCreateOpen(true)} className="gap-2">
+          <Button type="button" size="default" onClick={() => setCreateOpen(true)} className="gap-2">
             <Plus className="size-4" />
             Create role
           </Button>
@@ -67,7 +67,7 @@ export function PermissionsPageView({
           }}
         />
 
-        <Card className="overflow-visible rounded-xl border-border bg-card shadow-sm">
+        <Card className="overflow-hidden rounded-xl border-border bg-card shadow-sm">
           <CardContent className="p-0">
             <div className="grid grid-cols-[minmax(0,1fr)_auto] border-b border-border px-5 py-4 text-sm font-medium text-muted-foreground">
               <span>Roles - {roles.length}</span>
@@ -79,7 +79,7 @@ export function PermissionsPageView({
                 No roles found.
               </div>
             ) : (
-                filteredRoles.map((role) => (
+              filteredRoles.map((role) => (
                 <RoleRow
                   key={role.id ?? role.name}
                   role={role}

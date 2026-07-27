@@ -131,13 +131,12 @@ export function PermissionsWorkspace({ role, permissions }: PermissionsWorkspace
               </div>
 
               <div className="flex items-center justify-end gap-2 border-t border-border pt-5">
-                <Button type="button" variant="ghost" onClick={cancelChanges} disabled={pending} className="gap-2">
-                  <RotateCcw className="size-4" />
+                <Button type="button" variant="ghost" onClick={cancelChanges} disabled={pending}>
                   Cancel
                 </Button>
                 <Button type="submit" disabled={pending} className="gap-2">
                   {pending ? <Spinner className="size-4" /> : <Save className="size-4" />}
-                  {pending ? "Saving..." : "Save permissions"}
+                  {pending ? "Saving..." : "Save"}
                 </Button>
               </div>
             </form>
