@@ -214,32 +214,31 @@ export function AssistantChatView() {
         | { type: "delete"; conversationId: string }
       >;
 
-      if (!customEvent.detail) return;
+      const detail = customEvent.detail;
+      if (!detail) return;
 
-      if (customEvent.detail.type === "upsert") {
-        if (
-          selectedConversationId &&
-          customEvent.detail.conversation.id === selectedConversationId
-        ) {
-          setActiveConversation(customEvent.detail.conversation);
-        }
-        return;
-      }
+      switch (detail.type) {
+        case "upsert":
+          if (selectedConversationId && detail.conversation.id === selectedConversationId) {
+            setActiveConversation(detail.conversation);
+          }
+          return;
+        case "rename":
+          if (!selectedConversationId || detail.conversationId !== selectedConversationId) {
+            return;
+          }
 
-      if (!selectedConversationId || customEvent.detail.conversationId !== selectedConversationId) {
-        return;
-      }
+          setActiveConversation((current) =>
+            current && current.id === detail.conversationId ? { ...current, title: detail.title } : current,
+          );
+          return;
+        case "delete":
+          if (!selectedConversationId || detail.conversationId !== selectedConversationId) {
+            return;
+          }
 
-      if (customEvent.detail.type === "rename") {
-        setActiveConversation((current) =>
-          current && current.id === customEvent.detail.conversationId
-            ? { ...current, title: customEvent.detail.title }
-            : current,
-        );
-      }
-
-      if (customEvent.detail.type === "delete") {
-        setActiveConversation(null);
+          setActiveConversation(null);
+          return;
       }
     }
 

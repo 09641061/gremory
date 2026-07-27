@@ -316,39 +316,41 @@ function ChatsSection() {
   useEffect(() => {
     function handleMutation(event: Event) {
       const customEvent = event as CustomEvent<ConversationMutationEventDetail>;
-      if (!customEvent.detail) return;
+      const detail = customEvent.detail;
+      if (!detail) return;
 
-      if (customEvent.detail.type === "upsert") {
-        upsertAssistantConversationListItem(customEvent.detail.conversation, {
-          moveToFront: customEvent.detail.moveToFront,
-        });
-        setConversations((current) => {
-          const next = current.filter((item) => item.id !== customEvent.detail.conversation.id);
-          return customEvent.detail.moveToFront
-            ? [customEvent.detail.conversation, ...next]
-            : [...next, customEvent.detail.conversation];
-        });
-      }
-
-      if (customEvent.detail.type === "rename") {
-        const { title } = customEvent.detail;
-        setConversations((current) =>
-          current.map((conversation) =>
-            conversation.id === customEvent.detail.conversationId
-              ? { ...conversation, title }
-              : conversation,
-          ),
-        );
-        patchAssistantConversationListItemTitle(customEvent.detail.conversationId, title);
-      }
-
-      if (customEvent.detail.type === "delete") {
-        setConversations((current) =>
-          current.filter((conversation) => conversation.id !== customEvent.detail.conversationId),
-        );
-        removeAssistantConversationListItem(customEvent.detail.conversationId);
-        if (customEvent.detail.conversationId === activeConversationId) {
-          router.replace("/chat", { scroll: false });
+      switch (detail.type) {
+        case "upsert": {
+          upsertAssistantConversationListItem(detail.conversation, {
+            moveToFront: detail.moveToFront,
+          });
+          setConversations((current) => {
+            const next = current.filter((item) => item.id !== detail.conversation.id);
+            return detail.moveToFront
+              ? [detail.conversation, ...next]
+              : [...next, detail.conversation];
+          });
+          return;
+        }
+        case "rename": {
+          const { title } = detail;
+          setConversations((current) =>
+            current.map((conversation) =>
+              conversation.id === detail.conversationId ? { ...conversation, title } : conversation,
+            ),
+          );
+          patchAssistantConversationListItemTitle(detail.conversationId, title);
+          return;
+        }
+        case "delete": {
+          setConversations((current) =>
+            current.filter((conversation) => conversation.id !== detail.conversationId),
+          );
+          removeAssistantConversationListItem(detail.conversationId);
+          if (detail.conversationId === activeConversationId) {
+            router.replace("/chat", { scroll: false });
+          }
+          return;
         }
       }
     }
