@@ -1,7 +1,7 @@
 "use client";
 
 import type { RefObject } from "react";
-import { AlertCircle, Bot, User } from "lucide-react";
+import { Bot, User } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
@@ -68,8 +68,10 @@ export function AssistantChatThread({
   conversation,
   isLoading,
   bottomRef,
-  error,
+  error: _error,
 }: AssistantChatThreadProps) {
+  void _error;
+
   return (
     <section className="flex min-h-0 min-w-0 flex-col overflow-hidden rounded-3xl border border-border/60 bg-background/95 shadow-sm">
       <div className="flex items-center justify-between gap-4 border-b border-border/60 px-4 py-4 sm:px-6">
@@ -79,15 +81,6 @@ export function AssistantChatThread({
           </h1>
         </div>
       </div>
-
-      {error ? (
-        <div className="border-b border-amber-500/20 bg-amber-500/10 px-4 py-3 text-sm text-amber-900 dark:text-amber-200 sm:px-6">
-          <div className="flex items-start gap-2">
-            <AlertCircle className="mt-0.5 size-4 shrink-0" />
-            <p>{error}</p>
-          </div>
-        </div>
-      ) : null}
 
       <div className="min-h-0 flex-1 overflow-y-auto bg-[radial-gradient(circle_at_top,rgba(26,185,145,0.08),transparent_35%)] px-4 py-6 sm:px-6">
         {isLoading ? (

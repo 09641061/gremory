@@ -5,6 +5,7 @@ import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 
 import { hasActiveSubscription } from "@/contexts/billing/domain/services/subscription-access.policy";
 import type { SubscriptionResponse } from "@/contexts/billing/infrastructure/gateways/billing-api.gateway";
+import { ErrorAlert } from "@/contexts/shared/interfaces/components/ui/error";
 
 import { AssistantChatComposer } from "./assistant-chat-composer";
 import { AssistantChatThread } from "./assistant-chat-thread";
@@ -192,7 +193,7 @@ export function AssistantChatView() {
         setError(
           requestError instanceof Error
             ? requestError.message
-            : "No pudimos cargar la conversación seleccionada.",
+            : "Could not load the selected conversation.",
         );
       } finally {
         if (!controller.signal.aborted) {
@@ -329,7 +330,7 @@ export function AssistantChatView() {
       setError(
         requestError instanceof Error
           ? requestError.message
-          : "No pudimos enviar el mensaje.",
+          : "Could not send the message.",
       );
     } finally {
       setIsSendingMessage(false);
@@ -351,8 +352,17 @@ export function AssistantChatView() {
         bottomRef={bottomRef}
         error={
           assistantAccessState === "blocked"
-            ? "No hay acceso activo al asistente. Revisa tu sesión o suscripción."
+            ? "You do not have active access to the assistant. Check your session or subscription."
             : error
+        }
+      />
+
+      <ErrorAlert
+        title="Assistant error"
+        message={
+          assistantAccessState === "blocked"
+            ? "You do not have active access to the assistant. Check your session or subscription."
+            : error ?? undefined
         }
       />
 
