@@ -37,7 +37,7 @@ export function FinancialsAndLogisticsSection({ defaultValues }: FinancialsAndLo
                 type="number"
                 step="0.01"
                 placeholder="0.00"
-                defaultValue={defaultValues?.price}
+                defaultValue={defaultValues?.price ?? ""}
                 required
                 className="pl-10 bg-card border-border"
               />
@@ -62,7 +62,7 @@ export function FinancialsAndLogisticsSection({ defaultValues }: FinancialsAndLo
                 name="durationMinutes"
                 type="number"
                 placeholder="30"
-                defaultValue={defaultValues?.durationMinutes}
+                defaultValue={defaultValues?.durationMinutes ?? ""}
                 required
                 className="bg-card border-border text-xs px-2"
               />
