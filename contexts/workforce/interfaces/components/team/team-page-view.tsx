@@ -1,11 +1,17 @@
 "use client";
 
 import { useActionState, useEffect, useMemo, useState } from "react";
-import { Search, Settings2, User, UserPlus } from "lucide-react";
+import { MoreVertical, Search, Settings2, User, UserMinus, UserPlus, UserX } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import { Input } from "@/contexts/shared/interfaces/components/ui/input";
 import { Card, CardContent } from "@/contexts/shared/interfaces/components/ui/card";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/contexts/shared/interfaces/components/ui/dropdown-menu";
 import {
   removeTeamMemberAction,
   revokeTeamInvitationAction,
@@ -53,7 +59,7 @@ export function TeamPageView({ establishmentId, members }: { establishmentId: st
               <span>{members.length} {members.length === 1 ? "Member" : "Members"}</span>
               <span>Status</span>
               <div className="flex justify-end">
-                <span className="min-w-[116px] text-left">Actions</span>
+                <span className="min-w-[116px] text-left" aria-hidden="true" />
               </div>
             </div>
             {filteredMembers.map((member) => <MemberRow key={member.memberId ?? member.invitationId} member={member} />)}
@@ -87,20 +93,49 @@ function MemberRow({ member }: { member: TeamUserSummary }) {
       </div>
       <span className="text-[15px] text-muted-foreground">{formatStatus(member.status)}</span>
       <div className="flex flex-col items-end gap-2">
-        {canCancel ? (
-          <form action={revokeAction}>
-            <input type="hidden" name="invitationId" value={member.invitationId} />
-            <Button type="submit" variant="outline" size="sm" disabled={revokePending} className="min-w-[116px]">
-              {revokePending ? "Cancelling…" : "Cancel"}
-            </Button>
-          </form>
-        ) : canRemove ? (
-          <form action={removeAction}>
-            <input type="hidden" name="memberId" value={memberId} />
-            <Button type="submit" variant="outline" size="sm" disabled={removePending} className="min-w-[116px]">
-              {removePending ? "Removing…" : "Remove"}
-            </Button>
-          </form>
+        {canCancel || canRemove ? (
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              render={
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-sm"
+                  aria-label="Open member actions"
+                />
+              }
+            >
+              <MoreVertical className="size-4" />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              {canCancel ? (
+                <form action={revokeAction}>
+                  <input type="hidden" name="invitationId" value={member.invitationId} />
+                  <DropdownMenuItem
+                    render={<button type="submit" className="w-full" />}
+                    className="gap-2 text-destructive focus:bg-destructive/10 focus:text-destructive"
+                    disabled={revokePending}
+                  >
+                    <UserX className="size-4" />
+                    {revokePending ? "Cancelling..." : "Cancel invite"}
+                  </DropdownMenuItem>
+                </form>
+              ) : null}
+              {canRemove ? (
+                <form action={removeAction}>
+                  <input type="hidden" name="memberId" value={memberId ?? ""} />
+                  <DropdownMenuItem
+                    render={<button type="submit" className="w-full" />}
+                    className="gap-2 text-destructive focus:bg-destructive/10 focus:text-destructive"
+                    disabled={removePending}
+                  >
+                    <UserMinus className="size-4" />
+                    {removePending ? "Removing..." : "Remove member"}
+                  </DropdownMenuItem>
+                </form>
+              ) : null}
+            </DropdownMenuContent>
+          </DropdownMenu>
         ) : null}
         {error ? <p className="text-xs text-destructive" role="alert">{error}</p> : null}
       </div>
