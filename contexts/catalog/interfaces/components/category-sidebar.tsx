@@ -1,17 +1,17 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import {
   PlusIcon,
-  FolderIcon,
   FolderXIcon,
   MenuIcon,
   XIcon,
-  GripVerticalIcon,
-  PencilIcon,
 } from "lucide-react";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
+import { Alert, AlertTitle, AlertDescription } from "@/contexts/shared/interfaces/components/ui/alert";
+import { useDeleteServiceCategory } from "../../application/use-cases/use-delete-service-category";
+import { CategoryItem } from "./category-item";
 
 export type CategoryDTO = {
   id: string;
@@ -47,15 +47,22 @@ export function CategorySidebar({
   onOpenEditCategoryModal,
   onMoveServiceCategory,
 }: CategorySidebarProps) {
-  const router = useRouter();
   const [draggedServiceId, setDraggedServiceId] = useState<string | null>(null);
   const [dragOverCategoryId, setDragOverCategoryId] = useState<string | null>(null);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const [alertMessage, setAlertMessage] = useState<string | null>(null);
+  const { deleteCategory } = useDeleteServiceCategory();
 
   // Keep track of which categories are expanded in a Set
   const [expandedCategoryIds, setExpandedCategoryIds] = useState<Set<string>>(
     new Set(selectedCategoryId ? [selectedCategoryId] : [])
   );
+
+  useEffect(() => {
+    if (!alertMessage) return;
+    const timer = setTimeout(() => setAlertMessage(null), 4000);
+    return () => clearTimeout(timer);
+  }, [alertMessage]);
 
   // Toggle category expansion on click without collapsing other categories
   const handleToggleCategory = (categoryId: string) => {
@@ -100,15 +107,13 @@ export function CategorySidebar({
   const sidebarContent = (
     <aside className="w-full md:w-[260px] bg-background border-r border-border/60 flex flex-col shrink-0 h-full">
       <div className="p-4 flex flex-col gap-4 border-b border-border/60">
-        <div className="flex items-center justify-between">
-          <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-            Categories
-          </span>
+        <div className="flex items-center justify-center relative w-full">
+
           <Button
             variant="ghost"
             size="icon"
             onClick={() => setIsMobileOpen(false)}
-            className="md:hidden h-8 w-8 text-muted-foreground"
+            className="absolute right-0 md:hidden h-8 w-8 text-muted-foreground"
           >
             <XIcon className="size-4" />
           </Button>
@@ -133,104 +138,27 @@ export function CategorySidebar({
             <p className="text-xs font-medium">No categories available</p>
           </div>
         ) : (
-          categories.map((cat) => {
-            const isCatSelected = selectedCategoryId === cat.id;
-            const isCatExpanded = expandedCategoryIds.has(cat.id);
-            const catServices = services.filter((s) => s.categoryId === cat.id);
-            const isTarget = dragOverCategoryId === cat.id;
-
-            return (
-              <div
-                key={cat.id}
-                onDragOver={(e) => handleDragOver(e, cat.id)}
-                onDragLeave={handleDragLeave}
-                onDrop={(e) => handleDrop(e, cat.id)}
-                className={`space-y-1 rounded-md transition-all ${
-                  isTarget ? "ring-2 ring-primary bg-primary/10" : ""
-                }`}
-              >
-                <div
-                  className={`w-full flex items-center justify-between px-3 py-2 text-sm rounded-md transition-colors group/row ${
-                    isCatSelected
-                      ? "bg-primary/10 text-primary font-semibold"
-                      : "text-foreground hover:bg-muted"
-                  }`}
-                >
-                  <button
-                    onClick={() => {
-                      handleToggleCategory(cat.id);
-                    }}
-                    className="flex items-center gap-3 truncate flex-1 text-left"
-                  >
-                    <FolderIcon className="size-4 text-muted-foreground shrink-0" />
-                    <span className="truncate">{cat.name}</span>
-                  </button>
-
-                  <div className="flex items-center gap-1 shrink-0">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onOpenEditCategoryModal(cat);
-                      }}
-                      className="h-6 w-6 text-muted-foreground opacity-0 group-hover/row:opacity-100 hover:text-foreground transition-opacity"
-                      title="Edit Category Name"
-                    >
-                      <PencilIcon className="size-3" />
-                    </Button>
-
-                    <span className="text-xs text-muted-foreground">
-                      {catServices.length}
-                    </span>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setIsMobileOpen(false);
-                        // Navigate programmatically with a timestamp to reset create form instance state
-                        router.push(`/catalog/new?categoryId=${cat.id}&t=${Date.now()}`);
-                      }}
-                      className="h-6 w-6 text-primary hover:bg-primary/20"
-                      title="New Service"
-                    >
-                      <PlusIcon className="size-3.5" />
-                    </Button>
-                  </div>
-                </div>
-
-                {/* Show services if this category is expanded */}
-                {isCatExpanded && (
-                  <div className="pl-6 space-y-1">
-                    {catServices.map((svc) => (
-                      <div
-                        key={svc.id}
-                        draggable
-                        onDragStart={(e) => handleDragStart(e, svc.id)}
-                        className="group flex items-center gap-1 cursor-grab active:cursor-grabbing"
-                      >
-                        <GripVerticalIcon className="size-3 text-muted-foreground/40 group-hover:text-primary transition-colors shrink-0" />
-                        <button
-                          onClick={() => {
-                            onSelectService(svc.id);
-                            setIsMobileOpen(false);
-                          }}
-                          className={`w-full text-left px-2 py-1.5 text-xs rounded-md transition-colors truncate ${
-                            selectedServiceId === svc.id
-                              ? "bg-primary text-primary-foreground font-medium"
-                              : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                          }`}
-                        >
-                          {svc.name}
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            );
-          })
+          categories.map((cat) => (
+            <CategoryItem
+              key={cat.id}
+              cat={cat}
+              services={services}
+              selectedCategoryId={selectedCategoryId}
+              selectedServiceId={selectedServiceId}
+              isExpanded={expandedCategoryIds.has(cat.id)}
+              isDragTarget={dragOverCategoryId === cat.id}
+              onToggleExpand={handleToggleCategory}
+              onSelectService={onSelectService}
+              onOpenEditCategoryModal={onOpenEditCategoryModal}
+              onDragStart={handleDragStart}
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+              setIsMobileOpen={setIsMobileOpen}
+              deleteCategory={deleteCategory}
+              setAlertMessage={setAlertMessage}
+            />
+          ))
         )}
       </nav>
     </aside>
@@ -262,6 +190,17 @@ export function CategorySidebar({
           </div>
           <div className="flex-1" onClick={() => setIsMobileOpen(false)} />
         </div>
+      )}
+      {alertMessage && typeof document !== "undefined" && createPortal(
+        <div className="fixed top-4 right-4 z-[9999] w-full max-w-sm animate-in fade-in slide-in-from-top-2">
+          <Alert variant="destructive" className="bg-card text-card-foreground shadow-lg border-border">
+            <AlertTitle className="text-sm font-semibold">Cannot Delete</AlertTitle>
+            <AlertDescription className="text-xs text-muted-foreground mt-1">
+              {alertMessage}
+            </AlertDescription>
+          </Alert>
+        </div>,
+        document.body
       )}
     </>
   );

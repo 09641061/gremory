@@ -28,7 +28,7 @@ export function GeneralInfoSection({ defaultValues }: GeneralInfoSectionProps) {
               id="name"
               name="name"
               placeholder="e.g. Executive Haircut"
-              defaultValue={defaultValues?.name}
+              defaultValue={defaultValues?.name ?? ""}
               required
               className="bg-card border-border"
             />
@@ -41,7 +41,7 @@ export function GeneralInfoSection({ defaultValues }: GeneralInfoSectionProps) {
               name="description"
               rows={3}
               placeholder="Describe main service details..."
-              defaultValue={defaultValues?.description}
+              defaultValue={defaultValues?.description ?? ""}
               required
               className="w-full rounded-md border border-border bg-card p-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
             />

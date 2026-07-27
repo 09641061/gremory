@@ -1,8 +1,8 @@
 "use client";
 
-import Link from "next/link";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { XIcon } from "lucide-react";
+import { EyeIcon, EyeOffIcon } from "lucide-react";
 import { ErrorAlert } from "@/contexts/shared/interfaces/components/ui/error";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import { Spinner } from "@/contexts/shared/interfaces/components/ui/spinner";
@@ -11,6 +11,7 @@ import { FinancialsAndLogisticsSection } from "./financials-and-logistics-sectio
 import { InstructionsSection } from "./instructions-section";
 import { useUpdateCatalogService } from "../../application/use-cases/use-update-catalog-service";
 import { useDeleteCatalogService } from "../../application/use-cases/use-delete-catalog-service";
+import { useChangeCatalogServiceStatus } from "../../application/use-cases/use-change-catalog-service-status";
 import type { DetailedServiceDTO } from "./service-detail-view";
 
 interface EditServiceFormProps {
@@ -19,6 +20,8 @@ interface EditServiceFormProps {
 
 export function EditServiceForm({ service }: EditServiceFormProps) {
   const router = useRouter();
+  const [resetKey, setResetKey] = useState(0);
+  const { changeStatus, pending: statusPending, state: statusState } = useChangeCatalogServiceStatus();
   const { state: updateState, formAction, pending: updatePending } = useUpdateCatalogService(() => {
     router.push("/catalog");
   });
@@ -26,8 +29,18 @@ export function EditServiceForm({ service }: EditServiceFormProps) {
     router.push("/catalog");
   });
 
+  const isActive = service.status === "ACTIVE";
+
   // Combined error and loading state for actions
-  const errorState = updateState.status === "error" ? updateState : deleteState.status === "error" ? deleteState : null;
+  const errorState = 
+    updateState.status === "error" 
+      ? updateState 
+      : deleteState.status === "error" 
+      ? deleteState 
+      : statusState.status === "error"
+      ? statusState
+      : null;
+
   const isActionPending = updatePending || deletePending;
 
   return (
@@ -41,15 +54,40 @@ export function EditServiceForm({ service }: EditServiceFormProps) {
         {/* Form Main Canvas */}
         <main className="flex-1 max-w-[800px] w-full mx-auto px-4 py-8">
           <div className="flex justify-between items-center mb-6">
-            <h1 className="text-xl font-bold text-primary">Edit Service</h1>
-            <Link href="/catalog" passHref>
-              <Button variant="ghost" size="icon" className="rounded-full text-muted-foreground hover:bg-muted">
-                <XIcon className="size-5" />
+            <div className="flex items-center gap-3">
+              <h1 className="text-xl font-bold text-primary">Service Settings</h1>
+              <span
+                className={`px-2.5 py-0.5 text-xs font-semibold rounded uppercase tracking-wide border ${
+                  isActive
+                    ? "bg-primary/10 text-primary border-primary/20"
+                    : "bg-muted text-muted-foreground border-border"
+                }`}
+              >
+                {service.status}
+              </span>
+            </div>
+            
+            <div className="flex items-center gap-3">
+              <Button
+                type="button"
+                variant="outline"
+                disabled={statusPending}
+                onClick={() => changeStatus(service.id, !isActive)}
+                className="gap-2 border-border bg-card hover:bg-muted text-xs h-9"
+              >
+                {statusPending ? (
+                  <Spinner className="size-4" />
+                ) : isActive ? (
+                  <EyeOffIcon className="size-4 text-muted-foreground" />
+                ) : (
+                  <EyeIcon className="size-4 text-primary" />
+                )}
+                <span>{isActive ? "Deactivate" : "Activate"}</span>
               </Button>
-            </Link>
+            </div>
           </div>
 
-          <form action={formAction} key={service.id} id="edit-service-form" className="space-y-6">
+          <form action={formAction} key={`${service.id}-${service.status}-${resetKey}`} id="edit-service-form" className="space-y-6">
             <input type="hidden" name="id" value={service.id} />
             {service.categoryId && (
               <input type="hidden" name="categoryId" value={service.categoryId} />
@@ -98,11 +136,17 @@ export function EditServiceForm({ service }: EditServiceFormProps) {
               </Button>
 
               <div className="flex gap-3">
-                <Link href="/catalog" passHref>
-                  <Button type="button" variant="ghost" className="text-muted-foreground">
-                    Cancel
-                  </Button>
-                </Link>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="text-muted-foreground"
+                  onClick={() => {
+                    setResetKey((prev) => prev + 1);
+                    router.push("/catalog");
+                  }}
+                >
+                  Cancel
+                </Button>
 
                 <Button
                   type="submit"

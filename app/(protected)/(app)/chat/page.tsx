@@ -1,3 +1,5 @@
+import { AssistantChatView } from "@/contexts/assistant/interfaces/components/chat/assistant-chat-view";
+
 export default function ChatPage() {
-  return <h1 className="text-lg font-semibold text-foreground">Chat</h1>;
+  return <AssistantChatView />;
 }
