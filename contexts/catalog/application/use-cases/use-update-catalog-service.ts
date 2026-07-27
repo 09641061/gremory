@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect } from "react";
+import { useActionState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import {
   updateCatalogServiceAction,
@@ -9,6 +9,9 @@ import {
 
 export function useUpdateCatalogService(onSuccess?: () => void) {
   const router = useRouter();
+  const onSuccessRef = useRef(onSuccess);
+  useEffect(() => { onSuccessRef.current = onSuccess; });
+
   const [state, formAction, pending] = useActionState(
     updateCatalogServiceAction,
     { status: "idle", error: null } satisfies CatalogServiceActionResult
@@ -17,11 +20,9 @@ export function useUpdateCatalogService(onSuccess?: () => void) {
   useEffect(() => {
     if (state.status === "success") {
       router.refresh();
-      if (onSuccess) {
-        onSuccess();
-      }
+      onSuccessRef.current?.();
     }
-  }, [state.status, onSuccess, router]);
+  }, [state.status, router]);
 
   return {
     state,
@@ -29,3 +30,4 @@ export function useUpdateCatalogService(onSuccess?: () => void) {
     pending,
   };
 }
+
