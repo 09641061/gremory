@@ -8,6 +8,8 @@ import {
   deleteEstablishmentCommand,
   updateEstablishmentCommand,
 } from "../../domain/model/commands/business.commands";
+import { createEstablishmentId } from "../../domain/model/valueobjects/establishment-id.vo";
+import { EstablishmentApiGateway } from "../../infrastructure/gateways/establishment-api.gateway";
 import { requireBusinessAccessToken } from "../../infrastructure/session/business-session";
 import {
   createEstablishmentSchema,
@@ -54,6 +56,10 @@ function readPhotoFileFromFormData(formData: FormData) {
   return photoFile instanceof File && photoFile.size > 0 ? photoFile : null;
 }
 
+function readBoolFromFormData(formData: FormData, key: string) {
+  return formData.get(key) === "true";
+}
+
 export async function createEstablishmentAction(
   _previous: BusinessActionResult,
   formData: FormData
@@ -97,17 +103,34 @@ export async function updateEstablishmentAction(
 
   try {
     const token = await requireBusinessAccessToken();
+    const removePhoto = readBoolFromFormData(formData, "removePhoto");
+    const currentPhotoUrl = formData.get("currentPhotoUrl");
     const photoFile = readPhotoFileFromFormData(formData);
     const photoUrl = photoFile
       ? await uploadEstablishmentPhoto(photoFile, token)
+<<<<<<< HEAD
+      : removePhoto
+        ? null
+        : typeof currentPhotoUrl === "string" && currentPhotoUrl.trim()
+          ? currentPhotoUrl
+          : null;
+
+    if (removePhoto) {
+      await new EstablishmentApiGateway(token).deletePhoto(
+        createEstablishmentId(parsed.data.id),
+      );
+    }
+
+=======
       : parsed.data.photoUrl ?? null;
+>>>>>>> 77bce9012b83412b317708015d64a28135b8c0da
     const establishmentId = await createEstablishmentCommandService(token).update(
       updateEstablishmentCommand({
         ...parsed.data,
         photoUrl,
       }),
     );
-    revalidateBusinessViews();
+    revalidateBusinessViews(establishmentId.value);
     return { status: "success", data: { id: establishmentId.value }, error: null };
   } catch (error) {
     return actionError(error);
@@ -134,7 +157,10 @@ export async function deleteEstablishmentAction(
   }
 }
 
-function revalidateBusinessViews() {
+function revalidateBusinessViews(establishmentId?: string) {
   revalidatePath("/catalog");
   revalidatePath("/establishments");
+  if (establishmentId) {
+    revalidatePath(`/establishments/${encodeURIComponent(establishmentId)}/edit`);
+  }
 }

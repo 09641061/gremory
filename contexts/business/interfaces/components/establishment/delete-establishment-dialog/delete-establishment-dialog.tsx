@@ -3,8 +3,8 @@
 import { useActionState, useEffect } from "react";
 import { Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { deleteEstablishmentAction } from "../../actions/establishment.actions";
-import { initialBusinessActionResult } from "../../actions/business-action-result";
+import { deleteEstablishmentAction } from "../../../actions/establishment.actions";
+import { initialBusinessActionResult } from "../../../actions/business-action-result";
 import {
   AlertDialog,
   AlertDialogCancel,

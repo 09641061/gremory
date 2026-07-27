@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import type { ReactNode } from "react";
-import { EstablishmentSelector } from "@/contexts/business/interfaces/components/business/establishment-selector";
+import { EstablishmentSelector } from "@/contexts/business/interfaces/components/establishment/establishment-selector/establishment-selector";
 
 export type HeaderEstablishment = {
   id: string;

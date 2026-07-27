@@ -7,8 +7,8 @@ import {
   Button,
   buttonVariants,
 } from "@/contexts/shared/interfaces/components/ui/button";
-import { useSelectorMenu } from "../use-selector-menu";
-import { DeleteEstablishmentDialog } from "./delete-establishment-dialog";
+import { useSelectorMenu } from "../../use-selector-menu";
+import { DeleteEstablishmentDialog } from "../delete-establishment-dialog/delete-establishment-dialog";
 
 export function EstablishmentCardMenu({
   establishmentId,
@@ -41,6 +41,7 @@ export function EstablishmentCardMenu({
           <Link
             href={`/establishments/${establishmentId}/edit`}
             onClick={() => setOpen(false)}
+            prefetch={false}
             className={buttonVariants({
               variant: "ghost",
               className:

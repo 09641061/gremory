@@ -7,7 +7,7 @@ import {
   Button,
   buttonVariants,
 } from "@/contexts/shared/interfaces/components/ui/button";
-import { useSelectorMenu } from "../use-selector-menu";
+import { useSelectorMenu } from "../../use-selector-menu";
 
 export function OrganizationCardMenu({
   organizationId,
