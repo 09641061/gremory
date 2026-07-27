@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import { Input } from "@/contexts/shared/interfaces/components/ui/input";
 import { Card, CardContent } from "@/contexts/shared/interfaces/components/ui/card";
+import { ErrorAlert } from "@/contexts/shared/interfaces/components/ui/error";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -55,8 +56,9 @@ export function TeamPageView({ establishmentId, members }: { establishmentId: st
       <Card className="overflow-hidden rounded-xl border-border bg-card shadow-sm">
         <CardContent className="p-0">
           <div className="min-w-[720px]">
-            <div className="grid grid-cols-[minmax(420px,1.7fr)_minmax(150px,.55fr)_minmax(170px,.7fr)] border-b border-border px-5 py-4 text-sm font-medium text-muted-foreground">
+            <div className="grid grid-cols-[minmax(320px,1.4fr)_minmax(150px,.55fr)_minmax(150px,.55fr)_minmax(170px,.7fr)] border-b border-border px-5 py-4 text-sm font-medium text-muted-foreground">
               <span>{members.length} {members.length === 1 ? "Member" : "Members"}</span>
+              <span>Role</span>
               <span>Status</span>
               <div className="flex justify-end">
                 <span className="min-w-[116px] text-left" aria-hidden="true" />
@@ -84,13 +86,14 @@ function MemberRow({ member }: { member: TeamUserSummary }) {
   const canCancel = member.canRevokeInvitation;
   const error = removeState.error ?? revokeState.error;
   return (
-    <div className="grid min-h-[96px] grid-cols-[minmax(420px,1.7fr)_minmax(150px,.55fr)_minmax(170px,.7fr)] items-center border-b border-border px-5 py-4 last:border-b-0">
+    <div className="grid min-h-[96px] grid-cols-[minmax(320px,1.4fr)_minmax(150px,.55fr)_minmax(150px,.55fr)_minmax(170px,.7fr)] items-center border-b border-border px-5 py-4 last:border-b-0">
       <div className="flex items-center gap-4">
         <span className="flex size-12 shrink-0 items-center justify-center rounded-full border border-border bg-muted/40 text-muted-foreground">
           <User className="size-5" />
         </span>
         <span className="truncate text-[15px] text-foreground">{member.email}</span>
       </div>
+      <span className="text-[15px] text-muted-foreground">{member.roleName}</span>
       <span className="text-[15px] text-muted-foreground">{formatStatus(member.status)}</span>
       <div className="flex flex-col items-end gap-2">
         {canCancel || canRemove ? (
@@ -112,6 +115,7 @@ function MemberRow({ member }: { member: TeamUserSummary }) {
                 <form action={revokeAction}>
                   <input type="hidden" name="invitationId" value={member.invitationId} />
                   <DropdownMenuItem
+                    nativeButton
                     render={<button type="submit" className="w-full" />}
                     className="gap-2 text-destructive focus:bg-destructive/10 focus:text-destructive"
                     disabled={revokePending}
@@ -125,6 +129,7 @@ function MemberRow({ member }: { member: TeamUserSummary }) {
                 <form action={removeAction}>
                   <input type="hidden" name="memberId" value={memberId ?? ""} />
                   <DropdownMenuItem
+                    nativeButton
                     render={<button type="submit" className="w-full" />}
                     className="gap-2 text-destructive focus:bg-destructive/10 focus:text-destructive"
                     disabled={removePending}
@@ -137,7 +142,10 @@ function MemberRow({ member }: { member: TeamUserSummary }) {
             </DropdownMenuContent>
           </DropdownMenu>
         ) : null}
-        {error ? <p className="text-xs text-destructive" role="alert">{error}</p> : null}
+        <ErrorAlert
+          title="Action failed"
+          message={error ?? undefined}
+        />
       </div>
     </div>
   );

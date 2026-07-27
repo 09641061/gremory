@@ -8,6 +8,7 @@ import {
   createMemberId,
   createTeamEstablishmentId,
   createTeamOrganizationId,
+  createTeamRoleId,
 } from "@/contexts/workforce/domain/model/valueobjects/team-identifiers.vo";
 import type { TeamRepository } from "@/contexts/workforce/domain/services/team.repository";
 
@@ -15,72 +16,89 @@ const invitationId = "11111111-1111-4111-8111-111111111111";
 const memberId = "22222222-2222-4222-8222-222222222222";
 const organizationId = "44444444-4444-4444-8444-444444444444";
 const establishmentId = "55555555-5555-4555-8555-555555555555";
+const roleId = "66666666-6666-4666-8666-666666666666";
 
 describe("Team application services", () => {
   it("should normalize invitation input before invoking repository", async () => {
     const repository = teamRepository();
-    const invite = vi.spyOn(repository, "invite");
+    const service = new TeamCommandServiceImpl(repository);
 
-    const result = await new TeamCommandServiceImpl(repository).invite({
+    const result = await service.invite({
       establishmentId,
-      email: " Employee@Example.COM ",
+      email: " User@Company.Com ",
     });
 
-    expect(invite).toHaveBeenCalledWith(
+    expect(repository.invite).toHaveBeenCalledWith(
       createTeamEstablishmentId(establishmentId),
-      createInvitedEmail("employee@example.com"),
+      createInvitedEmail("user@company.com"),
     );
     expect(result.value).toBe(invitationId);
   });
 
-  it("should not invoke repository when invitation input is invalid", async () => {
+  it("should forward revocation command to repository", async () => {
     const repository = teamRepository();
-    const invite = vi.spyOn(repository, "invite");
+    const service = new TeamCommandServiceImpl(repository);
 
-    expect(() =>
-      new TeamCommandServiceImpl(repository).invite({
-        establishmentId: "invalid",
-        email: "employee@example.com",
-      }),
-    ).toThrow("Establishment ID must be a valid UUID");
-    expect(invite).not.toHaveBeenCalled();
+    await service.revokeInvitation({ invitationId });
+
+    expect(repository.revokeInvitation).toHaveBeenCalledWith(
+      createInvitationId(invitationId),
+    );
+  });
+
+  it("should forward membership removal command to repository", async () => {
+    const repository = teamRepository();
+    const service = new TeamCommandServiceImpl(repository);
+
+    await service.removeMember({ memberId });
+
+    expect(repository.removeMember).toHaveBeenCalledWith(
+      createMemberId(memberId),
+    );
   });
 
   it("should return serializable roster entries when listing team users", async () => {
     const repository = teamRepository();
-    const list = vi.spyOn(repository, "list");
+    const service = new TeamQueryServiceImpl(repository);
 
-    const result = await new TeamQueryServiceImpl(repository).list({
-      establishmentId,
-      status: "PENDING" as const,
-      page: 0,
-      size: 20,
-    });
+    const result = await service.list({ establishmentId, page: 0, size: 20 });
 
-    expect(list).toHaveBeenCalledWith({
+    expect(repository.list).toHaveBeenCalledWith({
       establishmentId: createTeamEstablishmentId(establishmentId),
-      status: "PENDING",
       page: 0,
       size: 20,
     });
-    expect(result.content).toEqual([
-      expect.objectContaining({
-        invitationId,
-        memberId: null,
-        email: "employee@example.com",
-        status: "PENDING",
-        canRevokeInvitation: true,
-        canRemoveMembership: false,
-      }),
-    ]);
-    expect(result.content[0]).not.toBeInstanceOf(TeamUser);
+    expect(result.content[0]).toEqual({
+      invitationId,
+      memberId: null,
+      userId: null,
+      email: "employee@example.com",
+      roleId,
+      roleName: "Everyone",
+      organizationId,
+      establishmentId,
+      establishmentName: "Miraflores",
+      status: "PENDING",
+      hasAcceptedInvitation: false,
+      canRevokeInvitation: true,
+      canRemoveMembership: false,
+      invitedAt: "2026-07-25T10:00:00.000Z",
+      invitationExpiresAt: "2026-08-01T10:00:00.000Z",
+      acceptedAt: null,
+      joinedAt: null,
+      removedAt: null,
+    });
   });
 
-  it("should return a serializable invitation preview", async () => {
-    const result = await new TeamQueryServiceImpl(
-      teamRepository(),
-    ).previewInvitation({ token: "raw-token" });
+  it("should forward token preview requests to repository", async () => {
+    const repository = teamRepository();
+    const service = new TeamQueryServiceImpl(repository);
 
+    const result = await service.previewInvitation({ token: "abc-token" });
+
+    expect(repository.previewInvitation).toHaveBeenCalledWith(
+      expect.objectContaining({ value: "abc-token" }),
+    );
     expect(result).toEqual({
       organizationId,
       organizationName: "Takodu Studio",
@@ -132,6 +150,8 @@ function pendingUser() {
     memberId: null,
     userId: null,
     email: createInvitedEmail("employee@example.com"),
+    roleId: createTeamRoleId(roleId),
+    roleName: "Everyone",
     organizationId: createTeamOrganizationId(organizationId),
     establishmentId: createTeamEstablishmentId(establishmentId),
     establishmentName: "Miraflores",

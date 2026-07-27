@@ -7,6 +7,7 @@ import type { TeamInvitationPreviewView } from "@/contexts/workforce/application
 import { acceptTeamInvitationAction } from "@/contexts/workforce/interfaces/actions/team.actions";
 import { initialTeamActionResult } from "@/contexts/workforce/interfaces/actions/team-action-result";
 import { Button, buttonVariants } from "@/contexts/shared/interfaces/components/ui/button";
+import { ErrorAlert } from "@/contexts/shared/interfaces/components/ui/error";
 import {
   Card,
   CardContent,
@@ -85,9 +86,10 @@ export function InvitationAcceptanceView({
         </CardContent>
       </Card>
 
-      {state.status === "error" ? (
-        <p className="mt-4 text-sm text-destructive" role="alert">{state.error}</p>
-      ) : null}
+      <ErrorAlert
+        title="Invitation error"
+        message={state.status === "error" ? state.error : undefined}
+      />
 
       {authenticated ? (
         <form action={formAction} className="mt-6">

@@ -10,6 +10,7 @@ import {
   createMemberId,
   createTeamEstablishmentId,
   createTeamOrganizationId,
+  createTeamRoleId,
   createTeamUserId,
   type InvitationId,
   type MemberId,
@@ -140,8 +141,9 @@ function toTeamUser(resource: {
   invitationId: string;
   memberId: string | null;
   userId: string | null;
-    email: string;
-    role?: string | null;
+  email: string;
+  roleId: string;
+  roleName: string;
   organizationId: string;
   establishmentId: string;
   establishmentName: string | null;
@@ -157,7 +159,8 @@ function toTeamUser(resource: {
     memberId: resource.memberId ? createMemberId(resource.memberId) : null,
     userId: resource.userId ? createTeamUserId(resource.userId) : null,
     email: createInvitedEmail(resource.email),
-    role: resource.role,
+    roleId: createTeamRoleId(resource.roleId),
+    roleName: resource.roleName,
     organizationId: createTeamOrganizationId(resource.organizationId),
     establishmentId: createTeamEstablishmentId(resource.establishmentId),
     establishmentName: resource.establishmentName,

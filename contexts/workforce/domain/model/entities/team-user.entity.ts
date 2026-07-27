@@ -5,6 +5,7 @@ import type {
   MemberId,
   TeamEstablishmentId,
   TeamOrganizationId,
+  TeamRoleId,
   TeamUserId,
 } from "../valueobjects/team-identifiers.vo";
 
@@ -13,7 +14,8 @@ export interface TeamUserProps {
   memberId: MemberId | null;
   userId: TeamUserId | null;
   email: InvitedEmail;
-  role?: string | null;
+  roleId: TeamRoleId;
+  roleName: string;
   organizationId: TeamOrganizationId;
   establishmentId: TeamEstablishmentId;
   establishmentName: string | null;
@@ -31,7 +33,8 @@ export class TeamUser {
     public readonly memberId: MemberId | null,
     public readonly userId: TeamUserId | null,
     public readonly email: InvitedEmail,
-    public readonly role: string | null,
+    public readonly roleId: TeamRoleId,
+    public readonly roleName: string,
     public readonly organizationId: TeamOrganizationId,
     public readonly establishmentId: TeamEstablishmentId,
     public readonly establishmentName: string | null,
@@ -58,7 +61,8 @@ export class TeamUser {
       props.memberId,
       props.userId,
       props.email,
-      props.role ?? null,
+      props.roleId,
+      props.roleName.trim(),
       props.organizationId,
       props.establishmentId,
       normalizeEstablishmentName(props.establishmentName),

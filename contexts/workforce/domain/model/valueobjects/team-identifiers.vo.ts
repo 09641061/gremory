@@ -3,6 +3,8 @@ export type MemberId = Readonly<{ value: string }>;
 export type TeamUserId = Readonly<{ value: string }>;
 export type TeamOrganizationId = Readonly<{ value: string }>;
 export type TeamEstablishmentId = Readonly<{ value: string }>;
+export type TeamRoleId = Readonly<{ value: string }>;
+
 
 export function createInvitationId(value: string): InvitationId {
   return Object.freeze({ value: requireUuid(value, "Invitation ID") });
@@ -23,6 +25,11 @@ export function createTeamOrganizationId(value: string): TeamOrganizationId {
 export function createTeamEstablishmentId(value: string): TeamEstablishmentId {
   return Object.freeze({ value: requireUuid(value, "Establishment ID") });
 }
+
+export function createTeamRoleId(value: string): TeamRoleId {
+  return Object.freeze({ value: requireUuid(value, "Role ID") });
+}
+
 
 function requireUuid(value: string, field: string): string {
   const normalized = value.trim();
