@@ -28,17 +28,11 @@ interface DeleteRoleDialogProps {
 
 export function DeleteRoleDialog({ roleId, roleName, isSystemRole, open, onOpenChange }: DeleteRoleDialogProps) {
   const router = useRouter();
-  const [errorKey, setErrorKey] = useState(0);
+  const [submitCount, setSubmitCount] = useState(0);
   const [state, formAction, pending] = useActionState(
     deleteWorkforceRoleAction,
     initialWorkforceRoleActionResult,
   );
-
-  useEffect(() => {
-    if (state.status === "error") {
-      setErrorKey((prev) => prev + 1);
-    }
-  }, [state]);
 
   useEffect(() => {
     if (state.status === "success") {
@@ -50,13 +44,16 @@ export function DeleteRoleDialog({ roleId, roleName, isSystemRole, open, onOpenC
   return (
     <>
       <ErrorAlert
-        key={errorKey}
+        key={state.status === "error" ? `${submitCount}-${state.error}` : `idle-${submitCount}`}
         title="Unable to delete role"
         message={state.status === "error" ? state.error : undefined}
       />
       <AlertDialog open={open && state.status !== "success"} onOpenChange={onOpenChange}>
         <AlertDialogContent>
-          <form action={formAction}>
+          <form
+            action={formAction}
+            onSubmit={() => setSubmitCount((count) => count + 1)}
+          >
             <AlertDialogHeader>
               <AlertDialogTitle>Delete role?</AlertDialogTitle>
               <AlertDialogDescription>

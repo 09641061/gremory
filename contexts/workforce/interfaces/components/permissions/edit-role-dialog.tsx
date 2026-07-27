@@ -27,17 +27,11 @@ interface EditRoleDialogProps {
 export function EditRoleDialog({ role, open, onOpenChange }: EditRoleDialogProps) {
   const router = useRouter();
   const [name, setName] = useState(role.name);
-  const [errorKey, setErrorKey] = useState(0);
+  const [submitCount, setSubmitCount] = useState(0);
   const [state, formAction, pending] = useActionState(
     patchWorkforceRoleAction,
     initialWorkforceRoleActionResult,
   );
-
-  useEffect(() => {
-    if (state.status === "error") {
-      setErrorKey((prev) => prev + 1);
-    }
-  }, [state]);
 
   useEffect(() => {
     if (state.status === "success") {
@@ -49,13 +43,17 @@ export function EditRoleDialog({ role, open, onOpenChange }: EditRoleDialogProps
   return (
     <>
       <ErrorAlert
-        key={errorKey}
+        key={state.status === "error" ? `${submitCount}-${state.error}` : `idle-${submitCount}`}
         title="Unable to update role"
         message={state.status === "error" ? state.error : undefined}
       />
       <AlertDialog open={open && state.status !== "success"} onOpenChange={onOpenChange}>
         <AlertDialogContent>
-          <form action={formAction} className="space-y-4">
+          <form
+            action={formAction}
+            onSubmit={() => setSubmitCount((count) => count + 1)}
+            className="space-y-4"
+          >
             <AlertDialogHeader>
               <AlertDialogTitle>Edit role</AlertDialogTitle>
             </AlertDialogHeader>

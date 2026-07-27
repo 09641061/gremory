@@ -15,6 +15,7 @@ export function RoleRow({ role }: RoleRowProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
+  const [editSession, setEditSession] = useState(0);
   const menuRef = useRef<HTMLDivElement>(null);
   const roleId = role.id;
   const canEdit = roleId !== null;
@@ -77,6 +78,7 @@ export function RoleRow({ role }: RoleRowProps) {
               disabled={!canEdit}
               onClick={() => {
                 setMenuOpen(false);
+                setEditSession((value) => value + 1);
                 setEditOpen(true);
               }}
             >
@@ -104,6 +106,7 @@ export function RoleRow({ role }: RoleRowProps) {
       {roleId ? (
         <>
           <EditRoleDialog
+            key={`${roleId}-${editSession}`}
             role={role}
             open={editOpen}
             onOpenChange={setEditOpen}
