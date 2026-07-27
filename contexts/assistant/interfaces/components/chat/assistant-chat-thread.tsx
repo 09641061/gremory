@@ -1,67 +1,17 @@
 "use client";
 
 import type { RefObject } from "react";
-import { Bot, User } from "lucide-react";
 
-import { cn } from "@/lib/utils";
-
-import type { AssistantChatMessage, AssistantConversation } from "./assistant-chat.types";
+import { AssistantChatLoadingState } from "./assistant-chat-loading-state";
+import { AssistantChatMessageBubble } from "./assistant-chat-message-bubble";
+import { AssistantChatWelcome } from "./assistant-chat-welcome";
+import type { AssistantConversation } from "./assistant-chat.types";
 
 interface AssistantChatThreadProps {
   conversation: AssistantConversation | null;
   isLoading: boolean;
   bottomRef: RefObject<HTMLDivElement | null>;
   error?: string | null;
-}
-
-function MessageBubble({ message }: { message: AssistantChatMessage }) {
-  const isUser = message.role === "user";
-
-  return (
-    <div
-      className={cn("flex items-end gap-3", isUser ? "justify-end" : "justify-start")}
-    >
-      {!isUser ? (
-        <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary/15 text-primary">
-          <Bot className="size-4" />
-        </div>
-      ) : null}
-
-      <div
-        className={cn(
-          "max-w-[min(44rem,calc(100vw-7rem))] rounded-3xl px-4 py-3 text-sm leading-6 shadow-sm sm:max-w-[36rem]",
-          isUser
-            ? "rounded-br-md bg-primary text-primary-foreground"
-            : "rounded-bl-md border border-border/70 bg-card text-card-foreground",
-        )}
-      >
-        {message.content}
-      </div>
-
-      {isUser ? (
-        <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground">
-          <User className="size-4" />
-        </div>
-      ) : null}
-    </div>
-  );
-}
-
-function WelcomeMessage({ bottomRef }: { bottomRef: RefObject<HTMLDivElement | null> }) {
-  return (
-    <div className="mx-auto flex w-full max-w-4xl flex-col gap-4">
-      <div className="flex items-end justify-start gap-3">
-        <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary/15 text-primary">
-          <Bot className="size-4" />
-        </div>
-        <div className="max-w-[min(44rem,calc(100vw-7rem))] rounded-3xl rounded-bl-md border border-border/70 bg-card px-4 py-3 text-sm leading-6 text-card-foreground shadow-sm sm:max-w-[36rem]">
-          Hola, soy tu asistente. Escribime lo que necesitas y empezamos.
-        </div>
-      </div>
-
-      <div ref={bottomRef} />
-    </div>
-  );
 }
 
 export function AssistantChatThread({
@@ -84,26 +34,16 @@ export function AssistantChatThread({
 
       <div className="min-h-0 flex-1 overflow-y-auto bg-[radial-gradient(circle_at_top,rgba(26,185,145,0.08),transparent_35%)] px-4 py-6 sm:px-6">
         {isLoading ? (
-          <div className="mx-auto flex w-full max-w-4xl flex-col gap-4">
-            {Array.from({ length: 4 }).map((_, index) => (
-              <div
-                key={index}
-                className={cn(
-                  "h-20 animate-pulse rounded-3xl border border-border/40 bg-muted/30",
-                  index % 2 === 0 ? "mr-10" : "ml-10",
-                )}
-              />
-            ))}
-          </div>
+          <AssistantChatLoadingState />
         ) : conversation?.messages.length ? (
           <div className="mx-auto flex w-full max-w-4xl flex-col gap-4">
             {conversation.messages.map((message) => (
-              <MessageBubble key={message.id} message={message} />
+              <AssistantChatMessageBubble key={message.id} message={message} />
             ))}
             <div ref={bottomRef} />
           </div>
         ) : (
-          <WelcomeMessage bottomRef={bottomRef} />
+          <AssistantChatWelcome bottomRef={bottomRef} />
         )}
       </div>
     </section>

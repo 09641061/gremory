@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { cookies } from "next/headers";
-import { AssistantApiGateway } from "@/contexts/assistant/infrastructure/gateways/assistant-api.gateway";
+import { SendMessageCommandService } from "@/contexts/assistant/application/internal/commandservices/send-message-command.service";
 import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-session-cookie";
 
 function unauthorized() {
@@ -26,9 +26,9 @@ export async function POST(
       return NextResponse.json({ message: "Message is required" }, { status: 400 });
     }
 
-    const data = await new AssistantApiGateway().sendMessage(
-      id,
+    const data = await new SendMessageCommandService().handle(
       {
+        conversationId: id,
         message: body.message.trim(),
       },
       accessToken,

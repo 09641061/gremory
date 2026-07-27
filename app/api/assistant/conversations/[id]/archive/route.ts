@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { cookies } from "next/headers";
-import { AssistantApiGateway } from "@/contexts/assistant/infrastructure/gateways/assistant-api.gateway";
+import { ArchiveConversationCommandService } from "@/contexts/assistant/application/internal/commandservices/archive-conversation-command.service";
 import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-session-cookie";
 
 function unauthorized() {
@@ -20,7 +20,12 @@ export async function PATCH(
   }
 
   try {
-    const data = await new AssistantApiGateway().archiveConversation(id, accessToken);
+    const data = await new ArchiveConversationCommandService().handle(
+      {
+        conversationId: id,
+      },
+      accessToken,
+    );
     return NextResponse.json(data);
   } catch (error) {
     return NextResponse.json(

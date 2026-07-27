@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
 
 import { cookies } from "next/headers";
-import { AssistantApiGateway } from "@/contexts/assistant/infrastructure/gateways/assistant-api.gateway";
+import { DeleteConversationCommandService } from "@/contexts/assistant/application/internal/commandservices/delete-conversation-command.service";
+import { RenameConversationCommandService } from "@/contexts/assistant/application/internal/commandservices/rename-conversation-command.service";
+import { GetConversationQueryService } from "@/contexts/assistant/application/internal/queryservices/get-conversation-query.service";
 import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-session-cookie";
 
 function unauthorized() {
@@ -20,7 +22,7 @@ export async function GET(
   }
 
   try {
-    const data = await new AssistantApiGateway().getConversation(id, accessToken);
+    const data = await new GetConversationQueryService().handle(id, accessToken);
     return NextResponse.json(data);
   } catch (error) {
     return NextResponse.json(
@@ -55,9 +57,11 @@ export async function PATCH(
       );
     }
 
-    const data = await new AssistantApiGateway().renameConversation(
-      id,
-      { title },
+    const data = await new RenameConversationCommandService().handle(
+      {
+        conversationId: id,
+        title,
+      },
       accessToken,
     );
     return NextResponse.json(data);
@@ -81,7 +85,12 @@ export async function DELETE(
   }
 
   try {
-    await new AssistantApiGateway().deleteConversation(id, accessToken);
+    await new DeleteConversationCommandService().handle(
+      {
+        conversationId: id,
+      },
+      accessToken,
+    );
     return new NextResponse(null, { status: 204 });
   } catch (error) {
     return NextResponse.json(
