@@ -7,6 +7,8 @@ import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import { Card, CardContent } from "@/contexts/shared/interfaces/components/ui/card";
 import { Input } from "@/contexts/shared/interfaces/components/ui/input";
 import { CreateRoleDialog } from "./create-role-dialog";
+import { EditRoleDialog } from "./edit-role-dialog";
+import { DeleteRoleDialog } from "./delete-role-dialog";
 import { RoleRow } from "./role-row";
 import { PermissionsWorkspace } from "./permissions-workspace";
 
@@ -19,8 +21,10 @@ export function PermissionsPageView({
 }) {
   const [filter, setFilter] = useState("");
   const [createOpen, setCreateOpen] = useState(false);
-  const [createSession, setCreateSession] = useState(0);
+  const [editingRole, setEditingRole] = useState<WorkforceRoleSummary | null>(null);
+  const [deletingRole, setDeletingRole] = useState<WorkforceRoleSummary | null>(null);
   const [selectedRoleId, setSelectedRoleId] = useState<string | null>(roles[0]?.id ?? null);
+
   const filteredRoles = useMemo(() => {
     const normalizedFilter = filter.trim().toLowerCase();
     if (!normalizedFilter) return roles;
@@ -59,13 +63,33 @@ export function PermissionsPageView({
         </div>
 
         <CreateRoleDialog
-          key={createSession}
           open={createOpen}
-          onOpenChange={(open) => {
-            setCreateOpen(open);
-            if (!open) setCreateSession((session) => session + 1);
-          }}
+          onOpenChange={setCreateOpen}
         />
+
+        {editingRole ? (
+          <EditRoleDialog
+            key={editingRole.id}
+            role={editingRole}
+            open={!!editingRole}
+            onOpenChange={(open) => {
+              if (!open) setEditingRole(null);
+            }}
+          />
+        ) : null}
+
+        {deletingRole && deletingRole.id ? (
+          <DeleteRoleDialog
+            key={deletingRole.id}
+            roleId={deletingRole.id}
+            roleName={deletingRole.name}
+            isSystemRole={deletingRole.systemRole}
+            open={!!deletingRole}
+            onOpenChange={(open) => {
+              if (!open) setDeletingRole(null);
+            }}
+          />
+        ) : null}
 
         <Card className="overflow-visible rounded-xl border-border bg-card shadow-sm">
           <CardContent className="p-0">
@@ -85,6 +109,8 @@ export function PermissionsPageView({
                   role={role}
                   selected={role.id === selectedRoleId}
                   onSelect={() => role.id && setSelectedRoleId(role.id)}
+                  onEdit={(selectedRole) => setEditingRole(selectedRole)}
+                  onDelete={(selectedRole) => setDeletingRole(selectedRole)}
                 />
               ))
             )}

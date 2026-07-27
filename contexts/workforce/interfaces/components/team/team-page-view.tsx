@@ -50,7 +50,7 @@ export function TeamPageView({ establishmentId, members }: { establishmentId: st
         <CardContent className="p-0">
           <div className="min-w-[720px]">
             <div className="grid grid-cols-[minmax(420px,1.7fr)_minmax(150px,.55fr)_minmax(170px,.7fr)] border-b border-border px-5 py-4 text-sm font-medium text-muted-foreground">
-              <span>Member</span>
+              <span />
               <span>Status</span>
               <span />
             </div>

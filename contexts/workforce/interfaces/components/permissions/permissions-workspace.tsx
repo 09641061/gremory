@@ -64,22 +64,7 @@ export function PermissionsWorkspace({ role, permissions }: PermissionsWorkspace
     <div className="hidden flex-1 lg:block">
       <div className="min-h-[calc(100vh-10rem)] rounded-xl border border-border bg-card shadow-sm lg:ml-3">
         <Card className="rounded-xl border-0 shadow-none">
-          <CardHeader className="border-b border-border px-6 py-5">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <CardTitle className="flex items-center gap-2 text-lg">
-                  <span className="flex size-8 items-center justify-center rounded-lg bg-accent text-accent-foreground">
-                    <ShieldCheck className="size-4" />
-                  </span>
-                  {role.name}
-                </CardTitle>
-                <p className="mt-2 text-sm text-muted-foreground">Define what this role can access.</p>
-              </div>
-              <span className="rounded-full bg-muted px-2.5 py-1 text-xs font-medium text-muted-foreground">
-                {selectedPermissions.size} selected
-              </span>
-            </div>
-          </CardHeader>
+
 
           <CardContent className="px-6 py-5">
             <ErrorAlert
@@ -96,10 +81,6 @@ export function PermissionsWorkspace({ role, permissions }: PermissionsWorkspace
               <div className="space-y-5">
                 {groupedPermissions.map((group) => (
                   <section key={group.label}>
-                    <div className="mb-2 flex items-center gap-2">
-                      <span className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">{group.label}</span>
-                      <span className="h-px flex-1 bg-border" />
-                    </div>
                     <div className="grid gap-2 sm:grid-cols-2">
                       {group.permissions.map((permission) => {
                         const checked = selectedPermissions.has(permission);

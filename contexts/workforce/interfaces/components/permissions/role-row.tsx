@@ -1,27 +1,24 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { MoreVertical, Pencil, ShieldCheck, Trash2 } from "lucide-react";
+import { MoreVertical, Pencil, Trash2, User } from "lucide-react";
 import type { WorkforceRoleSummary } from "@/contexts/workforce/application/model/workforce-role.read-models";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
-import { EditRoleDialog } from "./edit-role-dialog";
-import { DeleteRoleDialog } from "./delete-role-dialog";
 
 interface RoleRowProps {
   role: WorkforceRoleSummary;
   selected?: boolean;
   onSelect?: () => void;
+  onEdit?: (role: WorkforceRoleSummary) => void;
+  onDelete?: (role: WorkforceRoleSummary) => void;
 }
 
-export function RoleRow({ role, selected = false, onSelect }: RoleRowProps) {
+export function RoleRow({ role, selected = false, onSelect, onEdit, onDelete }: RoleRowProps) {
   const [menuOpen, setMenuOpen] = useState(false);
-  const [deleteOpen, setDeleteOpen] = useState(false);
-  const [editOpen, setEditOpen] = useState(false);
-  const [editSession, setEditSession] = useState(0);
   const menuRef = useRef<HTMLDivElement>(null);
   const roleId = role.id;
-  const canEdit = roleId !== null;
-  const canDelete = roleId !== null && !role.systemRole;
+  const canEdit = roleId !== null && !!onEdit;
+  const canDelete = roleId !== null && !role.systemRole && !!onDelete;
 
   useEffect(() => {
     if (!menuOpen) return;
@@ -62,7 +59,7 @@ export function RoleRow({ role, selected = false, onSelect }: RoleRowProps) {
     >
       <div className="flex min-w-0 items-center gap-3">
         <span className="flex size-10 shrink-0 items-center justify-center rounded-full border border-border bg-muted/40 text-muted-foreground">
-          <ShieldCheck className="size-4" />
+          <User className="size-4" />
         </span>
         <div className="min-w-0">
           <p className="truncate text-[15px] font-medium text-foreground">
@@ -96,8 +93,7 @@ export function RoleRow({ role, selected = false, onSelect }: RoleRowProps) {
               disabled={!canEdit}
               onClick={() => {
                 setMenuOpen(false);
-                setEditSession((value) => value + 1);
-                setEditOpen(true);
+                onEdit?.(role);
               }}
             >
               <Pencil className="size-4" />
@@ -111,7 +107,7 @@ export function RoleRow({ role, selected = false, onSelect }: RoleRowProps) {
               onClick={() => {
                 if (!canDelete) return;
                 setMenuOpen(false);
-                setDeleteOpen(true);
+                onDelete?.(role);
               }}
             >
               <Trash2 className="size-4" />
@@ -120,24 +116,6 @@ export function RoleRow({ role, selected = false, onSelect }: RoleRowProps) {
           </div>
         ) : null}
       </div>
-
-      {roleId ? (
-        <>
-          <EditRoleDialog
-            key={`${roleId}-${editSession}`}
-            role={role}
-            open={editOpen}
-            onOpenChange={setEditOpen}
-          />
-          <DeleteRoleDialog
-            roleId={roleId}
-            roleName={role.name}
-            isSystemRole={role.systemRole}
-            open={deleteOpen}
-            onOpenChange={setDeleteOpen}
-          />
-        </>
-      ) : null}
     </div>
   );
 }
