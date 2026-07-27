@@ -35,6 +35,10 @@ export function InvitationAcceptanceView({
     }
   }, [state.status]);
 
+  if (state.status === "success") {
+    return <InvitationAcceptedView redirecting />;
+  }
+
   if (invitation.status === "REMOVED") {
     return (
       <InvitationShell>
@@ -50,21 +54,7 @@ export function InvitationAcceptanceView({
   }
 
   if (invitation.status === "ACCEPTED") {
-    return <InvitationExpiredView />;
-  }
-
-  if (state.status === "success") {
-    return (
-      <InvitationShell>
-        <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-600">
-          <Check className="size-6" />
-        </div>
-        <h1 className="mt-5 text-2xl font-semibold tracking-tight">Invitation accepted</h1>
-        <p className="mt-2 text-sm leading-6 text-muted-foreground">
-          Redirecting you to Takodu…
-        </p>
-      </InvitationShell>
-    );
+    return <InvitationAcceptedView />;
   }
 
   const returnTo = `/invitations/accept?${new URLSearchParams({ token })}`;
@@ -122,7 +112,28 @@ export function InvitationAcceptanceView({
   );
 }
 
-function InvitationExpiredView() {
+function InvitationAcceptedView({ redirecting = false }: { redirecting?: boolean }) {
+  return (
+    <InvitationShell>
+      <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-600">
+        <Check className="size-6" />
+      </div>
+      <h1 className="mt-5 text-2xl font-semibold tracking-tight">Invitation accepted</h1>
+      <p className="mt-2 text-sm leading-6 text-muted-foreground">
+        {redirecting
+          ? "Redirecting you to Takodu…"
+          : "You already have access to this workspace."}
+      </p>
+      {!redirecting ? (
+        <Link href="/chat" className={buttonVariants({ className: "mt-6 h-10 w-full" })}>
+          Continue to Takodu
+        </Link>
+      ) : null}
+    </InvitationShell>
+  );
+}
+
+export function InvitationExpiredView() {
   return (
     <InvitationShell>
       <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-muted text-muted-foreground">
@@ -130,7 +141,7 @@ function InvitationExpiredView() {
       </div>
       <h1 className="mt-5 text-2xl font-semibold tracking-tight">Invitation expired</h1>
       <p className="mt-2 text-sm leading-6 text-muted-foreground">
-        This invitation has already been used and is no longer available.
+        This invitation has expired and is no longer available.
       </p>
     </InvitationShell>
   );
@@ -144,7 +155,7 @@ export function InvitationUnavailableView() {
       </div>
       <h1 className="mt-5 text-2xl font-semibold tracking-tight">Invitation unavailable</h1>
       <p className="mt-2 text-sm leading-6 text-muted-foreground">
-        This invitation is invalid, expired, or no longer available.
+        This invitation is invalid or no longer available.
       </p>
     </InvitationShell>
   );
