@@ -2,15 +2,16 @@
 
 import { useActionState, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Check, RotateCcw, Save, ShieldCheck } from "lucide-react";
+import { Save, ShieldCheck } from "lucide-react";
 import type { WorkforcePermission } from "@/contexts/workforce/domain/model/enums/workforce-permission";
 import type { WorkforceRoleSummary } from "@/contexts/workforce/application/model/workforce-role.read-models";
 import { patchWorkforceRoleAction } from "@/contexts/workforce/interfaces/actions/workforce-role.actions";
 import { initialWorkforceRoleActionResult } from "@/contexts/workforce/interfaces/actions/workforce-role-action-result";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/contexts/shared/interfaces/components/ui/card";
+import { Card, CardContent } from "@/contexts/shared/interfaces/components/ui/card";
 import { ErrorAlert } from "@/contexts/shared/interfaces/components/ui/error";
 import { Spinner } from "@/contexts/shared/interfaces/components/ui/spinner";
+import { Switch } from "@/contexts/shared/interfaces/components/ui/switch";
 
 interface PermissionsWorkspaceProps {
   role: WorkforceRoleSummary | null;
@@ -47,15 +48,6 @@ export function PermissionsWorkspace({ role, permissions }: PermissionsWorkspace
     );
   }
 
-  function togglePermission(permission: string) {
-    setSelectedPermissions((current) => {
-      const next = new Set(current);
-      if (next.has(permission)) next.delete(permission);
-      else next.add(permission);
-      return next;
-    });
-  }
-
   function cancelChanges() {
     setSelectedPermissions(new Set(role?.permissions ?? []));
   }
@@ -77,29 +69,38 @@ export function PermissionsWorkspace({ role, permissions }: PermissionsWorkspace
 
             <div className="space-y-5">
               {groupedPermissions.map((group) => (
-                <section key={group.label}>
-                  <div className="grid gap-2 sm:grid-cols-2">
+                <section key={group.label} className="space-y-3">
+                  <h3 className="text-sm font-medium capitalize tracking-wide text-muted-foreground">
+                    {group.label}
+                  </h3>
+                  <div className="grid gap-3">
                     {group.permissions.map((permission) => {
                       const checked = selectedPermissions.has(permission);
                       return (
                         <label
                           key={permission}
-                          className={`flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition-colors ${checked ? "border-primary/40 bg-accent/50" : "border-border hover:bg-muted/40"}`}
+                          className={`flex cursor-pointer items-center justify-between gap-4 rounded-lg border p-4 transition-colors ${checked ? "border-primary/40 bg-accent/50" : "border-border hover:bg-muted/40"}`}
                         >
-                          <span className={`mt-0.5 flex size-4 shrink-0 items-center justify-center rounded border ${checked ? "border-primary bg-primary text-primary-foreground" : "border-input bg-background"}`}>
-                            {checked ? <Check className="size-3" /> : null}
+                          <span className="min-w-0 space-y-1">
+                            <span className="block text-sm font-medium text-foreground">
+                              {permissionLabel(permission)}
+                            </span>
+                            <span className="block truncate text-xs text-muted-foreground">
+                              {permission}
+                            </span>
                           </span>
-                          <input
-                            type="checkbox"
+                          <Switch
                             checked={checked}
-                            onChange={() => togglePermission(permission)}
-                            className="sr-only"
+                            onCheckedChange={(nextChecked) => {
+                              setSelectedPermissions((current) => {
+                                const next = new Set(current);
+                                if (nextChecked) next.add(permission);
+                                else next.delete(permission);
+                                return next;
+                              });
+                            }}
                             aria-label={permissionLabel(permission)}
                           />
-                          <span className="min-w-0">
-                            <span className="block text-sm font-medium text-foreground">{permissionLabel(permission)}</span>
-                            <span className="mt-0.5 block truncate text-xs text-muted-foreground">{permission}</span>
-                          </span>
                         </label>
                       );
                     })}
