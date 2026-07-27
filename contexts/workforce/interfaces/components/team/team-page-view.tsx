@@ -1,11 +1,18 @@
 "use client";
 
 import { useActionState, useEffect, useMemo, useState } from "react";
-import { Search, Settings2, User, UserPlus } from "lucide-react";
+import { MoreVertical, Search, Settings2, User, UserMinus, UserPlus, UserX } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import { Input } from "@/contexts/shared/interfaces/components/ui/input";
 import { Card, CardContent } from "@/contexts/shared/interfaces/components/ui/card";
+import { ErrorAlert } from "@/contexts/shared/interfaces/components/ui/error";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/contexts/shared/interfaces/components/ui/dropdown-menu";
 import {
   removeTeamMemberAction,
   revokeTeamInvitationAction,
@@ -49,14 +56,16 @@ export function TeamPageView({ establishmentId, members }: { establishmentId: st
       <Card className="overflow-hidden rounded-xl border-border bg-card shadow-sm">
         <CardContent className="p-0">
           <div className="min-w-[720px]">
-            <div className="grid grid-cols-[minmax(420px,1.7fr)_minmax(150px,.55fr)_minmax(170px,.7fr)] border-b border-border px-5 py-4 text-sm font-medium text-muted-foreground">
-              <span />
+            <div className="grid grid-cols-[minmax(320px,1.4fr)_minmax(150px,.55fr)_minmax(150px,.55fr)_minmax(170px,.7fr)] border-b border-border px-5 py-4 text-sm font-medium text-muted-foreground">
+              <span>{members.length} {members.length === 1 ? "Member" : "Members"}</span>
+              <span>Role</span>
               <span>Status</span>
-              <span />
+              <div className="flex justify-end">
+                <span className="min-w-[116px] text-left" aria-hidden="true" />
+              </div>
             </div>
             {filteredMembers.map((member) => <MemberRow key={member.memberId ?? member.invitationId} member={member} />)}
             {filteredMembers.length === 0 && <div className="px-5 py-10 text-sm text-muted-foreground">No members found.</div>}
-            <div className="border-t border-border px-5 py-5 text-sm text-muted-foreground">{members.length} {members.length === 1 ? "member" : "members"}</div>
           </div>
         </CardContent>
       </Card>
@@ -77,31 +86,66 @@ function MemberRow({ member }: { member: TeamUserSummary }) {
   const canCancel = member.canRevokeInvitation;
   const error = removeState.error ?? revokeState.error;
   return (
-    <div className="grid min-h-[96px] grid-cols-[minmax(420px,1.7fr)_minmax(150px,.55fr)_minmax(170px,.7fr)] items-center border-b border-border px-5 py-4 last:border-b-0">
+    <div className="grid min-h-[96px] grid-cols-[minmax(320px,1.4fr)_minmax(150px,.55fr)_minmax(150px,.55fr)_minmax(170px,.7fr)] items-center border-b border-border px-5 py-4 last:border-b-0">
       <div className="flex items-center gap-4">
         <span className="flex size-12 shrink-0 items-center justify-center rounded-full border border-border bg-muted/40 text-muted-foreground">
           <User className="size-5" />
         </span>
         <span className="truncate text-[15px] text-foreground">{member.email}</span>
       </div>
+      <span className="text-[15px] text-muted-foreground">{member.roleName}</span>
       <span className="text-[15px] text-muted-foreground">{formatStatus(member.status)}</span>
       <div className="flex flex-col items-end gap-2">
-        {canCancel ? (
-          <form action={revokeAction}>
-            <input type="hidden" name="invitationId" value={member.invitationId} />
-            <Button type="submit" variant="outline" size="sm" disabled={revokePending} className="min-w-[116px]">
-              {revokePending ? "Cancelling…" : "Cancel"}
-            </Button>
-          </form>
-        ) : canRemove ? (
-          <form action={removeAction}>
-            <input type="hidden" name="memberId" value={memberId} />
-            <Button type="submit" variant="outline" size="sm" disabled={removePending} className="min-w-[116px]">
-              {removePending ? "Removing…" : "Remove"}
-            </Button>
-          </form>
+        {canCancel || canRemove ? (
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              render={
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-sm"
+                  aria-label="Open member actions"
+                />
+              }
+            >
+              <MoreVertical className="size-4" />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              {canCancel ? (
+                <form action={revokeAction}>
+                  <input type="hidden" name="invitationId" value={member.invitationId} />
+                  <DropdownMenuItem
+                    nativeButton
+                    render={<button type="submit" className="w-full" />}
+                    className="gap-2 text-destructive focus:bg-destructive/10 focus:text-destructive"
+                    disabled={revokePending}
+                  >
+                    <UserX className="size-4" />
+                    {revokePending ? "Cancelling..." : "Cancel invite"}
+                  </DropdownMenuItem>
+                </form>
+              ) : null}
+              {canRemove ? (
+                <form action={removeAction}>
+                  <input type="hidden" name="memberId" value={memberId ?? ""} />
+                  <DropdownMenuItem
+                    nativeButton
+                    render={<button type="submit" className="w-full" />}
+                    className="gap-2 text-destructive focus:bg-destructive/10 focus:text-destructive"
+                    disabled={removePending}
+                  >
+                    <UserMinus className="size-4" />
+                    {removePending ? "Removing..." : "Remove member"}
+                  </DropdownMenuItem>
+                </form>
+              ) : null}
+            </DropdownMenuContent>
+          </DropdownMenu>
         ) : null}
-        {error ? <p className="text-xs text-destructive" role="alert">{error}</p> : null}
+        <ErrorAlert
+          title="Action failed"
+          message={error ?? undefined}
+        />
       </div>
     </div>
   );

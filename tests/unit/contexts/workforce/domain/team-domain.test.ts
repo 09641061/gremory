@@ -7,6 +7,7 @@ import {
   createMemberId,
   createTeamEstablishmentId,
   createTeamOrganizationId,
+  createTeamRoleId,
   createTeamUserId,
 } from "@/contexts/workforce/domain/model/valueobjects/team-identifiers.vo";
 
@@ -15,6 +16,7 @@ const memberId = "22222222-2222-4222-8222-222222222222";
 const userId = "33333333-3333-4333-8333-333333333333";
 const organizationId = "44444444-4444-4444-8444-444444444444";
 const establishmentId = "55555555-5555-4555-8555-555555555555";
+const roleId = "66666666-6666-4666-8666-666666666666";
 
 describe("Team domain", () => {
   it("should normalize an invited email when input is valid", () => {
@@ -81,6 +83,8 @@ function baseProps() {
     memberId: null,
     userId: null,
     email: createInvitedEmail("employee@example.com"),
+    roleId: createTeamRoleId(roleId),
+    roleName: "Everyone",
     organizationId: createTeamOrganizationId(organizationId),
     establishmentId: createTeamEstablishmentId(establishmentId),
     establishmentName: "Miraflores",

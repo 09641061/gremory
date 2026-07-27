@@ -203,6 +203,8 @@ function pageResource(overrides: Record<string, unknown> = {}) {
       memberId: null,
       userId: null,
       email: "employee@example.com",
+      roleId: "66666666-6666-4666-8666-666666666666",
+      roleName: "Everyone",
       organizationId,
       establishmentId,
       establishmentName: "Miraflores",

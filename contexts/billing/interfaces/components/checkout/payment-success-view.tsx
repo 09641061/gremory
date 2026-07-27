@@ -5,17 +5,11 @@ import { CheckCircle2, Loader2 } from "lucide-react";
 
 import { hasActiveSubscription } from "@/contexts/billing/domain/services/subscription-access.policy";
 import type { SubscriptionResponse } from "@/contexts/billing/infrastructure/gateways/billing-api.gateway";
-import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import {
   Alert,
   AlertDescription,
   AlertTitle,
 } from "@/contexts/shared/interfaces/components/ui/alert";
-
-function continueToChat() {
-  // Use a full navigation so auth and subscription proxies re-run with the latest session state.
-  window.location.assign("/chat");
-}
 
 export function PaymentSuccessView() {
   const [activationPending, setActivationPending] = useState(true);
@@ -32,7 +26,8 @@ export function PaymentSuccessView() {
         if (cancelled) return;
 
         if (hasActiveSubscription(subscription)) {
-          continueToChat();
+          // Use a full navigation so auth and subscription proxies re-run with the latest session state.
+          window.location.assign("/chat");
           return;
         }
 
@@ -71,9 +66,6 @@ export function PaymentSuccessView() {
             : "Your payment was received. Activation is taking longer than usual."}
         </AlertDescription>
       </Alert>
-      <Button type="button" variant="outline" onClick={continueToChat}>
-        Continue
-      </Button>
     </div>
   );
 }

@@ -4,6 +4,7 @@ import { useActionState, useEffect } from "react";
 import { UserPlus } from "lucide-react";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import { Input } from "@/contexts/shared/interfaces/components/ui/input";
+import { ErrorAlert } from "@/contexts/shared/interfaces/components/ui/error";
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -50,7 +51,10 @@ export function InviteMembersDialog({ establishmentId, onClose }: { establishmen
             />
           </div>
 
-          {state.error && <p className="text-sm text-destructive" role="alert">{state.error}</p>}
+          <ErrorAlert
+            title="Invite failed"
+            message={state.status === "error" ? state.error : undefined}
+          />
 
           <AlertDialogFooter>
             <AlertDialogCancel disabled={pending} onClick={onClose}>Cancel</AlertDialogCancel>

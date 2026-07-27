@@ -67,13 +67,16 @@ export async function createEstablishmentAction(
   const parsed = createEstablishmentSchema.safeParse({
     organizationId: formData.get("organizationId"),
     name: formData.get("name"),
+    photoUrl: formData.get("photoUrl"),
   });
   if (!parsed.success) return actionError(parsed.error.issues[0]?.message);
 
   try {
     const token = await requireBusinessAccessToken();
     const photoFile = readPhotoFileFromFormData(formData);
-    const photoUrl = photoFile ? await uploadEstablishmentPhoto(photoFile, token) : null;
+    const photoUrl = photoFile
+      ? await uploadEstablishmentPhoto(photoFile, token)
+      : parsed.data.photoUrl ?? null;
     const establishmentId = await createEstablishmentCommandService(token).create(
       createEstablishmentCommand({
         ...parsed.data,
@@ -94,6 +97,7 @@ export async function updateEstablishmentAction(
   const parsed = updateEstablishmentSchema.safeParse({
     id: formData.get("id"),
     name: formData.get("name"),
+    photoUrl: formData.get("photoUrl"),
   });
   if (!parsed.success) return actionError(parsed.error.issues[0]?.message);
 
