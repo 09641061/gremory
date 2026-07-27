@@ -5,7 +5,8 @@ export interface WorkforceUserResource {
   memberId: string | null;
   userId: string | null;
   email: string;
-  role?: string | null;
+  roleId: string;
+  roleName: string;
   organizationId: string;
   establishmentId: string;
   establishmentName: string | null;

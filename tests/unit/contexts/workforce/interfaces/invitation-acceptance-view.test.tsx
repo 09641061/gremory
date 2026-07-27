@@ -2,6 +2,7 @@
 import { render, screen } from "@testing-library/react";
 import {
   InvitationAcceptanceView,
+  InvitationExpiredView,
   InvitationUnavailableView,
 } from "@/contexts/workforce/interfaces/components/invitations/invitation-acceptance-view";
 import type { TeamInvitationPreviewView } from "@/contexts/workforce/application/model/team.read-models";
@@ -61,11 +62,11 @@ describe("Invitation acceptance view", () => {
       screen.getByRole("heading", { name: "Invitation unavailable" }),
     ).toBeVisible();
     expect(
-      screen.getByText("This invitation is invalid, expired, or no longer available."),
+      screen.getByText("This invitation is invalid or no longer available."),
     ).toBeVisible();
   });
 
-  it("should show an accepted invitation as expired when its link is reused", () => {
+  it("should show that an accepted invitation already grants access", () => {
     render(
       <InvitationAcceptanceView
         token="accepted-token"
@@ -75,12 +76,27 @@ describe("Invitation acceptance view", () => {
     );
 
     expect(
+      screen.getByRole("heading", { name: "Invitation accepted" }),
+    ).toBeVisible();
+    expect(
+      screen.getByText("You already have access to this workspace."),
+    ).toBeVisible();
+    expect(screen.getByRole("link", { name: "Continue to Takodu" })).toHaveAttribute(
+      "href",
+      "/chat",
+    );
+    expect(screen.queryByRole("button", { name: "Accept invitation" })).not.toBeInTheDocument();
+  });
+
+  it("should reserve the expired view for an actually expired invitation", () => {
+    render(<InvitationExpiredView />);
+
+    expect(
       screen.getByRole("heading", { name: "Invitation expired" }),
     ).toBeVisible();
     expect(
-      screen.getByText("This invitation has already been used and is no longer available."),
+      screen.getByText("This invitation has expired and is no longer available."),
     ).toBeVisible();
-    expect(screen.queryByRole("button", { name: "Accept invitation" })).not.toBeInTheDocument();
   });
 
   it("should explain when membership was removed after acceptance", () => {

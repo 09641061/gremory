@@ -2,9 +2,11 @@ import { createTeamQueryService } from "@/contexts/workforce/application/interna
 import { getTeamAccessToken } from "@/contexts/workforce/infrastructure/session/team-session";
 import {
   InvitationAcceptanceView,
+  InvitationExpiredView,
   InvitationUnavailableView,
 } from "@/contexts/workforce/interfaces/components/invitations/invitation-acceptance-view";
 import type { TeamInvitationPreviewView } from "@/contexts/workforce/application/model/team.read-models";
+import { TeamApiError } from "@/contexts/workforce/infrastructure/gateways/team-api.gateway";
 
 export default async function InvitationAcceptPage({
   searchParams,
@@ -20,7 +22,10 @@ export default async function InvitationAcceptPage({
   let invitation: TeamInvitationPreviewView;
   try {
     invitation = await createTeamQueryService(accessToken).previewInvitation({ token });
-  } catch {
+  } catch (error) {
+    if (isExpiredInvitationError(error)) {
+      return <InvitationExpiredView />;
+    }
     return <InvitationUnavailableView />;
   }
 
@@ -32,4 +37,11 @@ export default async function InvitationAcceptPage({
       authenticated={authenticated}
     />
   );
+}
+
+function isExpiredInvitationError(error: unknown): boolean {
+  if (!(error instanceof TeamApiError) || !error.details || typeof error.details !== "object") {
+    return false;
+  }
+  return (error.details as Record<string, unknown>).code === "INVITATION_EXPIRED";
 }

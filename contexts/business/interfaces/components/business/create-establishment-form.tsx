@@ -51,7 +51,7 @@ export function CreateEstablishmentForm({ organizationId }: { organizationId: st
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <form action={formAction} encType="multipart/form-data" className="space-y-5">
+            <form action={formAction} className="space-y-5">
               <input type="hidden" name="organizationId" value={organizationId} />
 
               <div className="space-y-2">
