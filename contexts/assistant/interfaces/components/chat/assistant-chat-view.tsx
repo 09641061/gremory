@@ -5,6 +5,7 @@ import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 
 import { hasActiveSubscription } from "@/contexts/billing/domain/services/subscription-access.policy";
 import type { SubscriptionResponse } from "@/contexts/billing/infrastructure/gateways/billing-api.gateway";
+import { ErrorAlert } from "@/contexts/shared/interfaces/components/ui/error";
 
 import { AssistantChatComposer } from "./assistant-chat-composer";
 import { AssistantChatThread } from "./assistant-chat-thread";
@@ -353,6 +354,15 @@ export function AssistantChatView() {
           assistantAccessState === "blocked"
             ? "No hay acceso activo al asistente. Revisa tu sesión o suscripción."
             : error
+        }
+      />
+
+      <ErrorAlert
+        title="Error del asistente"
+        message={
+          assistantAccessState === "blocked"
+            ? "No hay acceso activo al asistente. Revisa tu sesión o suscripción."
+            : error ?? undefined
         }
       />
 
