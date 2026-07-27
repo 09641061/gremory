@@ -21,6 +21,7 @@ export function PermissionsPageView({
 }) {
   const [filter, setFilter] = useState("");
   const [createOpen, setCreateOpen] = useState(false);
+  const [createSession, setCreateSession] = useState(0);
   const [editingRole, setEditingRole] = useState<WorkforceRoleSummary | null>(null);
   const [deletingRole, setDeletingRole] = useState<WorkforceRoleSummary | null>(null);
   const [selectedRoleId, setSelectedRoleId] = useState<string | null>(null);
@@ -68,8 +69,12 @@ export function PermissionsPageView({
         </div>
 
         <CreateRoleDialog
+          key={createSession}
           open={createOpen}
-          onOpenChange={setCreateOpen}
+          onOpenChange={(open) => {
+            setCreateOpen(open);
+            if (!open) setCreateSession((session) => session + 1);
+          }}
         />
 
         {editingRole ? (
