@@ -88,6 +88,14 @@ export class EstablishmentApiGateway implements EstablishmentRepository {
     return toEstablishment(resource);
   }
 
+  async deletePhoto(id: EstablishmentId): Promise<void> {
+    const authToken = await requireBusinessAccessToken(this.providedToken);
+    await businessDelete(
+      `${apiConfig.routes.establishments}/${encodeURIComponent(id.value)}/photo`,
+      authToken,
+    );
+  }
+
   async delete(id: EstablishmentId): Promise<void> {
     const authToken = await requireBusinessAccessToken(this.providedToken);
     await businessDelete(
