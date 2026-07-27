@@ -1,8 +1,8 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { Store } from "lucide-react";
 import { updateEstablishmentAction } from "../../actions/establishment.actions";
 import { initialBusinessActionResult } from "../../actions/business-action-result";
@@ -19,8 +19,11 @@ export function EditEstablishmentForm({
   establishment: { id: string; name: string; photoUrl: string | null };
 }) {
   const router = useRouter();
+  const pathname = usePathname();
+  const photoFileInputRef = useRef<HTMLInputElement | null>(null);
   const [name, setName] = useState(establishment.name);
   const [currentPhotoUrl, setCurrentPhotoUrl] = useState(establishment.photoUrl);
+  const [photoPreviewUrl, setPhotoPreviewUrl] = useState<string | null>(null);
   const [photoMarkedForRemoval, setPhotoMarkedForRemoval] = useState(false);
   const [state, formAction, pending] = useActionState(
     updateEstablishmentAction,
@@ -38,6 +41,35 @@ export function EditEstablishmentForm({
     }
   }, [router, state.status]);
 
+  useEffect(() => {
+    const timeout = window.setTimeout(() => {
+      setName(establishment.name);
+      setCurrentPhotoUrl(establishment.photoUrl);
+      setPhotoPreviewUrl(null);
+      setPhotoMarkedForRemoval(false);
+      if (photoFileInputRef.current) {
+        photoFileInputRef.current.value = "";
+      }
+    }, 0);
+
+    return () => window.clearTimeout(timeout);
+  }, [pathname, establishment.id, establishment.name, establishment.photoUrl]);
+
+  useEffect(() => {
+    function handlePageShow(event: PageTransitionEvent) {
+      if (!event.persisted) return;
+
+      setPhotoPreviewUrl(null);
+      setPhotoMarkedForRemoval(false);
+      if (photoFileInputRef.current) {
+        photoFileInputRef.current.value = "";
+      }
+    }
+
+    window.addEventListener("pageshow", handlePageShow);
+    return () => window.removeEventListener("pageshow", handlePageShow);
+  }, []);
+
   function handleRemovePhoto() {
     if (!establishment.photoUrl) return;
 
@@ -50,6 +82,33 @@ export function EditEstablishmentForm({
     setCurrentPhotoUrl(null);
     setPhotoMarkedForRemoval(true);
   }
+
+  function handlePhotoChange(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0] ?? null;
+
+    if (photoPreviewUrl) {
+      URL.revokeObjectURL(photoPreviewUrl);
+    }
+
+    if (!file) {
+      setPhotoPreviewUrl(null);
+      return;
+    }
+
+    setPhotoPreviewUrl(URL.createObjectURL(file));
+    setPhotoMarkedForRemoval(false);
+    if (establishment.photoUrl && currentPhotoUrl === null) {
+      setCurrentPhotoUrl(establishment.photoUrl);
+    }
+  }
+
+  useEffect(() => {
+    return () => {
+      if (photoPreviewUrl) {
+        URL.revokeObjectURL(photoPreviewUrl);
+      }
+    };
+  }, [photoPreviewUrl]);
 
   return (
     <>
@@ -95,6 +154,8 @@ export function EditEstablishmentForm({
                   name="photoFile"
                   type="file"
                   accept="image/*"
+                  ref={photoFileInputRef}
+                  onChange={handlePhotoChange}
                 />
                 <p className="text-xs text-muted-foreground">
                   Upload a new image to replace the current one automatically.
@@ -102,41 +163,57 @@ export function EditEstablishmentForm({
               </div>
 
               <div className="space-y-3 rounded-2xl border border-border/70 bg-muted/20 p-4">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                  <div className="space-y-1">
-                    <Label className="text-sm font-medium">Current photo</Label>
-                    <p className="text-xs text-muted-foreground">
-                      You can remove the current image without deleting the establishment.
-                    </p>
-                  </div>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={handleRemovePhoto}
-                    disabled={!establishment.photoUrl}
-                    className="gap-2 border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive"
-                  >
-                    {photoMarkedForRemoval ? "Undo remove" : "Remove photo"}
-                  </Button>
-                </div>
-
                 {currentPhotoUrl ? (
-                  <div className="overflow-hidden rounded-xl border border-border/60 bg-background">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={currentPhotoUrl}
-                      alt={establishment.name}
-                      className="h-40 w-full object-cover"
-                    />
-                  </div>
+                  <>
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                      <div className="space-y-1">
+                        <Label className="text-sm font-medium">Current photo</Label>
+                        <p className="text-xs text-muted-foreground">
+                          You can remove the current image without deleting the establishment.
+                        </p>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={handleRemovePhoto}
+                        className="gap-2 border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                      >
+                        {photoMarkedForRemoval ? "Undo remove" : "Remove photo"}
+                      </Button>
+                    </div>
+
+                    <div className="overflow-hidden rounded-xl border border-border/60 bg-background">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={currentPhotoUrl}
+                        alt={establishment.name}
+                        className="h-40 w-full object-cover"
+                      />
+                    </div>
+                  </>
                 ) : (
-                  <div className="space-y-1 text-sm text-muted-foreground">
-                    <p>
-                      No photo is currently set for this establishment.
-                    </p>
-                    {photoMarkedForRemoval ? (
-                      <p>The current photo will be removed when you save changes.</p>
-                    ) : null}
+                  <div className="space-y-3">
+                    <div className="space-y-1">
+                      <Label className="text-sm font-medium">Image preview</Label>
+                      <p className="text-xs text-muted-foreground">
+                        This will show the new photo before you save the changes.
+                      </p>
+                    </div>
+
+                    {photoPreviewUrl ? (
+                      <div className="overflow-hidden rounded-xl border border-border/60 bg-background">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={photoPreviewUrl}
+                          alt="Selected establishment image preview"
+                          className="h-40 w-full object-cover"
+                        />
+                      </div>
+                    ) : (
+                      <div className="flex h-40 items-center justify-center rounded-xl border border-dashed border-border/60 bg-background text-sm text-muted-foreground">
+                        No image selected yet.
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
