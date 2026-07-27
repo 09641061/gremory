@@ -62,68 +62,64 @@ export function PermissionsWorkspace({ role, permissions }: PermissionsWorkspace
 
   return (
     <div className="hidden flex-1 lg:block">
-      <div className="min-h-[calc(100vh-10rem)] rounded-xl border border-border bg-card shadow-sm lg:ml-3">
-        <Card className="rounded-xl border-0 shadow-none">
+      <Card className="rounded-xl border-border bg-card shadow-sm lg:ml-3">
+        <CardContent className="px-6 py-5">
+          <ErrorAlert
+            title="Unable to save permissions"
+            message={state.status === "error" ? state.error : undefined}
+          />
+          <form action={formAction} className="space-y-6">
+            <input type="hidden" name="roleId" value={role.id ?? ""} />
+            <input type="hidden" name="permissionsSubmitted" value="true" />
+            {[...selectedPermissions].map((permission) => (
+              <input key={permission} type="hidden" name="permissions" value={permission} />
+            ))}
 
-
-          <CardContent className="px-6 py-5">
-            <ErrorAlert
-              title="Unable to save permissions"
-              message={state.status === "error" ? state.error : undefined}
-            />
-            <form action={formAction} className="space-y-6">
-              <input type="hidden" name="roleId" value={role.id ?? ""} />
-              <input type="hidden" name="permissionsSubmitted" value="true" />
-              {[...selectedPermissions].map((permission) => (
-                <input key={permission} type="hidden" name="permissions" value={permission} />
+            <div className="space-y-5">
+              {groupedPermissions.map((group) => (
+                <section key={group.label}>
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    {group.permissions.map((permission) => {
+                      const checked = selectedPermissions.has(permission);
+                      return (
+                        <label
+                          key={permission}
+                          className={`flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition-colors ${checked ? "border-primary/40 bg-accent/50" : "border-border hover:bg-muted/40"}`}
+                        >
+                          <span className={`mt-0.5 flex size-4 shrink-0 items-center justify-center rounded border ${checked ? "border-primary bg-primary text-primary-foreground" : "border-input bg-background"}`}>
+                            {checked ? <Check className="size-3" /> : null}
+                          </span>
+                          <input
+                            type="checkbox"
+                            checked={checked}
+                            onChange={() => togglePermission(permission)}
+                            className="sr-only"
+                            aria-label={permissionLabel(permission)}
+                          />
+                          <span className="min-w-0">
+                            <span className="block text-sm font-medium text-foreground">{permissionLabel(permission)}</span>
+                            <span className="mt-0.5 block truncate text-xs text-muted-foreground">{permission}</span>
+                          </span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                </section>
               ))}
+            </div>
 
-              <div className="space-y-5">
-                {groupedPermissions.map((group) => (
-                  <section key={group.label}>
-                    <div className="grid gap-2 sm:grid-cols-2">
-                      {group.permissions.map((permission) => {
-                        const checked = selectedPermissions.has(permission);
-                        return (
-                          <label
-                            key={permission}
-                            className={`flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition-colors ${checked ? "border-primary/40 bg-accent/50" : "border-border hover:bg-muted/40"}`}
-                          >
-                            <span className={`mt-0.5 flex size-4 shrink-0 items-center justify-center rounded border ${checked ? "border-primary bg-primary text-primary-foreground" : "border-input bg-background"}`}>
-                              {checked ? <Check className="size-3" /> : null}
-                            </span>
-                            <input
-                              type="checkbox"
-                              checked={checked}
-                              onChange={() => togglePermission(permission)}
-                              className="sr-only"
-                              aria-label={permissionLabel(permission)}
-                            />
-                            <span className="min-w-0">
-                              <span className="block text-sm font-medium text-foreground">{permissionLabel(permission)}</span>
-                              <span className="mt-0.5 block truncate text-xs text-muted-foreground">{permission}</span>
-                            </span>
-                          </label>
-                        );
-                      })}
-                    </div>
-                  </section>
-                ))}
-              </div>
-
-              <div className="flex items-center justify-end gap-2 border-t border-border pt-5">
-                <Button type="button" variant="ghost" onClick={cancelChanges} disabled={pending}>
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={pending} className="gap-2">
-                  {pending ? <Spinner className="size-4" /> : <Save className="size-4" />}
-                  {pending ? "Saving..." : "Save"}
-                </Button>
-              </div>
-            </form>
-          </CardContent>
-        </Card>
-      </div>
+            <div className="flex items-center justify-end gap-2 pt-5">
+              <Button type="button" variant="ghost" onClick={cancelChanges} disabled={pending}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={pending} className="gap-2">
+                {pending ? <Spinner className="size-4" /> : <Save className="size-4" />}
+                {pending ? "Saving..." : "Save"}
+              </Button>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
     </div>
   );
 }
