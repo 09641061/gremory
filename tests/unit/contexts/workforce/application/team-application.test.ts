@@ -119,6 +119,10 @@ function teamRepository(): TeamRepository {
       expiresAt: new Date("2026-08-01T10:00:00Z"),
     })),
     acceptInvitation: vi.fn(async () => createMemberId(memberId)),
+    getAccessContext: vi.fn(async () => ({
+      active: true,
+      establishments: [],
+    })),
   };
 }
 

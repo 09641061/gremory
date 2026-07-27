@@ -1,6 +1,6 @@
 import { createBusinessEstablishmentAclService } from "@/contexts/business/application/internal/outboundservices/business-establishment-acl.service";
 import { createTeamQueryService } from "@/contexts/workforce/application/internal/queryservices/team-query.service";
-import { TeamPageView } from "@/contexts/workforce/interfaces/components/team-page-view";
+import { TeamPageView } from "@/contexts/workforce/interfaces/components/team/team-page-view";
 
 export default async function TeamPage() {
   const establishmentId = await createBusinessEstablishmentAclService().getActiveEstablishmentIdForUser();

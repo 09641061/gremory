@@ -2,7 +2,6 @@ export interface OrganizationSummary {
   id: string;
   ownerId: string;
   name: string;
-  active: boolean;
 }
 
 export interface EstablishmentSummary {
@@ -10,7 +9,6 @@ export interface EstablishmentSummary {
   organizationId: string;
   name: string;
   photoUrl: string | null;
-  active: boolean;
 }
 
 export interface PageView<T> {

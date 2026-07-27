@@ -30,9 +30,7 @@ export function OrganizationsPage({
           </div>
           <CardHeader>
             <CardTitle>{organization.name}</CardTitle>
-            <CardDescription>
-              {organization.active ? "Active organization" : "Inactive organization"}
-            </CardDescription>
+            <CardDescription>Organization connected to your account</CardDescription>
             <CardAction>
               <OrganizationCardMenu
                 organizationId={organization.id}

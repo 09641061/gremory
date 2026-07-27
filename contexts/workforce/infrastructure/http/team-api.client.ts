@@ -38,6 +38,22 @@ export function teamPost<T>(
   return teamRequest<T>(path, { method: "POST", body, token });
 }
 
+export function teamPut<T>(
+  path: string,
+  body: unknown,
+  token?: string,
+): Promise<T> {
+  return teamRequest<T>(path, { method: "PUT", body, token });
+}
+
+export function teamPatch<T>(
+  path: string,
+  body: unknown,
+  token?: string,
+): Promise<T> {
+  return teamRequest<T>(path, { method: "PATCH", body, token });
+}
+
 export function teamDelete(path: string, token: string): Promise<void> {
   return teamRequest<void>(path, { method: "DELETE", token });
 }

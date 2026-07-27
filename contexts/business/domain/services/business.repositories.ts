@@ -4,7 +4,6 @@ import type { EstablishmentId } from "../model/valueobjects/establishment-id.vo"
 import type { EstablishmentName } from "../model/valueobjects/establishment-name.vo";
 import type { EstablishmentPhoto } from "../model/valueobjects/establishment-photo.vo";
 import type { OrganizationId } from "../model/valueobjects/organization-id.vo";
-import type { OrganizationName } from "../model/valueobjects/organization-name.vo";
 
 export interface PageResult<T> {
   content: T[];
@@ -19,11 +18,9 @@ export interface PageResult<T> {
 }
 
 export interface OrganizationRepository {
-  create(name: OrganizationName): Promise<Organization>;
   findMine(): Promise<Organization>;
   findById(id: OrganizationId): Promise<Organization | null>;
   save(organization: Organization): Promise<Organization>;
-  delete(id: OrganizationId): Promise<void>;
 }
 
 export interface EstablishmentRepository {

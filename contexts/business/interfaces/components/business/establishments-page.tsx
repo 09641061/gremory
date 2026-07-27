@@ -75,7 +75,7 @@ export function EstablishmentsPage({
               </div>
               <CardHeader>
                 <CardTitle>{establishment.name}</CardTitle>
-                <CardDescription>Active establishment</CardDescription>
+                <CardDescription>Managed establishment</CardDescription>
                 <CardAction>
                   <EstablishmentCardMenu
                     establishmentId={establishment.id}

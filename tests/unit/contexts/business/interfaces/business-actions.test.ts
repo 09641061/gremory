@@ -37,7 +37,6 @@ import {
   deleteEstablishmentAction,
 } from "@/contexts/business/interfaces/actions/establishment.actions";
 import {
-  createOrganizationAction,
   updateOrganizationAction,
 } from "@/contexts/business/interfaces/actions/organization.actions";
 import { createEstablishmentId } from "@/contexts/business/domain/model/valueobjects/establishment-id.vo";
@@ -113,24 +112,16 @@ describe("Business server actions", () => {
     expect(mocks.revalidatePath).toHaveBeenCalledWith("/establishments");
   });
 
-  it("creates and updates organizations using explicit commands", async () => {
-    const created = await createOrganizationAction(
-      initialBusinessActionResult,
-      form({ name: "  Acme  " }),
-    );
+  it("updates organizations using explicit commands", async () => {
     const updated = await updateOrganizationAction(
       initialBusinessActionResult,
       form({ id: organizationId, name: "Acme Group" }),
     );
 
-    expect(mocks.organizationService.create).toHaveBeenCalledWith({
-      name: "Acme",
-    });
     expect(mocks.organizationService.update).toHaveBeenCalledWith({
       id: organizationId,
       name: "Acme Group",
     });
-    expect(created.status).toBe("success");
     expect(updated.status).toBe("success");
     expect(mocks.revalidatePath).toHaveBeenCalledWith("/organizations");
   });
@@ -138,9 +129,9 @@ describe("Business server actions", () => {
   it("returns a stable error when authentication fails", async () => {
     mocks.requireToken.mockRejectedValue(new Error("Authentication is required"));
 
-    const result = await createOrganizationAction(
+    const result = await updateOrganizationAction(
       initialBusinessActionResult,
-      form({ name: "Acme" }),
+      form({ id: organizationId, name: "Acme Group" }),
     );
 
     expect(result).toEqual({
@@ -148,7 +139,7 @@ describe("Business server actions", () => {
       data: null,
       error: "Authentication is required",
     });
-    expect(mocks.organizationService.create).not.toHaveBeenCalled();
+    expect(mocks.organizationService.update).not.toHaveBeenCalled();
   });
 });
 

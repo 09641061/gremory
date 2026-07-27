@@ -57,11 +57,6 @@ export function OrganizationSelector({
             allLabel="All Organizations"
             searchPlaceholder="Find organization..."
             emptyMessage="No organizations found"
-            newLabel="New organization"
-            onNew={() => {
-              setIsOpen(false);
-              router.push("/organizations");
-            }}
           />
         </div>
       )}

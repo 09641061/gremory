@@ -3,7 +3,7 @@ import { getTeamAccessToken } from "@/contexts/workforce/infrastructure/session/
 import {
   InvitationAcceptanceView,
   InvitationUnavailableView,
-} from "@/contexts/workforce/interfaces/components/invitation-acceptance-view";
+} from "@/contexts/workforce/interfaces/components/invitations/invitation-acceptance-view";
 import type { TeamInvitationPreviewView } from "@/contexts/workforce/application/model/team.read-models";
 
 export default async function InvitationAcceptPage({

@@ -3,9 +3,9 @@
 import Link from "next/link";
 import { Building2, Check, Mail, Store, Users } from "lucide-react";
 import { useActionState, useEffect } from "react";
-import type { TeamInvitationPreviewView } from "../../application/model/team.read-models";
-import { acceptTeamInvitationAction } from "../actions/team.actions";
-import { initialTeamActionResult } from "../actions/team-action-result";
+import type { TeamInvitationPreviewView } from "@/contexts/workforce/application/model/team.read-models";
+import { acceptTeamInvitationAction } from "@/contexts/workforce/interfaces/actions/team.actions";
+import { initialTeamActionResult } from "@/contexts/workforce/interfaces/actions/team-action-result";
 import { Button, buttonVariants } from "@/contexts/shared/interfaces/components/ui/button";
 import {
   Card,
@@ -153,9 +153,11 @@ export function InvitationUnavailableView() {
 function InvitationShell({ children }: { children: React.ReactNode }) {
   return (
     <main className="flex min-h-screen items-center justify-center bg-background px-4 py-8 text-foreground">
-      <section className="w-full max-w-[440px] rounded-xl border border-border bg-card p-7 text-center shadow-sm">
-        {children}
-      </section>
+      <Card className="w-full max-w-[440px] rounded-xl border-border bg-card shadow-sm">
+        <CardContent className="p-7 text-center">
+          {children}
+        </CardContent>
+      </Card>
     </main>
   );
 }

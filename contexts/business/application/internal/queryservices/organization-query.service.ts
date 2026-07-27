@@ -43,6 +43,5 @@ function toOrganizationSummary(
     id: organization.id.value,
     ownerId: organization.ownerId,
     name: organization.name.value,
-    active: organization.active,
   };
 }
