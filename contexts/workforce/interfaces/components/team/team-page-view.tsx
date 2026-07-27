@@ -30,6 +30,19 @@ export function TeamPageView({ establishmentId, members, roles, canManageRoles }
   const [filter, setFilter] = useState("");
   const [inviteOpen, setInviteOpen] = useState(false);
   const router = useRouter();
+  const orderedRoles = useMemo(() => {
+    return [...roles].sort((left, right) => {
+      if (left.systemRole !== right.systemRole) {
+        return left.systemRole ? 1 : -1;
+      }
+
+      if (left.position !== right.position) {
+        return left.position - right.position;
+      }
+
+      return left.name.localeCompare(right.name);
+    });
+  }, [roles]);
   const filteredMembers = useMemo(() => members.filter((member) => member.email.toLowerCase().includes(filter.toLowerCase())), [filter, members]);
 
   return (
@@ -67,7 +80,7 @@ export function TeamPageView({ establishmentId, members, roles, canManageRoles }
                 <span className="min-w-[116px] text-left" aria-hidden="true" />
               </div>
             </div>
-            {filteredMembers.map((member) => <MemberRow key={member.memberId ?? member.invitationId} member={member} roles={roles} />)}
+            {filteredMembers.map((member) => <MemberRow key={member.memberId ?? member.invitationId} member={member} roles={orderedRoles} />)}
             {filteredMembers.length === 0 && <div className="px-5 py-10 text-sm text-muted-foreground">No members found.</div>}
           </div>
         </CardContent>
@@ -113,7 +126,7 @@ function MemberRow({ member, roles }: { member: TeamUserSummary; roles: RoleOpti
             <input type="hidden" name="memberId" value={member.memberId} />
             <select name="roleId" defaultValue="" disabled={rolePending} className="h-8 rounded-md border border-border bg-background px-2 text-xs">
               <option value="" disabled>Add role</option>
-              {roles.filter((role) => !role.systemRole && !member.roles.some((assigned) => assigned.id === role.id)).map((role) => <option key={role.id} value={role.id}>{role.position}. {role.name}</option>)}
+              {roles.filter((role) => !role.systemRole && !member.roles.some((assigned) => assigned.id === role.id)).map((role) => <option key={role.id} value={role.id}>{role.name}</option>)}
             </select>
             <button type="submit" disabled={rolePending} className="rounded-md border border-border px-2 py-1 text-xs">{rolePending ? "..." : "+"}</button>
           </form>

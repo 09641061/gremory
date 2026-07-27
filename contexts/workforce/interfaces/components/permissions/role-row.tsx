@@ -1,19 +1,37 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { MoreVertical, Pencil, Trash2, User } from "lucide-react";
+import { GripVertical, MoreVertical, Pencil, Trash2, User } from "lucide-react";
 import type { WorkforceRoleSummary } from "@/contexts/workforce/application/model/workforce-role.read-models";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 
 interface RoleRowProps {
   role: WorkforceRoleSummary;
   selected?: boolean;
+  isDragging?: boolean;
+  dropPosition?: "before" | "after" | null;
   onSelect?: () => void;
   onEdit?: (role: WorkforceRoleSummary) => void;
   onDelete?: (role: WorkforceRoleSummary) => void;
+  onDragStart?: (role: WorkforceRoleSummary) => void;
+  onDragEnd?: () => void;
+  onDragOver?: (event: React.DragEvent<HTMLDivElement>, role: WorkforceRoleSummary) => void;
+  onDrop?: (event: React.DragEvent<HTMLDivElement>, role: WorkforceRoleSummary) => void;
 }
 
-export function RoleRow({ role, selected = false, onSelect, onEdit, onDelete }: RoleRowProps) {
+export function RoleRow({
+  role,
+  selected = false,
+  isDragging = false,
+  dropPosition = null,
+  onSelect,
+  onEdit,
+  onDelete,
+  onDragStart,
+  onDragEnd,
+  onDragOver,
+  onDrop,
+}: RoleRowProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const roleId = role.id;
@@ -45,7 +63,32 @@ export function RoleRow({ role, selected = false, onSelect, onEdit, onDelete }: 
 
   return (
     <div
-      className={`grid cursor-pointer items-center gap-4 border-b border-border px-5 py-4 transition-colors last:border-b-0 hover:bg-muted/40 sm:grid-cols-[minmax(0,1fr)_auto] ${selected ? "bg-accent/60" : ""} ${menuOpen ? "relative z-50" : "relative"}`}
+      draggable={!role.systemRole}
+      onDragStart={(event) => {
+        if (role.systemRole) return;
+        event.dataTransfer.effectAllowed = "move";
+        event.dataTransfer.setData("text/plain", roleId ?? "");
+        onDragStart?.(role);
+      }}
+      onDragEnd={() => {
+        onDragEnd?.();
+      }}
+      onDragOver={(event) => {
+        onDragOver?.(event, role);
+      }}
+      onDrop={(event) => {
+        onDrop?.(event, role);
+      }}
+      className={`grid cursor-grab items-center gap-4 border-b border-border px-5 py-4 transition-colors last:border-b-0 hover:bg-muted/40 active:cursor-grabbing sm:grid-cols-[minmax(0,1fr)_auto] ${
+        selected ? "bg-accent/60" : ""
+      } ${isDragging ? "opacity-50" : ""} ${
+        dropPosition === "before"
+          ? "border-t-2 border-t-primary bg-primary/5"
+          : dropPosition === "after"
+            ? "border-b-2 border-b-primary bg-primary/5"
+            : ""
+      } ${menuOpen ? "relative z-50" : "relative"}`}
+      aria-grabbed={isDragging}
       onClick={onSelect}
       onKeyDown={(event) => {
         if (event.key === "Enter" || event.key === " ") {
@@ -58,14 +101,20 @@ export function RoleRow({ role, selected = false, onSelect, onEdit, onDelete }: 
       aria-pressed={selected}
     >
       <div className="flex min-w-0 items-center gap-3">
+        {!role.systemRole ? (
+          <span
+            className="flex size-8 shrink-0 items-center justify-center rounded-full border border-border bg-muted/30 text-muted-foreground"
+            aria-hidden="true"
+            title="Drag to reorder"
+          >
+            <GripVertical className="size-4" />
+          </span>
+        ) : null}
         <span className="flex size-10 shrink-0 items-center justify-center rounded-full border border-border bg-muted/40 text-muted-foreground">
           <User className="size-4" />
         </span>
         <div className="min-w-0">
-          <p className="truncate text-[15px] font-medium text-foreground">
-            <span className="mr-2 text-xs text-muted-foreground">{role.systemRole ? "∞" : role.position}</span>
-            {role.name}
-          </p>
+          <p className="truncate text-[15px] font-medium text-foreground">{role.name}</p>
         </div>
       </div>
 
@@ -98,7 +147,7 @@ export function RoleRow({ role, selected = false, onSelect, onEdit, onDelete }: 
               }}
             >
               <Pencil className="size-4" />
-              {role.systemRole ? "Protected" : "Edit"}
+              Edit
             </Button>
             <Button
               type="button"
@@ -112,7 +161,7 @@ export function RoleRow({ role, selected = false, onSelect, onEdit, onDelete }: 
               }}
             >
               <Trash2 className="size-4" />
-              {role.systemRole ? "Default role" : "Delete"}
+              Delete
             </Button>
           </div>
         ) : null}

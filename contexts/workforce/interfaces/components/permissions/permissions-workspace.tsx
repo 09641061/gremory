@@ -162,7 +162,7 @@ export function PermissionsWorkspace({ role, permissions, onCancel }: Permission
               </Button>
               <Button type="submit" disabled={pending || !editable} className="gap-2">
                 {pending ? <Spinner className="size-4" /> : <Save className="size-4" />}
-                {pending ? "Saving..." : editable ? "Save" : "Default role is protected"}
+                {pending ? "Saving..." : "Save"}
               </Button>
             </CardFooter>
           </form>
