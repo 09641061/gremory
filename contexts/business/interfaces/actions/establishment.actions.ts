@@ -108,6 +108,7 @@ export async function updateEstablishmentAction(
     const photoFile = readPhotoFileFromFormData(formData);
     const photoUrl = photoFile
       ? await uploadEstablishmentPhoto(photoFile, token)
+<<<<<<< HEAD
       : removePhoto
         ? null
         : typeof currentPhotoUrl === "string" && currentPhotoUrl.trim()
@@ -120,6 +121,9 @@ export async function updateEstablishmentAction(
       );
     }
 
+=======
+      : parsed.data.photoUrl ?? null;
+>>>>>>> 77bce9012b83412b317708015d64a28135b8c0da
     const establishmentId = await createEstablishmentCommandService(token).update(
       updateEstablishmentCommand({
         ...parsed.data,
