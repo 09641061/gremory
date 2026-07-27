@@ -45,8 +45,8 @@ export function PermissionsPageView({
           </div>
         </div>
 
-        <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:items-center">
-          <label className="relative block w-full max-w-xs">
+        <div className="mx-auto flex w-full max-w-4xl flex-col items-stretch gap-3 sm:flex-row sm:items-center">
+          <label className="relative block w-full flex-1">
             <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               value={filter}
@@ -56,7 +56,12 @@ export function PermissionsPageView({
               className="pl-9"
             />
           </label>
-          <Button type="button" size="default" onClick={() => setCreateOpen(true)} className="gap-2">
+          <Button
+            type="button"
+            size="default"
+            onClick={() => setCreateOpen(true)}
+            className="shrink-0 gap-2 sm:whitespace-nowrap"
+          >
             <Plus className="size-4" />
             Create role
           </Button>

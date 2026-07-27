@@ -8,7 +8,7 @@ import type { WorkforceRoleSummary } from "@/contexts/workforce/application/mode
 import { patchWorkforceRoleAction } from "@/contexts/workforce/interfaces/actions/workforce-role.actions";
 import { initialWorkforceRoleActionResult } from "@/contexts/workforce/interfaces/actions/workforce-role-action-result";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
-import { Card, CardContent } from "@/contexts/shared/interfaces/components/ui/card";
+import { Card, CardContent, CardFooter } from "@/contexts/shared/interfaces/components/ui/card";
 import { ErrorAlert } from "@/contexts/shared/interfaces/components/ui/error";
 import { Input } from "@/contexts/shared/interfaces/components/ui/input";
 import { Spinner } from "@/contexts/shared/interfaces/components/ui/spinner";
@@ -74,81 +74,84 @@ export function PermissionsWorkspace({ role, permissions }: PermissionsWorkspace
 
   return (
     <div className="hidden flex-1 lg:block">
-      <Card className="rounded-xl border-border bg-card shadow-sm lg:ml-3">
-        <CardContent className="px-6 py-5">
-          <ErrorAlert
-            title="Unable to save permissions"
-            message={state.status === "error" ? state.error : undefined}
-          />
-          <form action={formAction} className="space-y-6">
+      <Card className="rounded-xl border-border bg-card shadow-sm lg:ml-3 lg:h-[calc(100vh-10rem)]">
+        <CardContent className="flex min-h-0 flex-1 flex-col p-0">
+          <form action={formAction} className="flex min-h-0 flex-1 flex-col">
             <input type="hidden" name="roleId" value={role.id ?? ""} />
             <input type="hidden" name="permissionsSubmitted" value="true" />
             {[...selectedPermissions].map((permission) => (
               <input key={permission} type="hidden" name="permissions" value={permission} />
             ))}
 
-            <div className="space-y-2">
-              <label className="relative block">
-                <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  value={permissionFilter}
-                  onChange={(event) => setPermissionFilter(event.target.value)}
-                  placeholder="Search permissions"
-                  aria-label="Search permissions"
-                  className="pl-9"
-                />
-              </label>
+            <div className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto px-6 py-5">
+              <ErrorAlert
+                title="Unable to save permissions"
+                message={state.status === "error" ? state.error : undefined}
+              />
+
+              <div className="space-y-2">
+                <label className="relative block">
+                  <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    value={permissionFilter}
+                    onChange={(event) => setPermissionFilter(event.target.value)}
+                    placeholder="Search permissions"
+                    aria-label="Search permissions"
+                    className="pl-9"
+                  />
+                </label>
+              </div>
+
+              <div className="space-y-5">
+                {filteredGroupedPermissions.length === 0 ? (
+                  <div className="rounded-lg border border-dashed border-border px-4 py-8 text-sm text-muted-foreground">
+                    No permissions found.
+                  </div>
+                ) : (
+                  filteredGroupedPermissions.map((group) => (
+                    <section key={group.label} className="space-y-3">
+                      <h3 className="text-sm font-medium capitalize tracking-wide text-muted-foreground">
+                        {group.label}
+                      </h3>
+                      <div className="grid gap-3">
+                        {group.permissions.map((permission) => {
+                          const checked = selectedPermissions.has(permission);
+                          return (
+                            <label
+                              key={permission}
+                              className={`flex cursor-pointer items-center justify-between gap-4 rounded-lg border p-4 transition-colors ${checked ? "border-primary/40 bg-accent/50" : "border-border hover:bg-muted/40"}`}
+                            >
+                              <span className="min-w-0 space-y-1">
+                                <span className="block text-sm font-medium text-foreground">
+                                  {permissionLabel(permission)}
+                                </span>
+                                <span className="block truncate text-xs text-muted-foreground">
+                                  {permission}
+                                </span>
+                              </span>
+                              <Switch
+                                checked={checked}
+                                onCheckedChange={(nextChecked) => {
+                                  setSelectedPermissions((current) => {
+                                    const next = new Set(current);
+                                    if (nextChecked) next.add(permission);
+                                    else next.delete(permission);
+                                    return next;
+                                  });
+                                }}
+                                aria-label={permissionLabel(permission)}
+                              />
+                            </label>
+                          );
+                        })}
+                      </div>
+                    </section>
+                  ))
+                )}
+              </div>
             </div>
 
-            <div className="space-y-5">
-              {filteredGroupedPermissions.length === 0 ? (
-                <div className="rounded-lg border border-dashed border-border px-4 py-8 text-sm text-muted-foreground">
-                  No permissions found.
-                </div>
-              ) : (
-                filteredGroupedPermissions.map((group) => (
-                  <section key={group.label} className="space-y-3">
-                    <h3 className="text-sm font-medium capitalize tracking-wide text-muted-foreground">
-                      {group.label}
-                    </h3>
-                    <div className="grid gap-3">
-                      {group.permissions.map((permission) => {
-                        const checked = selectedPermissions.has(permission);
-                        return (
-                          <label
-                            key={permission}
-                            className={`flex cursor-pointer items-center justify-between gap-4 rounded-lg border p-4 transition-colors ${checked ? "border-primary/40 bg-accent/50" : "border-border hover:bg-muted/40"}`}
-                          >
-                            <span className="min-w-0 space-y-1">
-                              <span className="block text-sm font-medium text-foreground">
-                                {permissionLabel(permission)}
-                              </span>
-                              <span className="block truncate text-xs text-muted-foreground">
-                                {permission}
-                              </span>
-                            </span>
-                            <Switch
-                              checked={checked}
-                              onCheckedChange={(nextChecked) => {
-                                setSelectedPermissions((current) => {
-                                  const next = new Set(current);
-                                  if (nextChecked) next.add(permission);
-                                  else next.delete(permission);
-                                  return next;
-                                });
-                              }}
-                              aria-label={permissionLabel(permission)}
-                            />
-                          </label>
-                        );
-                      })}
-                    </div>
-                  </section>
-                ))
-              )}
-            </div>
-
-            <div className="flex items-center justify-end gap-2 pt-5">
+            <CardFooter className="shrink-0 justify-end gap-2 rounded-b-xl border-t border-border bg-card px-6 py-5">
               <Button type="button" variant="ghost" onClick={cancelChanges} disabled={pending}>
                 Cancel
               </Button>
@@ -156,7 +159,7 @@ export function PermissionsWorkspace({ role, permissions }: PermissionsWorkspace
                 {pending ? <Spinner className="size-4" /> : <Save className="size-4" />}
                 {pending ? "Saving..." : "Save"}
               </Button>
-            </div>
+            </CardFooter>
           </form>
         </CardContent>
       </Card>
