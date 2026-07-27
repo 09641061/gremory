@@ -117,7 +117,7 @@ function MemberRow({ member, roles }: { member: TeamUserSummary; roles: RoleOpti
             <input type="hidden" name="memberId" value={member.memberId ?? ""} />
             <input type="hidden" name="roleId" value={role.id} />
             <button type="submit" disabled={role.systemRole || removeRolePending} className="rounded-full border border-border bg-muted/40 px-2.5 py-1 text-xs text-foreground disabled:cursor-default disabled:opacity-70" title={role.systemRole ? "Everyone is inherited and protected" : "Remove role"}>
-              {role.name}{role.systemRole ? " · base" : " ×"}
+              {role.name}{role.systemRole ? "" : " ×"}
             </button>
           </form>
         ))}
