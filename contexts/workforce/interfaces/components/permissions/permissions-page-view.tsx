@@ -23,7 +23,7 @@ export function PermissionsPageView({
   const [createOpen, setCreateOpen] = useState(false);
   const [editingRole, setEditingRole] = useState<WorkforceRoleSummary | null>(null);
   const [deletingRole, setDeletingRole] = useState<WorkforceRoleSummary | null>(null);
-  const [selectedRoleId, setSelectedRoleId] = useState<string | null>(roles[0]?.id ?? null);
+  const [selectedRoleId, setSelectedRoleId] = useState<string | null>(null);
 
   const filteredRoles = useMemo(() => {
     const normalizedFilter = filter.trim().toLowerCase();
@@ -127,6 +127,7 @@ export function PermissionsPageView({
         key={selectedRole?.id ?? "empty"}
         role={selectedRole}
         permissions={permissions}
+        onCancel={() => setSelectedRoleId(null)}
       />
     </section>
   );

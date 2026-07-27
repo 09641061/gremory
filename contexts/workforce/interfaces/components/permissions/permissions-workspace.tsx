@@ -2,7 +2,7 @@
 
 import { useActionState, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Save, Search, ShieldCheck } from "lucide-react";
+import { Save, Search, User } from "lucide-react";
 import type { WorkforcePermission } from "@/contexts/workforce/domain/model/enums/workforce-permission";
 import type { WorkforceRoleSummary } from "@/contexts/workforce/application/model/workforce-role.read-models";
 import { patchWorkforceRoleAction } from "@/contexts/workforce/interfaces/actions/workforce-role.actions";
@@ -17,9 +17,10 @@ import { Switch } from "@/contexts/shared/interfaces/components/ui/switch";
 interface PermissionsWorkspaceProps {
   role: WorkforceRoleSummary | null;
   permissions: ReadonlyArray<WorkforcePermission | string>;
+  onCancel?: () => void;
 }
 
-export function PermissionsWorkspace({ role, permissions }: PermissionsWorkspaceProps) {
+export function PermissionsWorkspace({ role, permissions, onCancel }: PermissionsWorkspaceProps) {
   const router = useRouter();
   const [selectedPermissions, setSelectedPermissions] = useState<ReadonlySet<string>>(
     new Set(role?.permissions ?? []),
@@ -59,7 +60,7 @@ export function PermissionsWorkspace({ role, permissions }: PermissionsWorkspace
       <div className="hidden flex-1 lg:block">
         <div className="flex min-h-[calc(100vh-10rem)] items-center justify-center rounded-xl border border-border bg-card p-8 text-center shadow-sm lg:ml-3">
           <div className="max-w-xs">
-            <ShieldCheck className="mx-auto size-10 text-muted-foreground/50" />
+            <User className="mx-auto size-10 text-muted-foreground/50" />
             <p className="mt-4 text-sm font-medium text-foreground">Select a role</p>
             <p className="mt-1 text-sm text-muted-foreground">Choose a role to configure its permissions.</p>
           </div>
@@ -70,6 +71,7 @@ export function PermissionsWorkspace({ role, permissions }: PermissionsWorkspace
 
   function cancelChanges() {
     setSelectedPermissions(new Set(role?.permissions ?? []));
+    onCancel?.();
   }
 
   return (
