@@ -20,13 +20,16 @@ export function EditEstablishmentForm({
 }) {
   const router = useRouter();
   const [name, setName] = useState(establishment.name);
-  const [originalPhotoUrl] = useState(establishment.photoUrl);
   const [currentPhotoUrl, setCurrentPhotoUrl] = useState(establishment.photoUrl);
   const [photoMarkedForRemoval, setPhotoMarkedForRemoval] = useState(false);
   const [state, formAction, pending] = useActionState(
     updateEstablishmentAction,
     initialBusinessActionResult,
   );
+
+  useEffect(() => {
+    router.refresh();
+  }, [router]);
 
   useEffect(() => {
     if (state.status === "success") {
@@ -36,10 +39,10 @@ export function EditEstablishmentForm({
   }, [router, state.status]);
 
   function handleRemovePhoto() {
-    if (!originalPhotoUrl) return;
+    if (!establishment.photoUrl) return;
 
     if (photoMarkedForRemoval) {
-      setCurrentPhotoUrl(originalPhotoUrl);
+      setCurrentPhotoUrl(establishment.photoUrl);
       setPhotoMarkedForRemoval(false);
       return;
     }
@@ -70,7 +73,7 @@ export function EditEstablishmentForm({
           <CardContent>
             <form action={formAction} className="space-y-5">
               <input type="hidden" name="id" value={establishment.id} />
-              <input type="hidden" name="currentPhotoUrl" value={originalPhotoUrl ?? ""} />
+              <input type="hidden" name="currentPhotoUrl" value={establishment.photoUrl ?? ""} />
               <input type="hidden" name="removePhoto" value={photoMarkedForRemoval ? "true" : "false"} />
               <div className="space-y-2">
                 <Label htmlFor="establishment-name">Name</Label>
@@ -110,7 +113,7 @@ export function EditEstablishmentForm({
                     type="button"
                     variant="outline"
                     onClick={handleRemovePhoto}
-                    disabled={!originalPhotoUrl}
+                    disabled={!establishment.photoUrl}
                     className="gap-2 border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive"
                   >
                     {photoMarkedForRemoval ? "Undo remove" : "Remove photo"}

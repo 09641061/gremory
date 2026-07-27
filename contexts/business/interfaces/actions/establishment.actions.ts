@@ -122,7 +122,7 @@ export async function updateEstablishmentAction(
         photoUrl,
       }),
     );
-    revalidateBusinessViews();
+    revalidateBusinessViews(establishmentId.value);
     return { status: "success", data: { id: establishmentId.value }, error: null };
   } catch (error) {
     return actionError(error);
@@ -149,7 +149,10 @@ export async function deleteEstablishmentAction(
   }
 }
 
-function revalidateBusinessViews() {
+function revalidateBusinessViews(establishmentId?: string) {
   revalidatePath("/catalog");
   revalidatePath("/establishments");
+  if (establishmentId) {
+    revalidatePath(`/establishments/${encodeURIComponent(establishmentId)}/edit`);
+  }
 }

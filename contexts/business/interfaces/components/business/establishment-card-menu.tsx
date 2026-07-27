@@ -41,6 +41,7 @@ export function EstablishmentCardMenu({
           <Link
             href={`/establishments/${establishmentId}/edit`}
             onClick={() => setOpen(false)}
+            prefetch={false}
             className={buttonVariants({
               variant: "ghost",
               className:
