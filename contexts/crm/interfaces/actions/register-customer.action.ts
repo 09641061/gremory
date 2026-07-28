@@ -1,0 +1,41 @@
+"use server";
+
+import { revalidatePath } from "next/cache";
+import { createCrmCommandService } from "../../application/internal/commandservices/crm-command.service";
+import { RegisterCustomerCommand } from "../../domain/model/commands/register-customer.command";
+import { ApiError } from "@/contexts/shared/infrastructure/http/api-client";
+import { CustomerResponse } from "../../domain/model/entities/customer";
+
+export type ActionState<T> =
+  | { status: "idle"; data: null; error: null }
+  | { status: "success"; data: T; error: null }
+  | { status: "error"; data: null; error: string };
+
+export async function registerCustomerAction(
+  command: Omit<RegisterCustomerCommand, "establishmentId">,
+  establishmentId: string
+): Promise<ActionState<CustomerResponse>> {
+  try {
+    const service = createCrmCommandService();
+    const result = await service.registerCustomer({
+      ...command,
+      establishmentId,
+    });
+    
+    revalidatePath("/crm");
+    return { status: "success", data: result, error: null };
+  } catch (error: unknown) {
+    console.error("Error registering customer:", error);
+    let message = "An error occurred while registering the customer.";
+    if (error instanceof ApiError) {
+      if (error.status === 409) {
+        message = "A customer with this document number is already registered in this establishment.";
+      } else if (error.status === 422) {
+        message = "The identity document could not be validated.";
+      } else if (error.message) {
+        message = error.message;
+      }
+    }
+    return { status: "error", data: null, error: message };
+  }
+}
