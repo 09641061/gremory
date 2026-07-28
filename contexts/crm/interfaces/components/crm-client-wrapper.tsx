@@ -13,6 +13,7 @@ import {
   ChevronRight,
   ChevronsLeft,
   ChevronsRight,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import { Input } from "@/contexts/shared/interfaces/components/ui/input";
@@ -74,9 +75,7 @@ export function CrmClientWrapper({
     router.push(`/crm?${params.toString()}`);
   };
 
-  const handleRefresh = () => {
-    router.refresh();
-  };
+  const handleRefresh = React.useTransition()[1];
 
   const handleDelete = async () => {
     if (!customerToDelete) return;
@@ -87,7 +86,9 @@ export function CrmClientWrapper({
       const res = await deleteCustomerAction(id, establishmentId);
       if (res.status === "success") {
         setCustomerToDelete(null);
-        router.refresh();
+        handleRefresh(() => {
+          router.refresh();
+        });
       } else {
         setErrorMsg(res.error || "Failed to delete customer.");
       }
@@ -257,7 +258,9 @@ export function CrmClientWrapper({
           }}
           onSuccess={() => {
             setEditingCustomer(null);
-            router.refresh();
+            handleRefresh(() => {
+              router.refresh();
+            });
           }}
         />
       )}

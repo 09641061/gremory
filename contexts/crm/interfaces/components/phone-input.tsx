@@ -14,14 +14,14 @@ interface PhoneInputProps {
 }
 
 const COUNTRY_CODES = [
-  { code: "+51", name: "Peru" },
-  { code: "+1", name: "USA/Canada" },
-  { code: "+34", name: "Spain" },
-  { code: "+52", name: "Mexico" },
-  { code: "+54", name: "Argentina" },
-  { code: "+56", name: "Chile" },
-  { code: "+57", name: "Colombia" },
-  { code: "+", name: "Other" },
+  { code: "+51", name: "Peru", length: 9 },
+  { code: "+1", name: "USA/Canada", length: 10 },
+  { code: "+34", name: "Spain", length: 9 },
+  { code: "+52", name: "Mexico", length: 10 },
+  { code: "+54", name: "Argentina", length: 10 },
+  { code: "+56", name: "Chile", length: 9 },
+  { code: "+57", name: "Colombia", length: 10 },
+  { code: "+", name: "Other", length: null },
 ];
 
 export function PhoneInput({
@@ -32,10 +32,15 @@ export function PhoneInput({
   onPrefixChange,
   required = false,
 }: PhoneInputProps) {
+  const country = COUNTRY_CODES.find((c) => c.code === prefix);
+
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = e.target.value;
-    // Strict digit validation for Peru
-    if (prefix === "+51" && val !== "" && !/^\d+$/.test(val)) return;
+    let val = e.target.value.replace(/\D/g, ""); // Allow only digits
+
+    if (country?.length) {
+      val = val.slice(0, country.length);
+    }
+
     onChange(val);
   };
 
@@ -45,7 +50,10 @@ export function PhoneInput({
       <div className="flex items-center gap-2">
         <select
           value={prefix}
-          onChange={(e) => onPrefixChange(e.target.value)}
+          onChange={(e) => {
+            onPrefixChange(e.target.value);
+            onChange(""); // Reset number on prefix change to ensure validation
+          }}
           className="h-9 rounded-lg border border-border bg-muted/30 px-2 text-sm transition-colors outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
         >
           {COUNTRY_CODES.map((c) => (
@@ -54,14 +62,21 @@ export function PhoneInput({
             </option>
           ))}
         </select>
-        <Input
-          id={id}
-          value={value}
-          onChange={handlePhoneChange}
-          placeholder={prefix === "+51" ? "987654321" : "Phone number"}
-          required={required}
-          className="flex-1"
-        />
+        <div className="relative flex-1">
+          <Input
+            id={id}
+            value={value}
+            onChange={handlePhoneChange}
+            placeholder={country?.length ? `Ex: ${"9".repeat(country.length)}` : "Phone number"}
+            required={required}
+            className="pr-12"
+          />
+          {country?.length && (
+            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-mono text-muted-foreground tabular-nums">
+              {value.length}/{country.length}
+            </span>
+          )}
+        </div>
       </div>
     </div>
   );

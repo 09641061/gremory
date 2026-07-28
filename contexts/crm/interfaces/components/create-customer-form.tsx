@@ -14,6 +14,7 @@ interface CreateCustomerFormProps {
 
 export function CreateCustomerForm({ establishmentId }: CreateCustomerFormProps) {
   const router = useRouter();
+  const [isPending, startTransition] = React.useTransition();
   const [isSaving, setIsSaving] = React.useState(false);
   const [errorMsg, setErrorMsg] = React.useState<string | null>(null);
 
@@ -34,8 +35,10 @@ export function CreateCustomerForm({ establishmentId }: CreateCustomerFormProps)
     try {
       const result = await registerCustomerAction(command, establishmentId);
       if (result.status === "success") {
-        router.push("/crm");
-        router.refresh();
+        startTransition(() => {
+          router.push("/crm");
+          router.refresh();
+        });
       } else {
         setErrorMsg(result.error || "Failed to register customer.");
       }
@@ -45,6 +48,8 @@ export function CreateCustomerForm({ establishmentId }: CreateCustomerFormProps)
       setIsSaving(false);
     }
   };
+
+  const isWorking = isSaving || isPending;
 
   return (
     <>
@@ -65,7 +70,7 @@ export function CreateCustomerForm({ establishmentId }: CreateCustomerFormProps)
           <div className="p-6">
             <CustomerForm
               onSubmit={handleSubmit}
-              isSaving={isSaving}
+              isSaving={isWorking}
               submitLabel="Register Customer"
               onCancel={() => router.back()}
             />

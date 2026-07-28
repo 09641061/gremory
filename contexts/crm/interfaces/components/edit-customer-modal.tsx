@@ -3,7 +3,6 @@
 import * as React from "react";
 import { Dialog } from "@base-ui/react/dialog";
 import { X, Save } from "lucide-react";
-import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import { ErrorAlert } from "@/contexts/shared/interfaces/components/ui/error";
 import { CustomerResponse } from "../../domain/model/entities/customer";
 import { updateCustomerAction } from "../actions/update-customer.action";

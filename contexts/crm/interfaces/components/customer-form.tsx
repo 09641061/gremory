@@ -42,6 +42,7 @@ export function CustomerForm({
   const [phoneNumber, setPhoneNumber] = React.useState(initialData?.phoneNumber || "");
 
   const [isResolving, setIsResolving] = React.useState(false);
+  const [wasResolvedSuccessfully, setWasResolvedSuccessfully] = React.useState(false);
   const prevResolvedRef = React.useRef<string>("");
 
   const handleResolve = React.useCallback(async () => {
@@ -49,13 +50,17 @@ export function CustomerForm({
     if (!docNumber) return;
 
     setIsResolving(true);
+    setWasResolvedSuccessfully(false);
     try {
       const res = await resolveDocumentAction(docType as "dni" | "ruc", docNumber);
       if (res.status === "success" && res.data) {
         setName(res.data.name);
+        setWasResolvedSuccessfully(true);
+      } else {
+        setWasResolvedSuccessfully(false);
       }
     } catch {
-      // Silent error for auto-resolve, user can still manually edit
+      setWasResolvedSuccessfully(false);
     } finally {
       setIsResolving(false);
     }
@@ -92,6 +97,8 @@ export function CustomerForm({
   };
 
   const isDniOrRuc = docType === "dni" || docType === "ruc";
+  // Allow manual entry if not DNI/RUC OR if resolution failed (to not block the user)
+  const canEditName = !isDniOrRuc || (isDniOrRuc && !wasResolvedSuccessfully);
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -104,10 +111,12 @@ export function CustomerForm({
               id="doc_type"
               value={docType}
               onChange={(e) => {
-                setDocType(e.target.value);
-                if (initialData?.docType !== e.target.value) {
+                const newType = e.target.value;
+                setDocType(newType);
+                if (initialData?.docType !== newType) {
                     setName("");
                     setDocNumber("");
+                    setWasResolvedSuccessfully(false);
                 }
               }}
               className="w-full h-9 rounded-lg border border-border bg-transparent px-3 text-sm transition-colors outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
@@ -151,7 +160,6 @@ export function CustomerForm({
             onChange={(e) => setName(e.target.value)}
             placeholder={isDniOrRuc ? "Awaiting document entry..." : "Enter full name"}
             required
-            disabled={isDniOrRuc && name !== ""}
           />
         </div>
       </div>
@@ -183,7 +191,7 @@ export function CustomerForm({
       {/* Footer Actions */}
       <div className="flex justify-end gap-3 pt-4 border-t border-border mt-6">
         {onCancel && (
-          <Button type="button" variant="outline" onClick={onCancel}>
+          <Button type="button" variant="outline" onClick={onCancel} disabled={isSaving}>
             Cancel
           </Button>
         )}
