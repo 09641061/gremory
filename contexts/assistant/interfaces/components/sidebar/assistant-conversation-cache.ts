@@ -1,4 +1,4 @@
-import type { AssistantConversationSummary } from "./assistant-chat.types";
+import type { AssistantConversationSummary } from "../shared/assistant-chat.types";
 
 const assistantConversationsEndpoint = "/api/assistant/conversations";
 

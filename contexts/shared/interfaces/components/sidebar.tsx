@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 
 import { buttonVariants } from "@/contexts/shared/interfaces/components/ui/button";
-import { AssistantChatsSection } from "@/contexts/assistant/interfaces/components/chat/assistant-chats-section";
+import { AssistantChatsSection } from "@/contexts/assistant/interfaces/components/sidebar/assistant-chats-section";
 import { cn } from "@/lib/utils";
 
 const navigation = [

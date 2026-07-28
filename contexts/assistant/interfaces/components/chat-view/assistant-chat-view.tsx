@@ -7,12 +7,11 @@ import { hasActiveSubscription } from "@/contexts/billing/domain/services/subscr
 import type { SubscriptionResponse } from "@/contexts/billing/infrastructure/gateways/billing-api.gateway";
 import { ErrorAlert } from "@/contexts/shared/interfaces/components/ui/error";
 
+import { AssistantChatEmptyState } from "./assistant-chat-empty-state";
 import { AssistantChatComposer } from "./assistant-chat-composer";
 import { AssistantChatThread } from "./assistant-chat-thread";
-import {
-  upsertAssistantConversationListItem,
-} from "./assistant-conversation-cache";
-import type { AssistantChatMessage, AssistantConversation } from "./assistant-chat.types";
+import { upsertAssistantConversationListItem } from "../sidebar/assistant-conversation-cache";
+import type { AssistantChatMessage, AssistantConversation } from "../shared/assistant-chat.types";
 
 const conversationsEndpoint = "/api/assistant/conversations";
 const subscriptionStatusEndpoint = "/api/billing/subscriptions";
@@ -346,16 +345,49 @@ export function AssistantChatView() {
 
   return (
     <div className="flex min-h-[calc(100vh-6rem)] flex-col">
-      <AssistantChatThread
-        conversation={selectedConversationId ? activeConversation : null}
-        isLoading={assistantAccessState === "checking" || isLoadingConversation}
-        bottomRef={bottomRef}
-        error={
-          assistantAccessState === "blocked"
-            ? "You do not have active access to the assistant. Check your session or subscription."
-            : error
-        }
-      />
+      {selectedConversationId ? (
+        <div className="relative flex min-h-0 flex-1 flex-col">
+          <AssistantChatThread
+            conversation={activeConversation}
+            isLoading={assistantAccessState === "checking" || isLoadingConversation}
+            bottomRef={bottomRef}
+            error={
+              assistantAccessState === "blocked"
+                ? "You do not have active access to the assistant. Check your session or subscription."
+                : error
+            }
+            composer={
+              <AssistantChatComposer
+                value={draft}
+                isSending={isSendingMessage || assistantAccessState !== "ready"}
+                onValueChange={setDraft}
+                onSubmit={() => {
+                  void sendMessage();
+                }}
+                onKeyDown={handleComposerKeyDown}
+                disabled={assistantAccessState !== "ready"}
+                floating
+              />
+            }
+          />
+        </div>
+      ) : (
+        <div className="flex min-h-[calc(100vh-6rem)] flex-1 flex-col justify-center">
+          <AssistantChatEmptyState />
+          <div className="h-8 sm:h-10" />
+          <AssistantChatComposer
+            value={draft}
+            isSending={isSendingMessage || assistantAccessState !== "ready"}
+            onValueChange={setDraft}
+            onSubmit={() => {
+              void sendMessage();
+            }}
+            onKeyDown={handleComposerKeyDown}
+            disabled={assistantAccessState !== "ready"}
+            variant="minimal"
+          />
+        </div>
+      )}
 
       <ErrorAlert
         title="Assistant error"
@@ -364,17 +396,6 @@ export function AssistantChatView() {
             ? "You do not have active access to the assistant. Check your session or subscription."
             : error ?? undefined
         }
-      />
-
-      <AssistantChatComposer
-        value={draft}
-        isSending={isSendingMessage || assistantAccessState !== "ready"}
-        onValueChange={setDraft}
-        onSubmit={() => {
-          void sendMessage();
-        }}
-        onKeyDown={handleComposerKeyDown}
-        disabled={assistantAccessState !== "ready"}
       />
     </div>
   );
