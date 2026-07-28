@@ -5,7 +5,6 @@ import { useRouter, useSearchParams } from "next/navigation";
 import {
   Search,
   Plus,
-  RefreshCw,
   MoreVertical,
   Edit,
   Trash2,
@@ -132,9 +131,6 @@ export function CrmClientWrapper({
               className="pl-9 w-full"
             />
           </div>
-          <Button variant="outline" size="icon" onClick={handleRefresh}>
-            <RefreshCw className="h-4 w-4" />
-          </Button>
         </section>
 
         {/* Data Grid Table */}
@@ -170,11 +166,13 @@ export function CrmClientWrapper({
                       <td className="px-6 py-4 text-muted-foreground">{cust.phone}</td>
                       <td className="px-6 py-4 text-right">
                         <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-8 w-8">
-                              <MoreVertical className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
+                          <DropdownMenuTrigger
+                            render={
+                              <Button variant="ghost" size="icon" className="h-8 w-8">
+                                <MoreVertical className="h-4 w-4" />
+                              </Button>
+                            }
+                          />
                           <DropdownMenuContent>
                             <DropdownMenuItem onClick={() => setEditingCustomer(cust)} className="gap-2 cursor-pointer">
                               <Edit className="h-3 w-3" />

@@ -81,6 +81,23 @@ export function CustomerForm({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Basic phone validation based on selected prefix
+    const country = [
+      { code: "+51", length: 9 },
+      { code: "+1", length: 10 },
+      { code: "+34", length: 9 },
+      { code: "+52", length: 10 },
+      { code: "+54", length: 10 },
+      { code: "+56", length: 9 },
+      { code: "+57", length: 10 },
+    ].find((c) => c.code === phonePrefix);
+
+    if (country && phoneNumber.length !== country.length) {
+      alert(`The phone number for ${phonePrefix} must have exactly ${country.length} digits.`);
+      return;
+    }
+
     onSubmit({
       docType,
       docNumber,
