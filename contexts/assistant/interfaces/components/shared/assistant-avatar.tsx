@@ -16,6 +16,8 @@ import xplo7 from "@/contexts/assistant/interfaces/resources/explotion/kodu_icon
 
 const explosionFrames: StaticImageData[] = [xplo1, xplo2, xplo3, xplo4, xplo5, xplo6, xplo7];
 const longPressDelayMs = 500;
+const shakeDelayMs = 5000;
+const shakeStepMs = 80;
 const maxFrame = explosionFrames.length;
 
 interface AssistantAvatarProps {
@@ -32,8 +34,11 @@ export function AssistantAvatar({
   iconAlt = "Assistant avatar",
 }: AssistantAvatarProps) {
   const [frame, setFrame] = useState(0);
+  const [shakeStep, setShakeStep] = useState(0);
   const timeoutRef = useRef<number | null>(null);
   const intervalRef = useRef<number | null>(null);
+  const shakeTimeoutRef = useRef<number | null>(null);
+  const shakeIntervalRef = useRef<number | null>(null);
 
   function clearTimers() {
     if (timeoutRef.current !== null) {
@@ -45,11 +50,22 @@ export function AssistantAvatar({
       window.clearInterval(intervalRef.current);
       intervalRef.current = null;
     }
+
+    if (shakeTimeoutRef.current !== null) {
+      window.clearTimeout(shakeTimeoutRef.current);
+      shakeTimeoutRef.current = null;
+    }
+
+    if (shakeIntervalRef.current !== null) {
+      window.clearInterval(shakeIntervalRef.current);
+      shakeIntervalRef.current = null;
+    }
   }
 
   function resetAvatar() {
     clearTimers();
     setFrame(0);
+    setShakeStep(0);
   }
 
   useEffect(() => clearTimers, []);
@@ -72,6 +88,13 @@ export function AssistantAvatar({
         setFrame((current) => (current >= maxFrame ? maxFrame : current + 1));
       }, longPressDelayMs);
     }, longPressDelayMs);
+
+    shakeTimeoutRef.current = window.setTimeout(() => {
+      setShakeStep(1);
+      shakeIntervalRef.current = window.setInterval(() => {
+        setShakeStep((current) => current + 1);
+      }, shakeStepMs);
+    }, shakeDelayMs);
   }
 
   function handlePointerEnd() {
@@ -80,6 +103,17 @@ export function AssistantAvatar({
 
   const currentIcon = frame === 0 ? assistantIcon : explosionFrames[frame - 1];
   const scale = 1 + frame * 0.28;
+  const isShaking = shakeStep > 0;
+  const shakePattern = [
+    { x: 0, y: 0, rotate: 0 },
+    { x: -2, y: 1, rotate: -2 },
+    { x: 3, y: -1, rotate: 2 },
+    { x: -3, y: 0, rotate: -1 },
+    { x: 2, y: 2, rotate: 3 },
+    { x: -1, y: -2, rotate: -3 },
+  ];
+  const shakeIndex = isShaking ? shakeStep % shakePattern.length : 0;
+  const shakeOffset = shakePattern[shakeIndex];
 
   return (
     <button
@@ -97,7 +131,9 @@ export function AssistantAvatar({
     >
       <span
         className="pointer-events-none flex items-center justify-center transition-transform duration-150 ease-out"
-        style={{ transform: `scale(${scale})` }}
+        style={{
+          transform: `scale(${scale}) translate(${shakeOffset.x}px, ${shakeOffset.y}px) rotate(${shakeOffset.rotate}deg)`,
+        }}
       >
         <Image
           src={currentIcon}
