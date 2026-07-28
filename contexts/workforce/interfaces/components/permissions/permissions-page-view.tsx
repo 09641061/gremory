@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Plus, Search } from "lucide-react";
 import type { WorkforceRoleSummary } from "@/contexts/workforce/application/model/workforce-role.read-models";
+import type { TeamUserSummary } from "@/contexts/workforce/application/model/team.read-models";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import { Card, CardContent } from "@/contexts/shared/interfaces/components/ui/card";
 import { Input } from "@/contexts/shared/interfaces/components/ui/input";
@@ -18,9 +19,11 @@ import { patchWorkforceRoleAction } from "@/contexts/workforce/interfaces/action
 export function PermissionsPageView({
   roles,
   permissions,
+  members,
 }: {
   roles: ReadonlyArray<WorkforceRoleSummary>;
   permissions: ReadonlyArray<string>;
+  members: ReadonlyArray<TeamUserSummary>;
 }) {
   const [filter, setFilter] = useState("");
   const [createOpen, setCreateOpen] = useState(false);
@@ -34,6 +37,7 @@ export function PermissionsPageView({
   const [reorderError, setReorderError] = useState<string | null>(null);
   const [reorderInProgress, setReorderInProgress] = useState(false);
   const router = useRouter();
+
 
   const orderedRoles = useMemo(() => {
     return [...roles].sort((left, right) => {
@@ -223,7 +227,9 @@ export function PermissionsPageView({
         role={selectedRole}
         permissions={permissions}
         onCancel={() => setSelectedRoleId(null)}
+        members={members}
       />
+
     </section>
   );
 }
