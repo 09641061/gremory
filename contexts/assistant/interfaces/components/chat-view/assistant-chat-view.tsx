@@ -346,16 +346,31 @@ export function AssistantChatView() {
   return (
     <div className="flex min-h-[calc(100vh-6rem)] flex-col">
       {selectedConversationId ? (
-        <AssistantChatThread
-          conversation={activeConversation}
-          isLoading={assistantAccessState === "checking" || isLoadingConversation}
-          bottomRef={bottomRef}
-          error={
-            assistantAccessState === "blocked"
-              ? "You do not have active access to the assistant. Check your session or subscription."
-              : error
-          }
-        />
+        <div className="relative flex min-h-0 flex-1 flex-col">
+          <AssistantChatThread
+            conversation={activeConversation}
+            isLoading={assistantAccessState === "checking" || isLoadingConversation}
+            bottomRef={bottomRef}
+            error={
+              assistantAccessState === "blocked"
+                ? "You do not have active access to the assistant. Check your session or subscription."
+                : error
+            }
+            composer={
+              <AssistantChatComposer
+                value={draft}
+                isSending={isSendingMessage || assistantAccessState !== "ready"}
+                onValueChange={setDraft}
+                onSubmit={() => {
+                  void sendMessage();
+                }}
+                onKeyDown={handleComposerKeyDown}
+                disabled={assistantAccessState !== "ready"}
+                floating
+              />
+            }
+          />
+        </div>
       ) : (
         <div className="flex min-h-[calc(100vh-6rem)] flex-1 flex-col justify-center">
           <AssistantChatEmptyState />
@@ -382,19 +397,6 @@ export function AssistantChatView() {
             : error ?? undefined
         }
       />
-
-      {selectedConversationId ? (
-        <AssistantChatComposer
-          value={draft}
-          isSending={isSendingMessage || assistantAccessState !== "ready"}
-          onValueChange={setDraft}
-          onSubmit={() => {
-            void sendMessage();
-          }}
-          onKeyDown={handleComposerKeyDown}
-          disabled={assistantAccessState !== "ready"}
-        />
-      ) : null}
     </div>
   );
 }

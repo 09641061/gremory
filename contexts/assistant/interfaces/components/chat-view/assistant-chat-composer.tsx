@@ -14,6 +14,7 @@ interface AssistantChatComposerProps {
   onKeyDown: (event: KeyboardEvent<HTMLTextAreaElement>) => void;
   disabled?: boolean;
   variant?: "default" | "minimal";
+  floating?: boolean;
 }
 
 const MIN_HEIGHT = 24;
@@ -37,6 +38,7 @@ export function AssistantChatComposer({
   onKeyDown,
   disabled,
   variant = "default",
+  floating = false,
 }: AssistantChatComposerProps) {
   const isMinimal = variant === "minimal";
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
@@ -148,7 +150,7 @@ export function AssistantChatComposer({
       </div>
     </div>
   ) : (
-    <div className="bg-background/95 p-4 sm:p-6">
+    <div className={floating ? "bg-transparent p-0" : "bg-background/95 p-4 sm:p-6"}>
       <div className="mx-auto w-full max-w-4xl">
         <div
           ref={shellRef}

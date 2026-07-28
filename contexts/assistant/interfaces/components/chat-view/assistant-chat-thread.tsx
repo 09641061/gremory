@@ -1,6 +1,6 @@
 "use client";
 
-import type { RefObject } from "react";
+import type { ReactNode, RefObject } from "react";
 
 import { AssistantChatLoadingState } from "./assistant-chat-loading-state";
 import { AssistantChatMessageBubble } from "./assistant-chat-message-bubble";
@@ -11,6 +11,7 @@ interface AssistantChatThreadProps {
   isLoading: boolean;
   bottomRef: RefObject<HTMLDivElement | null>;
   error?: string | null;
+  composer?: ReactNode;
 }
 
 export function AssistantChatThread({
@@ -18,12 +19,13 @@ export function AssistantChatThread({
   isLoading,
   bottomRef,
   error: _error,
+  composer,
 }: AssistantChatThreadProps) {
   void _error;
 
   return (
-    <section className="flex min-h-0 min-w-0 flex-1 flex-col">
-      <div className="min-h-0 flex-1 overflow-y-auto px-4 py-6 sm:px-6">
+    <section className="relative isolate flex min-h-0 min-w-0 flex-1 overflow-hidden">
+      <div className="absolute inset-0 z-0 overflow-y-auto px-4 py-6 pb-40 sm:px-6 sm:pb-44">
         {isLoading ? (
           <AssistantChatLoadingState />
         ) : conversation?.messages.length ? (
@@ -39,6 +41,12 @@ export function AssistantChatThread({
           </div>
         )}
       </div>
+
+      {composer ? (
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-30 flex justify-center px-4 pb-4 sm:px-6 sm:pb-6">
+          <div className="pointer-events-auto w-full max-w-4xl">{composer}</div>
+        </div>
+      ) : null}
     </section>
   );
 }
