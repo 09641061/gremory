@@ -22,15 +22,7 @@ export function AssistantChatThread({
   void _error;
 
   return (
-    <section className="flex min-h-0 min-w-0 flex-col">
-      <div className="flex items-center justify-between gap-4 border-b border-border/60 px-4 py-4 sm:px-6">
-        <div className="min-w-0">
-          <h1 className="truncate text-lg font-medium tracking-tight text-foreground">
-            {conversation?.title ?? "Nuevo chat"}
-          </h1>
-        </div>
-      </div>
-
+    <section className="flex min-h-0 min-w-0 flex-1 flex-col">
       <div className="min-h-0 flex-1 overflow-y-auto px-4 py-6 sm:px-6">
         {isLoading ? (
           <AssistantChatLoadingState />

@@ -148,7 +148,7 @@ export function AssistantChatComposer({
       </div>
     </div>
   ) : (
-    <div className="border-t border-border/60 bg-background/95 p-4 sm:p-6">
+    <div className="bg-background/95 p-4 sm:p-6">
       <div className="mx-auto w-full max-w-4xl">
         <div
           ref={shellRef}
