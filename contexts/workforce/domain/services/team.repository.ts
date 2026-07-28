@@ -45,6 +45,8 @@ export interface TeamAccessContext {
     organizationName: string;
     establishmentId: TeamEstablishmentId;
     establishmentName: string;
+    roles: Array<{ id: string; name: string; position: number; systemRole: boolean }>;
+    effectivePermissions: string[];
   }>;
 }
 

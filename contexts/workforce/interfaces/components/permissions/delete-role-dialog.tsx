@@ -59,8 +59,7 @@ export function DeleteRoleDialog({ roleId, roleName, isSystemRole, open, onOpenC
               <AlertDialogDescription>
                 {isSystemRole ? (
                   <>
-                    <span className="font-medium text-foreground">{roleName}</span> is the default role,
-                    so it cannot be deleted.
+                    <span className="font-medium text-foreground">{roleName}</span> is protected and cannot be deleted.
                   </>
                 ) : (
                   <>
@@ -76,7 +75,7 @@ export function DeleteRoleDialog({ roleId, roleName, isSystemRole, open, onOpenC
             <AlertDialogCancel disabled={pending}>Cancel</AlertDialogCancel>
             <Button type="submit" variant="destructive" disabled={pending || isSystemRole} className="gap-2">
               {pending ? <Spinner className="size-4" /> : <Trash2 className="size-4" />}
-              {isSystemRole ? "Protected" : pending ? "Deleting..." : "Delete"}
+              {pending ? "Deleting..." : "Delete"}
             </Button>
           </AlertDialogFooter>
         </form>

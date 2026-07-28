@@ -7,6 +7,7 @@ import {
   createWorkforceRoleCommand,
   deleteWorkforceRoleCommand,
   patchWorkforceRoleCommand,
+  removeWorkforceRoleAssignmentCommand,
 } from "../../domain/model/commands/workforce-role.commands";
 import { requireTeamAccessToken } from "../../infrastructure/session/team-session";
 import {
@@ -98,6 +99,26 @@ export async function assignWorkforceRoleAction(
   }
 }
 
+export async function removeWorkforceRoleAssignmentAction(
+  _previous: WorkforceRoleActionResult,
+  formData: FormData,
+): Promise<WorkforceRoleActionResult> {
+  const role = assignWorkforceRoleRequestSchema.safeParse({ roleId: formData.get("roleId") });
+  const member = assignWorkforceRoleRequestSchema.shape.roleId.safeParse(formData.get("memberId"));
+  if (!role.success || !member.success) return workforceRoleActionError("Invalid role assignment");
+  try {
+    const service = createWorkforceRoleCommandService(await requireTeamAccessToken());
+    if (!service.removeAssignment) throw new Error("Role assignment removal is unavailable");
+    await service.removeAssignment(
+      removeWorkforceRoleAssignmentCommand({ memberId: member.data, roleId: role.data.roleId }),
+    );
+    revalidateWorkforceRoleView();
+    return { status: "success", data: null, error: null };
+  } catch (error) {
+    return workforceRoleActionError(error);
+  }
+}
+
 export async function deleteWorkforceRoleAction(
   _previous: WorkforceRoleActionResult,
   formData: FormData,
@@ -136,6 +157,7 @@ function parsePatchRolePayload(formData: FormData) {
   return {
     name: typeof formData.get("name") === "string" ? formData.get("name") : undefined,
     permissions,
+    position: formData.has("position") ? Number(formData.get("position")) : undefined,
   };
 }
 

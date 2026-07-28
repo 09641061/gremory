@@ -14,8 +14,9 @@ export interface TeamUserProps {
   memberId: MemberId | null;
   userId: TeamUserId | null;
   email: InvitedEmail;
-  roleId: TeamRoleId;
-  roleName: string;
+  roleId?: TeamRoleId;
+  roleName?: string;
+  roles?: ReadonlyArray<TeamRoleSummary>;
   organizationId: TeamOrganizationId;
   establishmentId: TeamEstablishmentId;
   establishmentName: string | null;
@@ -27,6 +28,14 @@ export interface TeamUserProps {
   removedAt: Date | null;
 }
 
+export interface TeamRoleSummary {
+  id: TeamRoleId;
+  name: string;
+  position: number;
+  systemRole: boolean;
+  permissions: ReadonlyArray<string>;
+}
+
 export class TeamUser {
   private constructor(
     public readonly invitationId: InvitationId,
@@ -35,6 +44,7 @@ export class TeamUser {
     public readonly email: InvitedEmail,
     public readonly roleId: TeamRoleId,
     public readonly roleName: string,
+    public readonly roles: ReadonlyArray<TeamRoleSummary>,
     public readonly organizationId: TeamOrganizationId,
     public readonly establishmentId: TeamEstablishmentId,
     public readonly establishmentName: string | null,
@@ -56,13 +66,23 @@ export class TeamUser {
     if (Number.isNaN(props.invitedAt.getTime()) || Number.isNaN(props.invitationExpiresAt.getTime())) {
       throw new Error("Team user invitation dates must be valid");
     }
+    const roles = [...(props.roles ?? (props.roleId && props.roleName ? [{
+      id: props.roleId,
+      name: props.roleName,
+      position: 2_147_483_647,
+      systemRole: true,
+      permissions: [],
+    }] : []))];
+    const primaryRole = roles[0];
+    if (!primaryRole) throw new Error("Team users require at least Everyone role");
     return new TeamUser(
       props.invitationId,
       props.memberId,
       props.userId,
       props.email,
-      props.roleId,
-      props.roleName.trim(),
+      primaryRole.id,
+      primaryRole.name.trim(),
+      Object.freeze(roles),
       props.organizationId,
       props.establishmentId,
       normalizeEstablishmentName(props.establishmentName),

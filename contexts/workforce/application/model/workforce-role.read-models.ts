@@ -3,6 +3,7 @@ export interface WorkforceRoleSummary {
   name: string;
   permissions: ReadonlyArray<string>;
   systemRole: boolean;
+  position: number;
 }
 
 export interface WorkforceRolePermissionsView {

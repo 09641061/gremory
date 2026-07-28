@@ -75,6 +75,13 @@ describe("Team application services", () => {
       email: "employee@example.com",
       roleId,
       roleName: "Everyone",
+      roles: [{
+        id: roleId,
+        name: "Everyone",
+        position: 2_147_483_647,
+        systemRole: true,
+        permissions: [],
+      }],
       organizationId,
       establishmentId,
       establishmentName: "Miraflores",

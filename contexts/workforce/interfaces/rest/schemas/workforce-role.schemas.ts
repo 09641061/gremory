@@ -8,12 +8,14 @@ const workforcePermissionSchema = z.string().refine(isWorkforcePermission, {
 
 export const workforceRoleCreateRequestSchema = z.object({
   name: z.string().trim().min(1).max(100),
+  position: z.number().int().min(1).optional(),
 });
 
 export const workforceRolePatchRequestSchema = z.object({
   name: z.string().trim().min(1).max(100).optional(),
   permissions: z.array(workforcePermissionSchema).optional(),
-}).refine((value) => value.name !== undefined || value.permissions !== undefined, {
+  position: z.number().int().min(1).optional(),
+}).refine((value) => value.name !== undefined || value.permissions !== undefined || value.position !== undefined, {
   message: "At least one field must be provided",
 });
 
@@ -26,6 +28,7 @@ export const workforceRoleResourceSchema = z.object({
   name: z.string().trim().min(1),
   permissions: z.array(z.enum(workforcePermissionCodes)),
   systemRole: z.boolean(),
+  position: z.number().int().min(1).optional(),
 });
 
 export const workforceRoleResourcesSchema = z.array(workforceRoleResourceSchema);

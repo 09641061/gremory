@@ -1,23 +1,29 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Plus, Search } from "lucide-react";
 import type { WorkforceRoleSummary } from "@/contexts/workforce/application/model/workforce-role.read-models";
+import type { TeamUserSummary } from "@/contexts/workforce/application/model/team.read-models";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import { Card, CardContent } from "@/contexts/shared/interfaces/components/ui/card";
 import { Input } from "@/contexts/shared/interfaces/components/ui/input";
+import { ErrorAlert } from "@/contexts/shared/interfaces/components/ui/error";
 import { CreateRoleDialog } from "./create-role-dialog";
 import { EditRoleDialog } from "./edit-role-dialog";
 import { DeleteRoleDialog } from "./delete-role-dialog";
 import { RoleRow } from "./role-row";
 import { PermissionsWorkspace } from "./permissions-workspace";
+import { patchWorkforceRoleAction } from "@/contexts/workforce/interfaces/actions/workforce-role.actions";
 
 export function PermissionsPageView({
   roles,
   permissions,
+  members,
 }: {
   roles: ReadonlyArray<WorkforceRoleSummary>;
   permissions: ReadonlyArray<string>;
+  members: ReadonlyArray<TeamUserSummary>;
 }) {
   const [filter, setFilter] = useState("");
   const [createOpen, setCreateOpen] = useState(false);
@@ -25,14 +31,76 @@ export function PermissionsPageView({
   const [editingRole, setEditingRole] = useState<WorkforceRoleSummary | null>(null);
   const [deletingRole, setDeletingRole] = useState<WorkforceRoleSummary | null>(null);
   const [selectedRoleId, setSelectedRoleId] = useState<string | null>(null);
+  const [draggedRoleId, setDraggedRoleId] = useState<string | null>(null);
+  const [dropTargetRoleId, setDropTargetRoleId] = useState<string | null>(null);
+  const [dropPosition, setDropPosition] = useState<"before" | "after" | null>(null);
+  const [reorderError, setReorderError] = useState<string | null>(null);
+  const [reorderInProgress, setReorderInProgress] = useState(false);
+  const router = useRouter();
+
+
+  const orderedRoles = useMemo(() => {
+    return [...roles].sort((left, right) => {
+      if (left.systemRole !== right.systemRole) {
+        return left.systemRole ? 1 : -1;
+      }
+
+      if (left.position !== right.position) {
+        return left.position - right.position;
+      }
+
+      return left.name.localeCompare(right.name);
+    });
+  }, [roles]);
 
   const filteredRoles = useMemo(() => {
     const normalizedFilter = filter.trim().toLowerCase();
-    if (!normalizedFilter) return roles;
-    return roles.filter((role) => role.name.toLowerCase().includes(normalizedFilter));
-  }, [filter, roles]);
+    if (!normalizedFilter) return orderedRoles;
+    return orderedRoles.filter((role) => role.name.toLowerCase().includes(normalizedFilter));
+  }, [filter, orderedRoles]);
 
-  const selectedRole = roles.find((role) => role.id === selectedRoleId) ?? null;
+  const selectedRole = orderedRoles.find((role) => role.id === selectedRoleId) ?? null;
+
+  const clearDragState = () => {
+    setDraggedRoleId(null);
+    setDropTargetRoleId(null);
+    setDropPosition(null);
+  };
+
+  const resolveDropPosition = (event: React.DragEvent<HTMLDivElement>, role: WorkforceRoleSummary) => {
+    if (role.systemRole) return "before" as const;
+    const rect = event.currentTarget.getBoundingClientRect();
+    return event.clientY < rect.top + rect.height / 2 ? "before" as const : "after" as const;
+  };
+
+  const handleReorderRole = async (targetRole: WorkforceRoleSummary, placement: "before" | "after") => {
+    if (!draggedRoleId || !targetRole.id) return;
+    if (draggedRoleId === targetRole.id) return;
+
+    const draggedRole = orderedRoles.find((role) => role.id === draggedRoleId);
+    if (!draggedRole || draggedRole.systemRole || !draggedRole.id) return;
+
+    const newPosition = placement === "after" ? targetRole.position + 1 : targetRole.position;
+    if (draggedRole.position === newPosition) return;
+
+    setReorderInProgress(true);
+    setReorderError(null);
+
+    const formData = new FormData();
+    formData.append("roleId", draggedRole.id ?? "");
+    formData.append("position", String(newPosition));
+
+    const result = await patchWorkforceRoleAction({ status: "idle", data: null, error: null }, formData);
+    setReorderInProgress(false);
+    clearDragState();
+
+    if (result.status === "success") {
+      router.refresh();
+      return;
+    }
+
+    setReorderError(result.error);
+  };
 
   return (
     <section className="mx-auto flex w-full max-w-7xl flex-col gap-6 lg:flex-row">
@@ -67,6 +135,8 @@ export function PermissionsPageView({
             Create role
           </Button>
         </div>
+
+        <ErrorAlert title="Unable to reorder role" message={reorderError ?? undefined} />
 
         <CreateRoleDialog
           key={createSession}
@@ -119,9 +189,31 @@ export function PermissionsPageView({
                     key={role.id ?? role.name}
                     role={role}
                     selected={role.id === selectedRoleId}
+                    isDragging={draggedRoleId === role.id}
+                    dropPosition={dropTargetRoleId === role.id ? dropPosition : null}
                     onSelect={() => role.id && setSelectedRoleId(role.id)}
                     onEdit={(selectedRole) => setEditingRole(selectedRole)}
                     onDelete={(selectedRole) => setDeletingRole(selectedRole)}
+                    onDragStart={(draggedRole) => {
+                      if (draggedRole.systemRole || reorderInProgress || !draggedRole.id) return;
+                      setReorderError(null);
+                      setDraggedRoleId(draggedRole.id);
+                    }}
+                    onDragEnd={clearDragState}
+                    onDragOver={(event, hoveredRole) => {
+                      if (reorderInProgress) return;
+                      if (!draggedRoleId || draggedRoleId === hoveredRole.id) return;
+                      event.preventDefault();
+                      event.dataTransfer.dropEffect = "move";
+                      setDropTargetRoleId(hoveredRole.id);
+                      setDropPosition(resolveDropPosition(event, hoveredRole));
+                    }}
+                    onDrop={(event, targetRole) => {
+                      event.preventDefault();
+                      if (reorderInProgress) return;
+                      const placement = resolveDropPosition(event, targetRole);
+                      void handleReorderRole(targetRole, placement);
+                    }}
                   />
                 ))
               )}
@@ -135,7 +227,9 @@ export function PermissionsPageView({
         role={selectedRole}
         permissions={permissions}
         onCancel={() => setSelectedRoleId(null)}
+        members={members}
       />
+
     </section>
   );
 }

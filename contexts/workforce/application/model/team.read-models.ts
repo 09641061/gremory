@@ -7,6 +7,13 @@ export interface TeamUserSummary {
   email: string;
   roleId: string;
   roleName: string;
+  roles: ReadonlyArray<{
+    id: string;
+    name: string;
+    position: number;
+    systemRole: boolean;
+    permissions: ReadonlyArray<string>;
+  }>;
   organizationId: string;
   establishmentId: string;
   establishmentName: string | null;
@@ -38,6 +45,8 @@ export interface TeamAccessView {
     organizationName: string;
     establishmentId: string;
     establishmentName: string;
+    roles: ReadonlyArray<{ id: string; name: string; position: number; systemRole: boolean }>;
+    effectivePermissions: ReadonlyArray<string>;
   }>;
 }
 

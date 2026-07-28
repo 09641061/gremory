@@ -5,6 +5,7 @@ import type {
   DeleteWorkforceRoleCommand,
   CreateWorkforceRoleCommand,
   PatchWorkforceRoleCommand,
+  RemoveWorkforceRoleAssignmentCommand,
 } from "../../../domain/model/commands/workforce-role.commands";
 import { WorkforceRole } from "../../../domain/model/entities/workforce-role.entity";
 import type { WorkforceRoleRepository } from "../../../domain/services/workforce-role.repository";
@@ -20,6 +21,7 @@ export class WorkforceRoleCommandServiceImpl implements WorkforceRoleCommandServ
         name: command.name,
         permissions: [],
         systemRole: false,
+        position: command.position ?? 1,
       }),
     );
   }
@@ -34,6 +36,11 @@ export class WorkforceRoleCommandServiceImpl implements WorkforceRoleCommandServ
 
   assign(command: AssignWorkforceRoleCommand): Promise<void> {
     return this.roles.assign(command);
+  }
+
+  removeAssignment(command: RemoveWorkforceRoleAssignmentCommand): Promise<void> {
+    if (!this.roles.removeAssignment) return Promise.reject(new Error("Role assignment removal is unavailable"));
+    return this.roles.removeAssignment(command);
   }
 }
 

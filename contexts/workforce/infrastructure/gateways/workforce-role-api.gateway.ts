@@ -6,6 +6,7 @@ import type {
   AssignWorkforceRoleCommand,
   DeleteWorkforceRoleCommand,
   PatchWorkforceRoleCommand,
+  RemoveWorkforceRoleAssignmentCommand,
 } from "../../domain/model/commands/workforce-role.commands";
 import type { WorkforceRoleRepository } from "../../domain/services/workforce-role.repository";
 import type { WorkforceRoleResource } from "../../interfaces/rest/resources/workforce-role.resources";
@@ -40,6 +41,7 @@ export class WorkforceRoleApiGateway implements WorkforceRoleRepository {
     const token = await requireTeamAccessToken(this.providedToken);
     const body = workforceRoleCreateRequestSchema.parse({
       name: role.getName(),
+      position: role.id === null || role.position === 2_147_483_647 ? undefined : role.position,
     });
     const response = await teamPost<unknown>(apiConfig.routes.workforce.roles, body, token);
     return toRole(workforceRoleResourceSchema.parse(response));
@@ -50,6 +52,7 @@ export class WorkforceRoleApiGateway implements WorkforceRoleRepository {
     const body = workforceRolePatchRequestSchema.parse({
       name: command.name,
       permissions: command.permissions,
+      position: command.position,
     });
     const response = await teamPatch<unknown>(
       `${apiConfig.routes.workforce.roles}/${encodeURIComponent(command.roleId)}`,
@@ -75,6 +78,14 @@ export class WorkforceRoleApiGateway implements WorkforceRoleRepository {
       token,
     );
   }
+
+  async removeAssignment(command: RemoveWorkforceRoleAssignmentCommand): Promise<void> {
+    const token = await requireTeamAccessToken(this.providedToken);
+    await teamDelete(
+      `${apiConfig.routes.workforce.roles}/members/${encodeURIComponent(command.memberId)}/${encodeURIComponent(command.roleId)}`,
+      token,
+    );
+  }
 }
 
 function toRole(resource: WorkforceRoleResource) {
@@ -83,5 +94,6 @@ function toRole(resource: WorkforceRoleResource) {
     name: resource.name,
     permissions: resource.permissions,
     systemRole: resource.systemRole,
+    position: resource.position ?? (resource.systemRole ? 2_147_483_647 : 1),
   });
 }
