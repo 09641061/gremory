@@ -42,7 +42,6 @@ export function CustomerForm({
   const [phoneNumber, setPhoneNumber] = React.useState(initialData?.phoneNumber || "");
 
   const [isResolving, setIsResolving] = React.useState(false);
-  const [wasResolvedSuccessfully, setWasResolvedSuccessfully] = React.useState(false);
   const prevResolvedRef = React.useRef<string>("");
 
   const handleResolve = React.useCallback(async () => {
@@ -50,17 +49,13 @@ export function CustomerForm({
     if (!docNumber) return;
 
     setIsResolving(true);
-    setWasResolvedSuccessfully(false);
     try {
       const res = await resolveDocumentAction(docType as "dni" | "ruc", docNumber);
       if (res.status === "success" && res.data) {
         setName(res.data.name);
-        setWasResolvedSuccessfully(true);
-      } else {
-        setWasResolvedSuccessfully(false);
       }
     } catch {
-      setWasResolvedSuccessfully(false);
+      // Silent error for auto-resolve, user can still manually edit
     } finally {
       setIsResolving(false);
     }
@@ -97,8 +92,6 @@ export function CustomerForm({
   };
 
   const isDniOrRuc = docType === "dni" || docType === "ruc";
-  // Allow manual entry if not DNI/RUC OR if resolution failed (to not block the user)
-  const canEditName = !isDniOrRuc || (isDniOrRuc && !wasResolvedSuccessfully);
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -116,7 +109,6 @@ export function CustomerForm({
                 if (initialData?.docType !== newType) {
                     setName("");
                     setDocNumber("");
-                    setWasResolvedSuccessfully(false);
                 }
               }}
               className="w-full h-9 rounded-lg border border-border bg-transparent px-3 text-sm transition-colors outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
