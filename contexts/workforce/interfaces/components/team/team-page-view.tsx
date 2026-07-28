@@ -20,29 +20,16 @@ import {
 import type { TeamUserSummary } from "@/contexts/workforce/application/model/team.read-models";
 import type { TeamActionResult } from "@/contexts/workforce/interfaces/actions/team-action-result";
 import { InviteMembersDialog } from "./invite-members-dialog";
-import { assignWorkforceRoleAction, removeWorkforceRoleAssignmentAction } from "@/contexts/workforce/interfaces/actions/workforce-role.actions";
+import { removeWorkforceRoleAssignmentAction } from "@/contexts/workforce/interfaces/actions/workforce-role.actions";
 
 const initialActionState: TeamActionResult = { status: "idle", data: null, error: null };
 
 type RoleOption = { id: string; name: string; position: number; systemRole: boolean };
 
-export function TeamPageView({ establishmentId, members, roles, canManageRoles }: { establishmentId: string | null; members: TeamUserSummary[]; roles: RoleOption[]; canManageRoles: boolean }) {
+export function TeamPageView({ establishmentId, members, roles: _roles, canManageRoles }: { establishmentId: string | null; members: TeamUserSummary[]; roles: RoleOption[]; canManageRoles: boolean }) {
   const [filter, setFilter] = useState("");
   const [inviteOpen, setInviteOpen] = useState(false);
   const router = useRouter();
-  const orderedRoles = useMemo(() => {
-    return [...roles].sort((left, right) => {
-      if (left.systemRole !== right.systemRole) {
-        return left.systemRole ? 1 : -1;
-      }
-
-      if (left.position !== right.position) {
-        return left.position - right.position;
-      }
-
-      return left.name.localeCompare(right.name);
-    });
-  }, [roles]);
   const filteredMembers = useMemo(() => members.filter((member) => member.email.toLowerCase().includes(filter.toLowerCase())), [filter, members]);
 
   return (
@@ -80,7 +67,7 @@ export function TeamPageView({ establishmentId, members, roles, canManageRoles }
                 <span className="min-w-[116px] text-left" aria-hidden="true" />
               </div>
             </div>
-            {filteredMembers.map((member) => <MemberRow key={member.memberId ?? member.invitationId} member={member} roles={orderedRoles} />)}
+            {filteredMembers.map((member) => <MemberRow key={member.memberId ?? member.invitationId} member={member} />)}
             {filteredMembers.length === 0 && <div className="px-5 py-10 text-sm text-muted-foreground">No members found.</div>}
           </div>
         </CardContent>
@@ -90,19 +77,18 @@ export function TeamPageView({ establishmentId, members, roles, canManageRoles }
   );
 }
 
-function MemberRow({ member, roles }: { member: TeamUserSummary; roles: RoleOption[] }) {
+function MemberRow({ member }: { member: TeamUserSummary }) {
   const [removeState, removeAction, removePending] = useActionState(removeTeamMemberAction, initialActionState);
   const [revokeState, revokeAction, revokePending] = useActionState(revokeTeamInvitationAction, initialActionState);
-  const [roleState, roleAction, rolePending] = useActionState(assignWorkforceRoleAction, { status: "idle", data: null, error: null } as const);
   const [removeRoleState, removeRoleAction, removeRolePending] = useActionState(removeWorkforceRoleAssignmentAction, { status: "idle", data: null, error: null } as const);
   const router = useRouter();
   useEffect(() => {
-    if ([removeState.status, revokeState.status, roleState.status, removeRoleState.status].includes("success")) router.refresh();
-  }, [removeState.status, revokeState.status, roleState.status, removeRoleState.status, router]);
+    if ([removeState.status, revokeState.status, removeRoleState.status].includes("success")) router.refresh();
+  }, [removeState.status, revokeState.status, removeRoleState.status, router]);
   const memberId = member.memberId;
   const canRemove = member.canRemoveMembership && memberId !== null;
   const canCancel = member.canRevokeInvitation;
-  const error = removeState.error ?? revokeState.error ?? roleState.error ?? removeRoleState.error;
+  const error = removeState.error ?? revokeState.error ?? removeRoleState.error;
   return (
     <div className="grid min-h-[96px] grid-cols-[minmax(320px,1.4fr)_minmax(150px,.55fr)_minmax(150px,.55fr)_minmax(170px,.7fr)] items-center border-b border-border px-5 py-4 last:border-b-0">
       <div className="flex items-center gap-4">
@@ -121,16 +107,6 @@ function MemberRow({ member, roles }: { member: TeamUserSummary; roles: RoleOpti
             </button>
           </form>
         ))}
-        {member.memberId && roles.some((role) => !role.systemRole && !member.roles.some((assigned) => assigned.id === role.id)) ? (
-          <form action={roleAction} className="inline-flex items-center gap-1">
-            <input type="hidden" name="memberId" value={member.memberId} />
-            <select name="roleId" defaultValue="" disabled={rolePending} className="h-8 rounded-md border border-border bg-background px-2 text-xs">
-              <option value="" disabled>Add role</option>
-              {roles.filter((role) => !role.systemRole && !member.roles.some((assigned) => assigned.id === role.id)).map((role) => <option key={role.id} value={role.id}>{role.name}</option>)}
-            </select>
-            <button type="submit" disabled={rolePending} className="rounded-md border border-border px-2 py-1 text-xs">{rolePending ? "..." : "+"}</button>
-          </form>
-        ) : null}
       </div>
       <span className="text-[15px] text-muted-foreground">{formatStatus(member.status)}</span>
       <div className="flex flex-col items-end gap-2">
