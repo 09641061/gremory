@@ -7,6 +7,7 @@ import { hasActiveSubscription } from "@/contexts/billing/domain/services/subscr
 import type { SubscriptionResponse } from "@/contexts/billing/infrastructure/gateways/billing-api.gateway";
 import { ErrorAlert } from "@/contexts/shared/interfaces/components/ui/error";
 
+import { AssistantChatEmptyState } from "./assistant-chat-empty-state";
 import { AssistantChatComposer } from "./assistant-chat-composer";
 import { AssistantChatThread } from "./assistant-chat-thread";
 import { upsertAssistantConversationListItem } from "../sidebar/assistant-conversation-cache";
@@ -344,16 +345,34 @@ export function AssistantChatView() {
 
   return (
     <div className="flex min-h-[calc(100vh-6rem)] flex-col">
-      <AssistantChatThread
-        conversation={selectedConversationId ? activeConversation : null}
-        isLoading={assistantAccessState === "checking" || isLoadingConversation}
-        bottomRef={bottomRef}
-        error={
-          assistantAccessState === "blocked"
-            ? "You do not have active access to the assistant. Check your session or subscription."
-            : error
-        }
-      />
+      {selectedConversationId ? (
+        <AssistantChatThread
+          conversation={activeConversation}
+          isLoading={assistantAccessState === "checking" || isLoadingConversation}
+          bottomRef={bottomRef}
+          error={
+            assistantAccessState === "blocked"
+              ? "You do not have active access to the assistant. Check your session or subscription."
+              : error
+          }
+        />
+      ) : (
+        <div className="flex min-h-[calc(100vh-6rem)] flex-1 flex-col justify-center">
+          <AssistantChatEmptyState />
+          <div className="h-8 sm:h-10" />
+          <AssistantChatComposer
+            value={draft}
+            isSending={isSendingMessage || assistantAccessState !== "ready"}
+            onValueChange={setDraft}
+            onSubmit={() => {
+              void sendMessage();
+            }}
+            onKeyDown={handleComposerKeyDown}
+            disabled={assistantAccessState !== "ready"}
+            variant="minimal"
+          />
+        </div>
+      )}
 
       <ErrorAlert
         title="Assistant error"
@@ -364,16 +383,18 @@ export function AssistantChatView() {
         }
       />
 
-      <AssistantChatComposer
-        value={draft}
-        isSending={isSendingMessage || assistantAccessState !== "ready"}
-        onValueChange={setDraft}
-        onSubmit={() => {
-          void sendMessage();
-        }}
-        onKeyDown={handleComposerKeyDown}
-        disabled={assistantAccessState !== "ready"}
-      />
+      {selectedConversationId ? (
+        <AssistantChatComposer
+          value={draft}
+          isSending={isSendingMessage || assistantAccessState !== "ready"}
+          onValueChange={setDraft}
+          onSubmit={() => {
+            void sendMessage();
+          }}
+          onKeyDown={handleComposerKeyDown}
+          disabled={assistantAccessState !== "ready"}
+        />
+      ) : null}
     </div>
   );
 }

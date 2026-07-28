@@ -4,7 +4,6 @@ import type { RefObject } from "react";
 
 import { AssistantChatLoadingState } from "./assistant-chat-loading-state";
 import { AssistantChatMessageBubble } from "./assistant-chat-message-bubble";
-import { AssistantChatWelcome } from "./assistant-chat-welcome";
 import type { AssistantConversation } from "../shared/assistant-chat.types";
 
 interface AssistantChatThreadProps {
@@ -43,7 +42,9 @@ export function AssistantChatThread({
             <div ref={bottomRef} />
           </div>
         ) : (
-          <AssistantChatWelcome bottomRef={bottomRef} />
+          <div className="mx-auto flex w-full max-w-4xl flex-col gap-4">
+            <div ref={bottomRef} />
+          </div>
         )}
       </div>
     </section>
