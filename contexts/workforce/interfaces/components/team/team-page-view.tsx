@@ -12,7 +12,8 @@ import { MemberRow } from "./member-row";
 
 type RoleOption = { id: string; name: string; position: number; systemRole: boolean };
 
-export function TeamPageView({ establishmentId, members, roles: _roles, canManageRoles }: { establishmentId: string | null; members: TeamUserSummary[]; roles: RoleOption[]; canManageRoles: boolean }) {
+export function TeamPageView({ establishmentId, members, canManageRoles }: { establishmentId: string | null; members: TeamUserSummary[]; roles: RoleOption[]; canManageRoles: boolean }) {
+
   const [filter, setFilter] = useState("");
   const [inviteOpen, setInviteOpen] = useState(false);
   const router = useRouter();

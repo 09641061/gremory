@@ -1,5 +1,6 @@
 import { Building2 } from "lucide-react";
-import type { OrganizationSummary } from "../../../application/model/business.read-models";
+import type { OrganizationSummary } from "@/contexts/business/application/model/business.read-models";
+
 import {
   Card,
   CardAction,
