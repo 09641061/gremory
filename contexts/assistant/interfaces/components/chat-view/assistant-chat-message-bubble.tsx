@@ -1,6 +1,6 @@
 "use client";
 
-import { Bot, User } from "lucide-react";
+import Image from "next/image";
 
 import { cn } from "@/lib/utils";
 
@@ -17,7 +17,13 @@ export function AssistantChatMessageBubble({ message }: AssistantChatMessageBubb
     <div className={cn("flex w-full", isUser ? "justify-end" : "justify-start")}>
       {!isUser ? (
         <div className="mr-3 mt-1 flex size-8 shrink-0 items-center justify-center rounded-full border border-border/60 bg-background text-muted-foreground">
-          <Bot className="size-3.5" />
+          <Image
+            src="/kodu_assistant_icon.svg"
+            alt=""
+            width={16}
+            height={16}
+            className="size-4 object-contain"
+          />
         </div>
       ) : null}
 
@@ -31,12 +37,6 @@ export function AssistantChatMessageBubble({ message }: AssistantChatMessageBubb
       >
         {message.content}
       </div>
-
-      {isUser ? (
-        <div className="ml-3 mt-1 flex size-8 shrink-0 items-center justify-center rounded-full border border-border/60 bg-muted text-muted-foreground">
-          <User className="size-3.5" />
-        </div>
-      ) : null}
     </div>
   );
 }
