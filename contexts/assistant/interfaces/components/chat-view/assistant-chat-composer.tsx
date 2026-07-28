@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useRef, type KeyboardEvent } from "react";
-import { Mic, Plus, Send } from "lucide-react";
+import { useLayoutEffect, useRef, useState, type KeyboardEvent } from "react";
+import { AudioWaveform, ArrowUp, Mic, Plus } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
@@ -16,9 +16,21 @@ interface AssistantChatComposerProps {
   variant?: "default" | "minimal";
 }
 
-const MINIMAL_MIN_HEIGHT = 96;
-const MINIMAL_MAX_HEIGHT = 180;
-const showAuxiliaryActions = false;
+const MIN_HEIGHT = 24;
+const MAX_HEIGHT = 220;
+const SINGLE_LINE_THRESHOLD = 58;
+const inputBaseClass =
+  "block w-full resize-none border-0 bg-transparent px-0 py-0 text-[15px] leading-6 text-foreground outline-none transition placeholder:text-muted-foreground focus:ring-0 disabled:cursor-not-allowed disabled:opacity-60 break-words [overflow-wrap:anywhere]";
+const inputSingleLineClass = "min-h-[24px] max-h-[220px] overflow-hidden";
+const inputMultiLineClass = "min-h-[24px] max-h-[220px] overflow-y-auto scrollbar-hide overscroll-contain";
+const shellBaseClass =
+  "w-full border border-border/70 bg-background/95 text-foreground shadow-[0_12px_30px_rgba(15,23,42,0.08)] backdrop-blur-xl transition-all duration-200 ease-in-out";
+const shellSingleLineClass = "rounded-full px-4 py-3";
+const shellMultiLineClass = "rounded-[24px] px-4 py-4";
+const neutralActionClass =
+  "rounded-full border border-border/70 bg-muted/70 text-foreground transition-colors hover:bg-muted";
+const sendActionClass =
+  "rounded-full border border-border/70 bg-white text-foreground shadow-[0_8px_24px_rgba(15,23,42,0.12)] transition-transform hover:scale-105 hover:bg-white/95 disabled:scale-100 disabled:bg-white/80 disabled:text-foreground/50";
 
 export function AssistantChatComposer({
   value,
@@ -31,117 +43,253 @@ export function AssistantChatComposer({
 }: AssistantChatComposerProps) {
   const isMinimal = variant === "minimal";
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const shellRef = useRef<HTMLDivElement | null>(null);
+  const [isMultiline, setIsMultiline] = useState(false);
 
-  useEffect(() => {
-    if (!isMinimal) return;
-
+  useLayoutEffect(() => {
     const textarea = textareaRef.current;
     if (!textarea) return;
 
-    textarea.style.height = "auto";
-    const nextHeight = Math.min(textarea.scrollHeight, MINIMAL_MAX_HEIGHT);
-    textarea.style.height = `${Math.max(nextHeight, MINIMAL_MIN_HEIGHT)}px`;
-    textarea.style.overflowY = textarea.scrollHeight > MINIMAL_MAX_HEIGHT ? "auto" : "hidden";
-  }, [isMinimal, value]);
+    textarea.style.height = "0px";
+    const measuredHeight = textarea.scrollHeight;
+    const nextHeight = Math.min(Math.max(measuredHeight, MIN_HEIGHT), MAX_HEIGHT);
+    textarea.style.height = `${nextHeight}px`;
+    textarea.style.overflowY = measuredHeight > MAX_HEIGHT ? "auto" : "hidden";
+    textarea.style.overflowWrap = "anywhere";
+    textarea.style.wordBreak = "break-word";
+
+    const wrappedIntoMultipleLines = value.includes("\n") || measuredHeight > SINGLE_LINE_THRESHOLD;
+    setIsMultiline(wrappedIntoMultipleLines);
+  }, [value]);
+
+  useLayoutEffect(() => {
+    const shell = shellRef.current;
+    if (!shell || typeof ResizeObserver === "undefined") return;
+
+    const observer = new ResizeObserver(() => {
+      const textarea = textareaRef.current;
+      if (!textarea) return;
+
+      textarea.style.height = "0px";
+      const measuredHeight = textarea.scrollHeight;
+      const nextHeight = Math.min(Math.max(measuredHeight, MIN_HEIGHT), MAX_HEIGHT);
+      textarea.style.height = `${nextHeight}px`;
+      textarea.style.overflowY = measuredHeight > MAX_HEIGHT ? "auto" : "hidden";
+      setIsMultiline(value.includes("\n") || measuredHeight > SINGLE_LINE_THRESHOLD);
+    });
+
+    observer.observe(shell);
+    return () => observer.disconnect();
+  }, [value]);
+
+  const hasText = value.trim().length > 0;
+  const composerState = !hasText ? "empty" : isMultiline ? "multiline" : "single-line";
+
+  function handlePrimaryAction() {
+    if (!hasText) return;
+    onSubmit();
+  }
+
+  function renderActionButton() {
+    if (!hasText) {
+      return (
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon-lg"
+          className="rounded-full border border-white/10 bg-white/5 text-white transition-colors hover:bg-white/10"
+          aria-label="Live voice"
+          title="Live voice"
+        >
+          <AudioWaveform className="size-4" />
+        </Button>
+      );
+    }
+
+    return (
+      <Button
+        type="button"
+        onClick={handlePrimaryAction}
+        disabled={disabled || isSending}
+        variant="ghost"
+        size="icon-lg"
+        className={sendActionClass}
+        aria-label={isSending ? "Sending" : "Send message"}
+      >
+        <ArrowUp className="size-4" />
+        <span className="sr-only">{isSending ? "Sending" : "Send message"}</span>
+      </Button>
+    );
+  }
+
+  const shellClasses = cn(
+    shellBaseClass,
+    composerState === "multiline" ? shellMultiLineClass : shellSingleLineClass,
+    isMinimal ? "max-w-3xl" : "max-w-4xl",
+    disabled || isSending ? "opacity-95" : "",
+  );
 
   return isMinimal ? (
     <div className="px-4 pb-10 pt-2 sm:px-6 sm:pb-12">
       <div className="mx-auto w-full max-w-3xl">
-        <div className="rounded-[28px] border border-border/60 bg-card/90 px-3 py-3 shadow-[0_14px_40px_rgba(0,0,0,0.22)] backdrop-blur">
+        <div
+          ref={shellRef}
+          className={shellClasses}
+          data-composer-state={composerState}
+          data-testid="assistant-composer-shell"
+        >
           <label htmlFor="assistant-chat-composer" className="sr-only">
-            Escribe tu mensaje
+            Pregunta lo que quieras
           </label>
 
-          <textarea
-            ref={textareaRef}
-            id="assistant-chat-composer"
-            value={value}
-            onChange={(event) => onValueChange(event.target.value)}
-            onKeyDown={onKeyDown}
-            rows={1}
-            placeholder="Escribe aqui..."
-            disabled={disabled || isSending}
-            className={cn(
-              "block w-full resize-none border-0 bg-transparent px-3 pt-2 text-sm leading-6 text-foreground outline-none transition placeholder:text-muted-foreground [overflow-wrap:anywhere] break-words focus:ring-0 disabled:cursor-not-allowed disabled:opacity-60",
-              "min-h-[96px]",
-            )}
-          />
+          <div className="flex items-center gap-3">
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-lg"
+              className={neutralActionClass}
+              aria-label="Attach files"
+              title="Attach files"
+            >
+              <Plus className="size-4" />
+            </Button>
 
-          <div className="mt-3 flex items-center justify-end gap-2 px-1 pb-1">
-            {showAuxiliaryActions ? (
-              <>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon-sm"
-                  className="rounded-full text-muted-foreground hover:bg-muted hover:text-foreground"
-                  aria-label="Attach file"
-                  title="Attach file"
-                >
-                  <Plus className="size-4" />
-                </Button>
-
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon-sm"
-                  className="rounded-full text-muted-foreground hover:bg-muted hover:text-foreground"
-                  aria-label="Voice input"
-                  title="Voice input"
-                >
-                  <Mic className="size-4" />
-                </Button>
-              </>
-            ) : null}
+            <div className="min-w-0 flex-1">
+              <textarea
+                ref={textareaRef}
+                id="assistant-chat-composer"
+                value={value}
+                onChange={(event) => onValueChange(event.target.value)}
+                onKeyDown={onKeyDown}
+                rows={1}
+                placeholder="Preguntar lo que quieras"
+                disabled={disabled || isSending}
+                className={cn(
+                  inputBaseClass,
+                  inputSingleLineClass,
+                )}
+              />
+            </div>
 
             <Button
               type="button"
-              onClick={onSubmit}
-              disabled={disabled || isSending || !value.trim()}
-              variant="default"
+              variant="ghost"
               size="icon-lg"
-              className="rounded-full border border-border/60 bg-background text-foreground shadow-[0_8px_24px_rgba(0,0,0,0.18)] hover:bg-background/90"
-              style={{ width: "2.75rem", height: "2.75rem" }}
-              aria-label="Enviar mensaje"
+              className={neutralActionClass}
+              aria-label="Microphone"
+              title="Microphone"
             >
-              <Send className="size-4" />
-              <span className="sr-only">{isSending ? "Enviando" : "Enviar"}</span>
+              <Mic className="size-4" />
             </Button>
+
+            {renderActionButton()}
           </div>
         </div>
       </div>
     </div>
   ) : (
     <div className="border-t border-border/60 bg-background/95 p-4 sm:p-6">
-      <div className="mx-auto flex w-full max-w-4xl items-end gap-3">
-        <div className="flex-1">
-          <label htmlFor="assistant-chat-composer" className="sr-only">
-            Escribe tu mensaje
-          </label>
-          <textarea
-            id="assistant-chat-composer"
-            value={value}
-            onChange={(event) => onValueChange(event.target.value)}
-            onKeyDown={onKeyDown}
-            rows={2}
-            placeholder="Escribe un mensaje..."
-            disabled={disabled || isSending}
-            className="min-h-24 w-full resize-none rounded-3xl border border-border/70 bg-background px-4 py-3 text-sm text-foreground outline-none transition placeholder:text-muted-foreground focus:border-ring focus:ring-4 focus:ring-ring/20 disabled:cursor-not-allowed disabled:opacity-60"
-          />
-        </div>
-
-        <Button
-          type="button"
-          onClick={onSubmit}
-          disabled={disabled || isSending || !value.trim()}
-          variant="default"
-          size="default"
-          className="h-12 shrink-0 rounded-3xl px-4"
-          aria-label="Enviar mensaje"
+      <div className="mx-auto w-full max-w-4xl">
+        <div
+          ref={shellRef}
+          className={shellClasses}
+          data-composer-state={composerState}
+          data-testid="assistant-composer-shell"
         >
-          <Send className="size-4" />
-          <span className="hidden sm:inline">{isSending ? "Enviando" : "Enviar"}</span>
-        </Button>
+          <label htmlFor="assistant-chat-composer" className="sr-only">
+            Pregunta lo que quieras
+          </label>
+
+          {composerState === "multiline" ? (
+            <div className="flex min-h-0 flex-col gap-3">
+              <textarea
+                ref={textareaRef}
+                id="assistant-chat-composer"
+                value={value}
+                onChange={(event) => onValueChange(event.target.value)}
+                onKeyDown={onKeyDown}
+                rows={1}
+                placeholder="Preguntar lo que quieras"
+                disabled={disabled || isSending}
+                className={cn(
+                  inputBaseClass,
+                  inputMultiLineClass,
+                )}
+              />
+
+              <div className="flex items-center justify-between gap-3 border-t border-border/60 pt-3">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-lg"
+                  className={neutralActionClass}
+                  aria-label="Attach files"
+                  title="Attach files"
+                >
+                  <Plus className="size-4" />
+                </Button>
+
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon-lg"
+                    className={neutralActionClass}
+                    aria-label="Microphone"
+                    title="Microphone"
+                  >
+                    <Mic className="size-4" />
+                  </Button>
+
+                  {renderActionButton()}
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="flex items-center gap-3">
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-lg"
+                className={neutralActionClass}
+                aria-label="Attach files"
+                title="Attach files"
+              >
+                <Plus className="size-4" />
+              </Button>
+
+              <div className="min-w-0 flex-1">
+                <textarea
+                  ref={textareaRef}
+                  id="assistant-chat-composer"
+                  value={value}
+                  onChange={(event) => onValueChange(event.target.value)}
+                  onKeyDown={onKeyDown}
+                  rows={1}
+                  placeholder="Preguntar lo que quieras"
+                  disabled={disabled || isSending}
+                  className={cn(
+                    inputBaseClass,
+                    inputSingleLineClass,
+                  )}
+                />
+              </div>
+
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-lg"
+                className={neutralActionClass}
+                aria-label="Microphone"
+                title="Microphone"
+              >
+                <Mic className="size-4" />
+              </Button>
+
+              {renderActionButton()}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
