@@ -42,15 +42,15 @@ export async function POST(request: Request) {
   }
 
   try {
-    const body = (await request.json()) as { title?: string };
+    const body = (await request.json()) as { messageContent?: string };
 
-    if (!body.title || !body.title.trim()) {
-      return NextResponse.json({ message: "Title is required" }, { status: 400 });
+    if (!body.messageContent || !body.messageContent.trim()) {
+      return NextResponse.json({ message: "Message content is required" }, { status: 400 });
     }
 
     const data = await new CreateConversationCommandService().handle(
       {
-        title: body.title.trim(),
+        messageContent: body.messageContent.trim(),
       },
       accessToken,
     );

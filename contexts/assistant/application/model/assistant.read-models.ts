@@ -1,18 +1,14 @@
 export type AssistantConversationSummaryReadModel = {
   id: string;
   title: string;
-  status: string;
   createdAt: string;
   updatedAt: string;
-  lastMessageAt?: string | null;
-  messageCount: number;
 };
 
 export type AssistantMessageReadModel = {
   id: string;
   role: "user" | "assistant";
   content: string;
-  intent?: string | null;
   createdAt: string;
 };
 

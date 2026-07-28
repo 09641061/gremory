@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
+import { useEffect } from "react";
 import {
   BarChart3,
   CalendarDays,
@@ -14,6 +15,8 @@ import {
 
 import { buttonVariants } from "@/contexts/shared/interfaces/components/ui/button";
 import { AssistantChatsSection } from "@/contexts/assistant/interfaces/components/sidebar/assistant-chats-section";
+import type { AssistantConversationSummaryReadModel } from "@/contexts/assistant/application/model/assistant.read-models";
+import { setAssistantConversationListCache } from "@/contexts/assistant/interfaces/components/sidebar/assistant-conversation-cache";
 import { cn } from "@/lib/utils";
 
 const navigation = [
@@ -25,12 +28,20 @@ const navigation = [
   { label: "Analytics", href: "/analytics", icon: BarChart3 },
 ];
 
-export function Sidebar() {
+export function Sidebar({
+  initialAssistantConversations,
+}: {
+  initialAssistantConversations: AssistantConversationSummaryReadModel[];
+}) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const selectedConversationId = pathname.startsWith("/chat")
     ? searchParams.get("conversationId")
     : null;
+
+  useEffect(() => {
+    setAssistantConversationListCache(initialAssistantConversations);
+  }, [initialAssistantConversations]);
 
   return (
     <aside className="fixed bottom-0 left-0 top-14 z-20 hidden w-60 shrink-0 border-r border-border/60 bg-background px-3 py-3 md:flex md:flex-col">
@@ -68,7 +79,7 @@ export function Sidebar() {
         </ul>
       </nav>
 
-      <AssistantChatsSection />
+      <AssistantChatsSection initialConversations={initialAssistantConversations} />
 
       <nav aria-label="Configuracion" className="mt-auto pt-5">
         <ul>
@@ -103,4 +114,3 @@ export function Sidebar() {
     </aside>
   );
 }
-

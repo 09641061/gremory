@@ -14,7 +14,7 @@ export class SendMessageCommandService {
   async handle(command: SendMessageCommand, token?: string): Promise<AssistantConversationReadModel> {
     const conversationId = createAssistantConversationId(command.conversationId).value;
     const message = createAssistantMessageContent(command.message).value;
-    const conversation = await this.gateway.sendMessage(conversationId, { message }, token);
+    const conversation = await this.gateway.sendMessage(conversationId, { messageContent: message }, token);
     return toConversationReadModel(conversation);
   }
 }

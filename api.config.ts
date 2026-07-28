@@ -19,7 +19,7 @@ export const apiConfig = Object.freeze({
     establishments: "/api/business/establishments",
     subscriptions: "/api/billing/subscriptions",
     invoices: "/api/billing/invoices",
-    assistantConversations: "/api/assistant/conversations",
+    assistantConversations: "/api/assistant/chats",
     catalogCategories: "/api/catalog/categories",
     catalogServices: "/api/catalog/services",
     workforce: Object.freeze({

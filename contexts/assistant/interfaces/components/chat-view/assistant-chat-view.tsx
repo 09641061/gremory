@@ -5,6 +5,7 @@ import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 
 import { hasActiveSubscription } from "@/contexts/billing/domain/services/subscription-access.policy";
 import type { SubscriptionResponse } from "@/contexts/billing/infrastructure/gateways/billing-api.gateway";
+import { submitAssistantMessageAction } from "@/contexts/assistant/interfaces/actions/assistant-chat.actions";
 import { ErrorAlert } from "@/contexts/shared/interfaces/components/ui/error";
 
 import { AssistantChatEmptyState } from "./assistant-chat-empty-state";
@@ -20,14 +21,14 @@ function normalizeMessage(message: {
   id: string;
   role: string;
   content: string;
-  intent?: string | null;
   createdAt: string;
 }): AssistantChatMessage {
+  const role = (message.role ?? "").toUpperCase();
+
   return {
     id: message.id,
-    role: message.role.toUpperCase() === "ASSISTANT" ? "assistant" : "user",
+    role: role === "ASSISTANT" || role === "AGENT" ? "assistant" : "user",
     content: message.content,
-    intent: message.intent ?? null,
     createdAt: message.createdAt,
   };
 }
@@ -35,26 +36,20 @@ function normalizeMessage(message: {
 function normalizeConversation(raw: {
   id: string;
   title: string;
-  status: string;
   createdAt: string;
   updatedAt: string;
-  lastMessageAt?: string | null;
   messages: Array<{
     id: string;
     role: string;
     content: string;
-    intent?: string | null;
     createdAt: string;
   }>;
 }): AssistantConversation {
   return {
     id: raw.id,
     title: raw.title,
-    status: raw.status,
     createdAt: raw.createdAt,
     updatedAt: raw.updatedAt,
-    lastMessageAt: raw.lastMessageAt ?? null,
-    messageCount: raw.messages.length,
     messages: raw.messages.map(normalizeMessage),
   };
 }
@@ -108,13 +103,19 @@ function buildConversationUrl(pathname: string, conversationId?: string | null) 
   return `${pathname}?${params.toString()}`;
 }
 
-export function AssistantChatView() {
+type AssistantChatViewProps = {
+  initialConversation: AssistantConversation | null;
+};
+
+export function AssistantChatView({ initialConversation }: AssistantChatViewProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const bottomRef = useRef<HTMLDivElement | null>(null);
 
-  const [activeConversation, setActiveConversation] = useState<AssistantConversation | null>(null);
+  const [activeConversation, setActiveConversation] = useState<AssistantConversation | null>(
+    initialConversation,
+  );
   const [draft, setDraft] = useState("");
   const [isLoadingConversation, setIsLoadingConversation] = useState(false);
   const [isSendingMessage, setIsSendingMessage] = useState(false);
@@ -124,6 +125,11 @@ export function AssistantChatView() {
   const [error, setError] = useState<string | null>(null);
 
   const selectedConversationId = searchParams.get("conversationId");
+
+  useEffect(() => {
+    setActiveConversation(initialConversation);
+    setError(null);
+  }, [initialConversation]);
 
   useEffect(() => {
     let cancelled = false;
@@ -158,6 +164,7 @@ export function AssistantChatView() {
 
   useEffect(() => {
     if (assistantAccessState !== "ready" || !selectedConversationId) return;
+    if (activeConversation?.id === selectedConversationId) return;
 
     const controller = new AbortController();
 
@@ -204,7 +211,7 @@ export function AssistantChatView() {
     void loadConversation();
 
     return () => controller.abort();
-  }, [assistantAccessState, selectedConversationId]);
+  }, [assistantAccessState, selectedConversationId, activeConversation?.id]);
 
   useEffect(() => {
     function handleConversationMutation(event: Event) {
@@ -247,37 +254,6 @@ export function AssistantChatView() {
       window.removeEventListener("assistant-conversations-updated", handleConversationMutation);
   }, [selectedConversationId]);
 
-  async function createConversationRecord(title: string) {
-    const data = await requestJson<{
-      id: string;
-      title: string;
-      status: string;
-      createdAt: string;
-      updatedAt: string;
-      lastMessageAt?: string | null;
-      messages: Array<{
-        id: string;
-        role: string;
-        content: string;
-        intent?: string | null;
-        createdAt: string;
-      }>;
-      }>(conversationsEndpoint, {
-      method: "POST",
-      body: JSON.stringify({ title }),
-    });
-
-    const conversation = normalizeConversation(data);
-    upsertAssistantConversationListItem(conversation, { moveToFront: true });
-    window.dispatchEvent(
-      new CustomEvent("assistant-conversations-updated", {
-        detail: { type: "upsert", conversation, moveToFront: true },
-      }),
-    );
-
-    return conversation;
-  }
-
   async function sendMessage() {
     const message = draft.trim();
 
@@ -287,35 +263,17 @@ export function AssistantChatView() {
     setError(null);
 
     try {
-      let conversationId = selectedConversationId;
-
-      if (!conversationId) {
-        const createdConversation = await createConversationRecord("Nuevo chat");
-        conversationId = createdConversation.id;
-        setActiveConversation(createdConversation);
-        router.replace(buildConversationUrl(pathname, conversationId), { scroll: false });
-      }
-
-      const data = await requestJson<{
-        id: string;
-        title: string;
-        status: string;
-        createdAt: string;
-        updatedAt: string;
-        lastMessageAt?: string | null;
-        messages: Array<{
-          id: string;
-          role: string;
-          content: string;
-          intent?: string | null;
-          createdAt: string;
-        }>;
-      }>(`${conversationsEndpoint}/${encodeURIComponent(conversationId)}/messages`, {
-        method: "POST",
-        body: JSON.stringify({ message }),
+      const result = await submitAssistantMessageAction({
+        conversationId: selectedConversationId,
+        message,
       });
 
-      const conversation = normalizeConversation(data);
+      if (result.status === "error") {
+        setError(result.error);
+        return;
+      }
+
+      const conversation = normalizeConversation(result.data);
       upsertAssistantConversationListItem(conversation, { moveToFront: true });
       window.dispatchEvent(
         new CustomEvent("assistant-conversations-updated", {

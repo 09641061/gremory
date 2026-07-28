@@ -3,12 +3,14 @@
 import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
+import type { AssistantConversationSummaryReadModel } from "@/contexts/assistant/application/model/assistant.read-models";
 import type { AssistantConversationSummary } from "@/contexts/assistant/interfaces/components/shared/assistant-chat.types";
 import {
   ensureAssistantConversationListCached,
   getAssistantConversationListCache,
   patchAssistantConversationListItemTitle,
   removeAssistantConversationListItem,
+  setAssistantConversationListCache,
   upsertAssistantConversationListItem,
 } from "@/contexts/assistant/interfaces/components/sidebar/assistant-conversation-cache";
 
@@ -49,7 +51,9 @@ async function requestJson<T>(input: RequestInfo | URL, init?: RequestInit): Pro
   return parsed as T;
 }
 
-export function useAssistantConversationSidebar() {
+export function useAssistantConversationSidebar(
+  initialConversations: AssistantConversationSummaryReadModel[],
+) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -75,6 +79,11 @@ export function useAssistantConversationSidebar() {
     useState<AssistantConversationSummary | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [isDeleteSaving, setIsDeleteSaving] = useState(false);
+
+  useEffect(() => {
+    setAssistantConversationListCache(initialConversations);
+    setConversations(initialConversations);
+  }, [initialConversations]);
 
   useEffect(() => {
     function handlePointerDown(event: MouseEvent | TouchEvent) {

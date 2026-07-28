@@ -6,24 +6,19 @@ import { apiConfig } from "@/api.config";
 import { apiClient } from "@/contexts/shared/infrastructure/http/api-client";
 import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-session-cookie";
 
-export type AssistantConversationStatus = "ACTIVE" | "ARCHIVED" | string;
-export type AssistantMessageRole = "USER" | "ASSISTANT" | string;
+export type AssistantMessageRole = "USER" | "AGENT" | string;
 
 export interface AssistantConversationSummaryResponse {
   id: string;
   title: string;
-  status: AssistantConversationStatus;
   createdAt: string;
   updatedAt: string;
-  lastMessageAt?: string | null;
-  messageCount: number;
 }
 
 export interface AssistantMessageResponse {
   id: string;
   role: AssistantMessageRole;
   content: string;
-  intent?: string | null;
   createdAt: string;
 }
 
@@ -45,7 +40,7 @@ export interface PageResponse<T> {
 }
 
 export interface CreateConversationRequest {
-  title: string;
+  messageContent: string;
 }
 
 export interface RenameConversationRequest {
@@ -53,7 +48,7 @@ export interface RenameConversationRequest {
 }
 
 export interface SendAssistantMessageRequest {
-  message: string;
+  messageContent: string;
 }
 
 export interface ListConversationsParams {
@@ -142,19 +137,6 @@ export class AssistantApiGateway {
     );
   }
 
-  async archiveConversation(id: string, token?: string): Promise<AssistantConversationResponse> {
-    const authToken = await resolveAccessToken(token);
-
-    return apiClient.patch<AssistantConversationResponse>(
-      `${apiConfig.routes.assistantConversations}/${encodeURIComponent(id)}/archive`,
-      undefined,
-      {
-        token: authToken,
-        errorMessage: "Failed to archive assistant conversation",
-      },
-    );
-  }
-
   async renameConversation(
     id: string,
     command: RenameConversationRequest,
@@ -163,7 +145,7 @@ export class AssistantApiGateway {
     const authToken = await resolveAccessToken(token);
 
     return apiClient.patch<AssistantConversationResponse>(
-      `${apiConfig.routes.assistantConversations}/${encodeURIComponent(id)}`,
+      `${apiConfig.routes.assistantConversations}/${encodeURIComponent(id)}/title`,
       command,
       {
         token: authToken,

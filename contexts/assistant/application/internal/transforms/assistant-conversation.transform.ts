@@ -16,11 +16,12 @@ import type {
 import type { PageResponse } from "@/contexts/assistant/infrastructure/gateways/assistant-api.gateway";
 
 function normalizeMessage(message: AssistantMessageResponse): AssistantMessageReadModel {
+  const role = (message.role ?? "").toUpperCase();
+
   return {
     id: message.id,
-    role: message.role.toUpperCase() === "ASSISTANT" ? "assistant" : "user",
+    role: role === "ASSISTANT" || role === "AGENT" ? "assistant" : "user",
     content: createAssistantMessageContent(message.content).value,
-    intent: message.intent ?? null,
     createdAt: message.createdAt,
   };
 }
@@ -30,12 +31,9 @@ function normalizeSummary(
 ): AssistantConversationSummaryReadModel {
   return {
     id: createAssistantConversationId(conversation.id).value,
-    title: createAssistantConversationTitle(conversation.title).value,
-    status: conversation.status,
+    title: conversation.title ? createAssistantConversationTitle(conversation.title).value : "Nueva conversación",
     createdAt: conversation.createdAt,
     updatedAt: conversation.updatedAt,
-    lastMessageAt: conversation.lastMessageAt ?? null,
-    messageCount: conversation.messageCount,
   };
 }
 
