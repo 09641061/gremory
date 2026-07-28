@@ -30,7 +30,7 @@ describe("AssistantChatComposer", () => {
       />,
     );
 
-    expect(screen.getByPlaceholderText("Preguntar lo que quieras")).toBeVisible();
+    expect(screen.getByPlaceholderText("Ask what you need about Takodu")).toBeVisible();
     expect(screen.getByLabelText("Send message")).toBeVisible();
     expect(screen.getByTestId("assistant-composer-shell")).toHaveAttribute("data-composer-state", "empty");
   });

@@ -6,7 +6,7 @@ interface AssistantChatEmptyStateProps {
 }
 
 export function AssistantChatEmptyState({
-  title = "¿Cuál es el programa de hoy?",
+  title = "What do you want to manage today?",
   subtitle,
 }: AssistantChatEmptyStateProps) {
   return (

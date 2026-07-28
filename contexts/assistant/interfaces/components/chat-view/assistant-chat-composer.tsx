@@ -20,7 +20,7 @@ const MIN_HEIGHT = 24;
 const MAX_HEIGHT = 220;
 const SINGLE_LINE_THRESHOLD = 58;
 const inputBaseClass =
-  "block w-full resize-none border-0 bg-transparent px-0 py-0 text-[15px] leading-6 text-foreground outline-none transition placeholder:text-muted-foreground focus:ring-0 disabled:cursor-not-allowed disabled:opacity-60 break-words [overflow-wrap:anywhere]";
+  "block w-full resize-none border-0 bg-transparent px-0 py-0 pl-2 sm:pl-3 text-[15px] leading-6 text-foreground outline-none transition placeholder:text-muted-foreground focus:ring-0 disabled:cursor-not-allowed disabled:opacity-60 break-words [overflow-wrap:anywhere]";
 const inputSingleLineClass = "min-h-[24px] max-h-[220px] overflow-hidden";
 const inputMultiLineClass = "min-h-[24px] max-h-[220px] overflow-y-auto scrollbar-hide overscroll-contain";
 const shellBaseClass =
@@ -121,7 +121,7 @@ export function AssistantChatComposer({
           data-testid="assistant-composer-shell"
         >
           <label htmlFor="assistant-chat-composer" className="sr-only">
-            Pregunta lo que quieras
+            Ask what you need about Takodu
           </label>
 
           <div className="flex items-center gap-3">
@@ -133,7 +133,7 @@ export function AssistantChatComposer({
                 onChange={(event) => onValueChange(event.target.value)}
                 onKeyDown={onKeyDown}
                 rows={1}
-                placeholder="Preguntar lo que quieras"
+                placeholder="Ask what you need about Takodu"
                 disabled={disabled || isSending}
                 className={cn(
                   inputBaseClass,
@@ -157,7 +157,7 @@ export function AssistantChatComposer({
           data-testid="assistant-composer-shell"
         >
           <label htmlFor="assistant-chat-composer" className="sr-only">
-            Pregunta lo que quieras
+            Ask what you need about Takodu
           </label>
 
           {composerState === "multiline" ? (
@@ -169,7 +169,7 @@ export function AssistantChatComposer({
                 onChange={(event) => onValueChange(event.target.value)}
                 onKeyDown={onKeyDown}
                 rows={1}
-                placeholder="Preguntar lo que quieras"
+                placeholder="Ask what you need about Takodu"
                 disabled={disabled || isSending}
                 className={cn(
                   inputBaseClass,
@@ -192,7 +192,7 @@ export function AssistantChatComposer({
                   onChange={(event) => onValueChange(event.target.value)}
                   onKeyDown={onKeyDown}
                   rows={1}
-                  placeholder="Preguntar lo que quieras"
+                  placeholder="Ask what you need about Takodu"
                   disabled={disabled || isSending}
                   className={cn(
                     inputBaseClass,
