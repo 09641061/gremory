@@ -122,7 +122,7 @@ function RenameConversationModal({
     <div className="fixed inset-0 z-50">
       <button
         type="button"
-        aria-label="Cerrar modal"
+        aria-label="Close modal"
         className="absolute inset-0 cursor-default bg-black/50"
         onClick={onClose}
       />
@@ -139,7 +139,7 @@ function RenameConversationModal({
                 Chat
               </p>
               <h2 id="rename-conversation-title" className="mt-1 text-lg font-semibold">
-                Editar nombre
+                Edit chat name
               </h2>
             </div>
 
@@ -149,7 +149,7 @@ function RenameConversationModal({
               size="icon-xs"
               onClick={onClose}
               className="rounded-full text-muted-foreground hover:bg-muted hover:text-foreground"
-              aria-label="Cerrar"
+              aria-label="Close"
             >
               <X className="size-4" />
             </Button>
@@ -158,7 +158,7 @@ function RenameConversationModal({
           <div className="mt-4 space-y-3">
             <div className="space-y-2">
               <label htmlFor="conversation-title" className="text-sm font-medium">
-                Nombre del chat
+                Chat name
               </label>
               <Input
                 ref={inputRef}
@@ -177,7 +177,7 @@ function RenameConversationModal({
 
           <div className="mt-5 flex items-center justify-end gap-2">
             <Button type="button" variant="outline" onClick={onClose} disabled={isSaving}>
-              Cancelar
+              Cancel
             </Button>
             <Button
               type="button"
@@ -185,7 +185,7 @@ function RenameConversationModal({
               disabled={isSaving || !value.trim() || value.trim().length > 200}
               className="gap-2"
             >
-              {isSaving ? "Guardando..." : "Guardar"}
+              {isSaving ? "Saving..." : "Save"}
             </Button>
           </div>
         </div>
@@ -356,12 +356,12 @@ export function AssistantChatsSection() {
     const nextTitle = renameTitle.trim();
 
     if (!nextTitle) {
-      setRenameError("El nombre no puede estar vacio.");
+      setRenameError("The name cannot be empty.");
       return;
     }
 
     if (nextTitle.length > 200) {
-      setRenameError("El nombre no puede superar 200 caracteres.");
+      setRenameError("The name cannot exceed 200 characters.");
       return;
     }
 
@@ -396,7 +396,7 @@ export function AssistantChatsSection() {
       setRenameModalConversation(null);
     } catch (requestError) {
       setRenameError(
-        requestError instanceof Error ? requestError.message : "No pudimos renombrar el chat.",
+        requestError instanceof Error ? requestError.message : "We couldn't rename the chat.",
       );
     } finally {
       setIsRenameSaving(false);
@@ -439,7 +439,7 @@ export function AssistantChatsSection() {
       setDeleteModalConversation(null);
     } catch (requestError) {
       setDeleteError(
-        requestError instanceof Error ? requestError.message : "No pudimos eliminar el chat.",
+        requestError instanceof Error ? requestError.message : "We couldn't delete the chat.",
       );
     } finally {
       setIsDeleteSaving(false);
@@ -490,7 +490,7 @@ export function AssistantChatsSection() {
               </p>
             ) : conversations.length === 0 ? (
               <p className="rounded-md border border-dashed border-border/60 px-3 py-2 text-xs text-muted-foreground">
-                No hay chats todavia.
+                No chats yet.
               </p>
             ) : (
               <ul className="space-y-1">
@@ -519,14 +519,14 @@ export function AssistantChatsSection() {
                           variant="ghost"
                           size="icon-xs"
                           disabled={isMutating}
-                          aria-label={`Opciones para ${conversation.title}`}
+                          aria-label={`Options for ${conversation.title}`}
                           aria-expanded={openMenuId === conversation.id}
                           onClick={(event) => {
                             const currentTarget = event.currentTarget;
                             const rect = currentTarget.getBoundingClientRect();
                             const estimatedMenuHeight = 116;
                             const estimatedMenuWidth = 176;
-                            const top = Math.max(8, rect.top - estimatedMenuHeight - 8);
+                            const top = Math.max(4, rect.top - estimatedMenuHeight + 20);
                             const left = Math.max(
                               8,
                               Math.min(rect.right - estimatedMenuWidth, window.innerWidth - estimatedMenuWidth - 8),
@@ -581,7 +581,7 @@ export function AssistantChatsSection() {
                       className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm text-foreground hover:bg-muted disabled:opacity-50"
                     >
                       <PencilLine className="size-4 text-muted-foreground" />
-                      <span>Editar nombre</span>
+                      <span>Edit name</span>
                     </button>
                     <button
                       type="button"
@@ -593,7 +593,7 @@ export function AssistantChatsSection() {
                       className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm text-foreground hover:bg-muted disabled:opacity-50"
                     >
                       <Trash2 className="size-4 text-muted-foreground" />
-                      <span>Eliminar</span>
+                      <span>Delete</span>
                     </button>
                   </>
                 );
@@ -630,9 +630,9 @@ export function AssistantChatsSection() {
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Eliminar conversacion?</AlertDialogTitle>
+            <AlertDialogTitle>Delete conversation?</AlertDialogTitle>
             <AlertDialogDescription>
-              Esta accion no se puede deshacer.
+              This action cannot be undone.
               <span className="mt-1 block font-medium text-foreground">
                 {deleteModalConversation?.title ?? ""}
               </span>
@@ -640,7 +640,7 @@ export function AssistantChatsSection() {
             {deleteError ? <p className="text-sm text-destructive">{deleteError}</p> : null}
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={isDeleteSaving}>Cancelar</AlertDialogCancel>
+            <AlertDialogCancel disabled={isDeleteSaving}>Cancel</AlertDialogCancel>
             <Button
               type="button"
               variant="destructive"
@@ -649,7 +649,7 @@ export function AssistantChatsSection() {
                 void confirmDeleteConversation();
               }}
             >
-              {isDeleteSaving ? "Eliminando..." : "Eliminar"}
+              {isDeleteSaving ? "Deleting..." : "Delete"}
             </Button>
           </AlertDialogFooter>
         </AlertDialogContent>
