@@ -14,27 +14,27 @@ export function AssistantChatMessageBubble({ message }: AssistantChatMessageBubb
   const isUser = message.role === "user";
 
   return (
-    <div className={cn("flex items-end gap-3", isUser ? "justify-end" : "justify-start")}>
+    <div className={cn("flex w-full", isUser ? "justify-end" : "justify-start")}>
       {!isUser ? (
-        <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary/15 text-primary">
-          <Bot className="size-4" />
+        <div className="mr-3 mt-1 flex size-8 shrink-0 items-center justify-center rounded-full border border-border/60 bg-background text-muted-foreground">
+          <Bot className="size-3.5" />
         </div>
       ) : null}
 
       <div
         className={cn(
-          "max-w-[min(44rem,calc(100vw-7rem))] rounded-3xl px-4 py-3 text-sm leading-6 shadow-sm sm:max-w-[36rem]",
+          "max-w-[min(44rem,calc(100vw-7rem))] whitespace-pre-wrap break-words text-[15px] leading-7 text-foreground sm:max-w-[38rem]",
           isUser
-            ? "rounded-br-md bg-primary text-primary-foreground"
-            : "rounded-bl-md border border-border/70 bg-card text-card-foreground",
+            ? "rounded-2xl bg-muted/80 px-4 py-3"
+            : "px-0 py-1",
         )}
       >
         {message.content}
       </div>
 
       {isUser ? (
-        <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground">
-          <User className="size-4" />
+        <div className="ml-3 mt-1 flex size-8 shrink-0 items-center justify-center rounded-full border border-border/60 bg-muted text-muted-foreground">
+          <User className="size-3.5" />
         </div>
       ) : null}
     </div>
