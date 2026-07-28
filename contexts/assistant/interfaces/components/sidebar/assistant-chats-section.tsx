@@ -26,14 +26,14 @@ import { Button, buttonVariants } from "@/contexts/shared/interfaces/components/
 import { Input } from "@/contexts/shared/interfaces/components/ui/input";
 import type {
   AssistantConversationSummary,
-} from "@/contexts/assistant/interfaces/components/chat/assistant-chat.types";
+} from "@/contexts/assistant/interfaces/components/shared/assistant-chat.types";
 import {
   ensureAssistantConversationListCached,
   getAssistantConversationListCache,
   patchAssistantConversationListItemTitle,
   removeAssistantConversationListItem,
   upsertAssistantConversationListItem,
-} from "@/contexts/assistant/interfaces/components/chat/assistant-conversation-cache";
+} from "@/contexts/assistant/interfaces/components/sidebar/assistant-conversation-cache";
 import { cn } from "@/lib/utils";
 
 const assistantConversationsEndpoint = "/api/assistant/conversations";

@@ -9,10 +9,8 @@ import { ErrorAlert } from "@/contexts/shared/interfaces/components/ui/error";
 
 import { AssistantChatComposer } from "./assistant-chat-composer";
 import { AssistantChatThread } from "./assistant-chat-thread";
-import {
-  upsertAssistantConversationListItem,
-} from "./assistant-conversation-cache";
-import type { AssistantChatMessage, AssistantConversation } from "./assistant-chat.types";
+import { upsertAssistantConversationListItem } from "../sidebar/assistant-conversation-cache";
+import type { AssistantChatMessage, AssistantConversation } from "../shared/assistant-chat.types";
 
 const conversationsEndpoint = "/api/assistant/conversations";
 const subscriptionStatusEndpoint = "/api/billing/subscriptions";

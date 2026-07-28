@@ -4,7 +4,7 @@ import { Bot, User } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
-import type { AssistantChatMessage } from "./assistant-chat.types";
+import type { AssistantChatMessage } from "../shared/assistant-chat.types";
 
 interface AssistantChatMessageBubbleProps {
   message: AssistantChatMessage;

@@ -5,7 +5,7 @@ import type { RefObject } from "react";
 import { AssistantChatLoadingState } from "./assistant-chat-loading-state";
 import { AssistantChatMessageBubble } from "./assistant-chat-message-bubble";
 import { AssistantChatWelcome } from "./assistant-chat-welcome";
-import type { AssistantConversation } from "./assistant-chat.types";
+import type { AssistantConversation } from "../shared/assistant-chat.types";
 
 interface AssistantChatThreadProps {
   conversation: AssistantConversation | null;
