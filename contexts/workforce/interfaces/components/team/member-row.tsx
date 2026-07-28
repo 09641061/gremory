@@ -16,29 +16,25 @@ import {
   revokeTeamInvitationAction,
 } from "@/contexts/workforce/interfaces/actions/team.actions";
 import type { TeamUserSummary } from "@/contexts/workforce/application/model/team.read-models";
-import { removeWorkforceRoleAssignmentAction } from "@/contexts/workforce/interfaces/actions/workforce-role.actions";
+import { MemberRolesDropdown } from "./member-roles-dropdown";
 
 const initialActionState = { status: "idle", data: null, error: null } as const;
 
 export function MemberRow({ member }: { member: TeamUserSummary }) {
   const [removeState, removeAction, removePending] = useActionState(removeTeamMemberAction, initialActionState);
   const [revokeState, revokeAction, revokePending] = useActionState(revokeTeamInvitationAction, initialActionState);
-  const [removeRoleState, removeRoleAction, removeRolePending] = useActionState(
-    removeWorkforceRoleAssignmentAction,
-    { status: "idle", data: null, error: null } as const,
-  );
   const router = useRouter();
 
   useEffect(() => {
-    if ([removeState.status, revokeState.status, removeRoleState.status].includes("success")) {
+    if ([removeState.status, revokeState.status].includes("success")) {
       router.refresh();
     }
-  }, [removeState.status, revokeState.status, removeRoleState.status, router]);
+  }, [removeState.status, revokeState.status, router]);
 
   const memberId = member.memberId;
   const canRemove = member.canRemoveMembership && memberId !== null;
   const canCancel = member.canRevokeInvitation;
-  const error = removeState.error ?? revokeState.error ?? removeRoleState.error;
+  const error = removeState.error ?? revokeState.error;
 
   return (
     <div className="grid min-h-[96px] grid-cols-[minmax(320px,1.4fr)_minmax(150px,.55fr)_minmax(150px,.55fr)_minmax(170px,.7fr)] items-center border-b border-border px-5 py-4 last:border-b-0">
@@ -48,22 +44,8 @@ export function MemberRow({ member }: { member: TeamUserSummary }) {
         </span>
         <span className="truncate text-[15px] text-foreground">{member.email}</span>
       </div>
-      <div className="flex flex-wrap gap-1.5">
-        {member.roles.map((role) => (
-          <form key={role.id} action={removeRoleAction} className="inline-flex items-center">
-            <input type="hidden" name="memberId" value={member.memberId ?? ""} />
-            <input type="hidden" name="roleId" value={role.id} />
-            <button
-              type="submit"
-              disabled={role.systemRole || removeRolePending}
-              className="rounded-full border border-border bg-muted/40 px-2.5 py-1 text-xs text-foreground disabled:cursor-default disabled:opacity-70"
-              title={role.systemRole ? "Everyone is inherited and protected" : "Remove role"}
-            >
-              {role.name}
-              {role.systemRole ? "" : " ×"}
-            </button>
-          </form>
-        ))}
+      <div>
+        <MemberRolesDropdown roles={member.roles} />
       </div>
       <span className="text-[15px] text-muted-foreground">{formatStatus(member.status)}</span>
       <div className="flex flex-col items-end gap-2">
@@ -122,3 +104,4 @@ export function MemberRow({ member }: { member: TeamUserSummary }) {
 function formatStatus(status: TeamUserSummary["status"]): string {
   return status.charAt(0) + status.slice(1).toLowerCase();
 }
+
