@@ -22,6 +22,7 @@ interface PermissionsWorkspaceProps {
 
 export function PermissionsWorkspace({ role, permissions, onCancel }: PermissionsWorkspaceProps) {
   const router = useRouter();
+  const [activeTab, setActiveTab] = useState<"permissions" | "members">("permissions");
   const [selectedPermissions, setSelectedPermissions] = useState<ReadonlySet<string>>(
     new Set(role?.permissions ?? []),
   );
@@ -93,78 +94,114 @@ export function PermissionsWorkspace({ role, permissions, onCancel }: Permission
                 message={state.status === "error" ? state.error : undefined}
               />
 
-              <div className="space-y-2">
-                <label className="relative block">
-                  <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-                  <Input
-                    value={permissionFilter}
-                    onChange={(event) => setPermissionFilter(event.target.value)}
-                    placeholder="Search permissions"
-                    aria-label="Search permissions"
-                    className="pl-9"
-                  />
-                </label>
+              <div className="relative grid grid-cols-2 gap-1 rounded-lg bg-muted p-1 text-sm font-medium text-muted-foreground shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("permissions")}
+                  className={`flex items-center justify-center rounded-md px-3 py-1.5 transition-all ${
+                    activeTab === "permissions"
+                      ? "bg-background text-foreground shadow-sm"
+                      : "hover:text-foreground"
+                  }`}
+                >
+                  Permissions
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("members")}
+                  className={`flex items-center justify-center rounded-md px-3 py-1.5 transition-all ${
+                    activeTab === "members"
+                      ? "bg-background text-foreground shadow-sm"
+                      : "hover:text-foreground"
+                  }`}
+                >
+                  Manage members
+                </button>
               </div>
 
-              <div className="space-y-5">
-                {filteredGroupedPermissions.length === 0 ? (
-                  <div className="rounded-lg border border-dashed border-border px-4 py-8 text-sm text-muted-foreground">
-                    No permissions found.
+              {activeTab === "permissions" ? (
+                <>
+                  <div className="space-y-2">
+                    <label className="relative block">
+                      <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                      <Input
+                        value={permissionFilter}
+                        onChange={(event) => setPermissionFilter(event.target.value)}
+                        placeholder="Search permissions"
+                        aria-label="Search permissions"
+                        className="pl-9"
+                      />
+                    </label>
                   </div>
-                ) : (
-                  filteredGroupedPermissions.map((group) => (
-                    <section key={group.label} className="space-y-3">
-                      <h3 className="text-sm font-medium capitalize tracking-wide text-muted-foreground">
-                        {group.label}
-                      </h3>
-                      <div className="grid gap-3">
-                        {group.permissions.map((permission) => {
-                          const checked = selectedPermissions.has(permission);
-                          return (
-                            <label
-                              key={permission}
-                              className={`flex cursor-pointer items-center justify-between gap-4 rounded-lg border p-4 transition-colors ${checked ? "border-primary/40 bg-accent/50" : "border-border hover:bg-muted/40"}`}
-                            >
-                              <span className="min-w-0 space-y-1">
-                                <span className="block text-sm font-medium text-foreground">
-                                  {permissionLabel(permission)}
-                                </span>
-                                <span className="block truncate text-xs text-muted-foreground">
-                                  {permission}
-                                </span>
-                              </span>
-                              <Switch
-                                disabled={!editable}
-                                checked={checked}
-                                onCheckedChange={(nextChecked) => {
-                                  setSelectedPermissions((current) => {
-                                    const next = new Set(current);
-                                    if (nextChecked) next.add(permission);
-                                    else next.delete(permission);
-                                    return next;
-                                  });
-                                }}
-                                aria-label={permissionLabel(permission)}
-                              />
-                            </label>
-                          );
-                        })}
+
+                  <div className="space-y-5">
+                    {filteredGroupedPermissions.length === 0 ? (
+                      <div className="rounded-lg border border-dashed border-border px-4 py-8 text-sm text-muted-foreground">
+                        No permissions found.
                       </div>
-                    </section>
-                  ))
-                )}
-              </div>
+                    ) : (
+                      filteredGroupedPermissions.map((group) => (
+                        <section key={group.label} className="space-y-3">
+                          <h3 className="text-sm font-medium capitalize tracking-wide text-muted-foreground">
+                            {group.label}
+                          </h3>
+                          <div className="grid gap-3">
+                            {group.permissions.map((permission) => {
+                              const checked = selectedPermissions.has(permission);
+                              return (
+                                <label
+                                  key={permission}
+                                  className={`flex cursor-pointer items-center justify-between gap-4 rounded-lg border p-4 transition-colors ${checked ? "border-primary/40 bg-accent/50" : "border-border hover:bg-muted/40"}`}
+                                >
+                                  <span className="min-w-0 space-y-1">
+                                    <span className="block text-sm font-medium text-foreground">
+                                      {permissionLabel(permission)}
+                                    </span>
+                                    <span className="block truncate text-xs text-muted-foreground">
+                                      {permission}
+                                    </span>
+                                  </span>
+                                  <Switch
+                                    disabled={!editable}
+                                    checked={checked}
+                                    onCheckedChange={(nextChecked) => {
+                                      setSelectedPermissions((current) => {
+                                        const next = new Set(current);
+                                        if (nextChecked) next.add(permission);
+                                        else next.delete(permission);
+                                        return next;
+                                        });
+                                    }}
+                                    aria-label={permissionLabel(permission)}
+                                  />
+                                </label>
+                              );
+                            })}
+                          </div>
+                        </section>
+                      ))
+                    )}
+                  </div>
+                </>
+              ) : (
+                <div className="flex flex-1 flex-col items-center justify-center py-12 text-center">
+                  <p className="text-sm font-medium text-foreground">Manage members</p>
+                  <p className="text-xs text-muted-foreground">This view is currently empty.</p>
+                </div>
+              )}
             </div>
 
-            <CardFooter className="shrink-0 justify-end gap-2 rounded-b-xl border-t border-border bg-card px-6 py-5">
-              <Button type="button" variant="ghost" onClick={cancelChanges} disabled={pending}>
-                Cancel
-              </Button>
-              <Button type="submit" disabled={pending || !editable} className="gap-2">
-                {pending ? <Spinner className="size-4" /> : <Save className="size-4" />}
-                {pending ? "Saving..." : "Save"}
-              </Button>
-            </CardFooter>
+            {activeTab === "permissions" ? (
+              <CardFooter className="shrink-0 justify-end gap-2 rounded-b-xl border-t border-border bg-card px-6 py-5">
+                <Button type="button" variant="ghost" onClick={cancelChanges} disabled={pending}>
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={pending || !editable} className="gap-2">
+                  {pending ? <Spinner className="size-4" /> : <Save className="size-4" />}
+                  {pending ? "Saving..." : "Save"}
+                </Button>
+              </CardFooter>
+            ) : null}
           </form>
         </CardContent>
       </Card>

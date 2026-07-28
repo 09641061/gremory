@@ -26,8 +26,6 @@ interface EditRoleDialogProps {
 
 export function EditRoleDialog({ role, open, onOpenChange }: EditRoleDialogProps) {
   const router = useRouter();
-  const [name, setName] = useState(role.name);
-  const [position, setPosition] = useState(String(role.position));
   const [submitCount, setSubmitCount] = useState(0);
   const [state, formAction, pending] = useActionState(
     patchWorkforceRoleAction,
@@ -59,45 +57,49 @@ export function EditRoleDialog({ role, open, onOpenChange }: EditRoleDialogProps
               <AlertDialogTitle>Edit role</AlertDialogTitle>
             </AlertDialogHeader>
 
+            <div className="space-y-2">
+              <label htmlFor="edit-role-name" className="text-sm font-medium text-foreground">
+                Role Name
+              </label>
+              <Input
+                id="edit-role-name"
+                name="name"
+                defaultValue={role.name}
+                placeholder="Role Name"
+                required
+              />
+            </div>
 
-          <div className="space-y-2">
-            <label htmlFor="edit-role-name" className="text-sm font-medium text-foreground">Role Name</label>
-            <Input
-              id="edit-role-name"
-              name="name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Role Name"
-              required
-            />
-          </div>
+            <div className="space-y-2">
+              <label htmlFor="edit-role-position" className="text-sm font-medium text-foreground">
+                Hierarchy position
+              </label>
+              <Input
+                id="edit-role-position"
+                name="position"
+                type="number"
+                min={1}
+                defaultValue={role.position}
+                required
+              />
+              <p className="text-xs text-muted-foreground">
+                1 is the highest position. Other roles shift automatically.
+              </p>
+            </div>
 
-          <div className="space-y-2">
-            <label htmlFor="edit-role-position" className="text-sm font-medium text-foreground">Hierarchy position</label>
-            <Input
-              id="edit-role-position"
-              name="position"
-              type="number"
-              min={1}
-              value={position}
-              onChange={(e) => setPosition(e.target.value)}
-              required
-            />
-            <p className="text-xs text-muted-foreground">1 is the highest position. Other roles shift automatically.</p>
-          </div>
+            <input type="hidden" name="roleId" value={role.id || ""} />
 
-          <input type="hidden" name="roleId" value={role.id || ""} />
-
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={pending}>Cancel</AlertDialogCancel>
-            <Button type="submit" disabled={pending} className="gap-2">
-              {pending ? <Spinner className="size-4" /> : null}
-              {pending ? "Saving..." : "Save changes"}
-            </Button>
-          </AlertDialogFooter>
-        </form>
-      </AlertDialogContent>
-    </AlertDialog>
-  </>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={pending}>Cancel</AlertDialogCancel>
+              <Button type="submit" disabled={pending} className="gap-2">
+                {pending ? <Spinner className="size-4" /> : null}
+                {pending ? "Saving..." : "Save changes"}
+              </Button>
+            </AlertDialogFooter>
+          </form>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }
+

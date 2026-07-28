@@ -1,9 +1,14 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
 import { GripVertical, MoreVertical, Pencil, Trash2, User } from "lucide-react";
 import type { WorkforceRoleSummary } from "@/contexts/workforce/application/model/workforce-role.read-models";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/contexts/shared/interfaces/components/ui/dropdown-menu";
 
 interface RoleRowProps {
   role: WorkforceRoleSummary;
@@ -32,34 +37,9 @@ export function RoleRow({
   onDragOver,
   onDrop,
 }: RoleRowProps) {
-  const [menuOpen, setMenuOpen] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
   const roleId = role.id;
   const canEdit = roleId !== null && !role.systemRole && !!onEdit;
   const canDelete = roleId !== null && !role.systemRole && !!onDelete;
-
-  useEffect(() => {
-    if (!menuOpen) return;
-
-    function handlePointerDown(event: PointerEvent) {
-      if (!menuRef.current?.contains(event.target as Node)) {
-        setMenuOpen(false);
-      }
-    }
-
-    function handleEscape(event: KeyboardEvent) {
-      if (event.key === "Escape") {
-        setMenuOpen(false);
-      }
-    }
-
-    document.addEventListener("pointerdown", handlePointerDown, true);
-    document.addEventListener("keydown", handleEscape);
-    return () => {
-      document.removeEventListener("pointerdown", handlePointerDown, true);
-      document.removeEventListener("keydown", handleEscape);
-    };
-  }, [menuOpen]);
 
   return (
     <div
@@ -87,7 +67,7 @@ export function RoleRow({
           : dropPosition === "after"
             ? "border-b-2 border-b-primary bg-primary/5"
             : ""
-      } ${menuOpen ? "relative z-50" : "relative"}`}
+      } relative`}
       aria-grabbed={isDragging}
       onClick={onSelect}
       onKeyDown={(event) => {
@@ -119,53 +99,47 @@ export function RoleRow({
       </div>
 
       <div
-        ref={menuRef}
         className="relative flex items-center justify-end gap-2"
         onClick={(event) => event.stopPropagation()}
       >
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon-sm"
-          aria-label={`More actions for ${role.name}`}
-          aria-expanded={menuOpen}
-          onClick={() => setMenuOpen((value) => !value)}
-        >
-          <MoreVertical className="size-4" />
-        </Button>
-
-        {menuOpen ? (
-          <div className="absolute right-0 top-full z-50 mt-1 w-40 rounded-lg border border-border bg-card p-1 shadow-lg">
-            <Button
-              type="button"
-              variant="ghost"
-              className="h-auto w-full justify-start gap-2 rounded-md px-2 py-2 text-sm"
+        <DropdownMenu>
+          <DropdownMenuTrigger
+            render={
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-sm"
+                aria-label={`More actions for ${role.name}`}
+              />
+            }
+          >
+            <MoreVertical className="size-4" />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent>
+            <DropdownMenuItem
+              nativeButton
+              render={<button type="button" className="w-full" />}
+              className="gap-2"
               disabled={!canEdit}
-              onClick={() => {
-                setMenuOpen(false);
-                onEdit?.(role);
-              }}
+              onClick={() => onEdit?.(role)}
             >
               <Pencil className="size-4" />
               Edit
-            </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              className="h-auto w-full justify-start gap-2 rounded-md px-2 py-2 text-sm text-destructive hover:bg-destructive/10 hover:text-destructive"
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              nativeButton
+              render={<button type="button" className="w-full" />}
+              className="gap-2 text-destructive focus:bg-destructive/10 focus:text-destructive"
               disabled={!canDelete}
-              onClick={() => {
-                if (!canDelete) return;
-                setMenuOpen(false);
-                onDelete?.(role);
-              }}
+              onClick={() => onDelete?.(role)}
             >
               <Trash2 className="size-4" />
               Delete
-            </Button>
-          </div>
-        ) : null}
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </div>
   );
 }
+
