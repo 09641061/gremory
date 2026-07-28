@@ -1,9 +1,8 @@
 "use client";
 
-import Image from "next/image";
-
 import { cn } from "@/lib/utils";
 
+import { AssistantAvatar } from "../shared/assistant-avatar";
 import type { AssistantChatMessage } from "../shared/assistant-chat.types";
 
 interface AssistantChatMessageBubbleProps {
@@ -16,15 +15,7 @@ export function AssistantChatMessageBubble({ message }: AssistantChatMessageBubb
   return (
     <div className={cn("flex w-full", isUser ? "justify-end" : "justify-start")}>
       {!isUser ? (
-        <div className="mr-3 mt-1 flex size-8 shrink-0 items-center justify-center rounded-full border border-border/60 bg-background text-muted-foreground">
-          <Image
-            src="/kodu_assistant_icon.svg"
-            alt=""
-            width={16}
-            height={16}
-            className="size-4 object-contain"
-          />
-        </div>
+        <AssistantAvatar className="mr-3 mt-1 size-11" iconSize={22} iconClassName="size-[22px]" />
       ) : null}
 
       <div
