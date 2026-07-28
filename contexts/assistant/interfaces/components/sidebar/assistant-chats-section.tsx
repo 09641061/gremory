@@ -1,28 +1,10 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { createPortal } from "react-dom";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import {
-  ChevronDown,
-  MoreHorizontal,
-  PencilLine,
-  Trash2,
-  X,
-} from "lucide-react";
+import { ChevronDown } from "lucide-react";
 
-import {
-  AlertDialog,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/contexts/shared/interfaces/components/ui/alert-dialog";
-import { Button, buttonVariants } from "@/contexts/shared/interfaces/components/ui/button";
-import { Input } from "@/contexts/shared/interfaces/components/ui/input";
+import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import type {
   AssistantConversationSummary,
 } from "@/contexts/assistant/interfaces/components/shared/assistant-chat.types";
@@ -33,6 +15,10 @@ import {
   removeAssistantConversationListItem,
   upsertAssistantConversationListItem,
 } from "@/contexts/assistant/interfaces/components/sidebar/assistant-conversation-cache";
+import { AssistantConversationActionsMenu } from "@/contexts/assistant/interfaces/components/sidebar/assistant-conversation-actions-menu";
+import { AssistantConversationDeleteDialog } from "@/contexts/assistant/interfaces/components/sidebar/assistant-conversation-delete-dialog";
+import { AssistantConversationListItem } from "@/contexts/assistant/interfaces/components/sidebar/assistant-conversation-list-item";
+import { AssistantConversationRenameModal } from "@/contexts/assistant/interfaces/components/sidebar/assistant-conversation-rename-modal";
 import { cn } from "@/lib/utils";
 
 const assistantConversationsEndpoint = "/api/assistant/conversations";
@@ -70,127 +56,6 @@ async function requestJson<T>(input: RequestInfo | URL, init?: RequestInit): Pro
   }
 
   return parsed as T;
-}
-
-function RenameConversationModal({
-  open,
-  conversationTitle,
-  value,
-  error,
-  isSaving,
-  onClose,
-  onChange,
-  onSubmit,
-}: {
-  open: boolean;
-  conversationTitle: string;
-  value: string;
-  error: string | null;
-  isSaving: boolean;
-  onClose: () => void;
-  onChange: (value: string) => void;
-  onSubmit: () => void;
-}) {
-  const inputRef = useRef<HTMLInputElement | null>(null);
-
-  useEffect(() => {
-    if (!open) return;
-
-    const timeout = window.setTimeout(() => {
-      inputRef.current?.focus();
-      inputRef.current?.select();
-    }, 0);
-
-    return () => window.clearTimeout(timeout);
-  }, [open]);
-
-  useEffect(() => {
-    if (!open) return;
-
-    function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") onClose();
-    }
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [open, onClose]);
-
-  if (!open) return null;
-
-  return (
-    <div className="fixed inset-0 z-50">
-      <button
-        type="button"
-        aria-label="Close modal"
-        className="absolute inset-0 cursor-default bg-black/50"
-        onClick={onClose}
-      />
-      <div className="absolute inset-0 flex items-center justify-center p-4">
-        <div
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="rename-conversation-title"
-          className="relative w-full max-w-md rounded-2xl border border-border bg-card p-5 text-card-foreground shadow-2xl"
-        >
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <p className="text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
-                Chat
-              </p>
-              <h2 id="rename-conversation-title" className="mt-1 text-lg font-semibold">
-                Edit chat name
-              </h2>
-            </div>
-
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon-xs"
-              onClick={onClose}
-              className="rounded-full text-muted-foreground hover:bg-muted hover:text-foreground"
-              aria-label="Close"
-            >
-              <X className="size-4" />
-            </Button>
-          </div>
-
-          <div className="mt-4 space-y-3">
-            <div className="space-y-2">
-              <label htmlFor="conversation-title" className="text-sm font-medium">
-                Chat name
-              </label>
-              <Input
-                ref={inputRef}
-                id="conversation-title"
-                value={value}
-                onChange={(event) => onChange(event.target.value)}
-                placeholder={conversationTitle}
-                maxLength={200}
-                disabled={isSaving}
-                className="h-10"
-              />
-            </div>
-
-            {error ? <p className="text-sm text-destructive">{error}</p> : null}
-          </div>
-
-          <div className="mt-5 flex items-center justify-end gap-2">
-            <Button type="button" variant="outline" onClick={onClose} disabled={isSaving}>
-              Cancel
-            </Button>
-            <Button
-              type="button"
-              onClick={onSubmit}
-              disabled={isSaving || !value.trim() || value.trim().length > 200}
-              className="gap-2"
-            >
-              {isSaving ? "Saving..." : "Save"}
-            </Button>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
 }
 
 export function AssistantChatsSection() {
@@ -446,6 +311,10 @@ export function AssistantChatsSection() {
     }
   }
 
+  const openConversation = openMenuId
+    ? conversations.find((conversation) => conversation.id === openMenuId) ?? null
+    : null;
+
   return (
     <section ref={sectionRef} className="mt-2">
       <Button
@@ -493,56 +362,21 @@ export function AssistantChatsSection() {
                   const isMutating = mutatingConversationId === conversation.id;
 
                   return (
-                    <li key={conversation.id}>
-                      <div className="relative flex items-center gap-1.5 rounded-2xl">
-                        <Link
-                          href={`/chat?conversationId=${encodeURIComponent(conversation.id)}`}
-                          aria-current={active ? "page" : undefined}
-                          className={cn(
-                            buttonVariants({ variant: "ghost", size: "lg" }),
-                            "min-w-0 flex-1 justify-start gap-2.5 rounded-2xl border border-transparent px-3 py-3 text-left text-sm font-medium text-foreground hover:border-accent/40 hover:bg-accent/70 hover:text-accent-foreground",
-                            active &&
-                              "!border-accent/40 !bg-accent !text-accent-foreground hover:!border-accent/40 hover:!bg-accent hover:!text-accent-foreground",
-                          )}
-                        >
-                          <span className="truncate">{conversation.title}</span>
-                        </Link>
-
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon-xs"
-                          disabled={isMutating}
-                          aria-label={`Options for ${conversation.title}`}
-                          aria-expanded={openMenuId === conversation.id}
-                          onClick={(event) => {
-                            const currentTarget = event.currentTarget;
-                            const rect = currentTarget.getBoundingClientRect();
-                            const estimatedMenuHeight = 116;
-                            const estimatedMenuWidth = 176;
-                            const top = Math.max(4, rect.top - estimatedMenuHeight + 20);
-                            const left = Math.max(
-                              8,
-                              Math.min(rect.right - estimatedMenuWidth, window.innerWidth - estimatedMenuWidth - 8),
-                            );
-
-                            setMenuPosition((current) =>
-                              current && openMenuId === conversation.id ? null : { top, left },
-                            );
-                            setOpenMenuId((current) =>
-                              current === conversation.id ? null : conversation.id,
-                            );
-                          }}
-                          className={cn(
-                            "shrink-0 rounded-full border border-transparent text-muted-foreground hover:bg-muted hover:text-foreground",
-                            openMenuId === conversation.id && "bg-muted text-foreground",
-                          )}
-                        >
-                          <MoreHorizontal className="size-4" />
-                        </Button>
-
-                      </div>
-                    </li>
+                    <AssistantConversationListItem
+                      key={conversation.id}
+                      conversation={conversation}
+                      active={active}
+                      isMutating={isMutating}
+                      isMenuOpen={openMenuId === conversation.id}
+                      onOpenMenu={(nextConversation, nextMenuPosition) => {
+                        setMenuPosition((current) =>
+                          current && openMenuId === nextConversation.id ? null : nextMenuPosition,
+                        );
+                        setOpenMenuId((current) =>
+                          current === nextConversation.id ? null : nextConversation.id,
+                        );
+                      }}
+                    />
                   );
                 })}
               </ul>
@@ -551,53 +385,22 @@ export function AssistantChatsSection() {
         </div>
       ) : null}
 
-      {openMenuId && menuPosition
-        ? createPortal(
-            <div
-              ref={menuRef}
-              className="fixed z-[60] w-44 rounded-2xl border border-border/70 bg-background p-1.5 shadow-xl shadow-black/20"
-              style={{ top: `${menuPosition.top}px`, left: `${menuPosition.left}px` }}
-            >
-              {(() => {
-                const conversation = conversations.find((item) => item.id === openMenuId);
-                if (!conversation) return null;
-                const isMutating = mutatingConversationId === conversation.id;
+      <AssistantConversationActionsMenu
+        conversation={openConversation}
+        isMutating={openConversation ? mutatingConversationId === openConversation.id : false}
+        menuPosition={menuPosition}
+        menuRef={menuRef}
+        onRename={(conversation) => {
+          openRenameConversation(conversation);
+          setMenuPosition(null);
+        }}
+        onDelete={(conversation) => {
+          openDeleteConversation(conversation);
+          setMenuPosition(null);
+        }}
+      />
 
-                return (
-                  <>
-                    <button
-                      type="button"
-                      disabled={isMutating}
-                      onClick={() => {
-                        openRenameConversation(conversation);
-                        setMenuPosition(null);
-                      }}
-                      className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm text-foreground hover:bg-muted disabled:opacity-50"
-                    >
-                      <PencilLine className="size-4 text-muted-foreground" />
-                      <span>Edit name</span>
-                    </button>
-                    <button
-                      type="button"
-                      disabled={isMutating}
-                      onClick={() => {
-                        openDeleteConversation(conversation);
-                        setMenuPosition(null);
-                      }}
-                      className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm text-foreground hover:bg-muted disabled:opacity-50"
-                    >
-                      <Trash2 className="size-4 text-muted-foreground" />
-                      <span>Delete</span>
-                    </button>
-                  </>
-                );
-              })()}
-            </div>,
-            document.body,
-          )
-        : null}
-
-      <RenameConversationModal
+      <AssistantConversationRenameModal
         open={renameModalConversation !== null}
         conversationTitle={renameModalConversation?.title ?? ""}
         value={renameTitle}
@@ -613,41 +416,21 @@ export function AssistantChatsSection() {
         }}
       />
 
-      <AlertDialog
+      <AssistantConversationDeleteDialog
         open={deleteModalConversation !== null}
+        title={deleteModalConversation?.title ?? ""}
+        error={deleteError}
+        isSaving={isDeleteSaving}
         onOpenChange={(open) => {
           if (!open) {
             setDeleteModalConversation(null);
             setDeleteError(null);
           }
         }}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete conversation?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone.
-              <span className="mt-1 block font-medium text-foreground">
-                {deleteModalConversation?.title ?? ""}
-              </span>
-            </AlertDialogDescription>
-            {deleteError ? <p className="text-sm text-destructive">{deleteError}</p> : null}
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={isDeleteSaving}>Cancel</AlertDialogCancel>
-            <Button
-              type="button"
-              variant="destructive"
-              disabled={isDeleteSaving}
-              onClick={() => {
-                void confirmDeleteConversation();
-              }}
-            >
-              {isDeleteSaving ? "Deleting..." : "Delete"}
-            </Button>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+        onConfirm={() => {
+          void confirmDeleteConversation();
+        }}
+      />
     </section>
   );
 }
