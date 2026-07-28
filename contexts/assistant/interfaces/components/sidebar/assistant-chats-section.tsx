@@ -6,7 +6,6 @@ import { createPortal } from "react-dom";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   ChevronDown,
-  MessageSquareText,
   MoreHorizontal,
   PencilLine,
   Trash2,
@@ -449,8 +448,6 @@ export function AssistantChatsSection() {
 
   return (
     <section ref={sectionRef} className="mt-2">
-      <div className="my-2 border-t border-border/60" />
-
       <Button
         type="button"
         variant="ghost"
@@ -463,10 +460,7 @@ export function AssistantChatsSection() {
         className="h-10 w-full justify-between rounded-md px-2.5 text-sm font-medium text-foreground hover:bg-accent/70 hover:text-accent-foreground"
         aria-expanded={isOpen}
       >
-        <span className="flex items-center gap-2.5">
-          <MessageSquareText className="size-5 text-muted-foreground" strokeWidth={2} />
-          <span>Chats</span>
-        </span>
+        <span>Chats</span>
         <ChevronDown
           className={cn(
             "size-4 text-muted-foreground transition-transform",
