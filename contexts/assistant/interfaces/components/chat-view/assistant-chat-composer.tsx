@@ -1,7 +1,7 @@
 "use client";
 
 import { useLayoutEffect, useRef, useState, type KeyboardEvent } from "react";
-import { AudioWaveform, ArrowUp, Mic, Plus } from "lucide-react";
+import { ArrowUp } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
@@ -27,11 +27,8 @@ const shellBaseClass =
   "w-full border border-border/70 bg-background/95 text-foreground shadow-[0_12px_30px_rgba(15,23,42,0.08)] backdrop-blur-xl transition-all duration-200 ease-in-out";
 const shellSingleLineClass = "rounded-full px-4 py-3";
 const shellMultiLineClass = "rounded-[24px] px-4 py-4";
-const neutralActionClass =
-  "rounded-full border border-border/70 bg-muted/70 text-foreground transition-colors hover:bg-muted";
 const sendActionClass =
   "rounded-full border border-border/70 bg-white text-foreground shadow-[0_8px_24px_rgba(15,23,42,0.12)] transition-transform hover:scale-105 hover:bg-white/95 disabled:scale-100 disabled:bg-white/80 disabled:text-foreground/50";
-
 export function AssistantChatComposer({
   value,
   isSending,
@@ -91,21 +88,6 @@ export function AssistantChatComposer({
   }
 
   function renderActionButton() {
-    if (!hasText) {
-      return (
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon-lg"
-          className="rounded-full border border-white/10 bg-white/5 text-white transition-colors hover:bg-white/10"
-          aria-label="Live voice"
-          title="Live voice"
-        >
-          <AudioWaveform className="size-4" />
-        </Button>
-      );
-    }
-
     return (
       <Button
         type="button"
@@ -143,17 +125,6 @@ export function AssistantChatComposer({
           </label>
 
           <div className="flex items-center gap-3">
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon-lg"
-              className={neutralActionClass}
-              aria-label="Attach files"
-              title="Attach files"
-            >
-              <Plus className="size-4" />
-            </Button>
-
             <div className="min-w-0 flex-1">
               <textarea
                 ref={textareaRef}
@@ -170,17 +141,6 @@ export function AssistantChatComposer({
                 )}
               />
             </div>
-
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon-lg"
-              className={neutralActionClass}
-              aria-label="Microphone"
-              title="Microphone"
-            >
-              <Mic className="size-4" />
-            </Button>
 
             {renderActionButton()}
           </div>
@@ -218,46 +178,12 @@ export function AssistantChatComposer({
               />
 
               <div className="flex items-center justify-between gap-3 border-t border-border/60 pt-3">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon-lg"
-                  className={neutralActionClass}
-                  aria-label="Attach files"
-                  title="Attach files"
-                >
-                  <Plus className="size-4" />
-                </Button>
-
-                <div className="flex items-center gap-2">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon-lg"
-                    className={neutralActionClass}
-                    aria-label="Microphone"
-                    title="Microphone"
-                  >
-                    <Mic className="size-4" />
-                  </Button>
-
-                  {renderActionButton()}
-                </div>
+                <div />
+                {renderActionButton()}
               </div>
             </div>
           ) : (
             <div className="flex items-center gap-3">
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon-lg"
-                className={neutralActionClass}
-                aria-label="Attach files"
-                title="Attach files"
-              >
-                <Plus className="size-4" />
-              </Button>
-
               <div className="min-w-0 flex-1">
                 <textarea
                   ref={textareaRef}
@@ -274,17 +200,6 @@ export function AssistantChatComposer({
                   )}
                 />
               </div>
-
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon-lg"
-                className={neutralActionClass}
-                aria-label="Microphone"
-                title="Microphone"
-              >
-                <Mic className="size-4" />
-              </Button>
 
               {renderActionButton()}
             </div>

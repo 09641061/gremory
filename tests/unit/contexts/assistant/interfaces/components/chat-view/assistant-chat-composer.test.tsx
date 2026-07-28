@@ -19,7 +19,7 @@ describe("AssistantChatComposer", () => {
     }
   });
 
-  it("should render the compact empty state with the live voice action", () => {
+  it("should render the compact empty state with only the send action", () => {
     render(
       <AssistantChatComposer
         value=""
@@ -31,8 +31,7 @@ describe("AssistantChatComposer", () => {
     );
 
     expect(screen.getByPlaceholderText("Preguntar lo que quieras")).toBeVisible();
-    expect(screen.getByLabelText("Live voice")).toBeVisible();
-    expect(screen.getByLabelText("Microphone")).toBeVisible();
+    expect(screen.getByLabelText("Send message")).toBeVisible();
     expect(screen.getByTestId("assistant-composer-shell")).toHaveAttribute("data-composer-state", "empty");
   });
 
