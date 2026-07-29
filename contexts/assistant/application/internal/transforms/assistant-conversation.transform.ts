@@ -2,8 +2,11 @@ import type {
   AssistantConversationResponse,
   AssistantConversationSummaryResponse,
   AssistantMessageResponse,
+  PageResponse,
 } from "@/contexts/assistant/infrastructure/gateways/assistant-api.gateway";
 
+import type { AssistantConversation } from "../../../domain/model/entities/assistant-conversation";
+import type { AssistantMessage } from "../../../domain/model/entities/assistant-message";
 import { createAssistantConversationId } from "../../../domain/model/value-objects/assistant-conversation-id";
 import { createAssistantConversationTitle } from "../../../domain/model/value-objects/assistant-conversation-title";
 import { createAssistantMessageContent } from "../../../domain/model/value-objects/assistant-message-content";
@@ -12,17 +15,35 @@ import type {
   AssistantConversationReadModel,
   AssistantConversationSummaryReadModel,
   AssistantMessageReadModel,
-} from "../../model/assistant.read-models";
-import type { PageResponse } from "@/contexts/assistant/infrastructure/gateways/assistant-api.gateway";
+} from "./assistant.read-models";
 
 function normalizeMessage(message: AssistantMessageResponse): AssistantMessageReadModel {
+  const role = (message.role ?? "").toUpperCase();
+
   return {
     id: message.id,
-    role: message.role.toUpperCase() === "ASSISTANT" ? "assistant" : "user",
+    role: role === "ASSISTANT" || role === "AGENT" ? "assistant" : "user",
     content: createAssistantMessageContent(message.content).value,
-    intent: message.intent ?? null,
     createdAt: message.createdAt,
   };
+}
+
+function normalizeConversationMessages(
+  messages: AssistantMessageResponse[],
+): AssistantMessageReadModel[] {
+  const normalizedMessages = messages.map(normalizeMessage);
+  const hasAssistantMessage = normalizedMessages.some((message) => message.role === "assistant");
+
+  if (hasAssistantMessage || normalizedMessages.length <= 1) {
+    return normalizedMessages;
+  }
+
+  // Some legacy conversations come back with flattened roles.
+  // When that happens, recover the expected left/right alternation by order.
+  return normalizedMessages.map((message, index) => ({
+    ...message,
+    role: index % 2 === 0 ? "user" : "assistant",
+  }));
 }
 
 function normalizeSummary(
@@ -30,12 +51,9 @@ function normalizeSummary(
 ): AssistantConversationSummaryReadModel {
   return {
     id: createAssistantConversationId(conversation.id).value,
-    title: createAssistantConversationTitle(conversation.title).value,
-    status: conversation.status,
+    title: conversation.title ? createAssistantConversationTitle(conversation.title).value : "Nueva conversacion",
     createdAt: conversation.createdAt,
     updatedAt: conversation.updatedAt,
-    lastMessageAt: conversation.lastMessageAt ?? null,
-    messageCount: conversation.messageCount,
   };
 }
 
@@ -62,6 +80,23 @@ export function toConversationReadModel(
 
   return {
     ...summary,
-    messages: conversation.messages.map(normalizeMessage),
+    messages: normalizeConversationMessages(conversation.messages),
+  };
+}
+
+export function toConversationReadModelFromEntity(
+  conversation: AssistantConversation,
+): AssistantConversationReadModel {
+  return {
+    id: conversation.id.value,
+    title: conversation.getTitle(),
+    createdAt: conversation.createdAt,
+    updatedAt: conversation.updatedAt,
+    messages: conversation.getMessages().map((message: AssistantMessage) => ({
+      id: message.id,
+      role: message.role === "ASSISTANT" ? "assistant" : "user",
+      content: message.content,
+      createdAt: message.createdAt,
+    })),
   };
 }

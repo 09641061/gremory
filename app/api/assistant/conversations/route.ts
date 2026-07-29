@@ -3,6 +3,10 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { CreateConversationCommandService } from "@/contexts/assistant/application/internal/commandservices/create-conversation-command.service";
 import { ListConversationsQueryService } from "@/contexts/assistant/application/internal/queryservices/list-conversations-query.service";
+import {
+  assistantConversationCreateSchema,
+  assistantConversationListQuerySchema,
+} from "@/contexts/assistant/interfaces/rest/schemas/assistant-chat.schemas";
 import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-session-cookie";
 
 function unauthorized() {
@@ -18,11 +22,11 @@ export async function GET(request: Request) {
   }
 
   try {
-    const query = {
+    const query = assistantConversationListQuerySchema.parse({
       search: searchParams.get("search") ?? undefined,
-      page: searchParams.get("page") ? Number(searchParams.get("page")) : 0,
-      size: searchParams.get("size") ? Number(searchParams.get("size")) : 20,
-    };
+      page: searchParams.get("page") ?? undefined,
+      size: searchParams.get("size") ?? undefined,
+    });
     const data = await new ListConversationsQueryService().handle(query, accessToken);
 
     return NextResponse.json(data);
@@ -42,15 +46,11 @@ export async function POST(request: Request) {
   }
 
   try {
-    const body = (await request.json()) as { title?: string };
-
-    if (!body.title || !body.title.trim()) {
-      return NextResponse.json({ message: "Title is required" }, { status: 400 });
-    }
+    const body = assistantConversationCreateSchema.parse(await request.json());
 
     const data = await new CreateConversationCommandService().handle(
       {
-        title: body.title.trim(),
+        messageContent: body.messageContent,
       },
       accessToken,
     );

@@ -1,3 +1,3 @@
 export interface CreateConversationCommand {
-  title: string;
+  messageContent: string;
 }

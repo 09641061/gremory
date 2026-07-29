@@ -14,6 +14,7 @@ import {
 
 import { buttonVariants } from "@/contexts/shared/interfaces/components/ui/button";
 import { AssistantChatsSection } from "@/contexts/assistant/interfaces/components/sidebar/assistant-chats-section";
+import type { AssistantConversationSummaryReadModel } from "@/contexts/assistant/application/internal/transforms/assistant.read-models";
 import { cn } from "@/lib/utils";
 
 const navigation = [
@@ -25,7 +26,11 @@ const navigation = [
   { label: "Analytics", href: "/analytics", icon: BarChart3 },
 ];
 
-export function Sidebar() {
+export function Sidebar({
+  initialAssistantConversations,
+}: {
+  initialAssistantConversations: AssistantConversationSummaryReadModel[];
+}) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const selectedConversationId = pathname.startsWith("/chat")
@@ -68,7 +73,7 @@ export function Sidebar() {
         </ul>
       </nav>
 
-      <AssistantChatsSection />
+      <AssistantChatsSection initialConversations={initialAssistantConversations} />
 
       <nav aria-label="Configuracion" className="mt-auto pt-5">
         <ul>
@@ -103,4 +108,3 @@ export function Sidebar() {
     </aside>
   );
 }
-

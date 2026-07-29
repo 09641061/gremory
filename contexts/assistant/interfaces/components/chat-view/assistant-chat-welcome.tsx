@@ -2,10 +2,10 @@
 
 import type { RefObject } from "react";
 
-import { AssistantAvatar } from "../shared/assistant-avatar";
+import { AssistantAvatar } from "../icons/assistant-avatar/assistant-avatar";
 
 interface AssistantChatWelcomeProps {
-  bottomRef: RefObject<HTMLDivElement | null>;
+  bottomRef?: RefObject<HTMLDivElement | null>;
 }
 
 export function AssistantChatWelcome({ bottomRef }: AssistantChatWelcomeProps) {
@@ -18,7 +18,7 @@ export function AssistantChatWelcome({ bottomRef }: AssistantChatWelcomeProps) {
         </div>
       </div>
 
-      <div ref={bottomRef} />
+      {bottomRef ? <div ref={bottomRef} /> : null}
     </div>
   );
 }

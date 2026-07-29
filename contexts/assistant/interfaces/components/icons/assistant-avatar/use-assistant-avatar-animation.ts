@@ -5,15 +5,15 @@ import { useEffect, useRef, useState } from "react";
 
 import type { StaticImageData } from "next/image";
 
-import assistantIcon from "@/contexts/assistant/interfaces/resources/kodu_assistant_icon.svg";
-import deathIcon from "@/contexts/assistant/interfaces/resources/ghost/kodu_icon_death.svg";
-import xplo1 from "@/contexts/assistant/interfaces/resources/explotion/kodu_icon_xplo1.svg";
-import xplo2 from "@/contexts/assistant/interfaces/resources/explotion/kodu_icon_xplo2.svg";
-import xplo3 from "@/contexts/assistant/interfaces/resources/explotion/kodu_icon_xplo3.svg";
-import xplo4 from "@/contexts/assistant/interfaces/resources/explotion/kodu_icon_xplo4.svg";
-import xplo5 from "@/contexts/assistant/interfaces/resources/explotion/kodu_icon_xplo5.svg";
-import xplo6 from "@/contexts/assistant/interfaces/resources/explotion/kodu_icon_xplo6.svg";
-import xplo7 from "@/contexts/assistant/interfaces/resources/explotion/kodu_icon_xplo7.svg";
+import assistantIcon from "./assets/kodu_assistant_icon.svg";
+import deathIcon from "./assets/ghost/kodu_icon_death.svg";
+import xplo1 from "./assets/explosion/kodu_icon_xplo1.svg";
+import xplo2 from "./assets/explosion/kodu_icon_xplo2.svg";
+import xplo3 from "./assets/explosion/kodu_icon_xplo3.svg";
+import xplo4 from "./assets/explosion/kodu_icon_xplo4.svg";
+import xplo5 from "./assets/explosion/kodu_icon_xplo5.svg";
+import xplo6 from "./assets/explosion/kodu_icon_xplo6.svg";
+import xplo7 from "./assets/explosion/kodu_icon_xplo7.svg";
 
 const explosionFrames: StaticImageData[] = [xplo1, xplo2, xplo3, xplo4, xplo5, xplo6, xplo7];
 const longPressDelayMs = 500;

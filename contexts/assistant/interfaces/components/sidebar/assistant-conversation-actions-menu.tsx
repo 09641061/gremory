@@ -5,15 +5,15 @@ import { createPortal } from "react-dom";
 
 import { PencilLine, Trash2 } from "lucide-react";
 
-import type { AssistantConversationSummary } from "@/contexts/assistant/interfaces/components/shared/assistant-chat.types";
+import type { AssistantConversationSummaryReadModel } from "@/contexts/assistant/application/internal/transforms/assistant.read-models";
 
 type AssistantConversationActionsMenuProps = {
-  conversation: AssistantConversationSummary | null;
+  conversation: AssistantConversationSummaryReadModel | null;
   isMutating: boolean;
   menuPosition: { top: number; left: number } | null;
   menuRef: RefObject<HTMLDivElement | null>;
-  onRename: (conversation: AssistantConversationSummary) => void;
-  onDelete: (conversation: AssistantConversationSummary) => void;
+  onRename: (conversation: AssistantConversationSummaryReadModel) => void;
+  onDelete: (conversation: AssistantConversationSummaryReadModel) => void;
 };
 
 export function AssistantConversationActionsMenu({

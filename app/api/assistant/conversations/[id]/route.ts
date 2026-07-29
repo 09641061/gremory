@@ -4,6 +4,10 @@ import { cookies } from "next/headers";
 import { DeleteConversationCommandService } from "@/contexts/assistant/application/internal/commandservices/delete-conversation-command.service";
 import { RenameConversationCommandService } from "@/contexts/assistant/application/internal/commandservices/rename-conversation-command.service";
 import { GetConversationQueryService } from "@/contexts/assistant/application/internal/queryservices/get-conversation-query.service";
+import {
+  assistantConversationIdParamSchema,
+  assistantConversationRenameSchema,
+} from "@/contexts/assistant/interfaces/rest/schemas/assistant-chat.schemas";
 import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-session-cookie";
 
 function unauthorized() {
@@ -14,7 +18,7 @@ export async function GET(
   _request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const { id } = await params;
+  const { id } = assistantConversationIdParamSchema.parse(await params);
   const accessToken = (await cookies()).get(iamSessionCookies.accessToken)?.value;
 
   if (!accessToken) {
@@ -36,7 +40,7 @@ export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const { id } = await params;
+  const { id } = assistantConversationIdParamSchema.parse(await params);
   const accessToken = (await cookies()).get(iamSessionCookies.accessToken)?.value;
 
   if (!accessToken) {
@@ -44,23 +48,12 @@ export async function PATCH(
   }
 
   try {
-    const body = (await request.json()) as { title?: string };
-    const title = body.title?.trim();
-
-    if (!title) {
-      return NextResponse.json({ message: "Title is required" }, { status: 400 });
-    }
-    if (title.length > 200) {
-      return NextResponse.json(
-        { message: "Title must not exceed 200 characters" },
-        { status: 400 },
-      );
-    }
+    const body = assistantConversationRenameSchema.parse(await request.json());
 
     const data = await new RenameConversationCommandService().handle(
       {
         conversationId: id,
-        title,
+        title: body.title,
       },
       accessToken,
     );
@@ -77,7 +70,7 @@ export async function DELETE(
   _request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const { id } = await params;
+  const { id } = assistantConversationIdParamSchema.parse(await params);
   const accessToken = (await cookies()).get(iamSessionCookies.accessToken)?.value;
 
   if (!accessToken) {

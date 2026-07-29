@@ -1,9 +1,9 @@
 import "server-only";
 
-import type { AssistantConversationPageReadModel } from "../../model/assistant.read-models";
 import { AssistantApiGateway } from "@/contexts/assistant/infrastructure/gateways/assistant-api.gateway";
 
 import { toConversationPageReadModel } from "../transforms/assistant-conversation.transform";
+import type { AssistantConversationPageReadModel } from "../transforms/assistant.read-models";
 
 export interface ListConversationsQuery {
   search?: string;

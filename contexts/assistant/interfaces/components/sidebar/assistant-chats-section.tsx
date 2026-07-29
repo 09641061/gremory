@@ -5,13 +5,18 @@ import { ChevronDown } from "lucide-react";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import { cn } from "@/lib/utils";
 
+import type { AssistantConversationSummaryReadModel } from "@/contexts/assistant/application/internal/transforms/assistant.read-models";
 import { AssistantConversationActionsMenu } from "./assistant-conversation-actions-menu";
 import { AssistantConversationDeleteDialog } from "./assistant-conversation-delete-dialog";
 import { AssistantConversationList } from "./assistant-conversation-list";
 import { AssistantConversationRenameModal } from "./assistant-conversation-rename-modal";
 import { useAssistantConversationSidebar } from "./use-assistant-conversation-sidebar";
 
-export function AssistantChatsSection() {
+export function AssistantChatsSection({
+  initialConversations,
+}: {
+  initialConversations: AssistantConversationSummaryReadModel[];
+}) {
   const {
     activeConversationId,
     conversations,
@@ -43,7 +48,7 @@ export function AssistantChatsSection() {
     submitDeleteConversation,
     submitRenameConversation,
     toggleOpen,
-  } = useAssistantConversationSidebar();
+  } = useAssistantConversationSidebar(initialConversations);
 
   return (
     <section ref={sectionRef} className="mt-2">

@@ -25,11 +25,11 @@ const inputBaseClass =
 const inputSingleLineClass = "min-h-[24px] max-h-[220px] overflow-hidden";
 const inputMultiLineClass = "min-h-[24px] max-h-[220px] overflow-y-auto scrollbar-hide overscroll-contain";
 const shellBaseClass =
-  "w-full border border-border/70 bg-background/95 text-foreground shadow-[0_12px_30px_rgba(15,23,42,0.08)] backdrop-blur-xl transition-all duration-200 ease-in-out";
+  "w-full border border-border/30 bg-white/90 text-foreground shadow-[0_8px_22px_rgba(15,23,42,0.05)] backdrop-blur-md transition-all duration-200 ease-in-out";
 const shellSingleLineClass = "rounded-full px-4 py-3";
 const shellMultiLineClass = "rounded-[24px] px-4 py-4";
 const sendActionClass =
-  "rounded-full border border-border/70 bg-white text-foreground shadow-[0_8px_24px_rgba(15,23,42,0.12)] transition-transform hover:scale-105 hover:bg-white/95 disabled:scale-100 disabled:bg-white/80 disabled:text-foreground/50";
+  "rounded-full border border-border/30 bg-white text-foreground shadow-[0_6px_16px_rgba(15,23,42,0.06)] transition-transform hover:scale-105 hover:bg-white/95 disabled:scale-100 disabled:bg-white/80 disabled:text-foreground/50";
 export function AssistantChatComposer({
   value,
   isSending,
@@ -150,7 +150,7 @@ export function AssistantChatComposer({
       </div>
     </div>
   ) : (
-    <div className={floating ? "bg-transparent p-0" : "bg-background/95 p-4 sm:p-6"}>
+    <div className={floating ? "bg-transparent p-0" : "bg-transparent p-0"}>
       <div className="mx-auto w-full max-w-4xl">
         <div
           ref={shellRef}
