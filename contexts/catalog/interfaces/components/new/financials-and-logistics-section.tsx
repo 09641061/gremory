@@ -1,6 +1,5 @@
 "use client";
 
-import { CreditCardIcon, ClockIcon } from "lucide-react";
 import { Input } from "@/contexts/shared/interfaces/components/ui/input";
 import { Label } from "@/contexts/shared/interfaces/components/ui/label";
 
@@ -18,11 +17,6 @@ export function FinancialsAndLogisticsSection({ defaultValues }: FinancialsAndLo
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
       {/* Financials */}
       <div className="space-y-4">
-        <div className="flex items-center gap-3 border-b border-border pb-3">
-          <CreditCardIcon className="size-5 text-primary" />
-          <h2 className="text-lg font-semibold text-foreground">Financials</h2>
-        </div>
-
         <div className="space-y-2">
           <Label htmlFor="price">Price ($)</Label>
           <div className="relative">
@@ -45,10 +39,6 @@ export function FinancialsAndLogisticsSection({ defaultValues }: FinancialsAndLo
 
       {/* Logistics */}
       <div className="space-y-4">
-        <div className="flex items-center gap-3 border-b border-border pb-3">
-          <ClockIcon className="size-5 text-primary" />
-          <h2 className="text-lg font-semibold text-foreground">Logistics</h2>
-        </div>
 
         <div className="grid grid-cols-3 gap-3">
           <div className="space-y-1.5">

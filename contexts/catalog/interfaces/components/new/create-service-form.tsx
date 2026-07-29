@@ -38,6 +38,9 @@ export function CreateServiceForm({ establishmentId, categoryId }: CreateService
               <CardContent className="p-0 space-y-6">
                 <div className="border-b border-border pb-4">
                   <h1 className="text-xl font-bold text-foreground">Create New Service</h1>
+                  <p className="text-sm text-muted-foreground mt-1.5">
+                    Add a new service to your catalog. Configure its details, pricing, logistics, and preparation times to start accepting bookings.
+                  </p>
                 </div>
 
                 <input type="hidden" name="establishmentId" value={establishmentId} />
@@ -58,7 +61,7 @@ export function CreateServiceForm({ establishmentId, categoryId }: CreateService
                   <Button
                     type="submit"
                     disabled={pending}
-                    className="gap-2 font-semibold px-8"
+                    className="gap-2"
                   >
                     {pending ? <Spinner className="size-4" /> : <Save className="size-4" />}
                     {pending ? "Saving..." : "Save"}

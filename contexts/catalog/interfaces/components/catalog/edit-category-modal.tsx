@@ -1,5 +1,6 @@
 "use client";
 
+import { Save } from "lucide-react";
 import { ErrorAlert } from "@/contexts/shared/interfaces/components/ui/error";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import { Input } from "@/contexts/shared/interfaces/components/ui/input";
@@ -52,22 +53,16 @@ export function EditCategoryModal({
               </div>
 
               <div className="flex justify-end gap-3 pt-2 mt-4">
-                <Button type="button" variant="ghost" onClick={onClose}>
+                <Button type="button" variant="ghost" onClick={onClose} disabled={isActionPending}>
                   Cancel
                 </Button>
                 <Button
                   type="submit"
                   disabled={isActionPending}
-                  className="bg-primary hover:bg-primary/90 text-primary-foreground font-medium"
+                  className="gap-2"
                 >
-                  {updatePending ? (
-                    <>
-                      <Spinner data-icon="inline-start" />
-                      Saving...
-                    </>
-                  ) : (
-                    "Save"
-                  )}
+                  {updatePending ? <Spinner className="size-4" /> : <Save className="size-4" />}
+                  {updatePending ? "Saving..." : "Save"}
                 </Button>
               </div>
             </form>

@@ -35,13 +35,13 @@ export function CatalogLayout({
     categories[0]?.id
   );
   const [selectedServiceId, setSelectedServiceId] = useState<string | undefined>(
-    initialServices[0]?.id
+    undefined
   );
 
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<CategoryDTO | null>(null);
 
-  const selectedService = servicesList.find((s) => s.id === selectedServiceId) ?? servicesList[0];
+  const selectedService = selectedServiceId ? servicesList.find((s) => s.id === selectedServiceId) : undefined;
 
   const serviceSummaries: ServiceSummaryDTO[] = servicesList.map((s) => ({
     id: s.id,
@@ -78,8 +78,14 @@ export function CatalogLayout({
           services={serviceSummaries}
           selectedCategoryId={selectedCategoryId}
           selectedServiceId={selectedServiceId}
-          onSelectCategory={(id) => setSelectedCategoryId(id)}
-          onSelectService={(id) => setSelectedServiceId(id)}
+          onSelectCategory={(id) => {
+            setSelectedCategoryId(id);
+            setSelectedServiceId(undefined);
+          }}
+          onSelectService={(id) => {
+            setSelectedServiceId(id);
+            setSelectedCategoryId(undefined);
+          }}
           onOpenCreateCategoryModal={() => setIsCategoryModalOpen(true)}
           onOpenEditCategoryModal={(category) => setEditingCategory(category)}
           onMoveServiceCategory={handleMoveServiceCategory}
@@ -90,7 +96,7 @@ export function CatalogLayout({
             <EditServiceForm service={selectedService} />
           ) : (
             <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
-              No services available
+              Select a service from the sidebar to view or edit its settings.
             </div>
           )}
         </main>

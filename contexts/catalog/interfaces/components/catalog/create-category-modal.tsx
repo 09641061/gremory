@@ -1,5 +1,6 @@
 "use client";
 
+import { Save } from "lucide-react";
 import { ErrorAlert } from "@/contexts/shared/interfaces/components/ui/error";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import { Input } from "@/contexts/shared/interfaces/components/ui/input";
@@ -47,22 +48,16 @@ export function CreateCategoryModal({
             </div>
 
             <div className="flex justify-end gap-3 pt-2">
-              <Button type="button" variant="ghost" onClick={onClose}>
+              <Button type="button" variant="ghost" onClick={onClose} disabled={pending}>
                 Cancel
               </Button>
               <Button
                 type="submit"
                 disabled={pending}
-                className="bg-primary hover:bg-primary/90 text-primary-foreground font-medium"
+                className="gap-2"
               >
-                {pending ? (
-                  <>
-                    <Spinner data-icon="inline-start" />
-                    Saving...
-                  </>
-                ) : (
-                  "Create Category"
-                )}
+                {pending ? <Spinner className="size-4" /> : <Save className="size-4" />}
+                {pending ? "Saving..." : "Save"}
               </Button>
             </div>
           </form>

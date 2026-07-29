@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { EyeIcon, EyeOffIcon } from "lucide-react";
+import { EyeIcon, EyeOffIcon, Save } from "lucide-react";
 import { ErrorAlert } from "@/contexts/shared/interfaces/components/ui/error";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import { Spinner } from "@/contexts/shared/interfaces/components/ui/spinner";
@@ -144,7 +144,7 @@ export function EditServiceForm({ service }: EditServiceFormProps) {
                 <Button
                   type="button"
                   variant="ghost"
-                  className="text-muted-foreground"
+                  disabled={isActionPending}
                   onClick={() => {
                     setResetKey((prev) => prev + 1);
                     router.push("/catalog");
@@ -156,16 +156,10 @@ export function EditServiceForm({ service }: EditServiceFormProps) {
                 <Button
                   type="submit"
                   disabled={isActionPending}
-                  className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-8"
+                  className="gap-2"
                 >
-                  {updatePending ? (
-                    <>
-                      <Spinner data-icon="inline-start" />
-                      Saving...
-                    </>
-                  ) : (
-                    "Save Changes"
-                  )}
+                  {updatePending ? <Spinner className="size-4" /> : <Save className="size-4" />}
+                  {updatePending ? "Saving..." : "Save"}
                 </Button>
               </div>
             </div>
