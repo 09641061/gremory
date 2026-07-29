@@ -1,11 +1,13 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { CategorySidebar, type CategoryDTO, type ServiceSummaryDTO } from "./category-sidebar";
 import { type DetailedServiceDTO } from "./service-detail-view";
 import { EditServiceForm } from "./edit-service-form";
 import { CreateCategoryModal } from "./create-category-modal";
 import { EditCategoryModal } from "./edit-category-modal";
+import { CreateServiceForm } from "../new/create-service-form";
 import { updateCatalogServiceAction } from "../../actions/manage-catalog-service.actions";
 
 interface CatalogLayoutProps {
@@ -19,6 +21,7 @@ export function CatalogLayout({
   services: initialServices,
   activeEstablishmentId,
 }: CatalogLayoutProps) {
+  const router = useRouter();
   // Local state initialized with server props
   const [servicesList, setServicesList] = useState<DetailedServiceDTO[]>(initialServices);
   
@@ -35,6 +38,9 @@ export function CatalogLayout({
     categories[0]?.id
   );
   const [selectedServiceId, setSelectedServiceId] = useState<string | undefined>(
+    undefined
+  );
+  const [creatingServiceCategoryId, setCreatingServiceCategoryId] = useState<string | undefined>(
     undefined
   );
 
@@ -81,18 +87,38 @@ export function CatalogLayout({
           onSelectCategory={(id) => {
             setSelectedCategoryId(id);
             setSelectedServiceId(undefined);
+            setCreatingServiceCategoryId(undefined);
           }}
           onSelectService={(id) => {
             setSelectedServiceId(id);
             setSelectedCategoryId(undefined);
+            setCreatingServiceCategoryId(undefined);
           }}
           onOpenCreateCategoryModal={() => setIsCategoryModalOpen(true)}
           onOpenEditCategoryModal={(category) => setEditingCategory(category)}
           onMoveServiceCategory={handleMoveServiceCategory}
+          onCreateService={(catId) => {
+            setCreatingServiceCategoryId(catId);
+            setSelectedServiceId(undefined);
+            setSelectedCategoryId(undefined);
+          }}
         />
 
         <main className="flex-1 overflow-y-auto bg-background p-4 md:p-6">
-          {selectedService ? (
+          {creatingServiceCategoryId ? (
+            <CreateServiceForm
+              key={`create-service-${creatingServiceCategoryId}`}
+              establishmentId={activeEstablishmentId ?? ""}
+              categoryId={creatingServiceCategoryId}
+              onSuccess={() => {
+                setCreatingServiceCategoryId(undefined);
+                router.refresh();
+              }}
+              onCancel={() => {
+                setCreatingServiceCategoryId(undefined);
+              }}
+            />
+          ) : selectedService ? (
             <EditServiceForm service={selectedService} />
           ) : (
             <div className="flex items-center justify-center h-full text-muted-foreground text-sm">

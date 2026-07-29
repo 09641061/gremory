@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Save } from "lucide-react";
 import { ErrorAlert } from "@/contexts/shared/interfaces/components/ui/error";
@@ -15,12 +14,18 @@ import { useCreateCatalogService } from "../../../application/use-cases/use-crea
 interface CreateServiceFormProps {
   establishmentId: string;
   categoryId?: string;
+  onSuccess?: () => void;
+  onCancel?: () => void;
 }
 
-export function CreateServiceForm({ establishmentId, categoryId }: CreateServiceFormProps) {
+export function CreateServiceForm({ establishmentId, categoryId, onSuccess, onCancel }: CreateServiceFormProps) {
   const router = useRouter();
   const { state, formAction, pending } = useCreateCatalogService(() => {
-    router.push("/catalog");
+    if (onSuccess) {
+      onSuccess();
+    } else {
+      router.push("/catalog");
+    }
   });
 
   return (
@@ -52,11 +57,20 @@ export function CreateServiceForm({ establishmentId, categoryId }: CreateService
 
                 {/* Actions Inside Form */}
                 <div className="flex justify-end items-center gap-3 pt-6 border-t border-border mt-8">
-                  <Link href="/catalog" passHref>
-                    <Button type="button" variant="ghost" disabled={pending}>
-                      Cancel
-                    </Button>
-                  </Link>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    disabled={pending}
+                    onClick={() => {
+                      if (onCancel) {
+                        onCancel();
+                      } else {
+                        router.push("/catalog");
+                      }
+                    }}
+                  >
+                    Cancel
+                  </Button>
 
                   <Button
                     type="submit"

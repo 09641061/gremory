@@ -34,6 +34,7 @@ interface CategorySidebarProps {
   onOpenCreateCategoryModal: () => void;
   onOpenEditCategoryModal: (category: CategoryDTO) => void;
   onMoveServiceCategory?: (serviceId: string, newCategoryId: string) => void;
+  onCreateService?: (categoryId: string) => void;
 }
 
 export function CategorySidebar({
@@ -46,6 +47,7 @@ export function CategorySidebar({
   onOpenCreateCategoryModal,
   onOpenEditCategoryModal,
   onMoveServiceCategory,
+  onCreateService,
 }: CategorySidebarProps) {
   const [draggedServiceId, setDraggedServiceId] = useState<string | null>(null);
   const [dragOverCategoryId, setDragOverCategoryId] = useState<string | null>(null);
@@ -157,6 +159,7 @@ export function CategorySidebar({
               setIsMobileOpen={setIsMobileOpen}
               onDeleteCategory={setCategoryToDelete}
               setAlertMessage={setAlertMessage}
+              onCreateService={onCreateService}
             />
           ))
         )}

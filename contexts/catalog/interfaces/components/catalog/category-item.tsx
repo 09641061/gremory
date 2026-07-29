@@ -31,6 +31,7 @@ interface CategoryItemProps {
   setIsMobileOpen: (open: boolean) => void;
   onDeleteCategory: (category: CategoryDTO) => void;
   setAlertMessage: (msg: string | null) => void;
+  onCreateService?: (categoryId: string) => void;
 }
 
 export function CategoryItem({
@@ -50,6 +51,7 @@ export function CategoryItem({
   setIsMobileOpen,
   onDeleteCategory,
   setAlertMessage,
+  onCreateService,
 }: CategoryItemProps) {
   const router = useRouter();
   const isCatSelected = selectedCategoryId === cat.id;
@@ -105,7 +107,11 @@ export function CategoryItem({
                 label="Create Service"
                 onClick={() => {
                   setIsMobileOpen(false);
-                  router.push(`/catalog/new?categoryId=${cat.id}&t=${Date.now()}`);
+                  if (onCreateService) {
+                    onCreateService(cat.id);
+                  } else {
+                    router.push(`/catalog/new?categoryId=${cat.id}&t=${Date.now()}`);
+                  }
                 }}
               />
               <DropdownMenuEditItem
