@@ -119,7 +119,12 @@ export function CatalogLayout({
               }}
             />
           ) : selectedService ? (
-            <EditServiceForm service={selectedService} />
+            <EditServiceForm
+              service={selectedService}
+              onCancel={() => {
+                setSelectedServiceId(undefined);
+              }}
+            />
           ) : (
             <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
               Select a service from the sidebar to view or edit its settings.

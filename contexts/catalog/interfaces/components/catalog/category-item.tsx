@@ -110,7 +110,7 @@ export function CategoryItem({
                   if (onCreateService) {
                     onCreateService(cat.id);
                   } else {
-                    router.push(`/catalog/new?categoryId=${cat.id}&t=${Date.now()}`);
+                    router.push("/catalog");
                   }
                 }}
               />
