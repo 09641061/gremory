@@ -6,12 +6,12 @@ import { EyeIcon, EyeOffIcon } from "lucide-react";
 import { ErrorAlert } from "@/contexts/shared/interfaces/components/ui/error";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import { Spinner } from "@/contexts/shared/interfaces/components/ui/spinner";
-import { GeneralInfoSection } from "./general-info-section";
-import { FinancialsAndLogisticsSection } from "./financials-and-logistics-section";
-import { InstructionsSection } from "./instructions-section";
-import { useUpdateCatalogService } from "../../application/use-cases/use-update-catalog-service";
-import { useDeleteCatalogService } from "../../application/use-cases/use-delete-catalog-service";
-import { useChangeCatalogServiceStatus } from "../../application/use-cases/use-change-catalog-service-status";
+import { GeneralInfoSection } from "../new/general-info-section";
+import { FinancialsAndLogisticsSection } from "../new/financials-and-logistics-section";
+import { InstructionsSection } from "../new/instructions-section";
+import { useUpdateCatalogService } from "../../../application/use-cases/use-update-catalog-service";
+import { useDeleteCatalogService } from "../../../application/use-cases/use-delete-catalog-service";
+import { useChangeCatalogServiceStatus } from "../../../application/use-cases/use-change-catalog-service-status";
 import type { DetailedServiceDTO } from "./service-detail-view";
 
 interface EditServiceFormProps {

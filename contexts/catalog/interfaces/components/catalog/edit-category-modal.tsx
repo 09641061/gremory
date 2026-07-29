@@ -6,7 +6,7 @@ import { Input } from "@/contexts/shared/interfaces/components/ui/input";
 import { Label } from "@/contexts/shared/interfaces/components/ui/label";
 import { Spinner } from "@/contexts/shared/interfaces/components/ui/spinner";
 import { Dialog, DialogContent, DialogTitle } from "@/contexts/shared/interfaces/components/ui/dialog";
-import { useUpdateServiceCategory } from "../../application/use-cases/use-update-service-category";
+import { useUpdateServiceCategory } from "../../../application/use-cases/use-update-service-category";
 
 interface EditCategoryModalProps {
   isOpen: boolean;

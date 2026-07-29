@@ -67,8 +67,8 @@ export function CategoryItem({
       <div
         className={`w-full flex items-center justify-between px-3 py-2 text-sm rounded-md transition-colors group/row ${
           isCatSelected
-            ? "bg-primary/10 text-foreground font-semibold"
-            : "text-foreground hover:bg-muted"
+            ? "bg-accent text-accent-foreground font-semibold"
+            : "text-foreground hover:bg-accent/70 hover:text-accent-foreground"
         }`}
       >
         <button
@@ -96,16 +96,16 @@ export function CategoryItem({
               <MoreVerticalIcon className="size-3" />
             </DropdownMenuTrigger>
             <DropdownMenuContent className="p-2 space-y-1 w-44">
-              <DropdownMenuEditItem
-                onClick={() => {
-                  onOpenEditCategoryModal(cat);
-                }}
-              />
               <DropdownMenuCreateItem
                 label="Create Service"
                 onClick={() => {
                   setIsMobileOpen(false);
                   router.push(`/catalog/new?categoryId=${cat.id}&t=${Date.now()}`);
+                }}
+              />
+              <DropdownMenuEditItem
+                onClick={() => {
+                  onOpenEditCategoryModal(cat);
                 }}
               />
               <DropdownMenuDeleteItem
@@ -140,8 +140,8 @@ export function CategoryItem({
                 }}
                 className={`w-full text-left px-3 py-1.5 text-xs rounded-md transition-colors truncate ${
                   selectedServiceId === svc.id
-                    ? "bg-primary text-primary-foreground font-medium"
-                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                    ? "bg-accent text-accent-foreground font-medium"
+                    : "text-muted-foreground hover:bg-accent/70 hover:text-accent-foreground"
                 }`}
               >
                 {svc.name}

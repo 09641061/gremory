@@ -9,7 +9,7 @@ import { Spinner } from "@/contexts/shared/interfaces/components/ui/spinner";
 import { GeneralInfoSection } from "./general-info-section";
 import { FinancialsAndLogisticsSection } from "./financials-and-logistics-section";
 import { InstructionsSection } from "./instructions-section";
-import { useCreateCatalogService } from "../../application/use-cases/use-create-catalog-service";
+import { useCreateCatalogService } from "../../../application/use-cases/use-create-catalog-service";
 
 interface CreateServiceFormProps {
   establishmentId: string;

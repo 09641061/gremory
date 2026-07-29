@@ -1,9 +1,9 @@
 import { createBusinessEstablishmentAclService } from "@/contexts/business/application/internal/outboundservices/business-establishment-acl.service";
 import { createCatalogServiceQueryService } from "@/contexts/catalog/application/internal/commandservices/catalog-service-command.service";
 import { createServiceCategoryQueryService } from "@/contexts/catalog/application/internal/commandservices/service-category-command.service";
-import { CatalogClientWrapper } from "@/contexts/catalog/interfaces/components/catalog-client-wrapper";
-import type { DetailedServiceDTO } from "@/contexts/catalog/interfaces/components/service-detail-view";
-import type { CategoryDTO } from "@/contexts/catalog/interfaces/components/category-sidebar";
+import { CatalogClientWrapper } from "@/contexts/catalog/interfaces/components/catalog/catalog-client-wrapper";
+import type { DetailedServiceDTO } from "@/contexts/catalog/interfaces/components/catalog/service-detail-view";
+import type { CategoryDTO } from "@/contexts/catalog/interfaces/components/catalog/category-sidebar";
 
 interface CatalogPageProps {
   searchParams: Promise<{ establishmentId?: string }>;
