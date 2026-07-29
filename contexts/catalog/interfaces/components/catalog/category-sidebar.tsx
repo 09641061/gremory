@@ -9,7 +9,7 @@ import {
   XIcon,
 } from "lucide-react";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
-import { Alert, AlertTitle, AlertDescription } from "@/contexts/shared/interfaces/components/ui/alert";
+import { ErrorAlert } from "@/contexts/shared/interfaces/components/ui/error";
 import { CategoryItem } from "./category-item";
 import { DeleteCategoryDialog } from "./delete-category-dialog";
 
@@ -60,11 +60,7 @@ export function CategorySidebar({
     new Set(selectedCategoryId ? [selectedCategoryId] : [])
   );
 
-  useEffect(() => {
-    if (!alertMessage) return;
-    const timer = setTimeout(() => setAlertMessage(null), 4000);
-    return () => clearTimeout(timer);
-  }, [alertMessage]);
+
 
   // Toggle category expansion on click without collapsing other categories
   const handleToggleCategory = (categoryId: string) => {
@@ -194,17 +190,11 @@ export function CategorySidebar({
           <div className="flex-1" onClick={() => setIsMobileOpen(false)} />
         </div>
       )}
-      {alertMessage && typeof document !== "undefined" && createPortal(
-        <div className="fixed top-4 right-4 z-[9999] w-full max-w-sm animate-in fade-in slide-in-from-top-2">
-          <Alert variant="destructive" className="bg-card text-card-foreground shadow-lg border-border">
-            <AlertTitle className="text-sm font-semibold">Cannot Delete</AlertTitle>
-            <AlertDescription className="text-xs text-muted-foreground mt-1">
-              {alertMessage}
-            </AlertDescription>
-          </Alert>
-        </div>,
-        document.body
-      )}
+      <ErrorAlert
+        title="Cannot Delete"
+        message={alertMessage ?? undefined}
+        onDismiss={() => setAlertMessage(null)}
+      />
 
       {categoryToDelete && (
         <DeleteCategoryDialog

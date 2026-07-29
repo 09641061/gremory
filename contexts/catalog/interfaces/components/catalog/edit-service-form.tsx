@@ -56,7 +56,7 @@ export function EditServiceForm({ service, onCancel }: EditServiceFormProps) {
     <>
       <ErrorAlert
         title="Failed to process service request"
-        message={errorState ? (errorState.error ?? undefined) : undefined}
+        message={errorState && !isActionPending ? (errorState.error ?? undefined) : undefined}
       />
 
       <div className="bg-background text-foreground flex flex-col">

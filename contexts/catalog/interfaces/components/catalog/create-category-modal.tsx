@@ -26,7 +26,7 @@ export function CreateCategoryModal({
     <>
       <ErrorAlert
         title="Failed to create category"
-        message={state.status === "error" ? (state.error ?? undefined) : undefined}
+        message={state.status === "error" && !pending ? (state.error ?? undefined) : undefined}
       />
 
       <Dialog open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>

@@ -36,7 +36,7 @@ export function EditOrganizationForm({
     <>
       <ErrorAlert
         title="Unable to update organization"
-        message={state.status === "error" ? state.error : undefined}
+        message={state.status === "error" && !pending ? state.error : undefined}
       />
       <div className="mx-auto w-full max-w-2xl space-y-6">
         <EditOrganizationFormHeader

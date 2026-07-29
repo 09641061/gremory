@@ -30,7 +30,7 @@ export function EditCategoryModal({
     <>
       <ErrorAlert
         title="Failed to process category request"
-        message={errorState ? (errorState.error ?? undefined) : undefined}
+        message={errorState && !isActionPending ? (errorState.error ?? undefined) : undefined}
       />
 
       <Dialog open={isOpen && !!category} onOpenChange={(open) => { if (!open) onClose(); }}>

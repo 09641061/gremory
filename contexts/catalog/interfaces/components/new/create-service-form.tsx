@@ -32,7 +32,7 @@ export function CreateServiceForm({ establishmentId, categoryId, onSuccess, onCa
     <>
       <ErrorAlert
         title="Failed to create service"
-        message={state.status === "error" ? (state.error ?? undefined) : undefined}
+        message={state.status === "error" && !pending ? (state.error ?? undefined) : undefined}
       />
 
       <div className="bg-background text-foreground flex flex-col">
