@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode, RefObject } from "react";
+import { useLayoutEffect, useRef, type ReactNode, type RefObject } from "react";
 
 import { AssistantChatWelcome } from "./assistant-chat-welcome";
 import { AssistantChatLoadingState } from "./assistant-chat-loading-state";
@@ -28,12 +28,26 @@ export function AssistantChatThread({
   showWelcome = true,
 }: AssistantChatThreadProps) {
   void _error;
+  const scrollContainerRef = useRef<HTMLDivElement | null>(null);
   const messages = conversation?.messages ?? [];
   const shouldShowWelcome = showWelcome && messages.length > 0 && messages[0]?.role !== "assistant";
 
+  useLayoutEffect(() => {
+    const scrollContainer = scrollContainerRef.current;
+    if (!scrollContainer || messages.length === 0) return;
+
+    scrollContainer.scrollTo({
+      top: scrollContainer.scrollHeight,
+      behavior: "auto",
+    });
+  }, [messages.length, conversation?.id, isAssistantThinking]);
+
   return (
     <section className="relative isolate flex min-h-0 min-w-0 flex-1 overflow-hidden bg-background">
-      <div className="absolute inset-0 z-0 overflow-y-auto px-4 py-10 pb-48 sm:px-6 sm:py-12 sm:pb-56">
+      <div
+        ref={scrollContainerRef}
+        className="absolute inset-0 z-0 overflow-y-auto px-4 py-10 pb-48 sm:px-6 sm:py-12 sm:pb-56"
+      >
         {isLoading ? (
           <AssistantChatLoadingState />
         ) : messages.length ? (

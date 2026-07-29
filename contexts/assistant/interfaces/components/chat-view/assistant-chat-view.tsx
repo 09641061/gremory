@@ -46,11 +46,6 @@ export function AssistantChatView({
   const isThreadVisible = Boolean(conversationId || visibleConversation);
 
   useEffect(() => {
-    if (!bottomRef.current) return;
-    bottomRef.current.scrollIntoView({ behavior: "smooth", block: "end" });
-  }, [visibleConversation?.messages.length, isSendingMessage]);
-
-  useEffect(() => {
     function handleConversationMutation(event: Event) {
       const customEvent = event as CustomEvent<
         | { type: "upsert"; conversation: AssistantConversationReadModel; moveToFront?: boolean }
