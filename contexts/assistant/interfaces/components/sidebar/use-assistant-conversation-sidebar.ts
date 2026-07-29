@@ -1,18 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import type { AssistantConversationSummaryReadModel } from "@/contexts/assistant/application/internal/transforms/assistant.read-models";
-import {
-  ensureAssistantConversationListCached,
-  getAssistantConversationListCache,
-  patchAssistantConversationListItemTitle,
-  removeAssistantConversationListItem,
-  subscribeAssistantConversationListCache,
-  setAssistantConversationListCache,
-  upsertAssistantConversationListItem,
-} from "@/contexts/assistant/interfaces/components/sidebar/assistant-conversation-cache";
 
 const assistantConversationsEndpoint = "/api/assistant/conversations";
 
@@ -57,11 +48,6 @@ export function useAssistantConversationSidebar(
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const cache = useSyncExternalStore(
-    subscribeAssistantConversationListCache,
-    getAssistantConversationListCache,
-    getAssistantConversationListCache,
-  );
   const sectionRef = useRef<HTMLElement | null>(null);
   const menuRef = useRef<HTMLDivElement | null>(null);
   const activeConversationId = pathname.startsWith("/chat")
@@ -72,6 +58,7 @@ export function useAssistantConversationSidebar(
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [menuPosition, setMenuPosition] = useState<{ top: number; left: number } | null>(null);
   const [mutatingConversationId, setMutatingConversationId] = useState<string | null>(null);
+  const [conversations, setConversations] = useState(() => initialConversations);
   const [renameModalConversation, setRenameModalConversation] =
     useState<AssistantConversationSummaryReadModel | null>(null);
   const [renameTitle, setRenameTitle] = useState("");
@@ -81,10 +68,6 @@ export function useAssistantConversationSidebar(
     useState<AssistantConversationSummaryReadModel | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [isDeleteSaving, setIsDeleteSaving] = useState(false);
-
-  useEffect(() => {
-    setAssistantConversationListCache(initialConversations);
-  }, [initialConversations]);
 
   useEffect(() => {
     function handlePointerDown(event: MouseEvent | TouchEvent) {
@@ -125,16 +108,6 @@ export function useAssistantConversationSidebar(
   }, [openMenuId]);
 
   useEffect(() => {
-    if (!isOpen) return;
-
-    if (!cache.loaded && !cache.isLoading) {
-      void ensureAssistantConversationListCached().catch(() => {
-        // The cache state already reflects the load error.
-      });
-    }
-  }, [cache.isLoading, cache.loaded, isOpen]);
-
-  useEffect(() => {
     function handleMutation(event: Event) {
       const customEvent = event as CustomEvent<ConversationMutationEventDetail>;
       const detail = customEvent.detail;
@@ -142,18 +115,22 @@ export function useAssistantConversationSidebar(
 
       switch (detail.type) {
         case "upsert": {
-          upsertAssistantConversationListItem(detail.conversation, {
-            moveToFront: detail.moveToFront,
+          setConversations((current) => {
+            const next = current.filter((item) => item.id !== detail.conversation.id);
+            return detail.moveToFront ? [detail.conversation, ...next] : [...next, detail.conversation];
           });
           return;
         }
         case "rename": {
-          const { title } = detail;
-          patchAssistantConversationListItemTitle(detail.conversationId, title);
+          setConversations((current) =>
+            current.map((item) =>
+              item.id === detail.conversationId ? { ...item, title: detail.title } : item,
+            ),
+          );
           return;
         }
         case "delete": {
-          removeAssistantConversationListItem(detail.conversationId);
+          setConversations((current) => current.filter((item) => item.id !== detail.conversationId));
           if (detail.conversationId === activeConversationId) {
             router.replace("/chat", { scroll: false });
           }
@@ -191,7 +168,6 @@ export function useAssistantConversationSidebar(
     setIsRenameSaving(true);
     setRenameError(null);
     setMutatingConversationId(renameModalConversation.id);
-    setError(null);
 
     try {
       const updated = await requestJson<AssistantConversationSummaryReadModel>(
@@ -202,7 +178,9 @@ export function useAssistantConversationSidebar(
         },
       );
 
-      patchAssistantConversationListItemTitle(renameModalConversation.id, updated.title);
+      setConversations((current) =>
+        current.map((item) => (item.id === renameModalConversation.id ? updated : item)),
+      );
 
       window.dispatchEvent(
         new CustomEvent<ConversationMutationEventDetail>("assistant-conversations-updated", {
@@ -237,7 +215,6 @@ export function useAssistantConversationSidebar(
     setIsDeleteSaving(true);
     setDeleteError(null);
     setMutatingConversationId(deleteModalConversation.id);
-    setError(null);
 
     try {
       await requestJson<void>(
@@ -247,7 +224,9 @@ export function useAssistantConversationSidebar(
         },
       );
 
-      removeAssistantConversationListItem(deleteModalConversation.id);
+      setConversations((current) =>
+        current.filter((item) => item.id !== deleteModalConversation.id),
+      );
       window.dispatchEvent(
         new CustomEvent<ConversationMutationEventDetail>("assistant-conversations-updated", {
           detail: { type: "delete", conversationId: deleteModalConversation.id },
@@ -273,12 +252,12 @@ export function useAssistantConversationSidebar(
 
   return {
     activeConversationId,
-    conversations: cache.conversations,
+    conversations,
     deleteError,
     deleteModalConversation,
-    error: cache.error,
+    error: null,
     isDeleteSaving,
-    isLoading: cache.isLoading,
+    isLoading: false,
     isOpen,
     isRenameSaving,
     manualOpen,
@@ -286,7 +265,7 @@ export function useAssistantConversationSidebar(
     menuRef,
     mutatingConversationId,
     openConversation: openMenuId
-      ? cache.conversations.find((conversation) => conversation.id === openMenuId) ?? null
+      ? conversations.find((conversation) => conversation.id === openMenuId) ?? null
       : null,
     openMenuId,
     openDeleteConversation,

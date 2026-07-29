@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
-import { useEffect } from "react";
 import {
   BarChart3,
   CalendarDays,
@@ -15,8 +14,7 @@ import {
 
 import { buttonVariants } from "@/contexts/shared/interfaces/components/ui/button";
 import { AssistantChatsSection } from "@/contexts/assistant/interfaces/components/sidebar/assistant-chats-section";
-import type { AssistantConversationSummaryReadModel } from "@/contexts/assistant/application/model/assistant.read-models";
-import { setAssistantConversationListCache } from "@/contexts/assistant/interfaces/components/sidebar/assistant-conversation-cache";
+import type { AssistantConversationSummaryReadModel } from "@/contexts/assistant/application/internal/transforms/assistant.read-models";
 import { cn } from "@/lib/utils";
 
 const navigation = [
@@ -38,10 +36,6 @@ export function Sidebar({
   const selectedConversationId = pathname.startsWith("/chat")
     ? searchParams.get("conversationId")
     : null;
-
-  useEffect(() => {
-    setAssistantConversationListCache(initialAssistantConversations);
-  }, [initialAssistantConversations]);
 
   return (
     <aside className="fixed bottom-0 left-0 top-14 z-20 hidden w-60 shrink-0 border-r border-border/60 bg-background px-3 py-3 md:flex md:flex-col">
