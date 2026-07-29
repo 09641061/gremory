@@ -6,6 +6,7 @@ import { EyeIcon, EyeOffIcon } from "lucide-react";
 import { ErrorAlert } from "@/contexts/shared/interfaces/components/ui/error";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import { Spinner } from "@/contexts/shared/interfaces/components/ui/spinner";
+import { Card, CardContent } from "@/contexts/shared/interfaces/components/ui/card";
 import { GeneralInfoSection } from "../new/general-info-section";
 import { FinancialsAndLogisticsSection } from "../new/financials-and-logistics-section";
 import { InstructionsSection } from "../new/instructions-section";
@@ -55,7 +56,7 @@ export function EditServiceForm({ service }: EditServiceFormProps) {
         <main className="flex-1 max-w-[800px] w-full mx-auto px-4 py-8">
           <div className="flex justify-between items-center mb-6">
             <div className="flex items-center gap-3">
-              <h1 className="text-xl font-bold text-primary">Service Settings</h1>
+              <h1 className="text-xl font-bold text-foreground">Service Settings</h1>
               <span
                 className={`px-2.5 py-0.5 text-xs font-semibold rounded uppercase tracking-wide border ${
                   isActive
@@ -87,34 +88,38 @@ export function EditServiceForm({ service }: EditServiceFormProps) {
             </div>
           </div>
 
-          <form action={formAction} key={`${service.id}-${service.status}-${resetKey}`} id="edit-service-form" className="space-y-6">
-            <input type="hidden" name="id" value={service.id} />
-            {service.categoryId && (
-              <input type="hidden" name="categoryId" value={service.categoryId} />
-            )}
+          <form action={formAction} key={`${service.id}-${service.status}-${resetKey}`} id="edit-service-form">
+            <Card className="rounded-lg border-border bg-card p-6">
+              <CardContent className="p-0 space-y-6">
+                <input type="hidden" name="id" value={service.id} />
+                {service.categoryId && (
+                  <input type="hidden" name="categoryId" value={service.categoryId} />
+                )}
 
-            <GeneralInfoSection
-              defaultValues={{
-                name: service.name,
-                description: service.description,
-              }}
-            />
+                <GeneralInfoSection
+                  defaultValues={{
+                    name: service.name,
+                    description: service.description,
+                  }}
+                />
 
-            <FinancialsAndLogisticsSection
-              defaultValues={{
-                price: service.price,
-                durationMinutes: service.durationMinutes,
-                preparationMinutes: service.preparationMinutes,
-                cleanupMinutes: service.cleanupMinutes,
-              }}
-            />
+                <FinancialsAndLogisticsSection
+                  defaultValues={{
+                    price: service.price,
+                    durationMinutes: service.durationMinutes,
+                    preparationMinutes: service.preparationMinutes,
+                    cleanupMinutes: service.cleanupMinutes,
+                  }}
+                />
 
-            <InstructionsSection
-              defaultValues={{
-                preServiceInstructions: service.preServiceInstructions,
-                postServiceRecommendations: service.postServiceRecommendations,
-              }}
-            />
+                <InstructionsSection
+                  defaultValues={{
+                    preServiceInstructions: service.preServiceInstructions,
+                    postServiceRecommendations: service.postServiceRecommendations,
+                  }}
+                />
+              </CardContent>
+            </Card>
 
             {/* Actions Inside Form */}
             <div className="flex justify-between items-center pt-6 border-t border-border mt-8">

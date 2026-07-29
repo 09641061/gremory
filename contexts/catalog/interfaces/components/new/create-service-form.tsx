@@ -2,10 +2,11 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { XIcon } from "lucide-react";
+import { Save } from "lucide-react";
 import { ErrorAlert } from "@/contexts/shared/interfaces/components/ui/error";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import { Spinner } from "@/contexts/shared/interfaces/components/ui/spinner";
+import { Card, CardContent } from "@/contexts/shared/interfaces/components/ui/card";
 import { GeneralInfoSection } from "./general-info-section";
 import { FinancialsAndLogisticsSection } from "./financials-and-logistics-section";
 import { InstructionsSection } from "./instructions-section";
@@ -32,46 +33,39 @@ export function CreateServiceForm({ establishmentId, categoryId }: CreateService
       <div className="bg-background text-foreground flex flex-col">
         {/* Form Main Canvas */}
         <main className="flex-1 max-w-[800px] w-full mx-auto px-4 py-8">
-          <div className="flex justify-between items-center mb-6">
-            <h1 className="text-xl font-bold text-primary">Create New Service</h1>
-            <Link href="/catalog" passHref>
-              <Button variant="ghost" size="icon" className="rounded-full text-muted-foreground hover:bg-muted">
-                <XIcon className="size-5" />
-              </Button>
-            </Link>
-          </div>
+          <form action={formAction} id="create-service-form">
+            <Card className="rounded-lg border-border bg-card p-6">
+              <CardContent className="p-0 space-y-6">
+                <div className="border-b border-border pb-4">
+                  <h1 className="text-xl font-bold text-foreground">Create New Service</h1>
+                </div>
 
-          <form action={formAction} id="create-service-form" className="space-y-6">
-            <input type="hidden" name="establishmentId" value={establishmentId} />
-            {categoryId && <input type="hidden" name="categoryId" value={categoryId} />}
+                <input type="hidden" name="establishmentId" value={establishmentId} />
+                {categoryId && <input type="hidden" name="categoryId" value={categoryId} />}
 
-            <GeneralInfoSection />
-            <FinancialsAndLogisticsSection />
-            <InstructionsSection />
+                <GeneralInfoSection />
+                <FinancialsAndLogisticsSection />
+                <InstructionsSection />
 
-            {/* Actions Inside Form */}
-            <div className="flex justify-between items-center pt-6 border-t border-border mt-8">
-              <Link href="/catalog" passHref>
-                <Button type="button" variant="ghost" className="text-muted-foreground">
-                  Cancel
-                </Button>
-              </Link>
+                {/* Actions Inside Form */}
+                <div className="flex justify-end items-center gap-3 pt-6 border-t border-border mt-8">
+                  <Link href="/catalog" passHref>
+                    <Button type="button" variant="ghost" disabled={pending}>
+                      Cancel
+                    </Button>
+                  </Link>
 
-              <Button
-                type="submit"
-                disabled={pending}
-                className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-8"
-              >
-                {pending ? (
-                  <>
-                    <Spinner data-icon="inline-start" />
-                    Creating...
-                  </>
-                ) : (
-                  "Create Service"
-                )}
-              </Button>
-            </div>
+                  <Button
+                    type="submit"
+                    disabled={pending}
+                    className="gap-2 font-semibold px-8"
+                  >
+                    {pending ? <Spinner className="size-4" /> : <Save className="size-4" />}
+                    {pending ? "Saving..." : "Save"}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
           </form>
         </main>
       </div>
