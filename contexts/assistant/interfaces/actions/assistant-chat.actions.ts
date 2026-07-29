@@ -4,9 +4,8 @@ import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 
 import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-session-cookie";
-import { CreateConversationCommandService } from "@/contexts/assistant/application/internal/commandservices/create-conversation-command.service";
-import { SendMessageCommandService } from "@/contexts/assistant/application/internal/commandservices/send-message-command.service";
-import type { AssistantConversationReadModel } from "@/contexts/assistant/application/model/assistant.read-models";
+import { SubmitAssistantMessageCommandService } from "@/contexts/assistant/application/internal/commandservices/submit-assistant-message-command.service";
+import type { AssistantConversationReadModel } from "@/contexts/assistant/application/internal/transforms/assistant.read-models";
 
 import {
   submitAssistantMessageSchema,
@@ -33,20 +32,13 @@ export async function submitAssistantMessageAction(
       };
     }
 
-    const conversation = parsed.conversationId
-      ? await new SendMessageCommandService().handle(
-          {
-            conversationId: parsed.conversationId,
-            message: parsed.message,
-          },
-          accessToken,
-        )
-      : await new CreateConversationCommandService().handle(
-          {
-            messageContent: parsed.message,
-          },
-          accessToken,
-        );
+    const conversation = await new SubmitAssistantMessageCommandService().handle(
+      {
+        conversationId: parsed.conversationId,
+        message: parsed.message,
+      },
+      accessToken,
+    );
 
     revalidatePath("/chat");
 

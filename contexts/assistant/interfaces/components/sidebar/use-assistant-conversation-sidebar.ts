@@ -3,21 +3,12 @@
 import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
-import type { AssistantConversationSummaryReadModel } from "@/contexts/assistant/application/model/assistant.read-models";
-import type { AssistantConversationSummary } from "@/contexts/assistant/interfaces/components/shared/assistant-chat.types";
-import {
-  ensureAssistantConversationListCached,
-  getAssistantConversationListCache,
-  patchAssistantConversationListItemTitle,
-  removeAssistantConversationListItem,
-  setAssistantConversationListCache,
-  upsertAssistantConversationListItem,
-} from "@/contexts/assistant/interfaces/components/sidebar/assistant-conversation-cache";
+import type { AssistantConversationSummaryReadModel } from "@/contexts/assistant/application/internal/transforms/assistant.read-models";
 
 const assistantConversationsEndpoint = "/api/assistant/conversations";
 
 type ConversationMutationEventDetail =
-  | { type: "upsert"; conversation: AssistantConversationSummary; moveToFront?: boolean }
+  | { type: "upsert"; conversation: AssistantConversationSummaryReadModel; moveToFront?: boolean }
   | { type: "rename"; conversationId: string; title: string }
   | { type: "delete"; conversationId: string };
 
@@ -64,26 +55,19 @@ export function useAssistantConversationSidebar(
     : null;
   const [manualOpen, setManualOpen] = useState<boolean | null>(null);
   const isOpen = manualOpen ?? pathname.startsWith("/chat");
-  const [conversations, setConversations] = useState<AssistantConversationSummary[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [menuPosition, setMenuPosition] = useState<{ top: number; left: number } | null>(null);
   const [mutatingConversationId, setMutatingConversationId] = useState<string | null>(null);
+  const [conversations, setConversations] = useState(() => initialConversations);
   const [renameModalConversation, setRenameModalConversation] =
-    useState<AssistantConversationSummary | null>(null);
+    useState<AssistantConversationSummaryReadModel | null>(null);
   const [renameTitle, setRenameTitle] = useState("");
   const [renameError, setRenameError] = useState<string | null>(null);
   const [isRenameSaving, setIsRenameSaving] = useState(false);
   const [deleteModalConversation, setDeleteModalConversation] =
-    useState<AssistantConversationSummary | null>(null);
+    useState<AssistantConversationSummaryReadModel | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [isDeleteSaving, setIsDeleteSaving] = useState(false);
-
-  useEffect(() => {
-    setAssistantConversationListCache(initialConversations);
-    setConversations(initialConversations);
-  }, [initialConversations]);
 
   useEffect(() => {
     function handlePointerDown(event: MouseEvent | TouchEvent) {
@@ -124,44 +108,6 @@ export function useAssistantConversationSidebar(
   }, [openMenuId]);
 
   useEffect(() => {
-    if (!isOpen) return;
-
-    const cached = getAssistantConversationListCache();
-
-    queueMicrotask(() => {
-      setConversations(cached.conversations);
-      setError(cached.error);
-      setIsLoading(!cached.loaded);
-    });
-
-    if (cached.loaded) return;
-
-    const controller = new AbortController();
-
-    void ensureAssistantConversationListCached()
-      .then((data) => {
-        if (controller.signal.aborted) return;
-        setConversations(data);
-        setError(null);
-      })
-      .catch((requestError) => {
-        if (controller.signal.aborted) return;
-        setConversations([]);
-        setError(
-          requestError instanceof Error ? requestError.message : "No pudimos cargar los chats.",
-        );
-      })
-      .finally(() => {
-        if (!controller.signal.aborted) {
-          const nextCache = getAssistantConversationListCache();
-          setIsLoading(nextCache.isLoading);
-        }
-      });
-
-    return () => controller.abort();
-  }, [isOpen]);
-
-  useEffect(() => {
     function handleMutation(event: Event) {
       const customEvent = event as CustomEvent<ConversationMutationEventDetail>;
       const detail = customEvent.detail;
@@ -169,32 +115,22 @@ export function useAssistantConversationSidebar(
 
       switch (detail.type) {
         case "upsert": {
-          upsertAssistantConversationListItem(detail.conversation, {
-            moveToFront: detail.moveToFront,
-          });
           setConversations((current) => {
             const next = current.filter((item) => item.id !== detail.conversation.id);
-            return detail.moveToFront
-              ? [detail.conversation, ...next]
-              : [...next, detail.conversation];
+            return detail.moveToFront ? [detail.conversation, ...next] : [...next, detail.conversation];
           });
           return;
         }
         case "rename": {
-          const { title } = detail;
           setConversations((current) =>
-            current.map((conversation) =>
-              conversation.id === detail.conversationId ? { ...conversation, title } : conversation,
+            current.map((item) =>
+              item.id === detail.conversationId ? { ...item, title: detail.title } : item,
             ),
           );
-          patchAssistantConversationListItemTitle(detail.conversationId, title);
           return;
         }
         case "delete": {
-          setConversations((current) =>
-            current.filter((conversation) => conversation.id !== detail.conversationId),
-          );
-          removeAssistantConversationListItem(detail.conversationId);
+          setConversations((current) => current.filter((item) => item.id !== detail.conversationId));
           if (detail.conversationId === activeConversationId) {
             router.replace("/chat", { scroll: false });
           }
@@ -207,7 +143,7 @@ export function useAssistantConversationSidebar(
     return () => window.removeEventListener("assistant-conversations-updated", handleMutation);
   }, [activeConversationId, router]);
 
-  function openRenameConversation(conversation: AssistantConversationSummary) {
+  function openRenameConversation(conversation: AssistantConversationSummaryReadModel) {
     setRenameModalConversation(conversation);
     setRenameTitle(conversation.title);
     setRenameError(null);
@@ -232,10 +168,9 @@ export function useAssistantConversationSidebar(
     setIsRenameSaving(true);
     setRenameError(null);
     setMutatingConversationId(renameModalConversation.id);
-    setError(null);
 
     try {
-      const updated = await requestJson<AssistantConversationSummary>(
+      const updated = await requestJson<AssistantConversationSummaryReadModel>(
         `${assistantConversationsEndpoint}/${encodeURIComponent(renameModalConversation.id)}`,
         {
           method: "PATCH",
@@ -246,7 +181,6 @@ export function useAssistantConversationSidebar(
       setConversations((current) =>
         current.map((item) => (item.id === renameModalConversation.id ? updated : item)),
       );
-      patchAssistantConversationListItemTitle(renameModalConversation.id, updated.title);
 
       window.dispatchEvent(
         new CustomEvent<ConversationMutationEventDetail>("assistant-conversations-updated", {
@@ -268,7 +202,7 @@ export function useAssistantConversationSidebar(
     }
   }
 
-  function openDeleteConversation(conversation: AssistantConversationSummary) {
+  function openDeleteConversation(conversation: AssistantConversationSummaryReadModel) {
     setDeleteModalConversation(conversation);
     setDeleteError(null);
     setOpenMenuId(null);
@@ -281,7 +215,6 @@ export function useAssistantConversationSidebar(
     setIsDeleteSaving(true);
     setDeleteError(null);
     setMutatingConversationId(deleteModalConversation.id);
-    setError(null);
 
     try {
       await requestJson<void>(
@@ -294,7 +227,6 @@ export function useAssistantConversationSidebar(
       setConversations((current) =>
         current.filter((item) => item.id !== deleteModalConversation.id),
       );
-      removeAssistantConversationListItem(deleteModalConversation.id);
       window.dispatchEvent(
         new CustomEvent<ConversationMutationEventDetail>("assistant-conversations-updated", {
           detail: { type: "delete", conversationId: deleteModalConversation.id },
@@ -323,9 +255,9 @@ export function useAssistantConversationSidebar(
     conversations,
     deleteError,
     deleteModalConversation,
-    error,
+    error: null,
     isDeleteSaving,
-    isLoading,
+    isLoading: false,
     isOpen,
     isRenameSaving,
     manualOpen,

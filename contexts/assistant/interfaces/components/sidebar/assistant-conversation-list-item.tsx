@@ -5,16 +5,16 @@ import Link from "next/link";
 import { MoreHorizontal } from "lucide-react";
 
 import { Button, buttonVariants } from "@/contexts/shared/interfaces/components/ui/button";
-import type { AssistantConversationSummary } from "@/contexts/assistant/interfaces/components/shared/assistant-chat.types";
+import type { AssistantConversationSummaryReadModel } from "@/contexts/assistant/application/internal/transforms/assistant.read-models";
 import { cn } from "@/lib/utils";
 
 type AssistantConversationListItemProps = {
-  conversation: AssistantConversationSummary;
+  conversation: AssistantConversationSummaryReadModel;
   active: boolean;
   isMutating: boolean;
   isMenuOpen: boolean;
   onOpenMenu: (
-    conversation: AssistantConversationSummary,
+    conversation: AssistantConversationSummaryReadModel,
     menuPosition: { top: number; left: number },
   ) => void;
 };

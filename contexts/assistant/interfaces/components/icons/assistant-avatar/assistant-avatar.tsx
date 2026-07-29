@@ -37,7 +37,7 @@ export function AssistantAvatar({
       onLostPointerCapture={handlePointerEnd}
       onContextMenu={handleContextMenu}
       className={cn(
-        "flex shrink-0 items-center justify-center overflow-visible rounded-full border border-border/60 bg-background",
+        "flex shrink-0 items-center justify-center overflow-visible rounded-full border border-border/50 bg-background shadow-[0_6px_16px_rgba(15,23,42,0.05)] transition-transform duration-150 ease-out hover:-translate-y-0.5",
         className,
       )}
     >

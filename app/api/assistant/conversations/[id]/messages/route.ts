@@ -2,6 +2,10 @@ import { NextResponse } from "next/server";
 
 import { cookies } from "next/headers";
 import { SendMessageCommandService } from "@/contexts/assistant/application/internal/commandservices/send-message-command.service";
+import {
+  assistantConversationIdParamSchema,
+  assistantConversationMessageSchema,
+} from "@/contexts/assistant/interfaces/rest/schemas/assistant-chat.schemas";
 import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-session-cookie";
 
 function unauthorized() {
@@ -12,7 +16,7 @@ export async function POST(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const { id } = await params;
+  const { id } = assistantConversationIdParamSchema.parse(await params);
   const accessToken = (await cookies()).get(iamSessionCookies.accessToken)?.value;
 
   if (!accessToken) {
@@ -20,16 +24,12 @@ export async function POST(
   }
 
   try {
-    const body = (await request.json()) as { message?: string };
-
-    if (!body.message || !body.message.trim()) {
-      return NextResponse.json({ message: "Message is required" }, { status: 400 });
-    }
+    const body = assistantConversationMessageSchema.parse(await request.json());
 
     const data = await new SendMessageCommandService().handle(
       {
         conversationId: id,
-        message: body.message.trim(),
+        message: body.message,
       },
       accessToken,
     );
