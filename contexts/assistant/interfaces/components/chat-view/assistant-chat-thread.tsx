@@ -32,7 +32,7 @@ export function AssistantChatThread({
   const shouldShowWelcome = showWelcome && messages.length > 0 && messages[0]?.role !== "assistant";
 
   return (
-    <section className="relative isolate flex min-h-0 min-w-0 flex-1 overflow-hidden bg-white">
+    <section className="relative isolate flex min-h-0 min-w-0 flex-1 overflow-hidden bg-background">
       <div className="absolute inset-0 z-0 overflow-y-auto px-4 py-10 pb-48 sm:px-6 sm:py-12 sm:pb-56">
         {isLoading ? (
           <AssistantChatLoadingState />
