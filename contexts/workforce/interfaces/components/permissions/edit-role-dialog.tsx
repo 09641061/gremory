@@ -70,23 +70,6 @@ export function EditRoleDialog({ role, open, onOpenChange }: EditRoleDialogProps
               />
             </div>
 
-            <div className="space-y-2">
-              <label htmlFor="edit-role-position" className="text-sm font-medium text-foreground">
-                Hierarchy position
-              </label>
-              <Input
-                id="edit-role-position"
-                name="position"
-                type="number"
-                min={1}
-                defaultValue={role.position}
-                required
-              />
-              <p className="text-xs text-muted-foreground">
-                1 is the highest position. Other roles shift automatically.
-              </p>
-            </div>
-
             <input type="hidden" name="roleId" value={role.id || ""} />
 
             <AlertDialogFooter>
@@ -102,4 +85,3 @@ export function EditRoleDialog({ role, open, onOpenChange }: EditRoleDialogProps
     </>
   );
 }
-
