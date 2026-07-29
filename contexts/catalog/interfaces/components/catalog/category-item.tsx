@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 
-import { FolderIcon, MoreVerticalIcon } from "lucide-react";
+import { FolderIcon, MoreVerticalIcon, GripVertical, ChevronRight, ChevronDown } from "lucide-react";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import {
   DropdownMenu,
@@ -75,8 +75,13 @@ export function CategoryItem({
           onClick={() => {
             onToggleExpand(cat.id);
           }}
-          className="flex items-center gap-3 truncate flex-1 text-left"
+          className="flex items-center gap-2 truncate flex-1 text-left"
         >
+          {isExpanded ? (
+            <ChevronDown className="size-4 text-muted-foreground/80 shrink-0" />
+          ) : (
+            <ChevronRight className="size-4 text-muted-foreground/80 shrink-0" />
+          )}
           <FolderIcon className="size-4 text-muted-foreground shrink-0" />
           <span className="truncate">{cat.name}</span>
         </button>
@@ -131,20 +136,23 @@ export function CategoryItem({
               key={svc.id}
               draggable
               onDragStart={(e) => onDragStart(e, svc.id)}
-              className="group flex items-center cursor-grab active:cursor-grabbing"
+              className="group flex items-center cursor-grab active:cursor-grabbing w-full"
             >
               <button
                 onClick={() => {
                   onSelectService(svc.id);
                   setIsMobileOpen(false);
                 }}
-                className={`w-full text-left px-3 py-1.5 text-xs rounded-md transition-colors truncate ${
+                className={`w-full flex items-center gap-3 text-left px-3 py-2 text-sm rounded-md transition-colors truncate ${
                   selectedServiceId === svc.id
-                    ? "bg-accent text-accent-foreground font-medium"
-                    : "text-muted-foreground hover:bg-accent/70 hover:text-accent-foreground"
+                    ? "bg-accent text-accent-foreground font-semibold"
+                    : "text-foreground hover:bg-accent/70 hover:text-accent-foreground"
                 }`}
               >
-                {svc.name}
+                <GripVertical className={`size-4 shrink-0 cursor-grab ${
+                  selectedServiceId === svc.id ? "text-accent-foreground" : "text-muted-foreground/60"
+                }`} />
+                <span className="truncate">{svc.name}</span>
               </button>
             </div>
           ))}
