@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { Menu as MenuPrimitive } from "@base-ui/react/menu";
+import { Pencil, Plus, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 function DropdownMenu(props: React.ComponentProps<typeof MenuPrimitive.Root>) {
@@ -58,10 +59,58 @@ function DropdownMenuSeparator({
   );
 }
 
+function DropdownMenuEditItem({
+  className,
+  label = "Edit",
+  ...props
+}: React.ComponentProps<typeof MenuPrimitive.Item> & { label?: string }) {
+  return (
+    <DropdownMenuItem className={cn("gap-2 cursor-pointer", className)} {...props}>
+      <Pencil className="size-3.5 text-muted-foreground" />
+      <span>{label}</span>
+    </DropdownMenuItem>
+  );
+}
+
+function DropdownMenuCreateItem({
+  className,
+  label = "Create",
+  ...props
+}: React.ComponentProps<typeof MenuPrimitive.Item> & { label?: string }) {
+  return (
+    <DropdownMenuItem className={cn("text-foreground font-medium gap-2 cursor-pointer", className)} {...props}>
+      <Plus className="size-3.5 text-muted-foreground" />
+      <span>{label}</span>
+    </DropdownMenuItem>
+  );
+}
+
+function DropdownMenuDeleteItem({
+  className,
+  label = "Delete",
+  ...props
+}: React.ComponentProps<typeof MenuPrimitive.Item> & { label?: string }) {
+  return (
+    <DropdownMenuItem
+      className={cn(
+        "text-destructive gap-2 cursor-pointer focus:bg-destructive/10 focus:text-destructive",
+        className
+      )}
+      {...props}
+    >
+      <Trash2 className="size-3.5" />
+      <span>{label}</span>
+    </DropdownMenuItem>
+  );
+}
+
 export {
   DropdownMenu,
   DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
+  DropdownMenuEditItem,
+  DropdownMenuCreateItem,
+  DropdownMenuDeleteItem,
 };

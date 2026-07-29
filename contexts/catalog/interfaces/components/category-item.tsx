@@ -1,13 +1,16 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+
 import { FolderIcon, MoreVerticalIcon } from "lucide-react";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
   DropdownMenuContent,
-  DropdownMenuItem,
+  DropdownMenuEditItem,
+  DropdownMenuCreateItem,
+  DropdownMenuDeleteItem,
 } from "@/contexts/shared/interfaces/components/ui/dropdown-menu";
 import type { CategoryDTO, ServiceSummaryDTO } from "./category-sidebar";
 
@@ -92,39 +95,31 @@ export function CategoryItem({
             >
               <MoreVerticalIcon className="size-3" />
             </DropdownMenuTrigger>
-            <DropdownMenuContent className="p-2 space-y-1 w-40">
-              <DropdownMenuItem
+            <DropdownMenuContent className="p-2 space-y-1 w-44">
+              <DropdownMenuEditItem
                 onClick={() => {
                   onOpenEditCategoryModal(cat);
                 }}
-              >
-                Editar
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                className="text-primary font-medium"
+              />
+              <DropdownMenuCreateItem
+                label="Create Service"
                 onClick={() => {
                   setIsMobileOpen(false);
                   router.push(`/catalog/new?categoryId=${cat.id}&t=${Date.now()}`);
                 }}
-              >
-                Agregar Servicio
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                className={`text-destructive ${
-                  catServices.length > 0 ? "opacity-50 cursor-not-allowed" : ""
-                }`}
+              />
+              <DropdownMenuDeleteItem
+                className={catServices.length > 0 ? "opacity-50 cursor-not-allowed" : ""}
                 onClick={() => {
                   if (catServices.length > 0) {
                     setAlertMessage("You cannot delete a category that has services.");
                   } else {
-                    if (confirm(`¿Estás seguro de que deseas eliminar la categoría "${cat.name}"?`)) {
+                    if (confirm(`Are you sure you want to delete the category "${cat.name}"?`)) {
                       deleteCategory(cat.id);
                     }
                   }
                 }}
-              >
-                Eliminar
-              </DropdownMenuItem>
+              />
             </DropdownMenuContent>
           </DropdownMenu>
         </div>

@@ -127,7 +127,7 @@ export function CategorySidebar({
           className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-medium gap-2"
         >
           <PlusIcon className="size-4" />
-          <span>New Category</span>
+          <span>Create Category</span>
         </Button>
       </div>
 
