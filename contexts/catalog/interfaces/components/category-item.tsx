@@ -29,7 +29,7 @@ interface CategoryItemProps {
   onDragLeave: (e: React.DragEvent) => void;
   onDrop: (e: React.DragEvent, categoryId: string) => void;
   setIsMobileOpen: (open: boolean) => void;
-  deleteCategory: (id: string) => void;
+  onDeleteCategory: (category: CategoryDTO) => void;
   setAlertMessage: (msg: string | null) => void;
 }
 
@@ -48,7 +48,7 @@ export function CategoryItem({
   onDragLeave,
   onDrop,
   setIsMobileOpen,
-  deleteCategory,
+  onDeleteCategory,
   setAlertMessage,
 }: CategoryItemProps) {
   const router = useRouter();
@@ -67,7 +67,7 @@ export function CategoryItem({
       <div
         className={`w-full flex items-center justify-between px-3 py-2 text-sm rounded-md transition-colors group/row ${
           isCatSelected
-            ? "bg-primary/10 text-primary font-semibold"
+            ? "bg-primary/10 text-foreground font-semibold"
             : "text-foreground hover:bg-muted"
         }`}
       >
@@ -114,9 +114,7 @@ export function CategoryItem({
                   if (catServices.length > 0) {
                     setAlertMessage("You cannot delete a category that has services.");
                   } else {
-                    if (confirm(`Are you sure you want to delete the category "${cat.name}"?`)) {
-                      deleteCategory(cat.id);
-                    }
+                    onDeleteCategory(cat);
                   }
                 }}
               />

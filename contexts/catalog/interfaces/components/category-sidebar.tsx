@@ -10,8 +10,8 @@ import {
 } from "lucide-react";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import { Alert, AlertTitle, AlertDescription } from "@/contexts/shared/interfaces/components/ui/alert";
-import { useDeleteServiceCategory } from "../../application/use-cases/use-delete-service-category";
 import { CategoryItem } from "./category-item";
+import { DeleteCategoryDialog } from "./delete-category-dialog";
 
 export type CategoryDTO = {
   id: string;
@@ -51,7 +51,7 @@ export function CategorySidebar({
   const [dragOverCategoryId, setDragOverCategoryId] = useState<string | null>(null);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [alertMessage, setAlertMessage] = useState<string | null>(null);
-  const { deleteCategory } = useDeleteServiceCategory();
+  const [categoryToDelete, setCategoryToDelete] = useState<CategoryDTO | null>(null);
 
   // Keep track of which categories are expanded in a Set
   const [expandedCategoryIds, setExpandedCategoryIds] = useState<Set<string>>(
@@ -155,7 +155,7 @@ export function CategorySidebar({
               onDragLeave={handleDragLeave}
               onDrop={handleDrop}
               setIsMobileOpen={setIsMobileOpen}
-              deleteCategory={deleteCategory}
+              onDeleteCategory={setCategoryToDelete}
               setAlertMessage={setAlertMessage}
             />
           ))
@@ -201,6 +201,17 @@ export function CategorySidebar({
           </Alert>
         </div>,
         document.body
+      )}
+
+      {categoryToDelete && (
+        <DeleteCategoryDialog
+          categoryId={categoryToDelete.id}
+          categoryName={categoryToDelete.name}
+          open={!!categoryToDelete}
+          onOpenChange={(open) => {
+            if (!open) setCategoryToDelete(null);
+          }}
+        />
       )}
     </>
   );

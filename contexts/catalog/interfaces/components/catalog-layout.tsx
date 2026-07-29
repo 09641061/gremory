@@ -108,11 +108,6 @@ export function CatalogLayout({
             isOpen={!!editingCategory}
             onClose={() => setEditingCategory(null)}
             category={editingCategory}
-            servicesCount={
-              editingCategory
-                ? servicesList.filter((s) => s.categoryId === editingCategory.id).length
-                : 0
-            }
           />
         )}
       </div>
