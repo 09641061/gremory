@@ -8,9 +8,9 @@ import type { SubscriptionResponse } from "@/contexts/billing/infrastructure/gat
 import { submitAssistantMessageAction } from "@/contexts/assistant/interfaces/actions/assistant-chat.actions";
 import { ErrorAlert } from "@/contexts/shared/interfaces/components/ui/error";
 import type {
-  AssistantChatMessage,
-  AssistantConversation,
-} from "@/contexts/assistant/interfaces/model/assistant-chat.read-models";
+  AssistantConversationReadModel,
+  AssistantMessageReadModel,
+} from "@/contexts/assistant/application/internal/transforms/assistant.read-models";
 
 import { AssistantChatEmptyState } from "./assistant-chat-empty-state";
 import { AssistantChatComposer } from "./assistant-chat-composer";
@@ -25,7 +25,7 @@ function normalizeMessage(message: {
   role: string;
   content: string;
   createdAt: string;
-}): AssistantChatMessage {
+}): AssistantMessageReadModel {
   const role = (message.role ?? "").toUpperCase();
 
   return {
@@ -47,7 +47,7 @@ function normalizeConversation(raw: {
     content: string;
     createdAt: string;
   }>;
-}): AssistantConversation {
+}): AssistantConversationReadModel {
   return {
     id: raw.id,
     title: raw.title,
@@ -107,7 +107,7 @@ function buildConversationUrl(pathname: string, conversationId?: string | null) 
 }
 
 type AssistantChatViewProps = {
-  initialConversation: AssistantConversation | null;
+  initialConversation: AssistantConversationReadModel | null;
 };
 
 export function AssistantChatView({ initialConversation }: AssistantChatViewProps) {
@@ -116,7 +116,7 @@ export function AssistantChatView({ initialConversation }: AssistantChatViewProp
   const searchParams = useSearchParams();
   const bottomRef = useRef<HTMLDivElement | null>(null);
 
-  const [activeConversation, setActiveConversation] = useState<AssistantConversation | null>(
+  const [activeConversation, setActiveConversation] = useState<AssistantConversationReadModel | null>(
     initialConversation,
   );
   const [draft, setDraft] = useState("");
@@ -214,7 +214,7 @@ export function AssistantChatView({ initialConversation }: AssistantChatViewProp
   useEffect(() => {
     function handleConversationMutation(event: Event) {
       const customEvent = event as CustomEvent<
-        | { type: "upsert"; conversation: AssistantConversation; moveToFront?: boolean }
+        | { type: "upsert"; conversation: AssistantConversationReadModel; moveToFront?: boolean }
         | { type: "rename"; conversationId: string; title: string }
         | { type: "delete"; conversationId: string }
       >;

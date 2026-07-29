@@ -3,10 +3,10 @@
 import { cn } from "@/lib/utils";
 
 import { AssistantAvatar } from "../icons/assistant-avatar/assistant-avatar";
-import type { AssistantChatMessage } from "@/contexts/assistant/interfaces/model/assistant-chat.read-models";
+import type { AssistantMessageReadModel } from "@/contexts/assistant/application/internal/transforms/assistant.read-models";
 
 interface AssistantChatMessageBubbleProps {
-  message: AssistantChatMessage;
+  message: AssistantMessageReadModel;
 }
 
 export function AssistantChatMessageBubble({ message }: AssistantChatMessageBubbleProps) {

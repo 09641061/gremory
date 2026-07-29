@@ -4,7 +4,7 @@ import { AssistantApiGateway } from "@/contexts/assistant/infrastructure/gateway
 
 import type { CreateConversationCommand } from "../../../domain/model/commands/create-conversation.command";
 import { toConversationReadModel } from "../transforms/assistant-conversation.transform";
-import type { AssistantConversationReadModel } from "../../model/assistant.read-models";
+import type { AssistantConversationReadModel } from "../transforms/assistant.read-models";
 
 export class CreateConversationCommandService {
   constructor(private readonly gateway = new AssistantApiGateway()) {}

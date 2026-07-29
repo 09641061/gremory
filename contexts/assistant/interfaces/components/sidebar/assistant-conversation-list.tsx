@@ -1,18 +1,18 @@
 "use client";
 
-import type { AssistantConversationSummary } from "@/contexts/assistant/interfaces/model/assistant-chat.read-models";
+import type { AssistantConversationSummaryReadModel } from "@/contexts/assistant/application/internal/transforms/assistant.read-models";
 
 import { AssistantConversationListItem } from "./assistant-conversation-list-item";
 
 type AssistantConversationListProps = {
-  conversations: AssistantConversationSummary[];
+  conversations: AssistantConversationSummaryReadModel[];
   activeConversationId: string | null;
   isLoading: boolean;
   error: string | null;
   openMenuId: string | null;
   mutatingConversationId: string | null;
   onOpenMenu: (
-    conversation: AssistantConversationSummary,
+    conversation: AssistantConversationSummaryReadModel,
     menuPosition: { top: number; left: number },
   ) => void;
 };

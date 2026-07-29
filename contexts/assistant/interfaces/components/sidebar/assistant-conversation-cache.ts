@@ -1,13 +1,15 @@
-import type { AssistantConversationSummary } from "@/contexts/assistant/interfaces/model/assistant-chat.read-models";
+import type { AssistantConversationSummaryReadModel } from "@/contexts/assistant/application/internal/transforms/assistant.read-models";
 
 const assistantConversationsEndpoint = "/api/assistant/conversations";
 
 type CacheState = {
-  conversations: AssistantConversationSummary[];
+  conversations: AssistantConversationSummaryReadModel[];
   loaded: boolean;
   isLoading: boolean;
   error: string | null;
 };
+
+type CacheListener = () => void;
 
 let state: CacheState = {
   conversations: [],
@@ -16,7 +18,14 @@ let state: CacheState = {
   error: null,
 };
 
-let loadPromise: Promise<AssistantConversationSummary[]> | null = null;
+let loadPromise: Promise<AssistantConversationSummaryReadModel[]> | null = null;
+const listeners = new Set<CacheListener>();
+
+function emitChange() {
+  for (const listener of listeners) {
+    listener();
+  }
+}
 
 function readErrorMessage(value: unknown, fallback: string): string {
   if (typeof value === "string" && value.trim()) {
@@ -68,7 +77,7 @@ export function getAssistantConversationListCache() {
   };
 }
 
-export async function ensureAssistantConversationListCached(): Promise<AssistantConversationSummary[]> {
+export async function ensureAssistantConversationListCached(): Promise<AssistantConversationSummaryReadModel[]> {
   if (state.loaded) {
     return state.conversations;
   }
@@ -82,10 +91,11 @@ export async function ensureAssistantConversationListCached(): Promise<Assistant
     isLoading: true,
     error: null,
   };
+  emitChange();
 
   loadPromise = (async () => {
     try {
-      const data = await requestJson<{ content?: AssistantConversationSummary[] }>(
+      const data = await requestJson<{ content?: AssistantConversationSummaryReadModel[] }>(
         `${assistantConversationsEndpoint}?page=0&size=20`,
       );
 
@@ -95,6 +105,7 @@ export async function ensureAssistantConversationListCached(): Promise<Assistant
         isLoading: false,
         error: null,
       };
+      emitChange();
       return state.conversations;
     } catch (error) {
       state = {
@@ -105,6 +116,7 @@ export async function ensureAssistantConversationListCached(): Promise<Assistant
         error:
           error instanceof Error ? error.message : "No pudimos cargar los chats.",
       };
+      emitChange();
       throw error;
     } finally {
       loadPromise = null;
@@ -114,17 +126,25 @@ export async function ensureAssistantConversationListCached(): Promise<Assistant
   return loadPromise;
 }
 
-export function setAssistantConversationListCache(conversations: AssistantConversationSummary[]) {
+export function setAssistantConversationListCache(conversations: AssistantConversationSummaryReadModel[]) {
   state = {
     conversations: [...conversations],
     loaded: true,
     isLoading: false,
     error: null,
   };
+  emitChange();
+}
+
+export function subscribeAssistantConversationListCache(listener: CacheListener) {
+  listeners.add(listener);
+  return () => {
+    listeners.delete(listener);
+  };
 }
 
 export function upsertAssistantConversationListItem(
-  conversation: AssistantConversationSummary,
+  conversation: AssistantConversationSummaryReadModel,
   options: { moveToFront?: boolean; markLoaded?: boolean } = {},
 ) {
   const { moveToFront = false, markLoaded = false } = options;
@@ -146,6 +166,7 @@ export function upsertAssistantConversationListItem(
     loaded: state.loaded || markLoaded,
     error: null,
   };
+  emitChange();
 }
 
 export function removeAssistantConversationListItem(id: string) {
@@ -154,6 +175,7 @@ export function removeAssistantConversationListItem(id: string) {
     conversations: state.conversations.filter((item) => item.id !== id),
     error: null,
   };
+  emitChange();
 }
 
 export function patchAssistantConversationListItemTitle(id: string, title: string) {
@@ -164,4 +186,5 @@ export function patchAssistantConversationListItemTitle(id: string, title: strin
     ),
     error: null,
   };
+  emitChange();
 }

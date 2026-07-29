@@ -4,10 +4,10 @@ import type { ReactNode, RefObject } from "react";
 
 import { AssistantChatLoadingState } from "./assistant-chat-loading-state";
 import { AssistantChatMessageBubble } from "./assistant-chat-message-bubble";
-import type { AssistantConversation } from "@/contexts/assistant/interfaces/model/assistant-chat.read-models";
+import type { AssistantConversationReadModel } from "@/contexts/assistant/application/internal/transforms/assistant.read-models";
 
 interface AssistantChatThreadProps {
-  conversation: AssistantConversation | null;
+  conversation: AssistantConversationReadModel | null;
   isLoading: boolean;
   bottomRef: RefObject<HTMLDivElement | null>;
   error?: string | null;

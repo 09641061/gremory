@@ -5,8 +5,8 @@ import { AssistantApiGateway } from "@/contexts/assistant/infrastructure/gateway
 import { createAssistantConversationId } from "../../../domain/model/value-objects/assistant-conversation-id";
 import { createAssistantConversationTitle } from "../../../domain/model/value-objects/assistant-conversation-title";
 import type { RenameConversationCommand } from "../../../domain/model/commands/rename-conversation.command";
-import type { AssistantConversationReadModel } from "../../model/assistant.read-models";
 import { toConversationReadModel } from "../transforms/assistant-conversation.transform";
+import type { AssistantConversationReadModel } from "../transforms/assistant.read-models";
 
 export class RenameConversationCommandService {
   constructor(private readonly gateway = new AssistantApiGateway()) {}

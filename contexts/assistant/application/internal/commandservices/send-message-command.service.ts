@@ -5,8 +5,8 @@ import { AssistantApiGateway } from "@/contexts/assistant/infrastructure/gateway
 import { createAssistantConversationId } from "../../../domain/model/value-objects/assistant-conversation-id";
 import { createAssistantMessageContent } from "../../../domain/model/value-objects/assistant-message-content";
 import type { SendMessageCommand } from "../../../domain/model/commands/send-message.command";
-import type { AssistantConversationReadModel } from "../../model/assistant.read-models";
 import { toConversationReadModel } from "../transforms/assistant-conversation.transform";
+import type { AssistantConversationReadModel } from "../transforms/assistant.read-models";
 
 export class SendMessageCommandService {
   constructor(private readonly gateway = new AssistantApiGateway()) {}

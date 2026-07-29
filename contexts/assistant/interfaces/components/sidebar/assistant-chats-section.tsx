@@ -5,7 +5,7 @@ import { ChevronDown } from "lucide-react";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import { cn } from "@/lib/utils";
 
-import type { AssistantConversationSummaryReadModel } from "@/contexts/assistant/application/model/assistant.read-models";
+import type { AssistantConversationSummaryReadModel } from "@/contexts/assistant/application/internal/transforms/assistant.read-models";
 import { AssistantConversationActionsMenu } from "./assistant-conversation-actions-menu";
 import { AssistantConversationDeleteDialog } from "./assistant-conversation-delete-dialog";
 import { AssistantConversationList } from "./assistant-conversation-list";

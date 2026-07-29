@@ -12,7 +12,7 @@ import type {
   AssistantConversationReadModel,
   AssistantConversationSummaryReadModel,
   AssistantMessageReadModel,
-} from "../../model/assistant.read-models";
+} from "./assistant.read-models";
 import type { PageResponse } from "@/contexts/assistant/infrastructure/gateways/assistant-api.gateway";
 
 function normalizeMessage(message: AssistantMessageResponse): AssistantMessageReadModel {

@@ -6,7 +6,7 @@ import { revalidatePath } from "next/cache";
 import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-session-cookie";
 import { CreateConversationCommandService } from "@/contexts/assistant/application/internal/commandservices/create-conversation-command.service";
 import { SendMessageCommandService } from "@/contexts/assistant/application/internal/commandservices/send-message-command.service";
-import type { AssistantConversationReadModel } from "@/contexts/assistant/application/model/assistant.read-models";
+import type { AssistantConversationReadModel } from "@/contexts/assistant/application/internal/transforms/assistant.read-models";
 
 import {
   submitAssistantMessageSchema,
