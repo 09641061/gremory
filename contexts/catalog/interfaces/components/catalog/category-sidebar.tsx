@@ -1,7 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { createPortal } from "react-dom";
+import { useState } from "react";
 import {
   PlusIcon,
   FolderXIcon,
@@ -9,9 +8,9 @@ import {
   XIcon,
 } from "lucide-react";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
-import { Alert, AlertTitle, AlertDescription } from "@/contexts/shared/interfaces/components/ui/alert";
-import { useDeleteServiceCategory } from "../../application/use-cases/use-delete-service-category";
+import { ErrorAlert } from "@/contexts/shared/interfaces/components/ui/error";
 import { CategoryItem } from "./category-item";
+import { DeleteCategoryDialog } from "./delete-category-dialog";
 
 export type CategoryDTO = {
   id: string;
@@ -34,6 +33,7 @@ interface CategorySidebarProps {
   onOpenCreateCategoryModal: () => void;
   onOpenEditCategoryModal: (category: CategoryDTO) => void;
   onMoveServiceCategory?: (serviceId: string, newCategoryId: string) => void;
+  onCreateService?: (categoryId: string) => void;
 }
 
 export function CategorySidebar({
@@ -46,23 +46,20 @@ export function CategorySidebar({
   onOpenCreateCategoryModal,
   onOpenEditCategoryModal,
   onMoveServiceCategory,
+  onCreateService,
 }: CategorySidebarProps) {
   const [draggedServiceId, setDraggedServiceId] = useState<string | null>(null);
   const [dragOverCategoryId, setDragOverCategoryId] = useState<string | null>(null);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [alertMessage, setAlertMessage] = useState<string | null>(null);
-  const { deleteCategory } = useDeleteServiceCategory();
+  const [categoryToDelete, setCategoryToDelete] = useState<CategoryDTO | null>(null);
 
   // Keep track of which categories are expanded in a Set
   const [expandedCategoryIds, setExpandedCategoryIds] = useState<Set<string>>(
     new Set(selectedCategoryId ? [selectedCategoryId] : [])
   );
 
-  useEffect(() => {
-    if (!alertMessage) return;
-    const timer = setTimeout(() => setAlertMessage(null), 4000);
-    return () => clearTimeout(timer);
-  }, [alertMessage]);
+
 
   // Toggle category expansion on click without collapsing other categories
   const handleToggleCategory = (categoryId: string) => {
@@ -127,7 +124,7 @@ export function CategorySidebar({
           className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-medium gap-2"
         >
           <PlusIcon className="size-4" />
-          <span>New Category</span>
+          <span>Create Category</span>
         </Button>
       </div>
 
@@ -155,8 +152,9 @@ export function CategorySidebar({
               onDragLeave={handleDragLeave}
               onDrop={handleDrop}
               setIsMobileOpen={setIsMobileOpen}
-              deleteCategory={deleteCategory}
+              onDeleteCategory={setCategoryToDelete}
               setAlertMessage={setAlertMessage}
+              onCreateService={onCreateService}
             />
           ))
         )}
@@ -184,23 +182,28 @@ export function CategorySidebar({
 
       {/* Mobile Drawer Overlay */}
       {isMobileOpen && (
-        <div className="fixed inset-0 z-50 flex md:hidden bg-black/50 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex md:hidden bg-black/50">
           <div className="w-[280px] h-full bg-background shadow-xl animate-in slide-in-from-left">
             {sidebarContent}
           </div>
           <div className="flex-1" onClick={() => setIsMobileOpen(false)} />
         </div>
       )}
-      {alertMessage && typeof document !== "undefined" && createPortal(
-        <div className="fixed top-4 right-4 z-[9999] w-full max-w-sm animate-in fade-in slide-in-from-top-2">
-          <Alert variant="destructive" className="bg-card text-card-foreground shadow-lg border-border">
-            <AlertTitle className="text-sm font-semibold">Cannot Delete</AlertTitle>
-            <AlertDescription className="text-xs text-muted-foreground mt-1">
-              {alertMessage}
-            </AlertDescription>
-          </Alert>
-        </div>,
-        document.body
+      <ErrorAlert
+        title="Cannot Delete"
+        message={alertMessage ?? undefined}
+        onDismiss={() => setAlertMessage(null)}
+      />
+
+      {categoryToDelete && (
+        <DeleteCategoryDialog
+          categoryId={categoryToDelete.id}
+          categoryName={categoryToDelete.name}
+          open={!!categoryToDelete}
+          onOpenChange={(open) => {
+            if (!open) setCategoryToDelete(null);
+          }}
+        />
       )}
     </>
   );

@@ -1,8 +1,8 @@
 "use client";
 
-import { CatalogLayout } from "@/contexts/catalog/interfaces/components/catalog-layout";
-import type { DetailedServiceDTO } from "@/contexts/catalog/interfaces/components/service-detail-view";
-import type { CategoryDTO } from "@/contexts/catalog/interfaces/components/category-sidebar";
+import { CatalogLayout } from "@/contexts/catalog/interfaces/components/catalog/catalog-layout";
+import type { DetailedServiceDTO } from "@/contexts/catalog/interfaces/components/catalog/service-detail-view";
+import type { CategoryDTO } from "@/contexts/catalog/interfaces/components/catalog/category-sidebar";
 interface CatalogClientWrapperProps {
   initialEstablishmentId?: string;
   initialCategories: CategoryDTO[];

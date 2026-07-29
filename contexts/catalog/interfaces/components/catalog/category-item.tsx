@@ -1,13 +1,16 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { FolderIcon, MoreVerticalIcon } from "lucide-react";
+
+import { FolderIcon, MoreVerticalIcon, GripVertical, ChevronRight, ChevronDown } from "lucide-react";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
   DropdownMenuContent,
-  DropdownMenuItem,
+  DropdownMenuEditItem,
+  DropdownMenuCreateItem,
+  DropdownMenuDeleteItem,
 } from "@/contexts/shared/interfaces/components/ui/dropdown-menu";
 import type { CategoryDTO, ServiceSummaryDTO } from "./category-sidebar";
 
@@ -26,8 +29,9 @@ interface CategoryItemProps {
   onDragLeave: (e: React.DragEvent) => void;
   onDrop: (e: React.DragEvent, categoryId: string) => void;
   setIsMobileOpen: (open: boolean) => void;
-  deleteCategory: (id: string) => void;
+  onDeleteCategory: (category: CategoryDTO) => void;
   setAlertMessage: (msg: string | null) => void;
+  onCreateService?: (categoryId: string) => void;
 }
 
 export function CategoryItem({
@@ -45,8 +49,9 @@ export function CategoryItem({
   onDragLeave,
   onDrop,
   setIsMobileOpen,
-  deleteCategory,
+  onDeleteCategory,
   setAlertMessage,
+  onCreateService,
 }: CategoryItemProps) {
   const router = useRouter();
   const isCatSelected = selectedCategoryId === cat.id;
@@ -64,16 +69,21 @@ export function CategoryItem({
       <div
         className={`w-full flex items-center justify-between px-3 py-2 text-sm rounded-md transition-colors group/row ${
           isCatSelected
-            ? "bg-primary/10 text-primary font-semibold"
-            : "text-foreground hover:bg-muted"
+            ? "bg-accent text-accent-foreground font-semibold"
+            : "text-foreground hover:bg-accent/70 hover:text-accent-foreground"
         }`}
       >
         <button
           onClick={() => {
             onToggleExpand(cat.id);
           }}
-          className="flex items-center gap-3 truncate flex-1 text-left"
+          className="flex items-center gap-2 truncate flex-1 text-left"
         >
+          {isExpanded ? (
+            <ChevronDown className="size-4 text-muted-foreground/80 shrink-0" />
+          ) : (
+            <ChevronRight className="size-4 text-muted-foreground/80 shrink-0" />
+          )}
           <FolderIcon className="size-4 text-muted-foreground shrink-0" />
           <span className="truncate">{cat.name}</span>
         </button>
@@ -92,39 +102,33 @@ export function CategoryItem({
             >
               <MoreVerticalIcon className="size-3" />
             </DropdownMenuTrigger>
-            <DropdownMenuContent className="p-2 space-y-1 w-40">
-              <DropdownMenuItem
+            <DropdownMenuContent className="p-2 space-y-1 w-44">
+              <DropdownMenuCreateItem
+                label="Create Service"
+                onClick={() => {
+                  setIsMobileOpen(false);
+                  if (onCreateService) {
+                    onCreateService(cat.id);
+                  } else {
+                    router.push("/catalog");
+                  }
+                }}
+              />
+              <DropdownMenuEditItem
                 onClick={() => {
                   onOpenEditCategoryModal(cat);
                 }}
-              >
-                Editar
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                className="text-primary font-medium"
-                onClick={() => {
-                  setIsMobileOpen(false);
-                  router.push(`/catalog/new?categoryId=${cat.id}&t=${Date.now()}`);
-                }}
-              >
-                Agregar Servicio
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                className={`text-destructive ${
-                  catServices.length > 0 ? "opacity-50 cursor-not-allowed" : ""
-                }`}
+              />
+              <DropdownMenuDeleteItem
+                className={catServices.length > 0 ? "opacity-50 cursor-not-allowed" : ""}
                 onClick={() => {
                   if (catServices.length > 0) {
                     setAlertMessage("You cannot delete a category that has services.");
                   } else {
-                    if (confirm(`¿Estás seguro de que deseas eliminar la categoría "${cat.name}"?`)) {
-                      deleteCategory(cat.id);
-                    }
+                    onDeleteCategory(cat);
                   }
                 }}
-              >
-                Eliminar
-              </DropdownMenuItem>
+              />
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
@@ -138,20 +142,23 @@ export function CategoryItem({
               key={svc.id}
               draggable
               onDragStart={(e) => onDragStart(e, svc.id)}
-              className="group flex items-center cursor-grab active:cursor-grabbing"
+              className="group flex items-center cursor-grab active:cursor-grabbing w-full"
             >
               <button
                 onClick={() => {
                   onSelectService(svc.id);
                   setIsMobileOpen(false);
                 }}
-                className={`w-full text-left px-3 py-1.5 text-xs rounded-md transition-colors truncate ${
+                className={`w-full flex items-center gap-3 text-left px-3 py-2 text-sm rounded-md transition-colors truncate ${
                   selectedServiceId === svc.id
-                    ? "bg-primary text-primary-foreground font-medium"
-                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                    ? "bg-accent text-accent-foreground font-semibold"
+                    : "text-foreground hover:bg-accent/70 hover:text-accent-foreground"
                 }`}
               >
-                {svc.name}
+                <GripVertical className={`size-4 shrink-0 cursor-grab ${
+                  selectedServiceId === svc.id ? "text-accent-foreground" : "text-muted-foreground/60"
+                }`} />
+                <span className="truncate">{svc.name}</span>
               </button>
             </div>
           ))}
