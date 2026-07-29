@@ -15,19 +15,27 @@ export function AssistantChatMessageBubble({ message }: AssistantChatMessageBubb
   return (
     <div className={cn("flex w-full", isUser ? "justify-end" : "justify-start")}>
       {!isUser ? (
-        <AssistantAvatar className="mr-3 mt-1 size-11" iconSize={22} iconClassName="size-[22px]" />
-      ) : null}
+        <div className="flex max-w-[min(48rem,calc(100vw-6rem))] items-start gap-3 sm:max-w-[42rem]">
+          <AssistantAvatar
+            className="mt-1 size-10 border-border/40 bg-white shadow-none"
+            iconSize={20}
+            iconClassName="size-5"
+          />
 
-      <div
-        className={cn(
-          "max-w-[min(44rem,calc(100vw-7rem))] whitespace-pre-wrap break-words text-[15px] leading-7 text-foreground sm:max-w-[38rem]",
-          isUser
-            ? "rounded-2xl bg-muted/80 px-4 py-3"
-            : "px-0 py-1",
-        )}
-      >
-        {message.content}
-      </div>
+          <div className="pt-1 text-[15px] leading-7 text-foreground whitespace-pre-wrap break-words">
+            {message.content}
+          </div>
+        </div>
+      ) : (
+        <div
+          className={cn(
+            "max-w-[min(22rem,calc(100vw-6rem))] whitespace-pre-wrap break-words text-[15px] leading-7 text-foreground sm:max-w-[26rem]",
+            "rounded-2xl border border-[#e7edf4] bg-[#f8fafc] px-4 py-3 shadow-none",
+          )}
+        >
+          {message.content}
+        </div>
+      )}
     </div>
   );
 }

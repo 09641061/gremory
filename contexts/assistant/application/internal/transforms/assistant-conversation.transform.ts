@@ -28,6 +28,24 @@ function normalizeMessage(message: AssistantMessageResponse): AssistantMessageRe
   };
 }
 
+function normalizeConversationMessages(
+  messages: AssistantMessageResponse[],
+): AssistantMessageReadModel[] {
+  const normalizedMessages = messages.map(normalizeMessage);
+  const hasAssistantMessage = normalizedMessages.some((message) => message.role === "assistant");
+
+  if (hasAssistantMessage || normalizedMessages.length <= 1) {
+    return normalizedMessages;
+  }
+
+  // Some legacy conversations come back with flattened roles.
+  // When that happens, recover the expected left/right alternation by order.
+  return normalizedMessages.map((message, index) => ({
+    ...message,
+    role: index % 2 === 0 ? "user" : "assistant",
+  }));
+}
+
 function normalizeSummary(
   conversation: AssistantConversationSummaryResponse,
 ): AssistantConversationSummaryReadModel {
@@ -62,7 +80,7 @@ export function toConversationReadModel(
 
   return {
     ...summary,
-    messages: conversation.messages.map(normalizeMessage),
+    messages: normalizeConversationMessages(conversation.messages),
   };
 }
 
