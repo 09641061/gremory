@@ -1,11 +1,11 @@
 "use client";
 
-import { XIcon } from "lucide-react";
 import { ErrorAlert } from "@/contexts/shared/interfaces/components/ui/error";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import { Input } from "@/contexts/shared/interfaces/components/ui/input";
 import { Label } from "@/contexts/shared/interfaces/components/ui/label";
 import { Spinner } from "@/contexts/shared/interfaces/components/ui/spinner";
+import { Dialog, DialogContent, DialogTitle } from "@/contexts/shared/interfaces/components/ui/dialog";
 import { useCreateServiceCategory } from "../../application/use-cases/use-create-service-category";
 
 interface CreateCategoryModalProps {
@@ -21,8 +21,6 @@ export function CreateCategoryModal({
 }: CreateCategoryModalProps) {
   const { state, formAction, pending } = useCreateServiceCategory(onClose);
 
-  if (!isOpen) return null;
-
   return (
     <>
       <ErrorAlert
@@ -30,16 +28,11 @@ export function CreateCategoryModal({
         message={state.status === "error" ? (state.error ?? undefined) : undefined}
       />
 
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-        <div className="w-full max-w-md bg-card border border-border rounded-xl shadow-lg overflow-hidden">
-          <header className="flex justify-between items-center px-6 py-4 border-b border-border">
-            <h2 className="text-lg font-bold text-primary">New Category</h2>
-            <Button variant="ghost" size="icon" onClick={onClose} className="rounded-full h-8 w-8">
-              <XIcon className="size-4" />
-            </Button>
-          </header>
+      <Dialog open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
+        <DialogContent>
+          <DialogTitle>New Category</DialogTitle>
 
-          <form action={formAction} className="p-6 space-y-4">
+          <form action={formAction} className="space-y-6 mt-4">
             <input type="hidden" name="establishmentId" value={establishmentId ?? ""} />
 
             <div className="space-y-2">
@@ -53,7 +46,7 @@ export function CreateCategoryModal({
               />
             </div>
 
-            <div className="flex justify-end gap-3 pt-4 border-t border-border">
+            <div className="flex justify-end gap-3 pt-2">
               <Button type="button" variant="ghost" onClick={onClose}>
                 Cancel
               </Button>
@@ -68,13 +61,13 @@ export function CreateCategoryModal({
                     Saving...
                   </>
                 ) : (
-                  "Save Category"
+                  "Create Category"
                 )}
               </Button>
             </div>
           </form>
-        </div>
-      </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

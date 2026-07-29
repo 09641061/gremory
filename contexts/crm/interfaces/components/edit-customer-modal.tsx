@@ -1,9 +1,9 @@
 "use client";
 
 import * as React from "react";
-import { Dialog } from "@base-ui/react/dialog";
 import { X, Save } from "lucide-react";
 import { ErrorAlert } from "@/contexts/shared/interfaces/components/ui/error";
+import { Dialog, DialogContent, DialogTitle, DialogDescription, DialogClose } from "@/contexts/shared/interfaces/components/ui/dialog";
 import { CustomerResponse } from "../../domain/model/entities/customer";
 import { updateCustomerAction } from "../actions/update-customer.action";
 import { CustomerForm, CustomerFormData } from "./customer-form";
@@ -67,36 +67,31 @@ export function EditCustomerModal({
   return (
     <>
       <ErrorAlert title="Error updating customer" message={errorMsg ?? undefined} />
-      <Dialog.Root open={open} onOpenChange={onOpenChange}>
-        <Dialog.Portal>
-          <Dialog.Backdrop className="fixed inset-0 z-50 bg-black/50 transition-opacity" />
-          <Dialog.Viewport className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <Dialog.Popup className="w-full max-w-4xl rounded-xl border border-border bg-card p-6 text-card-foreground shadow-xl outline-none">
-              <div className="flex items-center justify-between border-b border-border pb-4 mb-4">
-                <div>
-                  <Dialog.Title className="text-lg font-semibold text-primary">Edit Customer Details</Dialog.Title>
-                  <Dialog.Description className="text-xs text-muted-foreground">
-                    Modify the profile details of the customer in the catalog.
-                  </Dialog.Description>
-                </div>
-                <Dialog.Close className="rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none disabled:pointer-events-none">
-                  <X className="h-4 w-4" />
-                </Dialog.Close>
-              </div>
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="max-w-4xl">
+          <div className="flex items-center justify-between border-b border-border pb-4 mb-4">
+            <div>
+              <DialogTitle className="text-lg font-semibold text-foreground">Edit Customer Details</DialogTitle>
+              <DialogDescription className="text-xs text-muted-foreground">
+                Modify the profile details of the customer in the catalog.
+              </DialogDescription>
+            </div>
+            <DialogClose className="rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none disabled:pointer-events-none cursor-pointer">
+              <X className="h-4 w-4" />
+            </DialogClose>
+          </div>
 
-              <CustomerForm
-                key={customer.id} // Re-mount form when customer changes
-                initialData={initialData}
-                onSubmit={handleSubmit}
-                onCancel={() => onOpenChange(false)}
-                isSaving={isSaving}
-                submitLabel="Save Changes"
-                submitIcon={<Save className="mr-2 h-4 w-4" />}
-              />
-            </Dialog.Popup>
-          </Dialog.Viewport>
-        </Dialog.Portal>
-      </Dialog.Root>
+          <CustomerForm
+            key={customer.id} // Re-mount form when customer changes
+            initialData={initialData}
+            onSubmit={handleSubmit}
+            onCancel={() => onOpenChange(false)}
+            isSaving={isSaving}
+            submitLabel="Save Changes"
+            submitIcon={<Save className="mr-2 h-4 w-4" />}
+          />
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
