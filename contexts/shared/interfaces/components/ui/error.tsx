@@ -25,34 +25,28 @@ export function ErrorAlert({
     () => false
   );
   const [dismissedMessage, setDismissedMessage] = useState<string | null>(null);
-  const [progress, setProgress] = useState(100);
 
   useEffect(() => {
     if (!message) {
-      setDismissedMessage(null);
+      const resetId = window.setTimeout(() => {
+        setDismissedMessage(null);
+      }, 0);
+
+      return () => {
+        window.clearTimeout(resetId);
+      };
+    }
+
+    if (message === dismissedMessage) {
       return;
     }
-    if (message === dismissedMessage) return;
-
-    setProgress(100);
-    const startTime = Date.now();
-    const duration = 4000;
-
-    const interval = window.setInterval(() => {
-      const elapsed = Date.now() - startTime;
-      const remaining = Math.max(0, 100 - (elapsed / duration) * 100);
-      setProgress(remaining);
-    }, 40);
 
     const timeout = window.setTimeout(() => {
       setDismissedMessage(message);
       if (onDismiss) onDismiss();
-    }, duration);
+    }, 4000);
 
-    return () => {
-      window.clearInterval(interval);
-      window.clearTimeout(timeout);
-    };
+    return () => window.clearTimeout(timeout);
   }, [message, dismissedMessage, onDismiss]);
 
   if (
@@ -70,6 +64,48 @@ export function ErrorAlert({
   };
 
   return createPortal(
+    <ErrorToast
+      key={message}
+      title={title}
+      message={message}
+      onDismiss={handleDismiss}
+    />,
+    document.body
+  );
+}
+
+function ErrorToast({
+  title,
+  message,
+  onDismiss,
+}: {
+  title: string;
+  message: string;
+  onDismiss: () => void;
+}) {
+  const [progress, setProgress] = useState(100);
+
+  useEffect(() => {
+    const startTime = Date.now();
+    const duration = 4000;
+
+    const interval = window.setInterval(() => {
+      const elapsed = Date.now() - startTime;
+      const remaining = Math.max(0, 100 - (elapsed / duration) * 100);
+      setProgress(remaining);
+    }, 40);
+
+    const timeout = window.setTimeout(() => {
+      onDismiss();
+    }, duration);
+
+    return () => {
+      window.clearInterval(interval);
+      window.clearTimeout(timeout);
+    };
+  }, [onDismiss]);
+
+  return (
     <Alert
       variant="destructive"
       className={cn(
@@ -91,7 +127,7 @@ export function ErrorAlert({
 
       <button
         type="button"
-        onClick={handleDismiss}
+        onClick={onDismiss}
         className="absolute top-3 right-3 rounded-lg p-1.5 text-muted-foreground/60 hover:text-foreground hover:bg-muted/50 transition-colors"
       >
         <X className="size-3.5" />
@@ -99,12 +135,11 @@ export function ErrorAlert({
 
       {/* Progress timer bar */}
       <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-muted">
-        <div 
+        <div
           className="h-full bg-destructive transition-all ease-linear duration-75"
           style={{ width: `${progress}%` }}
         />
       </div>
-    </Alert>,
-    document.body
+    </Alert>
   );
 }
