@@ -5,7 +5,7 @@ import Link from "next/link";
 import { MoreHorizontal } from "lucide-react";
 
 import { Button, buttonVariants } from "@/contexts/shared/interfaces/components/ui/button";
-import type { AssistantConversationSummary } from "@/contexts/assistant/interfaces/components/shared/assistant-chat.types";
+import type { AssistantConversationSummary } from "@/contexts/assistant/interfaces/model/assistant-chat.read-models";
 import { cn } from "@/lib/utils";
 
 type AssistantConversationListItemProps = {

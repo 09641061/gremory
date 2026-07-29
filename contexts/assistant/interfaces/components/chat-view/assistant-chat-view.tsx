@@ -7,12 +7,15 @@ import { hasActiveSubscription } from "@/contexts/billing/domain/services/subscr
 import type { SubscriptionResponse } from "@/contexts/billing/infrastructure/gateways/billing-api.gateway";
 import { submitAssistantMessageAction } from "@/contexts/assistant/interfaces/actions/assistant-chat.actions";
 import { ErrorAlert } from "@/contexts/shared/interfaces/components/ui/error";
+import type {
+  AssistantChatMessage,
+  AssistantConversation,
+} from "@/contexts/assistant/interfaces/model/assistant-chat.read-models";
 
 import { AssistantChatEmptyState } from "./assistant-chat-empty-state";
 import { AssistantChatComposer } from "./assistant-chat-composer";
 import { AssistantChatThread } from "./assistant-chat-thread";
 import { upsertAssistantConversationListItem } from "../sidebar/assistant-conversation-cache";
-import type { AssistantChatMessage, AssistantConversation } from "../shared/assistant-chat.types";
 
 const conversationsEndpoint = "/api/assistant/conversations";
 const subscriptionStatusEndpoint = "/api/billing/subscriptions";
@@ -125,11 +128,6 @@ export function AssistantChatView({ initialConversation }: AssistantChatViewProp
   const [error, setError] = useState<string | null>(null);
 
   const selectedConversationId = searchParams.get("conversationId");
-
-  useEffect(() => {
-    setActiveConversation(initialConversation);
-    setError(null);
-  }, [initialConversation]);
 
   useEffect(() => {
     let cancelled = false;

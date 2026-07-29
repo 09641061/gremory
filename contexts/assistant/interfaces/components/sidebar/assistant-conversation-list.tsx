@@ -1,6 +1,6 @@
 "use client";
 
-import type { AssistantConversationSummary } from "@/contexts/assistant/interfaces/components/shared/assistant-chat.types";
+import type { AssistantConversationSummary } from "@/contexts/assistant/interfaces/model/assistant-chat.read-models";
 
 import { AssistantConversationListItem } from "./assistant-conversation-list-item";
 

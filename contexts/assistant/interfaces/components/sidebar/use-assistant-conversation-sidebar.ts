@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import type { AssistantConversationSummaryReadModel } from "@/contexts/assistant/application/model/assistant.read-models";
-import type { AssistantConversationSummary } from "@/contexts/assistant/interfaces/components/shared/assistant-chat.types";
+import type { AssistantConversationSummary } from "@/contexts/assistant/interfaces/model/assistant-chat.read-models";
 import {
   ensureAssistantConversationListCached,
   getAssistantConversationListCache,
@@ -64,7 +64,9 @@ export function useAssistantConversationSidebar(
     : null;
   const [manualOpen, setManualOpen] = useState<boolean | null>(null);
   const isOpen = manualOpen ?? pathname.startsWith("/chat");
-  const [conversations, setConversations] = useState<AssistantConversationSummary[]>([]);
+  const [conversations, setConversations] = useState<AssistantConversationSummary[]>(
+    () => initialConversations,
+  );
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
@@ -82,7 +84,6 @@ export function useAssistantConversationSidebar(
 
   useEffect(() => {
     setAssistantConversationListCache(initialConversations);
-    setConversations(initialConversations);
   }, [initialConversations]);
 
   useEffect(() => {

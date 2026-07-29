@@ -13,5 +13,10 @@ export default async function ChatPage({
     ? await new GetConversationQueryService().handle(conversationId)
     : null;
 
-  return <AssistantChatView initialConversation={initialConversation} />;
+  return (
+    <AssistantChatView
+      key={conversationId ?? "new"}
+      initialConversation={initialConversation}
+    />
+  );
 }

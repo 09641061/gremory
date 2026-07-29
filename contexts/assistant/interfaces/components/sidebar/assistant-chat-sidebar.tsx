@@ -6,7 +6,7 @@ import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import { Input } from "@/contexts/shared/interfaces/components/ui/input";
 import { cn } from "@/lib/utils";
 
-import type { AssistantConversationSummary } from "../shared/assistant-chat.types";
+import type { AssistantConversationSummary } from "@/contexts/assistant/interfaces/model/assistant-chat.read-models";
 
 interface AssistantChatSidebarProps {
   conversations: AssistantConversationSummary[];

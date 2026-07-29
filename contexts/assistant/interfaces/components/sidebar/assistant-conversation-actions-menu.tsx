@@ -5,7 +5,7 @@ import { createPortal } from "react-dom";
 
 import { PencilLine, Trash2 } from "lucide-react";
 
-import type { AssistantConversationSummary } from "@/contexts/assistant/interfaces/components/shared/assistant-chat.types";
+import type { AssistantConversationSummary } from "@/contexts/assistant/interfaces/model/assistant-chat.read-models";
 
 type AssistantConversationActionsMenuProps = {
   conversation: AssistantConversationSummary | null;
