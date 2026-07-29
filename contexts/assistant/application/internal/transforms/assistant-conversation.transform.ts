@@ -17,7 +17,14 @@ import type {
   AssistantMessageReadModel,
 } from "./assistant.read-models";
 
-function normalizeMessage(message: AssistantMessageResponse): AssistantMessageReadModel {
+type ConversationMessageSource = {
+  id: string;
+  role?: string | null;
+  content: string;
+  createdAt: string;
+};
+
+function normalizeMessage(message: ConversationMessageSource): AssistantMessageReadModel {
   const role = (message.role ?? "").toUpperCase();
 
   return {
@@ -29,7 +36,7 @@ function normalizeMessage(message: AssistantMessageResponse): AssistantMessageRe
 }
 
 function normalizeConversationMessages(
-  messages: AssistantMessageResponse[],
+  messages: ConversationMessageSource[],
 ): AssistantMessageReadModel[] {
   const normalizedMessages = messages.map(normalizeMessage);
   const hasAssistantMessage = normalizedMessages.some((message) => message.role === "assistant");
@@ -92,11 +99,13 @@ export function toConversationReadModelFromEntity(
     title: conversation.getTitle(),
     createdAt: conversation.createdAt,
     updatedAt: conversation.updatedAt,
-    messages: conversation.getMessages().map((message: AssistantMessage) => ({
-      id: message.id,
-      role: message.role === "ASSISTANT" ? "assistant" : "user",
-      content: message.content,
-      createdAt: message.createdAt,
-    })),
+    messages: normalizeConversationMessages(
+      conversation.getMessages().map((message: AssistantMessage) => ({
+        id: message.id,
+        role: message.role,
+        content: message.content,
+        createdAt: message.createdAt,
+      })),
+    ),
   };
 }

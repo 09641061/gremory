@@ -36,14 +36,14 @@ export function AssistantChatView({
   const [activeConversation, setActiveConversation] = useState<AssistantConversationReadModel | null>(
     initialConversation,
   );
+  const [pendingConversation, setPendingConversation] = useState<AssistantConversationReadModel | null>(
+    null,
+  );
   const [draft, setDraft] = useState("");
   const [isSendingMessage, setIsSendingMessage] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!bottomRef.current) return;
-    bottomRef.current.scrollIntoView({ behavior: "smooth", block: "end" });
-  }, [activeConversation?.messages.length]);
+  const visibleConversation = activeConversation ?? pendingConversation;
+  const isThreadVisible = Boolean(conversationId || visibleConversation);
 
   useEffect(() => {
     function handleConversationMutation(event: Event) {
@@ -93,6 +93,25 @@ export function AssistantChatView({
 
     setIsSendingMessage(true);
     setError(null);
+    setDraft("");
+
+    if (!conversationId) {
+      const now = new Date().toISOString();
+      setPendingConversation({
+        id: "pending-conversation",
+        title: "Nuevo chat",
+        createdAt: now,
+        updatedAt: now,
+        messages: [
+          {
+            id: `pending-message-${now}`,
+            role: "user",
+            content: message,
+            createdAt: now,
+          },
+        ],
+      });
+    }
 
     try {
       const result = await submitAssistantMessageAction({
@@ -110,10 +129,12 @@ export function AssistantChatView({
           detail: { type: "upsert", conversation: result.data, moveToFront: true },
         }),
       );
-      setDraft("");
+      setPendingConversation(null);
       setActiveConversation(result.data);
       router.replace(buildConversationUrl(result.data.id), { scroll: false });
     } catch (requestError) {
+      setDraft(message);
+      setPendingConversation(null);
       setError(
         requestError instanceof Error ? requestError.message : "Could not send the message.",
       );
@@ -131,12 +152,14 @@ export function AssistantChatView({
 
   return (
     <div className="flex min-h-[calc(100vh-6rem)] flex-col">
-      {conversationId ? (
+      {isThreadVisible ? (
         <div className="relative flex min-h-0 flex-1 flex-col">
           <AssistantChatThread
-            conversation={activeConversation}
+            conversation={visibleConversation}
             isLoading={false}
+            isAssistantThinking={isSendingMessage}
             bottomRef={bottomRef}
+            showWelcome={Boolean(conversationId)}
             error={
               !hasAssistantAccess
                 ? "You do not have active access to the assistant. Check your session or subscription."

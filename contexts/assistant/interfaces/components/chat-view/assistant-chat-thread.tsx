@@ -1,34 +1,53 @@
 "use client";
 
-import type { ReactNode, RefObject } from "react";
+import { useLayoutEffect, useRef, type ReactNode, type RefObject } from "react";
 
 import { AssistantChatWelcome } from "./assistant-chat-welcome";
 import { AssistantChatLoadingState } from "./assistant-chat-loading-state";
 import { AssistantChatMessageBubble } from "./assistant-chat-message-bubble";
+import { AssistantChatThinkingBubble } from "./assistant-chat-thinking-bubble";
 import type { AssistantConversationReadModel } from "@/contexts/assistant/application/internal/transforms/assistant.read-models";
 
 interface AssistantChatThreadProps {
   conversation: AssistantConversationReadModel | null;
   isLoading: boolean;
+  isAssistantThinking?: boolean;
   bottomRef: RefObject<HTMLDivElement | null>;
   error?: string | null;
   composer?: ReactNode;
+  showWelcome?: boolean;
 }
 
 export function AssistantChatThread({
   conversation,
   isLoading,
+  isAssistantThinking = false,
   bottomRef,
   error: _error,
   composer,
+  showWelcome = true,
 }: AssistantChatThreadProps) {
   void _error;
+  const scrollContainerRef = useRef<HTMLDivElement | null>(null);
   const messages = conversation?.messages ?? [];
-  const shouldShowWelcome = messages.length > 0 && messages[0]?.role !== "assistant";
+  const shouldShowWelcome = showWelcome && messages.length > 0 && messages[0]?.role !== "assistant";
+
+  useLayoutEffect(() => {
+    const scrollContainer = scrollContainerRef.current;
+    if (!scrollContainer || messages.length === 0) return;
+
+    scrollContainer.scrollTo({
+      top: scrollContainer.scrollHeight,
+      behavior: "auto",
+    });
+  }, [messages.length, conversation?.id, isAssistantThinking]);
 
   return (
-    <section className="relative isolate flex min-h-0 min-w-0 flex-1 overflow-hidden bg-white">
-      <div className="absolute inset-0 z-0 overflow-y-auto px-4 py-10 pb-48 sm:px-6 sm:py-12 sm:pb-56">
+    <section className="relative isolate flex min-h-0 min-w-0 flex-1 overflow-hidden bg-background">
+      <div
+        ref={scrollContainerRef}
+        className="absolute inset-0 z-0 overflow-y-auto px-4 py-10 pb-48 sm:px-6 sm:py-12 sm:pb-56"
+      >
         {isLoading ? (
           <AssistantChatLoadingState />
         ) : messages.length ? (
@@ -43,6 +62,7 @@ export function AssistantChatThread({
             {messages.map((message) => (
               <AssistantChatMessageBubble key={message.id} message={message} />
             ))}
+            {isAssistantThinking ? <AssistantChatThinkingBubble /> : null}
             <div ref={bottomRef} />
           </div>
         ) : (
