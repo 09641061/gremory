@@ -82,6 +82,33 @@ export function CustomerForm({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
+    // Document validation
+    if (docType === "dni") {
+      const isNumeric = /^\d+$/.test(docNumber);
+      if (!isNumeric || docNumber.length !== 8) {
+        alert("The DNI must have exactly 8 digits.");
+        return;
+      }
+    } else if (docType === "ruc") {
+      const isNumeric = /^\d+$/.test(docNumber);
+      if (!isNumeric || docNumber.length !== 11) {
+        alert("The RUC must have exactly 11 digits.");
+        return;
+      }
+    } else if (docType === "foreign_resident_card") {
+      const isAlphanumeric = /^[a-zA-Z0-9]+$/.test(docNumber);
+      if (!isAlphanumeric || docNumber.length < 9 || docNumber.length > 12) {
+        alert("The C.E. (Foreigner ID) must be alphanumeric and between 9 and 12 characters.");
+        return;
+      }
+    } else if (docType === "passport") {
+      const isAlphanumeric = /^[a-zA-Z0-9]+$/.test(docNumber);
+      if (!isAlphanumeric || docNumber.length > 20) {
+        alert("The Passport must be alphanumeric and have a maximum of 20 characters.");
+        return;
+      }
+    }
+
     // Basic phone validation based on selected prefix
     const country = [
       { code: "+51", length: 9 },
