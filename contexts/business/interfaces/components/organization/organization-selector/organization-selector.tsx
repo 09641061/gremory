@@ -1,7 +1,7 @@
 "use client";
 
 import { Building2, ChevronDown } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import {
@@ -21,13 +21,16 @@ export type OrganizationSelectorOrganization = {
 interface OrganizationSelectorProps {
   organization?: OrganizationSelectorOrganization;
   organizations?: OrganizationSelectorOrganization[];
+  canRead?: boolean;
 }
 
 export function OrganizationSelector({
   organization,
   organizations = organization ? [organization] : [],
+  canRead = true,
 }: OrganizationSelectorProps) {
   const router = useRouter();
+  const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState("");
   const selectorRef = useRef<HTMLDivElement>(null);
@@ -66,7 +69,11 @@ export function OrganizationSelector({
             onSelect={() => setIsOpen(false)}
             onSelectAll={() => {
               setIsOpen(false);
-              router.push("/organizations");
+              if (canRead) {
+                router.push("/organizations");
+              } else {
+                router.push(`${pathname}?denied=org`);
+              }
             }}
             allLabel="All Organizations"
             searchPlaceholder="Find organization..."

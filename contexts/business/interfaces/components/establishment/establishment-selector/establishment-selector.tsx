@@ -1,7 +1,7 @@
 "use client";
 
 import { ChevronDown, Store } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import {
@@ -19,6 +19,7 @@ interface EstablishmentSelectorProps {
   selectedEstablishmentId?: string;
   onSelect: (establishmentId: string) => void;
   onNew?: () => void;
+  canRead?: boolean;
 }
 
 export function EstablishmentSelector({
@@ -26,8 +27,10 @@ export function EstablishmentSelector({
   selectedEstablishmentId,
   onSelect,
   onNew,
+  canRead = true,
 }: EstablishmentSelectorProps) {
   const router = useRouter();
+  const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState("");
   const selectorRef = useRef<HTMLDivElement>(null);
@@ -76,7 +79,11 @@ export function EstablishmentSelector({
             onSelect={selectEstablishment}
             onSelectAll={() => {
               setIsOpen(false);
-              router.push("/establishments");
+              if (canRead) {
+                router.push("/establishments");
+              } else {
+                router.push(`${pathname}?denied=est`);
+              }
             }}
             allLabel="All Establishments"
             searchPlaceholder="Find establishment..."

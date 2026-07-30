@@ -5,6 +5,7 @@ import { createOrganizationQueryService } from "@/contexts/business/application/
 import { OrganizationSelector } from "@/contexts/business/interfaces/components/organization/organization-selector/organization-selector";
 import { Header } from "@/contexts/shared/interfaces/components/header";
 import { createTeamQueryService } from "@/contexts/workforce/application/internal/queryservices/team-query.service";
+import { ErrorBanner } from "@/contexts/shared/interfaces/components/error-banner";
 
 export default function ProtectedLayout({
   children,
@@ -24,6 +25,7 @@ export default function ProtectedLayout({
         <ProtectedHeader />
       </Suspense>
       {children}
+      <ErrorBanner />
     </div>
   );
 }
@@ -32,6 +34,8 @@ async function ProtectedHeader() {
   let organization: { id: string; name: string; imageUrl?: string | null } | undefined;
   let establishments: { id: string; name: string; photoUrl?: string | null }[] = [];
   let canCreateEstablishment = true;
+  let canReadOrganizations = true;
+  let canReadEstablishments = true;
 
   try {
     const currentOrganization =
@@ -52,10 +56,9 @@ async function ProtectedHeader() {
       photoUrl: establishment.photoUrl,
     }));
   } catch {
-    // Members do not own the organization, so Business's owner-scoped
-    // endpoints cannot provide their header context. Resolve it from their
-    // active workforce memberships instead.
     canCreateEstablishment = false;
+    canReadOrganizations = false;
+    canReadEstablishments = false;
     try {
       const access = await createTeamQueryService().getAccessContext();
       const firstEstablishment = access.establishments[0];
@@ -70,6 +73,28 @@ async function ProtectedHeader() {
             id: item.establishmentId,
             name: item.establishmentName,
           }));
+
+        canReadOrganizations = access.establishments.some(
+          (item) =>
+            item.organizationId === organization?.id &&
+            item.effectivePermissions.some(
+              (perm) =>
+                perm === "business:organizations:read" ||
+                perm === "business:organizations:manage" ||
+                perm === "business:manage"
+            )
+        );
+
+        canReadEstablishments = access.establishments.some(
+          (item) =>
+            item.organizationId === organization?.id &&
+            item.effectivePermissions.some(
+              (perm) =>
+                perm === "business:establishments:read" ||
+                perm === "business:establishments:manage" ||
+                perm === "business:manage"
+            )
+        );
 
         canCreateEstablishment = access.establishments.some(
           (item) =>
@@ -92,11 +117,13 @@ async function ProtectedHeader() {
         <OrganizationSelector
           organization={organization}
           organizations={organization ? [organization] : []}
+          canRead={canReadOrganizations}
         />
       }
       establishments={establishments}
       initialEstablishmentId={establishments[0]?.id}
       canCreateEstablishment={canCreateEstablishment}
+      canReadEstablishments={canReadEstablishments}
     />
   );
 }

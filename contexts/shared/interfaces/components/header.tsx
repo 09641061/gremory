@@ -15,6 +15,7 @@ interface HeaderProps {
   establishments: HeaderEstablishment[];
   initialEstablishmentId?: string;
   canCreateEstablishment?: boolean;
+  canReadEstablishments?: boolean;
 }
 
 export function Header({
@@ -22,6 +23,7 @@ export function Header({
   establishments,
   initialEstablishmentId,
   canCreateEstablishment = true,
+  canReadEstablishments = true,
 }: HeaderProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -56,6 +58,7 @@ export function Header({
           selectedEstablishmentId={selectedEstablishmentId}
           onSelect={selectEstablishment}
           onNew={canCreateEstablishment ? () => router.push("/establishments/new") : undefined}
+          canRead={canReadEstablishments}
         />
         </div>
       </div>

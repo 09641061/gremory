@@ -3,10 +3,12 @@ import { createOrganizationQueryService } from "@/contexts/business/application/
 import { EstablishmentsPage } from "@/contexts/business/interfaces/components/establishment/establishments-page/establishments-page";
 import { createTeamQueryService } from "@/contexts/workforce/application/internal/queryservices/team-query.service";
 import { redirect } from "next/navigation";
+import { headers } from "next/headers";
 
 export default async function EstablishmentsRoutePage() {
   let organizationId = "";
   let isOwner = true;
+  let canRead = true;
   const canUpdateMap: Record<string, boolean> = {};
 
   try {
@@ -29,31 +31,58 @@ export default async function EstablishmentsRoutePage() {
 
     return <EstablishmentsPage establishments={page.content} canUpdateMap={canUpdateMap} defaultCanUpdate={true} />;
   } else {
+    let allowedEstablishments: any[] = [];
     try {
       const access = await createTeamQueryService().getAccessContext();
       if (access.establishments.length === 0) {
-        redirect("/chat");
+        canRead = false;
       }
 
-      const allowedEstablishments = access.establishments.map((item) => {
-        const canUpdate = item.effectivePermissions.some(
-          (perm) =>
-            perm === "business:establishments:manage" ||
-            perm === "business:establishments:update" ||
-            perm === "business:manage"
-        );
-        canUpdateMap[item.establishmentId] = canUpdate;
+      allowedEstablishments = access.establishments
+        .filter((item) =>
+          item.effectivePermissions.some(
+            (perm) =>
+              perm === "business:establishments:read" ||
+              perm === "business:establishments:manage" ||
+              perm === "business:manage"
+          )
+        )
+        .map((item) => {
+          const canUpdate = item.effectivePermissions.some(
+            (perm) =>
+              perm === "business:establishments:manage" ||
+              perm === "business:establishments:update" ||
+              perm === "business:manage"
+          );
+          canUpdateMap[item.establishmentId] = canUpdate;
 
-        return {
-          id: item.establishmentId,
-          name: item.establishmentName,
-          photoUrl: null,
-        };
-      });
+          return {
+            id: item.establishmentId,
+            name: item.establishmentName,
+            photoUrl: null,
+          };
+        });
 
-      return <EstablishmentsPage establishments={allowedEstablishments} canUpdateMap={canUpdateMap} defaultCanUpdate={false} />;
+      if (allowedEstablishments.length === 0) {
+        canRead = false;
+      }
     } catch {
-      redirect("/chat");
+      canRead = false;
     }
+
+    if (!canRead) {
+      const headersList = await headers();
+      const referer = headersList.get("referer");
+      let redirectUrl = "/chat";
+      if (referer) {
+        try {
+          const refererUrl = new URL(referer);
+          redirectUrl = refererUrl.pathname;
+        } catch {}
+      }
+      redirect(`${redirectUrl}?denied=est`);
+    }
+
+    return <EstablishmentsPage establishments={allowedEstablishments} canUpdateMap={canUpdateMap} defaultCanUpdate={false} />;
   }
 }
