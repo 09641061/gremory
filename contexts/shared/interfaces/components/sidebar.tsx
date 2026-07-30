@@ -47,10 +47,13 @@ export function Sidebar({
                 ? pathname === href && !selectedConversationId
                 : pathname === href || pathname.startsWith(`${href}/`);
 
+            const establishmentId = searchParams.get("establishmentId");
+            const linkHref = establishmentId ? `${href}?establishmentId=${establishmentId}` : href;
+
             return (
               <li key={label}>
                 <Link
-                  href={href}
+                  href={linkHref}
                   aria-current={active ? "page" : undefined}
                   className={cn(
                     buttonVariants({ variant: "ghost", size: "lg" }),
@@ -79,7 +82,7 @@ export function Sidebar({
         <ul>
           <li>
             <Link
-              href="/settings"
+              href={searchParams.get("establishmentId") ? `/settings?establishmentId=${searchParams.get("establishmentId")}` : "/settings"}
               aria-current={
                 pathname === "/settings" || pathname.startsWith("/settings/")
                   ? "page"

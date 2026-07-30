@@ -3,8 +3,22 @@ import { createTeamQueryService } from "@/contexts/workforce/application/interna
 import { TeamPageView } from "@/contexts/workforce/interfaces/components/team/team-page-view";
 import { createWorkforceRoleQueryService } from "@/contexts/workforce/application/internal/queryservices/workforce-role-query.service";
 
-export default async function TeamPage() {
-  const establishmentId = await createBusinessEstablishmentAclService().getActiveEstablishmentIdForUser();
+interface TeamPageProps {
+  searchParams: Promise<{ establishmentId?: string }>;
+}
+
+export default async function TeamPage({ searchParams }: TeamPageProps) {
+  const { establishmentId: paramEstId } = await searchParams;
+  const aclService = createBusinessEstablishmentAclService();
+  let defaultEstId = await aclService.getActiveEstablishmentIdForUser();
+  if (!defaultEstId) {
+    try {
+      const access = await createTeamQueryService().getAccessContext();
+      defaultEstId = access.establishments[0]?.establishmentId ?? undefined;
+    } catch {}
+  }
+  const establishmentId = paramEstId ?? defaultEstId ?? undefined;
+
   let members: Awaited<ReturnType<ReturnType<typeof createTeamQueryService>["list"]>>["content"] = [];
   let roles: Awaited<ReturnType<ReturnType<typeof createWorkforceRoleQueryService>["list"]>> = [];
   if (establishmentId) {

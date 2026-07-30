@@ -14,7 +14,6 @@ export class BusinessAccessPolicyService {
   async getEstablishmentsPermissions(activeEstablishmentId?: string): Promise<BusinessPermissions> {
     let organizationId = "";
     let isOwner = true;
-    let canRead = true;
     const canUpdateMap: Record<string, boolean> = {};
 
     try {
@@ -22,6 +21,23 @@ export class BusinessAccessPolicyService {
       organizationId = organization.id;
     } catch {
       isOwner = false;
+    }
+
+    // Verify if the active establishment belongs to the organization owned by this user
+    if (isOwner && activeEstablishmentId) {
+      try {
+        const page = await createEstablishmentQueryService().getByOrganization({
+          organizationId,
+          page: 0,
+          size: 100,
+        });
+        const belongsToOwnerOrg = page.content.some((est) => est.id === activeEstablishmentId);
+        if (!belongsToOwnerOrg) {
+          isOwner = false; // User is acting as an employee for the active organization
+        }
+      } catch {
+        isOwner = false;
+      }
     }
 
     if (isOwner) {
@@ -75,8 +91,8 @@ export class BusinessAccessPolicyService {
 
         const activeOrgId = activeEst.organizationId;
 
-        // 2. Filter establishments to only match the active organization
-        const filteredEsts = access.establishments.filter(
+        // 2. Determine if the user has permission to read establishments in the active organization
+        const canRead = access.establishments.some(
           (item) =>
             item.organizationId === activeOrgId &&
             item.effectivePermissions.some(
@@ -87,9 +103,10 @@ export class BusinessAccessPolicyService {
             ),
         );
 
-        if (filteredEsts.length === 0) {
-          canRead = false;
-        }
+        // 3. Get all establishments of the active organization that the user is a member of
+        const filteredEsts = access.establishments.filter(
+          (item) => item.organizationId === activeOrgId
+        );
 
         const allowedEstablishments = filteredEsts.map((item) => {
           const canUpdate = item.effectivePermissions.some(
@@ -128,15 +145,38 @@ export class BusinessAccessPolicyService {
     let organization: OrganizationSummary | null = null;
     let canUpdate = true;
     let canRead = true;
+    let isOwner = true;
 
     try {
       organization = await createOrganizationQueryService().getMyOrganization();
+    } catch {
+      isOwner = false;
+    }
+
+    // Verify if the active establishment belongs to the organization owned by this user
+    if (isOwner && activeEstablishmentId && organization) {
+      try {
+        const page = await createEstablishmentQueryService().getByOrganization({
+          organizationId: organization.id,
+          page: 0,
+          size: 100,
+        });
+        const belongsToOwnerOrg = page.content.some((est) => est.id === activeEstablishmentId);
+        if (!belongsToOwnerOrg) {
+          isOwner = false; // User is acting as an employee for the active organization
+        }
+      } catch {
+        isOwner = false;
+      }
+    }
+
+    if (isOwner && organization) {
       return {
         canRead: true,
         canUpdate: true,
         organization,
       };
-    } catch {
+    } else {
       canUpdate = false;
       try {
         const access = await createTeamQueryService().getAccessContext();
