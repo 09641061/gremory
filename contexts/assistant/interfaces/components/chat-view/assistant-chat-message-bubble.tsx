@@ -18,7 +18,9 @@ function AssistantChatMessageBubbleComponent({ message }: AssistantChatMessageBu
     "[&_th]:whitespace-nowrap [&_th]:px-4 [&_th]:py-2 [&_th]:text-left [&_th]:font-semibold [&_th]:align-top " +
     "[&_td]:px-4 [&_td]:py-2 [&_td]:align-top " +
     "[&_thead_th]:border-b [&_thead_th]:border-border/60 " +
-    "[&_tbody_tr:not(:last-child)_td]:border-b [&_tbody_tr:not(:last-child)_td]:border-border/30";
+    "[&_tbody_tr:not(:last-child)_td]:border-b [&_tbody_tr:not(:last-child)_td]:border-border/30 " +
+    "[&_pre]:my-4 [&_pre]:overflow-x-auto [&_pre]:rounded-2xl [&_pre]:border [&_pre]:border-border/60 " +
+    "[&_pre]:bg-muted/30 [&_pre]:px-4 [&_pre]:py-3 [&_pre]:text-[13px] [&_pre]:leading-6";
 
   return (
     <div
