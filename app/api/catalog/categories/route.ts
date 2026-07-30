@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { createServiceCategoryCommandService, createServiceCategoryQueryService } from "@/contexts/catalog/application/internal/commandservices/service-category-command.service";
+import { createServiceCategoryCommandService } from "@/contexts/catalog/application/internal/commandservices/service-category-command.service";
+import { createServiceCategoryQueryService } from "@/contexts/catalog/application/internal/queryservices/service-category-query.service";
 import { createServiceCategorySchema } from "@/contexts/catalog/interfaces/rest/schemas/service-category.schemas";
 
 const listQuerySchema = z.object({

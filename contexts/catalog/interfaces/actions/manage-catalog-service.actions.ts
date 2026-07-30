@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { updateCatalogServiceSchema } from "../rest/schemas/catalog-service.schemas";
 import { createCatalogServiceCommandService } from "../../application/internal/commandservices/catalog-service-command.service";
+import { requireCatalogAccessToken } from "./catalog-action-auth";
 
 export type CatalogServiceActionResult = {
   status: "idle" | "success" | "error";
@@ -34,13 +35,14 @@ export async function updateCatalogServiceAction(
   }
 
   try {
+    const token = await requireCatalogAccessToken();
     const service = createCatalogServiceCommandService();
     await service.update({
       ...parsed.data,
       categoryId: parsed.data.categoryId || null,
       preServiceInstructions: parsed.data.preServiceInstructions || null,
       postServiceRecommendations: parsed.data.postServiceRecommendations || null,
-    });
+    }, token);
 
     revalidatePath("/catalog");
     return { status: "success", error: null };
@@ -57,8 +59,9 @@ export async function changeCatalogServiceStatusAction(
   active: boolean
 ): Promise<CatalogServiceActionResult> {
   try {
+    const token = await requireCatalogAccessToken();
     const service = createCatalogServiceCommandService();
-    await service.changeStatus({ id, active });
+    await service.changeStatus({ id, active }, token);
     revalidatePath("/catalog");
     return { status: "success", error: null };
   } catch (err) {
@@ -73,8 +76,9 @@ export async function deleteCatalogServiceAction(
   id: string
 ): Promise<CatalogServiceActionResult> {
   try {
+    const token = await requireCatalogAccessToken();
     const service = createCatalogServiceCommandService();
-    await service.delete({ id });
+    await service.delete({ id }, token);
     revalidatePath("/catalog");
     return { status: "success", error: null };
   } catch (err) {

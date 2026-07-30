@@ -3,11 +3,11 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import {
-  changeCatalogServiceStatusAction,
+  deleteCatalogServiceAction,
   type CatalogServiceActionResult,
-} from "../../interfaces/actions/manage-catalog-service.actions";
+} from "../actions/manage-catalog-service.actions";
 
-export function useChangeCatalogServiceStatus(onSuccess?: () => void) {
+export function useDeleteCatalogService(onSuccess?: () => void) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [state, setState] = useState<CatalogServiceActionResult>({
@@ -15,21 +15,20 @@ export function useChangeCatalogServiceStatus(onSuccess?: () => void) {
     error: null,
   });
 
-  const changeStatus = (id: string, active: boolean) => {
+  const deleteService = (id: string) => {
     startTransition(async () => {
-      const result = await changeCatalogServiceStatusAction(id, active);
+      const result = await deleteCatalogServiceAction(id);
       setState(result);
+
       if (result.status === "success") {
         router.refresh();
-        if (onSuccess) {
-          onSuccess();
-        }
+        onSuccess?.();
       }
     });
   };
 
   return {
-    changeStatus,
+    deleteService,
     pending: isPending,
     state,
   };

@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createCatalogServiceSchema } from "../rest/schemas/catalog-service.schemas";
 import { createCatalogServiceCommandService } from "../../application/internal/commandservices/catalog-service-command.service";
+import { requireCatalogAccessToken } from "./catalog-action-auth";
 
 export type CreateCatalogServiceActionState = {
   status: "idle" | "success" | "error";
@@ -35,13 +36,14 @@ export async function createCatalogServiceAction(
   }
 
   try {
+    const token = await requireCatalogAccessToken();
     const service = createCatalogServiceCommandService();
     const result = await service.create({
       ...parsed.data,
       categoryId: parsed.data.categoryId || null,
       preServiceInstructions: parsed.data.preServiceInstructions || null,
       postServiceRecommendations: parsed.data.postServiceRecommendations || null,
-    });
+    }, token);
 
     revalidatePath("/catalog");
 

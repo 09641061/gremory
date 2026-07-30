@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Trash2 } from "lucide-react";
-import { useDeleteCatalogService } from "../../../application/use-cases/use-delete-catalog-service";
+import { useDeleteCatalogService } from "../../hooks/use-delete-catalog-service";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import {
   AlertDialog,

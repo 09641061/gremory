@@ -17,8 +17,8 @@ import {
 import { GeneralInfoSection } from "../new/general-info-section";
 import { FinancialsAndLogisticsSection } from "../new/financials-and-logistics-section";
 import { InstructionsSection } from "../new/instructions-section";
-import { useUpdateCatalogService } from "../../../application/use-cases/use-update-catalog-service";
-import { useChangeCatalogServiceStatus } from "../../../application/use-cases/use-change-catalog-service-status";
+import { useUpdateCatalogService } from "../../hooks/use-update-catalog-service";
+import { useChangeCatalogServiceStatus } from "../../hooks/use-change-catalog-service-status";
 import { DeleteServiceDialog } from "./delete-service-dialog";
 import type { DetailedServiceDTO } from "./service-detail-view";
 

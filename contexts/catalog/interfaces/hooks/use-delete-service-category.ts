@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import {
   deleteServiceCategoryAction,
   type CategoryActionResult,
-} from "../../interfaces/actions/manage-service-category.actions";
+} from "../actions/manage-service-category.actions";
 
 export function useDeleteServiceCategory(onSuccess?: () => void) {
   const router = useRouter();
@@ -19,11 +19,10 @@ export function useDeleteServiceCategory(onSuccess?: () => void) {
     startTransition(async () => {
       const result = await deleteServiceCategoryAction(id);
       setState(result);
+
       if (result.status === "success") {
         router.refresh();
-        if (onSuccess) {
-          onSuccess();
-        }
+        onSuccess?.();
       }
     });
   };

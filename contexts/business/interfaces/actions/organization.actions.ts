@@ -23,7 +23,7 @@ async function uploadOrganizationPhoto(file: File, token: string): Promise<strin
   const formData = new FormData();
   formData.set("file", file);
 
-  const response = await fetch(`${apiConfig.baseUrl}/api/business/establishments/images`, {
+  const response = await fetch(`${apiConfig.baseUrl}${apiConfig.routes.organizationImages}`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,

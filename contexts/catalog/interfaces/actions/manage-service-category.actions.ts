@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createServiceCategorySchema, updateServiceCategorySchema } from "../rest/schemas/service-category.schemas";
 import { createServiceCategoryCommandService } from "../../application/internal/commandservices/service-category-command.service";
+import { requireCatalogAccessToken } from "./catalog-action-auth";
 
 export type CategoryActionResult = {
   status: "idle" | "success" | "error";
@@ -26,8 +27,9 @@ export async function createServiceCategoryAction(
   }
 
   try {
+    const token = await requireCatalogAccessToken();
     const service = createServiceCategoryCommandService();
-    await service.create(parsed.data);
+    await service.create(parsed.data, token);
     revalidatePath("/catalog");
     return { status: "success", error: null };
   } catch (err) {
@@ -54,8 +56,9 @@ export async function updateServiceCategoryAction(
   }
 
   try {
+    const token = await requireCatalogAccessToken();
     const service = createServiceCategoryCommandService();
-    await service.update(parsed.data);
+    await service.update(parsed.data, token);
     revalidatePath("/catalog");
     return { status: "success", error: null };
   } catch (err) {
@@ -68,8 +71,9 @@ export async function updateServiceCategoryAction(
 
 export async function deleteServiceCategoryAction(id: string): Promise<CategoryActionResult> {
   try {
+    const token = await requireCatalogAccessToken();
     const service = createServiceCategoryCommandService();
-    await service.delete({ id });
+    await service.delete({ id }, token);
     revalidatePath("/catalog");
     return { status: "success", error: null };
   } catch (err) {

@@ -101,6 +101,7 @@ export async function PUT(
     const parsed = updateOrganizationSchema.safeParse({
       id: idParsed.data,
       name: (body as { name?: unknown })?.name,
+      imageUrl: (body as { imageUrl?: unknown })?.imageUrl ?? null,
     });
     if (!parsed.success) {
       return validationErrorResponse(parsed.error.issues[0]?.message);
