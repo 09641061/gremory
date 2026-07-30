@@ -31,6 +31,9 @@ interface CategoryItemProps {
   setIsMobileOpen: (open: boolean) => void;
   onDeleteCategory: (category: CategoryDTO) => void;
   setAlertMessage: (msg: string | null) => void;
+  canUpdateCategory: boolean;
+  canDeleteCategory: boolean;
+  canCreateService: boolean;
   onCreateService?: (categoryId: string) => void;
 }
 
@@ -52,6 +55,9 @@ export function CategoryItem({
   onDeleteCategory,
   setAlertMessage,
   onCreateService,
+  canUpdateCategory,
+  canDeleteCategory,
+  canCreateService,
 }: CategoryItemProps) {
   const router = useRouter();
   const isCatSelected = selectedCategoryId === cat.id;
@@ -88,50 +94,58 @@ export function CategoryItem({
           <span className="truncate">{cat.name}</span>
         </button>
 
-        <div className="relative flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
-          <DropdownMenu>
-            <DropdownMenuTrigger
-              render={
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-6 w-6 text-muted-foreground hover:text-foreground transition-opacity"
-                  title="Category Options"
-                />
-              }
-            >
-              <MoreVerticalIcon className="size-3" />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="p-2 space-y-1 w-44">
-              <DropdownMenuCreateItem
-                label="Create Service"
-                onClick={() => {
-                  setIsMobileOpen(false);
-                  if (onCreateService) {
-                    onCreateService(cat.id);
-                  } else {
-                    router.push("/catalog");
-                  }
-                }}
-              />
-              <DropdownMenuEditItem
-                onClick={() => {
-                  onOpenEditCategoryModal(cat);
-                }}
-              />
-              <DropdownMenuDeleteItem
-                className={catServices.length > 0 ? "opacity-50 cursor-not-allowed" : ""}
-                onClick={() => {
-                  if (catServices.length > 0) {
-                    setAlertMessage("You cannot delete a category that has services.");
-                  } else {
-                    onDeleteCategory(cat);
-                  }
-                }}
-              />
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
+        {(canCreateService || canUpdateCategory || canDeleteCategory) && (
+          <div className="relative flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                render={
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6 text-muted-foreground hover:text-foreground transition-opacity"
+                    title="Category Options"
+                  />
+                }
+              >
+                <MoreVerticalIcon className="size-3" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="p-2 space-y-1 w-44">
+                {canCreateService && (
+                  <DropdownMenuCreateItem
+                    label="Create Service"
+                    onClick={() => {
+                      setIsMobileOpen(false);
+                      if (onCreateService) {
+                        onCreateService(cat.id);
+                      } else {
+                        router.push("/catalog");
+                      }
+                    }}
+                  />
+                )}
+                {canUpdateCategory && (
+                  <DropdownMenuEditItem
+                    onClick={() => {
+                      onOpenEditCategoryModal(cat);
+                    }}
+                  />
+                )}
+                {canDeleteCategory && (
+                  <DropdownMenuDeleteItem
+                    className={catServices.length > 0 ? "opacity-50 cursor-not-allowed" : ""}
+                    onClick={() => {
+                      if (catServices.length > 0) {
+                        setAlertMessage("You cannot delete a category that has services.");
+                      } else {
+                        onDeleteCategory(cat);
+                      }
+                    }}
+                  />
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        )}
       </div>
 
       {/* Show services if this category is expanded */}

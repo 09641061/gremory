@@ -80,7 +80,8 @@ export function EstablishmentSelector({
             onSelectAll={() => {
               setIsOpen(false);
               if (canRead) {
-                router.push("/establishments");
+                const query = selectedEstablishmentId ? `?establishmentId=${selectedEstablishmentId}` : "";
+                router.push(`/establishments${query}`);
               } else {
                 router.push(`${pathname}?denied=est`);
               }

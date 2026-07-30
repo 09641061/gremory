@@ -8,6 +8,12 @@ interface CatalogClientWrapperProps {
   initialSelectedServiceId?: string;
   initialCategories: CategoryDTO[];
   initialServices: DetailedServiceDTO[];
+  canCreateCategory: boolean;
+  canUpdateCategory: boolean;
+  canDeleteCategory: boolean;
+  canCreateService: boolean;
+  canUpdateService: boolean;
+  canDeleteService: boolean;
 }
 
 export function CatalogClientWrapper({
@@ -15,6 +21,12 @@ export function CatalogClientWrapper({
   initialSelectedServiceId,
   initialCategories,
   initialServices,
+  canCreateCategory,
+  canUpdateCategory,
+  canDeleteCategory,
+  canCreateService,
+  canUpdateService,
+  canDeleteService,
 }: CatalogClientWrapperProps) {
   const activeEstablishmentId = initialEstablishmentId;
 
@@ -25,6 +37,12 @@ export function CatalogClientWrapper({
       services={initialServices}
       activeEstablishmentId={activeEstablishmentId}
       initialSelectedServiceId={initialSelectedServiceId}
+      canCreateCategory={canCreateCategory}
+      canUpdateCategory={canUpdateCategory}
+      canDeleteCategory={canDeleteCategory}
+      canCreateService={canCreateService}
+      canUpdateService={canUpdateService}
+      canDeleteService={canDeleteService}
     />
   );
 }

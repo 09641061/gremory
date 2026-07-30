@@ -14,6 +14,12 @@ interface CatalogLayoutProps {
   services: DetailedServiceDTO[];
   activeEstablishmentId?: string;
   initialSelectedServiceId?: string;
+  canCreateCategory: boolean;
+  canUpdateCategory: boolean;
+  canDeleteCategory: boolean;
+  canCreateService: boolean;
+  canUpdateService: boolean;
+  canDeleteService: boolean;
 }
 
 export function CatalogLayout({
@@ -21,6 +27,12 @@ export function CatalogLayout({
   services: initialServices,
   activeEstablishmentId,
   initialSelectedServiceId,
+  canCreateCategory,
+  canUpdateCategory,
+  canDeleteCategory,
+  canCreateService,
+  canUpdateService,
+  canDeleteService,
 }: CatalogLayoutProps) {
   const selectedCategoryIdFallback = categories[0]?.id;
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | undefined>(selectedCategoryIdFallback);
@@ -119,6 +131,10 @@ export function CatalogLayout({
             setSelectedServiceId(undefined);
             setSelectedCategoryId(catId);
           }}
+          canCreateCategory={canCreateCategory}
+          canUpdateCategory={canUpdateCategory}
+          canDeleteCategory={canDeleteCategory}
+          canCreateService={canCreateService}
         />
 
         <main className="flex-1 overflow-y-auto bg-background p-4 md:p-6">
@@ -143,6 +159,8 @@ export function CatalogLayout({
               onCancel={() => {
                 setSelectedServiceId(undefined);
               }}
+              canUpdateService={canUpdateService}
+              canDeleteService={canDeleteService}
             />
           ) : (
             <div className="flex items-center justify-center h-full text-muted-foreground text-sm">

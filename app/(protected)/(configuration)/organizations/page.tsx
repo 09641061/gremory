@@ -1,56 +1,16 @@
-import { createOrganizationQueryService } from "@/contexts/business/application/internal/queryservices/organization-query.service";
 import { OrganizationsPageView } from "@/contexts/business/interfaces/components/organization/organizations-page/organizations-page-view";
-import { createTeamQueryService } from "@/contexts/workforce/application/internal/queryservices/team-query.service";
+import { createBusinessAccessPolicyService } from "@/contexts/business/application/internal/queryservices/business-access-policy.service";
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 
-export default async function OrganizationsRoutePage() {
-  let organization;
-  let canUpdate = true;
-  let canRead = true;
+interface OrganizationsPageProps {
+  searchParams: Promise<{ establishmentId?: string }>;
+}
 
-  try {
-    organization = await createOrganizationQueryService().getMyOrganization();
-  } catch {
-    canUpdate = false;
-    try {
-      const access = await createTeamQueryService().getAccessContext();
-      const firstEstablishment = access.establishments[0];
-      if (firstEstablishment) {
-        canRead = access.establishments.some(
-          (item) =>
-            item.organizationId === firstEstablishment.organizationId &&
-            item.effectivePermissions.some(
-              (perm) =>
-                perm === "business:organizations:read" ||
-                perm === "business:organizations:manage" ||
-                perm === "business:manage"
-            )
-        );
-
-        if (canRead) {
-          organization = await createOrganizationQueryService().getById({
-            id: firstEstablishment.organizationId,
-          });
-
-          canUpdate = access.establishments.some(
-            (item) =>
-              item.organizationId === firstEstablishment.organizationId &&
-              item.effectivePermissions.some(
-                (perm) =>
-                  perm === "business:organizations:update" ||
-                  perm === "business:organizations:manage" ||
-                  perm === "business:manage"
-              )
-          );
-        }
-      } else {
-        canRead = false;
-      }
-    } catch {
-      canRead = false;
-    }
-  }
+export default async function OrganizationsRoutePage({ searchParams }: OrganizationsPageProps) {
+  const { establishmentId } = await searchParams;
+  const policyService = createBusinessAccessPolicyService();
+  const { canRead, canUpdate, organization } = await policyService.getOrganizationPermissions(establishmentId);
 
   if (!canRead) {
     const headersList = await headers();

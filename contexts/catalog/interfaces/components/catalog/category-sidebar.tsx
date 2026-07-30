@@ -34,6 +34,10 @@ interface CategorySidebarProps {
   onOpenEditCategoryModal: (category: CategoryDTO) => void;
   onMoveServiceCategory?: (serviceId: string, newCategoryId: string) => void;
   onCreateService?: (categoryId: string) => void;
+  canCreateCategory: boolean;
+  canUpdateCategory: boolean;
+  canDeleteCategory: boolean;
+  canCreateService: boolean;
 }
 
 export function CategorySidebar({
@@ -47,6 +51,10 @@ export function CategorySidebar({
   onOpenEditCategoryModal,
   onMoveServiceCategory,
   onCreateService,
+  canCreateCategory,
+  canUpdateCategory,
+  canDeleteCategory,
+  canCreateService,
 }: CategorySidebarProps) {
   const [draggedServiceId, setDraggedServiceId] = useState<string | null>(null);
   const [dragOverCategoryId, setDragOverCategoryId] = useState<string | null>(null);
@@ -116,16 +124,18 @@ export function CategorySidebar({
           </Button>
         </div>
 
-        <Button
-          onClick={() => {
-            setIsMobileOpen(false);
-            onOpenCreateCategoryModal();
-          }}
-          className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-medium gap-2"
-        >
-          <PlusIcon className="size-4" />
-          <span>Create Category</span>
-        </Button>
+        {canCreateCategory && (
+          <Button
+            onClick={() => {
+              setIsMobileOpen(false);
+              onOpenCreateCategoryModal();
+            }}
+            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-medium gap-2"
+          >
+            <PlusIcon className="size-4" />
+            <span>Create Category</span>
+          </Button>
+        )}
       </div>
 
       <nav className="flex-1 overflow-y-auto p-2 space-y-1">
@@ -155,6 +165,9 @@ export function CategorySidebar({
               onDeleteCategory={setCategoryToDelete}
               setAlertMessage={setAlertMessage}
               onCreateService={onCreateService}
+              canUpdateCategory={canUpdateCategory}
+              canDeleteCategory={canDeleteCategory}
+              canCreateService={canCreateService}
             />
           ))
         )}

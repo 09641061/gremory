@@ -4,9 +4,22 @@ import { createWorkforceRoleQueryService } from "@/contexts/workforce/applicatio
 import type { WorkforceRoleSummary } from "@/contexts/workforce/application/model/workforce-role.read-models";
 import { PermissionsPageView } from "@/contexts/workforce/interfaces/components/permissions/permissions-page-view";
 
-export default async function PermissionsPage() {
+interface PermissionsPageProps {
+  searchParams: Promise<{ establishmentId?: string }>;
+}
+
+export default async function PermissionsPage({ searchParams }: PermissionsPageProps) {
+  const { establishmentId: paramEstId } = await searchParams;
   const queryService = createWorkforceRoleQueryService();
-  const establishmentId = await createBusinessEstablishmentAclService().getActiveEstablishmentIdForUser();
+  const aclService = createBusinessEstablishmentAclService();
+  let defaultEstId = await aclService.getActiveEstablishmentIdForUser();
+  if (!defaultEstId) {
+    try {
+      const access = await createTeamQueryService().getAccessContext();
+      defaultEstId = access.establishments[0]?.establishmentId ?? undefined;
+    } catch {}
+  }
+  const establishmentId = paramEstId ?? defaultEstId ?? undefined;
   
   let members: Awaited<ReturnType<ReturnType<typeof createTeamQueryService>["list"]>>["content"] = [];
 

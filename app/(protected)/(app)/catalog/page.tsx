@@ -1,8 +1,10 @@
-import { createBusinessEstablishmentAclService } from "@/contexts/business/application/internal/outboundservices/business-establishment-acl.service";
+import { headers } from "next/headers";
+import { redirect } from "next/navigation";
 import { createCatalogServiceQueryService } from "@/contexts/catalog/application/internal/queryservices/catalog-service-query.service";
 import { createServiceCategoryQueryService } from "@/contexts/catalog/application/internal/queryservices/service-category-query.service";
 import type { CategoryDTO, DetailedServiceDTO } from "@/contexts/catalog/application/model/catalog-view.models";
 import { CatalogClientWrapper } from "@/contexts/catalog/interfaces/components/catalog/catalog-client-wrapper";
+import { createCatalogAccessPolicyService } from "@/contexts/catalog/application/internal/queryservices/catalog-access-policy.service";
 
 interface CatalogPageProps {
   searchParams: Promise<{ establishmentId?: string; serviceId?: string }>;
@@ -11,9 +13,32 @@ interface CatalogPageProps {
 export default async function CatalogPage({ searchParams }: CatalogPageProps) {
   const { establishmentId: paramEstId, serviceId: paramServiceId } = await searchParams;
 
-  const aclService = createBusinessEstablishmentAclService();
-  const defaultEstId = await aclService.getActiveEstablishmentIdForUser();
-  const establishmentId = paramEstId ?? defaultEstId ?? undefined;
+  const policyService = createCatalogAccessPolicyService();
+  const defaultEstId = await policyService.getDefaultEstablishmentId();
+  const establishmentId = paramEstId ?? defaultEstId;
+
+  const {
+    canReadCatalog,
+    canCreateCategory,
+    canUpdateCategory,
+    canDeleteCategory,
+    canCreateService,
+    canUpdateService,
+    canDeleteService,
+  } = await policyService.getPermissions(establishmentId);
+
+  if (!canReadCatalog) {
+    const headersList = await headers();
+    const referer = headersList.get("referer");
+    let redirectUrl = "/chat";
+    if (referer) {
+      try {
+        const refererUrl = new URL(referer);
+        redirectUrl = refererUrl.pathname;
+      } catch {}
+    }
+    redirect(`${redirectUrl}?denied=catalog`);
+  }
 
   let categories: CategoryDTO[] = [];
   let services: DetailedServiceDTO[] = [];
@@ -38,6 +63,12 @@ export default async function CatalogPage({ searchParams }: CatalogPageProps) {
       initialSelectedServiceId={paramServiceId}
       initialCategories={categories}
       initialServices={services}
+      canCreateCategory={canCreateCategory}
+      canUpdateCategory={canUpdateCategory}
+      canDeleteCategory={canDeleteCategory}
+      canCreateService={canCreateService}
+      canUpdateService={canUpdateService}
+      canDeleteService={canDeleteService}
     />
   );
 }
