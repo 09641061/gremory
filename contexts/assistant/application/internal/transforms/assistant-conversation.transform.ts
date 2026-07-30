@@ -24,6 +24,8 @@ type ConversationMessageSource = {
   createdAt: string;
 };
 
+const DEFAULT_ASSISTANT_GREETING = "Hola. Soy tu asistente para negocio, clientes, catálogo y agenda.";
+
 function normalizeMessage(message: ConversationMessageSource): AssistantMessageReadModel {
   const role = (message.role ?? "").toUpperCase();
 
@@ -35,10 +37,23 @@ function normalizeMessage(message: ConversationMessageSource): AssistantMessageR
   };
 }
 
+function stripDefaultGreeting(messages: AssistantMessageReadModel[]): AssistantMessageReadModel[] {
+  const [firstMessage, ...restMessages] = messages;
+
+  if (
+    firstMessage?.role === "assistant" &&
+    firstMessage.content === DEFAULT_ASSISTANT_GREETING
+  ) {
+    return restMessages;
+  }
+
+  return messages;
+}
+
 function normalizeConversationMessages(
   messages: ConversationMessageSource[],
 ): AssistantMessageReadModel[] {
-  const normalizedMessages = messages.map(normalizeMessage);
+  const normalizedMessages = stripDefaultGreeting(messages.map(normalizeMessage));
   const hasAssistantMessage = normalizedMessages.some((message) => message.role === "assistant");
 
   if (hasAssistantMessage || normalizedMessages.length <= 1) {

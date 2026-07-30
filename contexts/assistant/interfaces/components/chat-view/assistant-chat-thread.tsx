@@ -26,12 +26,10 @@ function AssistantChatThreadComponent({
   isAssistantThinking = false,
   bottomRef,
   error: _error,
-  showWelcome = true,
 }: AssistantChatThreadProps) {
   void _error;
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
   const messages = conversation?.messages ?? [];
-  const shouldShowWelcome = showWelcome && messages.length > 0 && messages[0]?.role !== "assistant";
   // TanStack Virtual returns functions that the React Compiler flags as non-memoizable.
   // We still keep this hook here because it is the right tool for variable-height chat rows.
   // eslint-disable-next-line react-hooks/incompatible-library
@@ -60,13 +58,6 @@ function AssistantChatThreadComponent({
           <AssistantChatLoadingState />
         ) : messages.length ? (
           <div className="mx-auto flex w-full max-w-3xl flex-col gap-10 sm:gap-12">
-            {shouldShowWelcome ? (
-              <>
-                <AssistantChatWelcome />
-                <div className="h-2 sm:h-4" />
-              </>
-            ) : null}
-
             <div className="relative w-full" style={{ height: `${rowVirtualizer.getTotalSize()}px` }}>
               {rowVirtualizer.getVirtualItems().map((virtualRow) => {
                 const message = messages[virtualRow.index];
