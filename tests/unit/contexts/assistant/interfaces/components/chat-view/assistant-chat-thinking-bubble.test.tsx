@@ -2,7 +2,7 @@
 import { render, screen } from "@testing-library/react";
 
 vi.mock(
-  "@/contexts/assistant/interfaces/components/icons/assistant-avatar/assistant-avatar",
+  "@/contexts/shared/interfaces/components/assistant-avatar/assistant-avatar",
   () => ({
     AssistantAvatar: () => <div data-testid="assistant-avatar" />,
   }),
@@ -14,8 +14,8 @@ describe("AssistantChatThinkingBubble", () => {
   it("renders the assistant loading message", () => {
     render(<AssistantChatThinkingBubble />);
 
-    expect(screen.getByText("We received your message.")).toBeVisible();
-    expect(screen.getByText("AI is thinking")).toBeVisible();
+    expect(screen.getByLabelText("AI is thinking.")).toBeVisible();
+    expect(screen.getByText("Kodu is thinking")).toBeVisible();
     expect(screen.getByTestId("assistant-avatar")).toBeVisible();
   });
 });
