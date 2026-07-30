@@ -19,32 +19,36 @@ type PhotoUploadResponse = {
   photoUrl?: string;
 };
 
-async function uploadOrganizationPhoto(file: File, token: string): Promise<string> {
+async function updateOrganizationWithMultipart(
+  organizationId: string,
+  name: string,
+  photoFile: File | null,
+  currentPhotoUrl: string | null,
+  token: string,
+) {
   const formData = new FormData();
-  formData.set("file", file);
+  formData.set("name", name);
+  if (photoFile) {
+    formData.set("photoFile", photoFile);
+  } else if (currentPhotoUrl) {
+    formData.set("imageUrl", currentPhotoUrl);
+  }
 
-  const response = await fetch(`${apiConfig.baseUrl}${apiConfig.routes.organizationImages}`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${token}`,
+  const response = await fetch(
+    `${apiConfig.baseUrl}${apiConfig.routes.organizations}/${encodeURIComponent(organizationId)}`,
+    {
+      method: "PUT",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: formData,
     },
-    body: formData,
-  });
-
-  const data = (await response.json().catch(() => null)) as PhotoUploadResponse | null;
+  );
 
   if (!response.ok) {
-    throw new Error(
-      (data?.message ? String(data.message) : "") ||
-        "Failed to upload organization image",
-    );
+    const data = await response.json().catch(() => null);
+    throw new Error(data?.message || "Failed to update organization");
   }
-
-  if (!data?.photoUrl && !data?.storedPath) {
-    throw new Error("Failed to upload organization image");
-  }
-
-  return data.photoUrl ?? data.storedPath ?? "";
 }
 
 function readPhotoFileFromFormData(formData: FormData) {
@@ -56,32 +60,37 @@ export async function updateOrganizationAction(
   _previous: BusinessActionResult,
   formData: FormData
 ): Promise<BusinessActionResult> {
-  const removePhoto = formData.get("removePhoto") === "true";
+  const id = String(formData.get("id") ?? "");
+  const name = String(formData.get("name") ?? "");
   const currentPhotoUrl = formData.get("currentPhotoUrl");
   const photoFile = readPhotoFileFromFormData(formData);
 
   try {
     const token = await requireBusinessAccessToken();
-    const imageUrl = photoFile
-      ? await uploadOrganizationPhoto(photoFile, token)
-      : removePhoto
-        ? null
-        : typeof currentPhotoUrl === "string" && currentPhotoUrl.trim()
-          ? currentPhotoUrl
-          : null;
 
-    const parsed = updateOrganizationSchema.safeParse({
-      id: formData.get("id"),
-      name: formData.get("name"),
-      imageUrl,
-    });
-    if (!parsed.success) return actionError(parsed.error.issues[0]?.message);
+    if (photoFile) {
+      await updateOrganizationWithMultipart(
+        id,
+        name,
+        photoFile,
+        typeof currentPhotoUrl === "string" ? currentPhotoUrl : null,
+        token,
+      );
+    } else {
+      const parsed = updateOrganizationSchema.safeParse({
+        id,
+        name,
+        imageUrl: typeof currentPhotoUrl === "string" && currentPhotoUrl.trim() ? currentPhotoUrl : null,
+      });
+      if (!parsed.success) return actionError(parsed.error.issues[0]?.message);
 
-    const organizationId = await createOrganizationCommandService(token).update(
-      updateOrganizationCommand(parsed.data),
-    );
+      await createOrganizationCommandService(token).update(
+        updateOrganizationCommand(parsed.data),
+      );
+    }
+
     revalidateBusinessViews();
-    return { status: "success", data: { id: organizationId.value }, error: null };
+    return { status: "success", data: { id }, error: null };
   } catch (error) {
     return actionError(error);
   }
