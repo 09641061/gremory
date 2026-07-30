@@ -78,33 +78,35 @@ function AssistantChatThreadComponent({
       >
         {isLoading ? (
           <AssistantChatLoadingState />
-        ) : messages.length ? (
-          <div className="mx-auto flex w-full max-w-3xl flex-col gap-10 sm:gap-12">
-            <div className="relative w-full" style={{ height: `${rowVirtualizer.getTotalSize()}px` }}>
-              {rowVirtualizer.getVirtualItems().map((virtualRow) => {
-                const message = messages[virtualRow.index];
-                if (!message) return null;
-
-                return (
-                  <div
-                    key={virtualRow.key}
-                    data-index={virtualRow.index}
-                    ref={rowVirtualizer.measureElement}
-                    className="absolute left-0 top-0 w-full"
-                    style={{ transform: `translateY(${virtualRow.start}px)` }}
-                  >
-                    <AssistantChatMessageBubble message={message} />
-                  </div>
-                );
-              })}
-            </div>
-
-            {isAssistantThinking ? <AssistantChatThinkingBubble /> : null}
-            <div ref={bottomRef} />
-          </div>
         ) : (
           <>
-            <AssistantChatWelcome />
+            {messages.length ? (
+              <div className="mx-auto flex w-full max-w-3xl flex-col gap-10 sm:gap-12">
+                <div className="relative w-full" style={{ height: `${rowVirtualizer.getTotalSize()}px` }}>
+                  {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+                    const message = messages[virtualRow.index];
+                    if (!message) return null;
+
+                    return (
+                      <div
+                        key={virtualRow.key}
+                        data-index={virtualRow.index}
+                        ref={rowVirtualizer.measureElement}
+                        className="absolute left-0 top-0 w-full"
+                        style={{ transform: `translateY(${virtualRow.start}px)` }}
+                      >
+                        <AssistantChatMessageBubble message={message} />
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {isAssistantThinking ? <AssistantChatThinkingBubble /> : null}
+              </div>
+            ) : (
+              <AssistantChatWelcome />
+            )}
+
             <div ref={bottomRef} />
           </>
         )}
