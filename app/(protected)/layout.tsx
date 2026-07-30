@@ -29,8 +29,8 @@ export default function ProtectedLayout({
 }
 
 async function ProtectedHeader() {
-  let organization: { id: string; name: string } | undefined;
-  let establishments: { id: string; name: string }[] = [];
+  let organization: { id: string; name: string; imageUrl?: string | null } | undefined;
+  let establishments: { id: string; name: string; photoUrl?: string | null }[] = [];
 
   try {
     const currentOrganization =
@@ -38,6 +38,7 @@ async function ProtectedHeader() {
     organization = {
       id: currentOrganization.id,
       name: currentOrganization.name,
+      imageUrl: currentOrganization.imageUrl,
     };
     const page = await createEstablishmentQueryService().getByOrganization({
       organizationId: organization.id,
@@ -47,6 +48,7 @@ async function ProtectedHeader() {
     establishments = page.content.map((establishment) => ({
       id: establishment.id,
       name: establishment.name,
+      photoUrl: establishment.photoUrl,
     }));
   } catch {
     // Members do not own the organization, so Business's owner-scoped

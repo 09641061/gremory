@@ -4,10 +4,15 @@ import { ChevronDown, Store } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from "@/contexts/shared/interfaces/components/ui/avatar";
 import { SearchableOptions } from "../../searchable-options";
 import { useSelectorMenu } from "../../use-selector-menu";
 
-export type EstablishmentSelectorEstablishment = { id: string; name: string };
+export type EstablishmentSelectorEstablishment = { id: string; name: string; photoUrl?: string | null };
 
 interface EstablishmentSelectorProps {
   establishments: EstablishmentSelectorEstablishment[];
@@ -46,7 +51,15 @@ export function EstablishmentSelector({
         onClick={() => setIsOpen((open) => !open)}
         className="h-9 gap-2 px-2 font-medium"
       >
-        <Store className="size-4 text-muted-foreground" />
+        <Avatar className="size-5 border border-border">
+          {activeEstablishment?.photoUrl ? (
+            <AvatarImage src={activeEstablishment.photoUrl} alt={activeEstablishment.name} />
+          ) : (
+            <AvatarFallback className="bg-muted">
+              <Store className="size-3 text-muted-foreground" />
+            </AvatarFallback>
+          )}
+        </Avatar>
         <span className="max-w-44 truncate">
           {activeEstablishment?.name ?? "Select establishment"}
         </span>

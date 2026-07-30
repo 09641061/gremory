@@ -2,7 +2,6 @@ import "server-only";
 
 import type {
   ServiceCategoryCommandService,
-  ServiceCategoryQueryService,
 } from "../../../domain/services/service-category.services";
 import type { ServiceCategory } from "../../../domain/model/entities/service-category.entity";
 import type {
@@ -10,7 +9,6 @@ import type {
   UpdateServiceCategoryCommand,
   DeleteServiceCategoryCommand,
 } from "../../../domain/model/commands/service-category.commands";
-import type { PageResponse } from "../../../domain/services/catalog-service.services";
 import { ServiceCategoryApiGateway } from "../../../infrastructure/gateways/service-category-api.gateway";
 
 export class ServiceCategoryCommandServiceImpl implements ServiceCategoryCommandService {
@@ -29,23 +27,6 @@ export class ServiceCategoryCommandServiceImpl implements ServiceCategoryCommand
   }
 }
 
-export class ServiceCategoryQueryServiceImpl implements ServiceCategoryQueryService {
-  constructor(private readonly gateway: ServiceCategoryApiGateway) {}
-
-  list(
-    establishmentId: string,
-    page?: number,
-    size?: number,
-    token?: string
-  ): Promise<PageResponse<ServiceCategory>> {
-    return this.gateway.list(establishmentId, page, size, token);
-  }
-}
-
 export function createServiceCategoryCommandService() {
   return new ServiceCategoryCommandServiceImpl(new ServiceCategoryApiGateway());
-}
-
-export function createServiceCategoryQueryService() {
-  return new ServiceCategoryQueryServiceImpl(new ServiceCategoryApiGateway());
 }

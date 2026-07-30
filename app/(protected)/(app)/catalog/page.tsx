@@ -1,16 +1,15 @@
 import { createBusinessEstablishmentAclService } from "@/contexts/business/application/internal/outboundservices/business-establishment-acl.service";
-import { createCatalogServiceQueryService } from "@/contexts/catalog/application/internal/commandservices/catalog-service-command.service";
-import { createServiceCategoryQueryService } from "@/contexts/catalog/application/internal/commandservices/service-category-command.service";
+import { createCatalogServiceQueryService } from "@/contexts/catalog/application/internal/queryservices/catalog-service-query.service";
+import { createServiceCategoryQueryService } from "@/contexts/catalog/application/internal/queryservices/service-category-query.service";
+import type { CategoryDTO, DetailedServiceDTO } from "@/contexts/catalog/application/model/catalog-view.models";
 import { CatalogClientWrapper } from "@/contexts/catalog/interfaces/components/catalog/catalog-client-wrapper";
-import type { DetailedServiceDTO } from "@/contexts/catalog/interfaces/components/catalog/service-detail-view";
-import type { CategoryDTO } from "@/contexts/catalog/interfaces/components/catalog/category-sidebar";
 
 interface CatalogPageProps {
-  searchParams: Promise<{ establishmentId?: string }>;
+  searchParams: Promise<{ establishmentId?: string; serviceId?: string }>;
 }
 
 export default async function CatalogPage({ searchParams }: CatalogPageProps) {
-  const { establishmentId: paramEstId } = await searchParams;
+  const { establishmentId: paramEstId, serviceId: paramServiceId } = await searchParams;
 
   const aclService = createBusinessEstablishmentAclService();
   const defaultEstId = await aclService.getActiveEstablishmentIdForUser();
@@ -23,26 +22,11 @@ export default async function CatalogPage({ searchParams }: CatalogPageProps) {
     try {
       const categoryQueryService = createServiceCategoryQueryService();
       const categoriesPage = await categoryQueryService.list(establishmentId, 0, 100);
-      categories = categoriesPage.content.map((c) => ({
-        id: c.props.id.value,
-        name: c.props.name,
-      }));
+      categories = categoriesPage.content;
 
       const serviceQueryService = createCatalogServiceQueryService();
       const servicesPage = await serviceQueryService.search({ establishmentId, page: 0, size: 100 });
-      services = servicesPage.content.map((s) => ({
-        id: s.props.id.value,
-        name: s.props.name,
-        description: s.props.description,
-        price: s.props.price.amount,
-        durationMinutes: s.props.durationMinutes,
-        preparationMinutes: s.props.preparationMinutes,
-        cleanupMinutes: s.props.cleanupMinutes,
-        categoryId: s.props.categoryId,
-        preServiceInstructions: s.props.preServiceInstructions,
-        postServiceRecommendations: s.props.postServiceRecommendations,
-        status: s.props.status,
-      }));
+      services = servicesPage.content;
     } catch {
       // Fallback arrays remain empty on fetch failure
     }
@@ -51,6 +35,7 @@ export default async function CatalogPage({ searchParams }: CatalogPageProps) {
   return (
     <CatalogClientWrapper
       initialEstablishmentId={establishmentId}
+      initialSelectedServiceId={paramServiceId}
       initialCategories={categories}
       initialServices={services}
     />

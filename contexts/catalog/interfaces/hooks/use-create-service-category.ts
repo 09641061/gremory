@@ -1,14 +1,20 @@
 "use client";
 
-import { useActionState, useEffect } from "react";
+import { useActionState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import {
   createServiceCategoryAction,
   type CategoryActionResult,
-} from "../../interfaces/actions/manage-service-category.actions";
+} from "../actions/manage-service-category.actions";
 
 export function useCreateServiceCategory(onSuccess?: () => void) {
   const router = useRouter();
+  const onSuccessRef = useRef(onSuccess);
+
+  useEffect(() => {
+    onSuccessRef.current = onSuccess;
+  });
+
   const [state, formAction, pending] = useActionState(
     createServiceCategoryAction,
     { status: "idle", error: null } satisfies CategoryActionResult
@@ -17,11 +23,9 @@ export function useCreateServiceCategory(onSuccess?: () => void) {
   useEffect(() => {
     if (state.status === "success") {
       router.refresh();
-      if (onSuccess) {
-        onSuccess();
-      }
+      onSuccessRef.current?.();
     }
-  }, [state.status, onSuccess, router]);
+  }, [state.status, router]);
 
   return {
     state,

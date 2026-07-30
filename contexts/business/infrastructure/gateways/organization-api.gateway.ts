@@ -3,6 +3,7 @@ import "server-only";
 import { Organization } from "../../domain/model/entities/organization.entity";
 import { createOrganizationId } from "../../domain/model/valueobjects/organization-id.vo";
 import { createOrganizationName } from "../../domain/model/valueobjects/organization-name.vo";
+import { createOrganizationImage } from "../../domain/model/valueobjects/organization-image.vo";
 import type { OrganizationRepository } from "../../domain/services/business.repositories";
 import type { OrganizationId } from "../../domain/model/valueobjects/organization-id.vo";
 import type { OrganizationResource } from "../../interfaces/rest/resources/business.resources";
@@ -41,7 +42,7 @@ export class OrganizationApiGateway implements OrganizationRepository {
     const authToken = await requireBusinessAccessToken(this.providedToken);
     const resource = await businessPut<OrganizationResource>(
       `${apiConfig.routes.organizations}/${encodeURIComponent(organization.id.value)}`,
-      { name: organization.name.value },
+      { name: organization.name.value, imageUrl: organization.imageUrl.value },
       authToken
     );
     return toOrganization(resource);
@@ -53,6 +54,7 @@ function toOrganization(resource: OrganizationResource): Organization {
     id: createOrganizationId(resource.id),
     ownerId: resource.ownerId,
     name: createOrganizationName(resource.name),
+    imageUrl: createOrganizationImage(resource.imageUrl),
     active: true,
   });
 }

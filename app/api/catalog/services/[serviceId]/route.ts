@@ -1,41 +1,11 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { createCatalogServiceCommandService, createCatalogServiceQueryService } from "@/contexts/catalog/application/internal/commandservices/catalog-service-command.service";
+import { createCatalogServiceCommandService } from "@/contexts/catalog/application/internal/commandservices/catalog-service-command.service";
+import { createCatalogServiceQueryService } from "@/contexts/catalog/application/internal/queryservices/catalog-service-query.service";
+import { createCatalogServiceReadModel } from "@/contexts/catalog/application/model/catalog-service.read-model";
 import { updateCatalogServiceSchema } from "@/contexts/catalog/interfaces/rest/schemas/catalog-service.schemas";
 
 const uuidSchema = z.string().uuid();
-
-function toCatalogServiceResource(service: {
-  props: {
-    id: { value: string };
-    establishmentId: string;
-    name: string;
-    description: string;
-    price: { amount: number };
-    durationMinutes: number;
-    categoryId?: string | null;
-    preServiceInstructions?: string | null;
-    postServiceRecommendations?: string | null;
-    preparationMinutes: number;
-    cleanupMinutes: number;
-    status: "ACTIVE" | "INACTIVE" | "DELETED";
-  };
-}) {
-  return {
-    id: service.props.id.value,
-    establishmentId: service.props.establishmentId,
-    name: service.props.name,
-    description: service.props.description,
-    price: service.props.price.amount,
-    durationMinutes: service.props.durationMinutes,
-    categoryId: service.props.categoryId ?? null,
-    preServiceInstructions: service.props.preServiceInstructions ?? null,
-    postServiceRecommendations: service.props.postServiceRecommendations ?? null,
-    preparationMinutes: service.props.preparationMinutes,
-    cleanupMinutes: service.props.cleanupMinutes,
-    status: service.props.status,
-  };
-}
 
 export async function GET(
   request: Request,
@@ -59,7 +29,7 @@ export async function GET(
       establishmentId,
     );
 
-    return NextResponse.json(toCatalogServiceResource(service));
+    return NextResponse.json(service);
   } catch (error) {
     return routeErrorResponse(error);
   }
@@ -149,7 +119,7 @@ export async function PUT(
       postServiceRecommendations: parsed.data.postServiceRecommendations || null,
     });
 
-    return NextResponse.json(toCatalogServiceResource(service));
+    return NextResponse.json(createCatalogServiceReadModel(service));
   } catch (error) {
     return routeErrorResponse(error);
   }

@@ -6,6 +6,7 @@ import { createOrganizationName } from "../../../../../contexts/business/domain/
 import { createEstablishmentId } from "../../../../../contexts/business/domain/model/valueobjects/establishment-id.vo";
 import { createEstablishmentName } from "../../../../../contexts/business/domain/model/valueobjects/establishment-name.vo";
 import { createEstablishmentPhoto } from "../../../../../contexts/business/domain/model/valueobjects/establishment-photo.vo";
+import { createOrganizationImage } from "../../../../../contexts/business/domain/model/valueobjects/organization-image.vo";
 
 const organizationId = "11111111-1111-4111-8111-111111111111";
 const establishmentId = "22222222-2222-4222-8222-222222222222";
@@ -26,6 +27,14 @@ describe("Business value objects", () => {
   it("shouldAcceptNullPhotoWhenEstablishmentHasNoPhoto", () => {
     expect(createEstablishmentPhoto(null).value).toBeNull();
   });
+
+  it("shouldCreateOrganizationImageWhenUrlIsValid", () => {
+    expect(createOrganizationImage("  https://example.com/logo.png  ").value).toBe("https://example.com/logo.png");
+  });
+
+  it("shouldRejectOrganizationImageWhenUrlExceedsTheLimit", () => {
+    expect(() => createOrganizationImage("a".repeat(501))).toThrow("500 characters");
+  });
 });
 
 describe("Business entities", () => {
@@ -34,12 +43,28 @@ describe("Business entities", () => {
       id: createOrganizationId(organizationId),
       ownerId: organizationId,
       name: createOrganizationName("Old name"),
+      imageUrl: createOrganizationImage(null),
       active: true,
     });
 
     organization.rename("New name");
 
     expect(organization.name.value).toBe("New name");
+  });
+
+  it("shouldUpdateOrganizationDetailsWhenValuesAreValid", () => {
+    const organization = Organization.create({
+      id: createOrganizationId(organizationId),
+      ownerId: organizationId,
+      name: createOrganizationName("Old name"),
+      imageUrl: createOrganizationImage(null),
+      active: true,
+    });
+
+    organization.update("New name", "https://example.com/logo.png");
+
+    expect(organization.name.value).toBe("New name");
+    expect(organization.imageUrl.value).toBe("https://example.com/logo.png");
   });
 
   it("shouldUpdateEstablishmentDetailsWhenValuesAreValid", () => {

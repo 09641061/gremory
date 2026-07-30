@@ -9,23 +9,28 @@ import { Card, CardContent } from "@/contexts/shared/interfaces/components/ui/ca
 import { GeneralInfoSection } from "./general-info-section";
 import { FinancialsAndLogisticsSection } from "./financials-and-logistics-section";
 import { InstructionsSection } from "./instructions-section";
-import { useCreateCatalogService } from "../../../application/use-cases/use-create-catalog-service";
+import { useCreateCatalogService } from "../../hooks/use-create-catalog-service";
+import type { DetailedServiceDTO } from "@/contexts/catalog/application/model/catalog-view.models";
 
 interface CreateServiceFormProps {
   establishmentId: string;
   categoryId?: string;
-  onSuccess?: () => void;
+  onSuccess?: (service: DetailedServiceDTO) => void;
   onCancel?: () => void;
 }
 
 export function CreateServiceForm({ establishmentId, categoryId, onSuccess, onCancel }: CreateServiceFormProps) {
   const router = useRouter();
-  const { state, formAction, pending } = useCreateCatalogService(() => {
+  const { state, formAction, pending } = useCreateCatalogService((service) => {
     if (onSuccess) {
-      onSuccess();
-    } else {
-      router.push("/catalog");
+      onSuccess(service);
+      return;
     }
+
+    const params = new URLSearchParams();
+    if (establishmentId) params.set("establishmentId", establishmentId);
+    params.set("serviceId", service.id);
+    router.push(`/catalog?${params.toString()}`);
   });
 
   return (

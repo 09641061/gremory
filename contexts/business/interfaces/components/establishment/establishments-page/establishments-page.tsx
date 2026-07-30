@@ -1,15 +1,9 @@
-import Link from "next/link";
-import { Plus, Store } from "lucide-react";
-import { buttonVariants } from "@/contexts/shared/interfaces/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardAction,
-  CardHeader,
-  CardTitle,
-} from "@/contexts/shared/interfaces/components/ui/card";
-import { EstablishmentCardMenu } from "../establishment-card-menu/establishment-card-menu";
+"use client";
+
+import { useMemo, useState } from "react";
+import { EstablishmentsSearchBar } from "./establishments-search-bar";
+import { EstablishmentListCard } from "./establishment-list-card";
+import { EstablishmentDetailCard } from "./establishment-detail-card";
 
 export type EstablishmentListItem = {
   id: string;
@@ -22,71 +16,47 @@ export function EstablishmentsPage({
 }: {
   establishments: EstablishmentListItem[];
 }) {
+  const [filter, setFilter] = useState("");
+  const [selectedEstId, setSelectedEstId] = useState<string | null>(null);
+
+  const filteredEstablishments = useMemo(() => {
+    const normalized = filter.trim().toLowerCase();
+    if (!normalized) return establishments;
+    return establishments.filter((est) =>
+      est.name.toLowerCase().includes(normalized)
+    );
+  }, [filter, establishments]);
+
+  const selectedEst = establishments.find((est) => est.id === selectedEstId) ?? null;
+
   return (
-    <section className="mx-auto w-full max-w-6xl space-y-8">
-      <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
-        <div>
-          <h1 className="page-title">Establishments</h1>
-          <p className="page-description mt-2">
-            Manage the places where your business operates.
-          </p>
+    <section className="mx-auto flex w-full max-w-7xl flex-col gap-6 lg:flex-row">
+      {/* Columna izquierda */}
+      <div className="w-full space-y-6 lg:flex-1 lg:flex lg:flex-col lg:h-[calc(100vh-10rem)]">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between shrink-0">
+          <div>
+            <h1 className="page-title">Establishments</h1>
+            <p className="page-description mt-2">
+              Search, create, and manage the places where your business operates.
+            </p>
+          </div>
         </div>
-        <Link
-          href="/establishments/new"
-          className={buttonVariants({ className: "gap-2 self-start sm:self-auto" })}
-        >
-          <Plus className="size-4" />
-          New establishment
-        </Link>
+
+        <EstablishmentsSearchBar value={filter} onChange={setFilter} />
+
+        <EstablishmentListCard
+          establishments={establishments}
+          filteredEstablishments={filteredEstablishments}
+          selectedEstId={selectedEstId}
+          onSelect={setSelectedEstId}
+        />
       </div>
 
-      {establishments.length === 0 ? (
-        <Card className="border-dashed bg-transparent shadow-none">
-          <CardContent className="flex flex-col items-center justify-center gap-3 py-16 text-center">
-            <div className="flex size-12 items-center justify-center rounded-full bg-muted">
-              <Store className="size-6 text-muted-foreground" />
-            </div>
-            <div>
-              <p className="font-medium">No establishments yet</p>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Create your first establishment to get started.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {establishments.map((establishment) => (
-            <Card
-              key={establishment.id}
-              className="overflow-visible transition-colors hover:ring-foreground/20"
-            >
-              <div className="flex h-36 items-center justify-center overflow-hidden rounded-t-xl bg-muted/50">
-                {establishment.photoUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={establishment.photoUrl}
-                    alt=""
-                    className="size-full object-cover"
-                  />
-                ) : (
-                  <Store className="size-12 text-muted-foreground/50" />
-                )}
-              </div>
-              <CardHeader>
-                <CardTitle>{establishment.name}</CardTitle>
-                <CardDescription>Managed establishment</CardDescription>
-                <CardAction>
-                  <EstablishmentCardMenu
-                    establishmentId={establishment.id}
-                    establishmentName={establishment.name}
-                  />
-                </CardAction>
-              </CardHeader>
-            </Card>
-          ))}
-        </div>
-      )}
+      {/* Columna derecha */}
+      <EstablishmentDetailCard
+        establishment={selectedEst}
+        onCancel={() => setSelectedEstId(null)}
+      />
     </section>
   );
 }

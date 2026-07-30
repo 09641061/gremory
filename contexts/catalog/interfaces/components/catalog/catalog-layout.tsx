@@ -1,7 +1,6 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useMemo, useState } from "react";
 import { CategorySidebar, type CategoryDTO, type ServiceSummaryDTO } from "./category-sidebar";
 import { type DetailedServiceDTO } from "./service-detail-view";
 import { EditServiceForm } from "./edit-service-form";
@@ -14,38 +13,45 @@ interface CatalogLayoutProps {
   categories: CategoryDTO[];
   services: DetailedServiceDTO[];
   activeEstablishmentId?: string;
+  initialSelectedServiceId?: string;
 }
 
 export function CatalogLayout({
   categories,
   services: initialServices,
   activeEstablishmentId,
+  initialSelectedServiceId,
 }: CatalogLayoutProps) {
-  const router = useRouter();
-  // Local state initialized with server props
-  const [servicesList, setServicesList] = useState<DetailedServiceDTO[]>(initialServices);
-  
-  // Track previous initialServices prop value to detect server updates (triggered by router.refresh())
-  const [prevInitialServices, setPrevInitialServices] = useState<DetailedServiceDTO[]>(initialServices);
-
-  // Synchronize local servicesList state with initialServices from Server Component dynamically without useEffect/cascading renders
-  if (initialServices !== prevInitialServices) {
-    setServicesList(initialServices);
-    setPrevInitialServices(initialServices);
-  }
-
-  const [selectedCategoryId, setSelectedCategoryId] = useState<string | undefined>(
-    categories[0]?.id
-  );
-  const [selectedServiceId, setSelectedServiceId] = useState<string | undefined>(
-    undefined
-  );
-  const [creatingServiceCategoryId, setCreatingServiceCategoryId] = useState<string | undefined>(
-    undefined
-  );
-
+  const selectedCategoryIdFallback = categories[0]?.id;
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | undefined>(selectedCategoryIdFallback);
+  const [selectedServiceId, setSelectedServiceId] = useState<string | undefined>(initialSelectedServiceId);
+  const [createdService, setCreatedService] = useState<DetailedServiceDTO | null>(null);
+  const [creatingServiceCategoryId, setCreatingServiceCategoryId] = useState<string | undefined>(undefined);
+  const [serviceOverrides, setServiceOverrides] = useState<Record<string, Partial<DetailedServiceDTO>>>({});
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<CategoryDTO | null>(null);
+
+  const servicesList = useMemo(
+    () => {
+      const services = [...initialServices];
+      if (createdService && !services.some((service) => service.id === createdService.id)) {
+        services.unshift(createdService);
+      }
+
+      return services.map((service) => ({
+        ...service,
+        ...serviceOverrides[service.id],
+      }));
+    },
+    [createdService, initialServices, serviceOverrides]
+  );
+
+  const activeSelectedCategoryId =
+    selectedServiceId
+      ? undefined
+      : selectedCategoryId && categories.some((category) => category.id === selectedCategoryId)
+      ? selectedCategoryId
+      : selectedCategoryIdFallback;
 
   const selectedService = selectedServiceId ? servicesList.find((s) => s.id === selectedServiceId) : undefined;
 
@@ -56,12 +62,16 @@ export function CatalogLayout({
   }));
 
   const handleMoveServiceCategory = async (serviceId: string, newCategoryId: string) => {
-    setServicesList((prev) =>
-      prev.map((svc) => (svc.id === serviceId ? { ...svc, categoryId: newCategoryId } : svc))
-    );
-
     const targetService = servicesList.find((s) => s.id === serviceId);
     if (!targetService) return;
+
+    setServiceOverrides((prev) => ({
+      ...prev,
+      [serviceId]: {
+        ...prev[serviceId],
+        categoryId: newCategoryId,
+      },
+    }));
 
     const formData = new FormData();
     formData.append("id", targetService.id);
@@ -73,7 +83,14 @@ export function CatalogLayout({
     formData.append("cleanupMinutes", String(targetService.cleanupMinutes));
     formData.append("categoryId", newCategoryId);
 
-    await updateCatalogServiceAction({ status: "idle", error: null }, formData);
+    const result = await updateCatalogServiceAction({ status: "idle", error: null }, formData);
+    if (result.status !== "success") {
+      setServiceOverrides((prev) => {
+        const next = { ...prev };
+        delete next[serviceId];
+        return next;
+      });
+    }
   };
 
   return (
@@ -82,7 +99,7 @@ export function CatalogLayout({
         <CategorySidebar
           categories={categories}
           services={serviceSummaries}
-          selectedCategoryId={selectedCategoryId}
+          selectedCategoryId={activeSelectedCategoryId}
           selectedServiceId={selectedServiceId}
           onSelectCategory={(id) => {
             setSelectedCategoryId(id);
@@ -100,7 +117,7 @@ export function CatalogLayout({
           onCreateService={(catId) => {
             setCreatingServiceCategoryId(catId);
             setSelectedServiceId(undefined);
-            setSelectedCategoryId(undefined);
+            setSelectedCategoryId(catId);
           }}
         />
 
@@ -110,9 +127,11 @@ export function CatalogLayout({
               key={`create-service-${creatingServiceCategoryId}`}
               establishmentId={activeEstablishmentId ?? ""}
               categoryId={creatingServiceCategoryId}
-              onSuccess={() => {
+              onSuccess={(service) => {
+                setCreatedService(service);
+                setSelectedServiceId(service.id);
+                setSelectedCategoryId(undefined);
                 setCreatingServiceCategoryId(undefined);
-                router.refresh();
               }}
               onCancel={() => {
                 setCreatingServiceCategoryId(undefined);

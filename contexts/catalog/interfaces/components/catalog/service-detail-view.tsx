@@ -4,7 +4,7 @@ import Link from "next/link";
 import { EditIcon, ClockIcon, TimerIcon, SparklesIcon, CreditCardIcon, EyeIcon, EyeOffIcon } from "lucide-react";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/contexts/shared/interfaces/components/ui/card";
-import { useChangeCatalogServiceStatus } from "../../../application/use-cases/use-change-catalog-service-status";
+import { useChangeCatalogServiceStatus } from "../../hooks/use-change-catalog-service-status";
 import { Spinner } from "@/contexts/shared/interfaces/components/ui/spinner";
 import { ErrorAlert } from "@/contexts/shared/interfaces/components/ui/error";
 

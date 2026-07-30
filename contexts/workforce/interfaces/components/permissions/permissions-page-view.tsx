@@ -178,7 +178,7 @@ export function PermissionsPageView({
               <span className="pr-1">Actions</span>
             </div>
 
-            <div className="lg:flex-1 lg:overflow-y-auto lg:min-h-0">
+            <div className="scrollbar-hide lg:flex-1 lg:overflow-y-auto lg:min-h-0">
               {filteredRoles.length === 0 ? (
                 <div className="px-5 py-10 text-sm text-muted-foreground">
                   No roles found.

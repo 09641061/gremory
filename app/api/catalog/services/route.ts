@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { createCatalogServiceCommandService, createCatalogServiceQueryService } from "@/contexts/catalog/application/internal/commandservices/catalog-service-command.service";
+import { createCatalogServiceCommandService } from "@/contexts/catalog/application/internal/commandservices/catalog-service-command.service";
+import { createCatalogServiceQueryService } from "@/contexts/catalog/application/internal/queryservices/catalog-service-query.service";
+import { createCatalogServiceReadModel } from "@/contexts/catalog/application/model/catalog-service.read-model";
 import { createCatalogServiceSchema } from "@/contexts/catalog/interfaces/rest/schemas/catalog-service.schemas";
 
 const activeQuerySchema = z.enum(["true", "false"]).transform((value) => value === "true").optional();
@@ -16,38 +18,6 @@ const listQuerySchema = z.object({
   page: z.coerce.number().int().nonnegative().default(0),
   size: z.coerce.number().int().min(1).max(100).default(20),
 });
-
-function toCatalogServiceResource(service: {
-  props: {
-    id: { value: string };
-    establishmentId: string;
-    name: string;
-    description: string;
-    price: { amount: number };
-    durationMinutes: number;
-    categoryId?: string | null;
-    preServiceInstructions?: string | null;
-    postServiceRecommendations?: string | null;
-    preparationMinutes: number;
-    cleanupMinutes: number;
-    status: "ACTIVE" | "INACTIVE" | "DELETED";
-  };
-}) {
-  return {
-    id: service.props.id.value,
-    establishmentId: service.props.establishmentId,
-    name: service.props.name,
-    description: service.props.description,
-    price: service.props.price.amount,
-    durationMinutes: service.props.durationMinutes,
-    categoryId: service.props.categoryId ?? null,
-    preServiceInstructions: service.props.preServiceInstructions ?? null,
-    postServiceRecommendations: service.props.postServiceRecommendations ?? null,
-    preparationMinutes: service.props.preparationMinutes,
-    cleanupMinutes: service.props.cleanupMinutes,
-    status: service.props.status,
-  };
-}
 
 export async function GET(request: Request) {
   try {
@@ -81,10 +51,7 @@ export async function GET(request: Request) {
       size: parsed.data.size,
     });
 
-    return NextResponse.json({
-      ...page,
-      content: page.content.map(toCatalogServiceResource),
-    });
+    return NextResponse.json(page);
   } catch (error) {
     return routeErrorResponse(error);
   }
@@ -165,7 +132,7 @@ export async function POST(request: Request) {
       postServiceRecommendations: parsed.data.postServiceRecommendations || null,
     });
 
-    return NextResponse.json(toCatalogServiceResource(service), { status: 201 });
+    return NextResponse.json(createCatalogServiceReadModel(service), { status: 201 });
   } catch (error) {
     return routeErrorResponse(error);
   }

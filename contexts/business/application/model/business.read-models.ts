@@ -2,6 +2,7 @@ export interface OrganizationSummary {
   id: string;
   ownerId: string;
   name: string;
+  imageUrl: string | null;
 }
 
 export interface EstablishmentSummary {

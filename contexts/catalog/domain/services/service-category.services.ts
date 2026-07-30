@@ -5,6 +5,7 @@ import type {
 } from "../model/commands/service-category.commands";
 import type { ServiceCategory } from "../model/entities/service-category.entity";
 import type { PageResponse } from "./catalog-service.services";
+import type { CategoryDTO } from "../../application/model/catalog-view.models";
 
 export interface ServiceCategoryCommandService {
   create(command: CreateServiceCategoryCommand, token?: string): Promise<ServiceCategory>;
@@ -13,5 +14,5 @@ export interface ServiceCategoryCommandService {
 }
 
 export interface ServiceCategoryQueryService {
-  list(establishmentId: string, page?: number, size?: number, token?: string): Promise<PageResponse<ServiceCategory>>;
+  list(establishmentId: string, page?: number, size?: number, token?: string): Promise<PageResponse<CategoryDTO>>;
 }

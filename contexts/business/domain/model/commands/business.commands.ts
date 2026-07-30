@@ -1,5 +1,5 @@
 export type CreateOrganizationCommand = Readonly<{ name: string }>;
-export type UpdateOrganizationCommand = Readonly<{ id: string; name: string }>;
+export type UpdateOrganizationCommand = Readonly<{ id: string; name: string; imageUrl?: string | null }>;
 export type DeleteOrganizationCommand = Readonly<{ id: string }>;
 
 export type CreateEstablishmentCommand = Readonly<{
@@ -23,7 +23,7 @@ export function createOrganizationCommand(
 export function updateOrganizationCommand(
   input: UpdateOrganizationCommand,
 ): UpdateOrganizationCommand {
-  return Object.freeze({ id: input.id, name: input.name });
+  return Object.freeze({ id: input.id, name: input.name, imageUrl: input.imageUrl ?? null });
 }
 
 export function deleteOrganizationCommand(

@@ -121,6 +121,7 @@ describe("Business server actions", () => {
     expect(mocks.organizationService.update).toHaveBeenCalledWith({
       id: organizationId,
       name: "Acme Group",
+      imageUrl: null,
     });
     expect(updated.status).toBe("success");
     expect(mocks.revalidatePath).toHaveBeenCalledWith("/organizations");

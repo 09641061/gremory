@@ -5,12 +5,15 @@ import { useRouter } from "next/navigation";
 import {
   updateCatalogServiceAction,
   type CatalogServiceActionResult,
-} from "../../interfaces/actions/manage-catalog-service.actions";
+} from "../actions/manage-catalog-service.actions";
 
 export function useUpdateCatalogService(onSuccess?: () => void) {
   const router = useRouter();
   const onSuccessRef = useRef(onSuccess);
-  useEffect(() => { onSuccessRef.current = onSuccess; });
+
+  useEffect(() => {
+    onSuccessRef.current = onSuccess;
+  });
 
   const [state, formAction, pending] = useActionState(
     updateCatalogServiceAction,
@@ -30,4 +33,3 @@ export function useUpdateCatalogService(onSuccess?: () => void) {
     pending,
   };
 }
-
