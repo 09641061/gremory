@@ -165,7 +165,10 @@ export function AssistantChatView({
                 ? "You do not have active access to the assistant. Check your session or subscription."
                 : error
             }
-            composer={
+          />
+
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 z-30 flex justify-center px-4 pb-4 sm:px-6 sm:pb-6">
+            <div className="pointer-events-auto w-full max-w-4xl">
               <AssistantChatComposer
                 value={draft}
                 isSending={isSendingMessage || !hasAssistantAccess}
@@ -177,8 +180,8 @@ export function AssistantChatView({
                 disabled={!hasAssistantAccess}
                 floating
               />
-            }
-          />
+            </div>
+          </div>
         </div>
       ) : (
         <div className="flex min-h-[calc(100vh-6rem)] flex-1 flex-col justify-center">

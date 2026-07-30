@@ -1,15 +1,17 @@
 "use client";
 
+import { memo } from "react";
 import { cn } from "@/lib/utils";
 
 import type { AssistantMessageReadModel } from "@/contexts/assistant/application/internal/transforms/assistant.read-models";
 import { AssistantAvatar } from "@/contexts/shared/interfaces/components/assistant-avatar/assistant-avatar";
+import { AssistantChatMarkdown } from "./assistant-chat-markdown";
 
 interface AssistantChatMessageBubbleProps {
   message: AssistantMessageReadModel;
 }
 
-export function AssistantChatMessageBubble({ message }: AssistantChatMessageBubbleProps) {
+function AssistantChatMessageBubbleComponent({ message }: AssistantChatMessageBubbleProps) {
   const isUser = message.role === "user";
 
   return (
@@ -22,9 +24,7 @@ export function AssistantChatMessageBubble({ message }: AssistantChatMessageBubb
             iconClassName="size-5"
           />
 
-          <div className="pt-1 text-[15px] leading-7 text-foreground whitespace-pre-wrap break-words">
-            {message.content}
-          </div>
+          <AssistantChatMarkdown className="pt-1 text-[15px] leading-7 text-foreground" content={message.content} />
         </div>
       ) : (
         <div
@@ -39,3 +39,11 @@ export function AssistantChatMessageBubble({ message }: AssistantChatMessageBubb
     </div>
   );
 }
+
+export const AssistantChatMessageBubble = memo(
+  AssistantChatMessageBubbleComponent,
+  (previousProps, nextProps) =>
+    previousProps.message.id === nextProps.message.id &&
+    previousProps.message.role === nextProps.message.role &&
+    previousProps.message.content === nextProps.message.content,
+);

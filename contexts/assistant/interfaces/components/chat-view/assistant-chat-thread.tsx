@@ -1,6 +1,7 @@
 "use client";
 
-import { useLayoutEffect, useRef, type ReactNode, type RefObject } from "react";
+import { memo, useLayoutEffect, useRef, type RefObject } from "react";
+import { useVirtualizer } from "@tanstack/react-virtual";
 
 import { AssistantChatWelcome } from "./assistant-chat-welcome";
 import { AssistantChatLoadingState } from "./assistant-chat-loading-state";
@@ -14,33 +15,40 @@ interface AssistantChatThreadProps {
   isAssistantThinking?: boolean;
   bottomRef: RefObject<HTMLDivElement | null>;
   error?: string | null;
-  composer?: ReactNode;
   showWelcome?: boolean;
 }
 
-export function AssistantChatThread({
+const DEFAULT_MESSAGE_HEIGHT = 120;
+
+function AssistantChatThreadComponent({
   conversation,
   isLoading,
   isAssistantThinking = false,
   bottomRef,
   error: _error,
-  composer,
   showWelcome = true,
 }: AssistantChatThreadProps) {
   void _error;
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
   const messages = conversation?.messages ?? [];
   const shouldShowWelcome = showWelcome && messages.length > 0 && messages[0]?.role !== "assistant";
+  // TanStack Virtual returns functions that the React Compiler flags as non-memoizable.
+  // We still keep this hook here because it is the right tool for variable-height chat rows.
+  // eslint-disable-next-line react-hooks/incompatible-library
+  const rowVirtualizer = useVirtualizer({
+    count: messages.length,
+    getScrollElement: () => scrollContainerRef.current,
+    estimateSize: () => DEFAULT_MESSAGE_HEIGHT,
+    overscan: 8,
+    getItemKey: (index) => messages[index]?.id ?? index,
+  });
 
   useLayoutEffect(() => {
-    const scrollContainer = scrollContainerRef.current;
-    if (!scrollContainer || messages.length === 0) return;
+    const bottomElement = bottomRef.current;
+    if (!bottomElement || messages.length === 0) return;
 
-    scrollContainer.scrollTo({
-      top: scrollContainer.scrollHeight,
-      behavior: "auto",
-    });
-  }, [messages.length, conversation?.id, isAssistantThinking]);
+    bottomElement.scrollIntoView({ block: "end", behavior: "auto" });
+  }, [messages.length, conversation?.id, isAssistantThinking, bottomRef]);
 
   return (
     <section className="relative isolate flex min-h-0 min-w-0 flex-1 overflow-hidden bg-background">
@@ -59,9 +67,25 @@ export function AssistantChatThread({
               </>
             ) : null}
 
-            {messages.map((message) => (
-              <AssistantChatMessageBubble key={message.id} message={message} />
-            ))}
+            <div className="relative w-full" style={{ height: `${rowVirtualizer.getTotalSize()}px` }}>
+              {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+                const message = messages[virtualRow.index];
+                if (!message) return null;
+
+                return (
+                  <div
+                    key={virtualRow.key}
+                    data-index={virtualRow.index}
+                    ref={rowVirtualizer.measureElement}
+                    className="absolute left-0 top-0 w-full"
+                    style={{ transform: `translateY(${virtualRow.start}px)` }}
+                  >
+                    <AssistantChatMessageBubble message={message} />
+                  </div>
+                );
+              })}
+            </div>
+
             {isAssistantThinking ? <AssistantChatThinkingBubble /> : null}
             <div ref={bottomRef} />
           </div>
@@ -71,12 +95,17 @@ export function AssistantChatThread({
           </div>
         )}
       </div>
-
-      {composer ? (
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-30 flex justify-center px-4 pb-4 sm:px-6 sm:pb-6">
-          <div className="pointer-events-auto w-full max-w-4xl">{composer}</div>
-        </div>
-      ) : null}
     </section>
   );
 }
+
+export const AssistantChatThread = memo(
+  AssistantChatThreadComponent,
+  (previousProps, nextProps) =>
+    previousProps.conversation === nextProps.conversation &&
+    previousProps.isLoading === nextProps.isLoading &&
+    previousProps.isAssistantThinking === nextProps.isAssistantThinking &&
+    previousProps.bottomRef === nextProps.bottomRef &&
+    previousProps.error === nextProps.error &&
+    previousProps.showWelcome === nextProps.showWelcome,
+);
