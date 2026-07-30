@@ -29,7 +29,7 @@ export default function ProtectedLayout({
 }
 
 async function ProtectedHeader() {
-  let organization: { id: string; name: string } | undefined;
+  let organization: { id: string; name: string; imageUrl?: string | null } | undefined;
   let establishments: { id: string; name: string }[] = [];
 
   try {
@@ -38,6 +38,7 @@ async function ProtectedHeader() {
     organization = {
       id: currentOrganization.id,
       name: currentOrganization.name,
+      imageUrl: currentOrganization.imageUrl,
     };
     const page = await createEstablishmentQueryService().getByOrganization({
       organizationId: organization.id,

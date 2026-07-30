@@ -113,7 +113,7 @@ export function OrganizationDetailCard({ organization, onCancel }: OrganizationD
             <div className="flex flex-col border-b border-border">
               <div className="flex items-center justify-between p-6">
                 <div className="space-y-1">
-                  <h3 className="text-base font-semibold text-foreground">Organization Logo</h3>
+                  <h3 className="text-base font-semibold text-foreground">Organization</h3>
                   <p className="text-sm text-muted-foreground">
                     This is your organization logo.<br />
                     Click on the logo to upload a custom one from your files.
