@@ -1,9 +1,10 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidateTag } from "next/cache";
 import { createServiceCategorySchema, updateServiceCategorySchema } from "../rest/schemas/service-category.schemas";
 import { createServiceCategoryCommandService } from "../../application/internal/commandservices/service-category-command.service";
 import { requireCatalogAccessToken } from "./catalog-action-auth";
+import { createServiceCategoryCreateCommand, createServiceCategoryUpdateCommand } from "../../domain/model/commands/service-category.commands";
 
 export type CategoryActionResult = {
   status: "idle" | "success" | "error";
@@ -29,8 +30,9 @@ export async function createServiceCategoryAction(
   try {
     const token = await requireCatalogAccessToken();
     const service = createServiceCategoryCommandService();
-    await service.create(parsed.data, token);
-    revalidatePath("/catalog");
+    const command = createServiceCategoryCreateCommand(parsed.data);
+    await service.create(command, token);
+    revalidateTag("catalog-categories", "max");
     return { status: "success", error: null };
   } catch (err) {
     return {
@@ -58,8 +60,9 @@ export async function updateServiceCategoryAction(
   try {
     const token = await requireCatalogAccessToken();
     const service = createServiceCategoryCommandService();
-    await service.update(parsed.data, token);
-    revalidatePath("/catalog");
+    const command = createServiceCategoryUpdateCommand(parsed.data);
+    await service.update(command, token);
+    revalidateTag("catalog-categories", "max");
     return { status: "success", error: null };
   } catch (err) {
     return {
@@ -74,7 +77,7 @@ export async function deleteServiceCategoryAction(id: string): Promise<CategoryA
     const token = await requireCatalogAccessToken();
     const service = createServiceCategoryCommandService();
     await service.delete({ id }, token);
-    revalidatePath("/catalog");
+    revalidateTag("catalog-categories", "max");
     return { status: "success", error: null };
   } catch (err) {
     return {

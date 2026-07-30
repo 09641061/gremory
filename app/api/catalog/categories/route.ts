@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createServiceCategoryCommandService } from "@/contexts/catalog/application/internal/commandservices/service-category-command.service";
 import { createServiceCategoryQueryService } from "@/contexts/catalog/application/internal/queryservices/service-category-query.service";
+import { createServiceCategoryReadModel } from "@/contexts/catalog/application/model/service-category.read-model";
 import { createServiceCategorySchema } from "@/contexts/catalog/interfaces/rest/schemas/service-category.schemas";
 
 const listQuerySchema = z.object({
@@ -9,14 +10,6 @@ const listQuerySchema = z.object({
   page: z.coerce.number().int().nonnegative().default(0),
   size: z.coerce.number().int().min(1).max(100).default(20),
 });
-
-function toCategoryResource(category: { props: { id: { value: string }; establishmentId: string; name: string } }) {
-  return {
-    id: category.props.id.value,
-    establishmentId: category.props.establishmentId,
-    name: category.props.name,
-  };
-}
 
 export async function GET(request: Request) {
   try {
@@ -36,10 +29,7 @@ export async function GET(request: Request) {
       parsed.data.size,
     );
 
-    return NextResponse.json({
-      ...page,
-      content: page.content.map(toCategoryResource),
-    });
+    return NextResponse.json(page);
   } catch (error) {
     return routeErrorResponse(error);
   }
@@ -107,7 +97,7 @@ export async function POST(request: Request) {
 
     const category = await createServiceCategoryCommandService().create(parsed.data);
 
-    return NextResponse.json(toCategoryResource(category), { status: 201 });
+    return NextResponse.json(createServiceCategoryReadModel(category), { status: 201 });
   } catch (error) {
     return routeErrorResponse(error);
   }

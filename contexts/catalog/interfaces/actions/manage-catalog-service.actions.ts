@@ -1,9 +1,10 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidateTag } from "next/cache";
 import { updateCatalogServiceSchema } from "../rest/schemas/catalog-service.schemas";
 import { createCatalogServiceCommandService } from "../../application/internal/commandservices/catalog-service-command.service";
 import { requireCatalogAccessToken } from "./catalog-action-auth";
+import { createCatalogServiceUpdateCommand } from "../../domain/model/commands/catalog-service.commands";
 
 export type CatalogServiceActionResult = {
   status: "idle" | "success" | "error";
@@ -37,14 +38,10 @@ export async function updateCatalogServiceAction(
   try {
     const token = await requireCatalogAccessToken();
     const service = createCatalogServiceCommandService();
-    await service.update({
-      ...parsed.data,
-      categoryId: parsed.data.categoryId || null,
-      preServiceInstructions: parsed.data.preServiceInstructions || null,
-      postServiceRecommendations: parsed.data.postServiceRecommendations || null,
-    }, token);
+    const command = createCatalogServiceUpdateCommand(parsed.data);
+    await service.update(command, token);
 
-    revalidatePath("/catalog");
+    revalidateTag("catalog-services", "max");
     return { status: "success", error: null };
   } catch (err) {
     return {
@@ -62,7 +59,7 @@ export async function changeCatalogServiceStatusAction(
     const token = await requireCatalogAccessToken();
     const service = createCatalogServiceCommandService();
     await service.changeStatus({ id, active }, token);
-    revalidatePath("/catalog");
+    revalidateTag("catalog-services", "max");
     return { status: "success", error: null };
   } catch (err) {
     return {
@@ -79,7 +76,7 @@ export async function deleteCatalogServiceAction(
     const token = await requireCatalogAccessToken();
     const service = createCatalogServiceCommandService();
     await service.delete({ id }, token);
-    revalidatePath("/catalog");
+    revalidateTag("catalog-services", "max");
     return { status: "success", error: null };
   } catch (err) {
     return {

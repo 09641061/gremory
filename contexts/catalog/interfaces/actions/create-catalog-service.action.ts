@@ -1,9 +1,10 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidateTag } from "next/cache";
 import { createCatalogServiceSchema } from "../rest/schemas/catalog-service.schemas";
 import { createCatalogServiceCommandService } from "../../application/internal/commandservices/catalog-service-command.service";
 import { requireCatalogAccessToken } from "./catalog-action-auth";
+import { createCatalogServiceCreateCommand } from "../../domain/model/commands/catalog-service.commands";
 
 export type CreateCatalogServiceActionState = {
   status: "idle" | "success" | "error";
@@ -38,14 +39,10 @@ export async function createCatalogServiceAction(
   try {
     const token = await requireCatalogAccessToken();
     const service = createCatalogServiceCommandService();
-    const result = await service.create({
-      ...parsed.data,
-      categoryId: parsed.data.categoryId || null,
-      preServiceInstructions: parsed.data.preServiceInstructions || null,
-      postServiceRecommendations: parsed.data.postServiceRecommendations || null,
-    }, token);
+    const command = createCatalogServiceCreateCommand(parsed.data);
+    const result = await service.create(command, token);
 
-    revalidatePath("/catalog");
+    revalidateTag("catalog-services", "max");
 
     return {
       status: "success",

@@ -1,17 +1,10 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createServiceCategoryCommandService } from "@/contexts/catalog/application/internal/commandservices/service-category-command.service";
+import { createServiceCategoryReadModel } from "@/contexts/catalog/application/model/service-category.read-model";
 import { updateServiceCategorySchema } from "@/contexts/catalog/interfaces/rest/schemas/service-category.schemas";
 
 const uuidSchema = z.string().uuid();
-
-function toCategoryResource(category: { props: { id: { value: string }; establishmentId: string; name: string } }) {
-  return {
-    id: category.props.id.value,
-    establishmentId: category.props.establishmentId,
-    name: category.props.name,
-  };
-}
 
 export async function PUT(
   request: Request,
@@ -35,7 +28,7 @@ export async function PUT(
 
     const category = await createServiceCategoryCommandService().update(parsed.data);
 
-    return NextResponse.json(toCategoryResource(category));
+    return NextResponse.json(createServiceCategoryReadModel(category));
   } catch (error) {
     return routeErrorResponse(error);
   }

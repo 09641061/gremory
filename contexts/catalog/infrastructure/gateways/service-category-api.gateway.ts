@@ -6,7 +6,6 @@ import { ServiceCategory } from "../../domain/model/entities/service-category.en
 import { createCategoryId } from "../../domain/model/valueobjects/category-id.vo";
 import type {
   ServiceCategoryCommandService,
-  ServiceCategoryQueryService,
 } from "../../domain/services/service-category.services";
 import type {
   CreateServiceCategoryCommand,
@@ -42,7 +41,7 @@ async function resolveAccessToken(providedToken?: string): Promise<string | unde
 }
 
 export class ServiceCategoryApiGateway
-  implements ServiceCategoryCommandService, ServiceCategoryQueryService
+  implements ServiceCategoryCommandService
 {
   async list(
     establishmentId: string,

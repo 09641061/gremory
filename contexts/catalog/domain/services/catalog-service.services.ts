@@ -5,6 +5,7 @@ import type {
   DeleteCatalogServiceCommand,
 } from "../model/commands/catalog-service.commands";
 import type { CatalogService } from "../model/entities/catalog-service.entity";
+import type { DetailedServiceDTO } from "../../application/model/catalog-view.models";
 
 export interface CatalogServiceSearchParams {
   establishmentId: string;
@@ -38,6 +39,6 @@ export interface CatalogServiceCommandService {
 }
 
 export interface CatalogServiceQueryService {
-  search(params: CatalogServiceSearchParams, token?: string): Promise<PageResponse<CatalogService>>;
-  getById(id: string, establishmentId: string, token?: string): Promise<CatalogService>;
+  search(params: CatalogServiceSearchParams, token?: string): Promise<PageResponse<DetailedServiceDTO>>;
+  getById(id: string, establishmentId: string, token?: string): Promise<DetailedServiceDTO>;
 }

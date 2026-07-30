@@ -7,7 +7,6 @@ import { createCatalogServiceId } from "../../domain/model/valueobjects/catalog-
 import { createPrice } from "../../domain/model/valueobjects/price.vo";
 import type {
   CatalogServiceCommandService,
-  CatalogServiceQueryService,
   CatalogServiceSearchParams,
   PageResponse,
 } from "../../domain/services/catalog-service.services";
@@ -63,7 +62,7 @@ async function resolveAccessToken(providedToken?: string): Promise<string | unde
 }
 
 export class CatalogServiceApiGateway
-  implements CatalogServiceCommandService, CatalogServiceQueryService
+  implements CatalogServiceCommandService
 {
   async search(
     params: CatalogServiceSearchParams,
