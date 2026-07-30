@@ -8,13 +8,14 @@ import { cacheLife, cacheTag } from "next/cache";
 import { createServiceCategoryReadModel } from "../../model/service-category.read-model";
 
 export class ServiceCategoryQueryServiceImpl implements ServiceCategoryQueryService {
-  list(
+  async list(
     establishmentId: string,
     page?: number,
     size?: number,
     token?: string
   ): Promise<PageResponse<CategoryDTO>> {
-    return listServiceCategoriesCached(establishmentId, page, size, token);
+    const authToken = await resolveAccessToken(token);
+    return listServiceCategoriesCached(establishmentId, page, size, authToken);
   }
 }
 
@@ -34,17 +35,17 @@ async function listServiceCategoriesCached(
   establishmentId: string,
   page?: number,
   size?: number,
-  token?: string
+  authToken?: string
 ): Promise<PageResponse<CategoryDTO>> {
   "use cache";
   cacheLife("minutes");
   cacheTag("catalog-categories");
   cacheTag(`catalog-categories:${establishmentId}`);
 
-  const authToken = await resolveAccessToken(token);
   const result = await new ServiceCategoryApiGateway().list(establishmentId, page, size, authToken);
   return {
     ...result,
     content: result.content.map(createServiceCategoryReadModel),
   };
 }
+

@@ -109,7 +109,7 @@ export function PermissionsWorkspace({ role, permissions, members, onCancel }: P
         <input key={permission} type="hidden" name="permissions" value={permission} />
       ))}
 
-      <div className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto px-6 py-5">
+      <div className="flex min-h-0 flex-1 flex-col gap-6 px-6 py-5">
         <ErrorAlert
           title="Unable to save permissions"
           message={state.status === "error" ? state.error : undefined}
@@ -141,8 +141,8 @@ export function PermissionsWorkspace({ role, permissions, members, onCancel }: P
         </div>
 
         {activeTab === "permissions" ? (
-          <>
-            <div className="space-y-2">
+          <div className="flex min-h-0 flex-1 flex-col gap-4">
+            <div className="space-y-2 shrink-0">
               <label className="relative block">
                 <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
@@ -155,7 +155,7 @@ export function PermissionsWorkspace({ role, permissions, members, onCancel }: P
               </label>
             </div>
 
-            <div className="space-y-5">
+            <div className="scrollbar-hide min-h-0 flex-1 space-y-5 overflow-y-auto pr-1">
               {filteredGroupedPermissions.length === 0 ? (
                 <div className="rounded-lg border border-dashed border-border px-4 py-8 text-sm text-muted-foreground">
                   No permissions found.
@@ -191,7 +191,7 @@ export function PermissionsWorkspace({ role, permissions, members, onCancel }: P
                                   if (nextChecked) next.add(permission);
                                   else next.delete(permission);
                                   return next;
-                                  });
+                                });
                               }}
                               aria-label={permissionLabel(permission)}
                             />
@@ -203,7 +203,7 @@ export function PermissionsWorkspace({ role, permissions, members, onCancel }: P
                 ))
               )}
             </div>
-          </>
+          </div>
         ) : (
           <div className="flex flex-1 flex-col gap-4">
             <div className="flex items-center gap-3 shrink-0">

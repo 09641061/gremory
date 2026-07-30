@@ -33,6 +33,7 @@ export async function createServiceCategoryAction(
     const command = createServiceCategoryCreateCommand(parsed.data);
     await service.create(command, token);
     revalidateTag("catalog-categories", "max");
+    revalidateTag(`catalog-categories:${parsed.data.establishmentId}`, "max");
     return { status: "success", error: null };
   } catch (err) {
     return {

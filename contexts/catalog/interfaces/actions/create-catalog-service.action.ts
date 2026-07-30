@@ -43,6 +43,7 @@ export async function createCatalogServiceAction(
     const result = await service.create(command, token);
 
     revalidateTag("catalog-services", "max");
+    revalidateTag(`catalog-services:${parsed.data.establishmentId}`, "max");
 
     return {
       status: "success",
