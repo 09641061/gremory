@@ -14,12 +14,20 @@ const markdownProcessor = unified()
 
 const htmlCache = new Map<string, string>();
 
+function normalizeAssistantMarkdownContent(content: string): string {
+  return content
+    .replace(/\r\n/g, "\n")
+    .replace(/(?:^|\n)\s*•\s+/g, "\n- ")
+    .replace(/\s•\s+/g, "\n- ");
+}
+
 export function renderAssistantMarkdownToHtml(content: string): string {
   if (htmlCache.has(content)) {
     return htmlCache.get(content) ?? "";
   }
 
-  const renderedHtml = String(markdownProcessor.processSync(content));
+  const normalizedContent = normalizeAssistantMarkdownContent(content);
+  const renderedHtml = String(markdownProcessor.processSync(normalizedContent));
   htmlCache.set(content, renderedHtml);
   return renderedHtml;
 }

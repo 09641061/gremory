@@ -14,6 +14,13 @@ function AssistantChatMessageBubbleComponent({ message }: AssistantChatMessageBu
   const isUser = message.role === "user";
   const assistantMarkdownClassName =
     "min-w-0 overflow-x-auto break-words pt-1 text-[15px] leading-7 text-foreground " +
+    "[&_h1]:mb-3 [&_h1]:mt-5 [&_h1]:text-[1.6rem] [&_h1]:font-semibold [&_h1]:leading-tight " +
+    "[&_h2]:mb-2 [&_h2]:mt-5 [&_h2]:text-[1.35rem] [&_h2]:font-semibold [&_h2]:leading-tight " +
+    "[&_h3]:mb-2 [&_h3]:mt-4 [&_h3]:text-[1.15rem] [&_h3]:font-semibold [&_h3]:leading-tight " +
+    "[&_p]:my-3 " +
+    "[&_ul]:my-3 [&_ul]:pl-6 [&_ol]:my-3 [&_ol]:pl-6 " +
+    "[&_li]:my-1 " +
+    "[&_blockquote]:my-4 [&_blockquote]:border-l-2 [&_blockquote]:border-border/70 [&_blockquote]:pl-4 [&_blockquote]:text-muted-foreground " +
     "[&_table]:min-w-max [&_table]:border-separate [&_table]:border-spacing-x-4 [&_table]:border-spacing-y-2 " +
     "[&_th]:whitespace-nowrap [&_th]:px-4 [&_th]:py-2 [&_th]:text-left [&_th]:font-semibold [&_th]:align-top " +
     "[&_td]:px-4 [&_td]:py-2 [&_td]:align-top " +
