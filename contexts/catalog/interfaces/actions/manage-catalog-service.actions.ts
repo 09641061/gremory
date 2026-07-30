@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidateTag } from "next/cache";
+import { updateTag } from "next/cache";
 import { updateCatalogServiceSchema } from "../rest/schemas/catalog-service.schemas";
 import { createCatalogServiceCommandService } from "../../application/internal/commandservices/catalog-service-command.service";
 import { requireCatalogAccessToken } from "./catalog-action-auth";
@@ -41,7 +41,8 @@ export async function updateCatalogServiceAction(
     const command = createCatalogServiceUpdateCommand(parsed.data);
     await service.update(command, token);
 
-    revalidateTag("catalog-services", "max");
+    updateTag("catalog-services");
+    updateTag(`catalog-service:${parsed.data.id}`);
     return { status: "success", error: null };
   } catch (err) {
     return {
@@ -59,7 +60,8 @@ export async function changeCatalogServiceStatusAction(
     const token = await requireCatalogAccessToken();
     const service = createCatalogServiceCommandService();
     await service.changeStatus({ id, active }, token);
-    revalidateTag("catalog-services", "max");
+    updateTag("catalog-services");
+    updateTag(`catalog-service:${id}`);
     return { status: "success", error: null };
   } catch (err) {
     return {
@@ -76,7 +78,8 @@ export async function deleteCatalogServiceAction(
     const token = await requireCatalogAccessToken();
     const service = createCatalogServiceCommandService();
     await service.delete({ id }, token);
-    revalidateTag("catalog-services", "max");
+    updateTag("catalog-services");
+    updateTag(`catalog-service:${id}`);
     return { status: "success", error: null };
   } catch (err) {
     return {

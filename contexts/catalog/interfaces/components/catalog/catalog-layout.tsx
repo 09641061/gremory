@@ -40,7 +40,9 @@ export function CatalogLayout({
   );
 
   const activeSelectedCategoryId =
-    selectedCategoryId && categories.some((category) => category.id === selectedCategoryId)
+    selectedServiceId
+      ? undefined
+      : selectedCategoryId && categories.some((category) => category.id === selectedCategoryId)
       ? selectedCategoryId
       : selectedCategoryIdFallback;
 

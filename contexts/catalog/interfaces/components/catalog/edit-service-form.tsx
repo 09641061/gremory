@@ -32,13 +32,7 @@ export function EditServiceForm({ service, onCancel }: EditServiceFormProps) {
   const [resetKey, setResetKey] = useState(0);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const { changeStatus, pending: statusPending, state: statusState } = useChangeCatalogServiceStatus();
-  const { state: updateState, formAction, pending: updatePending } = useUpdateCatalogService(() => {
-    if (onCancel) {
-      onCancel();
-    } else {
-      router.push("/catalog");
-    }
-  });
+  const { state: updateState, formAction, pending: updatePending } = useUpdateCatalogService();
 
   const isActive = service.status === "ACTIVE";
 

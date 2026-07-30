@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidateTag } from "next/cache";
+import { updateTag } from "next/cache";
 import { createServiceCategorySchema, updateServiceCategorySchema } from "../rest/schemas/service-category.schemas";
 import { createServiceCategoryCommandService } from "../../application/internal/commandservices/service-category-command.service";
 import { requireCatalogAccessToken } from "./catalog-action-auth";
@@ -32,8 +32,8 @@ export async function createServiceCategoryAction(
     const service = createServiceCategoryCommandService();
     const command = createServiceCategoryCreateCommand(parsed.data);
     await service.create(command, token);
-    revalidateTag("catalog-categories", "max");
-    revalidateTag(`catalog-categories:${parsed.data.establishmentId}`, "max");
+    updateTag("catalog-categories");
+    updateTag(`catalog-categories:${parsed.data.establishmentId}`);
     return { status: "success", error: null };
   } catch (err) {
     return {
@@ -63,7 +63,7 @@ export async function updateServiceCategoryAction(
     const service = createServiceCategoryCommandService();
     const command = createServiceCategoryUpdateCommand(parsed.data);
     await service.update(command, token);
-    revalidateTag("catalog-categories", "max");
+    updateTag("catalog-categories");
     return { status: "success", error: null };
   } catch (err) {
     return {
@@ -78,7 +78,7 @@ export async function deleteServiceCategoryAction(id: string): Promise<CategoryA
     const token = await requireCatalogAccessToken();
     const service = createServiceCategoryCommandService();
     await service.delete({ id }, token);
-    revalidateTag("catalog-categories", "max");
+    updateTag("catalog-categories");
     return { status: "success", error: null };
   } catch (err) {
     return {
