@@ -5,7 +5,8 @@ import { revalidatePath } from "next/cache";
 
 import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-session-cookie";
 import { SubmitAssistantMessageCommandService } from "@/contexts/assistant/application/internal/commandservices/submit-assistant-message-command.service";
-import type { AssistantConversationReadModel } from "@/contexts/assistant/application/internal/transforms/assistant.read-models";
+import { toConversationViewModel } from "@/contexts/assistant/interfaces/presenters/assistant-chat.presenter.server";
+import type { AssistantConversationViewModel } from "@/contexts/assistant/interfaces/view-models/assistant-chat.view-model";
 
 import {
   submitAssistantMessageSchema,
@@ -13,7 +14,7 @@ import {
 } from "../rest/schemas/assistant-chat.schemas";
 
 export type SubmitAssistantMessageActionResult =
-  | { status: "success"; data: AssistantConversationReadModel; error: null }
+  | { status: "success"; data: AssistantConversationViewModel; error: null }
   | { status: "error"; data: null; error: string };
 
 export async function submitAssistantMessageAction(
@@ -44,7 +45,7 @@ export async function submitAssistantMessageAction(
 
     return {
       status: "success",
-      data: conversation,
+      data: toConversationViewModel(conversation)!,
       error: null,
     };
   } catch (error) {

@@ -7,10 +7,10 @@ import { AssistantChatWelcome } from "./assistant-chat-welcome";
 import { AssistantChatLoadingState } from "./assistant-chat-loading-state";
 import { AssistantChatMessageBubble } from "./assistant-chat-message-bubble";
 import { AssistantChatThinkingBubble } from "./assistant-chat-thinking-bubble";
-import type { AssistantConversationReadModel } from "@/contexts/assistant/application/internal/transforms/assistant.read-models";
+import type { AssistantConversationViewModel } from "@/contexts/assistant/interfaces/view-models/assistant-chat.view-model";
 
 interface AssistantChatThreadProps {
-  conversation: AssistantConversationReadModel | null;
+  conversation: AssistantConversationViewModel | null;
   isLoading: boolean;
   isAssistantThinking?: boolean;
   bottomRef: RefObject<HTMLDivElement | null>;

@@ -11,7 +11,7 @@ vi.mock("@tanstack/react-virtual", () => ({
 }));
 
 import { AssistantChatThread } from "@/contexts/assistant/interfaces/components/chat-view/assistant-chat-thread";
-import type { AssistantConversationReadModel } from "@/contexts/assistant/application/internal/transforms/assistant.read-models";
+import type { AssistantConversationViewModel } from "@/contexts/assistant/interfaces/view-models/assistant-chat.view-model";
 
 describe("AssistantChatThread", () => {
   it("does not render the default welcome message when a conversation already has messages", () => {
@@ -21,7 +21,7 @@ describe("AssistantChatThread", () => {
     });
 
     const bottomRef = createRef<HTMLDivElement>();
-    const conversation: AssistantConversationReadModel = {
+    const conversation: AssistantConversationViewModel = {
       id: "conversation-1",
       title: "Active conversation",
       createdAt: "2026-07-30T00:00:00.000Z",

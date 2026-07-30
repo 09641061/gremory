@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 
 import { submitAssistantMessageAction } from "@/contexts/assistant/interfaces/actions/assistant-chat.actions";
 import { ErrorAlert } from "@/contexts/shared/interfaces/components/ui/error";
-import type { AssistantConversationReadModel } from "@/contexts/assistant/application/internal/transforms/assistant.read-models";
+import type { AssistantConversationViewModel } from "@/contexts/assistant/interfaces/view-models/assistant-chat.view-model";
 
 import { AssistantChatComposer } from "./assistant-chat-composer";
 import { AssistantChatEmptyState } from "./assistant-chat-empty-state";
@@ -21,7 +21,7 @@ function buildConversationUrl(conversationId?: string | null) {
 
 type AssistantChatViewProps = {
   conversationId: string | null;
-  initialConversation: AssistantConversationReadModel | null;
+  initialConversation: AssistantConversationViewModel | null;
   hasAssistantAccess: boolean;
 };
 
@@ -33,10 +33,10 @@ export function AssistantChatView({
   const router = useRouter();
   const bottomRef = useRef<HTMLDivElement | null>(null);
 
-  const [activeConversation, setActiveConversation] = useState<AssistantConversationReadModel | null>(
+  const [activeConversation, setActiveConversation] = useState<AssistantConversationViewModel | null>(
     initialConversation,
   );
-  const [pendingConversation, setPendingConversation] = useState<AssistantConversationReadModel | null>(
+  const [pendingConversation, setPendingConversation] = useState<AssistantConversationViewModel | null>(
     null,
   );
   const [draft, setDraft] = useState("");
@@ -48,7 +48,7 @@ export function AssistantChatView({
   useEffect(() => {
     function handleConversationMutation(event: Event) {
       const customEvent = event as CustomEvent<
-        | { type: "upsert"; conversation: AssistantConversationReadModel; moveToFront?: boolean }
+        | { type: "upsert"; conversation: AssistantConversationViewModel; moveToFront?: boolean }
         | { type: "rename"; conversationId: string; title: string }
         | { type: "delete"; conversationId: string }
       >;

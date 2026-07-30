@@ -46,7 +46,7 @@ describe("assistant conversation transform", () => {
     });
 
     expect(conversation.messages.map((message) => message.role)).toEqual(["user", "assistant"]);
-    expect(conversation.messages[1]?.renderedContentHtml).toContain("class=\"mb-3");
+    expect(conversation.messages[1]?.content).toContain("¿en qué puedo ayudarte?");
   });
 
   it("alternates roles for legacy conversations that arrive flattened", () => {

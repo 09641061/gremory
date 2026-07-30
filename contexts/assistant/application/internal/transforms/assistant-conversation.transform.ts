@@ -9,7 +9,6 @@ import type { AssistantMessage } from "../../../domain/model/entities/assistant-
 import { createAssistantConversationId } from "../../../domain/model/value-objects/assistant-conversation-id";
 import { createAssistantConversationTitle } from "../../../domain/model/value-objects/assistant-conversation-title";
 import { createAssistantMessageContent } from "../../../domain/model/value-objects/assistant-message-content";
-import { renderAssistantMarkdownToHtml } from "./assistant-markdown-renderer.server";
 import type {
   AssistantConversationPageReadModel,
   AssistantConversationReadModel,
@@ -34,7 +33,6 @@ function normalizeMessage(message: ConversationMessageSource): AssistantMessageR
     id: message.id,
     role: role === "ASSISTANT" || role === "AGENT" ? "assistant" : "user",
     content,
-    renderedContentHtml: renderAssistantMarkdownToHtml(content),
     createdAt: message.createdAt,
   };
 }

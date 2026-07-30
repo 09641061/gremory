@@ -4,6 +4,7 @@ import { hasActiveSubscription } from "@/contexts/billing/domain/services/subscr
 import { cookies } from "next/headers";
 import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-session-cookie";
 import { AssistantChatView } from "@/contexts/assistant/interfaces/components/chat-view/assistant-chat-view";
+import { toConversationViewModel } from "@/contexts/assistant/interfaces/presenters/assistant-chat.presenter.server";
 
 export default async function ChatPage({
   searchParams,
@@ -22,12 +23,13 @@ export default async function ChatPage({
   const initialConversation = hasAssistantAccess && conversationId
     ? await new GetConversationQueryService().handle(conversationId)
     : null;
+  const initialConversationViewModel = toConversationViewModel(initialConversation);
 
   return (
     <AssistantChatView
       key={conversationId ?? "new"}
       conversationId={conversationId ?? null}
-      initialConversation={initialConversation}
+      initialConversation={initialConversationViewModel}
       hasAssistantAccess={hasAssistantAccess}
     />
   );

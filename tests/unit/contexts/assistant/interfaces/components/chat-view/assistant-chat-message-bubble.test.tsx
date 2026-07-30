@@ -6,11 +6,11 @@ vi.mock("@/contexts/shared/interfaces/components/assistant-avatar/assistant-avat
 }));
 
 import { AssistantChatMessageBubble } from "@/contexts/assistant/interfaces/components/chat-view/assistant-chat-message-bubble";
-import type { AssistantMessageReadModel } from "@/contexts/assistant/application/internal/transforms/assistant.read-models";
+import type { AssistantMessageViewModel } from "@/contexts/assistant/interfaces/view-models/assistant-chat.view-model";
 
 describe("AssistantChatMessageBubble", () => {
   it("renders assistant content as markdown", () => {
-    const message: AssistantMessageReadModel = {
+    const message: AssistantMessageViewModel = {
       id: "message-1",
       role: "assistant",
       content:

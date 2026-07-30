@@ -3,12 +3,12 @@
 import { memo } from "react";
 import { cn } from "@/lib/utils";
 
-import type { AssistantMessageReadModel } from "@/contexts/assistant/application/internal/transforms/assistant.read-models";
+import type { AssistantMessageViewModel } from "@/contexts/assistant/interfaces/view-models/assistant-chat.view-model";
 import { AssistantAvatar } from "@/contexts/shared/interfaces/components/assistant-avatar/assistant-avatar";
 import { AssistantChatMarkdown } from "./assistant-chat-markdown";
 
 interface AssistantChatMessageBubbleProps {
-  message: AssistantMessageReadModel;
+  message: AssistantMessageViewModel;
 }
 
 function AssistantChatMessageBubbleComponent({ message }: AssistantChatMessageBubbleProps) {
