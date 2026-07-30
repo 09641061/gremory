@@ -25,9 +25,11 @@ import type { DetailedServiceDTO } from "./service-detail-view";
 interface EditServiceFormProps {
   service: DetailedServiceDTO;
   onCancel?: () => void;
+  canUpdateService: boolean;
+  canDeleteService: boolean;
 }
 
-export function EditServiceForm({ service, onCancel }: EditServiceFormProps) {
+export function EditServiceForm({ service, onCancel, canUpdateService, canDeleteService }: EditServiceFormProps) {
   const router = useRouter();
   const [resetKey, setResetKey] = useState(0);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -73,38 +75,44 @@ export function EditServiceForm({ service, onCancel }: EditServiceFormProps) {
                     </span>
                   </div>
                   
-                  <div className="flex items-center gap-3">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger
-                        disabled={statusPending || isActionPending}
-                        className="group/button inline-flex shrink-0 items-center justify-center rounded-lg border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:hover:bg-muted/50 h-8 w-8 p-0"
-                      >
-                        <MoreVertical className="size-4 text-muted-foreground" />
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent>
-                        <DropdownMenuItem
-                          onClick={() => changeStatus(service.id, !isActive)}
-                          disabled={statusPending}
-                          className="gap-2 cursor-pointer"
+                  {(canUpdateService || canDeleteService) && (
+                    <div className="flex items-center gap-3">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger
+                          disabled={statusPending || isActionPending}
+                          className="group/button inline-flex shrink-0 items-center justify-center rounded-lg border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:hover:bg-muted/50 h-8 w-8 p-0"
                         >
-                          {isActive ? (
-                            <>
-                              <EyeOffIcon className="size-3.5 text-muted-foreground" />
-                              <span>Deactivate</span>
-                            </>
-                          ) : (
-                            <>
-                              <EyeIcon className="size-3.5 text-primary" />
-                              <span>Activate</span>
-                            </>
+                          <MoreVertical className="size-4 text-muted-foreground" />
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent>
+                          {canUpdateService && (
+                            <DropdownMenuItem
+                              onClick={() => changeStatus(service.id, !isActive)}
+                              disabled={statusPending}
+                              className="gap-2 cursor-pointer"
+                            >
+                              {isActive ? (
+                                <>
+                                  <EyeOffIcon className="size-3.5 text-muted-foreground" />
+                                  <span>Deactivate</span>
+                                </>
+                              ) : (
+                                <>
+                                  <EyeIcon className="size-3.5 text-primary" />
+                                  <span>Activate</span>
+                                </>
+                              )}
+                            </DropdownMenuItem>
                           )}
-                        </DropdownMenuItem>
-                        <DropdownMenuDeleteItem
-                          onClick={() => setIsDeleteDialogOpen(true)}
-                        />
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
+                          {canDeleteService && (
+                            <DropdownMenuDeleteItem
+                              onClick={() => setIsDeleteDialogOpen(true)}
+                            />
+                          )}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                  )}
                 </div>
 
                 <input type="hidden" name="id" value={service.id} />
@@ -112,28 +120,33 @@ export function EditServiceForm({ service, onCancel }: EditServiceFormProps) {
                   <input type="hidden" name="categoryId" value={service.categoryId} />
                 )}
 
-                <GeneralInfoSection
-                  defaultValues={{
-                    name: service.name,
-                    description: service.description,
-                  }}
-                />
+                <fieldset disabled={!canUpdateService} className="space-y-6 w-full">
+                  <GeneralInfoSection
+                    defaultValues={{
+                      name: service.name,
+                      description: service.description,
+                    }}
+                    disabled={!canUpdateService}
+                  />
 
-                <FinancialsAndLogisticsSection
-                  defaultValues={{
-                    price: service.price,
-                    durationMinutes: service.durationMinutes,
-                    preparationMinutes: service.preparationMinutes,
-                    cleanupMinutes: service.cleanupMinutes,
-                  }}
-                />
+                  <FinancialsAndLogisticsSection
+                    defaultValues={{
+                      price: service.price,
+                      durationMinutes: service.durationMinutes,
+                      preparationMinutes: service.preparationMinutes,
+                      cleanupMinutes: service.cleanupMinutes,
+                    }}
+                    disabled={!canUpdateService}
+                  />
 
-                <InstructionsSection
-                  defaultValues={{
-                    preServiceInstructions: service.preServiceInstructions,
-                    postServiceRecommendations: service.postServiceRecommendations,
-                  }}
-                />
+                  <InstructionsSection
+                    defaultValues={{
+                      preServiceInstructions: service.preServiceInstructions,
+                      postServiceRecommendations: service.postServiceRecommendations,
+                    }}
+                    disabled={!canUpdateService}
+                  />
+                </fieldset>
 
                 {/* Actions Inside Form */}
                 <div className="flex justify-end items-center gap-3 pt-6 border-t border-border mt-8">
@@ -153,14 +166,16 @@ export function EditServiceForm({ service, onCancel }: EditServiceFormProps) {
                     Cancel
                   </Button>
 
-                  <Button
-                    type="submit"
-                    disabled={isActionPending}
-                    className="gap-2"
-                  >
-                    {updatePending ? <Spinner className="size-4" /> : <Save className="size-4" />}
-                    {updatePending ? "Saving..." : "Save"}
-                  </Button>
+                  {canUpdateService && (
+                    <Button
+                      type="submit"
+                      disabled={isActionPending}
+                      className="gap-2"
+                    >
+                      {updatePending ? <Spinner className="size-4" /> : <Save className="size-4" />}
+                      {updatePending ? "Saving..." : "Save"}
+                    </Button>
+                  )}
                 </div>
               </CardContent>
             </Card>

@@ -10,9 +10,10 @@ interface FinancialsAndLogisticsSectionProps {
     preparationMinutes?: number;
     cleanupMinutes?: number;
   };
+  disabled?: boolean;
 }
 
-export function FinancialsAndLogisticsSection({ defaultValues }: FinancialsAndLogisticsSectionProps) {
+export function FinancialsAndLogisticsSection({ defaultValues, disabled }: FinancialsAndLogisticsSectionProps) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
       {/* Financials */}
@@ -32,6 +33,7 @@ export function FinancialsAndLogisticsSection({ defaultValues }: FinancialsAndLo
               defaultValue={defaultValues?.price ?? ""}
               required
               className="pl-10 bg-card border-border"
+              disabled={disabled}
             />
           </div>
         </div>
@@ -51,6 +53,7 @@ export function FinancialsAndLogisticsSection({ defaultValues }: FinancialsAndLo
               defaultValue={defaultValues?.durationMinutes ?? ""}
               required
               className="bg-card border-border text-xs px-2"
+              disabled={disabled}
             />
           </div>
           <div className="space-y-1.5">
@@ -62,6 +65,7 @@ export function FinancialsAndLogisticsSection({ defaultValues }: FinancialsAndLo
               placeholder="5"
               defaultValue={defaultValues?.preparationMinutes ?? 0}
               className="bg-card border-border text-xs px-2"
+              disabled={disabled}
             />
           </div>
           <div className="space-y-1.5">
@@ -73,6 +77,7 @@ export function FinancialsAndLogisticsSection({ defaultValues }: FinancialsAndLo
               placeholder="5"
               defaultValue={defaultValues?.cleanupMinutes ?? 0}
               className="bg-card border-border text-xs px-2"
+              disabled={disabled}
             />
           </div>
         </div>

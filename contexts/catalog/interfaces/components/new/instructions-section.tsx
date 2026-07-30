@@ -8,9 +8,10 @@ interface InstructionsSectionProps {
     preServiceInstructions?: string | null;
     postServiceRecommendations?: string | null;
   };
+  disabled?: boolean;
 }
 
-export function InstructionsSection({ defaultValues }: InstructionsSectionProps) {
+export function InstructionsSection({ defaultValues, disabled }: InstructionsSectionProps) {
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -23,6 +24,7 @@ export function InstructionsSection({ defaultValues }: InstructionsSectionProps)
             placeholder="e.g. Arrive 5 minutes prior..."
             defaultValue={defaultValues?.preServiceInstructions ?? ""}
             className="min-h-[60px] max-h-[200px]"
+            disabled={disabled}
           />
         </div>
         <div className="space-y-2">
@@ -34,6 +36,7 @@ export function InstructionsSection({ defaultValues }: InstructionsSectionProps)
             placeholder="e.g. Avoid washing hair for 12 hours..."
             defaultValue={defaultValues?.postServiceRecommendations ?? ""}
             className="min-h-[60px] max-h-[200px]"
+            disabled={disabled}
           />
         </div>
       </div>

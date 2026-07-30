@@ -9,9 +9,10 @@ interface GeneralInfoSectionProps {
     name?: string;
     description?: string;
   };
+  disabled?: boolean;
 }
 
-export function GeneralInfoSection({ defaultValues }: GeneralInfoSectionProps) {
+export function GeneralInfoSection({ defaultValues, disabled }: GeneralInfoSectionProps) {
   return (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -23,6 +24,7 @@ export function GeneralInfoSection({ defaultValues }: GeneralInfoSectionProps) {
           defaultValue={defaultValues?.name ?? ""}
           required
           className="bg-card border-border"
+          disabled={disabled}
         />
       </div>
 
@@ -35,6 +37,7 @@ export function GeneralInfoSection({ defaultValues }: GeneralInfoSectionProps) {
           placeholder="Describe main service details..."
           defaultValue={defaultValues?.description ?? ""}
           required
+          disabled={disabled}
         />
       </div>
     </div>
