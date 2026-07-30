@@ -13,13 +13,15 @@ describe("AssistantChatMessageBubble", () => {
     const message: AssistantMessageReadModel = {
       id: "message-1",
       role: "assistant",
-      content: "# Resumen\n\n| Plan | Estado |\n| --- | --- |\n| Chat | Listo |\n\n[Docs](https://example.com)\n\n`code`",
+      content:
+        "# Resumen\n\n- Punto uno\n- Punto dos\n\n| Plan | Estado |\n| --- | --- |\n| Chat | Listo |\n\n[Docs](https://example.com)\n\n`code`",
       createdAt: "2026-07-29T00:00:00.000Z",
     };
 
     render(<AssistantChatMessageBubble message={message} />);
 
     expect(screen.getByRole("heading", { level: 1, name: "Resumen" })).toBeVisible();
+    expect(screen.getAllByRole("listitem")).toHaveLength(2);
     expect(screen.getByRole("table")).toBeVisible();
     expect(screen.getByRole("link", { name: "Docs" })).toHaveAttribute("href", "https://example.com");
     expect(screen.getByText("code")).toBeVisible();

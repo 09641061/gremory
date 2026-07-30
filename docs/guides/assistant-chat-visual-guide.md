@@ -135,6 +135,44 @@ Este modo busca parecerse a la captura de referencia:
 - ancho mas generoso que el usuario
 - lectura mas editorial y menos “burbuja dura”
 
+### Contrato Markdown Del Assistant
+
+La vista del assistant no intenta soportar todo Markdown posible. La regla
+actual es mantener lo que aporta valor real al negocio y reducir lo que solo
+agrega costo o complejidad visual.
+
+#### Soportado
+
+- párrafos
+- saltos de línea
+- listas con viñetas
+- listas ordenadas
+- tablas
+- negrita
+- cursiva
+- links
+- código inline
+- bloques de código
+
+#### Reducido o omitido
+
+- imágenes
+- HTML embebido
+- footnotes
+- task lists o checkboxes
+- blockquotes
+- separadores horizontales
+- encabezados con estilizado dedicado más allá del flujo normal del texto
+
+#### Criterio de diseño
+
+La meta no es renderizar todo, sino:
+
+- conservar Markdown rico donde aporta valor
+- evitar adornos que el usuario casual probablemente no usa
+- bajar carga de render sin perder tablas, listas ni código
+- mantener una lectura clara y rápida en el chat
+
 ### Separacion Entre Mensajes
 
 La separacion vertical se aumento para que el hilo respire mejor.

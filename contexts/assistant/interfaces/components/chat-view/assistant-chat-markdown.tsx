@@ -16,17 +16,9 @@ const markdownRenderCache = new Map<string, ReactNode>();
 
 const markdownComponents = {
   p: ({ children }: { children?: ReactNode }) => <p className="mb-3 last:mb-0">{children}</p>,
-  h1: ({ children }: { children?: ReactNode }) => <h1 className="mb-3 text-xl font-semibold tracking-tight">{children}</h1>,
-  h2: ({ children }: { children?: ReactNode }) => <h2 className="mb-3 text-lg font-semibold tracking-tight">{children}</h2>,
-  h3: ({ children }: { children?: ReactNode }) => <h3 className="mb-2 text-base font-semibold tracking-tight">{children}</h3>,
   ul: ({ children }: { children?: ReactNode }) => <ul className="mb-3 list-disc space-y-1 pl-5 last:mb-0">{children}</ul>,
   ol: ({ children }: { children?: ReactNode }) => <ol className="mb-3 list-decimal space-y-1 pl-5 last:mb-0">{children}</ol>,
   li: ({ children }: { children?: ReactNode }) => <li className="leading-7">{children}</li>,
-  blockquote: ({ children }: { children?: ReactNode }) => (
-    <blockquote className="mb-3 border-l-4 border-border/70 pl-4 italic text-muted-foreground last:mb-0">
-      {children}
-    </blockquote>
-  ),
   table: ({ children }: { children?: ReactNode }) => (
     <table className="mb-4 min-w-max border-collapse overflow-hidden rounded-xl border border-border/60 text-sm last:mb-0">
       {children}
@@ -66,7 +58,6 @@ const markdownComponents = {
       {children}
     </a>
   ),
-  hr: () => <hr className="my-4 border-border/70" />,
 };
 
 function getCachedMarkdown(content: string) {
