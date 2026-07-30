@@ -5,7 +5,6 @@ import { cn } from "@/lib/utils";
 
 import type { AssistantMessageViewModel } from "@/contexts/assistant/interfaces/view-models/assistant-chat.view-model";
 import { AssistantAvatar } from "@/contexts/shared/interfaces/components/assistant-avatar/assistant-avatar";
-import { AssistantChatMarkdown } from "./assistant-chat-markdown";
 
 interface AssistantChatMessageBubbleProps {
   message: AssistantMessageViewModel;
@@ -15,20 +14,26 @@ function AssistantChatMessageBubbleComponent({ message }: AssistantChatMessageBu
   const isUser = message.role === "user";
 
   return (
-    <div className={cn("flex w-full", isUser ? "justify-end" : "justify-start")}>
+    <div
+      className={cn(
+        "flex w-full",
+        isUser ? "justify-end" : "justify-start",
+        !isUser && "items-start gap-3 max-w-[min(48rem,calc(100vw-6rem))] sm:max-w-[42rem]",
+      )}
+    >
       {!isUser ? (
-        <div className="flex max-w-[min(48rem,calc(100vw-6rem))] items-start gap-3 sm:max-w-[42rem]">
+        <>
           <AssistantAvatar
             className="mt-1 size-10 border-border/40 bg-white shadow-none"
             iconSize={20}
             iconClassName="size-5"
           />
 
-          <AssistantChatMarkdown
-            className="pt-1 text-[15px] leading-7 text-foreground"
-            html={message.renderedContentHtml}
+          <div
+            className="min-w-0 overflow-x-auto break-words pt-1 text-[15px] leading-7 text-foreground"
+            dangerouslySetInnerHTML={{ __html: message.renderedContentHtml }}
           />
-        </div>
+        </>
       ) : (
         <div
           className={cn(
