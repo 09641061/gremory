@@ -2,8 +2,8 @@
 
 import { cn } from "@/lib/utils";
 
-import { AssistantAvatar } from "../icons/assistant-avatar/assistant-avatar";
 import type { AssistantMessageReadModel } from "@/contexts/assistant/application/internal/transforms/assistant.read-models";
+import { AssistantAvatar } from "@/contexts/shared/interfaces/components/icons/assistant/assistant-kodu";
 
 interface AssistantChatMessageBubbleProps {
   message: AssistantMessageReadModel;

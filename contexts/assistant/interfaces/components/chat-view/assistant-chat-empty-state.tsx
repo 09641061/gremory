@@ -1,6 +1,6 @@
 "use client";
 
-import { AssistantAvatar } from "../icons/assistant-avatar/assistant-avatar";
+import { AssistantAvatar } from "@/contexts/shared/interfaces/components/icons/assistant/assistant-kodu";
 
 interface AssistantChatEmptyStateProps {
   title?: string;
