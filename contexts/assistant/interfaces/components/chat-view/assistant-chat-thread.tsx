@@ -29,6 +29,8 @@ function AssistantChatThreadComponent({
 }: AssistantChatThreadProps) {
   void _error;
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
+  const shouldFollowBottomRef = useRef(true);
+  const lastConversationIdRef = useRef<string | null>(null);
   const messages = conversation?.messages ?? [];
   // TanStack Virtual returns functions that the React Compiler flags as non-memoizable.
   // We still keep this hook here because it is the right tool for variable-height chat rows.
@@ -41,17 +43,38 @@ function AssistantChatThreadComponent({
     getItemKey: (index) => messages[index]?.id ?? index,
   });
 
-  useLayoutEffect(() => {
-    const bottomElement = bottomRef.current;
-    if (!bottomElement || messages.length === 0) return;
+  function handleScroll() {
+    const scrollContainer = scrollContainerRef.current;
+    if (!scrollContainer) return;
 
-    bottomElement.scrollIntoView({ block: "end", behavior: "auto" });
+    const distanceFromBottom =
+      scrollContainer.scrollHeight - scrollContainer.scrollTop - scrollContainer.clientHeight;
+    shouldFollowBottomRef.current = distanceFromBottom <= 160;
+  }
+
+  useLayoutEffect(() => {
+    const scrollContainer = scrollContainerRef.current;
+    if (!scrollContainer || messages.length === 0) return;
+
+    const isNewConversation = conversation?.id !== lastConversationIdRef.current;
+    lastConversationIdRef.current = conversation?.id ?? null;
+
+    if (isNewConversation) {
+      shouldFollowBottomRef.current = true;
+    }
+
+    if (!shouldFollowBottomRef.current) {
+      return;
+    }
+
+    bottomRef.current?.scrollIntoView({ block: "end", behavior: "auto" });
   }, [messages.length, conversation?.id, isAssistantThinking, bottomRef]);
 
   return (
     <section className="relative isolate flex min-h-0 min-w-0 flex-1 overflow-hidden bg-background">
       <div
         ref={scrollContainerRef}
+        onScroll={handleScroll}
         className="absolute inset-0 z-0 overflow-y-auto px-4 py-10 pb-48 sm:px-6 sm:py-12 sm:pb-56"
       >
         {isLoading ? (
