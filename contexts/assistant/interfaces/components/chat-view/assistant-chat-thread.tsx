@@ -14,7 +14,6 @@ interface AssistantChatThreadProps {
   isLoading: boolean;
   isAssistantThinking?: boolean;
   bottomRef: RefObject<HTMLDivElement | null>;
-  error?: string | null;
 }
 
 const DEFAULT_MESSAGE_HEIGHT = 120;
@@ -24,9 +23,7 @@ function AssistantChatThreadComponent({
   isLoading,
   isAssistantThinking = false,
   bottomRef,
-  error: _error,
 }: AssistantChatThreadProps) {
-  void _error;
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
   const shouldFollowBottomRef = useRef(true);
   const lastConversationIdRef = useRef<string | null>(null);
@@ -121,6 +118,5 @@ export const AssistantChatThread = memo(
     previousProps.conversation === nextProps.conversation &&
     previousProps.isLoading === nextProps.isLoading &&
     previousProps.isAssistantThinking === nextProps.isAssistantThinking &&
-    previousProps.bottomRef === nextProps.bottomRef &&
-    previousProps.error === nextProps.error,
+    previousProps.bottomRef === nextProps.bottomRef,
 );

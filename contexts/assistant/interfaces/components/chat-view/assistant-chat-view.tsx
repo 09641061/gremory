@@ -160,11 +160,6 @@ export function AssistantChatView({
             isLoading={false}
             isAssistantThinking={isSendingMessage}
             bottomRef={bottomRef}
-            error={
-              !hasAssistantAccess
-                ? "You do not have active access to the assistant. Check your session or subscription."
-                : error
-            }
           />
 
           <div className="pointer-events-none absolute inset-x-0 bottom-0 z-30 flex justify-center px-4 pb-4 sm:px-6 sm:pb-6">
