@@ -178,7 +178,6 @@ export function AssistantChatView({
                 }}
                 onKeyDown={handleComposerKeyDown}
                 disabled={!hasAssistantAccess}
-                floating
               />
             </div>
           </div>
