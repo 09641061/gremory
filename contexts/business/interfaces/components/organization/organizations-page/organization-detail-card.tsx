@@ -27,20 +27,20 @@ export function OrganizationDetailCard({ organization, canUpdate = true, onCance
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const [prevOrganization, setPrevOrganization] = useState(organization);
   const [name, setName] = useState(organization?.name ?? "");
   const [previewUrl, setPreviewUrl] = useState<string | null>(organization?.imageUrl ?? null);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+
+  if (organization !== prevOrganization) {
+    setPrevOrganization(organization);
+    setName(organization?.name ?? "");
+    setPreviewUrl(organization?.imageUrl ?? null);
+  }
 
   const [state, formAction, pending] = useActionState(
     updateOrganizationAction,
     initialBusinessActionResult,
   );
-
-  useEffect(() => {
-    setName(organization?.name ?? "");
-    setPreviewUrl(organization?.imageUrl ?? null);
-    setSelectedFile(null);
-  }, [organization]);
 
   useEffect(() => {
     if (state.status === "success") {
@@ -55,7 +55,6 @@ export function OrganizationDetailCard({ organization, canUpdate = true, onCance
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      setSelectedFile(file);
       const objectUrl = URL.createObjectURL(file);
       setPreviewUrl(objectUrl);
     }
@@ -64,7 +63,6 @@ export function OrganizationDetailCard({ organization, canUpdate = true, onCance
   const handleCancel = () => {
     setName(organization?.name ?? "");
     setPreviewUrl(organization?.imageUrl ?? null);
-    setSelectedFile(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }

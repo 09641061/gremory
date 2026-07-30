@@ -27,18 +27,20 @@ export function EstablishmentDetailCard({ establishment, canUpdate = true, onCan
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const [prevEstablishment, setPrevEstablishment] = useState(establishment);
   const [name, setName] = useState(establishment?.name ?? "");
   const [previewUrl, setPreviewUrl] = useState<string | null>(establishment?.photoUrl ?? null);
+
+  if (establishment !== prevEstablishment) {
+    setPrevEstablishment(establishment);
+    setName(establishment?.name ?? "");
+    setPreviewUrl(establishment?.photoUrl ?? null);
+  }
 
   const [state, formAction, pending] = useActionState(
     updateEstablishmentAction,
     initialBusinessActionResult,
   );
-
-  useEffect(() => {
-    setName(establishment?.name ?? "");
-    setPreviewUrl(establishment?.photoUrl ?? null);
-  }, [establishment]);
 
   useEffect(() => {
     if (state.status === "success") {

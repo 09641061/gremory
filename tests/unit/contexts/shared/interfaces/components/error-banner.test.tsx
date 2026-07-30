@@ -20,8 +20,10 @@ describe("ErrorBanner Component", () => {
     render(<ErrorBanner />);
 
     // Verify error banner content has been translated from "org" parameter
-    expect(screen.getByText("Access Denied")).toBeDefined();
-    expect(screen.getByText("You do not have permission to access organization details. Please contact your administrator.")).toBeDefined();
+    await waitFor(() => {
+      expect(screen.getByText("Access Denied")).toBeDefined();
+      expect(screen.getByText("You do not have permission to access organization details. Please contact your administrator.")).toBeDefined();
+    });
 
     // Verify next.js replace was called to clean the URL
     expect(mockReplace).toHaveBeenCalledWith("/chat");

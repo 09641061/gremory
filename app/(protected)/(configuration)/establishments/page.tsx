@@ -31,7 +31,7 @@ export default async function EstablishmentsRoutePage() {
 
     return <EstablishmentsPage establishments={page.content} canUpdateMap={canUpdateMap} defaultCanUpdate={true} />;
   } else {
-    let allowedEstablishments: any[] = [];
+    let allowedEstablishments: { id: string; name: string; photoUrl: string | null }[] = [];
     try {
       const access = await createTeamQueryService().getAccessContext();
       if (access.establishments.length === 0) {

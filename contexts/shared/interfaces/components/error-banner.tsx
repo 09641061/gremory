@@ -16,11 +16,13 @@ function ErrorBannerContent() {
   useEffect(() => {
     const denied = searchParams.get("denied");
     if (denied) {
-      if (denied === "org") {
-        setErrorMsg("You do not have permission to access organization details. Please contact your administrator.");
-      } else if (denied === "est") {
-        setErrorMsg("You do not have permission to access establishments in this organization. Please contact your administrator.");
-      }
+      setTimeout(() => {
+        if (denied === "org") {
+          setErrorMsg("You do not have permission to access organization details. Please contact your administrator.");
+        } else if (denied === "est") {
+          setErrorMsg("You do not have permission to access establishments in this organization. Please contact your administrator.");
+        }
+      }, 0);
       router.replace(pathname);
     }
   }, [searchParams, router, pathname]);

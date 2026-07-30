@@ -11,7 +11,7 @@ export default async function OrganizationsRoutePage() {
 
   try {
     organization = await createOrganizationQueryService().getMyOrganization();
-  } catch (error) {
+  } catch {
     canUpdate = false;
     try {
       const access = await createTeamQueryService().getAccessContext();
