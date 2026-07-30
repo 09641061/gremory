@@ -15,7 +15,6 @@ interface AssistantChatThreadProps {
   isAssistantThinking?: boolean;
   bottomRef: RefObject<HTMLDivElement | null>;
   error?: string | null;
-  showWelcome?: boolean;
 }
 
 const DEFAULT_MESSAGE_HEIGHT = 120;
@@ -120,6 +119,5 @@ export const AssistantChatThread = memo(
     previousProps.isLoading === nextProps.isLoading &&
     previousProps.isAssistantThinking === nextProps.isAssistantThinking &&
     previousProps.bottomRef === nextProps.bottomRef &&
-    previousProps.error === nextProps.error &&
-    previousProps.showWelcome === nextProps.showWelcome,
+    previousProps.error === nextProps.error,
 );

@@ -41,7 +41,6 @@ describe("AssistantChatThread", () => {
         conversation={conversation}
         isLoading={false}
         bottomRef={bottomRef}
-        showWelcome
       />,
     );
 

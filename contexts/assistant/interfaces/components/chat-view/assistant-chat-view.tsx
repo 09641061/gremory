@@ -159,7 +159,6 @@ export function AssistantChatView({
             isLoading={false}
             isAssistantThinking={isSendingMessage}
             bottomRef={bottomRef}
-            showWelcome={Boolean(conversationId)}
             error={
               !hasAssistantAccess
                 ? "You do not have active access to the assistant. Check your session or subscription."
