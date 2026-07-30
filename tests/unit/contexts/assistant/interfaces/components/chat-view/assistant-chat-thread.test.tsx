@@ -31,6 +31,7 @@ describe("AssistantChatThread", () => {
           id: "message-1",
           role: "user",
           content: "Hola",
+          renderedContentHtml: "",
           createdAt: "2026-07-30T00:00:00.000Z",
         },
       ],

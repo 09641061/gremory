@@ -9,6 +9,7 @@ export type AssistantMessageReadModel = {
   id: string;
   role: "user" | "assistant";
   content: string;
+  renderedContentHtml: string;
   createdAt: string;
 };
 

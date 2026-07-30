@@ -1,7 +1,6 @@
 import type {
   AssistantConversationResponse,
   AssistantConversationSummaryResponse,
-  AssistantMessageResponse,
   PageResponse,
 } from "@/contexts/assistant/infrastructure/gateways/assistant-api.gateway";
 
@@ -10,6 +9,7 @@ import type { AssistantMessage } from "../../../domain/model/entities/assistant-
 import { createAssistantConversationId } from "../../../domain/model/value-objects/assistant-conversation-id";
 import { createAssistantConversationTitle } from "../../../domain/model/value-objects/assistant-conversation-title";
 import { createAssistantMessageContent } from "../../../domain/model/value-objects/assistant-message-content";
+import { renderAssistantMarkdownToHtml } from "./assistant-markdown-renderer.server";
 import type {
   AssistantConversationPageReadModel,
   AssistantConversationReadModel,
@@ -28,11 +28,13 @@ const DEFAULT_ASSISTANT_GREETING = "Hola. Soy tu asistente para negocio, cliente
 
 function normalizeMessage(message: ConversationMessageSource): AssistantMessageReadModel {
   const role = (message.role ?? "").toUpperCase();
+  const content = createAssistantMessageContent(message.content).value;
 
   return {
     id: message.id,
     role: role === "ASSISTANT" || role === "AGENT" ? "assistant" : "user",
-    content: createAssistantMessageContent(message.content).value,
+    content,
+    renderedContentHtml: renderAssistantMarkdownToHtml(content),
     createdAt: message.createdAt,
   };
 }

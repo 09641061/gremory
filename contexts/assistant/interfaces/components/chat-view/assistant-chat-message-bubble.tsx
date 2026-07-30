@@ -24,7 +24,10 @@ function AssistantChatMessageBubbleComponent({ message }: AssistantChatMessageBu
             iconClassName="size-5"
           />
 
-          <AssistantChatMarkdown className="pt-1 text-[15px] leading-7 text-foreground" content={message.content} />
+          <AssistantChatMarkdown
+            className="pt-1 text-[15px] leading-7 text-foreground"
+            html={message.renderedContentHtml}
+          />
         </div>
       ) : (
         <div
