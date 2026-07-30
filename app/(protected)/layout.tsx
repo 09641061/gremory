@@ -31,6 +31,7 @@ export default function ProtectedLayout({
 async function ProtectedHeader() {
   let organization: { id: string; name: string; imageUrl?: string | null } | undefined;
   let establishments: { id: string; name: string; photoUrl?: string | null }[] = [];
+  let canCreateEstablishment = true;
 
   try {
     const currentOrganization =
@@ -54,6 +55,7 @@ async function ProtectedHeader() {
     // Members do not own the organization, so Business's owner-scoped
     // endpoints cannot provide their header context. Resolve it from their
     // active workforce memberships instead.
+    canCreateEstablishment = false;
     try {
       const access = await createTeamQueryService().getAccessContext();
       const firstEstablishment = access.establishments[0];
@@ -68,6 +70,16 @@ async function ProtectedHeader() {
             id: item.establishmentId,
             name: item.establishmentName,
           }));
+
+        canCreateEstablishment = access.establishments.some(
+          (item) =>
+            item.organizationId === organization?.id &&
+            item.effectivePermissions.some(
+              (perm) =>
+                perm === "business:establishments:manage" ||
+                perm === "business:manage"
+            )
+        );
       }
     } catch {
       // Keep protected pages available when both contexts are unavailable.
@@ -84,6 +96,7 @@ async function ProtectedHeader() {
       }
       establishments={establishments}
       initialEstablishmentId={establishments[0]?.id}
+      canCreateEstablishment={canCreateEstablishment}
     />
   );
 }

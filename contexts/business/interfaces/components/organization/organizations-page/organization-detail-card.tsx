@@ -19,10 +19,11 @@ import {
 
 interface OrganizationDetailCardProps {
   organization: OrganizationSummary | null;
+  canUpdate?: boolean;
   onCancel?: () => void;
 }
 
-export function OrganizationDetailCard({ organization, onCancel }: OrganizationDetailCardProps) {
+export function OrganizationDetailCard({ organization, canUpdate = true, onCancel }: OrganizationDetailCardProps) {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -115,13 +116,19 @@ export function OrganizationDetailCard({ organization, onCancel }: OrganizationD
                 <div className="space-y-1">
                   <h3 className="text-base font-semibold text-foreground">Organization</h3>
                   <p className="text-sm text-muted-foreground">
-                    This is your organization logo.<br />
-                    Click on the logo to upload a custom one from your files.
+                    {canUpdate ? (
+                      <>
+                        This is your organization logo.<br />
+                        Click on the logo to upload a custom one from your files.
+                      </>
+                    ) : (
+                      "This is the organization logo."
+                    )}
                   </p>
                 </div>
                 <Avatar
-                  className="size-16 cursor-pointer border border-border transition-opacity hover:opacity-80"
-                  onClick={handleAvatarClick}
+                  className={`size-16 border border-border ${canUpdate ? "cursor-pointer transition-opacity hover:opacity-80" : ""}`}
+                  onClick={canUpdate ? handleAvatarClick : undefined}
                 >
                   {previewUrl ? (
                     <AvatarImage src={previewUrl} alt={name} />
@@ -139,9 +146,11 @@ export function OrganizationDetailCard({ organization, onCancel }: OrganizationD
               <div className="space-y-4 p-6">
                 <div className="space-y-1">
                   <h3 className="text-base font-semibold text-foreground">Organization Name</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Please enter the official name for your organization.
-                  </p>
+                  {canUpdate && (
+                    <p className="text-sm text-muted-foreground">
+                      Please enter the official name for your organization.
+                    </p>
+                  )}
                 </div>
                 <div className="max-w-xs">
                   <Input
@@ -150,26 +159,29 @@ export function OrganizationDetailCard({ organization, onCancel }: OrganizationD
                     onChange={(e) => setName(e.target.value)}
                     placeholder="Organization name"
                     maxLength={32}
+                    disabled={!canUpdate}
                   />
                 </div>
               </div>
             </div>
           </CardContent>
 
-          <CardFooter className="shrink-0 justify-end gap-2 rounded-b-xl border-t border-border bg-card px-6 py-5">
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={handleCancel}
-              disabled={pending}
-            >
-              Cancel
-            </Button>
-            <Button type="submit" disabled={pending} className="gap-2">
-              {pending ? <Spinner className="size-4" /> : <Save className="size-4" />}
-              {pending ? "Saving..." : "Save"}
-            </Button>
-          </CardFooter>
+          {canUpdate && (
+            <CardFooter className="shrink-0 justify-end gap-2 rounded-b-xl border-t border-border bg-card px-6 py-5">
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={handleCancel}
+                disabled={pending}
+              >
+                Cancel
+              </Button>
+              <Button type="submit" disabled={pending} className="gap-2">
+                {pending ? <Spinner className="size-4" /> : <Save className="size-4" />}
+                {pending ? "Saving..." : "Save"}
+              </Button>
+            </CardFooter>
+          )}
         </form>
       </Card>
     </div>
