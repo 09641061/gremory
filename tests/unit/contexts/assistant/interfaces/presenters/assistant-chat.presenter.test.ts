@@ -37,7 +37,7 @@ describe("assistant chat presenter", () => {
           id: "message-1",
           role: "assistant",
           content:
-            "Beneficios\n\n• Rápida y Eficiente: Primer punto.\n• Personalizado y Flexible: Segundo punto.\n• Segura y Protegida: Tercer punto.",
+            "Beneficios\n\n\u2022 Rápida y Eficiente: Primer punto.\n\u2022 Personalizado y Flexible: Segundo punto.\n\u2022 Segura y Protegida: Tercer punto.",
           createdAt: "2026-07-30T00:00:00.000Z",
         },
       ],
@@ -47,6 +47,30 @@ describe("assistant chat presenter", () => {
 
     expect(viewModel?.messages[0]?.renderedContentHtml).toContain("<ul>");
     expect(viewModel?.messages[0]?.renderedContentHtml).toContain("<li>");
-    expect(viewModel?.messages[0]?.renderedContentHtml).not.toContain("•");
+    expect(viewModel?.messages[0]?.renderedContentHtml).not.toContain("\u2022");
+  });
+
+  it("separates numbered list items that arrive on the same line", () => {
+    const conversation: AssistantConversationReadModel = {
+      id: "conversation-3",
+      title: "Lista numerada",
+      createdAt: "2026-07-30T00:00:00.000Z",
+      updatedAt: "2026-07-30T00:00:01.000Z",
+      messages: [
+        {
+          id: "message-1",
+          role: "assistant",
+          content: "Pasos\n\n1. Primer paso 2. Segundo paso 3. Tercer paso",
+          createdAt: "2026-07-30T00:00:00.000Z",
+        },
+      ],
+    };
+
+    const viewModel = toConversationViewModel(conversation);
+
+    expect(viewModel?.messages[0]?.renderedContentHtml).toContain("<ol>");
+    expect(viewModel?.messages[0]?.renderedContentHtml).toContain("<li>Primer paso</li>");
+    expect(viewModel?.messages[0]?.renderedContentHtml).toContain("<li>Segundo paso</li>");
+    expect(viewModel?.messages[0]?.renderedContentHtml).toContain("<li>Tercer paso</li>");
   });
 });

@@ -15,10 +15,19 @@ const markdownProcessor = unified()
 const htmlCache = new Map<string, string>();
 
 function normalizeAssistantMarkdownContent(content: string): string {
-  return content
-    .replace(/\r\n/g, "\n")
-    .replace(/(?:^|\n)\s*•\s+/g, "\n- ")
-    .replace(/\s•\s+/g, "\n- ");
+  const normalizedLines = content.replace(/\r\n/g, "\n").split("\n");
+
+  return normalizedLines
+    .map((line) => {
+      if (!/\d+\.\s+.*\d+\.\s+/.test(line)) {
+        return line;
+      }
+
+      return line.replace(/(?<=\S)\s+(?=\d+\.\s+)/g, "\n");
+    })
+    .join("\n")
+    .replace(/(?:^|\n)\s*\u2022\s+/g, "\n- ")
+    .replace(/\s+\u2022\s+/g, "\n- ");
 }
 
 export function renderAssistantMarkdownToHtml(content: string): string {
