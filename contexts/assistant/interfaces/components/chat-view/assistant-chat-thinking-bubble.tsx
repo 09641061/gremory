@@ -5,9 +5,10 @@ export function AssistantChatThinkingBubble() {
   return (
     <div className="flex w-full max-w-[min(48rem,calc(100vw-6rem))] items-start gap-3 sm:max-w-[42rem]" aria-live="polite" aria-label="AI is thinking.">
       <AssistantAvatar
-        className="mt-1 size-10 border-border/40 bg-white shadow-none"
+        className="mt-1 size-10"
         iconSize={20}
         iconClassName="size-5"
+        variant="flat"
       />
 
       <div className="py-1 text-sm leading-6 text-foreground">

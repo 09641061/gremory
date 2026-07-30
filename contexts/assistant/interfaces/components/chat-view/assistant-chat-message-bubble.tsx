@@ -24,9 +24,10 @@ function AssistantChatMessageBubbleComponent({ message }: AssistantChatMessageBu
       {!isUser ? (
         <>
           <AssistantAvatar
-            className="mt-1 size-10 border-border/40 bg-white shadow-none"
+            className="mt-1 size-10"
             iconSize={20}
             iconClassName="size-5"
+            variant="flat"
           />
 
           <div

@@ -63,7 +63,7 @@ El empty state ya no se siente como una tarjeta pesada.
 
 Rasgos visuales:
 
-- avatar dentro de un circulo con borde suave
+- avatar sin contenedor visible, para que destaque solo el assistant
 - fondo claro tipo `card`
 - sombra leve
 - titulo centrado con jerarquia marcada
@@ -288,17 +288,16 @@ El icono del assistant no es decorativo. Define la identidad visual del chat.
 
 El componente `AssistantAvatar`:
 
-- renderiza un boton circular
-- contiene borde suave
+- renderiza un boton con variante `framed` o `flat`
 - usa `next/image`
-- recibe `className`, `iconClassName`, `iconSize` e `iconAlt`
+- recibe `className`, `iconClassName`, `iconSize`, `iconAlt` y `variant`
 
 ### Regla Visual
 
 El avatar debe sentirse:
 
 - pequeno pero reconocible
-- redondeado
+- limpio y sin un fondo que compita con el contenido
 - consistente con el sistema del chat
 - presente tanto en estados vacios como en contexto conversacional
 
