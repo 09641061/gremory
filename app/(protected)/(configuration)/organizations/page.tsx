@@ -1,9 +1,9 @@
 import { createOrganizationQueryService } from "@/contexts/business/application/internal/queryservices/organization-query.service";
-import { OrganizationsPage } from "@/contexts/business/interfaces/components/organization/organizations-page/organizations-page";
+import { OrganizationsPageView } from "@/contexts/business/interfaces/components/organization/organizations-page/organizations-page-view";
 
 export default async function OrganizationsRoutePage() {
   const organization =
     await createOrganizationQueryService().getMyOrganization();
 
-  return <OrganizationsPage organization={organization} />;
+  return <OrganizationsPageView organization={organization} />;
 }

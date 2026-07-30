@@ -1,19 +1,14 @@
 "use client";
 
 import { useActionState, useEffect, useRef } from "react";
-import { useRouter } from "next/navigation";
 import {
   createCatalogServiceAction,
   type CreateCatalogServiceActionState,
 } from "../actions/create-catalog-service.action";
+import type { DetailedServiceDTO } from "@/contexts/catalog/application/model/catalog-view.models";
 
-export function useCreateCatalogService(onSuccess?: () => void) {
-  const router = useRouter();
+export function useCreateCatalogService(onSuccess?: (service: DetailedServiceDTO) => void) {
   const onSuccessRef = useRef(onSuccess);
-
-  useEffect(() => {
-    onSuccessRef.current = onSuccess;
-  });
 
   const [state, formAction, pending] = useActionState(
     createCatalogServiceAction,
@@ -21,11 +16,17 @@ export function useCreateCatalogService(onSuccess?: () => void) {
   );
 
   useEffect(() => {
+    onSuccessRef.current = onSuccess;
+  }, [onSuccess]);
+
+  useEffect(() => {
     if (state.status === "success") {
-      router.refresh();
-      onSuccessRef.current?.();
+      const service = state.data;
+      if (service) {
+        onSuccessRef.current?.(service);
+      }
     }
-  }, [state.status, router]);
+  }, [state.data, state.status]);
 
   return {
     state,

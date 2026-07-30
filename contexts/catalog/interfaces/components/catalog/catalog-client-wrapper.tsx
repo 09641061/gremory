@@ -5,24 +5,26 @@ import type { DetailedServiceDTO } from "@/contexts/catalog/interfaces/component
 import type { CategoryDTO } from "@/contexts/catalog/interfaces/components/catalog/category-sidebar";
 interface CatalogClientWrapperProps {
   initialEstablishmentId?: string;
+  initialSelectedServiceId?: string;
   initialCategories: CategoryDTO[];
   initialServices: DetailedServiceDTO[];
 }
 
 export function CatalogClientWrapper({
   initialEstablishmentId,
+  initialSelectedServiceId,
   initialCategories,
   initialServices,
 }: CatalogClientWrapperProps) {
   const activeEstablishmentId = initialEstablishmentId;
 
-
   return (
     <CatalogLayout
-      key={activeEstablishmentId} // Remounts layout and updates state only when active establishment switches
+      key={`${activeEstablishmentId ?? "none"}:${initialSelectedServiceId ?? "none"}`} // Remounts layout when establishment or selected service changes
       categories={initialCategories}
       services={initialServices}
       activeEstablishmentId={activeEstablishmentId}
+      initialSelectedServiceId={initialSelectedServiceId}
     />
   );
 }

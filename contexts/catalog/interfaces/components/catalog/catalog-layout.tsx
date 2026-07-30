@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
 import { CategorySidebar, type CategoryDTO, type ServiceSummaryDTO } from "./category-sidebar";
 import { type DetailedServiceDTO } from "./service-detail-view";
 import { EditServiceForm } from "./edit-service-form";
@@ -14,29 +13,37 @@ interface CatalogLayoutProps {
   categories: CategoryDTO[];
   services: DetailedServiceDTO[];
   activeEstablishmentId?: string;
+  initialSelectedServiceId?: string;
 }
 
 export function CatalogLayout({
   categories,
   services: initialServices,
   activeEstablishmentId,
+  initialSelectedServiceId,
 }: CatalogLayoutProps) {
-  const router = useRouter();
   const selectedCategoryIdFallback = categories[0]?.id;
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | undefined>(selectedCategoryIdFallback);
-  const [selectedServiceId, setSelectedServiceId] = useState<string | undefined>(undefined);
+  const [selectedServiceId, setSelectedServiceId] = useState<string | undefined>(initialSelectedServiceId);
+  const [createdService, setCreatedService] = useState<DetailedServiceDTO | null>(null);
   const [creatingServiceCategoryId, setCreatingServiceCategoryId] = useState<string | undefined>(undefined);
   const [serviceOverrides, setServiceOverrides] = useState<Record<string, Partial<DetailedServiceDTO>>>({});
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<CategoryDTO | null>(null);
 
   const servicesList = useMemo(
-    () =>
-      initialServices.map((service) => ({
+    () => {
+      const services = [...initialServices];
+      if (createdService && !services.some((service) => service.id === createdService.id)) {
+        services.unshift(createdService);
+      }
+
+      return services.map((service) => ({
         ...service,
         ...serviceOverrides[service.id],
-      })),
-    [initialServices, serviceOverrides]
+      }));
+    },
+    [createdService, initialServices, serviceOverrides]
   );
 
   const activeSelectedCategoryId =
@@ -120,9 +127,11 @@ export function CatalogLayout({
               key={`create-service-${creatingServiceCategoryId}`}
               establishmentId={activeEstablishmentId ?? ""}
               categoryId={creatingServiceCategoryId}
-              onSuccess={() => {
+              onSuccess={(service) => {
+                setCreatedService(service);
+                setSelectedServiceId(service.id);
+                setSelectedCategoryId(undefined);
                 setCreatingServiceCategoryId(undefined);
-                router.refresh();
               }}
               onCancel={() => {
                 setCreatingServiceCategoryId(undefined);

@@ -3,12 +3,14 @@
 import { revalidateTag } from "next/cache";
 import { createCatalogServiceSchema } from "../rest/schemas/catalog-service.schemas";
 import { createCatalogServiceCommandService } from "../../application/internal/commandservices/catalog-service-command.service";
+import { createCatalogServiceReadModel } from "../../application/model/catalog-service.read-model";
 import { requireCatalogAccessToken } from "./catalog-action-auth";
 import { createCatalogServiceCreateCommand } from "../../domain/model/commands/catalog-service.commands";
+import type { DetailedServiceDTO } from "../../application/model/catalog-view.models";
 
 export type CreateCatalogServiceActionState = {
   status: "idle" | "success" | "error";
-  data: { id?: string } | null;
+  data: DetailedServiceDTO | null;
   error: string | null;
 };
 
@@ -47,7 +49,7 @@ export async function createCatalogServiceAction(
 
     return {
       status: "success",
-      data: { id: result.props.id.value },
+      data: createCatalogServiceReadModel(result),
       error: null,
     };
   } catch (err) {

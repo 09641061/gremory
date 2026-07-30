@@ -5,11 +5,11 @@ import type { CategoryDTO, DetailedServiceDTO } from "@/contexts/catalog/applica
 import { CatalogClientWrapper } from "@/contexts/catalog/interfaces/components/catalog/catalog-client-wrapper";
 
 interface CatalogPageProps {
-  searchParams: Promise<{ establishmentId?: string }>;
+  searchParams: Promise<{ establishmentId?: string; serviceId?: string }>;
 }
 
 export default async function CatalogPage({ searchParams }: CatalogPageProps) {
-  const { establishmentId: paramEstId } = await searchParams;
+  const { establishmentId: paramEstId, serviceId: paramServiceId } = await searchParams;
 
   const aclService = createBusinessEstablishmentAclService();
   const defaultEstId = await aclService.getActiveEstablishmentIdForUser();
@@ -35,6 +35,7 @@ export default async function CatalogPage({ searchParams }: CatalogPageProps) {
   return (
     <CatalogClientWrapper
       initialEstablishmentId={establishmentId}
+      initialSelectedServiceId={paramServiceId}
       initialCategories={categories}
       initialServices={services}
     />
