@@ -3,7 +3,7 @@
 import { cn } from "@/lib/utils";
 
 import type { AssistantMessageReadModel } from "@/contexts/assistant/application/internal/transforms/assistant.read-models";
-import { AssistantAvatar } from "@/contexts/shared/interfaces/components/icons/assistant/assistant-kodu";
+import { AssistantAvatar } from "@/contexts/shared/interfaces/components/assistant-avatar/assistant-avatar";
 
 interface AssistantChatMessageBubbleProps {
   message: AssistantMessageReadModel;

@@ -2,7 +2,7 @@
 
 import type { RefObject } from "react";
 
-import { AssistantAvatar } from "@/contexts/shared/interfaces/components/icons/assistant/assistant-kodu";
+import { AssistantAvatar } from "@/contexts/shared/interfaces/components/assistant-avatar/assistant-avatar";
 
 interface AssistantChatWelcomeProps {
   bottomRef?: RefObject<HTMLDivElement | null>;

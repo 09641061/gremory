@@ -2,7 +2,7 @@
 
 import { cn } from "@/lib/utils";
 
-import { AssistantAvatar } from "@/contexts/shared/interfaces/components/icons/assistant/assistant-kodu";
+import { AssistantAvatar } from "@/contexts/shared/interfaces/components/assistant-avatar/assistant-avatar";
 
 interface AssistantChatThinkingBubbleProps {
   className?: string;
