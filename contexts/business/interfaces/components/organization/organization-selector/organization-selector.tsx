@@ -22,12 +22,16 @@ interface OrganizationSelectorProps {
   organization?: OrganizationSelectorOrganization;
   organizations?: OrganizationSelectorOrganization[];
   canRead?: boolean;
+  onSelect?: (organizationId: string) => void;
+  activeEstablishmentId?: string;
 }
 
 export function OrganizationSelector({
   organization,
   organizations = organization ? [organization] : [],
   canRead = true,
+  onSelect,
+  activeEstablishmentId,
 }: OrganizationSelectorProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -66,11 +70,15 @@ export function OrganizationSelector({
             selectedId={organization?.id}
             search={search}
             onSearchChange={setSearch}
-            onSelect={() => setIsOpen(false)}
+            onSelect={(org) => {
+              setIsOpen(false);
+              onSelect?.(org.id);
+            }}
             onSelectAll={() => {
               setIsOpen(false);
               if (canRead) {
-                router.push("/organizations");
+                const query = activeEstablishmentId ? `?establishmentId=${activeEstablishmentId}` : "";
+                router.push(`/organizations${query}`);
               } else {
                 router.push(`${pathname}?denied=org`);
               }
