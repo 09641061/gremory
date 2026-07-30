@@ -1,14 +1,8 @@
 "use client";
 
-import type { RefObject } from "react";
-
 import { AssistantAvatar } from "@/contexts/shared/interfaces/components/assistant-avatar/assistant-avatar";
 
-interface AssistantChatWelcomeProps {
-  bottomRef?: RefObject<HTMLDivElement | null>;
-}
-
-export function AssistantChatWelcome({ bottomRef }: AssistantChatWelcomeProps) {
+export function AssistantChatWelcome() {
   return (
     <div className="mx-auto flex w-full max-w-4xl flex-col gap-4">
       <div className="flex items-end justify-start gap-3">
@@ -17,8 +11,6 @@ export function AssistantChatWelcome({ bottomRef }: AssistantChatWelcomeProps) {
           Hola, soy tu asistente. Escribime lo que necesitas y empezamos.
         </div>
       </div>
-
-      {bottomRef ? <div ref={bottomRef} /> : null}
     </div>
   );
 }

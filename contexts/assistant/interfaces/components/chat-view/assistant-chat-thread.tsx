@@ -103,9 +103,10 @@ function AssistantChatThreadComponent({
             <div ref={bottomRef} />
           </div>
         ) : (
-          <div className="mx-auto flex w-full max-w-3xl flex-col gap-6">
-            <AssistantChatWelcome bottomRef={bottomRef} />
-          </div>
+          <>
+            <AssistantChatWelcome />
+            <div ref={bottomRef} />
+          </>
         )}
       </div>
     </section>
