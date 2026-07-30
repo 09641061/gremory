@@ -12,6 +12,13 @@ interface AssistantChatMessageBubbleProps {
 
 function AssistantChatMessageBubbleComponent({ message }: AssistantChatMessageBubbleProps) {
   const isUser = message.role === "user";
+  const assistantMarkdownClassName =
+    "min-w-0 overflow-x-auto break-words pt-1 text-[15px] leading-7 text-foreground " +
+    "[&_table]:min-w-max [&_table]:border-separate [&_table]:border-spacing-x-4 [&_table]:border-spacing-y-2 " +
+    "[&_th]:whitespace-nowrap [&_th]:px-4 [&_th]:py-2 [&_th]:text-left [&_th]:font-semibold [&_th]:align-top " +
+    "[&_td]:px-4 [&_td]:py-2 [&_td]:align-top " +
+    "[&_thead_th]:border-b [&_thead_th]:border-border/60 " +
+    "[&_tbody_tr:not(:last-child)_td]:border-b [&_tbody_tr:not(:last-child)_td]:border-border/30";
 
   return (
     <div
@@ -31,7 +38,7 @@ function AssistantChatMessageBubbleComponent({ message }: AssistantChatMessageBu
           />
 
           <div
-            className="min-w-0 overflow-x-auto break-words pt-1 text-[15px] leading-7 text-foreground"
+            className={assistantMarkdownClassName}
             dangerouslySetInnerHTML={{ __html: message.renderedContentHtml }}
           />
         </>
