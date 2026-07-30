@@ -11,6 +11,9 @@ type AssistantChatMarkdownProps = {
   className?: string;
 };
 
+const MAX_MARKDOWN_CACHE_ENTRIES = 100;
+const markdownRenderCache = new Map<string, ReactNode>();
+
 const markdownComponents = {
   p: ({ children }: { children?: ReactNode }) => <p className="mb-3 last:mb-0">{children}</p>,
   h1: ({ children }: { children?: ReactNode }) => <h1 className="mb-3 text-xl font-semibold tracking-tight">{children}</h1>,
@@ -66,12 +69,31 @@ const markdownComponents = {
   hr: () => <hr className="my-4 border-border/70" />,
 };
 
+function getCachedMarkdown(content: string) {
+  const cached = markdownRenderCache.get(content);
+  if (cached) return cached;
+
+  const rendered = (
+    <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
+      {content}
+    </ReactMarkdown>
+  );
+
+  if (markdownRenderCache.size >= MAX_MARKDOWN_CACHE_ENTRIES) {
+    const oldestKey = markdownRenderCache.keys().next().value;
+    if (oldestKey !== undefined) {
+      markdownRenderCache.delete(oldestKey);
+    }
+  }
+
+  markdownRenderCache.set(content, rendered);
+  return rendered;
+}
+
 function AssistantChatMarkdownComponent({ content, className }: AssistantChatMarkdownProps) {
   return (
     <div className={cn("min-w-0 overflow-x-auto break-words", className)}>
-      <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
-        {content}
-      </ReactMarkdown>
+      {getCachedMarkdown(content)}
     </div>
   );
 }
