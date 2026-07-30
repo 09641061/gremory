@@ -145,6 +145,7 @@ agrega costo o complejidad visual.
 
 - párrafos
 - saltos de línea
+- encabezados simples
 - listas con viñetas
 - listas ordenadas
 - tablas
@@ -153,6 +154,8 @@ agrega costo o complejidad visual.
 - links
 - código inline
 - bloques de código
+- blockquotes
+- separadores horizontales
 
 #### Reducido o omitido
 
@@ -160,8 +163,6 @@ agrega costo o complejidad visual.
 - HTML embebido
 - footnotes
 - task lists o checkboxes
-- blockquotes
-- separadores horizontales
 - encabezados con estilizado dedicado más allá del flujo normal del texto
 
 #### Criterio de diseño
