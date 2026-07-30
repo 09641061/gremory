@@ -35,5 +35,5 @@ export default async function TeamPage({ searchParams }: TeamPageProps) {
     position: role.position,
     systemRole: role.isSystemRole(),
   }));
-  return <TeamPageView establishmentId={establishmentId} members={members} roles={roleOptions} canManageRoles={roleOptions.length > 0} />;
+  return <TeamPageView establishmentId={establishmentId ?? null} members={members} roles={roleOptions} canManageRoles={roleOptions.length > 0} />;
 }

@@ -34,6 +34,7 @@ interface CategoryItemProps {
   canUpdateCategory: boolean;
   canDeleteCategory: boolean;
   canCreateService: boolean;
+  onCreateService?: (categoryId: string) => void;
 }
 
 export function CategoryItem({
