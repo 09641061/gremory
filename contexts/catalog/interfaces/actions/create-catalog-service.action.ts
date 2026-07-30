@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidateTag } from "next/cache";
+import { updateTag } from "next/cache";
 import { createCatalogServiceSchema } from "../rest/schemas/catalog-service.schemas";
 import { createCatalogServiceCommandService } from "../../application/internal/commandservices/catalog-service-command.service";
 import { createCatalogServiceReadModel } from "../../application/model/catalog-service.read-model";
@@ -44,8 +44,8 @@ export async function createCatalogServiceAction(
     const command = createCatalogServiceCreateCommand(parsed.data);
     const result = await service.create(command, token);
 
-    revalidateTag("catalog-services", "max");
-    revalidateTag(`catalog-services:${parsed.data.establishmentId}`, "max");
+    updateTag("catalog-services");
+    updateTag(`catalog-services:${parsed.data.establishmentId}`);
 
     return {
       status: "success",

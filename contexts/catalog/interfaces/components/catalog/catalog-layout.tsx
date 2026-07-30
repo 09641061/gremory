@@ -117,7 +117,7 @@ export function CatalogLayout({
           onCreateService={(catId) => {
             setCreatingServiceCategoryId(catId);
             setSelectedServiceId(undefined);
-            setSelectedCategoryId(undefined);
+            setSelectedCategoryId(catId);
           }}
         />
 
