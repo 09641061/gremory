@@ -17,6 +17,7 @@ export default async function EditOrganizationPage({
       organization={{
         id: organization.id,
         name: organization.name,
+        imageUrl: organization.imageUrl,
       }}
     />
   );

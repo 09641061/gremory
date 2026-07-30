@@ -7,6 +7,7 @@ export const createOrganizationSchema = z.object({
 export const updateOrganizationSchema = z.object({
   id: z.string().uuid("Invalid organization ID"),
   name: z.string().trim().min(1, "Organization name is required").max(150),
+  imageUrl: z.string().trim().max(500, "Image URL cannot exceed 500 characters").nullish(),
 });
 
 export type CreateOrganizationInput = z.infer<typeof createOrganizationSchema>;

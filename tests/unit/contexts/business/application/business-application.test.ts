@@ -10,6 +10,7 @@ import { createEstablishmentName } from "../../../../../contexts/business/domain
 import { createEstablishmentPhoto } from "../../../../../contexts/business/domain/model/valueobjects/establishment-photo.vo";
 import { createOrganizationId } from "../../../../../contexts/business/domain/model/valueobjects/organization-id.vo";
 import { createOrganizationName } from "../../../../../contexts/business/domain/model/valueobjects/organization-name.vo";
+import { createOrganizationImage } from "../../../../../contexts/business/domain/model/valueobjects/organization-image.vo";
 import type {
   EstablishmentRepository,
   OrganizationRepository,
@@ -68,6 +69,7 @@ describe("Business query services", () => {
       id: organizationId,
       ownerId: organizationId,
       name: "Acme",
+      imageUrl: null,
     });
     expect(result).not.toBeInstanceOf(Organization);
   });
@@ -107,6 +109,7 @@ function organization(name: string) {
     id: createOrganizationId(organizationId),
     ownerId: organizationId,
     name: createOrganizationName(name),
+    imageUrl: createOrganizationImage(null),
     active: true,
   });
 }

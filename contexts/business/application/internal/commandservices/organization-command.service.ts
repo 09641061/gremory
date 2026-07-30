@@ -16,7 +16,7 @@ export class OrganizationCommandServiceImpl implements OrganizationCommandServic
       createOrganizationId(command.id),
     );
     if (!organization) throw new Error("Organization not found");
-    organization.rename(command.name);
+    organization.update(command.name, command.imageUrl);
     const saved = await this.organizations.save(organization);
     return saved.id;
   }

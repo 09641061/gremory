@@ -15,7 +15,7 @@ describe("AssistantChatThinkingBubble", () => {
     render(<AssistantChatThinkingBubble />);
 
     expect(screen.getByText("We received your message.")).toBeVisible();
-    expect(screen.getByText("AI is thinking")).toBeVisible();
+    expect(screen.getByText("Kodu is thinking")).toBeVisible();
     expect(screen.getByTestId("assistant-avatar")).toBeVisible();
   });
 });

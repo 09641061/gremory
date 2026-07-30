@@ -27,7 +27,16 @@ export function OrganizationsPage({
       <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
         <Card className="overflow-visible transition-colors hover:ring-foreground/20">
           <div className="flex h-36 items-center justify-center overflow-hidden rounded-t-xl bg-muted/50">
-            <Building2 className="size-12 text-muted-foreground/50" />
+            {organization.imageUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={organization.imageUrl}
+                alt={organization.name}
+                className="size-full object-cover"
+              />
+            ) : (
+              <Building2 className="size-12 text-muted-foreground/50" />
+            )}
           </div>
           <CardHeader>
             <CardTitle>{organization.name}</CardTitle>
