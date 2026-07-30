@@ -5,6 +5,7 @@ import { Loader2 } from "lucide-react";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import { Input } from "@/contexts/shared/interfaces/components/ui/input";
 import { Label } from "@/contexts/shared/interfaces/components/ui/label";
+import { Alert, AlertDescription, AlertTitle } from "@/contexts/shared/interfaces/components/ui/alert";
 import { PhoneInput } from "./phone-input";
 import { resolveDocumentAction } from "../actions/resolve-document.action";
 
@@ -40,6 +41,7 @@ export function CustomerForm({
   const [email, setEmail] = React.useState(initialData?.email || "");
   const [phonePrefix, setPhonePrefix] = React.useState(initialData?.phonePrefix || "+51");
   const [phoneNumber, setPhoneNumber] = React.useState(initialData?.phoneNumber || "");
+  const [error, setError] = React.useState<string | null>(null);
 
   const [isResolving, setIsResolving] = React.useState(false);
   const prevResolvedRef = React.useRef<string>("");
@@ -81,30 +83,31 @@ export function CustomerForm({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
 
     // Document validation
     if (docType === "dni") {
       const isNumeric = /^\d+$/.test(docNumber);
       if (!isNumeric || docNumber.length !== 8) {
-        alert("The DNI must have exactly 8 digits.");
+        setError("The DNI must have exactly 8 digits.");
         return;
       }
     } else if (docType === "ruc") {
       const isNumeric = /^\d+$/.test(docNumber);
       if (!isNumeric || docNumber.length !== 11) {
-        alert("The RUC must have exactly 11 digits.");
+        setError("The RUC must have exactly 11 digits.");
         return;
       }
     } else if (docType === "foreign_resident_card") {
       const isAlphanumeric = /^[a-zA-Z0-9]+$/.test(docNumber);
       if (!isAlphanumeric || docNumber.length < 9 || docNumber.length > 12) {
-        alert("The C.E. (Foreigner ID) must be alphanumeric and between 9 and 12 characters.");
+        setError("The C.E. (Foreigner ID) must be alphanumeric and between 9 and 12 characters.");
         return;
       }
     } else if (docType === "passport") {
       const isAlphanumeric = /^[a-zA-Z0-9]+$/.test(docNumber);
       if (!isAlphanumeric || docNumber.length > 20) {
-        alert("The Passport must be alphanumeric and have a maximum of 20 characters.");
+        setError("The Passport must be alphanumeric and have a maximum of 20 characters.");
         return;
       }
     }
@@ -121,7 +124,7 @@ export function CustomerForm({
     ].find((c) => c.code === phonePrefix);
 
     if (country && phoneNumber.length !== country.length) {
-      alert(`The phone number for ${phonePrefix} must have exactly ${country.length} digits.`);
+      setError(`The phone number for ${phonePrefix} must have exactly ${country.length} digits.`);
       return;
     }
 
@@ -139,6 +142,12 @@ export function CustomerForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
+      {error && (
+        <Alert variant="destructive">
+          <AlertTitle>Validation Error</AlertTitle>
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
       {/* Identity Section */}
       <div className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -150,10 +159,9 @@ export function CustomerForm({
               onChange={(e) => {
                 const newType = e.target.value;
                 setDocType(newType);
-                if (initialData?.docType !== newType) {
-                    setName("");
-                    setDocNumber("");
-                }
+                setName("");
+                setDocNumber("");
+                setError(null);
               }}
               className="w-full h-9 rounded-lg border border-border bg-transparent px-3 text-sm transition-colors outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
             >
@@ -170,7 +178,28 @@ export function CustomerForm({
               <Input
                 id="doc_number"
                 value={docNumber}
-                onChange={(e) => setDocNumber(e.target.value)}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setError(null);
+                  if (docType === "dni" || docType === "ruc") {
+                    if (/^\d*$/.test(val)) {
+                      setDocNumber(val);
+                    }
+                  } else {
+                    setDocNumber(val);
+                  }
+                }}
+                maxLength={
+                  docType === "dni"
+                    ? 8
+                    : docType === "ruc"
+                    ? 11
+                    : docType === "foreign_resident_card"
+                    ? 12
+                    : docType === "passport"
+                    ? 20
+                    : undefined
+                }
                 placeholder="Enter number..."
                 required
               />
