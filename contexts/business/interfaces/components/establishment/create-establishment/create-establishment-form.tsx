@@ -36,12 +36,14 @@ export function CreateEstablishmentForm({ organizationId }: { organizationId: st
       router.push("/establishments");
       router.refresh();
     } else if (state.status === "error") {
-      setName("");
-      setPhotoPreviewUrl((current) => {
-        if (current) URL.revokeObjectURL(current);
-        return null;
-      });
-      setFormResetKey((k) => k + 1);
+      setTimeout(() => {
+        setName("");
+        setPhotoPreviewUrl((current) => {
+          if (current) URL.revokeObjectURL(current);
+          return null;
+        });
+        setFormResetKey((k) => k + 1);
+      }, 0);
     }
   }, [router, state.status, state.error]);
 

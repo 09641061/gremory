@@ -19,25 +19,28 @@ import {
 
 interface EstablishmentDetailCardProps {
   establishment: EstablishmentListItem | null;
+  canUpdate?: boolean;
   onCancel?: () => void;
 }
 
-export function EstablishmentDetailCard({ establishment, onCancel }: EstablishmentDetailCardProps) {
+export function EstablishmentDetailCard({ establishment, canUpdate = true, onCancel }: EstablishmentDetailCardProps) {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const [prevEstablishment, setPrevEstablishment] = useState(establishment);
   const [name, setName] = useState(establishment?.name ?? "");
   const [previewUrl, setPreviewUrl] = useState<string | null>(establishment?.photoUrl ?? null);
+
+  if (establishment !== prevEstablishment) {
+    setPrevEstablishment(establishment);
+    setName(establishment?.name ?? "");
+    setPreviewUrl(establishment?.photoUrl ?? null);
+  }
 
   const [state, formAction, pending] = useActionState(
     updateEstablishmentAction,
     initialBusinessActionResult,
   );
-
-  useEffect(() => {
-    setName(establishment?.name ?? "");
-    setPreviewUrl(establishment?.photoUrl ?? null);
-  }, [establishment]);
 
   useEffect(() => {
     if (state.status === "success") {
@@ -111,13 +114,19 @@ export function EstablishmentDetailCard({ establishment, onCancel }: Establishme
                 <div className="space-y-1">
                   <h3 className="text-base font-semibold text-foreground">Establishment</h3>
                   <p className="text-sm text-muted-foreground">
-                    This is your establishment photo.<br />
-                    Click on the photo to upload a custom one from your files.
+                    {canUpdate ? (
+                      <>
+                        This is your establishment photo.<br />
+                        Click on the photo to upload a custom one from your files.
+                      </>
+                    ) : (
+                      "This is the establishment photo."
+                    )}
                   </p>
                 </div>
                 <Avatar
-                  className="size-16 cursor-pointer border border-border transition-opacity hover:opacity-80"
-                  onClick={handleAvatarClick}
+                  className={`size-16 border border-border ${canUpdate ? "cursor-pointer transition-opacity hover:opacity-80" : ""}`}
+                  onClick={canUpdate ? handleAvatarClick : undefined}
                 >
                   {previewUrl ? (
                     <AvatarImage src={previewUrl} alt={name} />
@@ -135,9 +144,11 @@ export function EstablishmentDetailCard({ establishment, onCancel }: Establishme
               <div className="space-y-4 p-6">
                 <div className="space-y-1">
                   <h3 className="text-base font-semibold text-foreground">Establishment Name</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Please enter the official name for your establishment.
-                  </p>
+                  {canUpdate && (
+                    <p className="text-sm text-muted-foreground">
+                      Please enter the official name for your establishment.
+                    </p>
+                  )}
                 </div>
                 <div className="max-w-xs">
                   <Input
@@ -146,26 +157,29 @@ export function EstablishmentDetailCard({ establishment, onCancel }: Establishme
                     onChange={(e) => setName(e.target.value)}
                     placeholder="Establishment name"
                     maxLength={32}
+                    disabled={!canUpdate}
                   />
                 </div>
               </div>
             </div>
           </CardContent>
 
-          <CardFooter className="shrink-0 justify-end gap-2 rounded-b-xl border-t border-border bg-card px-6 py-5">
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={handleCancel}
-              disabled={pending}
-            >
-              Cancel
-            </Button>
-            <Button type="submit" disabled={pending} className="gap-2">
-              {pending ? <Spinner className="size-4" /> : <Save className="size-4" />}
-              {pending ? "Saving..." : "Save"}
-            </Button>
-          </CardFooter>
+          {canUpdate && (
+            <CardFooter className="shrink-0 justify-end gap-2 rounded-b-xl border-t border-border bg-card px-6 py-5">
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={handleCancel}
+                disabled={pending}
+              >
+                Cancel
+              </Button>
+              <Button type="submit" disabled={pending} className="gap-2">
+                {pending ? <Spinner className="size-4" /> : <Save className="size-4" />}
+                {pending ? "Saving..." : "Save"}
+              </Button>
+            </CardFooter>
+          )}
         </form>
       </Card>
     </div>

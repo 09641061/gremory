@@ -14,12 +14,16 @@ interface HeaderProps {
   organizationSlot?: ReactNode;
   establishments: HeaderEstablishment[];
   initialEstablishmentId?: string;
+  canCreateEstablishment?: boolean;
+  canReadEstablishments?: boolean;
 }
 
 export function Header({
   organizationSlot,
   establishments,
   initialEstablishmentId,
+  canCreateEstablishment = true,
+  canReadEstablishments = true,
 }: HeaderProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -53,7 +57,8 @@ export function Header({
           establishments={establishments}
           selectedEstablishmentId={selectedEstablishmentId}
           onSelect={selectEstablishment}
-          onNew={() => router.push("/establishments/new")}
+          onNew={canCreateEstablishment ? () => router.push("/establishments/new") : undefined}
+          canRead={canReadEstablishments}
         />
         </div>
       </div>

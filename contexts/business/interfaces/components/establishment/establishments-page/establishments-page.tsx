@@ -13,8 +13,12 @@ export type EstablishmentListItem = {
 
 export function EstablishmentsPage({
   establishments,
+  canUpdateMap = {},
+  defaultCanUpdate = true,
 }: {
   establishments: EstablishmentListItem[];
+  canUpdateMap?: Record<string, boolean>;
+  defaultCanUpdate?: boolean;
 }) {
   const [filter, setFilter] = useState("");
   const [selectedEstId, setSelectedEstId] = useState<string | null>(null);
@@ -28,6 +32,7 @@ export function EstablishmentsPage({
   }, [filter, establishments]);
 
   const selectedEst = establishments.find((est) => est.id === selectedEstId) ?? null;
+  const canUpdateSelected = selectedEst ? (canUpdateMap[selectedEst.id] ?? defaultCanUpdate) : defaultCanUpdate;
 
   return (
     <section className="mx-auto flex w-full max-w-7xl flex-col gap-6 lg:flex-row">
@@ -55,6 +60,7 @@ export function EstablishmentsPage({
       {/* Columna derecha */}
       <EstablishmentDetailCard
         establishment={selectedEst}
+        canUpdate={canUpdateSelected}
         onCancel={() => setSelectedEstId(null)}
       />
     </section>

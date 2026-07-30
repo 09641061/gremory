@@ -13,11 +13,6 @@ import {
   type BusinessActionResult,
 } from "./business-action-result";
 
-type PhotoUploadResponse = {
-  message?: string;
-  storedPath?: string;
-  photoUrl?: string;
-};
 
 async function updateOrganizationWithMultipart(
   organizationId: string,

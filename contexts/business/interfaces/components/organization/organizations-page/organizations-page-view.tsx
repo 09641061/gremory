@@ -8,8 +8,10 @@ import { OrganizationDetailCard } from "./organization-detail-card";
 
 export function OrganizationsPageView({
   organization,
+  canUpdate = true,
 }: {
   organization: OrganizationSummary;
+  canUpdate?: boolean;
 }) {
   const [filter, setFilter] = useState("");
   const [selectedOrgId, setSelectedOrgId] = useState<string | null>(null);
@@ -52,6 +54,7 @@ export function OrganizationsPageView({
       {/* Columna derecha */}
       <OrganizationDetailCard
         organization={selectedOrg}
+        canUpdate={canUpdate}
         onCancel={() => setSelectedOrgId(null)}
       />
     </section>
