@@ -63,7 +63,7 @@ El empty state ya no se siente como una tarjeta pesada.
 
 Rasgos visuales:
 
-- avatar dentro de un circulo con borde suave
+- avatar sin contenedor visible, para que destaque solo el assistant
 - fondo claro tipo `card`
 - sombra leve
 - titulo centrado con jerarquia marcada
@@ -134,6 +134,45 @@ Este modo busca parecerse a la captura de referencia:
 - texto sin fondo pesado
 - ancho mas generoso que el usuario
 - lectura mas editorial y menos “burbuja dura”
+
+### Contrato Markdown Del Assistant
+
+La vista del assistant no intenta soportar todo Markdown posible. La regla
+actual es mantener lo que aporta valor real al negocio y reducir lo que solo
+agrega costo o complejidad visual.
+
+#### Soportado
+
+- párrafos
+- saltos de línea
+- encabezados simples
+- listas con viñetas
+- listas ordenadas
+- tablas
+- negrita
+- cursiva
+- links
+- código inline
+- bloques de código
+- blockquotes
+- separadores horizontales
+
+#### Reducido o omitido
+
+- imágenes
+- HTML embebido
+- footnotes
+- task lists o checkboxes
+- encabezados con estilizado dedicado más allá del flujo normal del texto
+
+#### Criterio de diseño
+
+La meta no es renderizar todo, sino:
+
+- conservar Markdown rico donde aporta valor
+- evitar adornos que el usuario casual probablemente no usa
+- bajar carga de render sin perder tablas, listas ni código
+- mantener una lectura clara y rápida en el chat
 
 ### Separacion Entre Mensajes
 
@@ -249,17 +288,16 @@ El icono del assistant no es decorativo. Define la identidad visual del chat.
 
 El componente `AssistantAvatar`:
 
-- renderiza un boton circular
-- contiene borde suave
+- renderiza un boton con variante `framed` o `flat`
 - usa `next/image`
-- recibe `className`, `iconClassName`, `iconSize` e `iconAlt`
+- recibe `className`, `iconClassName`, `iconSize`, `iconAlt` y `variant`
 
 ### Regla Visual
 
 El avatar debe sentirse:
 
 - pequeno pero reconocible
-- redondeado
+- limpio y sin un fondo que compita con el contenido
 - consistente con el sistema del chat
 - presente tanto en estados vacios como en contexto conversacional
 

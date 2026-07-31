@@ -14,7 +14,6 @@ interface AssistantChatComposerProps {
   onKeyDown: (event: KeyboardEvent<HTMLTextAreaElement>) => void;
   disabled?: boolean;
   variant?: "default" | "minimal";
-  floating?: boolean;
 }
 
 const MIN_HEIGHT = 24;
@@ -38,7 +37,6 @@ export function AssistantChatComposer({
   onKeyDown,
   disabled,
   variant = "default",
-  floating = false,
 }: AssistantChatComposerProps) {
   const isMinimal = variant === "minimal";
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
@@ -106,6 +104,22 @@ export function AssistantChatComposer({
     );
   }
 
+  function renderComposerInput(className: string) {
+    return (
+      <textarea
+        ref={textareaRef}
+        id="assistant-chat-composer"
+        value={value}
+        onChange={(event) => onValueChange(event.target.value)}
+        onKeyDown={onKeyDown}
+        rows={1}
+        placeholder="Ask what you need about Takodu"
+        disabled={disabled || isSending}
+        className={cn(inputBaseClass, className)}
+      />
+    );
+  }
+
   const shellClasses = cn(
     shellBaseClass,
     composerState === "multiline" ? shellMultiLineClass : shellSingleLineClass,
@@ -127,86 +141,40 @@ export function AssistantChatComposer({
           </label>
 
           <div className="flex items-center gap-3">
-            <div className="min-w-0 flex-1">
-              <textarea
-                ref={textareaRef}
-                id="assistant-chat-composer"
-                value={value}
-                onChange={(event) => onValueChange(event.target.value)}
-                onKeyDown={onKeyDown}
-                rows={1}
-                placeholder="Ask what you need about Takodu"
-                disabled={disabled || isSending}
-                className={cn(
-                  inputBaseClass,
-                  inputSingleLineClass,
-                )}
-              />
-            </div>
-
+            <div className="min-w-0 flex-1">{renderComposerInput(inputSingleLineClass)}</div>
             {renderActionButton()}
           </div>
         </div>
       </div>
     </div>
   ) : (
-    <div className={floating ? "bg-transparent p-0" : "bg-transparent p-0"}>
-      <div className="mx-auto w-full max-w-4xl">
-        <div
-          ref={shellRef}
-          className={shellClasses}
-          data-composer-state={composerState}
-          data-testid="assistant-composer-shell"
-        >
-          <label htmlFor="assistant-chat-composer" className="sr-only">
-            Ask what you need about Takodu
-          </label>
+    <div className="mx-auto w-full max-w-4xl">
+      <div
+        ref={shellRef}
+        className={shellClasses}
+        data-composer-state={composerState}
+        data-testid="assistant-composer-shell"
+      >
+        <label htmlFor="assistant-chat-composer" className="sr-only">
+          Ask what you need about Takodu
+        </label>
 
-          {composerState === "multiline" ? (
-            <div className="flex min-h-0 flex-col gap-3">
-              <textarea
-                ref={textareaRef}
-                id="assistant-chat-composer"
-                value={value}
-                onChange={(event) => onValueChange(event.target.value)}
-                onKeyDown={onKeyDown}
-                rows={1}
-                placeholder="Ask what you need about Takodu"
-                disabled={disabled || isSending}
-                className={cn(
-                  inputBaseClass,
-                  inputMultiLineClass,
-                )}
-              />
+        {composerState === "multiline" ? (
+          <div className="flex min-h-0 flex-col gap-3">
+            {renderComposerInput(inputMultiLineClass)}
 
-              <div className="flex items-center justify-between gap-3 border-t border-border/60 pt-3">
-                <div />
-                {renderActionButton()}
-              </div>
-            </div>
-          ) : (
-            <div className="flex items-center gap-3">
-              <div className="min-w-0 flex-1">
-                <textarea
-                  ref={textareaRef}
-                  id="assistant-chat-composer"
-                  value={value}
-                  onChange={(event) => onValueChange(event.target.value)}
-                  onKeyDown={onKeyDown}
-                  rows={1}
-                  placeholder="Ask what you need about Takodu"
-                  disabled={disabled || isSending}
-                  className={cn(
-                    inputBaseClass,
-                    inputSingleLineClass,
-                  )}
-                />
-              </div>
-
+            <div className="flex items-center justify-between gap-3 border-t border-border/60 pt-3">
+              <div />
               {renderActionButton()}
             </div>
-          )}
-        </div>
+          </div>
+        ) : (
+          <div className="flex items-center gap-3">
+            <div className="min-w-0 flex-1">{renderComposerInput(inputSingleLineClass)}</div>
+
+            {renderActionButton()}
+          </div>
+        )}
       </div>
     </div>
   );

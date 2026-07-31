@@ -1,7 +1,6 @@
 import type {
   AssistantConversationResponse,
   AssistantConversationSummaryResponse,
-  AssistantMessageResponse,
   PageResponse,
 } from "@/contexts/assistant/infrastructure/gateways/assistant-api.gateway";
 
@@ -24,21 +23,37 @@ type ConversationMessageSource = {
   createdAt: string;
 };
 
+const DEFAULT_ASSISTANT_GREETING = "Hola. Soy tu asistente para negocio, clientes, catálogo y agenda.";
+
 function normalizeMessage(message: ConversationMessageSource): AssistantMessageReadModel {
   const role = (message.role ?? "").toUpperCase();
+  const content = createAssistantMessageContent(message.content).value;
 
   return {
     id: message.id,
     role: role === "ASSISTANT" || role === "AGENT" ? "assistant" : "user",
-    content: createAssistantMessageContent(message.content).value,
+    content,
     createdAt: message.createdAt,
   };
+}
+
+function stripDefaultGreeting(messages: AssistantMessageReadModel[]): AssistantMessageReadModel[] {
+  const [firstMessage, ...restMessages] = messages;
+
+  if (
+    firstMessage?.role === "assistant" &&
+    firstMessage.content === DEFAULT_ASSISTANT_GREETING
+  ) {
+    return restMessages;
+  }
+
+  return messages;
 }
 
 function normalizeConversationMessages(
   messages: ConversationMessageSource[],
 ): AssistantMessageReadModel[] {
-  const normalizedMessages = messages.map(normalizeMessage);
+  const normalizedMessages = stripDefaultGreeting(messages.map(normalizeMessage));
   const hasAssistantMessage = normalizedMessages.some((message) => message.role === "assistant");
 
   if (hasAssistantMessage || normalizedMessages.length <= 1) {

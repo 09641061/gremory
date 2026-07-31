@@ -11,6 +11,7 @@ interface AssistantAvatarProps {
   iconClassName?: string;
   iconSize?: number;
   iconAlt?: string;
+  variant?: "framed" | "flat";
 }
 
 export function AssistantAvatar({
@@ -18,6 +19,7 @@ export function AssistantAvatar({
   iconClassName,
   iconSize = 20,
   iconAlt = "Assistant avatar",
+  variant = "framed",
 }: AssistantAvatarProps) {
   const {
     currentIcon,
@@ -37,7 +39,10 @@ export function AssistantAvatar({
       onLostPointerCapture={handlePointerEnd}
       onContextMenu={handleContextMenu}
       className={cn(
-        "flex shrink-0 items-center justify-center overflow-visible rounded-full border border-border/50 bg-background shadow-[0_6px_16px_rgba(15,23,42,0.05)] transition-transform duration-150 ease-out hover:-translate-y-0.5",
+        "flex shrink-0 items-center justify-center overflow-visible rounded-full transition-transform duration-150 ease-out",
+        variant === "framed" &&
+          "border border-border/50 bg-background shadow-[0_6px_16px_rgba(15,23,42,0.05)] hover:-translate-y-0.5",
+        variant === "flat" && "border-transparent bg-transparent shadow-none hover:translate-y-0",
         className,
       )}
     >
