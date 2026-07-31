@@ -20,7 +20,15 @@ import { MemberRolesDropdown } from "./member-roles-dropdown";
 
 const initialActionState = { status: "idle", data: null, error: null } as const;
 
-export function MemberRow({ member }: { member: TeamUserSummary }) {
+export function MemberRow({
+  member,
+  canRemoveMembers = true,
+  canCancelInvitations = true,
+}: {
+  member: TeamUserSummary;
+  canRemoveMembers?: boolean;
+  canCancelInvitations?: boolean;
+}) {
   const [removeState, removeAction, removePending] = useActionState(removeTeamMemberAction, initialActionState);
   const [revokeState, revokeAction, revokePending] = useActionState(revokeTeamInvitationAction, initialActionState);
   const router = useRouter();
@@ -32,8 +40,8 @@ export function MemberRow({ member }: { member: TeamUserSummary }) {
   }, [removeState.status, revokeState.status, router]);
 
   const memberId = member.memberId;
-  const canRemove = member.canRemoveMembership && memberId !== null;
-  const canCancel = member.canRevokeInvitation;
+  const canRemove = member.canRemoveMembership && memberId !== null && canRemoveMembers;
+  const canCancel = member.canRevokeInvitation && canCancelInvitations;
   const error = removeState.error ?? revokeState.error;
 
   return (

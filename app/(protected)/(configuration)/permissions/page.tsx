@@ -1,8 +1,10 @@
-import { createBusinessEstablishmentAclService } from "@/contexts/business/application/internal/outboundservices/business-establishment-acl.service";
 import { createTeamQueryService } from "@/contexts/workforce/application/internal/queryservices/team-query.service";
 import { createWorkforceRoleQueryService } from "@/contexts/workforce/application/internal/queryservices/workforce-role-query.service";
 import type { WorkforceRoleSummary } from "@/contexts/workforce/application/model/workforce-role.read-models";
 import { PermissionsPageView } from "@/contexts/workforce/interfaces/components/permissions/permissions-page-view";
+
+import { createWorkforceAccessPolicyService } from "@/contexts/workforce/application/internal/queryservices/workforce-access-policy.service";
+import { redirect } from "next/navigation";
 
 interface PermissionsPageProps {
   searchParams: Promise<{ establishmentId?: string }>;
@@ -11,15 +13,16 @@ interface PermissionsPageProps {
 export default async function PermissionsPage({ searchParams }: PermissionsPageProps) {
   const { establishmentId: paramEstId } = await searchParams;
   const queryService = createWorkforceRoleQueryService();
-  const aclService = createBusinessEstablishmentAclService();
-  let defaultEstId = await aclService.getActiveEstablishmentIdForUser();
-  if (!defaultEstId) {
-    try {
-      const access = await createTeamQueryService().getAccessContext();
-      defaultEstId = access.establishments[0]?.establishmentId ?? undefined;
-    } catch {}
-  }
+
+  const policyService = createWorkforceAccessPolicyService();
+  const defaultEstId = await policyService.getDefaultEstablishmentId();
   const establishmentId = paramEstId ?? defaultEstId ?? undefined;
+
+  const { canReadRoles, canCreateRole, canUpdateRole, canDeleteRole } = await policyService.getPermissions(establishmentId);
+
+  if (!canReadRoles) {
+    redirect("/team?denied=permissions");
+  }
   
   let members: Awaited<ReturnType<ReturnType<typeof createTeamQueryService>["list"]>>["content"] = [];
 
@@ -44,6 +47,15 @@ export default async function PermissionsPage({ searchParams }: PermissionsPageP
     position: role.position,
   }));
 
-  return <PermissionsPageView roles={roles} permissions={permissions} members={members} />;
+  return (
+    <PermissionsPageView
+      roles={roles}
+      permissions={permissions}
+      members={members}
+      canCreateRole={canCreateRole}
+      canUpdateRole={canUpdateRole}
+      canDeleteRole={canDeleteRole}
+    />
+  );
 }
 

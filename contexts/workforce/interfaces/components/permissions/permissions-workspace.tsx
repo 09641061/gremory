@@ -24,9 +24,10 @@ interface PermissionsWorkspaceProps {
   permissions: ReadonlyArray<WorkforcePermission | string>;
   members: ReadonlyArray<TeamUserSummary>;
   onCancel?: () => void;
+  canUpdateRole?: boolean;
 }
 
-export function PermissionsWorkspace({ role, permissions, members, onCancel }: PermissionsWorkspaceProps) {
+export function PermissionsWorkspace({ role, permissions, members, onCancel, canUpdateRole = true }: PermissionsWorkspaceProps) {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<"permissions" | "members">("permissions");
   const [selectedPermissions, setSelectedPermissions] = useState<ReadonlySet<string>>(
@@ -94,7 +95,7 @@ export function PermissionsWorkspace({ role, permissions, members, onCancel }: P
     );
   }
 
-  const editable = !role.systemRole;
+  const editable = !role.systemRole && canUpdateRole;
 
   function cancelChanges() {
     setSelectedPermissions(new Set(role?.permissions ?? []));

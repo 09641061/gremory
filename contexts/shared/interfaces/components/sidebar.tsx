@@ -30,10 +30,12 @@ export function Sidebar({
   initialAssistantConversations,
   canReadCatalog = true,
   canReadCrm = true,
+  canReadTeam = true,
 }: {
   initialAssistantConversations: AssistantConversationSummaryReadModel[];
   canReadCatalog?: boolean;
   canReadCrm?: boolean;
+  canReadTeam?: boolean;
 }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -47,6 +49,9 @@ export function Sidebar({
     }
     if (item.label === "CRM") {
       return canReadCrm;
+    }
+    if (item.label === "Team") {
+      return canReadTeam;
     }
     return true;
   });
