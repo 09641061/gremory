@@ -5,14 +5,16 @@ import { cookies } from "next/headers";
 import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-session-cookie";
 import { AssistantChatView } from "@/contexts/assistant/interfaces/components/chat-view/assistant-chat-view";
 import { toConversationViewModel } from "@/contexts/assistant/interfaces/presenters/assistant-chat.presenter.server";
+import { Alert, AlertTitle, AlertDescription } from "@/contexts/shared/interfaces/components/ui/alert";
 
 export default async function ChatPage({
   searchParams,
 }: {
-  searchParams?: Promise<{ conversationId?: string }>;
+  searchParams?: Promise<{ conversationId?: string; denied?: string }>;
 }) {
   const resolvedSearchParams = searchParams ? await searchParams : undefined;
   const conversationId = resolvedSearchParams?.conversationId;
+  const denied = resolvedSearchParams?.denied;
   const accessToken = (await cookies()).get(iamSessionCookies.accessToken)?.value;
 
   const subscription = accessToken
@@ -26,11 +28,25 @@ export default async function ChatPage({
   const initialConversationViewModel = toConversationViewModel(initialConversation);
 
   return (
-    <AssistantChatView
-      key={conversationId ?? "new"}
-      conversationId={conversationId ?? null}
-      initialConversation={initialConversationViewModel}
-      hasAssistantAccess={hasAssistantAccess}
-    />
+    <div className="flex flex-col flex-1 w-full gap-4">
+      {denied && (
+        <div className="px-6 pt-4">
+          <Alert variant="destructive">
+            <AlertTitle>Access Denied</AlertTitle>
+            <AlertDescription>
+              {denied === "crm" && "You do not have permission to access the CRM module."}
+              {denied === "catalog" && "You do not have permission to access the Catalog module."}
+              {denied === "workforce" && "You do not have permission to access the Workforce module."}
+            </AlertDescription>
+          </Alert>
+        </div>
+      )}
+      <AssistantChatView
+        key={conversationId ?? "new"}
+        conversationId={conversationId ?? null}
+        initialConversation={initialConversationViewModel}
+        hasAssistantAccess={hasAssistantAccess}
+      />
+    </div>
   );
 }

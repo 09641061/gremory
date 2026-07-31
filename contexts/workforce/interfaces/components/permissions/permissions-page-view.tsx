@@ -20,10 +20,16 @@ export function PermissionsPageView({
   roles,
   permissions,
   members,
+  canCreateRole = true,
+  canUpdateRole = true,
+  canDeleteRole = true,
 }: {
   roles: ReadonlyArray<WorkforceRoleSummary>;
   permissions: ReadonlyArray<string>;
   members: ReadonlyArray<TeamUserSummary>;
+  canCreateRole?: boolean;
+  canUpdateRole?: boolean;
+  canDeleteRole?: boolean;
 }) {
   const [filter, setFilter] = useState("");
   const [createOpen, setCreateOpen] = useState(false);
@@ -125,15 +131,17 @@ export function PermissionsPageView({
               className="pl-9"
             />
           </label>
-          <Button
-            type="button"
-            size="default"
-            onClick={() => setCreateOpen(true)}
-            className="shrink-0 gap-2 sm:whitespace-nowrap"
-          >
-            <Plus className="size-4" />
-            Create role
-          </Button>
+          {canCreateRole && (
+            <Button
+              type="button"
+              size="default"
+              onClick={() => setCreateOpen(true)}
+              className="shrink-0 gap-2 sm:whitespace-nowrap"
+            >
+              <Plus className="size-4" />
+              Create role
+            </Button>
+          )}
         </div>
 
         <ErrorAlert title="Unable to reorder role" message={reorderError ?? undefined} />
@@ -195,13 +203,13 @@ export function PermissionsPageView({
                     onEdit={(selectedRole) => setEditingRole(selectedRole)}
                     onDelete={(selectedRole) => setDeletingRole(selectedRole)}
                     onDragStart={(draggedRole) => {
-                      if (draggedRole.systemRole || reorderInProgress || !draggedRole.id) return;
+                      if (draggedRole.systemRole || reorderInProgress || !draggedRole.id || !canUpdateRole) return;
                       setReorderError(null);
                       setDraggedRoleId(draggedRole.id);
                     }}
                     onDragEnd={clearDragState}
                     onDragOver={(event, hoveredRole) => {
-                      if (reorderInProgress) return;
+                      if (reorderInProgress || !canUpdateRole) return;
                       if (!draggedRoleId || draggedRoleId === hoveredRole.id) return;
                       event.preventDefault();
                       event.dataTransfer.dropEffect = "move";
@@ -210,10 +218,12 @@ export function PermissionsPageView({
                     }}
                     onDrop={(event, targetRole) => {
                       event.preventDefault();
-                      if (reorderInProgress) return;
+                      if (reorderInProgress || !canUpdateRole) return;
                       const placement = resolveDropPosition(event, targetRole);
                       void handleReorderRole(targetRole, placement);
                     }}
+                    canUpdateRole={canUpdateRole}
+                    canDeleteRole={canDeleteRole}
                   />
                 ))
               )}
@@ -228,6 +238,7 @@ export function PermissionsPageView({
         permissions={permissions}
         onCancel={() => setSelectedRoleId(null)}
         members={members}
+        canUpdateRole={canUpdateRole}
       />
 
     </section>

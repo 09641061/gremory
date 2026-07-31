@@ -4,6 +4,7 @@ import { ListConversationsQueryService } from "@/contexts/assistant/application/
 import { Sidebar } from "@/contexts/shared/interfaces/components/sidebar";
 import { createCatalogAccessPolicyService } from "@/contexts/catalog/application/internal/queryservices/catalog-access-policy.service";
 import { createCrmAccessPolicyService } from "@/contexts/crm/application/internal/queryservices/crm-access-policy.service";
+import { createWorkforceAccessPolicyService } from "@/contexts/workforce/application/internal/queryservices/workforce-access-policy.service";
 import { createOrganizationQueryService } from "@/contexts/business/application/internal/queryservices/organization-query.service";
 
 /**
@@ -18,12 +19,15 @@ export default async function AppLayout({
 
   const catalogPolicyService = createCatalogAccessPolicyService();
   const crmPolicyService = createCrmAccessPolicyService();
+  const workforcePolicyService = createWorkforceAccessPolicyService();
   let canReadCatalog = false;
   let canReadCrm = false;
+  let canReadTeam = false;
   try {
     await createOrganizationQueryService().getMyOrganization();
     canReadCatalog = true;
     canReadCrm = true;
+    canReadTeam = true;
   } catch {
     const defaultCatalogEstId = await catalogPolicyService.getDefaultEstablishmentId();
     if (defaultCatalogEstId) {
@@ -33,6 +37,10 @@ export default async function AppLayout({
     if (defaultCrmEstId) {
       canReadCrm = true;
     }
+    const defaultTeamEstId = await workforcePolicyService.getDefaultEstablishmentId();
+    if (defaultTeamEstId) {
+      canReadTeam = true;
+    }
   }
 
   return (
@@ -41,6 +49,7 @@ export default async function AppLayout({
         initialAssistantConversations={assistantConversations.content}
         canReadCatalog={canReadCatalog}
         canReadCrm={canReadCrm}
+        canReadTeam={canReadTeam}
       />
       <main className="flex-1 p-6 pt-16 lg:ml-60">{children}</main>
     </>

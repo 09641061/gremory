@@ -1,7 +1,7 @@
-import { createBusinessEstablishmentAclService } from "@/contexts/business/application/internal/outboundservices/business-establishment-acl.service";
 import { createTeamQueryService } from "@/contexts/workforce/application/internal/queryservices/team-query.service";
 import { TeamPageView } from "@/contexts/workforce/interfaces/components/team/team-page-view";
-import { createWorkforceRoleQueryService } from "@/contexts/workforce/application/internal/queryservices/workforce-role-query.service";
+import { createWorkforceAccessPolicyService } from "@/contexts/workforce/application/internal/queryservices/workforce-access-policy.service";
+import { redirect } from "next/navigation";
 
 interface TeamPageProps {
   searchParams: Promise<{ establishmentId?: string }>;
@@ -9,18 +9,24 @@ interface TeamPageProps {
 
 export default async function TeamPage({ searchParams }: TeamPageProps) {
   const { establishmentId: paramEstId } = await searchParams;
-  const aclService = createBusinessEstablishmentAclService();
-  let defaultEstId = await aclService.getActiveEstablishmentIdForUser();
-  if (!defaultEstId) {
-    try {
-      const access = await createTeamQueryService().getAccessContext();
-      defaultEstId = access.establishments[0]?.establishmentId ?? undefined;
-    } catch {}
-  }
+
+  const policyService = createWorkforceAccessPolicyService();
+  const defaultEstId = await policyService.getDefaultEstablishmentId();
   const establishmentId = paramEstId ?? defaultEstId ?? undefined;
 
+  const {
+    canReadTeam,
+    canDeleteMember,
+    canCreateInvitation,
+    canDeleteInvitation,
+    canReadRoles,
+  } = await policyService.getPermissions(establishmentId);
+
+  if (!canReadTeam) {
+    redirect("/chat?denied=workforce");
+  }
+
   let members: Awaited<ReturnType<ReturnType<typeof createTeamQueryService>["list"]>>["content"] = [];
-  let roles: Awaited<ReturnType<ReturnType<typeof createWorkforceRoleQueryService>["list"]>> = [];
   if (establishmentId) {
     try {
       members = (await createTeamQueryService().list({ establishmentId, size: 100 })).content;
@@ -28,12 +34,14 @@ export default async function TeamPage({ searchParams }: TeamPageProps) {
       // Keep the team shell available while workforce is unavailable.
     }
   }
-  try { roles = await createWorkforceRoleQueryService().list(); } catch { /* Keep team available if roles are unavailable. */ }
-  const roleOptions = roles.map((role) => ({
-    id: role.id ?? "",
-    name: role.getName(),
-    position: role.position,
-    systemRole: role.isSystemRole(),
-  }));
-  return <TeamPageView establishmentId={establishmentId ?? null} members={members} roles={roleOptions} canManageRoles={roleOptions.length > 0} />;
+  return (
+    <TeamPageView
+      establishmentId={establishmentId ?? null}
+      members={members}
+      canManageRoles={canReadRoles}
+      canInviteMembers={canCreateInvitation}
+      canRemoveMembers={canDeleteMember}
+      canCancelInvitations={canDeleteInvitation}
+    />
+  );
 }

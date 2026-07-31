@@ -22,6 +22,8 @@ interface RoleRowProps {
   onDragEnd?: () => void;
   onDragOver?: (event: React.DragEvent<HTMLDivElement>, role: WorkforceRoleSummary) => void;
   onDrop?: (event: React.DragEvent<HTMLDivElement>, role: WorkforceRoleSummary) => void;
+  canUpdateRole?: boolean;
+  canDeleteRole?: boolean;
 }
 
 export function RoleRow({
@@ -36,16 +38,18 @@ export function RoleRow({
   onDragEnd,
   onDragOver,
   onDrop,
+  canUpdateRole = true,
+  canDeleteRole = true,
 }: RoleRowProps) {
   const roleId = role.id;
-  const canEdit = roleId !== null && !role.systemRole && !!onEdit;
-  const canDelete = roleId !== null && !role.systemRole && !!onDelete;
+  const canEdit = roleId !== null && !role.systemRole && !!onEdit && canUpdateRole;
+  const canDelete = roleId !== null && !role.systemRole && !!onDelete && canDeleteRole;
 
   return (
     <div
-      draggable={!role.systemRole}
+      draggable={!role.systemRole && canUpdateRole}
       onDragStart={(event) => {
-        if (role.systemRole) return;
+        if (role.systemRole || !canUpdateRole) return;
         event.dataTransfer.effectAllowed = "move";
         event.dataTransfer.setData("text/plain", roleId ?? "");
         onDragStart?.(role);

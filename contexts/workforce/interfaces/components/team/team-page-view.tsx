@@ -10,9 +10,22 @@ import type { TeamUserSummary } from "@/contexts/workforce/application/model/tea
 import { InviteMembersDialog } from "./invite-members-dialog";
 import { MemberRow } from "./member-row";
 
-type RoleOption = { id: string; name: string; position: number; systemRole: boolean };
 
-export function TeamPageView({ establishmentId, members, canManageRoles }: { establishmentId: string | null; members: TeamUserSummary[]; roles: RoleOption[]; canManageRoles: boolean }) {
+export function TeamPageView({
+  establishmentId,
+  members,
+  canManageRoles,
+  canInviteMembers = true,
+  canRemoveMembers = true,
+  canCancelInvitations = true,
+}: {
+  establishmentId: string | null;
+  members: TeamUserSummary[];
+  canManageRoles: boolean;
+  canInviteMembers?: boolean;
+  canRemoveMembers?: boolean;
+  canCancelInvitations?: boolean;
+}) {
 
   const [filter, setFilter] = useState("");
   const [inviteOpen, setInviteOpen] = useState(false);
@@ -31,10 +44,12 @@ export function TeamPageView({ establishmentId, members, canManageRoles }: { est
             <Settings2 className="size-4" />
             Manage permissions
           </Button> : null}
-          <Button className="gap-2" onClick={() => setInviteOpen(true)} disabled={!establishmentId}>
-            <UserPlus className="size-4" />
-            Invite members
-          </Button>
+          {canInviteMembers && (
+            <Button className="gap-2" onClick={() => setInviteOpen(true)} disabled={!establishmentId}>
+              <UserPlus className="size-4" />
+              Invite members
+            </Button>
+          )}
         </div>
       </div>
       <div className="flex items-center justify-between gap-4">
@@ -54,7 +69,14 @@ export function TeamPageView({ establishmentId, members, canManageRoles }: { est
                 <span className="min-w-[116px] text-left" aria-hidden="true" />
               </div>
             </div>
-            {filteredMembers.map((member) => <MemberRow key={member.memberId ?? member.invitationId} member={member} />)}
+            {filteredMembers.map((member) => (
+              <MemberRow
+                key={member.memberId ?? member.invitationId}
+                member={member}
+                canRemoveMembers={canRemoveMembers}
+                canCancelInvitations={canCancelInvitations}
+              />
+            ))}
             {filteredMembers.length === 0 && <div className="px-5 py-10 text-sm text-muted-foreground">No members found.</div>}
           </div>
         </CardContent>
