@@ -2,7 +2,8 @@
 import { render, screen } from "@testing-library/react";
 
 vi.mock("next/image", () => ({
-  default: (props: Record<string, unknown>) => <img {...props} />,
+  // eslint-disable-next-line @next/next/no-img-element
+  default: (props: Record<string, unknown>) => <img alt="" {...props} />,
 }));
 
 import { AssistantAvatar } from "@/contexts/shared/interfaces/components/assistant-avatar/assistant-avatar";

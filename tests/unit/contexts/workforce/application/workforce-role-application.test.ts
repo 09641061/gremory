@@ -2,7 +2,6 @@ import { describe, expect, it, vi } from "vitest";
 import { WorkforceRoleCommandServiceImpl } from "@/contexts/workforce/application/internal/commandservices/workforce-role-command.service";
 import { WorkforceRoleQueryServiceImpl } from "@/contexts/workforce/application/internal/queryservices/workforce-role-query.service";
 import { WorkforceRole } from "@/contexts/workforce/domain/model/entities/workforce-role.entity";
-import { workforcePermissionCodes } from "@/contexts/workforce/domain/model/enums/workforce-permission";
 import type { WorkforceRoleRepository } from "@/contexts/workforce/domain/services/workforce-role.repository";
 
 describe("Workforce role application services", () => {
@@ -75,14 +74,14 @@ function roleRepository(): WorkforceRoleRepository {
       WorkforceRole.rehydrate({
         id: "11111111-1111-4111-8111-111111111111",
         name: "Admin",
-        permissions: ["catalog:manage", "business:access"],
+        permissions: ["catalog:manage", "business:organizations:read"],
         systemRole: false,
       }),
     ]),
     permissions: vi.fn(async () => [
-      workforcePermissionCodes[0],
-      workforcePermissionCodes[8],
-    ]),
+      "business:organizations:read",
+      "catalog:manage",
+    ] as const),
     save: vi.fn(async (role: WorkforceRole) =>
       WorkforceRole.rehydrate({
         id: role.id ?? "11111111-1111-4111-8111-111111111111",
@@ -94,7 +93,7 @@ function roleRepository(): WorkforceRoleRepository {
       WorkforceRole.rehydrate({
         id: command.roleId,
         name: command.name ?? "Admin",
-        permissions: command.permissions ?? ["catalog:manage", "business:access"],
+        permissions: command.permissions ?? ["catalog:manage", "business:organizations:read"],
         systemRole: false,
       })),
     delete: vi.fn(async () => undefined),

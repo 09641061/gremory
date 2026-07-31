@@ -58,11 +58,13 @@ export class CatalogAccessPolicyService {
 
         const perms = estAccess.effectivePermissions;
         const hasManage = perms.includes("catalog:manage");
+        const roles = estAccess.roles || [];
+        const hasReadRole = roles.some((role) => role.name.toLowerCase() === "read");
 
         return {
           canReadCatalog:
             hasManage ||
-            perms.includes("catalog:access") ||
+            hasReadRole ||
             perms.includes("catalog:services:read") ||
             perms.includes("catalog:categories:read"),
           canCreateCategory:
@@ -107,15 +109,18 @@ export class CatalogAccessPolicyService {
   async getDefaultEstablishmentId(): Promise<string | undefined> {
     try {
       const access = await createTeamQueryService().getAccessContext();
-      const allowedEst = access.establishments.find((item) =>
-        item.effectivePermissions.some(
-          (perm) =>
-            perm === "catalog:access" ||
-            perm === "catalog:services:read" ||
-            perm === "catalog:categories:read" ||
-            perm === "catalog:manage",
-        ),
-      );
+      const allowedEst = access.establishments.find((item) => {
+        const roles = item.roles || [];
+        const hasReadRole = roles.some((role) => role.name.toLowerCase() === "read");
+        return (
+          item.effectivePermissions.some(
+            (perm) =>
+              perm === "catalog:services:read" ||
+              perm === "catalog:categories:read" ||
+              perm === "catalog:manage",
+          ) || hasReadRole
+        );
+      });
       return allowedEst?.establishmentId;
     } catch {
       return undefined;

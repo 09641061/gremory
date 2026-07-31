@@ -9,7 +9,7 @@ describe("Workforce role domain", () => {
   it("should normalize name and permissions when creating a role", () => {
     const role = WorkforceRole.create({
       name: "  Catalog Manager  ",
-      permissions: ["catalog:manage", "business:access"],
+      permissions: ["catalog:manage", "business:organizations:read"],
       systemRole: false,
     });
 
@@ -17,7 +17,7 @@ describe("Workforce role domain", () => {
     expect(role.getName()).toBe("Catalog Manager");
     expect(role.getPermissions()).toEqual([
       "catalog:manage",
-      "business:access",
+      "business:organizations:read",
     ]);
   });
 
@@ -32,7 +32,7 @@ describe("Workforce role domain", () => {
   });
 
   it("should expose the supported workforce permissions", () => {
-    expect(workforcePermissionCodes).toContain("business:access");
+    expect(workforcePermissionCodes).toContain("business:organizations:read");
     expect(isWorkforcePermission("catalog:manage")).toBe(true);
     expect(isWorkforcePermission("not-supported")).toBe(false);
   });

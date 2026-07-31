@@ -6,9 +6,10 @@ import { Input } from "@/contexts/shared/interfaces/components/ui/input";
 interface EstablishmentsSearchBarProps {
   value: string;
   onChange: (value: string) => void;
+  canCreate?: boolean;
 }
 
-export function EstablishmentsSearchBar({ value, onChange }: EstablishmentsSearchBarProps) {
+export function EstablishmentsSearchBar({ value, onChange, canCreate = true }: EstablishmentsSearchBarProps) {
   return (
     <div className="mx-auto flex w-full max-w-4xl flex-col items-stretch gap-3 sm:flex-row sm:items-center shrink-0">
       <label className="relative block w-full flex-1">
@@ -21,13 +22,15 @@ export function EstablishmentsSearchBar({ value, onChange }: EstablishmentsSearc
           className="pl-9"
         />
       </label>
-      <Link
-        href="/establishments/new"
-        className={buttonVariants({ className: "shrink-0 gap-2 sm:whitespace-nowrap" })}
-      >
-        <Plus className="size-4" />
-        Create establishment
-      </Link>
+      {canCreate && (
+        <Link
+          href="/establishments/new"
+          className={buttonVariants({ className: "shrink-0 gap-2 sm:whitespace-nowrap" })}
+        >
+          <Plus className="size-4" />
+          Create establishment
+        </Link>
+      )}
     </div>
   );
 }

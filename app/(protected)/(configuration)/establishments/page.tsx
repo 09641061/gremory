@@ -10,7 +10,7 @@ interface EstablishmentsPageProps {
 export default async function EstablishmentsRoutePage({ searchParams }: EstablishmentsPageProps) {
   const { establishmentId } = await searchParams;
   const policyService = createBusinessAccessPolicyService();
-  const { isOwner, canRead, canUpdateMap, allowedEstablishments } =
+  const { isOwner, canRead, canCreate, canUpdateMap, allowedEstablishments } =
     await policyService.getEstablishmentsPermissions(establishmentId);
 
   if (!canRead) {
@@ -31,6 +31,7 @@ export default async function EstablishmentsRoutePage({ searchParams }: Establis
       establishments={allowedEstablishments}
       canUpdateMap={canUpdateMap}
       defaultCanUpdate={isOwner}
+      canCreate={canCreate}
     />
   );
 }

@@ -1,12 +1,10 @@
 export const workforcePermissionCodes = [
-  "business:access",
   "business:organizations:read",
   "business:organizations:update",
   "business:organizations:manage",
   "business:establishments:read",
   "business:establishments:update",
   "business:establishments:manage",
-  "catalog:access",
   "catalog:manage",
   "catalog:categories:create",
   "catalog:categories:read",

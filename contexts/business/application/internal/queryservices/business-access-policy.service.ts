@@ -6,6 +6,7 @@ import type { OrganizationSummary } from "@/contexts/business/application/model/
 export interface BusinessPermissions {
   isOwner: boolean;
   canRead: boolean;
+  canCreate: boolean;
   canUpdateMap: Record<string, boolean>;
   allowedEstablishments: { id: string; name: string; photoUrl: string | null }[];
 }
@@ -55,6 +56,7 @@ export class BusinessAccessPolicyService {
         return {
           isOwner: true,
           canRead: true,
+          canCreate: true,
           canUpdateMap,
           allowedEstablishments: page.content.map((est) => ({
             id: est.id,
@@ -66,6 +68,7 @@ export class BusinessAccessPolicyService {
         return {
           isOwner: true,
           canRead: false,
+          canCreate: true,
           canUpdateMap: {},
           allowedEstablishments: [],
         };
@@ -84,6 +87,7 @@ export class BusinessAccessPolicyService {
           return {
             isOwner: false,
             canRead: false,
+            canCreate: false,
             canUpdateMap: {},
             allowedEstablishments: [],
           };
@@ -91,13 +95,29 @@ export class BusinessAccessPolicyService {
 
         const activeOrgId = activeEst.organizationId;
 
+        const roles = activeEst.roles || [];
+        const hasReadRole = roles.some((role) => role.name.toLowerCase() === "read");
+
         // 2. Determine if the user has permission to read establishments in the active organization
-        const canRead = access.establishments.some(
+        const canRead =
+          hasReadRole ||
+          access.establishments.some(
+            (item) =>
+              item.organizationId === activeOrgId &&
+              item.effectivePermissions.some(
+                (perm) =>
+                  perm === "business:establishments:read" ||
+                  perm === "business:establishments:manage" ||
+                  perm === "business:manage",
+              ),
+          );
+
+        // Determine if they can create establishments
+        const canCreate = access.establishments.some(
           (item) =>
             item.organizationId === activeOrgId &&
             item.effectivePermissions.some(
               (perm) =>
-                perm === "business:establishments:read" ||
                 perm === "business:establishments:manage" ||
                 perm === "business:manage",
             ),
@@ -127,6 +147,7 @@ export class BusinessAccessPolicyService {
         return {
           isOwner: false,
           canRead: canRead && allowedEstablishments.length > 0,
+          canCreate,
           canUpdateMap,
           allowedEstablishments,
         };
@@ -134,6 +155,7 @@ export class BusinessAccessPolicyService {
         return {
           isOwner: false,
           canRead: false,
+          canCreate: false,
           canUpdateMap: {},
           allowedEstablishments: [],
         };
@@ -189,16 +211,21 @@ export class BusinessAccessPolicyService {
 
         if (activeEst) {
           const activeOrgId = activeEst.organizationId;
-          canRead = access.establishments.some(
-            (item) =>
-              item.organizationId === activeOrgId &&
-              item.effectivePermissions.some(
-                (perm) =>
-                  perm === "business:organizations:read" ||
-                  perm === "business:organizations:manage" ||
-                  perm === "business:manage",
-              ),
-          );
+          const roles = activeEst.roles || [];
+          const hasReadRole = roles.some((role) => role.name.toLowerCase() === "read");
+
+          canRead =
+            hasReadRole ||
+            access.establishments.some(
+              (item) =>
+                item.organizationId === activeOrgId &&
+                item.effectivePermissions.some(
+                  (perm) =>
+                    perm === "business:organizations:read" ||
+                    perm === "business:organizations:manage" ||
+                    perm === "business:manage",
+                ),
+            );
 
           if (canRead) {
             organization = await createOrganizationQueryService().getById({

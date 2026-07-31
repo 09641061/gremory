@@ -28,8 +28,10 @@ const navigation = [
 
 export function Sidebar({
   initialAssistantConversations,
+  canReadCatalog = true,
 }: {
   initialAssistantConversations: AssistantConversationSummaryReadModel[];
+  canReadCatalog?: boolean;
 }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -37,11 +39,18 @@ export function Sidebar({
     ? searchParams.get("conversationId")
     : null;
 
+  const filteredNavigation = navigation.filter(item => {
+    if (item.label === "Catalog") {
+      return canReadCatalog;
+    }
+    return true;
+  });
+
   return (
     <aside className="fixed bottom-0 left-0 top-14 z-20 hidden w-60 shrink-0 border-r border-border/60 bg-background px-3 py-3 md:flex md:flex-col">
       <nav aria-label="Modulos" className="mt-2">
         <ul className="space-y-1">
-          {navigation.map(({ label, href, icon: Icon }) => {
+          {filteredNavigation.map(({ label, href, icon: Icon }) => {
             const active =
               href === "/chat"
                 ? pathname === href && !selectedConversationId

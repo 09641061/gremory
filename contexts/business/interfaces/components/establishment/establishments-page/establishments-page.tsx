@@ -15,10 +15,12 @@ export function EstablishmentsPage({
   establishments,
   canUpdateMap = {},
   defaultCanUpdate = true,
+  canCreate = true,
 }: {
   establishments: EstablishmentListItem[];
   canUpdateMap?: Record<string, boolean>;
   defaultCanUpdate?: boolean;
+  canCreate?: boolean;
 }) {
   const [filter, setFilter] = useState("");
   const [selectedEstId, setSelectedEstId] = useState<string | null>(null);
@@ -47,7 +49,7 @@ export function EstablishmentsPage({
           </div>
         </div>
 
-        <EstablishmentsSearchBar value={filter} onChange={setFilter} />
+        <EstablishmentsSearchBar value={filter} onChange={setFilter} canCreate={canCreate} />
 
         <EstablishmentListCard
           establishments={establishments}

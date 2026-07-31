@@ -21,6 +21,7 @@ describe("OrganizationDetailCard Component", () => {
     id: "org-123",
     name: "Test Organization",
     imageUrl: "http://example.com/logo.jpg",
+    ownerId: "owner-123",
   };
 
   it("renders detail card when organization is selected (Happy Case - Edit allowed)", () => {
