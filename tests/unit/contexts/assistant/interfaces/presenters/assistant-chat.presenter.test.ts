@@ -2,7 +2,7 @@ import { toConversationViewModel } from "@/contexts/assistant/interfaces/present
 import type { AssistantConversationReadModel } from "@/contexts/assistant/application/internal/transforms/assistant.read-models";
 
 describe("assistant chat presenter", () => {
-  it("renders assistant markdown content into html view models", () => {
+  it("keeps the conversation structure intact", () => {
     const conversation: AssistantConversationReadModel = {
       id: "conversation-1",
       title: "Chat de prueba",
@@ -20,57 +20,10 @@ describe("assistant chat presenter", () => {
 
     const viewModel = toConversationViewModel(conversation);
 
-    expect(viewModel?.messages[0]?.renderedContentHtml).toContain("<h1>Titulo</h1>");
-    expect(viewModel?.messages[0]?.renderedContentHtml).toContain("<ul>");
-    expect(viewModel?.messages[0]?.renderedContentHtml).toContain("<table>");
-    expect(viewModel?.messages[0]?.renderedContentHtml).toContain("<code>codigo</code>");
+    expect(viewModel).toBe(conversation);
   });
 
-  it("normalizes bullet glyphs into real markdown lists", () => {
-    const conversation: AssistantConversationReadModel = {
-      id: "conversation-2",
-      title: "Lista de prueba",
-      createdAt: "2026-07-30T00:00:00.000Z",
-      updatedAt: "2026-07-30T00:00:01.000Z",
-      messages: [
-        {
-          id: "message-1",
-          role: "assistant",
-          content:
-            "Beneficios\n\n\u2022 Rápida y Eficiente: Primer punto.\n\u2022 Personalizado y Flexible: Segundo punto.\n\u2022 Segura y Protegida: Tercer punto.",
-          createdAt: "2026-07-30T00:00:00.000Z",
-        },
-      ],
-    };
-
-    const viewModel = toConversationViewModel(conversation);
-
-    expect(viewModel?.messages[0]?.renderedContentHtml).toContain("<ul>");
-    expect(viewModel?.messages[0]?.renderedContentHtml).toContain("<li>");
-    expect(viewModel?.messages[0]?.renderedContentHtml).not.toContain("\u2022");
-  });
-
-  it("separates numbered list items that arrive on the same line", () => {
-    const conversation: AssistantConversationReadModel = {
-      id: "conversation-3",
-      title: "Lista numerada",
-      createdAt: "2026-07-30T00:00:00.000Z",
-      updatedAt: "2026-07-30T00:00:01.000Z",
-      messages: [
-        {
-          id: "message-1",
-          role: "assistant",
-          content: "Pasos\n\n1. Primer paso 2. Segundo paso 3. Tercer paso",
-          createdAt: "2026-07-30T00:00:00.000Z",
-        },
-      ],
-    };
-
-    const viewModel = toConversationViewModel(conversation);
-
-    expect(viewModel?.messages[0]?.renderedContentHtml).toContain("<ol>");
-    expect(viewModel?.messages[0]?.renderedContentHtml).toContain("<li>Primer paso</li>");
-    expect(viewModel?.messages[0]?.renderedContentHtml).toContain("<li>Segundo paso</li>");
-    expect(viewModel?.messages[0]?.renderedContentHtml).toContain("<li>Tercer paso</li>");
+  it("returns null when there is no conversation", () => {
+    expect(toConversationViewModel(null)).toBeNull();
   });
 });

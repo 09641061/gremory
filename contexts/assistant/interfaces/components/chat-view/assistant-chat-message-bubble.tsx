@@ -1,10 +1,28 @@
 "use client";
 
 import { memo } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { cn } from "@/lib/utils";
 
 import type { AssistantMessageViewModel } from "@/contexts/assistant/interfaces/view-models/assistant-chat.view-model";
 import { AssistantAvatar } from "@/contexts/shared/interfaces/components/assistant-avatar/assistant-avatar";
+
+function normalizeAssistantMarkdownContent(content: string): string {
+  const normalizedLines = content.replace(/\r\n/g, "\n").split("\n");
+
+  return normalizedLines
+    .map((line) => {
+      if (!/\d+\.\s+.*\d+\.\s+/.test(line)) {
+        return line;
+      }
+
+      return line.replace(/(?<=\S)\s+(?=\d+\.\s+)/g, "\n");
+    })
+    .join("\n")
+    .replace(/(?:^|\n)\s*\u2022\s+/g, "\n- ")
+    .replace(/\s+\u2022\s+/g, "\n- ");
+}
 
 interface AssistantChatMessageBubbleProps {
   message: AssistantMessageViewModel;
@@ -51,10 +69,11 @@ function AssistantChatMessageBubbleComponent({ message }: AssistantChatMessageBu
             variant="flat"
           />
 
-          <div
-            className={assistantMarkdownClassName}
-            dangerouslySetInnerHTML={{ __html: message.renderedContentHtml }}
-          />
+          <div className={assistantMarkdownClassName}>
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+              {normalizeAssistantMarkdownContent(message.content)}
+            </ReactMarkdown>
+          </div>
         </>
       ) : (
         <div

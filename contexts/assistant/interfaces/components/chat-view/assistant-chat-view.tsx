@@ -107,7 +107,6 @@ export function AssistantChatView({
             id: `pending-message-${now}`,
             role: "user",
             content: message,
-            renderedContentHtml: "",
             createdAt: now,
           },
         ],

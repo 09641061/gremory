@@ -15,8 +15,6 @@ describe("AssistantChatMessageBubble", () => {
       role: "assistant",
       content:
         "# Resumen\n\n> Nota importante\n\n- Punto uno\n- Punto dos\n\n---\n\n| Plan | Estado |\n| --- | --- |\n| Chat | Listo |\n\n[Docs](https://example.com)\n\n`code`",
-      renderedContentHtml:
-        '<h1>Resumen</h1><blockquote><p>Nota importante</p></blockquote><ul><li>Punto uno</li><li>Punto dos</li></ul><hr/><table><thead><tr><th>Plan</th><th>Estado</th></tr></thead><tbody><tr><td>Chat</td><td>Listo</td></tr></tbody></table><p><a href="https://example.com">Docs</a></p><p><code>code</code></p>',
       createdAt: "2026-07-29T00:00:00.000Z",
     };
 

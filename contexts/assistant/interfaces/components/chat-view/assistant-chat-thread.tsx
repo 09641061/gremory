@@ -1,7 +1,6 @@
 "use client";
 
 import { memo, useLayoutEffect, useRef, type RefObject } from "react";
-import { useVirtualizer } from "@tanstack/react-virtual";
 
 import { AssistantChatWelcome } from "./assistant-chat-welcome";
 import { AssistantChatLoadingState } from "./assistant-chat-loading-state";
@@ -16,8 +15,6 @@ interface AssistantChatThreadProps {
   bottomRef: RefObject<HTMLDivElement | null>;
 }
 
-const DEFAULT_MESSAGE_HEIGHT = 120;
-
 function AssistantChatThreadComponent({
   conversation,
   isLoading,
@@ -28,16 +25,6 @@ function AssistantChatThreadComponent({
   const shouldFollowBottomRef = useRef(true);
   const lastConversationIdRef = useRef<string | null>(null);
   const messages = conversation?.messages ?? [];
-  // TanStack Virtual returns functions that the React Compiler flags as non-memoizable.
-  // We still keep this hook here because it is the right tool for variable-height chat rows.
-  // eslint-disable-next-line react-hooks/incompatible-library
-  const rowVirtualizer = useVirtualizer({
-    count: messages.length,
-    getScrollElement: () => scrollContainerRef.current,
-    estimateSize: () => DEFAULT_MESSAGE_HEIGHT,
-    overscan: 8,
-    getItemKey: (index) => messages[index]?.id ?? index,
-  });
 
   function handleScroll() {
     const scrollContainer = scrollContainerRef.current;
@@ -79,24 +66,9 @@ function AssistantChatThreadComponent({
           <>
             {messages.length ? (
               <div className="mx-auto flex w-full max-w-3xl flex-col gap-10 sm:gap-12">
-                <div className="relative w-full" style={{ height: `${rowVirtualizer.getTotalSize()}px` }}>
-                  {rowVirtualizer.getVirtualItems().map((virtualRow) => {
-                    const message = messages[virtualRow.index];
-                    if (!message) return null;
-
-                    return (
-                      <div
-                        key={virtualRow.key}
-                        data-index={virtualRow.index}
-                        ref={rowVirtualizer.measureElement}
-                        className="absolute left-0 top-0 w-full"
-                        style={{ transform: `translateY(${virtualRow.start}px)` }}
-                      >
-                        <AssistantChatMessageBubble message={message} />
-                      </div>
-                    );
-                  })}
-                </div>
+                {messages.map((message) => (
+                  <AssistantChatMessageBubble key={message.id} message={message} />
+                ))}
 
                 {isAssistantThinking ? <AssistantChatThinkingBubble /> : null}
               </div>
