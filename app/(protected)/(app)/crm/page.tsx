@@ -1,14 +1,16 @@
-import { createBusinessEstablishmentAclService } from "@/contexts/business/application/internal/outboundservices/business-establishment-acl.service";
 import { createCrmQueryService } from "@/contexts/crm/application/internal/queryservices/crm-query.service";
+import { createCrmAccessPolicyService } from "@/contexts/crm/application/internal/queryservices/crm-access-policy.service";
 import { CrmClientWrapper } from "@/contexts/crm/interfaces/components/crm-client-wrapper";
 import { PageResponse } from "@/contexts/crm/application/services/crm-query.service";
 import { CustomerResponse } from "@/contexts/crm/domain/model/entities/customer";
+import { redirect } from "next/navigation";
 
 interface CrmPageProps {
   searchParams: Promise<{
     search?: string;
     page?: string;
     size?: string;
+    establishmentId?: string;
   }>;
 }
 
@@ -18,8 +20,16 @@ export default async function CrmPage({ searchParams }: CrmPageProps) {
   const page = params.page ? parseInt(params.page, 10) : 0;
   const size = params.size ? parseInt(params.size, 10) : 20;
 
-  const aclService = createBusinessEstablishmentAclService();
-  const establishmentId = await aclService.getActiveEstablishmentIdForUser();
+  const policyService = createCrmAccessPolicyService();
+  const defaultEstId = await policyService.getDefaultEstablishmentId();
+  const establishmentId = params.establishmentId ?? defaultEstId;
+
+  const { canReadCustomers, canCreateCustomer, canUpdateCustomer, canDeleteCustomer } =
+    await policyService.getPermissions(establishmentId);
+
+  if (!canReadCustomers) {
+    redirect("/chat?denied=crm");
+  }
 
   let customersPage: PageResponse<CustomerResponse> = {
     content: [],
@@ -42,6 +52,9 @@ export default async function CrmPage({ searchParams }: CrmPageProps) {
     <CrmClientWrapper
       initialCustomers={customersPage}
       establishmentId={establishmentId || ""}
+      canCreateCustomer={canCreateCustomer}
+      canUpdateCustomer={canUpdateCustomer}
+      canDeleteCustomer={canDeleteCustomer}
     />
   );
 }

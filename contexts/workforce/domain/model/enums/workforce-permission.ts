@@ -16,6 +16,11 @@ export const workforcePermissionCodes = [
   "catalog:services:update",
   "catalog:services:delete",
   "catalog:services:manage",
+  "crm:customers:create",
+  "crm:customers:read",
+  "crm:customers:update",
+  "crm:customers:delete",
+  "crm:customers:manage",
 ] as const;
 
 export type WorkforcePermission = (typeof workforcePermissionCodes)[number];

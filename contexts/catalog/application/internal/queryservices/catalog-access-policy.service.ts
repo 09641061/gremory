@@ -1,5 +1,6 @@
 import { createTeamQueryService } from "@/contexts/workforce/application/internal/queryservices/team-query.service";
 import { createOrganizationQueryService } from "@/contexts/business/application/internal/queryservices/organization-query.service";
+import { createEstablishmentQueryService } from "@/contexts/business/application/internal/queryservices/establishment-query.service";
 
 export interface CatalogPermissions {
   canReadCatalog: boolean;
@@ -108,22 +109,34 @@ export class CatalogAccessPolicyService {
 
   async getDefaultEstablishmentId(): Promise<string | undefined> {
     try {
-      const access = await createTeamQueryService().getAccessContext();
-      const allowedEst = access.establishments.find((item) => {
-        const roles = item.roles || [];
-        const hasReadRole = roles.some((role) => role.name.toLowerCase() === "read");
-        return (
-          item.effectivePermissions.some(
-            (perm) =>
-              perm === "catalog:services:read" ||
-              perm === "catalog:categories:read" ||
-              perm === "catalog:manage",
-          ) || hasReadRole
-        );
+      const org = await createOrganizationQueryService().getMyOrganization();
+      const page = await createEstablishmentQueryService().getByOrganization({
+        organizationId: org.id,
+        page: 0,
+        size: 1,
       });
-      return allowedEst?.establishmentId;
+      if (page.content.length > 0) {
+        return page.content[0].id;
+      }
     } catch {
-      return undefined;
+      try {
+        const access = await createTeamQueryService().getAccessContext();
+        const allowedEst = access.establishments.find((item) => {
+          const roles = item.roles || [];
+          const hasReadRole = roles.some((role) => role.name.toLowerCase() === "read");
+          return (
+            item.effectivePermissions.some(
+              (perm) =>
+                perm === "catalog:services:read" ||
+                perm === "catalog:categories:read" ||
+                perm === "catalog:manage",
+            ) || hasReadRole
+          );
+        });
+        return allowedEst?.establishmentId;
+      } catch {
+        return undefined;
+      }
     }
   }
 }

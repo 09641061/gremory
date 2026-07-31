@@ -29,9 +29,11 @@ const navigation = [
 export function Sidebar({
   initialAssistantConversations,
   canReadCatalog = true,
+  canReadCrm = true,
 }: {
   initialAssistantConversations: AssistantConversationSummaryReadModel[];
   canReadCatalog?: boolean;
+  canReadCrm?: boolean;
 }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -42,6 +44,9 @@ export function Sidebar({
   const filteredNavigation = navigation.filter(item => {
     if (item.label === "Catalog") {
       return canReadCatalog;
+    }
+    if (item.label === "CRM") {
+      return canReadCrm;
     }
     return true;
   });

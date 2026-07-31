@@ -40,11 +40,17 @@ import { EditCustomerModal } from "./edit-customer-modal";
 interface CrmClientWrapperProps {
   initialCustomers: PageResponse<CustomerResponse>;
   establishmentId: string;
+  canCreateCustomer?: boolean;
+  canUpdateCustomer?: boolean;
+  canDeleteCustomer?: boolean;
 }
 
 export function CrmClientWrapper({
   initialCustomers,
   establishmentId,
+  canCreateCustomer = true,
+  canUpdateCustomer = true,
+  canDeleteCustomer = true,
 }: CrmClientWrapperProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -114,10 +120,12 @@ export function CrmClientWrapper({
             <h1 className="text-2xl font-bold text-foreground mb-1">Customers Directory</h1>
             <p className="text-sm text-muted-foreground">Manage and organize your client directory with real-time status tracking.</p>
           </div>
-          <Button onClick={() => router.push("/crm/new")} className="gap-2">
-            <Plus className="h-4 w-4" />
-            Add New Customer
-          </Button>
+          {canCreateCustomer && (
+            <Button onClick={() => router.push("/crm/new")} className="gap-2">
+              <Plus className="h-4 w-4" />
+              Add New Customer
+            </Button>
+          )}
         </header>
 
         {/* Filters and Searches */}
@@ -143,13 +151,15 @@ export function CrmClientWrapper({
                   <th className="px-6 py-4 font-semibold text-foreground uppercase tracking-wider">Document ID</th>
                   <th className="px-6 py-4 font-semibold text-foreground uppercase tracking-wider">Email Address</th>
                   <th className="px-6 py-4 font-semibold text-foreground uppercase tracking-wider">Phone</th>
-                  <th className="px-6 py-4 font-semibold text-foreground uppercase tracking-wider text-right"></th>
+                  {(canUpdateCustomer || canDeleteCustomer) && (
+                    <th className="px-6 py-4 font-semibold text-foreground uppercase tracking-wider text-right"></th>
+                  )}
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
                 {customers.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="px-6 py-12 text-center text-muted-foreground">
+                    <td colSpan={canUpdateCustomer || canDeleteCustomer ? 5 : 4} className="px-6 py-12 text-center text-muted-foreground">
                       No customers found in this establishment.
                     </td>
                   </tr>
@@ -164,31 +174,37 @@ export function CrmClientWrapper({
                       </td>
                       <td className="px-6 py-4 text-muted-foreground">{cust.email}</td>
                       <td className="px-6 py-4 text-muted-foreground">{cust.phone}</td>
-                      <td className="px-6 py-4 text-right">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger
-                            render={
-                              <Button variant="ghost" size="icon" className="h-8 w-8">
-                                <MoreVertical className="h-4 w-4" />
-                              </Button>
-                            }
-                          />
-                          <DropdownMenuContent>
-                            <DropdownMenuItem onClick={() => setEditingCustomer(cust)} className="gap-2 cursor-pointer">
-                              <Edit className="h-3 w-3" />
-                              Edit Profile
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() => setCustomerToDelete(cust)}
-                              className="text-destructive gap-2 cursor-pointer hover:bg-destructive/10"
-                              disabled={isDeleting === cust.id}
-                            >
-                              <Trash2 className="h-3 w-3" />
-                              Delete
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </td>
+                      {(canUpdateCustomer || canDeleteCustomer) && (
+                        <td className="px-6 py-4 text-right">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger
+                              render={
+                                <Button variant="ghost" size="icon" className="h-8 w-8">
+                                  <MoreVertical className="h-4 w-4" />
+                                </Button>
+                              }
+                            />
+                            <DropdownMenuContent>
+                              {canUpdateCustomer && (
+                                <DropdownMenuItem onClick={() => setEditingCustomer(cust)} className="gap-2 cursor-pointer">
+                                  <Edit className="h-3 w-3" />
+                                  Edit Profile
+                                </DropdownMenuItem>
+                              )}
+                              {canDeleteCustomer && (
+                                <DropdownMenuItem
+                                  onClick={() => setCustomerToDelete(cust)}
+                                  className="text-destructive gap-2 cursor-pointer hover:bg-destructive/10"
+                                  disabled={isDeleting === cust.id}
+                                >
+                                  <Trash2 className="h-3 w-3" />
+                                  Delete
+                                </DropdownMenuItem>
+                              )}
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </td>
+                      )}
                     </tr>
                   ))
                 )}
