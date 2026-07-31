@@ -141,6 +141,10 @@ La vista del assistant no intenta soportar todo Markdown posible. La regla
 actual es mantener lo que aporta valor real al negocio y reducir lo que solo
 agrega costo o complejidad visual.
 
+El render hoy ocurre directo en el cliente con `react-markdown` + `remark-gfm`.
+Ya no existe una capa intermedia que convierta el contenido a HTML antes de
+llegar a la burbuja del mensaje.
+
 #### Soportado
 
 - párrafos

@@ -1,12 +1,7 @@
-import type {
-  AssistantConversationReadModel,
-  AssistantMessageReadModel,
-} from "@/contexts/assistant/application/internal/transforms/assistant.read-models";
+import type { AssistantConversationReadModel } from "@/contexts/assistant/application/internal/transforms/assistant.read-models";
 
-export type AssistantMessageViewModel = AssistantMessageReadModel & {
-  renderedContentHtml: string;
-};
+export type AssistantMessageViewModel = AssistantConversationReadModel["messages"][number];
 
 export type AssistantConversationViewModel = Omit<AssistantConversationReadModel, "messages"> & {
-  messages: AssistantMessageViewModel[];
+  messages: AssistantConversationReadModel["messages"];
 };
