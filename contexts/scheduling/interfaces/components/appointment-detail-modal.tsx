@@ -1,6 +1,6 @@
 "use client";
 
-import { CalendarCheck, Clock, User, UserCheck, Tag, CalendarClock, Ban, Pencil } from "lucide-react";
+import { CalendarCheck, Clock, User, UserCheck, Tag, CalendarClock, Ban } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/contexts/shared/interfaces/components/ui/dialog";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import { Appointment } from "../../domain/model/entities/appointment";
@@ -82,16 +82,6 @@ export function AppointmentDetailModal({
                     <Tag className="size-3.5 text-muted-foreground" />
                     <span>Service: <span className="font-medium text-foreground">{service?.name ?? "Unknown"}</span></span>
                   </div>
-                  {appointment.status !== "CANCELLED" && (
-                    <Button
-                      variant="ghost"
-                      size="icon-xs"
-                      onClick={() => setIsRescheduleOpen(true)}
-                      title="Edit Service"
-                    >
-                      <Pencil className="size-3.5 text-muted-foreground hover:text-foreground" />
-                    </Button>
-                  )}
                 </div>
               </div>
               <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold ${
@@ -111,16 +101,6 @@ export function AppointmentDetailModal({
                     <p className="text-sm font-medium text-foreground">{formattedTime}</p>
                     <p className="text-xs text-muted-foreground">{formattedDate}</p>
                   </div>
-                  {appointment.status !== "CANCELLED" && (
-                    <Button
-                      variant="ghost"
-                      size="icon-xs"
-                      onClick={() => setIsRescheduleOpen(true)}
-                      title="Reschedule Date & Time"
-                    >
-                      <Pencil className="size-3.5 text-muted-foreground hover:text-foreground" />
-                    </Button>
-                  )}
                 </div>
               </div>
 
@@ -131,16 +111,6 @@ export function AppointmentDetailModal({
                     <p className="text-sm text-muted-foreground">Customer</p>
                     <p className="text-sm font-medium text-foreground">{customer?.name ?? "Unknown"}</p>
                   </div>
-                  {appointment.status !== "CANCELLED" && (
-                    <Button
-                      variant="ghost"
-                      size="icon-xs"
-                      onClick={() => setIsRescheduleOpen(true)}
-                      title="Edit Customer"
-                    >
-                      <Pencil className="size-3.5 text-muted-foreground hover:text-foreground" />
-                    </Button>
-                  )}
                 </div>
               </div>
 
@@ -151,16 +121,6 @@ export function AppointmentDetailModal({
                     <p className="text-sm text-muted-foreground">Assigned Employee</p>
                     <p className="text-sm font-medium text-foreground">{employee?.name ?? "Unknown"}</p>
                   </div>
-                  {appointment.status !== "CANCELLED" && (
-                    <Button
-                      variant="ghost"
-                      size="icon-xs"
-                      onClick={() => setIsRescheduleOpen(true)}
-                      title="Edit Employee"
-                    >
-                      <Pencil className="size-3.5 text-muted-foreground hover:text-foreground" />
-                    </Button>
-                  )}
                 </div>
               </div>
 
@@ -188,7 +148,7 @@ export function AppointmentDetailModal({
                     onClick={() => setIsRescheduleOpen(true)}
                   >
                     <CalendarClock className="size-4" />
-                    Reschedule / Edit
+                    Reschedule
                   </Button>
                   <Button
                     type="button"

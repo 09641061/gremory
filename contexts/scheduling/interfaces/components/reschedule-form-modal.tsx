@@ -4,16 +4,15 @@ import { useActionState, useEffect, useState } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/contexts/shared/interfaces/components/ui/dialog";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import { Label } from "@/contexts/shared/interfaces/components/ui/label";
-import { Textarea } from "@/contexts/shared/interfaces/components/ui/textarea";
 import { Input } from "@/contexts/shared/interfaces/components/ui/input";
-import { rescheduleAppointmentAction } from "../actions/reschedule-appointment.action";
+import { updateAppointmentAction } from "../actions/update-appointment.action";
 import { ErrorAlert } from "@/contexts/shared/interfaces/components/ui/error";
 import { Appointment } from "../../domain/model/entities/appointment";
 import { ActionState } from "../actions/create-appointment.action";
 import { MemberResponse } from "../models/member-response";
 import { DetailedServiceDTO } from "@/contexts/catalog/application/model/catalog-view.models";
 import { CustomerResponse } from "@/contexts/crm/domain/model/entities/customer";
-import { CalendarClock, Tag, User, UserCheck, Trash2 } from "lucide-react";
+import { CalendarClock, Trash2 } from "lucide-react";
 import { DeleteConfirmDialog } from "./delete-confirm-dialog";
 
 interface RescheduleFormModalProps {
@@ -63,14 +62,19 @@ export function RescheduleFormModal({
 }: RescheduleFormModalProps) {
   const [state, formAction, isPending] = useActionState(
     async (prevState: ActionState<Appointment>, formData: FormData) => {
-      return await rescheduleAppointmentAction(appointment.id, prevState, formData);
+      return await updateAppointmentAction(appointment.id, prevState, formData);
     },
     initialActionState
   );
 
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
 
-  // Parse existing appointment start to initialize date/time fields
+  // Parse existing appointment values
+  const [title, setTitle] = useState(appointment.title);
+  const [selectedServiceId, setSelectedServiceId] = useState(appointment.serviceId ?? "");
+  const [selectedCustomerId, setSelectedCustomerId] = useState(appointment.customerId ?? "");
+  const [selectedEmployeeId, setSelectedEmployeeId] = useState(appointment.employeeId ?? "");
+
   const existingStart = new Date(appointment.startsAt);
   const initDate = `${existingStart.getFullYear()}-${String(existingStart.getMonth() + 1).padStart(2, "0")}-${String(existingStart.getDate()).padStart(2, "0")}`;
   const initTime = `${String(existingStart.getHours()).padStart(2, "0")}:${String(existingStart.getMinutes()).padStart(2, "0")}`;
@@ -79,11 +83,6 @@ export function RescheduleFormModal({
   const [startTime, setStartTime] = useState(initTime);
 
   const timeSlots = generateTimeSlots();
-
-  // Resolve related entities for display
-  const service = services.find((s) => s.id === appointment.serviceId);
-  const customer = customers.find((c) => c.id === appointment.customerId);
-  const employee = members.find((m) => m.userId === appointment.employeeId);
 
   useEffect(() => {
     if (state.status === "success" && state.data) {
@@ -94,10 +93,11 @@ export function RescheduleFormModal({
 
   // Calculate dynamic end time based on service duration
   const getCalculatedTimes = () => {
-    if (!startDate || !startTime) {
+    if (!startDate || !startTime || !selectedServiceId) {
       return { startsAt: "", endsAt: "", formattedEnd: "" };
     }
 
+    const service = services.find((s) => s.id === selectedServiceId);
     const duration = service ? service.durationMinutes : 30; // default 30 min fallback
 
     const [startYear, startMonth, startDay] = startDate.split("-").map(Number);
@@ -144,7 +144,7 @@ export function RescheduleFormModal({
 
   return (
     <>
-      <ErrorAlert title="Rescheduling Failed" message={state.error ?? undefined} />
+      <ErrorAlert title="Update Failed" message={state.error ?? undefined} />
       <Dialog open={isOpen} onOpenChange={onOpenChange}>
         <DialogContent className="max-w-md">
           <form action={formAction} className="space-y-4">
@@ -154,41 +154,101 @@ export function RescheduleFormModal({
             <DialogHeader>
               <div className="flex items-center gap-2">
                 <CalendarClock className="text-primary size-5" />
-                <DialogTitle>Reschedule Appointment</DialogTitle>
+                <DialogTitle>Edit Appointment</DialogTitle>
               </div>
               <DialogDescription>
-                Modify the date and time of this appointment. This will check for any conflicting schedules.
+                Modify appointment details, assignee, customer, and schedules in one place.
               </DialogDescription>
             </DialogHeader>
 
-            {/* Read-only appointment info summary */}
-            <div className="space-y-3 p-3 bg-muted/30 rounded-lg border border-border">
-              <div className="flex items-center gap-2 text-sm">
-                <Tag className="size-3.5 text-muted-foreground shrink-0" />
-                <span className="text-muted-foreground">Service:</span>
-                <span className="font-medium text-foreground">{service?.name ?? "Unknown"}</span>
-                {service && (
-                  <span className="text-xs text-muted-foreground">
-                    ({service.durationMinutes} min)
-                  </span>
-                )}
-              </div>
-              <div className="flex items-center gap-2 text-sm">
-                <User className="size-3.5 text-muted-foreground shrink-0" />
-                <span className="text-muted-foreground">Customer:</span>
-                <span className="font-medium text-foreground">{customer?.name ?? "Unknown"}</span>
-              </div>
-              <div className="flex items-center gap-2 text-sm">
-                <UserCheck className="size-3.5 text-muted-foreground shrink-0" />
-                <span className="text-muted-foreground">Employee:</span>
-                <span className="font-medium text-foreground">{employee?.name ?? employee?.email ?? "Unknown"}</span>
-              </div>
+            {/* Title field */}
+            <div className="space-y-1.5">
+              <Label htmlFor="reschedule-title">Appointment Title</Label>
+              <Input
+                id="reschedule-title"
+                name="title"
+                required
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+              />
+              {state.fieldErrors?.title && (
+                <p className="text-xs text-destructive">{state.fieldErrors.title[0]}</p>
+              )}
+            </div>
+
+            {/* Service Selection */}
+            <div className="space-y-1.5">
+              <Label htmlFor="reschedule-service">Service</Label>
+              <select
+                id="reschedule-service"
+                name="serviceId"
+                required
+                value={selectedServiceId}
+                onChange={(e) => setSelectedServiceId(e.target.value)}
+                className={selectClassName}
+              >
+                <option value="">Select a service...</option>
+                {services.map((service) => (
+                  <option key={service.id} value={service.id}>
+                    {service.name} (${service.price} - {service.durationMinutes} min)
+                  </option>
+                ))}
+              </select>
+              {state.fieldErrors?.serviceId && (
+                <p className="text-xs text-destructive">{state.fieldErrors.serviceId[0]}</p>
+              )}
+            </div>
+
+            {/* Customer Selection */}
+            <div className="space-y-1.5">
+              <Label htmlFor="reschedule-customer">Customer</Label>
+              <select
+                id="reschedule-customer"
+                name="customerId"
+                required
+                value={selectedCustomerId}
+                onChange={(e) => setSelectedCustomerId(e.target.value)}
+                className={selectClassName}
+              >
+                <option value="">Select a customer...</option>
+                {customers.map((customer) => (
+                  <option key={customer.id} value={customer.id}>
+                    {customer.name}
+                  </option>
+                ))}
+              </select>
+              {state.fieldErrors?.customerId && (
+                <p className="text-xs text-destructive">{state.fieldErrors.customerId[0]}</p>
+              )}
+            </div>
+
+            {/* Employee Selection */}
+            <div className="space-y-1.5">
+              <Label htmlFor="reschedule-employee">Employee / Specialist</Label>
+              <select
+                id="reschedule-employee"
+                name="employeeId"
+                required
+                value={selectedEmployeeId}
+                onChange={(e) => setSelectedEmployeeId(e.target.value)}
+                className={selectClassName}
+              >
+                <option value="">Select an employee...</option>
+                {members.map((member) => (
+                  <option key={member.id} value={member.userId}>
+                    {member.name} ({member.role})
+                  </option>
+                ))}
+              </select>
+              {state.fieldErrors?.employeeId && (
+                <p className="text-xs text-destructive">{state.fieldErrors.employeeId[0]}</p>
+              )}
             </div>
 
             {/* Date & Time selection */}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <Label htmlFor="reschedule-startDate">New Date</Label>
+                <Label htmlFor="reschedule-startDate">Date</Label>
                 <Input
                   id="reschedule-startDate"
                   type="date"
@@ -199,7 +259,7 @@ export function RescheduleFormModal({
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="reschedule-startTime">New Time</Label>
+                <Label htmlFor="reschedule-startTime">Time</Label>
                 <select
                   id="reschedule-startTime"
                   required
@@ -234,21 +294,7 @@ export function RescheduleFormModal({
               </div>
             )}
 
-            {/* Rescheduling reason */}
-            <div className="space-y-1.5">
-              <Label htmlFor="reschedule-reason">Rescheduling Reason</Label>
-              <Textarea
-                id="reschedule-reason"
-                name="reason"
-                placeholder="Client requested to change time..."
-                className="min-h-[80px]"
-              />
-              {state.fieldErrors?.reason && (
-                <p className="text-xs text-destructive">{state.fieldErrors.reason[0]}</p>
-              )}
-            </div>
-
-            <DialogFooter className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-2">
+            <DialogFooter className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-2 pt-2">
               <Button
                 type="button"
                 variant="ghost"

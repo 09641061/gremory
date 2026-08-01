@@ -120,6 +120,23 @@ export class SchedulingApiGateway
     );
   }
 
+  async updateAppointment(
+    id: string,
+    command: { title: string; serviceId: string; customerId: string; employeeId: string; startsAt: string; endsAt: string },
+    token?: string
+  ): Promise<Appointment> {
+    const authToken = await resolveAccessToken(token);
+    return apiClient.patch<Appointment>(
+      `${apiConfig.routes.scheduling.appointments}/${encodeURIComponent(id)}`,
+      command,
+      {
+        token: authToken,
+        errorMessage: "Failed to update appointment details",
+        errorType: SchedulingApiError,
+      }
+    );
+  }
+
   async cancelAppointment(
     id: string,
     command: CancelAppointmentCommand,

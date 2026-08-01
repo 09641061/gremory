@@ -1,8 +1,8 @@
 import type { ProfileId } from "../valueobjects/profile-id";
 import type { UserId } from "../valueobjects/user-id";
-import { type Username, createUsername } from "../valueobjects/username";
-import { type ProfileImageUrl, createProfileImageUrl } from "../valueobjects/profile-image-url";
-import { type ProfilePreferences, createProfilePreferences } from "../valueobjects/profile-preferences";
+import { type Username } from "../valueobjects/username";
+import { type ProfileImageUrl } from "../valueobjects/profile-image-url";
+import { type ProfilePreferences } from "../valueobjects/profile-preferences";
 
 export class Profile {
   private constructor(

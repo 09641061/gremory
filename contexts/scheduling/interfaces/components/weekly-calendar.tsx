@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition, useEffect } from "react";
+import { useState, useTransition, useEffect, useCallback, useMemo } from "react";
 import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import { Appointment } from "../../domain/model/entities/appointment";
@@ -46,20 +46,20 @@ export function WeeklyCalendar({
     return { sunday, saturday };
   };
 
-  const { sunday, saturday } = getWeekRange(currentDate);
+  const { sunday, saturday } = useMemo(() => getWeekRange(currentDate), [currentDate]);
 
-  const fetchAppointments = () => {
+  const fetchAppointments = useCallback(() => {
     startTransition(async () => {
       const fromStr = sunday.toISOString();
       const toStr = saturday.toISOString();
       const res = await listAppointmentsAction(fromStr, toStr, establishmentId);
       setAppointments(res.content);
     });
-  };
+  }, [sunday, saturday, establishmentId]);
 
   useEffect(() => {
     fetchAppointments();
-  }, [currentDate, establishmentId]);
+  }, [fetchAppointments]);
 
   const navigateWeek = (direction: "prev" | "next") => {
     const newDate = new Date(currentDate);
