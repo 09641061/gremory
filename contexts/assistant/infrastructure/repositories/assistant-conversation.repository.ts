@@ -19,7 +19,9 @@ function toAssistantMessageRole(role: ApiMessageRole): AssistantMessageRole {
 function toAssistantConversationEntity(conversation: AssistantConversationResponse): AssistantConversation {
   return AssistantConversation.create({
     id: createAssistantConversationId(conversation.id),
-    title: createAssistantConversationTitle(conversation.title || "Nueva conversacion"),
+    title: conversation.title?.trim()
+      ? createAssistantConversationTitle(conversation.title)
+      : null,
     createdAt: conversation.createdAt,
     updatedAt: conversation.updatedAt,
     messages: conversation.messages.map((message) =>

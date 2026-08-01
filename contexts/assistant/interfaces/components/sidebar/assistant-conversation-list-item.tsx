@@ -26,6 +26,8 @@ export function AssistantConversationListItem({
   isMenuOpen,
   onOpenMenu,
 }: AssistantConversationListItemProps) {
+  const conversationTitle = conversation.title ?? "Nueva conversacion";
+
   return (
     <li>
       <div className="relative flex items-center gap-1.5 rounded-2xl">
@@ -39,7 +41,7 @@ export function AssistantConversationListItem({
               "!border-accent/40 !bg-accent !text-accent-foreground hover:!border-accent/40 hover:!bg-accent hover:!text-accent-foreground",
           )}
         >
-          <span className="truncate">{conversation.title}</span>
+          <span className="truncate">{conversationTitle}</span>
         </Link>
 
         <Button
@@ -47,7 +49,7 @@ export function AssistantConversationListItem({
           variant="ghost"
           size="icon-xs"
           disabled={isMutating}
-          aria-label={`Options for ${conversation.title}`}
+          aria-label={`Options for ${conversationTitle}`}
           aria-expanded={isMenuOpen}
           onClick={(event) => {
             const currentTarget = event.currentTarget;

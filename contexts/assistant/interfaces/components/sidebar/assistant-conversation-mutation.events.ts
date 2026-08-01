@@ -2,7 +2,7 @@ import type { AssistantConversationSummaryReadModel } from "@/contexts/assistant
 
 export type ConversationMutationEventDetail =
   | { type: "upsert"; conversation: AssistantConversationSummaryReadModel; moveToFront?: boolean }
-  | { type: "rename"; conversationId: string; title: string }
+  | { type: "rename"; conversationId: string; title: string | null }
   | { type: "delete"; conversationId: string };
 
 export function dispatchAssistantConversationMutation(detail: ConversationMutationEventDetail) {

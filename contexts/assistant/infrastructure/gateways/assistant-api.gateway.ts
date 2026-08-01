@@ -10,7 +10,7 @@ export type AssistantMessageRole = "USER" | "AGENT" | string;
 
 export interface AssistantConversationSummaryResponse {
   id: string;
-  title: string;
+  title: string | null;
   createdAt: string;
   updatedAt: string;
 }

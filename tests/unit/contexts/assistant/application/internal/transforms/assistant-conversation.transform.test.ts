@@ -153,4 +153,16 @@ describe("assistant conversation transform", () => {
       "user",
     ]);
   });
+
+  it("preserves a pending title when converting a domain entity", () => {
+    const conversation = toConversationReadModelFromEntity({
+      id: { value: "conversation-4" },
+      createdAt: "2026-07-29T00:00:00.000Z",
+      updatedAt: "2026-07-29T00:00:00.000Z",
+      getTitle: () => null,
+      getMessages: () => [],
+    } as never);
+
+    expect(conversation.title).toBeNull();
+  });
 });

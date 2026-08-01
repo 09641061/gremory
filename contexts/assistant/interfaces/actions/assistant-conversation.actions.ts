@@ -25,7 +25,7 @@ export type DeleteAssistantConversationActionResult =
 
 function toSummaryReadModel(conversation: {
   id: string;
-  title: string;
+  title: string | null;
   createdAt: string;
   updatedAt: string;
 }): AssistantConversationSummaryReadModel {

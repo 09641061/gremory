@@ -45,6 +45,9 @@ export function Sidebar({
   const selectedConversationId = pathname.startsWith("/chat")
     ? searchParams.get("conversationId")
     : null;
+  const assistantChatsSectionKey = initialAssistantConversations
+    .map((conversation) => `${conversation.id}:${conversation.updatedAt}:${conversation.title ?? ""}`)
+    .join("|");
 
   const filteredNavigation = navigation.filter(item => {
     if (item.label === "Catalog") {
@@ -98,7 +101,10 @@ export function Sidebar({
         </ul>
       </nav>
 
-      <AssistantChatsSection initialConversations={initialAssistantConversations} />
+      <AssistantChatsSection
+        key={assistantChatsSectionKey}
+        initialConversations={initialAssistantConversations}
+      />
 
       <div className="mt-auto pt-5">
         <SidebarProfile

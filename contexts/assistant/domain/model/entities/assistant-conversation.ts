@@ -5,7 +5,7 @@ import { AssistantMessage } from "./assistant-message";
 export class AssistantConversation {
   private constructor(
     public readonly id: AssistantConversationId,
-    private title: AssistantConversationTitle,
+    private title: AssistantConversationTitle | null,
     public readonly createdAt: string,
     public readonly updatedAt: string,
     private messages: AssistantMessage[],
@@ -13,7 +13,7 @@ export class AssistantConversation {
 
   static create(params: {
     id: AssistantConversationId;
-    title: AssistantConversationTitle;
+    title: AssistantConversationTitle | null;
     createdAt: string;
     updatedAt: string;
     messages?: AssistantMessage[];
@@ -36,7 +36,7 @@ export class AssistantConversation {
   }
 
   getTitle() {
-    return this.title.value;
+    return this.title?.value ?? null;
   }
 
   getMessages() {

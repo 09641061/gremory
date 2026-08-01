@@ -73,7 +73,9 @@ function normalizeSummary(
 ): AssistantConversationSummaryReadModel {
   return {
     id: createAssistantConversationId(conversation.id).value,
-    title: conversation.title ? createAssistantConversationTitle(conversation.title).value : "Nueva conversacion",
+    title: conversation.title?.trim()
+      ? createAssistantConversationTitle(conversation.title).value
+      : null,
     createdAt: conversation.createdAt,
     updatedAt: conversation.updatedAt,
   };

@@ -31,7 +31,7 @@ export function useAssistantConversationSidebarConversations(
         case "rename": {
           setConversations((current) =>
             current.map((item) =>
-              item.id === detail.conversationId ? { ...item, title: detail.title } : item,
+              item.id === detail.conversationId ? { ...item, title: detail.title ?? item.title } : item,
             ),
           );
           return;

@@ -19,6 +19,13 @@ function buildConversationUrl(conversationId?: string | null) {
   return `/chat?${params.toString()}`;
 }
 
+const TITLE_POLL_DELAY_MS = 500;
+const TITLE_POLL_MAX_ATTEMPTS = 3;
+
+function isPendingTitle(title: string | null | undefined): title is null | undefined {
+  return title == null;
+}
+
 type AssistantChatViewProps = {
   conversationId: string | null;
   initialConversation: AssistantConversationViewModel | null;
@@ -46,10 +53,79 @@ export function AssistantChatView({
   const isThreadVisible = Boolean(conversationId || visibleConversation);
 
   useEffect(() => {
+    if (!conversationId || !visibleConversation || !isPendingTitle(visibleConversation.title)) {
+      return;
+    }
+
+    const targetConversationId = conversationId;
+    let cancelled = false;
+    let timeoutId: number | null = null;
+
+    async function pollConversationTitle(attempt: number) {
+      try {
+        const response = await fetch(
+          `/api/assistant/conversations/${encodeURIComponent(targetConversationId)}`,
+          {
+            cache: "no-store",
+          },
+        );
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch assistant conversation");
+        }
+
+        const nextConversation = (await response.json()) as AssistantConversationViewModel;
+
+        if (cancelled) {
+          return;
+        }
+
+        if (!isPendingTitle(nextConversation.title)) {
+          setActiveConversation(nextConversation);
+          window.dispatchEvent(
+            new CustomEvent("assistant-conversations-updated", {
+              detail: {
+                type: "rename",
+                conversationId: targetConversationId,
+                title: nextConversation.title,
+              },
+            }),
+          );
+          router.refresh();
+          return;
+        }
+      } catch {
+        if (cancelled) {
+          return;
+        }
+      }
+
+      if (cancelled || attempt >= TITLE_POLL_MAX_ATTEMPTS) {
+        return;
+      }
+
+      timeoutId = window.setTimeout(() => {
+        void pollConversationTitle(attempt + 1);
+      }, TITLE_POLL_DELAY_MS);
+    }
+
+    timeoutId = window.setTimeout(() => {
+      void pollConversationTitle(1);
+    }, TITLE_POLL_DELAY_MS);
+
+    return () => {
+      cancelled = true;
+      if (timeoutId !== null) {
+        window.clearTimeout(timeoutId);
+      }
+    };
+  }, [conversationId, visibleConversation, visibleConversation?.title, visibleConversation?.id, router]);
+
+  useEffect(() => {
     function handleConversationMutation(event: Event) {
       const customEvent = event as CustomEvent<
         | { type: "upsert"; conversation: AssistantConversationViewModel; moveToFront?: boolean }
-        | { type: "rename"; conversationId: string; title: string }
+        | { type: "rename"; conversationId: string; title: string | null }
         | { type: "delete"; conversationId: string }
       >;
 
@@ -68,7 +144,9 @@ export function AssistantChatView({
           }
 
           setActiveConversation((current) =>
-            current && current.id === detail.conversationId ? { ...current, title: detail.title } : current,
+            current && current.id === detail.conversationId
+              ? { ...current, title: detail.title ?? current.title }
+              : current,
           );
           return;
         case "delete":

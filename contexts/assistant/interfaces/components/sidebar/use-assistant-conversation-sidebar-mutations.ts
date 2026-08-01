@@ -26,7 +26,7 @@ export function useAssistantConversationSidebarMutations() {
 
   function openRenameConversation(conversation: AssistantConversationSummaryReadModel) {
     setRenameModalConversation(conversation);
-    setRenameTitle(conversation.title);
+    setRenameTitle(conversation.title ?? "");
     setRenameError(null);
   }
 
@@ -63,7 +63,7 @@ export function useAssistantConversationSidebarMutations() {
       dispatchAssistantConversationMutation({
         type: "rename",
         conversationId: renameModalConversation.id,
-        title: result.data.title,
+        title: result.data.title ?? nextTitle,
       });
       setRenameModalConversation(null);
     } catch (requestError) {
