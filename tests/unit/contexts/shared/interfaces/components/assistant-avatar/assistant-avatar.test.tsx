@@ -6,7 +6,7 @@ vi.mock("next/image", () => ({
   default: (props: Record<string, unknown>) => <img alt="" {...props} />,
 }));
 
-import { AssistantAvatar } from "@/contexts/shared/interfaces/components/assistant-avatar/assistant-avatar";
+import { AssistantAvatar } from "@/contexts/shared/interfaces/components/kodu/kodu-avatar";
 
 describe("AssistantAvatar", () => {
   it("renders a flat avatar without the framed surface", () => {
