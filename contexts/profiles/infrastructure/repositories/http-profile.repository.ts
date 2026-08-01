@@ -3,10 +3,10 @@ import "server-only";
 import { apiConfig } from "@/api.config";
 import { ApiError, apiClient } from "@/contexts/shared/infrastructure/http/api-client";
 import type { ProfileRepository } from "../../domain/repositories/profile.repository";
-import type { Profile } from "../../domain/model/entities/profile";
 import type { UpdateProfileCommand } from "../../domain/model/commands/update-profile.command";
 import type { UpdateProfilePreferencesCommand } from "../../domain/model/commands/update-profile-preferences.command";
 import { profileFromApiResponse } from "../../interfaces/rest/mappers/profile.mapper";
+import type { ProfileViewModel } from "../../application/services/profile.view-model";
 
 export class ProfileApiError extends ApiError {
   constructor(message: string, status: number, details?: unknown) {
@@ -16,7 +16,7 @@ export class ProfileApiError extends ApiError {
 }
 
 export class HttpProfileRepository implements ProfileRepository {
-  async getMyProfile(accessToken: string): Promise<Profile | null> {
+  async getMyProfile(accessToken: string): Promise<ProfileViewModel | null> {
     try {
       const response = await apiClient.get<unknown>(apiConfig.routes.profiles.root, {
         token: accessToken,
@@ -33,7 +33,10 @@ export class HttpProfileRepository implements ProfileRepository {
     }
   }
 
-  async updateProfile(command: UpdateProfileCommand, accessToken: string): Promise<Profile> {
+  async updateProfile(
+    command: UpdateProfileCommand,
+    accessToken: string
+  ): Promise<ProfileViewModel> {
     const payload = {
       username: command.username.value,
       imageUrl: command.imageUrl.value,
@@ -55,7 +58,7 @@ export class HttpProfileRepository implements ProfileRepository {
   async updatePreferences(
     command: UpdateProfilePreferencesCommand,
     accessToken: string
-  ): Promise<Profile> {
+  ): Promise<ProfileViewModel> {
     const payload = {
       language: command.preferences.language,
       theme: command.preferences.theme,

@@ -1,16 +1,10 @@
 import { z } from "zod";
 
 export const profileResponseSchema = z.object({
-  id: z.string().uuid(),
-  userId: z.string().uuid(),
   username: z.string(),
   imageUrl: z.string().nullable().optional(),
-  preferences: z.object({
-    language: z.enum(["ES", "EN"]),
-    theme: z.enum(["LIGHT", "DARK", "SYSTEM"]),
-  }),
-  createdAt: z.string(),
-  updatedAt: z.string(),
+  language: z.enum(["ES", "EN"]),
+  theme: z.enum(["LIGHT", "DARK", "SYSTEM"]),
 });
 
 export const updateProfileSchema = z.object({
