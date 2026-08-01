@@ -1,9 +1,9 @@
 "use client";
 
-import Image from "next/image";
-
 import { cn } from "@/lib/utils";
 
+import { KoduBlinkingIcon } from "../icons/kodu-blinking";
+import { KoduStaIcon } from "../icons/kodu";
 import { useAssistantAvatarAnimation } from "./use-assistant-avatar-animation";
 
 interface AssistantAvatarProps {
@@ -22,7 +22,7 @@ export function AssistantAvatar({
   variant = "framed",
 }: AssistantAvatarProps) {
   const {
-    currentIcon,
+    isPressed,
     iconStyle,
     handlePointerDown,
     handlePointerEnd,
@@ -50,13 +50,8 @@ export function AssistantAvatar({
         className="pointer-events-none flex items-center justify-center transition-transform duration-150 ease-out"
         style={iconStyle}
       >
-        <Image
-          src={currentIcon}
-          alt=""
-          width={iconSize}
-          height={iconSize}
-          className={cn("object-contain", iconClassName)}
-        />
+        <KoduBlinkingIcon size={iconSize} className={cn("object-contain", iconClassName, !isPressed && "hidden")} />
+        <KoduStaIcon size={iconSize} className={cn("object-contain", iconClassName, isPressed && "hidden")} />
       </span>
     </button>
   );
