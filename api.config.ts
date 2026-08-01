@@ -15,6 +15,10 @@ export const apiConfig = Object.freeze({
       magicLink: "/api/v1/auth/magic-link",
       googleAuthorize: "/api/v1/auth/google/authorize",
     }),
+    profiles: Object.freeze({
+      root: "/api/v1/profiles",
+      preferences: "/api/v1/profiles/preferences",
+    }),
     organizations: "/api/business/organizations",
     organizationImages: "/api/business/organizations/images",
     establishments: "/api/business/establishments",

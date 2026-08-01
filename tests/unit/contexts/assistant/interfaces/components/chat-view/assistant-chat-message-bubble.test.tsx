@@ -1,7 +1,7 @@
 /** @vitest-environment jsdom */
 import { render, screen } from "@testing-library/react";
 
-vi.mock("@/contexts/shared/interfaces/components/kodu/kodu", () => ({
+vi.mock("@/contexts/shared/interfaces/components/kodu/kodu-avatar", () => ({
   AssistantAvatar: () => <div data-testid="assistant-avatar" />,
 }));
 

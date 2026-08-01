@@ -8,13 +8,14 @@ import {
   ContactRound,
   MessageCircle,
   Package,
-  Settings,
   Users,
 } from "lucide-react";
 
 import { buttonVariants } from "@/contexts/shared/interfaces/components/ui/button";
 import { AssistantChatsSection } from "@/contexts/assistant/interfaces/components/sidebar/assistant-chats-section";
 import type { AssistantConversationSummaryReadModel } from "@/contexts/assistant/application/internal/transforms/assistant.read-models";
+import type { ProfileViewModel } from "@/contexts/profiles/application/services/profile.view-model";
+import { SidebarProfile } from "@/contexts/profiles/interfaces/components/profile/sidebar-profile";
 import { cn } from "@/lib/utils";
 
 const navigation = [
@@ -28,11 +29,13 @@ const navigation = [
 
 export function Sidebar({
   initialAssistantConversations,
+  currentProfile,
   canReadCatalog = true,
   canReadCrm = true,
   canReadTeam = true,
 }: {
   initialAssistantConversations: AssistantConversationSummaryReadModel[];
+  currentProfile: Pick<ProfileViewModel, "username" | "imageUrl"> | null;
   canReadCatalog?: boolean;
   canReadCrm?: boolean;
   canReadTeam?: boolean;
@@ -97,36 +100,17 @@ export function Sidebar({
 
       <AssistantChatsSection initialConversations={initialAssistantConversations} />
 
-      <nav aria-label="Configuracion" className="mt-auto pt-5">
-        <ul>
-          <li>
-            <Link
-              href={searchParams.get("establishmentId") ? `/settings?establishmentId=${searchParams.get("establishmentId")}` : "/settings"}
-              aria-current={
-                pathname === "/settings" || pathname.startsWith("/settings/")
-                  ? "page"
-                  : undefined
-              }
-              className={cn(
-                buttonVariants({ variant: "ghost", size: "lg" }),
-                "h-10 w-full justify-start gap-2.5 rounded-md px-2.5 text-sm font-medium text-foreground hover:bg-accent/70 hover:text-accent-foreground",
-                (pathname === "/settings" || pathname.startsWith("/settings/")) &&
-                  "!bg-accent !text-accent-foreground hover:!bg-accent",
-              )}
-            >
-              <Settings
-                className={cn(
-                  "size-5 text-muted-foreground",
-                  (pathname === "/settings" || pathname.startsWith("/settings/")) &&
-                    "text-accent-foreground",
-                )}
-                strokeWidth={2}
-              />
-              <span>Settings</span>
-            </Link>
-          </li>
-        </ul>
-      </nav>
+      <div className="mt-auto pt-5">
+        <SidebarProfile
+          profile={currentProfile}
+          href={
+            searchParams.get("establishmentId")
+              ? `/settings?establishmentId=${searchParams.get("establishmentId")}`
+              : "/settings"
+          }
+          active={pathname === "/settings" || pathname.startsWith("/settings/")}
+        />
+      </div>
     </aside>
   );
 }

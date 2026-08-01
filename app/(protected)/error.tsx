@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { ErrorAlert } from "@/contexts/shared/interfaces/components/ui/error";
+import { ErrorScreen } from "@/contexts/shared/interfaces/components/error-screen";
 
 export default function ProtectedError({
   error,
@@ -15,18 +15,11 @@ export default function ProtectedError({
   }, [error]);
 
   return (
-    <main className="flex min-h-[calc(100vh-4rem)] flex-1 items-center justify-center px-4 text-foreground">
-      <ErrorAlert
-        title="Something went wrong"
-        message="We could not complete this request. Please try again."
-      />
-      <button
-        type="button"
-        onClick={reset}
-        className="fixed right-4 top-20 z-50 rounded-md border-border bg-card px-3 py-1.5 text-sm font-medium text-foreground"
-      >
-        Try again
-      </button>
-    </main>
+    <ErrorScreen
+      title="Something went wrong"
+      message="We could not complete this request. Please try again."
+      reset={reset}
+      mainClassName="flex min-h-[calc(100vh-4rem)] flex-1 items-center justify-center px-4 text-foreground"
+    />
   );
 }
