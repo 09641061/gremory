@@ -6,6 +6,7 @@ import { createCatalogAccessPolicyService } from "@/contexts/catalog/application
 import { createCrmAccessPolicyService } from "@/contexts/crm/application/internal/queryservices/crm-access-policy.service";
 import { createWorkforceAccessPolicyService } from "@/contexts/workforce/application/internal/queryservices/workforce-access-policy.service";
 import { createOrganizationQueryService } from "@/contexts/business/application/internal/queryservices/organization-query.service";
+import { getMyProfileServerQuery } from "@/contexts/profiles/interfaces/queries/get-my-profile.query-handler";
 
 /**
  * Main app layout wrapper rendering the responsive Sidebar and main content canvas.
@@ -16,6 +17,7 @@ export default async function AppLayout({
   children: ReactNode;
 }) {
   const assistantConversations = await new ListConversationsQueryService().handle({ page: 0, size: 20 });
+  const currentProfile = await getMyProfileServerQuery();
 
   const catalogPolicyService = createCatalogAccessPolicyService();
   const crmPolicyService = createCrmAccessPolicyService();
@@ -47,6 +49,7 @@ export default async function AppLayout({
     <>
       <Sidebar
         initialAssistantConversations={assistantConversations.content}
+        currentProfile={currentProfile}
         canReadCatalog={canReadCatalog}
         canReadCrm={canReadCrm}
         canReadTeam={canReadTeam}
