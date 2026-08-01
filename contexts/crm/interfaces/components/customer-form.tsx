@@ -44,7 +44,6 @@ export function CustomerForm({
   const [error, setError] = React.useState<string | null>(null);
 
   const [isResolving, setIsResolving] = React.useState(false);
-  const prevResolvedRef = React.useRef<string>("");
 
   const handleResolve = React.useCallback(async () => {
     if (docType !== "dni" && docType !== "ruc") return;
@@ -57,29 +56,11 @@ export function CustomerForm({
         setName(res.data.name);
       }
     } catch {
-      // Silent error for auto-resolve, user can still manually edit
+      // Silent error, user can still manually edit
     } finally {
       setIsResolving(false);
     }
   }, [docNumber, docType]);
-
-  // Auto-resolve on length match
-  React.useEffect(() => {
-    const targetLength = docType === "dni" ? 8 : docType === "ruc" ? 11 : 0;
-    const currentIdentity = `${docType}:${docNumber}`;
-
-    if (
-      targetLength > 0 &&
-      docNumber.length === targetLength &&
-      currentIdentity !== prevResolvedRef.current
-    ) {
-      prevResolvedRef.current = currentIdentity;
-      const timeoutId = setTimeout(() => {
-        handleResolve();
-      }, 0);
-      return () => clearTimeout(timeoutId);
-    }
-  }, [docNumber, docType, handleResolve]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -96,18 +77,6 @@ export function CustomerForm({
       const isNumeric = /^\d+$/.test(docNumber);
       if (!isNumeric || docNumber.length !== 11) {
         setError("The RUC must have exactly 11 digits.");
-        return;
-      }
-    } else if (docType === "foreign_resident_card") {
-      const isAlphanumeric = /^[a-zA-Z0-9]+$/.test(docNumber);
-      if (!isAlphanumeric || docNumber.length < 9 || docNumber.length > 12) {
-        setError("The C.E. (Foreigner ID) must be alphanumeric and between 9 and 12 characters.");
-        return;
-      }
-    } else if (docType === "passport") {
-      const isAlphanumeric = /^[a-zA-Z0-9]+$/.test(docNumber);
-      if (!isAlphanumeric || docNumber.length > 20) {
-        setError("The Passport must be alphanumeric and have a maximum of 20 characters.");
         return;
       }
     }
@@ -167,8 +136,6 @@ export function CustomerForm({
             >
               <option value="dni">DNI (National ID)</option>
               <option value="ruc">RUC (Corporate Tax ID)</option>
-              <option value="foreign_resident_card">C.E. (Foreigner ID)</option>
-              <option value="passport">Passport</option>
             </select>
           </div>
 
@@ -181,24 +148,14 @@ export function CustomerForm({
                 onChange={(e) => {
                   const val = e.target.value;
                   setError(null);
-                  if (docType === "dni" || docType === "ruc") {
-                    if (/^\d*$/.test(val)) {
-                      setDocNumber(val);
-                    }
-                  } else {
+                  if (/^\d*$/.test(val)) {
                     setDocNumber(val);
                   }
                 }}
                 maxLength={
                   docType === "dni"
                     ? 8
-                    : docType === "ruc"
-                    ? 11
-                    : docType === "foreign_resident_card"
-                    ? 12
-                    : docType === "passport"
-                    ? 20
-                    : undefined
+                    : 11
                 }
                 placeholder="Enter number..."
                 required
