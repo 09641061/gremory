@@ -1,26 +1,45 @@
 "use client";
 
+import type { ButtonHTMLAttributes, ReactNode } from "react";
+
 import { cn } from "@/lib/utils";
 
 import { KoduBlinkingIcon } from "../icons/kodu-blinking";
 import { KoduStaIcon } from "../icons/kodu";
 import { useKoduAnimation } from "./use-kodu-animation";
 
-interface AssistantAvatarProps {
+interface KoduAvatarProps
+  extends Omit<
+    ButtonHTMLAttributes<HTMLButtonElement>,
+    | "children"
+    | "className"
+    | "type"
+    | "onPointerDown"
+    | "onPointerUp"
+    | "onPointerCancel"
+    | "onLostPointerCapture"
+    | "onContextMenu"
+    | "aria-label"
+  > {
   className?: string;
   iconClassName?: string;
   iconSize?: number;
-  iconAlt?: string;
+  label?: string;
   variant?: "framed" | "flat";
+  idleIcon?: ReactNode;
+  pressedIcon?: ReactNode;
 }
 
-export function AssistantAvatar({
+export function KoduAvatar({
   className,
   iconClassName,
   iconSize = 20,
-  iconAlt = "Assistant avatar",
+  label = "Kodu avatar",
   variant = "framed",
-}: AssistantAvatarProps) {
+  idleIcon,
+  pressedIcon,
+  ...buttonProps
+}: KoduAvatarProps) {
   const {
     isPressed,
     iconStyle,
@@ -29,10 +48,14 @@ export function AssistantAvatar({
     handleContextMenu,
   } = useKoduAnimation();
 
+  const idleNode = idleIcon ?? <KoduStaIcon size={iconSize} className={cn("object-contain", iconClassName)} />;
+  const pressedNode =
+    pressedIcon ?? <KoduBlinkingIcon size={iconSize} className={cn("object-contain", iconClassName)} />;
+
   return (
     <button
       type="button"
-      aria-label={iconAlt}
+      aria-label={label}
       onPointerDown={handlePointerDown}
       onPointerUp={handlePointerEnd}
       onPointerCancel={handlePointerEnd}
@@ -45,14 +68,19 @@ export function AssistantAvatar({
         variant === "flat" && "border-transparent bg-transparent shadow-none hover:translate-y-0",
         className,
       )}
+      {...buttonProps}
     >
       <span
         className="pointer-events-none flex items-center justify-center transition-transform duration-150 ease-out"
         style={iconStyle}
       >
-        <KoduBlinkingIcon size={iconSize} className={cn("object-contain", iconClassName, !isPressed && "hidden")} />
-        <KoduStaIcon size={iconSize} className={cn("object-contain", iconClassName, isPressed && "hidden")} />
+        <span className={cn(isPressed && "hidden")}>{idleNode}</span>
+        <span className={cn(!isPressed && "hidden")}>{pressedNode}</span>
       </span>
     </button>
   );
+}
+
+export function AssistantAvatar(props: KoduAvatarProps) {
+  return <KoduAvatar {...props} label={props.label ?? "Assistant avatar"} />;
 }

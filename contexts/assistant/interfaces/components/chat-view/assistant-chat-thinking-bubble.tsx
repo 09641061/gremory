@@ -1,6 +1,6 @@
 "use client";
 
-import { AssistantAvatar } from "@/contexts/shared/interfaces/components/kodu/kodu";
+import { AssistantAvatar } from "@/contexts/shared/interfaces/components/kodu/kodu-avatar";
 export function AssistantChatThinkingBubble() {
   return (
     <div className="flex w-full max-w-[min(48rem,calc(100vw-6rem))] items-start gap-3 sm:max-w-[42rem]" aria-live="polite" aria-label="AI is thinking.">

@@ -53,3 +53,4 @@ export function useKoduAnimation(): KoduAnimationState {
 }
 
 export const useAssistantAvatarAnimation = useKoduAnimation;
+export const useAvatarPressAnimation = useKoduAnimation;

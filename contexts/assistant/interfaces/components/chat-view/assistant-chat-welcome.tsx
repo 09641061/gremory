@@ -1,6 +1,6 @@
 "use client";
 
-import { AssistantAvatar } from "@/contexts/shared/interfaces/components/kodu/kodu";
+import { AssistantAvatar } from "@/contexts/shared/interfaces/components/kodu/kodu-avatar";
 
 export function AssistantChatWelcome() {
   return (
