@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 
 type AvatarMode = "idle" | "pressed";
 
-export interface AssistantAvatarAnimationState {
+export interface KoduAnimationState {
   isPressed: boolean;
   iconStyle: CSSProperties;
   handlePointerDown: (event: PointerEvent<HTMLButtonElement>) => void;
@@ -13,7 +13,7 @@ export interface AssistantAvatarAnimationState {
   handleContextMenu: (event: MouseEvent<HTMLButtonElement>) => void;
 }
 
-export function useAssistantAvatarAnimation(): AssistantAvatarAnimationState {
+export function useKoduAnimation(): KoduAnimationState {
   const [mode, setMode] = useState<AvatarMode>("idle");
 
   useEffect(() => () => setMode("idle"), []);
@@ -51,3 +51,5 @@ export function useAssistantAvatarAnimation(): AssistantAvatarAnimationState {
     handleContextMenu,
   };
 }
+
+export const useAssistantAvatarAnimation = useKoduAnimation;

@@ -6,7 +6,7 @@ import remarkGfm from "remark-gfm";
 import { cn } from "@/lib/utils";
 
 import type { AssistantMessageViewModel } from "@/contexts/assistant/interfaces/view-models/assistant-chat.view-model";
-import { AssistantAvatar } from "@/contexts/shared/interfaces/components/assistant-avatar/assistant-avatar";
+import { AssistantAvatar } from "@/contexts/shared/interfaces/components/kodu/kodu";
 
 function normalizeAssistantMarkdownContent(content: string): string {
   const normalizedLines = content.replace(/\r\n/g, "\n").split("\n");

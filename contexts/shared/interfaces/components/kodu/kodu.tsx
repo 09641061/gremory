@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 
 import { KoduBlinkingIcon } from "../icons/kodu-blinking";
 import { KoduStaIcon } from "../icons/kodu";
-import { useAssistantAvatarAnimation } from "./use-assistant-avatar-animation";
+import { useKoduAnimation } from "./use-kodu-animation";
 
 interface AssistantAvatarProps {
   className?: string;
@@ -27,7 +27,7 @@ export function AssistantAvatar({
     handlePointerDown,
     handlePointerEnd,
     handleContextMenu,
-  } = useAssistantAvatarAnimation();
+  } = useKoduAnimation();
 
   return (
     <button
