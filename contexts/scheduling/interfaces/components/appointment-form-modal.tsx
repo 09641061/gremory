@@ -1,7 +1,7 @@
 "use client";
 
-import { useActionState, useEffect, useLayoutEffect, useRef, useState } from "react";
-import { Check, ChevronDown } from "lucide-react";
+import { useActionState, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { Calendar, Check, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/contexts/shared/interfaces/components/ui/dialog";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import { Label } from "@/contexts/shared/interfaces/components/ui/label";
@@ -39,6 +39,41 @@ type DropdownOption = {
   description?: string;
 };
 
+type PopupPlacement = "top" | "bottom";
+
+function useAdaptivePopup(isOpen: boolean, anchorRef: React.RefObject<HTMLElement | null>) {
+  const [placement, setPlacement] = useState<PopupPlacement>("bottom");
+  const [maxHeight, setMaxHeight] = useState(256);
+
+  useLayoutEffect(() => {
+    if (!isOpen) return;
+
+    const updatePlacement = () => {
+      const anchorRect = anchorRef.current?.getBoundingClientRect();
+      if (!anchorRect) return;
+
+      const viewportHeight = window.innerHeight;
+      const spaceBelow = viewportHeight - anchorRect.bottom;
+      const spaceAbove = anchorRect.top;
+      const shouldOpenUp = spaceBelow < 240 && spaceAbove > spaceBelow;
+
+      setPlacement(shouldOpenUp ? "top" : "bottom");
+      setMaxHeight(Math.max(160, Math.min(320, shouldOpenUp ? spaceAbove - 16 : spaceBelow - 16)));
+    };
+
+    updatePlacement();
+    window.addEventListener("resize", updatePlacement);
+    window.addEventListener("scroll", updatePlacement, true);
+
+    return () => {
+      window.removeEventListener("resize", updatePlacement);
+      window.removeEventListener("scroll", updatePlacement, true);
+    };
+  }, [anchorRef, isOpen]);
+
+  return { placement, maxHeight };
+}
+
 interface DropdownFieldProps {
   id: string;
   name: string;
@@ -57,40 +92,13 @@ function DropdownField({
   onChange,
 }: DropdownFieldProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [placement, setPlacement] = useState<"top" | "bottom">("bottom");
-  const [maxHeight, setMaxHeight] = useState(256);
   const selectorRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
+  const { placement, maxHeight } = useAdaptivePopup(isOpen, buttonRef);
 
   useSelectorMenu(isOpen, setIsOpen, selectorRef);
 
   const selectedOption = options.find((option) => option.value === value);
-
-  useLayoutEffect(() => {
-    if (!isOpen) return;
-
-    const updatePlacement = () => {
-      const buttonRect = buttonRef.current?.getBoundingClientRect();
-      if (!buttonRect) return;
-
-      const viewportHeight = window.innerHeight;
-      const spaceBelow = viewportHeight - buttonRect.bottom;
-      const spaceAbove = buttonRect.top;
-      const shouldOpenUp = spaceBelow < 240 && spaceAbove > spaceBelow;
-
-      setPlacement(shouldOpenUp ? "top" : "bottom");
-      setMaxHeight(Math.max(160, Math.min(320, shouldOpenUp ? spaceAbove - 16 : spaceBelow - 16)));
-    };
-
-    updatePlacement();
-    window.addEventListener("resize", updatePlacement);
-    window.addEventListener("scroll", updatePlacement, true);
-
-    return () => {
-      window.removeEventListener("resize", updatePlacement);
-      window.removeEventListener("scroll", updatePlacement, true);
-    };
-  }, [isOpen]);
 
   return (
     <div ref={selectorRef} className="relative">
@@ -151,6 +159,184 @@ function DropdownField({
                   </button>
                 );
               })}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+interface DateFieldProps {
+  id: string;
+  name: string;
+  placeholder: string;
+  value: string;
+  onChange: (value: string) => void;
+}
+
+function parseDateInput(value: string) {
+  if (!value) return null;
+  const [year, month, day] = value.split("-").map(Number);
+  if (!year || !month || !day) return null;
+  return new Date(year, month - 1, day);
+}
+
+function formatDateInput(date: Date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function startOfMonth(date: Date) {
+  return new Date(date.getFullYear(), date.getMonth(), 1);
+}
+
+function addMonths(date: Date, amount: number) {
+  return new Date(date.getFullYear(), date.getMonth() + amount, 1);
+}
+
+function isSameDay(a: Date, b: Date) {
+  return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+}
+
+function buildMonthGrid(month: Date) {
+  const firstDay = startOfMonth(month);
+  const startWeekday = (firstDay.getDay() + 6) % 7;
+  const daysInMonth = new Date(month.getFullYear(), month.getMonth() + 1, 0).getDate();
+  const days: Array<Date | null> = [];
+
+  for (let i = 0; i < startWeekday; i += 1) {
+    days.push(null);
+  }
+
+  for (let day = 1; day <= daysInMonth; day += 1) {
+    days.push(new Date(month.getFullYear(), month.getMonth(), day));
+  }
+
+  while (days.length % 7 !== 0) {
+    days.push(null);
+  }
+
+  return days;
+}
+
+function DateField({ id, name, placeholder, value, onChange }: DateFieldProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [visibleMonth, setVisibleMonth] = useState(() => startOfMonth(parseDateInput(value) ?? new Date()));
+  const selectorRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const { placement, maxHeight } = useAdaptivePopup(isOpen, buttonRef);
+
+  useSelectorMenu(isOpen, setIsOpen, selectorRef);
+
+  const selectedDate = parseDateInput(value);
+  const monthLabel = visibleMonth.toLocaleDateString("en-US", {
+    month: "long",
+    year: "numeric",
+  });
+
+  const monthGrid = useMemo(() => buildMonthGrid(visibleMonth), [visibleMonth]);
+  const weekDays = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"];
+
+  return (
+    <div ref={selectorRef} className="relative">
+      <input type="hidden" name={name} value={value} />
+      <button
+        type="button"
+        id={id}
+        ref={buttonRef}
+        aria-haspopup="dialog"
+        aria-expanded={isOpen}
+        onClick={() => {
+          if (!isOpen) {
+            setVisibleMonth(startOfMonth(parseDateInput(value) ?? new Date()));
+          }
+          setIsOpen((open) => !open);
+        }}
+        className={cn(
+          "flex h-9 w-full items-center justify-between gap-3 rounded-lg border border-border bg-transparent px-3 text-left text-sm text-foreground transition-colors outline-none",
+          "focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 dark:bg-muted/30",
+          isOpen && "border-ring bg-card shadow-sm"
+        )}
+      >
+        <span className={cn("truncate", !selectedDate && "text-muted-foreground")}>
+          {selectedDate
+            ? selectedDate.toLocaleDateString("en-US", {
+                month: "short",
+                day: "numeric",
+                year: "numeric",
+              })
+            : placeholder}
+        </span>
+        <Calendar className="size-4 shrink-0 text-muted-foreground" />
+      </button>
+
+      {isOpen && (
+        <div
+          className={cn(
+            "absolute left-0 z-50 w-[19rem]",
+            placement === "top" ? "bottom-full mb-2" : "top-full mt-2"
+          )}
+        >
+          <div className="overflow-hidden rounded-2xl border border-border/70 bg-card/95 shadow-[0_20px_45px_rgba(15,23,42,0.18)] backdrop-blur">
+            <div className="flex items-center justify-between border-b border-border/60 bg-muted/20 px-3 py-2">
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-xs"
+                onClick={() => setVisibleMonth((current) => addMonths(current, -1))}
+                aria-label="Previous month"
+              >
+                <ChevronLeft className="size-4" />
+              </Button>
+              <div className="text-sm font-medium text-foreground">{monthLabel}</div>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-xs"
+                onClick={() => setVisibleMonth((current) => addMonths(current, 1))}
+                aria-label="Next month"
+              >
+                <ChevronRight className="size-4" />
+              </Button>
+            </div>
+            <div className="p-2" style={{ maxHeight }}>
+              <div className="grid grid-cols-7 gap-1 px-1 pb-2 text-center text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                {weekDays.map((day) => (
+                  <div key={day}>{day}</div>
+                ))}
+              </div>
+              <div className="grid grid-cols-7 gap-1">
+                {monthGrid.map((day, index) => {
+                  if (!day) {
+                    return <div key={`empty-${index}`} className="h-9" />;
+                  }
+
+                  const isSelected = selectedDate ? isSameDay(day, selectedDate) : false;
+                  const isToday = isSameDay(day, new Date());
+
+                  return (
+                    <button
+                      key={formatDateInput(day)}
+                      type="button"
+                      onClick={() => {
+                        onChange(formatDateInput(day));
+                        setIsOpen(false);
+                      }}
+                      className={cn(
+                        "h-9 rounded-xl text-sm transition-colors",
+                        "hover:bg-muted/70 focus-visible:bg-muted/70 focus-visible:outline-none",
+                        isToday && !isSelected && "bg-primary/5 text-primary",
+                        isSelected && "bg-primary text-primary-foreground shadow-sm"
+                      )}
+                    >
+                      {day.getDate()}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           </div>
         </div>
@@ -363,12 +549,12 @@ export function AppointmentFormModal({
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <Label htmlFor="create-startDate">Start Date</Label>
-                <Input
+                <DateField
                   id="create-startDate"
-                  type="date"
-                  required
+                  name="startDate"
+                  placeholder="dd/mm/aaaa"
                   value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
+                  onChange={setStartDate}
                 />
               </div>
 
