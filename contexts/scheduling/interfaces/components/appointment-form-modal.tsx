@@ -1,6 +1,7 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
+import { Check, ChevronDown } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/contexts/shared/interfaces/components/ui/dialog";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import { Label } from "@/contexts/shared/interfaces/components/ui/label";
@@ -12,6 +13,8 @@ import { ActionState } from "../actions/create-appointment.action";
 import { MemberResponse } from "../models/member-response";
 import { DetailedServiceDTO } from "@/contexts/catalog/application/model/catalog-view.models";
 import { CustomerResponse } from "@/contexts/crm/domain/model/entities/customer";
+import { useSelectorMenu } from "@/contexts/business/interfaces/components/use-selector-menu";
+import { cn } from "@/lib/utils";
 
 interface AppointmentFormModalProps {
   isOpen: boolean;
@@ -29,6 +32,97 @@ const initialActionState: ActionState<Appointment> = {
   error: null,
   fieldErrors: null,
 };
+
+type DropdownOption = {
+  value: string;
+  label: string;
+  description?: string;
+};
+
+interface DropdownFieldProps {
+  id: string;
+  name: string;
+  placeholder: string;
+  value: string;
+  options: DropdownOption[];
+  onChange: (value: string) => void;
+}
+
+function DropdownField({
+  id,
+  name,
+  placeholder,
+  value,
+  options,
+  onChange,
+}: DropdownFieldProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const selectorRef = useRef<HTMLDivElement>(null);
+
+  useSelectorMenu(isOpen, setIsOpen, selectorRef);
+
+  const selectedOption = options.find((option) => option.value === value);
+
+  return (
+    <div ref={selectorRef} className="relative">
+      <input type="hidden" name={name} value={value} />
+      <button
+        type="button"
+        id={id}
+        aria-haspopup="listbox"
+        aria-expanded={isOpen}
+        onClick={() => setIsOpen((open) => !open)}
+        className={cn(
+          "flex h-9 w-full items-center justify-between gap-3 rounded-lg border border-border bg-transparent px-3 text-left text-sm text-foreground transition-colors outline-none",
+          "focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 dark:bg-muted/30",
+          isOpen && "border-ring bg-card shadow-sm"
+        )}
+      >
+        <span className={cn("truncate", !selectedOption && "text-muted-foreground")}>
+          {selectedOption?.label ?? placeholder}
+        </span>
+        <ChevronDown className="size-4 shrink-0 text-muted-foreground" />
+      </button>
+
+      {isOpen && (
+        <div className="absolute left-0 top-full z-50 mt-2 w-full">
+          <div className="overflow-hidden rounded-2xl border border-border/70 bg-card/95 shadow-[0_20px_45px_rgba(15,23,42,0.18)] backdrop-blur">
+            <div className="max-h-64 overflow-y-auto p-2">
+              {options.map((option) => {
+                const isSelected = option.value === value;
+                return (
+                  <button
+                    key={option.value}
+                    type="button"
+                    onClick={() => {
+                      onChange(option.value);
+                      setIsOpen(false);
+                    }}
+                    className={cn(
+                      "flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2 text-left transition-colors",
+                      "hover:bg-muted/70 focus-visible:bg-muted/70 focus-visible:outline-none",
+                      isSelected && "bg-primary/10 ring-1 ring-primary/15"
+                    )}
+                    role="option"
+                    aria-selected={isSelected}
+                  >
+                    <div className="min-w-0 flex-1">
+                      <div className="truncate text-sm font-medium text-foreground">{option.label}</div>
+                      {option.description && (
+                        <div className="truncate text-xs text-muted-foreground">{option.description}</div>
+                      )}
+                    </div>
+                    {isSelected && <Check className="size-4 shrink-0 text-primary" />}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 // Generate options for time slots from 07:00 AM to 09:00 PM in 15-minute intervals
 const generateTimeSlots = () => {
@@ -59,10 +153,40 @@ export function AppointmentFormModal({
   );
 
   const [selectedServiceId, setSelectedServiceId] = useState("");
+  const [selectedCustomerId, setSelectedCustomerId] = useState("");
+  const [selectedEmployeeId, setSelectedEmployeeId] = useState("");
   const [startDate, setStartDate] = useState("");
   const [startTime, setStartTime] = useState("");
 
   const timeSlots = generateTimeSlots();
+  const selectedService = services.find((service) => service.id === selectedServiceId);
+
+  const serviceOptions = services.map((service) => ({
+    value: service.id,
+    label: service.name,
+    description: `$${service.price.toFixed(2)} - ${service.durationMinutes} min`,
+  }));
+
+  const customerOptions = customers.map((customer) => ({
+    value: customer.id,
+    label: customer.name,
+    description: customer.email || customer.phone || "Customer",
+  }));
+
+  const employeeOptions = members.map((member) => ({
+    value: member.userId,
+    label: member.name,
+    description: member.role,
+  }));
+
+  const timeOptions = timeSlots.map((slot) => {
+    const [h, m] = slot.split(":").map(Number);
+    const formatted = h! > 12 ? `${h! - 12}:${String(m!).padStart(2, "0")} PM` : h === 12 ? `12:${String(m!).padStart(2, "0")} PM` : `${h}:${String(m!).padStart(2, "0")} AM`;
+    return {
+      value: slot,
+      label: formatted,
+    };
+  });
 
   useEffect(() => {
     if (state.status === "success") {
@@ -77,7 +201,6 @@ export function AppointmentFormModal({
       return { startsAt: "", endsAt: "", formattedEnd: "" };
     }
 
-    const selectedService = services.find((s) => s.id === selectedServiceId);
     const duration = selectedService ? selectedService.durationMinutes : 30; // default 30 mins fallback
 
     // Parse start datetime in local timezone context
@@ -158,21 +281,14 @@ export function AppointmentFormModal({
 
             <div className="space-y-1.5">
               <Label htmlFor="create-service">Service</Label>
-              <select
+              <DropdownField
                 id="create-service"
                 name="serviceId"
-                required
+                placeholder="Select a service..."
                 value={selectedServiceId}
-                onChange={(e) => setSelectedServiceId(e.target.value)}
-                className="appearance-none h-9 w-full min-w-0 rounded-lg border border-border bg-transparent px-3 py-1 text-base transition-colors outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-muted disabled:opacity-50 md:text-sm dark:bg-muted/30"
-              >
-                <option value="">Select a service...</option>
-                {services.map((service) => (
-                  <option key={service.id} value={service.id}>
-                    {service.name} (${service.price} - {service.durationMinutes} min)
-                  </option>
-                ))}
-              </select>
+                onChange={setSelectedServiceId}
+                options={serviceOptions}
+              />
               {state.fieldErrors?.serviceId && (
                 <p className="text-xs text-destructive">{state.fieldErrors.serviceId[0]}</p>
               )}
@@ -180,19 +296,14 @@ export function AppointmentFormModal({
 
             <div className="space-y-1.5">
               <Label htmlFor="create-customer">Customer</Label>
-              <select
+              <DropdownField
                 id="create-customer"
                 name="customerId"
-                required
-                className="appearance-none h-9 w-full min-w-0 rounded-lg border border-border bg-transparent px-3 py-1 text-base transition-colors outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-muted disabled:opacity-50 md:text-sm dark:bg-muted/30"
-              >
-                <option value="">Select a customer...</option>
-                {customers.map((customer) => (
-                  <option key={customer.id} value={customer.id}>
-                    {customer.name}
-                  </option>
-                ))}
-              </select>
+                placeholder="Select a customer..."
+                value={selectedCustomerId}
+                onChange={setSelectedCustomerId}
+                options={customerOptions}
+              />
               {state.fieldErrors?.customerId && (
                 <p className="text-xs text-destructive">{state.fieldErrors.customerId[0]}</p>
               )}
@@ -200,19 +311,14 @@ export function AppointmentFormModal({
 
             <div className="space-y-1.5">
               <Label htmlFor="create-employee">Employee / Specialist</Label>
-              <select
+              <DropdownField
                 id="create-employee"
                 name="employeeId"
-                required
-                className="appearance-none h-9 w-full min-w-0 rounded-lg border border-border bg-transparent px-3 py-1 text-base transition-colors outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-muted disabled:opacity-50 md:text-sm dark:bg-muted/30"
-              >
-                <option value="">Select an employee...</option>
-                {members.map((member) => (
-                  <option key={member.id} value={member.userId}>
-                    {member.name} ({member.role})
-                  </option>
-                ))}
-              </select>
+                placeholder="Select an employee..."
+                value={selectedEmployeeId}
+                onChange={setSelectedEmployeeId}
+                options={employeeOptions}
+              />
               {state.fieldErrors?.employeeId && (
                 <p className="text-xs text-destructive">{state.fieldErrors.employeeId[0]}</p>
               )}
@@ -233,24 +339,14 @@ export function AppointmentFormModal({
 
               <div className="space-y-1.5">
                 <Label htmlFor="create-startTime">Start Time</Label>
-                <select
+                <DropdownField
                   id="create-startTime"
-                  required
+                  name="startTime"
+                  placeholder="Select time..."
                   value={startTime}
-                  onChange={(e) => setStartTime(e.target.value)}
-                  className="appearance-none h-9 w-full min-w-0 rounded-lg border border-border bg-transparent px-3 py-1 text-base transition-colors outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-muted disabled:opacity-50 md:text-sm dark:bg-muted/30"
-                >
-                  <option value="">Select time...</option>
-                  {timeSlots.map((slot) => {
-                    const [h, m] = slot.split(":").map(Number);
-                    const formatted = h! > 12 ? `${h! - 12}:${String(m!).padStart(2, "0")} PM` : h === 12 ? `12:${String(m!).padStart(2, "0")} PM` : `${h}:${String(m!).padStart(2, "0")} AM`;
-                    return (
-                      <option key={slot} value={slot}>
-                        {formatted}
-                      </option>
-                    );
-                  })}
-                </select>
+                  onChange={setStartTime}
+                  options={timeOptions}
+                />
               </div>
             </div>
 
