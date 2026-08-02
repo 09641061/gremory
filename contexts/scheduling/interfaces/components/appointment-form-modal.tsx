@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useRef, useState } from "react";
+import { useActionState, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Check, ChevronDown } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/contexts/shared/interfaces/components/ui/dialog";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
@@ -57,11 +57,40 @@ function DropdownField({
   onChange,
 }: DropdownFieldProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [placement, setPlacement] = useState<"top" | "bottom">("bottom");
+  const [maxHeight, setMaxHeight] = useState(256);
   const selectorRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
 
   useSelectorMenu(isOpen, setIsOpen, selectorRef);
 
   const selectedOption = options.find((option) => option.value === value);
+
+  useLayoutEffect(() => {
+    if (!isOpen) return;
+
+    const updatePlacement = () => {
+      const buttonRect = buttonRef.current?.getBoundingClientRect();
+      if (!buttonRect) return;
+
+      const viewportHeight = window.innerHeight;
+      const spaceBelow = viewportHeight - buttonRect.bottom;
+      const spaceAbove = buttonRect.top;
+      const shouldOpenUp = spaceBelow < 240 && spaceAbove > spaceBelow;
+
+      setPlacement(shouldOpenUp ? "top" : "bottom");
+      setMaxHeight(Math.max(160, Math.min(320, shouldOpenUp ? spaceAbove - 16 : spaceBelow - 16)));
+    };
+
+    updatePlacement();
+    window.addEventListener("resize", updatePlacement);
+    window.addEventListener("scroll", updatePlacement, true);
+
+    return () => {
+      window.removeEventListener("resize", updatePlacement);
+      window.removeEventListener("scroll", updatePlacement, true);
+    };
+  }, [isOpen]);
 
   return (
     <div ref={selectorRef} className="relative">
@@ -69,6 +98,7 @@ function DropdownField({
       <button
         type="button"
         id={id}
+        ref={buttonRef}
         aria-haspopup="listbox"
         aria-expanded={isOpen}
         onClick={() => setIsOpen((open) => !open)}
@@ -85,9 +115,14 @@ function DropdownField({
       </button>
 
       {isOpen && (
-        <div className="absolute left-0 top-full z-50 mt-2 w-full">
+        <div
+          className={cn(
+            "absolute left-0 z-50 w-full",
+            placement === "top" ? "bottom-full mb-2" : "top-full mt-2"
+          )}
+        >
           <div className="overflow-hidden rounded-2xl border border-border/70 bg-card/95 shadow-[0_20px_45px_rgba(15,23,42,0.18)] backdrop-blur">
-            <div className="max-h-64 overflow-y-auto p-2">
+            <div className="overflow-y-auto p-2" style={{ maxHeight }}>
               {options.map((option) => {
                 const isSelected = option.value === value;
                 return (
