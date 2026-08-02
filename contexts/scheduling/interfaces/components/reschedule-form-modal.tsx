@@ -10,19 +10,21 @@ import { updateAppointmentAction } from "../actions/update-appointment.action";
 import { ErrorAlert } from "@/contexts/shared/interfaces/components/ui/error";
 import { Appointment } from "../../domain/model/entities/appointment";
 import { ActionState } from "../actions/create-appointment.action";
-import { MemberResponse } from "../models/member-response";
-import { DetailedServiceDTO } from "@/contexts/catalog/application/model/catalog-view.models";
-import { CustomerResponse } from "@/contexts/crm/domain/model/entities/customer";
 import { DeleteConfirmDialog } from "./delete-confirm-dialog";
 import { DateField, DropdownField, generateTimeSlots } from "./scheduling-form-fields";
+import type {
+  SchedulingCustomerViewModel,
+  SchedulingMemberViewModel,
+  SchedulingServiceViewModel,
+} from "../../application/model/scheduling-page-data.view-model";
 
 interface RescheduleFormModalProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   appointment: Appointment;
-  services: DetailedServiceDTO[];
-  members: MemberResponse[];
-  customers: CustomerResponse[];
+  services: SchedulingServiceViewModel[];
+  members: SchedulingMemberViewModel[];
+  customers: SchedulingCustomerViewModel[];
   onSuccess: (updatedAppointment: Appointment) => void;
   onDeleteSuccess: () => void;
 }

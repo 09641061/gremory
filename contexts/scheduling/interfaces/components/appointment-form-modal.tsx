@@ -10,18 +10,20 @@ import { createAppointmentAction } from "../actions/create-appointment.action";
 import { ErrorAlert } from "@/contexts/shared/interfaces/components/ui/error";
 import { Appointment } from "../../domain/model/entities/appointment";
 import { ActionState } from "../actions/create-appointment.action";
-import { MemberResponse } from "../models/member-response";
-import { DetailedServiceDTO } from "@/contexts/catalog/application/model/catalog-view.models";
-import { CustomerResponse } from "@/contexts/crm/domain/model/entities/customer";
+import type {
+  SchedulingCustomerViewModel,
+  SchedulingMemberViewModel,
+  SchedulingServiceViewModel,
+} from "../../application/model/scheduling-page-data.view-model";
 import { DateField, DropdownField, generateTimeSlots } from "./scheduling-form-fields";
 
 interface AppointmentFormModalProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   establishmentId: string;
-  services: DetailedServiceDTO[];
-  members: MemberResponse[];
-  customers: CustomerResponse[];
+  services: SchedulingServiceViewModel[];
+  members: SchedulingMemberViewModel[];
+  customers: SchedulingCustomerViewModel[];
   onSuccess: () => void;
 }
 

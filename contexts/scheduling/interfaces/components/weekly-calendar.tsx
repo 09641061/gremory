@@ -8,15 +8,17 @@ import { listAppointmentsAction } from "../actions/list-appointments.action";
 import { AppointmentBlock } from "./appointment-block";
 import { AppointmentDetailModal } from "./appointment-detail-modal";
 import { AppointmentFormModal } from "./appointment-form-modal";
-import { MemberResponse } from "../models/member-response";
-import { DetailedServiceDTO } from "@/contexts/catalog/application/model/catalog-view.models";
-import { CustomerResponse } from "@/contexts/crm/domain/model/entities/customer";
+import type {
+  SchedulingCustomerViewModel,
+  SchedulingMemberViewModel,
+  SchedulingServiceViewModel,
+} from "../../application/model/scheduling-page-data.view-model";
 
 interface WeeklyCalendarProps {
   establishmentId: string;
-  services: DetailedServiceDTO[];
-  members: MemberResponse[];
-  customers: CustomerResponse[];
+  services: SchedulingServiceViewModel[];
+  members: SchedulingMemberViewModel[];
+  customers: SchedulingCustomerViewModel[];
 }
 
 export function WeeklyCalendar({

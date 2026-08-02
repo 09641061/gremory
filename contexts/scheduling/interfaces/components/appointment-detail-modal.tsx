@@ -7,17 +7,19 @@ import { Appointment } from "../../domain/model/entities/appointment";
 import { useState } from "react";
 import { CancelConfirmDialog } from "./cancel-confirm-dialog";
 import { RescheduleFormModal } from "./reschedule-form-modal";
-import { MemberResponse } from "../models/member-response";
-import { DetailedServiceDTO } from "@/contexts/catalog/application/model/catalog-view.models";
-import { CustomerResponse } from "@/contexts/crm/domain/model/entities/customer";
+import type {
+  SchedulingCustomerViewModel,
+  SchedulingMemberViewModel,
+  SchedulingServiceViewModel,
+} from "../../application/model/scheduling-page-data.view-model";
 
 interface AppointmentDetailModalProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   appointment: Appointment | null;
-  services: DetailedServiceDTO[];
-  members: MemberResponse[];
-  customers: CustomerResponse[];
+  services: SchedulingServiceViewModel[];
+  members: SchedulingMemberViewModel[];
+  customers: SchedulingCustomerViewModel[];
   onUpdate: (updated: Appointment) => void;
   onDeleteSuccess: () => void;
 }
