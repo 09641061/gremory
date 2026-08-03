@@ -1,7 +1,7 @@
 "use client";
 
-import { Appointment } from "../../domain/model/entities/appointment";
-import { AppointmentStatus } from "../../domain/model/valueobjects/appointment-status";
+import { Appointment } from "../../../domain/model/entities/appointment";
+import { AppointmentStatus } from "../../../domain/model/valueobjects/appointment-status";
 import { cn } from "@/lib/utils";
 
 interface AppointmentBlockProps {

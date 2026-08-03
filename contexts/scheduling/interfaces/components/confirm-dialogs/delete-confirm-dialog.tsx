@@ -1,18 +1,14 @@
 "use client";
 
-import {
-  AlertDialog as AlertDialogPrimitive,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/contexts/shared/interfaces/components/ui/alert-dialog";
+import { AlertDialogCancel } from "@/contexts/shared/interfaces/components/ui/alert-dialog";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import { useTransition, useState } from "react";
-import { deleteAppointmentAction } from "../actions/delete-appointment.action";
+import { deleteAppointmentAction } from "../../actions/delete-appointment.action";
 import { ErrorAlert } from "@/contexts/shared/interfaces/components/ui/error";
+import {
+  AppointmentConfirmDialogHeader,
+  AppointmentConfirmDialogShell,
+} from "./appointment-confirm-dialog-shell";
 
 interface DeleteConfirmDialogProps {
   isOpen: boolean;
@@ -45,30 +41,26 @@ export function DeleteConfirmDialog({
   return (
     <>
       <ErrorAlert title="Deletion Failed" message={error ?? undefined} />
-      <AlertDialogPrimitive open={isOpen} onOpenChange={onOpenChange}>
-        <AlertDialogContent className="relative max-w-md">
-          <AlertDialogHeader>
-            <AlertDialogTitle className="text-destructive">Delete Appointment</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to permanently delete this appointment? This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-
-          <AlertDialogFooter>
+      <AppointmentConfirmDialogShell
+        isOpen={isOpen}
+        onOpenChange={onOpenChange}
+        footer={
+          <>
             <AlertDialogCancel type="button" disabled={isPending}>
               Cancel
             </AlertDialogCancel>
-            <Button
-              type="button"
-              variant="destructive"
-              disabled={isPending}
-              onClick={handleDelete}
-            >
+            <Button type="button" variant="destructive" disabled={isPending} onClick={handleDelete}>
               {isPending ? "Deleting..." : "Delete Permanently"}
             </Button>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialogPrimitive>
+          </>
+        }
+      >
+        <AppointmentConfirmDialogHeader
+          title="Delete Appointment"
+          titleClassName="text-destructive"
+          description="Are you sure you want to permanently delete this appointment? This action cannot be undone."
+        />
+      </AppointmentConfirmDialogShell>
     </>
   );
 }
