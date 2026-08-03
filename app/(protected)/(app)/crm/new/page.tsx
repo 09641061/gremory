@@ -15,13 +15,13 @@ export default async function NewCustomerPage({ searchParams }: NewCustomerPageP
 
   const { canCreateCustomer } = await policyService.getPermissions(establishmentId);
 
-  if (!canCreateCustomer) {
+  if (!canCreateCustomer || !establishmentId) {
     redirect("/crm?denied=create");
   }
 
   return (
     <CreateCustomerForm
-      establishmentId={establishmentId || ""}
+      establishmentId={establishmentId}
     />
   );
 }

@@ -73,6 +73,7 @@ export function CreateCustomerForm({ establishmentId }: CreateCustomerFormProps)
               isSaving={isWorking}
               submitLabel="Register Customer"
               onCancel={() => router.back()}
+              establishmentId={establishmentId}
             />
           </div>
         </div>

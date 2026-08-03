@@ -25,6 +25,7 @@ interface CustomerFormProps {
   isSaving: boolean;
   submitLabel: string;
   submitIcon?: React.ReactNode;
+  establishmentId: string;
 }
 
 export function CustomerForm({
@@ -34,6 +35,7 @@ export function CustomerForm({
   isSaving,
   submitLabel,
   submitIcon,
+  establishmentId,
 }: CustomerFormProps) {
   const [docType, setDocType] = React.useState(initialData?.docType || "dni");
   const [docNumber, setDocNumber] = React.useState(initialData?.docNumber || "");
@@ -51,7 +53,7 @@ export function CustomerForm({
 
     setIsResolving(true);
     try {
-      const res = await resolveDocumentAction(docType as "dni" | "ruc", docNumber);
+      const res = await resolveDocumentAction(docType as "dni" | "ruc", docNumber, establishmentId);
       if (res.status === "success" && res.data) {
         setName(res.data.name);
       }
@@ -60,7 +62,7 @@ export function CustomerForm({
     } finally {
       setIsResolving(false);
     }
-  }, [docNumber, docType]);
+  }, [docNumber, docType, establishmentId]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -77,6 +79,18 @@ export function CustomerForm({
       const isNumeric = /^\d+$/.test(docNumber);
       if (!isNumeric || docNumber.length !== 11) {
         setError("The RUC must have exactly 11 digits.");
+        return;
+      }
+    } else if (docType === "foreign_resident_card") {
+      const isNumeric = /^\d+$/.test(docNumber);
+      if (!isNumeric || docNumber.length < 9 || docNumber.length > 11) {
+        setError("The Foreign Resident Card must have between 9 and 11 digits.");
+        return;
+      }
+    } else if (docType === "passport") {
+      const isValid = /^[A-Z0-9]{6,15}$/.test(docNumber);
+      if (!isValid) {
+        setError("The Passport must be 6 to 15 alphanumeric characters.");
         return;
       }
     }
@@ -136,6 +150,8 @@ export function CustomerForm({
             >
               <option value="dni">DNI (National ID)</option>
               <option value="ruc">RUC (Corporate Tax ID)</option>
+              <option value="foreign_resident_card">Foreign Resident Card</option>
+              <option value="passport">Passport</option>
             </select>
           </div>
 
@@ -148,14 +164,17 @@ export function CustomerForm({
                 onChange={(e) => {
                   const val = e.target.value;
                   setError(null);
-                  if (/^\d*$/.test(val)) {
-                    setDocNumber(val);
+                  const pattern = docType === "passport" ? /^[A-Za-z0-9]*$/ : /^\d*$/;
+                  if (pattern.test(val)) {
+                    setDocNumber(docType === "passport" ? val.toUpperCase() : val);
                   }
                 }}
                 maxLength={
                   docType === "dni"
                     ? 8
-                    : 11
+                    : docType === "ruc" || docType === "foreign_resident_card"
+                    ? 11
+                    : 15
                 }
                 placeholder="Enter number..."
                 required

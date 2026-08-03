@@ -39,10 +39,11 @@ import { EditCustomerModal } from "./edit-customer-modal";
 
 interface CrmClientWrapperProps {
   initialCustomers: PageResponse<CustomerResponse>;
-  establishmentId: string;
+  establishmentId?: string;
   canCreateCustomer?: boolean;
   canUpdateCustomer?: boolean;
   canDeleteCustomer?: boolean;
+  loadError?: boolean;
 }
 
 export function CrmClientWrapper({
@@ -51,6 +52,7 @@ export function CrmClientWrapper({
   canCreateCustomer = true,
   canUpdateCustomer = true,
   canDeleteCustomer = true,
+  loadError = false,
 }: CrmClientWrapperProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -83,7 +85,7 @@ export function CrmClientWrapper({
   const handleRefresh = React.useTransition()[1];
 
   const handleDelete = async () => {
-    if (!customerToDelete) return;
+    if (!customerToDelete || !establishmentId) return;
     const id = customerToDelete.id;
     setIsDeleting(id);
     setErrorMsg(null);
@@ -112,6 +114,10 @@ export function CrmClientWrapper({
   return (
     <>
       <ErrorAlert title="Error" message={errorMsg ?? undefined} />
+      <ErrorAlert
+        title="Error loading customers"
+        message={loadError ? "Failed to load the customer list. Please try refreshing the page." : undefined}
+      />
 
       <main className="max-w-[1600px] mx-auto px-4 md:px-8 py-8 space-y-6">
         {/* Page Header */}

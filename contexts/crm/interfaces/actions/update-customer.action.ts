@@ -2,22 +2,34 @@
 
 import { revalidatePath } from "next/cache";
 import { createCrmCommandService } from "../../application/internal/commandservices/crm-command.service";
+import { createCrmAccessPolicyService } from "../../application/internal/queryservices/crm-access-policy.service";
 import { UpdateCustomerCommand } from "../../domain/model/commands/update-customer.command";
 import { ApiError } from "@/contexts/shared/infrastructure/http/api-client";
 import { ActionState } from "./register-customer.action";
 import { CustomerResponse } from "../../domain/model/entities/customer";
+import { updateCustomerSchema } from "../schemas/update-customer.schema";
 
 export async function updateCustomerAction(
   command: Omit<UpdateCustomerCommand, "establishmentId">,
   establishmentId: string
 ): Promise<ActionState<CustomerResponse>> {
+  const permissions = await createCrmAccessPolicyService().getPermissions(establishmentId);
+  if (!permissions.canUpdateCustomer) {
+    return { status: "error", data: null, error: "You are not authorized to update customers." };
+  }
+
+  const parsed = updateCustomerSchema.safeParse(command);
+  if (!parsed.success) {
+    return { status: "error", data: null, error: parsed.error.issues[0]?.message ?? "Invalid customer data." };
+  }
+
   try {
     const service = createCrmCommandService();
     const result = await service.updateCustomer({
-      ...command,
+      ...parsed.data,
       establishmentId,
     });
-    
+
     revalidatePath("/crm");
     return { status: "success", data: result, error: null };
   } catch (error: unknown) {

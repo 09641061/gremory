@@ -89,6 +89,7 @@ export function EditCustomerModal({
             isSaving={isSaving}
             submitLabel="Save Changes"
             submitIcon={<Save className="mr-2 h-4 w-4" />}
+            establishmentId={customer.establishmentId}
           />
         </DialogContent>
       </Dialog>
