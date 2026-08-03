@@ -1,11 +1,11 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { SchedulingApiGateway } from "../../infrastructure/gateways/scheduling-api.gateway";
 import { rescheduleAppointmentSchema } from "../rest/schemas/appointment.schemas";
 import { ApiError } from "@/contexts/shared/infrastructure/http/api-client";
 import { Appointment } from "../../domain/model/entities/appointment";
 import { ActionState } from "./create-appointment.action";
+import { createSchedulingCommandService } from "../../application/internal/commandservices/scheduling-command.service.impl";
 
 export async function rescheduleAppointmentAction(
   appointmentId: string,
@@ -30,8 +30,8 @@ export async function rescheduleAppointmentAction(
   }
 
   try {
-    const gateway = new SchedulingApiGateway();
-    const result = await gateway.rescheduleAppointment(appointmentId, parsed.data);
+    const commandService = createSchedulingCommandService();
+    const result = await commandService.rescheduleAppointment(appointmentId, parsed.data);
     revalidatePath("/schedule");
     return { status: "success", data: result, error: null, fieldErrors: null };
   } catch (error: unknown) {

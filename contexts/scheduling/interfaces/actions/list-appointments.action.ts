@@ -1,8 +1,8 @@
 "use server";
 
-import { SchedulingApiGateway } from "../../infrastructure/gateways/scheduling-api.gateway";
 import { Appointment } from "../../domain/model/entities/appointment";
 import { PageResponse } from "../../application/model/page-response";
+import { createSchedulingQueryService } from "../../application/internal/queryservices/scheduling-query.service.impl";
 
 export async function listAppointmentsAction(
   from: string,
@@ -14,8 +14,8 @@ export async function listAppointmentsAction(
   size = 100
 ): Promise<PageResponse<Appointment>> {
   try {
-    const gateway = new SchedulingApiGateway();
-    return await gateway.searchAppointments({
+    const queryService = createSchedulingQueryService();
+    return await queryService.searchAppointments({
       from,
       to,
       establishmentId,

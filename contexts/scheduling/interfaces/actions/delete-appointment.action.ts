@@ -1,16 +1,16 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { SchedulingApiGateway } from "../../infrastructure/gateways/scheduling-api.gateway";
 import { ApiError } from "@/contexts/shared/infrastructure/http/api-client";
 import { ActionState } from "./create-appointment.action";
+import { createSchedulingCommandService } from "../../application/internal/commandservices/scheduling-command.service.impl";
 
 export async function deleteAppointmentAction(
   appointmentId: string
 ): Promise<ActionState<void>> {
   try {
-    const gateway = new SchedulingApiGateway();
-    await gateway.deleteAppointment(appointmentId);
+    const commandService = createSchedulingCommandService();
+    await commandService.deleteAppointment(appointmentId);
     revalidatePath("/schedule");
     return { status: "success", data: undefined, error: null, fieldErrors: null };
   } catch (error: unknown) {
