@@ -15,7 +15,15 @@ import type {
   SchedulingMemberViewModel,
   SchedulingServiceViewModel,
 } from "../../application/model/scheduling-page-data.view-model";
-import { DateField, DropdownField, generateTimeSlots } from "./scheduling-form-fields";
+import { DateField, DropdownField } from "./scheduling-form-fields";
+import {
+  computeAppointmentTimes,
+  createCustomerOptions,
+  createEmployeeOptions,
+  createServiceOptions,
+  createTimeOptions,
+  generateTimeSlots,
+} from "./scheduling-form-utils";
 
 interface AppointmentFormModalProps {
   isOpen: boolean;
@@ -56,35 +64,10 @@ export function AppointmentFormModal({
 
   const timeSlots = generateTimeSlots();
   const selectedService = services.find((service) => service.id === selectedServiceId);
-
-  const serviceOptions = services.map((service) => ({
-    value: service.id,
-    label: service.name,
-    description: `$${service.price.toFixed(2)} - ${service.durationMinutes} min`,
-  }));
-
-  const customerOptions = customers.map((customer) => ({
-    value: customer.id,
-    label: customer.name,
-    description: customer.email || customer.phone || "Customer",
-  }));
-
-  const employeeOptions = members.map((member) => ({
-    value: member.userId,
-    label: member.name,
-    description: member.role,
-  }));
-
-  const timeOptions = timeSlots.map((slot) => {
-    const [h, m] = slot.split(":").map(Number);
-    const formatted =
-      h! > 12
-        ? `${h! - 12}:${String(m!).padStart(2, "0")} PM`
-        : h === 12
-          ? `12:${String(m!).padStart(2, "0")} PM`
-          : `${h}:${String(m!).padStart(2, "0")} AM`;
-    return { value: slot, label: formatted };
-  });
+  const serviceOptions = createServiceOptions(services);
+  const customerOptions = createCustomerOptions(customers);
+  const employeeOptions = createEmployeeOptions(members);
+  const timeOptions = createTimeOptions(timeSlots);
 
   useEffect(() => {
     if (state.status === "success") {
@@ -93,52 +76,11 @@ export function AppointmentFormModal({
     }
   }, [state, onSuccess, onOpenChange]);
 
-  const getCalculatedTimes = () => {
-    if (!startDate || !startTime || !selectedServiceId) {
-      return { startsAt: "", endsAt: "", formattedEnd: "" };
-    }
-
-    const duration = selectedService ? selectedService.durationMinutes : 30;
-    const [startYear, startMonth, startDay] = startDate.split("-").map(Number);
-    const [startHour, startMin] = startTime.split(":").map(Number);
-    const startDateTime = new Date(startYear!, startMonth! - 1, startDay!, startHour!, startMin!, 0, 0);
-    const endDateTime = new Date(startDateTime.getTime() + duration * 60 * 1000);
-
-    const toLocalISOString = (date: Date) => {
-      const pad = (n: number) => String(n).padStart(2, "0");
-      const tzo = -date.getTimezoneOffset();
-      const dif = tzo >= 0 ? "+" : "-";
-      return (
-        date.getFullYear() +
-        "-" +
-        pad(date.getMonth() + 1) +
-        "-" +
-        pad(date.getDate()) +
-        "T" +
-        pad(date.getHours()) +
-        ":" +
-        pad(date.getMinutes()) +
-        ":" +
-        pad(date.getSeconds()) +
-        dif +
-        pad(Math.floor(Math.abs(tzo) / 60)) +
-        ":" +
-        pad(Math.abs(tzo) % 60)
-      );
-    };
-
-    return {
-      startsAt: toLocalISOString(startDateTime),
-      endsAt: toLocalISOString(endDateTime),
-      formattedEnd: `${endDateTime.toLocaleTimeString("en-US", {
-        hour: "numeric",
-        minute: "2-digit",
-        hour12: true,
-      })} (${duration} mins duration)`,
-    };
-  };
-
-  const { startsAt, endsAt, formattedEnd } = getCalculatedTimes();
+  const { startsAt, endsAt, formattedEnd } = computeAppointmentTimes({
+    startDate,
+    startTime,
+    durationMinutes: selectedService?.durationMinutes,
+  });
 
   return (
     <>
