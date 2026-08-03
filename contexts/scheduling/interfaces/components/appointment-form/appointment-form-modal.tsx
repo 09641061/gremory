@@ -6,10 +6,10 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import { Label } from "@/contexts/shared/interfaces/components/ui/label";
 import { Input } from "@/contexts/shared/interfaces/components/ui/input";
-import { createAppointmentAction } from "../actions/create-appointment.action";
+import { createAppointmentAction } from "../../actions/create-appointment.action";
 import { ErrorAlert } from "@/contexts/shared/interfaces/components/ui/error";
 import { Appointment } from "../../../domain/model/entities/appointment";
-import { ActionState } from "../actions/create-appointment.action";
+import { ActionState } from "../../actions/create-appointment.action";
 import type {
   SchedulingCustomerViewModel,
   SchedulingMemberViewModel,

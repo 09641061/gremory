@@ -3,7 +3,7 @@
 import { AlertDialogCancel } from "@/contexts/shared/interfaces/components/ui/alert-dialog";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import { useTransition, useState } from "react";
-import { deleteAppointmentAction } from "../actions/delete-appointment.action";
+import { deleteAppointmentAction } from "../../actions/delete-appointment.action";
 import { ErrorAlert } from "@/contexts/shared/interfaces/components/ui/error";
 import {
   AppointmentConfirmDialogHeader,

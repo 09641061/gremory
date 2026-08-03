@@ -4,10 +4,10 @@ import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import { Textarea } from "@/contexts/shared/interfaces/components/ui/textarea";
 import { Label } from "@/contexts/shared/interfaces/components/ui/label";
 import { useActionState, useEffect } from "react";
-import { cancelAppointmentAction } from "../actions/cancel-appointment.action";
+import { cancelAppointmentAction } from "../../actions/cancel-appointment.action";
 import { ErrorAlert } from "@/contexts/shared/interfaces/components/ui/error";
 import { Appointment } from "../../../domain/model/entities/appointment";
-import { ActionState } from "../actions/create-appointment.action";
+import { ActionState } from "../../actions/create-appointment.action";
 import { AppointmentConfirmDialogHeader, AppointmentConfirmDialogShell } from "./appointment-confirm-dialog-shell";
 
 interface CancelConfirmDialogProps {

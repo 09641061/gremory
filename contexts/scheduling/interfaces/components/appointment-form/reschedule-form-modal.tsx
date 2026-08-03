@@ -6,10 +6,10 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import { Label } from "@/contexts/shared/interfaces/components/ui/label";
 import { Input } from "@/contexts/shared/interfaces/components/ui/input";
-import { updateAppointmentAction } from "../actions/update-appointment.action";
+import { updateAppointmentAction } from "../../actions/update-appointment.action";
 import { ErrorAlert } from "@/contexts/shared/interfaces/components/ui/error";
 import { Appointment } from "../../../domain/model/entities/appointment";
-import { ActionState } from "../actions/create-appointment.action";
+import { ActionState } from "../../actions/create-appointment.action";
 import { DeleteConfirmDialog } from "../confirm-dialogs/delete-confirm-dialog";
 import { DateField } from "./date-field";
 import { DropdownField } from "./dropdown-field";

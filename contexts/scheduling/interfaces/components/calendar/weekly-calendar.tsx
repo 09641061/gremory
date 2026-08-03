@@ -2,7 +2,7 @@
 
 import { useState, useTransition, useEffect, useCallback, useMemo } from "react";
 import { Appointment } from "../../../domain/model/entities/appointment";
-import { listAppointmentsAction } from "../actions/list-appointments.action";
+import { listAppointmentsAction } from "../../actions/list-appointments.action";
 import { AppointmentDetailModal } from "../appointment-detail/appointment-detail-modal";
 import { AppointmentFormModal } from "../appointment-form/appointment-form-modal";
 import { WeeklyCalendarGrid } from "./weekly-calendar-grid";
