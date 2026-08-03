@@ -19,6 +19,12 @@ export async function deleteAppointmentAction(
     if (error instanceof ApiError && error.message) {
       message = error.message;
     }
-    return { status: "error", data: null, error: message, fieldErrors: null };
+    return {
+      status: "error",
+      data: null,
+      error: message,
+      errorId: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+      fieldErrors: null,
+    };
   }
 }

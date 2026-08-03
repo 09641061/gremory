@@ -11,6 +11,10 @@ interface WeeklyCalendarGridProps {
   onAppointmentClick: (appointment: Appointment) => void;
 }
 
+const BASE_ROW_HEIGHT = 80;
+const CARD_HEIGHT = 72;
+const ROW_PADDING = 16;
+
 function formatHour(hour: number) {
   if (hour > 12) return `${hour - 12} PM`;
   if (hour === 12) return "12 PM";
@@ -42,6 +46,16 @@ export function WeeklyCalendarGrid({
     return <CalendarSkeleton />;
   }
 
+  const appointmentsByDayHour = new Map<string, Appointment[]>();
+
+  appointments.forEach((appointment) => {
+    const starts = new Date(appointment.startsAt);
+    const key = `${starts.toDateString()}-${starts.getHours()}`;
+    const current = appointmentsByDayHour.get(key) ?? [];
+    current.push(appointment);
+    appointmentsByDayHour.set(key, current);
+  });
+
   return (
     <div className="relative select-none min-w-[700px]">
       <div className="absolute inset-0 grid grid-cols-[64px_repeat(7,1fr)] pointer-events-none">
@@ -52,22 +66,32 @@ export function WeeklyCalendarGrid({
       </div>
 
       {hours.map((hour) => (
-        <div key={hour} className="h-20 border-b border-border flex relative">
+        <div
+          key={hour}
+          className="border-b border-border flex relative"
+          style={{
+            minHeight: BASE_ROW_HEIGHT,
+          }}
+        >
           <div className="w-16 border-r border-border shrink-0 flex items-start justify-center pt-2 text-[10px] font-semibold text-muted-foreground">
             {formatHour(hour)}
           </div>
 
           <div className="flex-1 grid grid-cols-7 relative">
             {weekDays.map((day, dayIdx) => {
-              const dayAppts = appointments.filter((appt) => {
-                const apptStart = new Date(appt.startsAt);
-                return apptStart.toDateString() === day.toDateString() && apptStart.getHours() === hour;
-              });
+              const dayAppts = appointmentsByDayHour.get(`${day.toDateString()}-${hour}`) ?? [];
+              const rowHeight = Math.max(
+                BASE_ROW_HEIGHT,
+                dayAppts.length > 0 ? dayAppts.length * CARD_HEIGHT + ROW_PADDING : BASE_ROW_HEIGHT
+              );
 
               return (
                 <div
                   key={dayIdx}
-                  className={`relative p-1 h-full ${isToday(day) ? "bg-primary/5" : ""}`}
+                  className={`relative p-1 h-full flex flex-col gap-2 ${isToday(day) ? "bg-primary/5" : ""}`}
+                  style={{
+                    minHeight: rowHeight,
+                  }}
                 >
                   {dayAppts.map((appt) => (
                     <AppointmentBlock

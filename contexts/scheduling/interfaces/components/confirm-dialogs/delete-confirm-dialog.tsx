@@ -10,6 +10,11 @@ import {
   AppointmentConfirmDialogShell,
 } from "./appointment-confirm-dialog-shell";
 
+type DeleteErrorState = Readonly<{
+  message: string;
+  id: string;
+}>;
+
 interface DeleteConfirmDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
@@ -23,14 +28,17 @@ export function DeleteConfirmDialog({
   appointmentId,
   onSuccess,
 }: DeleteConfirmDialogProps) {
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<DeleteErrorState | null>(null);
   const [isPending, startTransition] = useTransition();
 
   const handleDelete = () => {
     startTransition(async () => {
       const res = await deleteAppointmentAction(appointmentId);
       if (res.status === "error") {
-        setError(res.error);
+        setError({
+          message: res.error,
+          id: res.errorId ?? `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+        });
       } else {
         onSuccess();
         onOpenChange(false);
@@ -40,7 +48,11 @@ export function DeleteConfirmDialog({
 
   return (
     <>
-      <ErrorAlert title="Deletion Failed" message={error ?? undefined} />
+      <ErrorAlert
+        key={error?.id ?? "delete-error"}
+        title="Deletion Failed"
+        message={error?.message ?? undefined}
+      />
       <AppointmentConfirmDialogShell
         isOpen={isOpen}
         onOpenChange={onOpenChange}

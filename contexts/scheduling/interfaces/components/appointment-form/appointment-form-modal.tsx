@@ -60,6 +60,7 @@ export function AppointmentFormModal({
   const [selectedServiceId, setSelectedServiceId] = useState("");
   const [selectedCustomerId, setSelectedCustomerId] = useState("");
   const [selectedEmployeeId, setSelectedEmployeeId] = useState("");
+  const [title, setTitle] = useState("");
   const [startDate, setStartDate] = useState("");
   const [startTime, setStartTime] = useState("");
 
@@ -85,7 +86,11 @@ export function AppointmentFormModal({
 
   return (
     <>
-      <ErrorAlert title="Scheduling Failed" message={state.error ?? undefined} />
+      <ErrorAlert
+        key={state.errorId ?? "scheduling-error"}
+        title="Scheduling Failed"
+        message={state.error ?? undefined}
+      />
       <Dialog open={isOpen} onOpenChange={onOpenChange}>
         <DialogContent className="max-w-md">
           <form action={formAction} className="space-y-4">
@@ -108,7 +113,8 @@ export function AppointmentFormModal({
                 name="title"
                 placeholder="e.g. Haircut & Beard Trim"
                 required
-                defaultValue=""
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
               />
               {state.fieldErrors?.title && <p className="text-xs text-destructive">{state.fieldErrors.title[0]}</p>}
             </div>
