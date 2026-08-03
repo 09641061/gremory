@@ -6,10 +6,10 @@ import type {
   SchedulingCustomerViewModel,
   SchedulingMemberViewModel,
   SchedulingServiceViewModel,
-} from "../../application/model/scheduling-page-data.view-model";
-import type { Appointment } from "../../domain/model/entities/appointment";
-import { CancelConfirmDialog } from "./cancel-confirm-dialog";
-import { RescheduleFormModal } from "./reschedule-form-modal";
+} from "../../../application/model/scheduling-page-data.view-model";
+import type { Appointment } from "../../../domain/model/entities/appointment";
+import { CancelConfirmDialog } from "../confirm-dialogs/cancel-confirm-dialog";
+import { RescheduleFormModal } from "../appointment-form/reschedule-form-modal";
 import { AppointmentDetailActions } from "./appointment-detail-actions";
 import { AppointmentDetailInfo } from "./appointment-detail-info";
 import { AppointmentDetailSummary } from "./appointment-detail-summary";

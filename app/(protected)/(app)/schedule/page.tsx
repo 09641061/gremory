@@ -1,6 +1,6 @@
 import { createCatalogAccessPolicyService } from "@/contexts/catalog/application/internal/queryservices/catalog-access-policy.service";
 import { loadSchedulingPageData } from "@/contexts/scheduling/application/internal/queryservices/schedule-page-data.query.service";
-import { WeeklyCalendar } from "@/contexts/scheduling/interfaces/components/weekly-calendar";
+import { WeeklyCalendar } from "@/contexts/scheduling/interfaces/components/calendar/weekly-calendar";
 import { redirect } from "next/navigation";
 
 interface SchedulePageProps {

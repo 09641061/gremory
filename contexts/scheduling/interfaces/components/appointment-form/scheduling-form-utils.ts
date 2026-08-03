@@ -2,7 +2,7 @@ import type {
   SchedulingCustomerViewModel,
   SchedulingMemberViewModel,
   SchedulingServiceViewModel,
-} from "../../application/model/scheduling-page-data.view-model";
+} from "../../../application/model/scheduling-page-data.view-model";
 
 export type DropdownOption = Readonly<{
   value: string;
@@ -14,19 +14,6 @@ function formatTimeLabel(hours: number, minutes: number) {
   const suffix = hours >= 12 ? "PM" : "AM";
   const normalizedHour = hours % 12 === 0 ? 12 : hours % 12;
   return `${normalizedHour}:${String(minutes).padStart(2, "0")} ${suffix}`;
-}
-
-export function generateTimeSlots() {
-  const slots: string[] = [];
-  for (let hour = 7; hour <= 21; hour += 1) {
-    slots.push(`${String(hour).padStart(2, "0")}:00`);
-    if (hour < 21) {
-      slots.push(`${String(hour).padStart(2, "0")}:15`);
-      slots.push(`${String(hour).padStart(2, "0")}:30`);
-      slots.push(`${String(hour).padStart(2, "0")}:45`);
-    }
-  }
-  return slots;
 }
 
 export function formatTimeSlotValue(slot: string) {

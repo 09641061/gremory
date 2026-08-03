@@ -5,7 +5,10 @@ import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import { useTransition, useState } from "react";
 import { deleteAppointmentAction } from "../actions/delete-appointment.action";
 import { ErrorAlert } from "@/contexts/shared/interfaces/components/ui/error";
-import { AppointmentConfirmDialogHeader, AppointmentConfirmDialogShell } from "./appointment-confirm-dialog-shell";
+import {
+  AppointmentConfirmDialogHeader,
+  AppointmentConfirmDialogShell,
+} from "./appointment-confirm-dialog-shell";
 
 interface DeleteConfirmDialogProps {
   isOpen: boolean;
@@ -41,9 +44,6 @@ export function DeleteConfirmDialog({
       <AppointmentConfirmDialogShell
         isOpen={isOpen}
         onOpenChange={onOpenChange}
-        title="Delete Appointment"
-        titleClassName="text-destructive"
-        description="Are you sure you want to permanently delete this appointment? This action cannot be undone."
         footer={
           <>
             <AlertDialogCancel type="button" disabled={isPending}>

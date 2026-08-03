@@ -2,8 +2,8 @@ import type {
   SchedulingCustomerViewModel,
   SchedulingMemberViewModel,
   SchedulingServiceViewModel,
-} from "../../application/model/scheduling-page-data.view-model";
-import type { Appointment } from "../../domain/model/entities/appointment";
+} from "../../../application/model/scheduling-page-data.view-model";
+import type { Appointment } from "../../../domain/model/entities/appointment";
 
 export function findAppointmentService(
   services: SchedulingServiceViewModel[],

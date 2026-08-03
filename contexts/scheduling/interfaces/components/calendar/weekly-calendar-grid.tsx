@@ -1,6 +1,6 @@
 "use client";
 
-import { Appointment } from "../../domain/model/entities/appointment";
+import { Appointment } from "../../../domain/model/entities/appointment";
 import { AppointmentBlock } from "./appointment-block";
 
 interface WeeklyCalendarGridProps {

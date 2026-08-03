@@ -1,17 +1,17 @@
 "use client";
 
 import { useState, useTransition, useEffect, useCallback, useMemo } from "react";
-import { Appointment } from "../../domain/model/entities/appointment";
+import { Appointment } from "../../../domain/model/entities/appointment";
 import { listAppointmentsAction } from "../actions/list-appointments.action";
-import { AppointmentDetailModal } from "./appointment-detail-modal";
-import { AppointmentFormModal } from "./appointment-form-modal";
+import { AppointmentDetailModal } from "../appointment-detail/appointment-detail-modal";
+import { AppointmentFormModal } from "../appointment-form/appointment-form-modal";
 import { WeeklyCalendarGrid } from "./weekly-calendar-grid";
 import { WeeklyCalendarHeader } from "./weekly-calendar-header";
 import type {
   SchedulingCustomerViewModel,
   SchedulingMemberViewModel,
   SchedulingServiceViewModel,
-} from "../../application/model/scheduling-page-data.view-model";
+} from "../../../application/model/scheduling-page-data.view-model";
 
 interface WeeklyCalendarProps {
   establishmentId: string;
