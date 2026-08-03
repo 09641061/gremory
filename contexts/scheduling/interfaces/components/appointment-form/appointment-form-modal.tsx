@@ -85,7 +85,11 @@ export function AppointmentFormModal({
 
   return (
     <>
-      <ErrorAlert title="Scheduling Failed" message={state.error ?? undefined} />
+      <ErrorAlert
+        key={state.errorId ?? "scheduling-error"}
+        title="Scheduling Failed"
+        message={state.error ?? undefined}
+      />
       <Dialog open={isOpen} onOpenChange={onOpenChange}>
         <DialogContent className="max-w-md">
           <form action={formAction} className="space-y-4">

@@ -23,6 +23,7 @@ export async function cancelAppointmentAction(
       status: "error",
       data: null,
       error: parsed.error.issues[0]?.message ?? "Invalid cancellation reason.",
+      errorId: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
       fieldErrors: parsed.error.flatten().fieldErrors,
     };
   }
@@ -38,6 +39,12 @@ export async function cancelAppointmentAction(
     if (error instanceof ApiError && error.message) {
       message = error.message;
     }
-    return { status: "error", data: null, error: message, fieldErrors: null };
+    return {
+      status: "error",
+      data: null,
+      error: message,
+      errorId: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+      fieldErrors: null,
+    };
   }
 }

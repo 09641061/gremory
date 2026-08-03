@@ -9,7 +9,13 @@ import { createSchedulingCommandService } from "../../application/internal/comma
 export type ActionState<T> =
   | { status: "idle"; data: null; error: null; fieldErrors: null }
   | { status: "success"; data: T; error: null; fieldErrors: null }
-  | { status: "error"; data: null; error: string; fieldErrors: Record<string, string[]> | null };
+  | {
+      status: "error";
+      data: null;
+      error: string;
+      errorId: string;
+      fieldErrors: Record<string, string[]> | null;
+    };
 
 export async function createAppointmentAction(
   _prevState: ActionState<Appointment>,
@@ -32,6 +38,7 @@ export async function createAppointmentAction(
       status: "error",
       data: null,
       error: "Please fix the validation errors below.",
+      errorId: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
       fieldErrors: parsed.error.flatten().fieldErrors,
     };
   }
@@ -46,11 +53,19 @@ export async function createAppointmentAction(
     let message = "We could not schedule this appointment. Please try again.";
     if (error instanceof ApiError) {
       if (error.status === 409) {
-        message = "There is a scheduling conflict at this time. Please choose another slot or checking employee availability.";
+        message =
+          error.message ||
+          "There is a scheduling conflict at this time. Please choose another slot or check employee availability.";
       } else if (error.message) {
         message = error.message;
       }
     }
-    return { status: "error", data: null, error: message, fieldErrors: null };
+    return {
+      status: "error",
+      data: null,
+      error: message,
+      errorId: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+      fieldErrors: null,
+    };
   }
 }

@@ -97,7 +97,11 @@ export function RescheduleFormModal({
 
   return (
     <>
-      <ErrorAlert title="Update Failed" message={state.error ?? undefined} />
+      <ErrorAlert
+        key={state.errorId ?? "update-error"}
+        title="Update Failed"
+        message={state.error ?? undefined}
+      />
       <Dialog open={isOpen} onOpenChange={onOpenChange}>
         <DialogContent className="max-w-md">
           <form action={formAction} className="space-y-4">

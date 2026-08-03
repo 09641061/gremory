@@ -25,6 +25,7 @@ export async function rescheduleAppointmentAction(
       status: "error",
       data: null,
       error: "Please fix the validation errors below.",
+      errorId: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
       fieldErrors: parsed.error.flatten().fieldErrors,
     };
   }
@@ -44,6 +45,12 @@ export async function rescheduleAppointmentAction(
         message = error.message;
       }
     }
-    return { status: "error", data: null, error: message, fieldErrors: null };
+    return {
+      status: "error",
+      data: null,
+      error: message,
+      errorId: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+      fieldErrors: null,
+    };
   }
 }

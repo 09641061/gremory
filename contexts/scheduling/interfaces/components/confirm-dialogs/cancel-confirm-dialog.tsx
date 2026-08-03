@@ -46,7 +46,11 @@ export function CancelConfirmDialog({
 
   return (
     <>
-      <ErrorAlert title="Cancellation Failed" message={state.error ?? undefined} />
+      <ErrorAlert
+        key={state.errorId ?? "cancel-error"}
+        title="Cancellation Failed"
+        message={state.error ?? undefined}
+      />
       <AppointmentConfirmDialogShell
         isOpen={isOpen}
         onOpenChange={onOpenChange}
