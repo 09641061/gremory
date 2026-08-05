@@ -18,6 +18,9 @@ interface WeeklyCalendarProps {
   services: SchedulingServiceViewModel[];
   members: SchedulingMemberViewModel[];
   customers: SchedulingCustomerViewModel[];
+  canCreateAppointment: boolean;
+  canUpdateAppointment: boolean;
+  canDeleteAppointment: boolean;
 }
 
 function getWeekRange(date: Date) {
@@ -38,6 +41,9 @@ export function WeeklyCalendar({
   services,
   members,
   customers,
+  canCreateAppointment,
+  canUpdateAppointment,
+  canDeleteAppointment,
 }: WeeklyCalendarProps) {
   const [currentDate, setCurrentDate] = useState(() => new Date());
   const [appointments, setAppointments] = useState<Appointment[]>([]);
@@ -140,6 +146,7 @@ export function WeeklyCalendar({
         onNextWeek={() => navigateWeek("next")}
         onToday={navigateToday}
         onCreateAppointment={() => setIsFormOpen(true)}
+        canCreateAppointment={canCreateAppointment}
       />
 
       <div className="flex-1 border border-border rounded-xl bg-card shadow-sm flex flex-col overflow-hidden">
@@ -200,6 +207,8 @@ export function WeeklyCalendar({
           customers={customers}
           onUpdate={handleUpdate}
           onDeleteSuccess={fetchAppointments}
+          canUpdateAppointment={canUpdateAppointment}
+          canDeleteAppointment={canDeleteAppointment}
         />
       )}
 

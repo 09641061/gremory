@@ -33,12 +33,14 @@ export function Sidebar({
   canReadCatalog = true,
   canReadCrm = true,
   canReadTeam = true,
+  canReadScheduling = true,
 }: {
   initialAssistantConversations: AssistantConversationSummaryReadModel[];
   currentProfile: Pick<ProfileViewModel, "username" | "imageUrl"> | null;
   canReadCatalog?: boolean;
   canReadCrm?: boolean;
   canReadTeam?: boolean;
+  canReadScheduling?: boolean;
 }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -50,6 +52,9 @@ export function Sidebar({
     .join("|");
 
   const filteredNavigation = navigation.filter(item => {
+    if (item.label === "Schedule") {
+      return canReadScheduling;
+    }
     if (item.label === "Catalog") {
       return canReadCatalog;
     }

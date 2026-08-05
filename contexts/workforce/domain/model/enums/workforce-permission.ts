@@ -33,6 +33,11 @@ export const workforcePermissionCodes = [
   "workforce:members:read",
   "workforce:members:delete",
   "workforce:members:manage",
+  "scheduling:appointments:read",
+  "scheduling:appointments:create",
+  "scheduling:appointments:update",
+  "scheduling:appointments:delete",
+  "scheduling:appointments:manage",
 ] as const;
 
 export type WorkforcePermission = (typeof workforcePermissionCodes)[number];

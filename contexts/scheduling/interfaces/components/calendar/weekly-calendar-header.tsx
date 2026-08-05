@@ -9,6 +9,7 @@ interface WeeklyCalendarHeaderProps {
   onNextWeek: () => void;
   onToday: () => void;
   onCreateAppointment: () => void;
+  canCreateAppointment: boolean;
 }
 
 export function WeeklyCalendarHeader({
@@ -17,6 +18,7 @@ export function WeeklyCalendarHeader({
   onNextWeek,
   onToday,
   onCreateAppointment,
+  canCreateAppointment,
 }: WeeklyCalendarHeaderProps) {
   return (
     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
@@ -35,10 +37,12 @@ export function WeeklyCalendarHeader({
         </Button>
       </div>
 
-      <Button size="sm" className="gap-1.5" onClick={onCreateAppointment}>
-        <Plus className="size-4" />
-        Schedule Appointment
-      </Button>
+      {canCreateAppointment && (
+        <Button size="sm" className="gap-1.5" onClick={onCreateAppointment}>
+          <Plus className="size-4" />
+          Schedule Appointment
+        </Button>
+      )}
     </div>
   );
 }
