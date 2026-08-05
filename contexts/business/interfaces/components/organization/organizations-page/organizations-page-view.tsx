@@ -10,13 +10,13 @@ export function OrganizationsPageView({
   organization,
   canUpdate = true,
 }: {
-  organization: OrganizationSummary;
+  organization: OrganizationSummary | null;
   canUpdate?: boolean;
 }) {
   const [filter, setFilter] = useState("");
   const [selectedOrgId, setSelectedOrgId] = useState<string | null>(null);
 
-  const organizations = useMemo(() => [organization], [organization]);
+  const organizations = useMemo(() => (organization ? [organization] : []), [organization]);
 
   const filteredOrganizations = useMemo(() => {
     const normalized = filter.trim().toLowerCase();
@@ -27,6 +27,22 @@ export function OrganizationsPageView({
   }, [filter, organizations]);
 
   const selectedOrg = organizations.find((org) => org.id === selectedOrgId) ?? null;
+
+  if (!organization) {
+    return (
+      <section className="mx-auto flex w-full max-w-3xl flex-col items-start gap-4 rounded-2xl border border-border bg-card p-8 shadow-sm">
+        <div>
+          <h1 className="page-title">Organizations</h1>
+          <p className="page-description mt-2">
+            Your Free plan is active. Organizations will appear here once the setup flow creates the first one.
+          </p>
+        </div>
+        <div className="rounded-xl border border-dashed border-border bg-muted/20 px-5 py-4 text-sm text-muted-foreground">
+          Free keeps the core product available, but this account does not have an organization yet.
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="mx-auto flex w-full max-w-7xl flex-col gap-6 lg:flex-row">

@@ -1,4 +1,5 @@
 import { OrganizationsPageView } from "@/contexts/business/interfaces/components/organization/organizations-page/organizations-page-view";
+import { CreateOrganizationForm } from "@/contexts/business/interfaces/components/organization/create-organization/create-organization-form";
 import { createBusinessAccessPolicyService } from "@/contexts/business/application/internal/queryservices/business-access-policy.service";
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
@@ -12,6 +13,10 @@ export default async function OrganizationsRoutePage({ searchParams }: Organizat
   const policyService = createBusinessAccessPolicyService();
   const { canRead, canUpdate, organization } = await policyService.getOrganizationPermissions(establishmentId);
 
+  if (!organization) {
+    return <CreateOrganizationForm />;
+  }
+
   if (!canRead) {
     const headersList = await headers();
     const referer = headersList.get("referer");
@@ -23,10 +28,6 @@ export default async function OrganizationsRoutePage({ searchParams }: Organizat
       } catch {}
     }
     redirect(`${redirectUrl}?denied=org`);
-  }
-
-  if (!organization) {
-    redirect("/chat");
   }
 
   return <OrganizationsPageView organization={organization} canUpdate={canUpdate} />;

@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 
 import type { BillingCycleType } from "../../../domain/model/value-objects/billing-cycle";
@@ -11,6 +12,7 @@ import { ErrorAlert } from "@/contexts/shared/interfaces/components/ui/error";
 import { SubscribeHero } from "./subscribe-hero";
 import { PlanCard } from "./plan-card";
 import { PaymentModal } from "../checkout/payment-modal";
+import { FreePlanSuccessModal } from "../checkout/free-plan-success-modal";
 
 interface ActivePaymentState {
   clientSecret: string | null | undefined;
@@ -83,10 +85,12 @@ function buildPlanButtonLabel(planName: string): string {
 }
 
 export function SubscribeView() {
+  const router = useRouter();
   const [billingCycle, setBillingCycle] = useState<BillingCycleType>("MONTHLY");
   const [currency, setCurrency] = useState<CurrencyCode>("USD");
   const [feedbackMessage, setFeedbackMessage] = useState<FeedbackState | null>(null);
   const [paymentModalState, setPaymentModalState] = useState<ActivePaymentState | null>(null);
+  const [freePlanModalOpen, setFreePlanModalOpen] = useState(false);
   const [plans, setPlans] = useState<BillingPlanViewModel[]>([]);
   const [isLoadingPlans, setIsLoadingPlans] = useState(true);
 
@@ -145,6 +149,9 @@ export function SubscribeView() {
     const response = data as SubscriptionResponse | undefined;
 
     if (plan.id === 0 || !response?.clientSecret || !response?.stripePublicKey) {
+      if (plan.id === 0) {
+        setFreePlanModalOpen(true);
+      }
       return;
     }
 
@@ -240,6 +247,15 @@ export function SubscribeView() {
           amountFormatted={paymentModalState.amountFormatted}
         />
       ) : null}
+
+      <FreePlanSuccessModal
+        isOpen={freePlanModalOpen}
+        onClose={() => setFreePlanModalOpen(false)}
+        onContinue={() => {
+          setFreePlanModalOpen(false);
+          router.push("/organizations");
+        }}
+      />
     </main>
   );
 }

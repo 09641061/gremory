@@ -1,5 +1,6 @@
 import type {
   CreateEstablishmentCommand,
+  CreateOrganizationCommand,
   DeleteEstablishmentCommand,
   UpdateEstablishmentCommand,
   UpdateOrganizationCommand,
@@ -19,6 +20,7 @@ import type {
 } from "../model/business.read-models";
 
 export interface OrganizationCommandService {
+  create(command: CreateOrganizationCommand): Promise<OrganizationId>;
   update(command: UpdateOrganizationCommand): Promise<OrganizationId>;
 }
 
