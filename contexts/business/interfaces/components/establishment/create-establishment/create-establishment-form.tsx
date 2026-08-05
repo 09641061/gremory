@@ -30,9 +30,11 @@ export function CreateEstablishmentForm({ organizationId }: { organizationId: st
   );
 
   const [formResetKey, setFormResetKey] = useState(0);
+  const hasRedirected = useRef(false);
 
   useEffect(() => {
-    if (state.status === "success") {
+    if (state.status === "success" && !hasRedirected.current) {
+      hasRedirected.current = true;
       router.push("/establishments");
       router.refresh();
     } else if (state.status === "error") {

@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { updateAppointmentSchema } from "../rest/schemas/appointment.schemas";
 import { ApiError } from "@/contexts/shared/infrastructure/http/api-client";
 import { Appointment } from "../../domain/model/entities/appointment";
-import { ActionState } from "./create-appointment.action";
+import { ActionState } from "./action-state";
 import { createSchedulingCommandService } from "../../application/internal/commandservices/scheduling-command.service.impl";
 
 export async function updateAppointmentAction(

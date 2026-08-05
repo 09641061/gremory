@@ -8,9 +8,11 @@ import { loadSchedulingMembers } from "./scheduling-members.query.service";
 import { loadSchedulingServices } from "./scheduling-services.query.service";
 
 export async function loadSchedulingPageData(establishmentId: string): Promise<SchedulingPageData> {
-  const services = await loadSchedulingServices(establishmentId);
-  const members = await loadSchedulingMembers(establishmentId);
-  const customers = await loadSchedulingCustomers(establishmentId);
+  const [services, members, customers] = await Promise.all([
+    loadSchedulingServices(establishmentId),
+    loadSchedulingMembers(establishmentId),
+    loadSchedulingCustomers(establishmentId),
+  ]);
 
   return { services, members, customers };
 }

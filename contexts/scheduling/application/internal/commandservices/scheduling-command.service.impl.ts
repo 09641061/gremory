@@ -5,16 +5,8 @@ import { Appointment } from "../../../domain/model/entities/appointment";
 import { CreateAppointmentCommand } from "../../../domain/model/commands/create-appointment.command";
 import { RescheduleAppointmentCommand } from "../../../domain/model/commands/reschedule-appointment.command";
 import { CancelAppointmentCommand } from "../../../domain/model/commands/cancel-appointment.command";
+import { UpdateAppointmentCommand } from "../../../domain/model/commands/update-appointment.command";
 import { SchedulingCommandService } from "../../services/scheduling-command.service";
-
-type UpdateAppointmentCommand = {
-  title: string;
-  serviceId: string;
-  customerId: string;
-  employeeId: string;
-  startsAt: string;
-  endsAt: string;
-};
 
 export class SchedulingCommandServiceImpl implements SchedulingCommandService {
   private readonly gateway = new SchedulingApiGateway();

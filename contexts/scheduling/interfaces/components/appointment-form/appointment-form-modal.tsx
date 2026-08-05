@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useEffect, useState, useRef, useMemo } from "react";
 import { Calendar } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/contexts/shared/interfaces/components/ui/dialog";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
@@ -9,7 +9,7 @@ import { Input } from "@/contexts/shared/interfaces/components/ui/input";
 import { createAppointmentAction } from "../../actions/create-appointment.action";
 import { ErrorAlert } from "@/contexts/shared/interfaces/components/ui/error";
 import { Appointment } from "../../../domain/model/entities/appointment";
-import { ActionState } from "../../actions/create-appointment.action";
+import { ActionState } from "../../actions/action-state";
 import type {
   SchedulingCustomerViewModel,
   SchedulingMemberViewModel,
@@ -24,7 +24,7 @@ import {
   createServiceOptions,
   createTimeOptions,
 } from "./scheduling-form-utils";
-import { generateTimeSlots } from "./time-slots";
+import { TIME_SLOTS } from "./time-slots";
 
 interface AppointmentFormModalProps {
   isOpen: boolean;
@@ -56,6 +56,7 @@ export function AppointmentFormModal({
     createAppointmentAction,
     initialActionState
   );
+  const hasSucceeded = useRef(false);
 
   const [selectedServiceId, setSelectedServiceId] = useState("");
   const [selectedCustomerId, setSelectedCustomerId] = useState("");
@@ -64,19 +65,20 @@ export function AppointmentFormModal({
   const [startDate, setStartDate] = useState("");
   const [startTime, setStartTime] = useState("");
 
-  const timeSlots = generateTimeSlots();
   const selectedService = services.find((service) => service.id === selectedServiceId);
-  const serviceOptions = createServiceOptions(services);
-  const customerOptions = createCustomerOptions(customers);
-  const employeeOptions = createEmployeeOptions(members);
-  const timeOptions = createTimeOptions(timeSlots);
+  
+  const serviceOptions = useMemo(() => createServiceOptions(services), [services]);
+  const customerOptions = useMemo(() => createCustomerOptions(customers), [customers]);
+  const employeeOptions = useMemo(() => createEmployeeOptions(members), [members]);
+  const timeOptions = useMemo(() => createTimeOptions(TIME_SLOTS), []);
 
   useEffect(() => {
-    if (state.status === "success") {
+    if (state.status === "success" && !hasSucceeded.current) {
+      hasSucceeded.current = true;
       onSuccess();
       onOpenChange(false);
     }
-  }, [state, onSuccess, onOpenChange]);
+  }, [state.status, onSuccess, onOpenChange]);
 
   const { startsAt, endsAt, formattedEnd } = computeAppointmentTimes({
     startDate,
@@ -86,13 +88,13 @@ export function AppointmentFormModal({
 
   return (
     <>
-      <ErrorAlert
-        key={state.errorId ?? "scheduling-error"}
-        title="Scheduling Failed"
-        message={state.error ?? undefined}
-      />
       <Dialog open={isOpen} onOpenChange={onOpenChange}>
         <DialogContent className="max-w-md">
+          <ErrorAlert
+            key={(state.status === "error" ? state.errorId : null) ?? "scheduling-error"}
+            title="Scheduling Failed"
+            message={state.error ?? undefined}
+          />
           <form action={formAction} className="space-y-4">
             <input type="hidden" name="establishmentId" value={establishmentId} />
             <input type="hidden" name="startsAt" value={startsAt} />

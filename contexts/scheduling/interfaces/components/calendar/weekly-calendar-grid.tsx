@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import { Appointment } from "../../../domain/model/entities/appointment";
 import { AppointmentBlock } from "./appointment-block";
 
@@ -42,19 +43,21 @@ export function WeeklyCalendarGrid({
   isPending,
   onAppointmentClick,
 }: WeeklyCalendarGridProps) {
+  const appointmentsByDayHour = useMemo(() => {
+    const map = new Map<string, Appointment[]>();
+    appointments.forEach((appointment) => {
+      const starts = new Date(appointment.startsAt);
+      const key = `${starts.toDateString()}-${starts.getHours()}`;
+      const current = map.get(key) ?? [];
+      current.push(appointment);
+      map.set(key, current);
+    });
+    return map;
+  }, [appointments]);
+
   if (isPending) {
     return <CalendarSkeleton />;
   }
-
-  const appointmentsByDayHour = new Map<string, Appointment[]>();
-
-  appointments.forEach((appointment) => {
-    const starts = new Date(appointment.startsAt);
-    const key = `${starts.toDateString()}-${starts.getHours()}`;
-    const current = appointmentsByDayHour.get(key) ?? [];
-    current.push(appointment);
-    appointmentsByDayHour.set(key, current);
-  });
 
   return (
     <div className="relative select-none min-w-[700px]">

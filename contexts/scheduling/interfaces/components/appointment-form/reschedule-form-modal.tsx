@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useEffect, useState, useRef } from "react";
 import { CalendarClock, Trash2 } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/contexts/shared/interfaces/components/ui/dialog";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
@@ -9,7 +9,7 @@ import { Input } from "@/contexts/shared/interfaces/components/ui/input";
 import { updateAppointmentAction } from "../../actions/update-appointment.action";
 import { ErrorAlert } from "@/contexts/shared/interfaces/components/ui/error";
 import { Appointment } from "../../../domain/model/entities/appointment";
-import { ActionState } from "../../actions/create-appointment.action";
+import { ActionState } from "../../actions/action-state";
 import { DeleteConfirmDialog } from "../confirm-dialogs/delete-confirm-dialog";
 import { DateField } from "./date-field";
 import { DropdownField } from "./dropdown-field";
@@ -25,7 +25,7 @@ import {
   createServiceOptions,
   createTimeOptions,
 } from "./scheduling-form-utils";
-import { generateTimeSlots } from "./time-slots";
+import { TIME_SLOTS } from "./time-slots";
 
 interface RescheduleFormModalProps {
   isOpen: boolean;
@@ -55,13 +55,20 @@ export function RescheduleFormModal({
   onSuccess,
   onDeleteSuccess,
 }: RescheduleFormModalProps) {
+  const appointmentIdRef = useRef(appointment.id);
+  
+  useEffect(() => {
+    appointmentIdRef.current = appointment.id;
+  }, [appointment.id]);
+
   const [state, formAction, isPending] = useActionState(
     async (prevState: ActionState<Appointment>, formData: FormData) => {
-      return await updateAppointmentAction(appointment.id, prevState, formData);
+      return await updateAppointmentAction(appointmentIdRef.current, prevState, formData);
     },
     initialActionState
   );
 
+  const hasSucceeded = useRef(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [title, setTitle] = useState(appointment.title);
   const [selectedServiceId, setSelectedServiceId] = useState(appointment.serviceId ?? "");
@@ -75,19 +82,33 @@ export function RescheduleFormModal({
   const [startDate, setStartDate] = useState(initDate);
   const [startTime, setStartTime] = useState(initTime);
 
-  const timeSlots = generateTimeSlots();
   const selectedService = services.find((service) => service.id === selectedServiceId);
-  const serviceOptions = createServiceOptions(services);
-  const customerOptions = createCustomerOptions(customers);
-  const employeeOptions = createEmployeeOptions(members);
-  const timeOptions = createTimeOptions(timeSlots);
+  
+  const serviceOptions = useMemo(() => createServiceOptions(services), [services]);
+  const customerOptions = useMemo(() => createCustomerOptions(customers), [customers]);
+  const employeeOptions = useMemo(() => createEmployeeOptions(members), [members]);
+  const timeOptions = useMemo(() => createTimeOptions(TIME_SLOTS), []);
+
+  // Sincronizar el estado del formulario de forma segura si el prop cambia
+  const [prevAppointmentId, setPrevAppointmentId] = useState(appointment.id);
+  if (appointment.id !== prevAppointmentId) {
+    setPrevAppointmentId(appointment.id);
+    setTitle(appointment.title);
+    setSelectedServiceId(appointment.serviceId ?? "");
+    setSelectedCustomerId(appointment.customerId ?? "");
+    setSelectedEmployeeId(appointment.employeeId ?? "");
+    const currentStart = new Date(appointment.startsAt);
+    setStartDate(`${currentStart.getFullYear()}-${String(currentStart.getMonth() + 1).padStart(2, "0")}-${String(currentStart.getDate()).padStart(2, "0")}`);
+    setStartTime(`${String(currentStart.getHours()).padStart(2, "0")}:${String(currentStart.getMinutes()).padStart(2, "0")}`);
+  }
 
   useEffect(() => {
-    if (state.status === "success" && state.data) {
+    if (state.status === "success" && state.data && !hasSucceeded.current) {
+      hasSucceeded.current = true;
       onSuccess(state.data);
       onOpenChange(false);
     }
-  }, [state, onSuccess, onOpenChange]);
+  }, [state.status, state.data, onSuccess, onOpenChange]);
 
   const { startsAt, endsAt, formattedEnd } = computeAppointmentTimes({
     startDate,
@@ -97,13 +118,13 @@ export function RescheduleFormModal({
 
   return (
     <>
-      <ErrorAlert
-        key={state.errorId ?? "update-error"}
-        title="Update Failed"
-        message={state.error ?? undefined}
-      />
       <Dialog open={isOpen} onOpenChange={onOpenChange}>
         <DialogContent className="max-w-md">
+          <ErrorAlert
+            key={(state.status === "error" ? state.errorId : null) ?? "update-error"}
+            title="Update Failed"
+            message={state.error ?? undefined}
+          />
           <form action={formAction} className="space-y-4">
             <input type="hidden" name="startsAt" value={startsAt} />
             <input type="hidden" name="endsAt" value={endsAt} />

@@ -5,17 +5,9 @@ import { createAppointmentSchema } from "../rest/schemas/appointment.schemas";
 import { ApiError } from "@/contexts/shared/infrastructure/http/api-client";
 import { Appointment } from "../../domain/model/entities/appointment";
 import { createSchedulingCommandService } from "../../application/internal/commandservices/scheduling-command.service.impl";
+import { ActionState } from "./action-state";
 
-export type ActionState<T> =
-  | { status: "idle"; data: null; error: null; fieldErrors: null }
-  | { status: "success"; data: T; error: null; fieldErrors: null }
-  | {
-      status: "error";
-      data: null;
-      error: string;
-      errorId: string;
-      fieldErrors: Record<string, string[]> | null;
-    };
+export { type ActionState };
 
 export async function createAppointmentAction(
   _prevState: ActionState<Appointment>,

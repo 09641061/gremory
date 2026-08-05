@@ -3,13 +3,14 @@
 import { Appointment } from "../../domain/model/entities/appointment";
 import { PageResponse } from "../../application/model/page-response";
 import { createSchedulingQueryService } from "../../application/internal/queryservices/scheduling-query.service.impl";
+import { AppointmentStatusType } from "../../domain/model/valueobjects/appointment-status";
 
 export async function listAppointmentsAction(
   from: string,
   to: string,
   establishmentId?: string,
   employeeId?: string,
-  status?: string,
+  status?: AppointmentStatusType,
   page = 0,
   size = 100
 ): Promise<PageResponse<Appointment>> {

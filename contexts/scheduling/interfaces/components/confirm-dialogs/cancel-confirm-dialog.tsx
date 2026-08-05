@@ -1,13 +1,14 @@
 "use client";
+
 import { AlertDialogCancel } from "@/contexts/shared/interfaces/components/ui/alert-dialog";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import { Textarea } from "@/contexts/shared/interfaces/components/ui/textarea";
 import { Label } from "@/contexts/shared/interfaces/components/ui/label";
-import { useActionState, useEffect } from "react";
+import { useActionState, useEffect, useRef } from "react";
 import { cancelAppointmentAction } from "../../actions/cancel-appointment.action";
 import { ErrorAlert } from "@/contexts/shared/interfaces/components/ui/error";
 import { Appointment } from "../../../domain/model/entities/appointment";
-import { ActionState } from "../../actions/create-appointment.action";
+import { ActionState } from "../../actions/action-state";
 import { AppointmentConfirmDialogHeader, AppointmentConfirmDialogShell } from "./appointment-confirm-dialog-shell";
 
 interface CancelConfirmDialogProps {
@@ -30,27 +31,31 @@ export function CancelConfirmDialog({
   appointmentId,
   onSuccess,
 }: CancelConfirmDialogProps) {
+  const appointmentIdRef = useRef(appointmentId);
+  
+  useEffect(() => {
+    appointmentIdRef.current = appointmentId;
+  }, [appointmentId]);
+
   const [state, formAction, isPending] = useActionState(
     async (prevState: ActionState<Appointment>, formData: FormData) => {
-      return await cancelAppointmentAction(appointmentId, prevState, formData);
+      return await cancelAppointmentAction(appointmentIdRef.current, prevState, formData);
     },
     initialActionState
   );
 
+  const hasSucceeded = useRef(false);
+
   useEffect(() => {
-    if (state.status === "success" && state.data) {
+    if (state.status === "success" && state.data && !hasSucceeded.current) {
+      hasSucceeded.current = true;
       onSuccess(state.data);
       onOpenChange(false);
     }
-  }, [state, onSuccess, onOpenChange]);
+  }, [state.status, state.data, onSuccess, onOpenChange]);
 
   return (
     <>
-      <ErrorAlert
-        key={state.errorId ?? "cancel-error"}
-        title="Cancellation Failed"
-        message={state.error ?? undefined}
-      />
       <AppointmentConfirmDialogShell
         isOpen={isOpen}
         onOpenChange={onOpenChange}
@@ -65,6 +70,11 @@ export function CancelConfirmDialog({
           </>
         }
       >
+        <ErrorAlert
+          key={(state.status === "error" ? state.errorId : null) ?? "cancel-error"}
+          title="Cancellation Failed"
+          message={state.error ?? undefined}
+        />
         <form id="cancel-appointment-form" action={formAction} className="space-y-4">
           <AppointmentConfirmDialogHeader
             title="Cancel Appointment"

@@ -48,11 +48,6 @@ export function DeleteConfirmDialog({
 
   return (
     <>
-      <ErrorAlert
-        key={error?.id ?? "delete-error"}
-        title="Deletion Failed"
-        message={error?.message ?? undefined}
-      />
       <AppointmentConfirmDialogShell
         isOpen={isOpen}
         onOpenChange={onOpenChange}
@@ -67,6 +62,11 @@ export function DeleteConfirmDialog({
           </>
         }
       >
+        <ErrorAlert
+          key={error?.id ?? "delete-error"}
+          title="Deletion Failed"
+          message={error?.message ?? undefined}
+        />
         <AppointmentConfirmDialogHeader
           title="Delete Appointment"
           titleClassName="text-destructive"
