@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useTransition } from "react";
-import { Check, Loader2 } from "lucide-react";
+import { Check, Loader2, Sparkles } from "lucide-react";
 import type { BillingCycleType } from "../../../domain/model/value-objects/billing-cycle";
 import { getCurrencySymbol, type CurrencyCode } from "../../../domain/model/value-objects/currency";
 import { createSubscriptionAction } from "../../actions/create-subscription.action";
@@ -49,7 +49,8 @@ export function PlanCard({
   const currencySymbol = getCurrencySymbol(currency);
 
   const defaultButtonText =
-    buttonLabel ?? (planId === 2 ? "Get Premium plan" : "Get Standart plan");
+    buttonLabel ??
+    (planId === 0 ? "Get Free plan" : planId === 2 ? "Get Premium plan" : "Get Standart plan");
 
   const handleSelectPlan = () => {
     startTransition(async () => {
@@ -76,7 +77,9 @@ export function PlanCard({
       <div>
         {/* Custom Plan SVG Icon */}
         <div className="mb-4">
-          {planId === 2 ? (
+          {planId === 0 ? (
+            <Sparkles className="w-10 h-auto text-foreground" />
+          ) : planId === 2 ? (
             <PremiumIcon className="w-10 h-auto text-foreground" />
           ) : (
             <StandardIcon className="w-10 h-auto text-foreground" />
