@@ -3,12 +3,7 @@ import type {
   SchedulingMemberViewModel,
   SchedulingServiceViewModel,
 } from "../../../application/model/scheduling-page-data.view-model";
-
-export type DropdownOption = Readonly<{
-  value: string;
-  label: string;
-  description?: string;
-}>;
+import type { DropdownOption } from "./types";
 
 function formatTimeLabel(hours: number, minutes: number) {
   const suffix = hours >= 12 ? "PM" : "AM";

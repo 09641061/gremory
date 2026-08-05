@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { ApiError } from "@/contexts/shared/infrastructure/http/api-client";
-import { ActionState } from "./create-appointment.action";
+import { ActionState } from "./action-state";
 import { createSchedulingCommandService } from "../../application/internal/commandservices/scheduling-command.service.impl";
 
 export async function deleteAppointmentAction(

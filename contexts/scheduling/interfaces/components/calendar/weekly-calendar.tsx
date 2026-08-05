@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition, useEffect, useCallback, useMemo } from "react";
+import { useState, useTransition, useEffect, useCallback, useMemo, useRef } from "react";
 import { Appointment } from "../../../domain/model/entities/appointment";
 import { listAppointmentsAction } from "../../actions/list-appointments.action";
 import { AppointmentDetailModal } from "../appointment-detail/appointment-detail-modal";
@@ -46,6 +46,8 @@ export function WeeklyCalendar({
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
 
+  const requestIdRef = useRef(0);
+
   const { sunday, saturday } = useMemo(() => getWeekRange(currentDate), [currentDate]);
 
   const weekDays = useMemo(
@@ -66,11 +68,39 @@ export function WeeklyCalendar({
   });
 
   const fetchAppointments = useCallback(() => {
+    const reqId = ++requestIdRef.current;
+    
+    // Función local para convertir fecha a ISO con offset
+    const toLocalISOString = (date: Date) => {
+      const pad = (n: number) => String(n).padStart(2, "0");
+      const tzo = -date.getTimezoneOffset();
+      const dif = tzo >= 0 ? "+" : "-";
+      return (
+        date.getFullYear() +
+        "-" +
+        pad(date.getMonth() + 1) +
+        "-" +
+        pad(date.getDate()) +
+        "T" +
+        pad(date.getHours()) +
+        ":" +
+        pad(date.getMinutes()) +
+        ":" +
+        pad(date.getSeconds()) +
+        dif +
+        pad(Math.floor(Math.abs(tzo) / 60)) +
+        ":" +
+        pad(Math.abs(tzo) % 60)
+      );
+    };
+
     startTransition(async () => {
-      const fromStr = sunday.toISOString();
-      const toStr = saturday.toISOString();
+      const fromStr = toLocalISOString(sunday);
+      const toStr = toLocalISOString(saturday);
       const res = await listAppointmentsAction(fromStr, toStr, establishmentId);
-      setAppointments(res.content);
+      if (reqId === requestIdRef.current) {
+        setAppointments(res.content);
+      }
     });
   }, [sunday, saturday, establishmentId, startTransition]);
 

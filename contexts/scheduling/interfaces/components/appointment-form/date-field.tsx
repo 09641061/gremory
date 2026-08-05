@@ -9,6 +9,7 @@ import { useAdaptivePopup } from "./use-adaptive-popup";
 
 interface DateFieldProps {
   id: string;
+  name?: string;
   placeholder: string;
   value: string;
   onChange: (value: string) => void;
@@ -61,7 +62,7 @@ function buildMonthGrid(month: Date) {
   return days;
 }
 
-export function DateField({ id, placeholder, value, onChange }: DateFieldProps) {
+export function DateField({ id, name, placeholder, value, onChange }: DateFieldProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [visibleMonth, setVisibleMonth] = useState(() => startOfMonth(parseDateInput(value) ?? new Date()));
   const selectorRef = useRef<HTMLDivElement>(null);
@@ -81,6 +82,7 @@ export function DateField({ id, placeholder, value, onChange }: DateFieldProps) 
 
   return (
     <div ref={selectorRef} className="relative">
+      {name && <input type="hidden" name={name} value={value} />}
       <button
         type="button"
         id={id}
