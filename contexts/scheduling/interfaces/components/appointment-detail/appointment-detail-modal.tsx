@@ -31,6 +31,8 @@ interface AppointmentDetailModalProps {
   customers: SchedulingCustomerViewModel[];
   onUpdate: (updated: Appointment) => void;
   onDeleteSuccess: () => void;
+  canUpdateAppointment: boolean;
+  canDeleteAppointment: boolean;
 }
 
 export function AppointmentDetailModal({
@@ -42,6 +44,8 @@ export function AppointmentDetailModal({
   customers,
   onUpdate,
   onDeleteSuccess,
+  canUpdateAppointment,
+  canDeleteAppointment,
 }: AppointmentDetailModalProps) {
   const [isRescheduleOpen, setIsRescheduleOpen] = useState(false);
   const [isCancelOpen, setIsCancelOpen] = useState(false);
@@ -90,6 +94,8 @@ export function AppointmentDetailModal({
               isCancelled={isCancelled}
               onReschedule={() => setIsRescheduleOpen(true)}
               onCancel={() => setIsCancelOpen(true)}
+              canUpdateAppointment={canUpdateAppointment}
+              canDeleteAppointment={canDeleteAppointment}
             />
           </DialogFooter>
         </DialogContent>

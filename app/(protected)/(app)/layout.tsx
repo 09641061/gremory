@@ -5,6 +5,7 @@ import { Sidebar } from "@/contexts/shared/interfaces/components/sidebar";
 import { createCatalogAccessPolicyService } from "@/contexts/catalog/application/internal/queryservices/catalog-access-policy.service";
 import { createCrmAccessPolicyService } from "@/contexts/crm/application/internal/queryservices/crm-access-policy.service";
 import { createWorkforceAccessPolicyService } from "@/contexts/workforce/application/internal/queryservices/workforce-access-policy.service";
+import { createSchedulingAccessPolicyService } from "@/contexts/scheduling/application/internal/queryservices/scheduling-access-policy.service";
 import { createOrganizationQueryService } from "@/contexts/business/application/internal/queryservices/organization-query.service";
 import { getMyProfileServerQuery } from "@/contexts/profiles/interfaces/queries/get-my-profile.query-handler";
 
@@ -22,14 +23,17 @@ export default async function AppLayout({
   const catalogPolicyService = createCatalogAccessPolicyService();
   const crmPolicyService = createCrmAccessPolicyService();
   const workforcePolicyService = createWorkforceAccessPolicyService();
+  const schedulingPolicyService = createSchedulingAccessPolicyService();
   let canReadCatalog = false;
   let canReadCrm = false;
   let canReadTeam = false;
+  let canReadScheduling = false;
   try {
     await createOrganizationQueryService().getMyOrganization();
     canReadCatalog = true;
     canReadCrm = true;
     canReadTeam = true;
+    canReadScheduling = true;
   } catch {
     const defaultCatalogEstId = await catalogPolicyService.getDefaultEstablishmentId();
     if (defaultCatalogEstId) {
@@ -43,6 +47,10 @@ export default async function AppLayout({
     if (defaultTeamEstId) {
       canReadTeam = true;
     }
+    const defaultSchedulingEstId = await schedulingPolicyService.getDefaultEstablishmentId();
+    if (defaultSchedulingEstId) {
+      canReadScheduling = true;
+    }
   }
 
   return (
@@ -53,6 +61,7 @@ export default async function AppLayout({
         canReadCatalog={canReadCatalog}
         canReadCrm={canReadCrm}
         canReadTeam={canReadTeam}
+        canReadScheduling={canReadScheduling}
       />
       <main className="flex-1 p-6 pt-16 lg:ml-60">{children}</main>
     </>
