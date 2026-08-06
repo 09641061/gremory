@@ -1,6 +1,11 @@
 import type { ReactNode } from "react";
 
+import { cookies } from "next/headers";
 import { ListConversationsQueryService } from "@/contexts/assistant/application/internal/queryservices/list-conversations-query.service";
+import type { AssistantConversationSummaryReadModel } from "@/contexts/assistant/application/internal/transforms/assistant.read-models";
+import { hasAssistantSubscriptionAccess } from "@/contexts/billing/domain/services/subscription-access.policy";
+import { BillingApiGateway } from "@/contexts/billing/infrastructure/gateways/billing-api.gateway";
+import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-session-cookie";
 import { Sidebar } from "@/contexts/shared/interfaces/components/sidebar";
 import { createCatalogAccessPolicyService } from "@/contexts/catalog/application/internal/queryservices/catalog-access-policy.service";
 import { createCrmAccessPolicyService } from "@/contexts/crm/application/internal/queryservices/crm-access-policy.service";
@@ -17,8 +22,17 @@ export default async function AppLayout({
 }: {
   children: ReactNode;
 }) {
-  const assistantConversations = await new ListConversationsQueryService().handle({ page: 0, size: 20 });
   const currentProfile = await getMyProfileServerQuery();
+  const accessToken = (await cookies()).get(iamSessionCookies.accessToken)?.value;
+  const subscription = accessToken
+    ? await new BillingApiGateway().getCurrentSubscription(accessToken).catch(() => null)
+    : null;
+  const hasAssistantAccess = hasAssistantSubscriptionAccess(subscription);
+
+  let assistantConversations: { content: AssistantConversationSummaryReadModel[] } = { content: [] };
+  if (hasAssistantAccess) {
+    assistantConversations = await new ListConversationsQueryService().handle({ page: 0, size: 20 });
+  }
 
   const catalogPolicyService = createCatalogAccessPolicyService();
   const crmPolicyService = createCrmAccessPolicyService();

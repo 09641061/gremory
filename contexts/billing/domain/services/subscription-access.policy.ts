@@ -1,6 +1,7 @@
 export type SubscriptionAccessSnapshot = Readonly<{
   active?: boolean;
   status?: string;
+  planId?: number;
 }>;
 
 /**
@@ -11,4 +12,14 @@ export function hasActiveSubscription(
   subscription: SubscriptionAccessSnapshot | null | undefined,
 ): boolean {
   return subscription?.active === true && subscription.status?.toUpperCase() === "ACTIVE";
+}
+
+/**
+ * Assistant access is only available on paid plans.
+ * Free subscriptions can still be active for the core product.
+ */
+export function hasAssistantSubscriptionAccess(
+  subscription: SubscriptionAccessSnapshot | null | undefined,
+): boolean {
+  return hasActiveSubscription(subscription) && (subscription?.planId ?? 0) > 0;
 }

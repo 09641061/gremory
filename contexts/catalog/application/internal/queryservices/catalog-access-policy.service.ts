@@ -57,17 +57,12 @@ export class CatalogAccessPolicyService {
           };
         }
 
-        const perms = estAccess.effectivePermissions;
+        const perms = estAccess.effectivePermissions ?? [];
+        const hasReadCatalog = hasCatalogReadPermission(perms);
         const hasManage = perms.includes("catalog:manage");
-        const roles = estAccess.roles || [];
-        const hasReadRole = roles.some((role) => role.name.toLowerCase() === "read");
 
         return {
-          canReadCatalog:
-            hasManage ||
-            hasReadRole ||
-            perms.includes("catalog:services:read") ||
-            perms.includes("catalog:categories:read"),
+          canReadCatalog: hasReadCatalog,
           canCreateCategory:
             hasManage ||
             perms.includes("catalog:categories:create") ||
@@ -121,17 +116,11 @@ export class CatalogAccessPolicyService {
     } catch {
       try {
         const access = await createTeamQueryService().getAccessContext();
+        if (!access.active) {
+          return undefined;
+        }
         const allowedEst = access.establishments.find((item) => {
-          const roles = item.roles || [];
-          const hasReadRole = roles.some((role) => role.name.toLowerCase() === "read");
-          return (
-            item.effectivePermissions.some(
-              (perm) =>
-                perm === "catalog:services:read" ||
-                perm === "catalog:categories:read" ||
-                perm === "catalog:manage",
-            ) || hasReadRole
-          );
+          return hasCatalogReadPermission(item.effectivePermissions ?? []);
         });
         return allowedEst?.establishmentId;
       } catch {
@@ -143,4 +132,13 @@ export class CatalogAccessPolicyService {
 
 export function createCatalogAccessPolicyService() {
   return new CatalogAccessPolicyService();
+}
+
+function hasCatalogReadPermission(permissions: ReadonlyArray<string>): boolean {
+  return permissions.some(
+    (permission) =>
+      permission === "catalog:manage" ||
+      permission === "catalog:services:read" ||
+      permission === "catalog:categories:read",
+  );
 }
