@@ -35,6 +35,7 @@ export function Sidebar({
   canReadTeam = true,
   canReadScheduling = true,
   showAssistantSection = true,
+  showAssistantNavigation = true,
 }: {
   initialAssistantConversations: AssistantConversationSummaryReadModel[];
   currentProfile: Pick<ProfileViewModel, "username" | "imageUrl"> | null;
@@ -43,6 +44,7 @@ export function Sidebar({
   canReadTeam?: boolean;
   canReadScheduling?: boolean;
   showAssistantSection?: boolean;
+  showAssistantNavigation?: boolean;
 }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -54,6 +56,9 @@ export function Sidebar({
     .join("|");
 
   const filteredNavigation = navigation.filter(item => {
+    if (!showAssistantNavigation && item.label === "New Chat") {
+      return false;
+    }
     if (item.label === "Schedule") {
       return canReadScheduling;
     }

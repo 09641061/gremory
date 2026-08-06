@@ -76,6 +76,7 @@ export default async function AppLayout({
         canReadTeam={canReadTeam}
         canReadScheduling={canReadScheduling}
         showAssistantSection={hasAssistantAccess}
+        showAssistantNavigation={hasAssistantAccess}
       />
       <main className="flex-1 p-6 pt-16 lg:ml-60">{children}</main>
     </>

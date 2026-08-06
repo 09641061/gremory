@@ -59,6 +59,10 @@ export async function proxy(request: NextRequest) {
     return redirectWithCookies(request, homePath, response);
   }
 
+  if (activeAccess && homePath === "/schedule" && (pathname === "/chat" || pathname.startsWith("/chat/"))) {
+    return redirectWithCookies(request, homePath, response);
+  }
+
   if (!activeAccess && (pathname === "/" || pathname === "/login" || isPrivateRoute(pathname))) {
     return redirectWithCookies(request, "/subscribe", response);
   }
@@ -123,7 +127,15 @@ async function getSubscriptionAccess(accessToken: string): Promise<ApplicationAc
 }
 
 function redirectWithCookies(request: NextRequest, path: string, response: NextResponse | null) {
-  const redirectResponse = NextResponse.redirect(new URL(path, request.url));
+  const redirectUrl = new URL(path, request.url);
+  if (path === "/schedule") {
+    const establishmentId = request.nextUrl.searchParams.get("establishmentId");
+    if (establishmentId) {
+      redirectUrl.searchParams.set("establishmentId", establishmentId);
+    }
+  }
+
+  const redirectResponse = NextResponse.redirect(redirectUrl);
   if (response) {
     for (const cookie of response.cookies.getAll()) {
       redirectResponse.cookies.set(cookie);

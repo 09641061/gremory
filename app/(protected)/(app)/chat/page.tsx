@@ -2,6 +2,7 @@ import { GetConversationQueryService } from "@/contexts/assistant/application/in
 import { BillingApiGateway } from "@/contexts/billing/infrastructure/gateways/billing-api.gateway";
 import { hasAssistantSubscriptionAccess } from "@/contexts/billing/domain/services/subscription-access.policy";
 import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-session-cookie";
 import { AssistantChatView } from "@/contexts/assistant/interfaces/components/chat-view/assistant-chat-view";
 import { toConversationViewModel } from "@/contexts/assistant/interfaces/presenters/assistant-chat.presenter.server";
@@ -21,6 +22,10 @@ export default async function ChatPage({
     ? await new BillingApiGateway().getCurrentSubscription(accessToken).catch(() => null)
     : null;
   const hasAssistantAccess = hasAssistantSubscriptionAccess(subscription);
+
+  if (!hasAssistantAccess) {
+    redirect("/schedule");
+  }
 
   const initialConversation = hasAssistantAccess && conversationId
     ? await new GetConversationQueryService().handle(conversationId)

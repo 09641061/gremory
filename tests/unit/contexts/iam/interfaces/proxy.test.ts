@@ -141,7 +141,7 @@ describe("IAM session proxy", () => {
     expect(response.headers.get("location")).toBe("http://localhost/schedule");
   });
 
-  it("should allow an active workforce member without a personal subscription", async () => {
+  it("should allow an active workforce member without a personal subscription on schedule", async () => {
     const fetchMock = vi.fn()
       .mockResolvedValueOnce(new Response(
         JSON.stringify({ message: "Subscription not found" }),
@@ -156,7 +156,7 @@ describe("IAM session proxy", () => {
     const response = await proxy(requestWithSession(
       "access-token",
       "refresh-token",
-      "/chat",
+      "/schedule",
     ));
 
     expect(response.status).toBe(200);
@@ -189,5 +189,22 @@ describe("IAM session proxy", () => {
 
     expect(response.status).toBe(307);
     expect(response.headers.get("location")).toBe("http://localhost/subscribe");
+  });
+
+  it("should redirect free sessions away from chat to schedule", async () => {
+    vi.stubGlobal("fetch", vi.fn()
+      .mockResolvedValueOnce(new Response(
+        JSON.stringify({ active: true, status: "ACTIVE", planId: 0 }),
+        { status: 200, headers: { "Content-Type": "application/json" } },
+      )));
+
+    const response = await proxy(requestWithSession(
+      "access-token",
+      "refresh-token",
+      "/chat",
+    ));
+
+    expect(response.status).toBe(307);
+    expect(response.headers.get("location")).toBe("http://localhost/schedule");
   });
 });
