@@ -1,9 +1,9 @@
 import { NextRequest } from "next/server";
 import { proxy } from "@/proxy";
 
-const mocks = vi.hoisted(() => ({
+const mocks = {
   resolveSession: vi.fn(),
-}));
+};
 
 vi.mock("@/contexts/iam/application/internal/queryservices/iam-session-query.service", () => ({
   createIamSessionQueryService: () => mocks,
@@ -33,7 +33,7 @@ describe("IAM session proxy", () => {
       rotatedSession: null,
     });
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(
-      new Response(JSON.stringify({ active: true, status: "ACTIVE" }), { status: 200 }),
+      new Response(JSON.stringify({ active: true, status: "ACTIVE", planId: 1 }), { status: 200 }),
     ));
   });
 
@@ -122,6 +122,23 @@ describe("IAM session proxy", () => {
     expect(response.cookies.get("takodu.access_token")?.value).toBe("new-access-token");
     expect(response.status).toBe(307);
     expect(response.headers.get("location")).toBe("http://localhost/chat");
+  });
+
+  it("should send free sessions from home to schedule", async () => {
+    vi.stubGlobal("fetch", vi.fn()
+      .mockResolvedValueOnce(new Response(
+        JSON.stringify({ active: true, status: "ACTIVE", planId: 0 }),
+        { status: 200, headers: { "Content-Type": "application/json" } },
+      )));
+
+    const response = await proxy(requestWithSession(
+      "access-token",
+      "refresh-token",
+      "/",
+    ));
+
+    expect(response.status).toBe(307);
+    expect(response.headers.get("location")).toBe("http://localhost/schedule");
   });
 
   it("should allow an active workforce member without a personal subscription", async () => {

@@ -32,9 +32,10 @@ interface ProtectedHeaderClientProps {
   employeeData?: {
     establishments: EmployeeEstablishmentAccess[];
   };
+  homeHref?: string;
 }
 
-export function ProtectedHeaderClient({ ownerData, employeeData }: ProtectedHeaderClientProps) {
+export function ProtectedHeaderClient({ ownerData, employeeData, homeHref = "/chat" }: ProtectedHeaderClientProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -140,6 +141,7 @@ export function ProtectedHeaderClient({ ownerData, employeeData }: ProtectedHead
 
   return (
     <Header
+      homeHref={homeHref}
       organizationSlot={
         <OrganizationSelector
           organization={activeOrg}

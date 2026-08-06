@@ -16,6 +16,7 @@ interface HeaderProps {
   initialEstablishmentId?: string;
   canCreateEstablishment?: boolean;
   canReadEstablishments?: boolean;
+  homeHref?: string;
 }
 
 export function Header({
@@ -24,6 +25,7 @@ export function Header({
   initialEstablishmentId,
   canCreateEstablishment = true,
   canReadEstablishments = true,
+  homeHref = "/chat",
 }: HeaderProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -41,7 +43,7 @@ export function Header({
     <header className="fixed inset-x-0 top-0 z-30 flex h-14 items-center border-b border-border/60 bg-background px-6">
       <div className="flex items-center gap-5 text-sm text-foreground">
         <Link
-          href={`/chat${selectedEstablishmentId ? `?establishmentId=${selectedEstablishmentId}` : ""}`}
+          href={`${homeHref}${selectedEstablishmentId ? `?establishmentId=${selectedEstablishmentId}` : ""}`}
           className="text-base font-semibold text-foreground"
         >
           Takodu

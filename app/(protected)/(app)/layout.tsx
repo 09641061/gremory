@@ -29,10 +29,9 @@ export default async function AppLayout({
     : null;
   const hasAssistantAccess = hasAssistantSubscriptionAccess(subscription);
 
-  let assistantConversations: { content: AssistantConversationSummaryReadModel[] } = { content: [] };
-  if (hasAssistantAccess) {
-    assistantConversations = await new ListConversationsQueryService().handle({ page: 0, size: 20 });
-  }
+  const assistantConversations = hasAssistantAccess
+    ? await new ListConversationsQueryService().handle({ page: 0, size: 20 })
+    : { content: [] as AssistantConversationSummaryReadModel[] };
 
   const catalogPolicyService = createCatalogAccessPolicyService();
   const crmPolicyService = createCrmAccessPolicyService();
@@ -76,6 +75,7 @@ export default async function AppLayout({
         canReadCrm={canReadCrm}
         canReadTeam={canReadTeam}
         canReadScheduling={canReadScheduling}
+        showAssistantSection={hasAssistantAccess}
       />
       <main className="flex-1 p-6 pt-16 lg:ml-60">{children}</main>
     </>

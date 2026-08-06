@@ -34,6 +34,7 @@ export function Sidebar({
   canReadCrm = true,
   canReadTeam = true,
   canReadScheduling = true,
+  showAssistantSection = true,
 }: {
   initialAssistantConversations: AssistantConversationSummaryReadModel[];
   currentProfile: Pick<ProfileViewModel, "username" | "imageUrl"> | null;
@@ -41,6 +42,7 @@ export function Sidebar({
   canReadCrm?: boolean;
   canReadTeam?: boolean;
   canReadScheduling?: boolean;
+  showAssistantSection?: boolean;
 }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -106,10 +108,12 @@ export function Sidebar({
         </ul>
       </nav>
 
-      <AssistantChatsSection
-        key={assistantChatsSectionKey}
-        initialConversations={initialAssistantConversations}
-      />
+      {showAssistantSection ? (
+        <AssistantChatsSection
+          key={assistantChatsSectionKey}
+          initialConversations={initialAssistantConversations}
+        />
+      ) : null}
 
       <div className="mt-auto pt-5">
         <SidebarProfile

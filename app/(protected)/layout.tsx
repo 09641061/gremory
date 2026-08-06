@@ -1,11 +1,15 @@
 import type { ReactNode } from "react";
 import { Suspense } from "react";
+import { cookies } from "next/headers";
 import { createEstablishmentQueryService } from "@/contexts/business/application/internal/queryservices/establishment-query.service";
 import { createOrganizationQueryService } from "@/contexts/business/application/internal/queryservices/organization-query.service";
 import { Header } from "@/contexts/shared/interfaces/components/header";
 import { createTeamQueryService } from "@/contexts/workforce/application/internal/queryservices/team-query.service";
 import { ErrorBanner } from "@/contexts/shared/interfaces/components/error-banner";
 import { ProtectedHeaderClient } from "@/contexts/business/interfaces/components/organization/protected-header-client/protected-header-client";
+import { BillingApiGateway } from "@/contexts/billing/infrastructure/gateways/billing-api.gateway";
+import { getApplicationHomePath } from "@/contexts/billing/domain/services/subscription-access.policy";
+import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-session-cookie";
 
 export default function ProtectedLayout({
   children,
@@ -30,6 +34,12 @@ export default function ProtectedLayout({
 }
 
 async function ProtectedHeader() {
+  const accessToken = (await cookies()).get(iamSessionCookies.accessToken)?.value;
+  const subscription = accessToken
+    ? await new BillingApiGateway().getCurrentSubscription(accessToken).catch(() => null)
+    : null;
+  const homeHref = getApplicationHomePath(subscription);
+
   let ownerData: {
     organization: { id: string; name: string; imageUrl?: string | null };
     establishments: { id: string; name: string; photoUrl?: string | null }[];
@@ -96,6 +106,7 @@ async function ProtectedHeader() {
     <ProtectedHeaderClient
       ownerData={ownerData}
       employeeData={employeeData}
+      homeHref={homeHref}
     />
   );
 }

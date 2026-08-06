@@ -23,3 +23,9 @@ export function hasAssistantSubscriptionAccess(
 ): boolean {
   return hasActiveSubscription(subscription) && (subscription?.planId ?? 0) > 0;
 }
+
+export function getApplicationHomePath(
+  subscription: SubscriptionAccessSnapshot | null | undefined,
+): "/chat" | "/schedule" {
+  return hasAssistantSubscriptionAccess(subscription) ? "/chat" : "/schedule";
+}

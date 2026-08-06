@@ -1,7 +1,10 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { createIamSessionQueryService } from "@/contexts/iam/application/internal/queryservices/iam-session-query.service";
-import { hasActiveSubscription } from "@/contexts/billing/domain/services/subscription-access.policy";
+import {
+  getApplicationHomePath,
+  hasActiveSubscription,
+} from "@/contexts/billing/domain/services/subscription-access.policy";
 import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-session-cookie";
 import { continueRequestWithSession } from "@/contexts/iam/interfaces/proxy/iam-session-request";
 import { apiConfig } from "@/api.config";
@@ -49,10 +52,11 @@ export async function proxy(request: NextRequest) {
     return response ?? NextResponse.next();
   }
 
-  const activeAccess = applicationAccess === "active";
+  const activeAccess = applicationAccess.status === "active";
+  const homePath = applicationAccess.homePath;
 
   if (activeAccess && (pathname === "/" || pathname === "/login" || pathname === "/subscribe")) {
-    return redirectWithCookies(request, "/chat", response);
+    return redirectWithCookies(request, homePath, response);
   }
 
   if (!activeAccess && (pathname === "/" || pathname === "/login" || isPrivateRoute(pathname))) {
@@ -76,40 +80,45 @@ function isPrivateRoute(pathname: string) {
   ].some((route) => pathname === route || pathname.startsWith(`${route}/`));
 }
 
-type SubscriptionAccess =
-  | "active"
-  | "inactive"
-  | "unauthenticated"
-  | "unavailable";
-async function getApplicationAccess(accessToken: string): Promise<SubscriptionAccess> {
+type ApplicationAccess =
+  | { status: "active"; homePath: "/chat" | "/schedule" }
+  | { status: "inactive" | "unauthenticated" | "unavailable" };
+
+async function getApplicationAccess(accessToken: string): Promise<ApplicationAccess> {
   const subscription = await getSubscriptionAccess(accessToken);
-  if (subscription !== "inactive") return subscription;
+  if (subscription.status !== "inactive") return subscription;
 
   try {
     const workforce = await apiClient.get<{ active?: boolean }>(
       apiConfig.routes.workforce.access,
       { token: accessToken },
     );
-    return workforce.active === true ? "active" : "inactive";
+    return workforce.active === true
+      ? { status: "active", homePath: "/schedule" }
+      : { status: "inactive" };
   } catch (error) {
-    if (error instanceof ApiError && error.status === 401) return "unauthenticated";
-    return "unavailable";
+    if (error instanceof ApiError && error.status === 401) return { status: "unauthenticated" };
+    return { status: "unavailable" };
   }
 }
 
-async function getSubscriptionAccess(accessToken: string): Promise<SubscriptionAccess> {
+async function getSubscriptionAccess(accessToken: string): Promise<ApplicationAccess> {
   try {
-    const subscription = await apiClient.get<{ active?: boolean; status?: string }>(
+    const subscription = await apiClient.get<{
+      active?: boolean;
+      status?: string;
+      planId?: number;
+    }>(
       apiConfig.routes.subscriptions,
       { token: accessToken },
     );
     return hasActiveSubscription(subscription)
-      ? "active"
-      : "inactive";
+      ? { status: "active", homePath: getApplicationHomePath(subscription) }
+      : { status: "inactive" };
   } catch (error) {
-    if (error instanceof ApiError && error.status === 401) return "unauthenticated";
-    if (error instanceof ApiError && error.status === 404) return "inactive";
-    return "unavailable";
+    if (error instanceof ApiError && error.status === 401) return { status: "unauthenticated" };
+    if (error instanceof ApiError && error.status === 404) return { status: "inactive" };
+    return { status: "unavailable" };
   }
 }
 
