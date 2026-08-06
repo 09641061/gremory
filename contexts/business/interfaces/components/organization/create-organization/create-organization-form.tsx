@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useEffect, useRef, useState } from "react";
+import type { ChangeEvent } from "react";
 import { useRouter } from "next/navigation";
 import { Building2, Plus } from "lucide-react";
 
@@ -11,10 +12,17 @@ import { Input } from "@/contexts/shared/interfaces/components/ui/input";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import { ErrorAlert } from "@/contexts/shared/interfaces/components/ui/error";
 import { Spinner } from "@/contexts/shared/interfaces/components/ui/spinner";
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from "@/contexts/shared/interfaces/components/ui/avatar";
 
 export function CreateOrganizationForm() {
   const router = useRouter();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [name, setName] = useState("");
+  const [photoPreviewUrl, setPhotoPreviewUrl] = useState<string | null>(null);
   const [state, formAction, pending] = useActionState(
     createOrganizationAction,
     initialBusinessActionResult,
@@ -27,6 +35,33 @@ export function CreateOrganizationForm() {
       router.refresh();
     }
   }, [router, state.status]);
+
+  useEffect(() => {
+    return () => {
+      if (photoPreviewUrl) {
+        URL.revokeObjectURL(photoPreviewUrl);
+      }
+    };
+  }, [photoPreviewUrl]);
+
+  const handleAvatarClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handlePhotoChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0] ?? null;
+
+    if (photoPreviewUrl) {
+      URL.revokeObjectURL(photoPreviewUrl);
+    }
+
+    if (!file) {
+      setPhotoPreviewUrl(null);
+      return;
+    }
+
+    setPhotoPreviewUrl(URL.createObjectURL(file));
+  };
 
   return (
     <section className="mx-auto flex w-full max-w-3xl flex-col gap-6">
@@ -44,18 +79,36 @@ export function CreateOrganizationForm() {
 
       <Card className="overflow-hidden rounded-xl border-border bg-card shadow-sm">
         <form action={formAction} className="flex flex-col">
+          <input
+            ref={fileInputRef}
+            type="file"
+            name="photoFile"
+            accept="image/*"
+            className="hidden"
+            onChange={handlePhotoChange}
+          />
           <CardContent className="p-0 flex flex-col">
             <div className="flex flex-col border-b border-border">
               <div className="flex items-center justify-between p-6">
                 <div className="space-y-1">
-                  <h3 className="text-base font-semibold text-foreground">Organization</h3>
+                  <h3 className="text-base font-semibold text-foreground">Organization Logo</h3>
                   <p className="text-sm text-muted-foreground">
-                    Give your organization a name. You can update the details later.
+                    This is your organization logo.<br />
+                    Click on the logo to upload a custom one from your files.
                   </p>
                 </div>
-                <div className="flex size-16 items-center justify-center rounded-full border border-border bg-muted/40">
-                  <Building2 className="size-8 text-muted-foreground" />
-                </div>
+                <Avatar
+                  className="size-16 cursor-pointer border border-border transition-opacity hover:opacity-80"
+                  onClick={handleAvatarClick}
+                >
+                  {photoPreviewUrl ? (
+                    <AvatarImage src={photoPreviewUrl} alt={name || "Organization"} />
+                  ) : (
+                    <AvatarFallback className="bg-muted">
+                      <Building2 className="size-8 text-muted-foreground" />
+                    </AvatarFallback>
+                  )}
+                </Avatar>
               </div>
             </div>
 
