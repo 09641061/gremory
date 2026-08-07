@@ -6,7 +6,6 @@ import { ErrorBanner } from "@/contexts/shared/interfaces/components/error-banne
 import { ProtectedHeaderClient } from "@/contexts/business/interfaces/components/organization/protected-header-client/protected-header-client";
 import { BillingApiGateway } from "@/contexts/billing/infrastructure/gateways/billing-api.gateway";
 import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-session-cookie";
-import { createLandingPathQueryService } from "@/contexts/iam/application/internal/queryservices/landing-path-query.service";
 import { createAppShellQueryService } from "@/contexts/shared/application/internal/queryservices/app-shell-query.service";
 
 export default function ProtectedLayout({
@@ -40,11 +39,6 @@ async function ProtectedHeader() {
     ? await createAppShellQueryService().resolve({ subscription }).catch(() => null)
     : null;
 
-  const landing = accessToken
-    ? await createLandingPathQueryService().getHeaderData({ accessToken, subscription }).catch(() => ({ status: "unavailable" as const }))
-    : { status: "unavailable" as const };
-  const homeHref = landing.status === "ready" ? landing.homeHref : "/organizations";
-
   return (
     <ProtectedHeaderClient
       organization={shell?.workspace.organization}
@@ -54,7 +48,7 @@ async function ProtectedHeader() {
       canReadOrganizations={shell?.workspace.canReadOrganizations ?? false}
       canReadEstablishments={shell?.workspace.canReadEstablishments ?? false}
       canCreateEstablishment={shell?.workspace.canCreateEstablishment ?? false}
-      homeHref={homeHref}
+      homeHref={shell?.homeHref ?? "/organizations"}
     />
   );
 }

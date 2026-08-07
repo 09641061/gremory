@@ -11,5 +11,6 @@ export type SidebarRouteId =
 export type AppShellViewModel = Readonly<{
   workspace: WorkspaceHeaderViewModel;
   hasAssistantAccess: boolean;
+  homeHref: "/chat" | "/schedule" | "/crm" | "/catalog" | "/team" | "/organizations";
   visibleSidebarRoutes: ReadonlyArray<SidebarRouteId>;
 }>;

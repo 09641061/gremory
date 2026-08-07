@@ -27,17 +27,19 @@ export class AppShellQueryService {
         createCrmAccessPolicyService().getDefaultEstablishmentId(),
         createWorkforceAccessPolicyService().getDefaultEstablishmentId(),
       ]);
+    const visibleSidebarRoutes = resolveVisibleSidebarRoutes(
+      Boolean(schedulingEstablishmentId),
+      Boolean(catalogEstablishmentId),
+      Boolean(crmEstablishmentId),
+      Boolean(teamEstablishmentId),
+      subscriptionAccess.hasAssistantAccess,
+    );
 
     return {
       workspace,
       hasAssistantAccess: subscriptionAccess.hasAssistantAccess,
-      visibleSidebarRoutes: resolveVisibleSidebarRoutes(
-        Boolean(schedulingEstablishmentId),
-        Boolean(catalogEstablishmentId),
-        Boolean(crmEstablishmentId),
-        Boolean(teamEstablishmentId),
-        subscriptionAccess.hasAssistantAccess,
-      ),
+      homeHref: resolveHomeHref(subscriptionAccess.hasAssistantAccess, visibleSidebarRoutes),
+      visibleSidebarRoutes,
     };
   }
 }
@@ -73,4 +75,16 @@ function resolveVisibleSidebarRoutes(
   routes.push("/analytics");
 
   return routes;
+}
+
+function resolveHomeHref(
+  hasAssistantAccess: boolean,
+  visibleRoutes: ReadonlyArray<SidebarRouteId>,
+): "/chat" | "/schedule" | "/crm" | "/catalog" | "/team" | "/organizations" {
+  if (hasAssistantAccess) {
+    return "/chat";
+  }
+
+  const firstWorkRoute = visibleRoutes.find((route) => route !== "/analytics");
+  return firstWorkRoute ?? "/organizations";
 }
