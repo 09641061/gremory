@@ -40,6 +40,11 @@ export class AppShellQueryService {
       hasAssistantAccess: subscriptionAccess.hasAssistantAccess,
       homeHref: resolveHomeHref(subscriptionAccess.hasAssistantAccess, visibleSidebarRoutes),
       visibleSidebarRoutes,
+      headerNavigation: {
+        organizationListHref: workspace.canReadOrganizations ? "/organizations" : null,
+        establishmentListHref: workspace.canReadEstablishments ? "/establishments" : null,
+        newEstablishmentHref: workspace.canCreateEstablishment ? "/establishments/new" : null,
+      },
     };
   }
 }

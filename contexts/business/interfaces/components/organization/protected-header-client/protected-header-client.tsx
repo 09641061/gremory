@@ -7,14 +7,17 @@ import { OrganizationSelector } from "../organization-selector/organization-sele
 import type {
   WorkspaceHeaderViewModel,
 } from "@/contexts/business/application/model/business-workspace.view-models";
+import type { HeaderNavigationViewModel } from "@/contexts/shared/application/model/app-shell.view-models";
 
 interface ProtectedHeaderClientProps {
   workspace: WorkspaceHeaderViewModel;
+  navigation: HeaderNavigationViewModel;
   homeHref?: string;
 }
 
 export function ProtectedHeaderClient({
   workspace,
+  navigation,
   homeHref = "/chat",
 }: ProtectedHeaderClientProps) {
   const router = useRouter();
@@ -25,6 +28,7 @@ export function ProtectedHeaderClient({
   const homeHrefWithEstablishment = selectedEstablishmentId
     ? `${homeHref}?establishmentId=${selectedEstablishmentId}`
     : homeHref;
+  const newEstablishmentHref = navigation.newEstablishmentHref;
 
   function handleSelectOrganization(_orgId: string, defaultEstablishmentId?: string) {
     const params = new URLSearchParams(searchParams.toString());
@@ -47,9 +51,9 @@ export function ProtectedHeaderClient({
           organizations={workspace.organizations}
           onSelect={handleSelectOrganization}
           onSelectAll={() => {
-            if (workspace.canReadOrganizations) {
+            if (navigation.organizationListHref) {
               const query = selectedEstablishmentId ? `?establishmentId=${selectedEstablishmentId}` : "";
-              router.push(`/organizations${query}`);
+              router.push(`${navigation.organizationListHref}${query}`);
             } else {
               router.push(`${pathname}?denied=org`);
             }
@@ -66,15 +70,17 @@ export function ProtectedHeaderClient({
             router.push(`${pathname}?${params.toString()}`);
           }}
           onSelectAll={() => {
-            if (workspace.canReadEstablishments) {
+            if (navigation.establishmentListHref) {
               const query = selectedEstablishmentId ? `?establishmentId=${selectedEstablishmentId}` : "";
-              router.push(`/establishments${query}`);
+              router.push(`${navigation.establishmentListHref}${query}`);
             } else {
               router.push(`${pathname}?denied=est`);
             }
           }}
           onNew={
-            workspace.canCreateEstablishment ? () => router.push("/establishments/new") : undefined
+            newEstablishmentHref
+              ? () => router.push(newEstablishmentHref)
+              : undefined
           }
         />
       }
