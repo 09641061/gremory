@@ -52,14 +52,32 @@ export async function proxy(request: NextRequest) {
     return response ?? NextResponse.next();
   }
 
+  const setupAccess = await getSetupAccess(accessToken, applicationAccess);
+  if (setupAccess.status === "unauthenticated") {
+    return redirectToLogin(request);
+  }
+  if (setupAccess.status === "unavailable") {
+    return response ?? NextResponse.next();
+  }
+
   const activeAccess = applicationAccess.status === "active";
-  const homePath = applicationAccess.homePath;
+  const homePath = setupAccess.hasOrganization || setupAccess.hasWorkforceAccess
+    ? applicationAccess.homePath
+    : "/organizations";
 
   if (activeAccess && (pathname === "/" || pathname === "/login" || pathname === "/subscribe")) {
     return redirectWithCookies(request, homePath, response);
   }
 
   if (activeAccess && homePath === "/schedule" && (pathname === "/chat" || pathname.startsWith("/chat/"))) {
+    return redirectWithCookies(request, homePath, response);
+  }
+
+  if (activeAccess && pathname === "/organizations" && setupAccess.hasWorkforceAccess && !setupAccess.hasOrganization) {
+    return redirectWithCookies(request, homePath, response);
+  }
+
+  if (activeAccess && homePath === "/organizations" && isPrivateRoute(pathname) && pathname !== "/organizations") {
     return redirectWithCookies(request, homePath, response);
   }
 
@@ -85,7 +103,7 @@ function isPrivateRoute(pathname: string) {
 }
 
 type ApplicationAccess =
-  | { status: "active"; homePath: "/chat" | "/schedule" }
+  | { status: "active"; homePath: "/chat" | "/schedule"; source: "subscription" | "workforce" }
   | { status: "inactive" | "unauthenticated" | "unavailable" };
 
 async function getApplicationAccess(accessToken: string): Promise<ApplicationAccess> {
@@ -98,10 +116,63 @@ async function getApplicationAccess(accessToken: string): Promise<ApplicationAcc
       { token: accessToken },
     );
     return workforce.active === true
-      ? { status: "active", homePath: "/schedule" }
+      ? { status: "active", homePath: "/schedule", source: "workforce" }
       : { status: "inactive" };
   } catch (error) {
     if (error instanceof ApiError && error.status === 401) return { status: "unauthenticated" };
+    return { status: "unavailable" };
+  }
+}
+
+type SetupAccess =
+  | {
+      hasOrganization: boolean;
+      hasWorkforceAccess: boolean;
+      status: "ready";
+    }
+  | { status: "unauthenticated" }
+  | { status: "unavailable" };
+
+async function getSetupAccess(accessToken: string, applicationAccess: Extract<ApplicationAccess, { status: "active" }>): Promise<SetupAccess> {
+  try {
+    await apiClient.get(apiConfig.routes.organizations, { token: accessToken });
+    return {
+      status: "ready",
+      hasOrganization: true,
+      hasWorkforceAccess: applicationAccess.source === "workforce",
+    };
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 401) return { status: "unauthenticated" };
+    if (error instanceof ApiError && error.status !== 404) return { status: "unavailable" };
+  }
+
+  if (applicationAccess.source === "workforce") {
+    return {
+      status: "ready",
+      hasOrganization: false,
+      hasWorkforceAccess: true,
+    };
+  }
+
+  try {
+    const workforce = await apiClient.get<{ active?: boolean }>(
+      apiConfig.routes.workforce.access,
+      { token: accessToken },
+    );
+    return {
+      status: "ready",
+      hasOrganization: false,
+      hasWorkforceAccess: workforce.active === true,
+    };
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 401) return { status: "unauthenticated" };
+    if (error instanceof ApiError && error.status === 404) {
+      return {
+        status: "ready",
+        hasOrganization: false,
+        hasWorkforceAccess: false,
+      };
+    }
     return { status: "unavailable" };
   }
 }
@@ -117,7 +188,7 @@ async function getSubscriptionAccess(accessToken: string): Promise<ApplicationAc
       { token: accessToken },
     );
     return hasActiveSubscription(subscription)
-      ? { status: "active", homePath: getApplicationHomePath(subscription) }
+      ? { status: "active", homePath: getApplicationHomePath(subscription), source: "subscription" }
       : { status: "inactive" };
   } catch (error) {
     if (error instanceof ApiError && error.status === 401) return { status: "unauthenticated" };

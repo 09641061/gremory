@@ -38,7 +38,6 @@ async function ProtectedHeader() {
   const subscription = accessToken
     ? await new BillingApiGateway().getCurrentSubscription(accessToken).catch(() => null)
     : null;
-  const homeHref = getApplicationHomePath(subscription);
 
   let ownerData: {
     organization: { id: string; name: string; imageUrl?: string | null };
@@ -101,6 +100,9 @@ async function ProtectedHeader() {
       // Ignore employee fetch failure
     }
   }
+
+  const hasOrganization = Boolean(ownerData || employeeData);
+  const homeHref = hasOrganization ? getApplicationHomePath(subscription) : "/organizations";
 
   return (
     <ProtectedHeaderClient
