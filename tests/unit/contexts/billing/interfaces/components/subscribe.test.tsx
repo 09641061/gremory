@@ -4,6 +4,16 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 
 import { SubscribeView } from "@/contexts/billing/interfaces/components/subscribe/subscribe-view";
 
+const mocks = vi.hoisted(() => ({
+  push: vi.fn(),
+}));
+
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({
+    push: mocks.push,
+  }),
+}));
+
 vi.mock("@/contexts/billing/interfaces/actions/create-subscription.action", () => ({
   createSubscriptionAction: vi.fn().mockResolvedValue({
     status: "success",
