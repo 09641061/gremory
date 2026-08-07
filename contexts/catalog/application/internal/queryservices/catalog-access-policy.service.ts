@@ -1,6 +1,11 @@
 import { createTeamQueryService } from "@/contexts/workforce/application/internal/queryservices/team-query.service";
 import { createOrganizationQueryService } from "@/contexts/business/application/internal/queryservices/organization-query.service";
 import { createEstablishmentQueryService } from "@/contexts/business/application/internal/queryservices/establishment-query.service";
+import {
+  findFirstMatchingEstablishment,
+  hasAnyPermission,
+  hasReadRole,
+} from "@/contexts/shared/application/internal/queryservices/access-context.helpers";
 
 export interface CatalogPermissions {
   canReadCatalog: boolean;
@@ -57,41 +62,30 @@ export class CatalogAccessPolicyService {
           };
         }
 
-        const perms = estAccess.effectivePermissions;
-        const hasManage = perms.includes("catalog:manage");
-        const roles = estAccess.roles || [];
-        const hasReadRole = roles.some((role) => role.name.toLowerCase() === "read");
+        const perms = estAccess.effectivePermissions ?? [];
+        const hasReadCatalog = hasCatalogReadPermission(perms);
+        const hasManage = hasAnyPermission(perms, ["catalog:manage"]);
 
         return {
-          canReadCatalog:
-            hasManage ||
-            hasReadRole ||
-            perms.includes("catalog:services:read") ||
-            perms.includes("catalog:categories:read"),
+          canReadCatalog: hasReadCatalog,
           canCreateCategory:
             hasManage ||
-            perms.includes("catalog:categories:create") ||
-            perms.includes("catalog:categories:manage"),
+            hasAnyPermission(perms, ["catalog:categories:create", "catalog:categories:manage"]),
           canUpdateCategory:
             hasManage ||
-            perms.includes("catalog:categories:update") ||
-            perms.includes("catalog:categories:manage"),
+            hasAnyPermission(perms, ["catalog:categories:update", "catalog:categories:manage"]),
           canDeleteCategory:
             hasManage ||
-            perms.includes("catalog:categories:delete") ||
-            perms.includes("catalog:categories:manage"),
+            hasAnyPermission(perms, ["catalog:categories:delete", "catalog:categories:manage"]),
           canCreateService:
             hasManage ||
-            perms.includes("catalog:services:create") ||
-            perms.includes("catalog:services:manage"),
+            hasAnyPermission(perms, ["catalog:services:create", "catalog:services:manage"]),
           canUpdateService:
             hasManage ||
-            perms.includes("catalog:services:update") ||
-            perms.includes("catalog:services:manage"),
+            hasAnyPermission(perms, ["catalog:services:update", "catalog:services:manage"]),
           canDeleteService:
             hasManage ||
-            perms.includes("catalog:services:delete") ||
-            perms.includes("catalog:services:manage"),
+            hasAnyPermission(perms, ["catalog:services:delete", "catalog:services:manage"]),
         };
       } catch {
         return {
@@ -121,18 +115,12 @@ export class CatalogAccessPolicyService {
     } catch {
       try {
         const access = await createTeamQueryService().getAccessContext();
-        const allowedEst = access.establishments.find((item) => {
-          const roles = item.roles || [];
-          const hasReadRole = roles.some((role) => role.name.toLowerCase() === "read");
-          return (
-            item.effectivePermissions.some(
-              (perm) =>
-                perm === "catalog:services:read" ||
-                perm === "catalog:categories:read" ||
-                perm === "catalog:manage",
-            ) || hasReadRole
-          );
-        });
+        if (!access.active) {
+          return undefined;
+        }
+        const allowedEst = findFirstMatchingEstablishment(access.establishments, (item) =>
+          hasCatalogReadPermission(item.effectivePermissions ?? []) || hasReadRole(item.roles),
+        );
         return allowedEst?.establishmentId;
       } catch {
         return undefined;
@@ -143,4 +131,13 @@ export class CatalogAccessPolicyService {
 
 export function createCatalogAccessPolicyService() {
   return new CatalogAccessPolicyService();
+}
+
+function hasCatalogReadPermission(permissions: ReadonlyArray<string>): boolean {
+  return permissions.some(
+    (permission) =>
+    permission === "catalog:manage" ||
+      permission === "catalog:services:read" ||
+      permission === "catalog:categories:read",
+  );
 }

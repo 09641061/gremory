@@ -126,6 +126,9 @@ function establishment(name: string, photoUrl: string | null) {
 
 function organizationRepository(): OrganizationRepository {
   return {
+    create: vi.fn(async (name) =>
+      organization(name.value),
+    ),
     findMine: vi.fn(async () => organization("Acme")),
     findById: vi.fn(async () => organization("Acme")),
     save: vi.fn(async (value) => value),

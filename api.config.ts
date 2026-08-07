@@ -23,6 +23,7 @@ export const apiConfig = Object.freeze({
     organizationImages: "/api/business/organizations/images",
     establishments: "/api/business/establishments",
     establishmentImages: "/api/business/establishments/images",
+    plans: "/api/billing/plans",
     subscriptions: "/api/billing/subscriptions",
     invoices: "/api/billing/invoices",
     assistantConversations: "/api/assistant/chats",

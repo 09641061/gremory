@@ -37,6 +37,7 @@ import {
   deleteEstablishmentAction,
 } from "@/contexts/business/interfaces/actions/establishment.actions";
 import {
+  createOrganizationAction,
   updateOrganizationAction,
 } from "@/contexts/business/interfaces/actions/organization.actions";
 import { createEstablishmentId } from "@/contexts/business/domain/model/valueobjects/establishment-id.vo";
@@ -124,6 +125,36 @@ describe("Business server actions", () => {
       imageUrl: null,
     });
     expect(updated.status).toBe("success");
+    expect(mocks.revalidatePath).toHaveBeenCalledWith("/organizations");
+  });
+
+  it("creates organizations and uploads a logo when a photo is provided", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({ id: organizationId }), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      }),
+    ));
+
+    const formData = new FormData();
+    formData.set("name", "Acme Group");
+    formData.set("photoFile", new File(["logo"], "logo.png", { type: "image/png" }));
+
+    const result = await createOrganizationAction(initialBusinessActionResult, formData);
+
+    expect(mocks.organizationService.create).toHaveBeenCalledWith({
+      name: "Acme Group",
+    });
+    expect(fetch).toHaveBeenCalledWith(
+      `http://localhost:8080/api/business/organizations/${organizationId}`,
+      expect.objectContaining({
+        method: "PUT",
+        headers: {
+          Authorization: "Bearer access-token",
+        },
+      }),
+    );
+    expect(result.status).toBe("success");
     expect(mocks.revalidatePath).toHaveBeenCalledWith("/organizations");
   });
 

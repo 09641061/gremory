@@ -5,6 +5,7 @@ import { Check, Loader2 } from "lucide-react";
 import type { BillingCycleType } from "../../../domain/model/value-objects/billing-cycle";
 import { getCurrencySymbol, type CurrencyCode } from "../../../domain/model/value-objects/currency";
 import { createSubscriptionAction } from "../../actions/create-subscription.action";
+import { FreeIcon } from "../icons/free";
 import { StandardIcon } from "../icons/standart";
 import { PremiumIcon } from "../icons/premium";
 import { cn } from "@/lib/utils";
@@ -49,7 +50,8 @@ export function PlanCard({
   const currencySymbol = getCurrencySymbol(currency);
 
   const defaultButtonText =
-    buttonLabel ?? (planId === 2 ? "Get Premium plan" : "Get Standart plan");
+    buttonLabel ??
+    (planId === 0 ? "Get Free plan" : planId === 2 ? "Get Premium plan" : "Get Standart plan");
 
   const handleSelectPlan = () => {
     startTransition(async () => {
@@ -70,16 +72,18 @@ export function PlanCard({
   return (
     <Card
       className={cn(
-        "relative rounded-lg p-7 transition-all duration-300 justify-between border-border shadow-sm hover:shadow-md"
+        "relative h-full rounded-lg p-7 transition-all duration-300 justify-between border-border shadow-sm hover:shadow-md"
       )}
     >
       <div>
         {/* Custom Plan SVG Icon */}
-        <div className="mb-4">
-          {planId === 2 ? (
-            <PremiumIcon className="w-10 h-auto text-foreground" />
+        <div className="mb-4 flex h-10 w-10 items-center justify-center text-foreground">
+          {planId === 0 ? (
+            <FreeIcon className="text-foreground" />
+          ) : planId === 2 ? (
+            <PremiumIcon className="text-foreground" />
           ) : (
-            <StandardIcon className="w-10 h-auto text-foreground" />
+            <StandardIcon className="text-foreground" />
           )}
         </div>
 

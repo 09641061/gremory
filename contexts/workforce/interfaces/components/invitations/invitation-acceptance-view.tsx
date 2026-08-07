@@ -32,7 +32,7 @@ export function InvitationAcceptanceView({
 
   useEffect(() => {
     if (state.status === "success") {
-      window.location.assign("/chat");
+      window.location.assign("/");
     }
   }, [state.status]);
 

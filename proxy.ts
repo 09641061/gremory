@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { createIamSessionQueryService } from "@/contexts/iam/application/internal/queryservices/iam-session-query.service";
-import { hasActiveSubscription } from "@/contexts/billing/domain/services/subscription-access.policy";
+import { createSubscriptionAccessQueryService } from "@/contexts/billing/application/internal/queryservices/subscription-access-query.service";
+import { createLandingPathQueryService } from "@/contexts/iam/application/internal/queryservices/landing-path-query.service";
 import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-session-cookie";
 import { continueRequestWithSession } from "@/contexts/iam/interfaces/proxy/iam-session-request";
 import { apiConfig } from "@/api.config";
@@ -37,22 +38,45 @@ export async function proxy(request: NextRequest) {
     response = continueRequestWithSession(request, session.rotatedSession);
   }
 
-  const applicationAccess = await getApplicationAccess(accessToken);
+  const subscriptionAccess = await getSubscriptionAccess(accessToken);
 
-  if (applicationAccess === "unauthenticated") {
+  if (subscriptionAccess.status === "unauthenticated") {
     return redirectToLogin(request);
   }
 
   // Do not convert an API outage into a false "no subscription" decision.
   // Protected backend endpoints remain the final authorization boundary.
-  if (applicationAccess === "unavailable") {
+  if (subscriptionAccess.status === "unavailable") {
     return response ?? NextResponse.next();
   }
 
-  const activeAccess = applicationAccess === "active";
+  let subscriptionForLanding = null as { active?: boolean; status?: string; planId?: number } | null;
+  if (subscriptionAccess.status === "active") {
+    subscriptionForLanding = subscriptionAccess.subscription;
+  } else if (subscriptionAccess.status === "inactive") {
+    subscriptionForLanding = subscriptionAccess.subscription ?? null;
+  }
+
+  const landing = await createLandingPathQueryService().resolveRoute({
+    accessToken,
+    subscription: subscriptionForLanding,
+  });
+  if (landing.status === "unauthenticated") {
+    return redirectToLogin(request);
+  }
+  if (landing.status === "unavailable") {
+    return response ?? NextResponse.next();
+  }
+
+  const homePath = landing.homeHref;
+  const activeAccess = subscriptionAccess.status === "active" || landing.hasWorkforceAccess;
 
   if (activeAccess && (pathname === "/" || pathname === "/login" || pathname === "/subscribe")) {
-    return redirectWithCookies(request, "/chat", response);
+    return redirectWithCookies(request, homePath, response);
+  }
+
+  if (activeAccess && homePath !== "/chat" && (pathname === "/chat" || pathname.startsWith("/chat/"))) {
+    return redirectWithCookies(request, homePath, response);
   }
 
   if (!activeAccess && (pathname === "/" || pathname === "/login" || isPrivateRoute(pathname))) {
@@ -77,44 +101,47 @@ function isPrivateRoute(pathname: string) {
 }
 
 type SubscriptionAccess =
-  | "active"
-  | "inactive"
-  | "unauthenticated"
-  | "unavailable";
-async function getApplicationAccess(accessToken: string): Promise<SubscriptionAccess> {
-  const subscription = await getSubscriptionAccess(accessToken);
-  if (subscription !== "inactive") return subscription;
-
-  try {
-    const workforce = await apiClient.get<{ active?: boolean }>(
-      apiConfig.routes.workforce.access,
-      { token: accessToken },
-    );
-    return workforce.active === true ? "active" : "inactive";
-  } catch (error) {
-    if (error instanceof ApiError && error.status === 401) return "unauthenticated";
-    return "unavailable";
-  }
-}
+  | {
+      status: "active";
+      subscription: { active?: boolean; status?: string; planId?: number };
+    }
+  | {
+      status: "inactive";
+      subscription?: { active?: boolean; status?: string; planId?: number } | null;
+    }
+  | { status: "unauthenticated" | "unavailable" };
 
 async function getSubscriptionAccess(accessToken: string): Promise<SubscriptionAccess> {
   try {
-    const subscription = await apiClient.get<{ active?: boolean; status?: string }>(
+    const subscription = await apiClient.get<{
+      active?: boolean;
+      status?: string;
+      planId?: number;
+    }>(
       apiConfig.routes.subscriptions,
       { token: accessToken },
     );
-    return hasActiveSubscription(subscription)
-      ? "active"
-      : "inactive";
+    const access = createSubscriptionAccessQueryService().resolve(subscription);
+    return access.isActive
+      ? { status: "active", subscription }
+      : { status: "inactive" };
   } catch (error) {
-    if (error instanceof ApiError && error.status === 401) return "unauthenticated";
-    if (error instanceof ApiError && error.status === 404) return "inactive";
-    return "unavailable";
+    if (error instanceof ApiError && error.status === 401) return { status: "unauthenticated" };
+    if (error instanceof ApiError && error.status === 404) return { status: "inactive", subscription: null };
+    return { status: "unavailable" };
   }
 }
 
 function redirectWithCookies(request: NextRequest, path: string, response: NextResponse | null) {
-  const redirectResponse = NextResponse.redirect(new URL(path, request.url));
+  const redirectUrl = new URL(path, request.url);
+  if (path === "/schedule") {
+    const establishmentId = request.nextUrl.searchParams.get("establishmentId");
+    if (establishmentId) {
+      redirectUrl.searchParams.set("establishmentId", establishmentId);
+    }
+  }
+
+  const redirectResponse = NextResponse.redirect(redirectUrl);
   if (response) {
     for (const cookie of response.cookies.getAll()) {
       redirectResponse.cookies.set(cookie);
