@@ -6,6 +6,7 @@ import { createOrganizationQueryService } from "@/contexts/business/application/
 import { createEstablishmentQueryService } from "@/contexts/business/application/internal/queryservices/establishment-query.service";
 import { createTeamQueryService } from "@/contexts/workforce/application/internal/queryservices/team-query.service";
 import { ApiError, apiClient } from "@/contexts/shared/infrastructure/http/api-client";
+import { hasAnyPermission, hasReadRole } from "@/contexts/shared/application/internal/queryservices/access-context.helpers";
 
 export type LandingPathEstablishment = Readonly<{
   organizationId: string;
@@ -215,42 +216,42 @@ function resolveEmployeeHomePath(
 
 function hasSchedulingAccess(establishment: LandingPathEstablishment): boolean {
   const perms = establishment.effectivePermissions;
-  return perms.includes("scheduling:appointments:manage") ||
-    perms.includes("scheduling:appointments:read") ||
-    hasReadRole(establishment);
+  return hasAnyPermission(perms, [
+    "scheduling:appointments:manage",
+    "scheduling:appointments:read",
+  ]) || hasReadRole(establishment.roles);
 }
 
 function hasCatalogAccess(establishment: LandingPathEstablishment): boolean {
   const perms = establishment.effectivePermissions;
-  return perms.includes("catalog:manage") ||
-    perms.includes("catalog:categories:read") ||
-    perms.includes("catalog:services:read");
+  return hasAnyPermission(perms, [
+    "catalog:manage",
+    "catalog:categories:read",
+    "catalog:services:read",
+  ]);
 }
 
 function hasCrmAccess(establishment: LandingPathEstablishment): boolean {
   const perms = establishment.effectivePermissions;
-  return perms.includes("crm:customers:manage") ||
-    perms.includes("crm:customers:read") ||
-    hasReadRole(establishment);
+  return hasAnyPermission(perms, ["crm:customers:manage", "crm:customers:read"]) ||
+    hasReadRole(establishment.roles);
 }
 
 function hasTeamAccess(establishment: LandingPathEstablishment): boolean {
   const perms = establishment.effectivePermissions;
-  return perms.includes("workforce:members:manage") ||
-    perms.includes("workforce:members:read") ||
-    perms.includes("workforce:invitations:manage") ||
-    perms.includes("workforce:invitations:read") ||
-    hasReadRole(establishment);
+  return hasAnyPermission(perms, [
+    "workforce:members:manage",
+    "workforce:members:read",
+    "workforce:invitations:manage",
+    "workforce:invitations:read",
+  ]) || hasReadRole(establishment.roles);
 }
 
 function hasOrganizationAccess(establishment: LandingPathEstablishment): boolean {
   const perms = establishment.effectivePermissions;
-  return perms.includes("business:organizations:manage") ||
-    perms.includes("business:organizations:read") ||
-    perms.includes("business:manage") ||
-    hasReadRole(establishment);
-}
-
-function hasReadRole(establishment: LandingPathEstablishment): boolean {
-  return establishment.roles?.some((role) => role.name.toLowerCase() === "read") ?? false;
+  return hasAnyPermission(perms, [
+    "business:organizations:manage",
+    "business:organizations:read",
+    "business:manage",
+  ]) || hasReadRole(establishment.roles);
 }

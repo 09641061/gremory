@@ -1,6 +1,11 @@
 import { createTeamQueryService } from "@/contexts/workforce/application/internal/queryservices/team-query.service";
 import { createOrganizationQueryService } from "@/contexts/business/application/internal/queryservices/organization-query.service";
 import { createEstablishmentQueryService } from "@/contexts/business/application/internal/queryservices/establishment-query.service";
+import {
+  findFirstMatchingEstablishment,
+  hasAnyPermission,
+  hasReadRole,
+} from "@/contexts/shared/application/internal/queryservices/access-context.helpers";
 
 export interface SchedulingPermissions {
   canReadAppointments: boolean;
@@ -46,24 +51,22 @@ export class SchedulingAccessPolicyService {
         }
 
         const perms = estAccess.effectivePermissions;
-        const hasManage = perms.includes("scheduling:appointments:manage");
-        const roles = estAccess.roles || [];
-        const hasReadRole = roles.some((role) => role.name.toLowerCase() === "read");
+        const hasManage = hasAnyPermission(perms, ["scheduling:appointments:manage"]);
 
         return {
           canReadAppointments:
             hasManage ||
-            hasReadRole ||
-            perms.includes("scheduling:appointments:read"),
+            hasReadRole(estAccess.roles) ||
+            hasAnyPermission(perms, ["scheduling:appointments:read"]),
           canCreateAppointment:
             hasManage ||
-            perms.includes("scheduling:appointments:create"),
+            hasAnyPermission(perms, ["scheduling:appointments:create"]),
           canUpdateAppointment:
             hasManage ||
-            perms.includes("scheduling:appointments:update"),
+            hasAnyPermission(perms, ["scheduling:appointments:update"]),
           canDeleteAppointment:
             hasManage ||
-            perms.includes("scheduling:appointments:delete"),
+            hasAnyPermission(perms, ["scheduling:appointments:delete"]),
         };
       } catch {
         return {
@@ -90,17 +93,12 @@ export class SchedulingAccessPolicyService {
     } catch {
       try {
         const access = await createTeamQueryService().getAccessContext();
-        const allowedEst = access.establishments.find((item) => {
-          const roles = item.roles || [];
-          const hasReadRole = roles.some((role) => role.name.toLowerCase() === "read");
-          return (
-            item.effectivePermissions.some(
-              (perm) =>
-                perm === "scheduling:appointments:read" ||
-                perm === "scheduling:appointments:manage",
-            ) || hasReadRole
-          );
-        });
+        const allowedEst = findFirstMatchingEstablishment(access.establishments, (item) =>
+          hasAnyPermission(item.effectivePermissions, [
+            "scheduling:appointments:read",
+            "scheduling:appointments:manage",
+          ]) || hasReadRole(item.roles),
+        );
         return allowedEst?.establishmentId;
       } catch {
         return undefined;

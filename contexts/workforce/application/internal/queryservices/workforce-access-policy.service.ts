@@ -1,6 +1,11 @@
 import { createTeamQueryService } from "@/contexts/workforce/application/internal/queryservices/team-query.service";
 import { createOrganizationQueryService } from "@/contexts/business/application/internal/queryservices/organization-query.service";
 import { createEstablishmentQueryService } from "@/contexts/business/application/internal/queryservices/establishment-query.service";
+import {
+  findFirstMatchingEstablishment,
+  hasAnyPermission,
+  hasReadRole,
+} from "@/contexts/shared/application/internal/queryservices/access-context.helpers";
 
 export interface WorkforcePermissions {
   canReadTeam: boolean;
@@ -62,41 +67,38 @@ export class WorkforceAccessPolicyService {
         }
 
         const perms = estAccess.effectivePermissions;
-        const hasManageRoles = perms.includes("workforce:roles:manage");
-        const hasManageInvitations = perms.includes("workforce:invitations:manage");
-        const hasManageMembers = perms.includes("workforce:members:manage");
-        const roles = estAccess.roles || [];
-        const hasReadRole = roles.some((role) => role.name.toLowerCase() === "read");
+        const hasManageRoles = hasAnyPermission(perms, ["workforce:roles:manage"]);
+        const hasManageInvitations = hasAnyPermission(perms, ["workforce:invitations:manage"]);
+        const hasManageMembers = hasAnyPermission(perms, ["workforce:members:manage"]);
 
         return {
           canReadTeam:
             hasManageMembers ||
             hasManageInvitations ||
-            hasReadRole ||
-            perms.includes("workforce:members:read") ||
-            perms.includes("workforce:invitations:read"),
+            hasReadRole(estAccess.roles) ||
+            hasAnyPermission(perms, ["workforce:members:read", "workforce:invitations:read"]),
           canDeleteMember:
             hasManageMembers ||
-            perms.includes("workforce:members:delete"),
+            hasAnyPermission(perms, ["workforce:members:delete"]),
           canCreateInvitation:
             hasManageInvitations ||
-            perms.includes("workforce:invitations:create"),
+            hasAnyPermission(perms, ["workforce:invitations:create"]),
           canDeleteInvitation:
             hasManageInvitations ||
-            perms.includes("workforce:invitations:delete"),
+            hasAnyPermission(perms, ["workforce:invitations:delete"]),
           canReadRoles:
             hasManageRoles ||
-            hasReadRole ||
-            perms.includes("workforce:roles:read"),
+            hasReadRole(estAccess.roles) ||
+            hasAnyPermission(perms, ["workforce:roles:read"]),
           canCreateRole:
             hasManageRoles ||
-            perms.includes("workforce:roles:create"),
+            hasAnyPermission(perms, ["workforce:roles:create"]),
           canUpdateRole:
             hasManageRoles ||
-            perms.includes("workforce:roles:update"),
+            hasAnyPermission(perms, ["workforce:roles:update"]),
           canDeleteRole:
             hasManageRoles ||
-            perms.includes("workforce:roles:delete"),
+            hasAnyPermission(perms, ["workforce:roles:delete"]),
         };
       } catch {
         return {
@@ -127,19 +129,14 @@ export class WorkforceAccessPolicyService {
     } catch {
       try {
         const access = await createTeamQueryService().getAccessContext();
-        const allowedEst = access.establishments.find((item) => {
-          const roles = item.roles || [];
-          const hasReadRole = roles.some((role) => role.name.toLowerCase() === "read");
-          return (
-            item.effectivePermissions.some(
-              (perm) =>
-                perm === "workforce:members:read" ||
-                perm === "workforce:members:manage" ||
-                perm === "workforce:invitations:read" ||
-                perm === "workforce:invitations:manage",
-            ) || hasReadRole
-          );
-        });
+        const allowedEst = findFirstMatchingEstablishment(access.establishments, (item) =>
+          hasAnyPermission(item.effectivePermissions, [
+            "workforce:members:read",
+            "workforce:members:manage",
+            "workforce:invitations:read",
+            "workforce:invitations:manage",
+          ]) || hasReadRole(item.roles),
+        );
         return allowedEst?.establishmentId;
       } catch {
         return undefined;

@@ -2,6 +2,7 @@ import { createOrganizationQueryService } from "@/contexts/business/application/
 import { createEstablishmentQueryService } from "@/contexts/business/application/internal/queryservices/establishment-query.service";
 import { createTeamQueryService } from "@/contexts/workforce/application/internal/queryservices/team-query.service";
 import type { OrganizationSummary } from "@/contexts/business/application/model/business.read-models";
+import { hasAnyPermission, hasReadRole, pickActiveEstablishment } from "@/contexts/shared/application/internal/queryservices/access-context.helpers";
 
 export interface BusinessPermissions {
   isOwner: boolean;
@@ -78,10 +79,7 @@ export class BusinessAccessPolicyService {
         const access = await createTeamQueryService().getAccessContext();
 
         // 1. Resolve active organization from activeEstablishmentId
-        let activeEst = access.establishments.find((e) => e.establishmentId === activeEstablishmentId);
-        if (!activeEst && access.establishments.length > 0) {
-          activeEst = access.establishments[0];
-        }
+        const activeEst = pickActiveEstablishment(access.establishments, activeEstablishmentId);
 
         if (!activeEst) {
           return {
@@ -95,32 +93,27 @@ export class BusinessAccessPolicyService {
 
         const activeOrgId = activeEst.organizationId;
 
-        const roles = activeEst.roles || [];
-        const hasReadRole = roles.some((role) => role.name.toLowerCase() === "read");
-
         // 2. Determine if the user has permission to read establishments in the active organization
         const canRead =
-          hasReadRole ||
+          hasReadRole(activeEst.roles) ||
           access.establishments.some(
             (item) =>
               item.organizationId === activeOrgId &&
-              item.effectivePermissions.some(
-                (perm) =>
-                  perm === "business:establishments:read" ||
-                  perm === "business:establishments:manage" ||
-                  perm === "business:manage",
-              ),
+              hasAnyPermission(item.effectivePermissions, [
+                "business:establishments:read",
+                "business:establishments:manage",
+                "business:manage",
+              ]),
           );
 
         // Determine if they can create establishments
         const canCreate = access.establishments.some(
           (item) =>
             item.organizationId === activeOrgId &&
-            item.effectivePermissions.some(
-              (perm) =>
-                perm === "business:establishments:manage" ||
-                perm === "business:manage",
-            ),
+            hasAnyPermission(item.effectivePermissions, [
+              "business:establishments:manage",
+              "business:manage",
+            ]),
         );
 
         // 3. Get all establishments of the active organization that the user is a member of
@@ -129,12 +122,11 @@ export class BusinessAccessPolicyService {
         );
 
         const allowedEstablishments = filteredEsts.map((item) => {
-          const canUpdate = item.effectivePermissions.some(
-            (perm) =>
-              perm === "business:establishments:manage" ||
-              perm === "business:establishments:update" ||
-              perm === "business:manage",
-          );
+          const canUpdate = hasAnyPermission(item.effectivePermissions, [
+            "business:establishments:manage",
+            "business:establishments:update",
+            "business:manage",
+          ]);
           canUpdateMap[item.establishmentId] = canUpdate;
 
           return {
@@ -204,27 +196,20 @@ export class BusinessAccessPolicyService {
         const access = await createTeamQueryService().getAccessContext();
 
         // Resolve active establishment
-        let activeEst = access.establishments.find((e) => e.establishmentId === activeEstablishmentId);
-        if (!activeEst && access.establishments.length > 0) {
-          activeEst = access.establishments[0];
-        }
+        const activeEst = pickActiveEstablishment(access.establishments, activeEstablishmentId);
 
         if (activeEst) {
           const activeOrgId = activeEst.organizationId;
-          const roles = activeEst.roles || [];
-          const hasReadRole = roles.some((role) => role.name.toLowerCase() === "read");
-
           canRead =
-            hasReadRole ||
+            hasReadRole(activeEst.roles) ||
             access.establishments.some(
               (item) =>
                 item.organizationId === activeOrgId &&
-                item.effectivePermissions.some(
-                  (perm) =>
-                    perm === "business:organizations:read" ||
-                    perm === "business:organizations:manage" ||
-                    perm === "business:manage",
-                ),
+                hasAnyPermission(item.effectivePermissions, [
+                  "business:organizations:read",
+                  "business:organizations:manage",
+                  "business:manage",
+                ]),
             );
 
           if (canRead) {
@@ -235,12 +220,11 @@ export class BusinessAccessPolicyService {
             canUpdate = access.establishments.some(
               (item) =>
                 item.organizationId === activeOrgId &&
-                item.effectivePermissions.some(
-                  (perm) =>
-                    perm === "business:organizations:update" ||
-                    perm === "business:organizations:manage" ||
-                    perm === "business:manage",
-                ),
+                hasAnyPermission(item.effectivePermissions, [
+                  "business:organizations:update",
+                  "business:organizations:manage",
+                  "business:manage",
+                ]),
             );
           }
         } else {
