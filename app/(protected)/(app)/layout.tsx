@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import { cookies } from "next/headers";
 import { ListConversationsQueryService } from "@/contexts/assistant/application/internal/queryservices/list-conversations-query.service";
 import type { AssistantConversationSummaryReadModel } from "@/contexts/assistant/application/internal/transforms/assistant.read-models";
-import { hasAssistantSubscriptionAccess } from "@/contexts/billing/domain/services/subscription-access.policy";
+import { createSubscriptionAccessQueryService } from "@/contexts/billing/application/internal/queryservices/subscription-access-query.service";
 import { BillingApiGateway } from "@/contexts/billing/infrastructure/gateways/billing-api.gateway";
 import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-session-cookie";
 import { Sidebar } from "@/contexts/shared/interfaces/components/sidebar";
@@ -27,7 +27,7 @@ export default async function AppLayout({
   const subscription = accessToken
     ? await new BillingApiGateway().getCurrentSubscription(accessToken).catch(() => null)
     : null;
-  const hasAssistantAccess = hasAssistantSubscriptionAccess(subscription);
+  const hasAssistantAccess = createSubscriptionAccessQueryService().resolve(subscription).hasAssistantAccess;
 
   const assistantConversations = hasAssistantAccess
     ? await new ListConversationsQueryService().handle({ page: 0, size: 20 })

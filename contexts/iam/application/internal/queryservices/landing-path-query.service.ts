@@ -1,7 +1,8 @@
 import "server-only";
 
-import { getApplicationHomePath, hasAssistantSubscriptionAccess, type SubscriptionAccessSnapshot } from "@/contexts/billing/domain/services/subscription-access.policy";
+import { type SubscriptionAccessSnapshot } from "@/contexts/billing/domain/services/subscription-access.policy";
 import { apiConfig } from "@/api.config";
+import { createSubscriptionAccessQueryService } from "@/contexts/billing/application/internal/queryservices/subscription-access-query.service";
 import { createOrganizationQueryService } from "@/contexts/business/application/internal/queryservices/organization-query.service";
 import { createEstablishmentQueryService } from "@/contexts/business/application/internal/queryservices/establishment-query.service";
 import { createTeamQueryService } from "@/contexts/workforce/application/internal/queryservices/team-query.service";
@@ -70,7 +71,7 @@ export class LandingPathQueryService {
       await apiClient.get(apiConfig.routes.organizations, { token: accessToken });
       return {
         status: "ready",
-        homeHref: getApplicationHomePath(subscription),
+        homeHref: createSubscriptionAccessQueryService().resolve(subscription).homeHref,
         hasWorkforceAccess: false,
       };
     } catch (error) {
@@ -150,7 +151,7 @@ export class LandingPathQueryService {
 
       return {
         status: "ready",
-        homeHref: getApplicationHomePath(subscription),
+        homeHref: createSubscriptionAccessQueryService().resolve(subscription).homeHref,
         hasWorkforceAccess: false,
         ownerData,
       };
@@ -193,7 +194,8 @@ function resolveEmployeeHomePath(
   establishments: ReadonlyArray<LandingPathEstablishment>,
   subscription: SubscriptionAccessSnapshot | null | undefined,
 ): "/chat" | "/schedule" | "/catalog" | "/crm" | "/team" | "/organizations" {
-  if (hasAssistantSubscriptionAccess(subscription)) {
+  const subscriptionAccess = createSubscriptionAccessQueryService().resolve(subscription);
+  if (subscriptionAccess.hasAssistantAccess) {
     return "/chat";
   }
 

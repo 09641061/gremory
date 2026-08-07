@@ -1,6 +1,6 @@
 import { GetConversationQueryService } from "@/contexts/assistant/application/internal/queryservices/get-conversation-query.service";
 import { BillingApiGateway } from "@/contexts/billing/infrastructure/gateways/billing-api.gateway";
-import { hasAssistantSubscriptionAccess } from "@/contexts/billing/domain/services/subscription-access.policy";
+import { createSubscriptionAccessQueryService } from "@/contexts/billing/application/internal/queryservices/subscription-access-query.service";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-session-cookie";
@@ -21,7 +21,7 @@ export default async function ChatPage({
   const subscription = accessToken
     ? await new BillingApiGateway().getCurrentSubscription(accessToken).catch(() => null)
     : null;
-  const hasAssistantAccess = hasAssistantSubscriptionAccess(subscription);
+  const hasAssistantAccess = createSubscriptionAccessQueryService().resolve(subscription).hasAssistantAccess;
 
   if (!hasAssistantAccess) {
     redirect("/");

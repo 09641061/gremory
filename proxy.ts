@@ -1,9 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { createIamSessionQueryService } from "@/contexts/iam/application/internal/queryservices/iam-session-query.service";
-import {
-  hasActiveSubscription,
-} from "@/contexts/billing/domain/services/subscription-access.policy";
+import { createSubscriptionAccessQueryService } from "@/contexts/billing/application/internal/queryservices/subscription-access-query.service";
 import { createLandingPathQueryService } from "@/contexts/iam/application/internal/queryservices/landing-path-query.service";
 import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-session-cookie";
 import { continueRequestWithSession } from "@/contexts/iam/interfaces/proxy/iam-session-request";
@@ -96,7 +94,10 @@ function isPrivateRoute(pathname: string) {
 }
 
 type SubscriptionAccess =
-  | { status: "active"; subscription: { active?: boolean; status?: string; planId?: number } }
+  | {
+      status: "active";
+      subscription: { active?: boolean; status?: string; planId?: number };
+    }
   | { status: "inactive" | "unauthenticated" | "unavailable" };
 
 async function getSubscriptionAccess(accessToken: string): Promise<SubscriptionAccess> {
@@ -109,7 +110,8 @@ async function getSubscriptionAccess(accessToken: string): Promise<SubscriptionA
       apiConfig.routes.subscriptions,
       { token: accessToken },
     );
-    return hasActiveSubscription(subscription)
+    const access = createSubscriptionAccessQueryService().resolve(subscription);
+    return access.isActive
       ? { status: "active", subscription }
       : { status: "inactive" };
   } catch (error) {
