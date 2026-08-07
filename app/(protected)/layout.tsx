@@ -41,13 +41,13 @@ async function ProtectedHeader() {
 
   return (
     <ProtectedHeaderClient
-      organization={shell?.workspace.organization}
-      organizations={shell?.workspace.organizations ?? []}
-      establishments={shell?.workspace.establishments ?? []}
-      activeEstablishmentId={shell?.workspace.activeEstablishmentId}
-      canReadOrganizations={shell?.workspace.canReadOrganizations ?? false}
-      canReadEstablishments={shell?.workspace.canReadEstablishments ?? false}
-      canCreateEstablishment={shell?.workspace.canCreateEstablishment ?? false}
+      workspace={shell?.workspace ?? {
+        organizations: [],
+        establishments: [],
+        canReadOrganizations: false,
+        canReadEstablishments: false,
+        canCreateEstablishment: false,
+      }}
       homeHref={shell?.homeHref ?? "/organizations"}
     />
   );

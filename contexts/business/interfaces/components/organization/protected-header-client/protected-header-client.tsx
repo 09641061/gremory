@@ -4,36 +4,23 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Header } from "@/contexts/shared/interfaces/components/header";
 import { OrganizationSelector } from "../organization-selector/organization-selector";
 import type {
-  WorkspaceHeaderEstablishment,
-  WorkspaceHeaderOrganization,
+  WorkspaceHeaderViewModel,
 } from "@/contexts/business/application/model/business-workspace.view-models";
 
 interface ProtectedHeaderClientProps {
-  organization?: WorkspaceHeaderOrganization;
-  organizations: ReadonlyArray<WorkspaceHeaderOrganization>;
-  establishments: ReadonlyArray<WorkspaceHeaderEstablishment>;
-  activeEstablishmentId?: string;
-  canReadOrganizations: boolean;
-  canReadEstablishments: boolean;
-  canCreateEstablishment: boolean;
+  workspace: WorkspaceHeaderViewModel;
   homeHref?: string;
 }
 
 export function ProtectedHeaderClient({
-  organization,
-  organizations,
-  establishments,
-  activeEstablishmentId,
-  canReadOrganizations,
-  canReadEstablishments,
-  canCreateEstablishment,
+  workspace,
   homeHref = "/chat",
 }: ProtectedHeaderClientProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  const selectedEstablishmentId = searchParams.get("establishmentId") || activeEstablishmentId;
+  const selectedEstablishmentId = searchParams.get("establishmentId") || workspace.activeEstablishmentId;
 
   function handleSelectOrganization(_orgId: string, defaultEstablishmentId?: string) {
     const params = new URLSearchParams(searchParams.toString());
@@ -52,17 +39,23 @@ export function ProtectedHeaderClient({
       homeHref={homeHref}
       organizationSlot={
         <OrganizationSelector
-          organization={organization}
-          organizations={organizations}
-          canRead={canReadOrganizations}
+          organization={workspace.organization}
+          organizations={workspace.organizations}
           onSelect={handleSelectOrganization}
-          activeEstablishmentId={selectedEstablishmentId}
+          onSelectAll={() => {
+            if (workspace.canReadOrganizations) {
+              const query = selectedEstablishmentId ? `?establishmentId=${selectedEstablishmentId}` : "";
+              router.push(`/organizations${query}`);
+            } else {
+              router.push(`${pathname}?denied=org`);
+            }
+          }}
         />
       }
-      establishments={establishments}
+      establishments={workspace.establishments}
       initialEstablishmentId={selectedEstablishmentId}
-      canCreateEstablishment={canCreateEstablishment}
-      canReadEstablishments={canReadEstablishments}
+      canCreateEstablishment={workspace.canCreateEstablishment}
+      canReadEstablishments={workspace.canReadEstablishments}
     />
   );
 }
