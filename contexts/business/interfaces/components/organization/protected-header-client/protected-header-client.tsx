@@ -2,6 +2,7 @@
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Header } from "@/contexts/shared/interfaces/components/header";
+import { EstablishmentSelector } from "@/contexts/business/interfaces/components/establishment/establishment-selector/establishment-selector";
 import { OrganizationSelector } from "../organization-selector/organization-selector";
 import type {
   WorkspaceHeaderViewModel,
@@ -55,23 +56,27 @@ export function ProtectedHeaderClient({
           }}
         />
       }
-      establishments={workspace.establishments}
-      initialEstablishmentId={selectedEstablishmentId}
-      onSelectEstablishment={(establishmentId) => {
-        const params = new URLSearchParams(searchParams.toString());
-        params.set("establishmentId", establishmentId);
-        router.push(`${pathname}?${params.toString()}`);
-      }}
-      onSelectAllEstablishments={() => {
-        if (workspace.canReadEstablishments) {
-          const query = selectedEstablishmentId ? `?establishmentId=${selectedEstablishmentId}` : "";
-          router.push(`/establishments${query}`);
-        } else {
-          router.push(`${pathname}?denied=est`);
-        }
-      }}
-      onNewEstablishment={
-        workspace.canCreateEstablishment ? () => router.push("/establishments/new") : undefined
+      establishmentSlot={
+        <EstablishmentSelector
+          establishments={workspace.establishments}
+          selectedEstablishmentId={selectedEstablishmentId}
+          onSelect={(establishmentId) => {
+            const params = new URLSearchParams(searchParams.toString());
+            params.set("establishmentId", establishmentId);
+            router.push(`${pathname}?${params.toString()}`);
+          }}
+          onSelectAll={() => {
+            if (workspace.canReadEstablishments) {
+              const query = selectedEstablishmentId ? `?establishmentId=${selectedEstablishmentId}` : "";
+              router.push(`/establishments${query}`);
+            } else {
+              router.push(`${pathname}?denied=est`);
+            }
+          }}
+          onNew={
+            workspace.canCreateEstablishment ? () => router.push("/establishments/new") : undefined
+          }
+        />
       }
     />
   );

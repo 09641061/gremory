@@ -17,9 +17,7 @@ export default function ProtectedLayout({
     <div className="flex min-h-screen bg-background text-foreground">
       <Suspense
         fallback={
-          <Header
-            establishments={[]}
-          />
+          <Header />
         }
       >
         <ProtectedHeader />
