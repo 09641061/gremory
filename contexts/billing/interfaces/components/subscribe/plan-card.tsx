@@ -71,7 +71,7 @@ export function PlanCard({
   return (
     <Card
       className={cn(
-        "relative rounded-lg p-7 transition-all duration-300 justify-between border-border shadow-sm hover:shadow-md"
+        "relative h-full rounded-lg p-7 transition-all duration-300 justify-between border-border shadow-sm hover:shadow-md"
       )}
     >
       <div>

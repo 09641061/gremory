@@ -194,7 +194,7 @@ export function SubscribeView() {
         onCurrencyChange={setCurrency}
       />
 
-      <section className="grid w-full max-w-5xl grid-cols-1 items-stretch gap-8 md:grid-cols-2">
+      <section className="grid w-full max-w-6xl grid-cols-1 items-stretch gap-8 md:grid-cols-2 lg:grid-cols-3">
         {isLoadingPlans ? (
           <div className="col-span-full flex min-h-[20rem] items-center justify-center rounded-lg border border-border/70 bg-card/70">
             <div className="flex items-center gap-3 text-sm text-muted-foreground">
