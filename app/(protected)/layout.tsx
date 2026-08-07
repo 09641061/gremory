@@ -7,6 +7,7 @@ import { ProtectedHeaderClient } from "@/contexts/business/interfaces/components
 import { BillingApiGateway } from "@/contexts/billing/infrastructure/gateways/billing-api.gateway";
 import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-session-cookie";
 import { createLandingPathQueryService } from "@/contexts/iam/application/internal/queryservices/landing-path-query.service";
+import { createBusinessWorkspaceQueryService } from "@/contexts/business/application/internal/queryservices/business-workspace-query.service";
 
 export default function ProtectedLayout({
   children,
@@ -35,19 +36,38 @@ async function ProtectedHeader() {
   const subscription = accessToken
     ? await new BillingApiGateway().getCurrentSubscription(accessToken).catch(() => null)
     : null;
+  const headerData = accessToken
+    ? await createBusinessWorkspaceQueryService().getHeaderViewModel().catch(() => ({
+        organizations: [],
+        establishments: [],
+        activeEstablishmentId: undefined,
+        canReadOrganizations: false,
+        canReadEstablishments: false,
+        canCreateEstablishment: false,
+      }))
+    : {
+        organizations: [],
+        establishments: [],
+        activeEstablishmentId: undefined,
+        canReadOrganizations: false,
+        canReadEstablishments: false,
+        canCreateEstablishment: false,
+      };
 
   const landing = accessToken
     ? await createLandingPathQueryService().getHeaderData({ accessToken, subscription }).catch(() => ({ status: "unavailable" as const }))
     : { status: "unavailable" as const };
-
-  const ownerData = landing.status === "ready" ? landing.ownerData : undefined;
-  const employeeData = landing.status === "ready" ? landing.employeeData : undefined;
   const homeHref = landing.status === "ready" ? landing.homeHref : "/organizations";
 
   return (
     <ProtectedHeaderClient
-      ownerData={ownerData}
-      employeeData={employeeData}
+      organization={headerData.organization}
+      organizations={headerData.organizations}
+      establishments={headerData.establishments}
+      activeEstablishmentId={headerData.activeEstablishmentId}
+      canReadOrganizations={headerData.canReadOrganizations}
+      canReadEstablishments={headerData.canReadEstablishments}
+      canCreateEstablishment={headerData.canCreateEstablishment}
       homeHref={homeHref}
     />
   );

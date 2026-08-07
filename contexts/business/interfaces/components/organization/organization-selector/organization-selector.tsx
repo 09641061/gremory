@@ -16,13 +16,14 @@ export type OrganizationSelectorOrganization = {
   id: string;
   name: string;
   imageUrl?: string | null;
+  defaultEstablishmentId?: string;
 };
 
 interface OrganizationSelectorProps {
   organization?: OrganizationSelectorOrganization;
   organizations?: OrganizationSelectorOrganization[];
   canRead?: boolean;
-  onSelect?: (organizationId: string) => void;
+  onSelect?: (organizationId: string, defaultEstablishmentId?: string) => void;
   activeEstablishmentId?: string;
 }
 
@@ -72,7 +73,7 @@ export function OrganizationSelector({
             onSearchChange={setSearch}
             onSelect={(org) => {
               setIsOpen(false);
-              onSelect?.(org.id);
+              onSelect?.(org.id, org.defaultEstablishmentId);
             }}
             onSelectAll={() => {
               setIsOpen(false);
