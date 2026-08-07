@@ -4,7 +4,7 @@ import { createIamSessionQueryService } from "@/contexts/iam/application/interna
 import {
   hasActiveSubscription,
 } from "@/contexts/billing/domain/services/subscription-access.policy";
-import { resolveApplicationHomePath } from "@/contexts/iam/domain/services/landing-path.policy";
+import { createLandingPathQueryService } from "@/contexts/iam/application/internal/queryservices/landing-path-query.service";
 import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-session-cookie";
 import { continueRequestWithSession } from "@/contexts/iam/interfaces/proxy/iam-session-request";
 import { apiConfig } from "@/api.config";
@@ -52,38 +52,25 @@ export async function proxy(request: NextRequest) {
     return response ?? NextResponse.next();
   }
 
-  const organizationAccess = await getOrganizationAccess(accessToken);
-  if (organizationAccess.status === "unauthenticated") {
+  const landing = await createLandingPathQueryService().resolveRoute({
+    accessToken,
+    subscription: subscriptionAccess.subscription,
+  });
+  if (landing.status === "unauthenticated") {
     return redirectToLogin(request);
   }
-  if (organizationAccess.status === "unavailable") {
+  if (landing.status === "unavailable") {
     return response ?? NextResponse.next();
   }
 
-  const workforceAccess = organizationAccess ? null : await getWorkforceAccess(accessToken);
-  if (workforceAccess?.status === "unauthenticated") {
-    return redirectToLogin(request);
-  }
-
-  const activeAccess =
-    subscriptionAccess.status === "active" ||
-    (workforceAccess?.status === "ready" && workforceAccess.access.active === true);
-
-  const homePath = resolveApplicationHomePath({
-    subscription: subscriptionAccess.subscription,
-    hasOrganization: organizationAccess,
-    workforceEstablishments: workforceAccess?.status === "ready" ? workforceAccess.access.establishments : [],
-  });
+  const homePath = landing.homeHref;
+  const activeAccess = subscriptionAccess.status === "active" || landing.hasWorkforceAccess;
 
   if (activeAccess && (pathname === "/" || pathname === "/login" || pathname === "/subscribe")) {
     return redirectWithCookies(request, homePath, response);
   }
 
-  if (activeAccess && homePath === "/schedule" && (pathname === "/chat" || pathname.startsWith("/chat/"))) {
-    return redirectWithCookies(request, homePath, response);
-  }
-
-  if (activeAccess && homePath === "/organizations" && isPrivateRoute(pathname) && pathname !== "/organizations") {
+  if (activeAccess && homePath !== "/chat" && (pathname === "/chat" || pathname.startsWith("/chat/"))) {
     return redirectWithCookies(request, homePath, response);
   }
 
@@ -112,18 +99,6 @@ type SubscriptionAccess =
   | { status: "active"; subscription: { active?: boolean; status?: string; planId?: number } }
   | { status: "inactive" | "unauthenticated" | "unavailable" };
 
-type WorkforceAccess =
-  | { status: "ready"; access: { active?: boolean; establishments: Array<{
-      organizationId: string;
-      organizationName: string;
-      establishmentId: string;
-      establishmentName: string;
-      roles?: Array<{ name: string }>;
-      effectivePermissions: string[];
-    }> } }
-  | { status: "unauthenticated" }
-  | { status: "unavailable" };
-
 async function getSubscriptionAccess(accessToken: string): Promise<SubscriptionAccess> {
   try {
     const subscription = await apiClient.get<{
@@ -140,53 +115,6 @@ async function getSubscriptionAccess(accessToken: string): Promise<SubscriptionA
   } catch (error) {
     if (error instanceof ApiError && error.status === 401) return { status: "unauthenticated" };
     if (error instanceof ApiError && error.status === 404) return { status: "inactive" };
-    return { status: "unavailable" };
-  }
-}
-
-async function getOrganizationAccess(accessToken: string): Promise<boolean | { status: "unauthenticated" | "unavailable" }> {
-  try {
-    await apiClient.get(apiConfig.routes.organizations, { token: accessToken });
-    return true;
-  } catch (error) {
-    if (error instanceof ApiError && error.status === 401) return { status: "unauthenticated" };
-    if (error instanceof ApiError && error.status === 404) return false;
-    return { status: "unavailable" };
-  }
-}
-
-async function getWorkforceAccess(accessToken: string): Promise<WorkforceAccess> {
-  try {
-    const access = await apiClient.get<{
-      active?: boolean;
-      establishments?: Array<{
-        organizationId: string;
-        organizationName: string;
-        establishmentId: string;
-        establishmentName: string;
-        roles?: Array<{ name: string }>;
-        effectivePermissions?: string[];
-      }>;
-    }>(apiConfig.routes.workforce.access, { token: accessToken });
-
-    return {
-      status: "ready",
-      access: {
-        active: access.active,
-        establishments: access.establishments ?? [],
-      },
-    };
-  } catch (error) {
-    if (error instanceof ApiError && error.status === 401) return { status: "unauthenticated" };
-    if (error instanceof ApiError && error.status === 404) {
-      return {
-        status: "ready",
-        access: {
-          active: false,
-          establishments: [],
-        },
-      };
-    }
     return { status: "unavailable" };
   }
 }

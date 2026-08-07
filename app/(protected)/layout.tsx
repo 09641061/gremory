@@ -1,15 +1,12 @@
 import type { ReactNode } from "react";
 import { Suspense } from "react";
 import { cookies } from "next/headers";
-import { createEstablishmentQueryService } from "@/contexts/business/application/internal/queryservices/establishment-query.service";
-import { createOrganizationQueryService } from "@/contexts/business/application/internal/queryservices/organization-query.service";
 import { Header } from "@/contexts/shared/interfaces/components/header";
-import { createTeamQueryService } from "@/contexts/workforce/application/internal/queryservices/team-query.service";
 import { ErrorBanner } from "@/contexts/shared/interfaces/components/error-banner";
 import { ProtectedHeaderClient } from "@/contexts/business/interfaces/components/organization/protected-header-client/protected-header-client";
 import { BillingApiGateway } from "@/contexts/billing/infrastructure/gateways/billing-api.gateway";
 import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-session-cookie";
-import { resolveApplicationHomePath } from "@/contexts/iam/domain/services/landing-path.policy";
+import { createLandingPathQueryService } from "@/contexts/iam/application/internal/queryservices/landing-path-query.service";
 
 export default function ProtectedLayout({
   children,
@@ -39,81 +36,13 @@ async function ProtectedHeader() {
     ? await new BillingApiGateway().getCurrentSubscription(accessToken).catch(() => null)
     : null;
 
-  let ownerData: {
-    organization: { id: string; name: string; imageUrl?: string | null };
-    establishments: { id: string; name: string; photoUrl?: string | null }[];
-  } | undefined;
+  const landing = accessToken
+    ? await createLandingPathQueryService().getHeaderData({ accessToken, subscription }).catch(() => ({ status: "unavailable" as const }))
+    : { status: "unavailable" as const };
 
-  let employeeData: {
-    establishments: {
-      organizationId: string;
-      organizationName: string;
-      establishmentId: string;
-      establishmentName: string;
-      effectivePermissions: string[];
-    }[];
-  } | undefined;
-
-  let isLoaded = false;
-
-  try {
-    const currentOrganization =
-      await createOrganizationQueryService().getMyOrganization();
-    const ownerOrganization = {
-      id: currentOrganization.id,
-      name: currentOrganization.name,
-      imageUrl: currentOrganization.imageUrl,
-    };
-    const page = await createEstablishmentQueryService().getByOrganization({
-      organizationId: ownerOrganization.id,
-      page: 0,
-      size: 100,
-    });
-    const ownerEstablishments = page.content.map((establishment) => ({
-      id: establishment.id,
-      name: establishment.name,
-      photoUrl: establishment.photoUrl,
-    }));
-
-    ownerData = {
-      organization: ownerOrganization,
-      establishments: ownerEstablishments,
-    };
-    isLoaded = true;
-  } catch {
-    // Ignore owner fetch failure, fallback to employee
-  }
-
-  if (!isLoaded) {
-    try {
-      const access = await createTeamQueryService().getAccessContext();
-      employeeData = {
-        establishments: access.establishments.map((est) => ({
-          organizationId: est.organizationId,
-          organizationName: est.organizationName,
-          establishmentId: est.establishmentId,
-          establishmentName: est.establishmentName,
-          effectivePermissions: Array.from(est.effectivePermissions),
-        })),
-      };
-    } catch {
-      // Ignore employee fetch failure
-    }
-  }
-
-  const homeHref = ownerData
-    ? resolveApplicationHomePath({
-        subscription,
-        hasOrganization: true,
-        workforceEstablishments: [],
-      })
-    : employeeData
-      ? resolveApplicationHomePath({
-          subscription,
-          hasOrganization: false,
-          workforceEstablishments: employeeData.establishments,
-        })
-      : "/organizations";
+  const ownerData = landing.status === "ready" ? landing.ownerData : undefined;
+  const employeeData = landing.status === "ready" ? landing.employeeData : undefined;
+  const homeHref = landing.status === "ready" ? landing.homeHref : "/organizations";
 
   return (
     <ProtectedHeaderClient
