@@ -50,9 +50,16 @@ export async function proxy(request: NextRequest) {
     return response ?? NextResponse.next();
   }
 
+  let subscriptionForLanding = null as { active?: boolean; status?: string; planId?: number } | null;
+  if (subscriptionAccess.status === "active") {
+    subscriptionForLanding = subscriptionAccess.subscription;
+  } else if (subscriptionAccess.status === "inactive") {
+    subscriptionForLanding = subscriptionAccess.subscription ?? null;
+  }
+
   const landing = await createLandingPathQueryService().resolveRoute({
     accessToken,
-    subscription: subscriptionAccess.subscription,
+    subscription: subscriptionForLanding,
   });
   if (landing.status === "unauthenticated") {
     return redirectToLogin(request);
@@ -98,7 +105,11 @@ type SubscriptionAccess =
       status: "active";
       subscription: { active?: boolean; status?: string; planId?: number };
     }
-  | { status: "inactive" | "unauthenticated" | "unavailable" };
+  | {
+      status: "inactive";
+      subscription?: { active?: boolean; status?: string; planId?: number } | null;
+    }
+  | { status: "unauthenticated" | "unavailable" };
 
 async function getSubscriptionAccess(accessToken: string): Promise<SubscriptionAccess> {
   try {
@@ -116,7 +127,7 @@ async function getSubscriptionAccess(accessToken: string): Promise<SubscriptionA
       : { status: "inactive" };
   } catch (error) {
     if (error instanceof ApiError && error.status === 401) return { status: "unauthenticated" };
-    if (error instanceof ApiError && error.status === 404) return { status: "inactive" };
+    if (error instanceof ApiError && error.status === 404) return { status: "inactive", subscription: null };
     return { status: "unavailable" };
   }
 }

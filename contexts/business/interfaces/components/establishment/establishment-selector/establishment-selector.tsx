@@ -15,7 +15,7 @@ import { useSelectorMenu } from "../../use-selector-menu";
 export type EstablishmentSelectorEstablishment = { id: string; name: string; photoUrl?: string | null };
 
 interface EstablishmentSelectorProps {
-  establishments: EstablishmentSelectorEstablishment[];
+  establishments: ReadonlyArray<EstablishmentSelectorEstablishment>;
   selectedEstablishmentId?: string;
   onSelect: (establishmentId: string) => void;
   onNew?: () => void;

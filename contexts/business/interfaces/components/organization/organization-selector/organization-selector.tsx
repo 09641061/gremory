@@ -21,7 +21,7 @@ export type OrganizationSelectorOrganization = {
 
 interface OrganizationSelectorProps {
   organization?: OrganizationSelectorOrganization;
-  organizations?: OrganizationSelectorOrganization[];
+  organizations?: ReadonlyArray<OrganizationSelectorOrganization>;
   canRead?: boolean;
   onSelect?: (organizationId: string, defaultEstablishmentId?: string) => void;
   activeEstablishmentId?: string;

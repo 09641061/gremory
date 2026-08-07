@@ -12,7 +12,7 @@ export type HeaderEstablishment = {
 
 interface HeaderProps {
   organizationSlot?: ReactNode;
-  establishments: HeaderEstablishment[];
+  establishments: ReadonlyArray<HeaderEstablishment>;
   initialEstablishmentId?: string;
   canCreateEstablishment?: boolean;
   canReadEstablishments?: boolean;

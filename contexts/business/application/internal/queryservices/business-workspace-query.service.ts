@@ -172,6 +172,12 @@ export class BusinessWorkspaceQueryService {
           id: activeOrganizationId,
         });
 
+        if (!organization) {
+          return {
+            status: "denied",
+          };
+        }
+
         return {
           status: "ready",
           organization,

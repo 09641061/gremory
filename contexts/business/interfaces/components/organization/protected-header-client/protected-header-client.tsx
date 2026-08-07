@@ -10,8 +10,8 @@ import type {
 
 interface ProtectedHeaderClientProps {
   organization?: WorkspaceHeaderOrganization;
-  organizations: WorkspaceHeaderOrganization[];
-  establishments: WorkspaceHeaderEstablishment[];
+  organizations: ReadonlyArray<WorkspaceHeaderOrganization>;
+  establishments: ReadonlyArray<WorkspaceHeaderEstablishment>;
   activeEstablishmentId?: string;
   canReadOrganizations: boolean;
   canReadEstablishments: boolean;
