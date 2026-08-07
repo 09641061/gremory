@@ -21,6 +21,9 @@ export function ProtectedHeaderClient({
   const searchParams = useSearchParams();
 
   const selectedEstablishmentId = searchParams.get("establishmentId") || workspace.activeEstablishmentId;
+  const homeHrefWithEstablishment = selectedEstablishmentId
+    ? `${homeHref}?establishmentId=${selectedEstablishmentId}`
+    : homeHref;
 
   function handleSelectOrganization(_orgId: string, defaultEstablishmentId?: string) {
     const params = new URLSearchParams(searchParams.toString());
@@ -36,7 +39,7 @@ export function ProtectedHeaderClient({
 
   return (
     <Header
-      homeHref={homeHref}
+      homeHref={homeHrefWithEstablishment}
       organizationSlot={
         <OrganizationSelector
           organization={workspace.organization}
@@ -54,8 +57,22 @@ export function ProtectedHeaderClient({
       }
       establishments={workspace.establishments}
       initialEstablishmentId={selectedEstablishmentId}
-      canCreateEstablishment={workspace.canCreateEstablishment}
-      canReadEstablishments={workspace.canReadEstablishments}
+      onSelectEstablishment={(establishmentId) => {
+        const params = new URLSearchParams(searchParams.toString());
+        params.set("establishmentId", establishmentId);
+        router.push(`${pathname}?${params.toString()}`);
+      }}
+      onSelectAllEstablishments={() => {
+        if (workspace.canReadEstablishments) {
+          const query = selectedEstablishmentId ? `?establishmentId=${selectedEstablishmentId}` : "";
+          router.push(`/establishments${query}`);
+        } else {
+          router.push(`${pathname}?denied=est`);
+        }
+      }}
+      onNewEstablishment={
+        workspace.canCreateEstablishment ? () => router.push("/establishments/new") : undefined
+      }
     />
   );
 }
