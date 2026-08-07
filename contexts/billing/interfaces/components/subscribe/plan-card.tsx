@@ -1,10 +1,11 @@
 "use client";
 
 import React, { useTransition } from "react";
-import { Check, Loader2, Sparkles } from "lucide-react";
+import { Check, Loader2 } from "lucide-react";
 import type { BillingCycleType } from "../../../domain/model/value-objects/billing-cycle";
 import { getCurrencySymbol, type CurrencyCode } from "../../../domain/model/value-objects/currency";
 import { createSubscriptionAction } from "../../actions/create-subscription.action";
+import { FreeIcon } from "../icons/free";
 import { StandardIcon } from "../icons/standart";
 import { PremiumIcon } from "../icons/premium";
 import { cn } from "@/lib/utils";
@@ -76,13 +77,13 @@ export function PlanCard({
     >
       <div>
         {/* Custom Plan SVG Icon */}
-        <div className="mb-4">
+        <div className="mb-4 flex h-10 w-10 items-center justify-center text-foreground">
           {planId === 0 ? (
-            <Sparkles className="w-10 h-auto text-foreground" />
+            <FreeIcon className="text-foreground" />
           ) : planId === 2 ? (
-            <PremiumIcon className="w-10 h-auto text-foreground" />
+            <PremiumIcon className="text-foreground" />
           ) : (
-            <StandardIcon className="w-10 h-auto text-foreground" />
+            <StandardIcon className="text-foreground" />
           )}
         </div>
 

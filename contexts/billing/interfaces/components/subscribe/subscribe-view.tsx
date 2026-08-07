@@ -38,11 +38,10 @@ const PLAN_METADATA: Record<
   Pick<BillingPlanViewModel, "description" | "features" | "isPopular">
 > = {
   0: {
-    description: "A lightweight free tier for the core product experience.",
+    description: "Try the core product experience.",
     features: [
       "Create and manage your organization",
-      "Core operational workflows",
-      "Assistant and AI features disabled",
+      "Core operational workflows",      
       "Upgrade later when you need automation",
     ],
     isPopular: false,
