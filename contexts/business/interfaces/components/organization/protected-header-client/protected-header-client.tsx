@@ -1,6 +1,6 @@
 "use client";
 
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams, type ReadonlyURLSearchParams } from "next/navigation";
 import { Header } from "@/contexts/shared/interfaces/components/header";
 import { EstablishmentSelector } from "@/contexts/business/interfaces/components/establishment/establishment-selector/establishment-selector";
 import { OrganizationSelector } from "../organization-selector/organization-selector";
@@ -25,26 +25,17 @@ export function ProtectedHeaderClient({
   const searchParams = useSearchParams();
 
   const selectedEstablishmentId = searchParams.get("establishmentId") || workspace.activeEstablishmentId;
-  const homeHrefWithEstablishment = selectedEstablishmentId
-    ? `${homeHref}?establishmentId=${selectedEstablishmentId}`
-    : homeHref;
   const newEstablishmentHref = navigation.newEstablishmentHref;
 
   function handleSelectOrganization(_orgId: string, defaultEstablishmentId?: string) {
-    const params = new URLSearchParams(searchParams.toString());
-    if (defaultEstablishmentId) {
-      params.set("establishmentId", defaultEstablishmentId);
-    }
     router.push(
-      params.toString()
-        ? `${pathname}?${params.toString()}`
-        : pathname,
+      buildPathWithEstablishmentId(pathname, searchParams, defaultEstablishmentId),
     );
   }
 
   return (
     <Header
-      homeHref={homeHrefWithEstablishment}
+      homeHref={resolveHomeHrefWithEstablishment(homeHref, selectedEstablishmentId)}
       organizationSlot={
         <OrganizationSelector
           organization={workspace.organization}
@@ -65,9 +56,7 @@ export function ProtectedHeaderClient({
           establishments={workspace.establishments}
           selectedEstablishmentId={selectedEstablishmentId}
           onSelect={(establishmentId) => {
-            const params = new URLSearchParams(searchParams.toString());
-            params.set("establishmentId", establishmentId);
-            router.push(`${pathname}?${params.toString()}`);
+            router.push(buildPathWithEstablishmentId(pathname, searchParams, establishmentId));
           }}
           onSelectAll={() => {
             if (navigation.establishmentListHref) {
@@ -86,4 +75,20 @@ export function ProtectedHeaderClient({
       }
     />
   );
+}
+
+function resolveHomeHrefWithEstablishment(homeHref: string, establishmentId?: string) {
+  return establishmentId ? `${homeHref}?establishmentId=${establishmentId}` : homeHref;
+}
+
+function buildPathWithEstablishmentId(
+  pathname: string,
+  searchParams: ReadonlyURLSearchParams,
+  establishmentId?: string,
+) {
+  const params = new URLSearchParams(searchParams.toString());
+  if (establishmentId) {
+    params.set("establishmentId", establishmentId);
+  }
+  return params.toString() ? `${pathname}?${params.toString()}` : pathname;
 }
