@@ -28,7 +28,7 @@ export default async function CrmPage({ searchParams }: CrmPageProps) {
     await policyService.getPermissions(establishmentId);
 
   if (!canReadCustomers) {
-    redirect("/chat?denied=crm");
+    redirect("/?denied=crm");
   }
 
   let customersPage: PageResponse<CustomerResponse> = {

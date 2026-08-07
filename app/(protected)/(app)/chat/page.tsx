@@ -24,7 +24,7 @@ export default async function ChatPage({
   const hasAssistantAccess = hasAssistantSubscriptionAccess(subscription);
 
   if (!hasAssistantAccess) {
-    redirect("/schedule");
+    redirect("/");
   }
 
   const initialConversation = hasAssistantAccess && conversationId

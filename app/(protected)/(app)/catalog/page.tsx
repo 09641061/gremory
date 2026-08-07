@@ -1,4 +1,3 @@
-import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { createCatalogServiceQueryService } from "@/contexts/catalog/application/internal/queryservices/catalog-service-query.service";
 import { createServiceCategoryQueryService } from "@/contexts/catalog/application/internal/queryservices/service-category-query.service";
@@ -28,16 +27,7 @@ export default async function CatalogPage({ searchParams }: CatalogPageProps) {
   } = await policyService.getPermissions(establishmentId);
 
   if (!canReadCatalog) {
-    const headersList = await headers();
-    const referer = headersList.get("referer");
-    let redirectUrl = "/chat";
-    if (referer) {
-      try {
-        const refererUrl = new URL(referer);
-        redirectUrl = refererUrl.pathname;
-      } catch {}
-    }
-    redirect(`${redirectUrl}?denied=catalog`);
+    redirect("/?denied=catalog");
   }
 
   let categories: CategoryDTO[] = [];

@@ -8,8 +8,8 @@ import { createTeamQueryService } from "@/contexts/workforce/application/interna
 import { ErrorBanner } from "@/contexts/shared/interfaces/components/error-banner";
 import { ProtectedHeaderClient } from "@/contexts/business/interfaces/components/organization/protected-header-client/protected-header-client";
 import { BillingApiGateway } from "@/contexts/billing/infrastructure/gateways/billing-api.gateway";
-import { getApplicationHomePath } from "@/contexts/billing/domain/services/subscription-access.policy";
 import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-session-cookie";
+import { resolveApplicationHomePath } from "@/contexts/iam/domain/services/landing-path.policy";
 
 export default function ProtectedLayout({
   children,
@@ -101,8 +101,19 @@ async function ProtectedHeader() {
     }
   }
 
-  const hasOrganization = Boolean(ownerData || employeeData);
-  const homeHref = hasOrganization ? getApplicationHomePath(subscription) : "/organizations";
+  const homeHref = ownerData
+    ? resolveApplicationHomePath({
+        subscription,
+        hasOrganization: true,
+        workforceEstablishments: [],
+      })
+    : employeeData
+      ? resolveApplicationHomePath({
+          subscription,
+          hasOrganization: false,
+          workforceEstablishments: employeeData.establishments,
+        })
+      : "/organizations";
 
   return (
     <ProtectedHeaderClient

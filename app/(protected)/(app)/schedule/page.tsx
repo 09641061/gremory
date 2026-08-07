@@ -2,7 +2,6 @@ import { createSchedulingAccessPolicyService } from "@/contexts/scheduling/appli
 import { loadSchedulingPageData } from "@/contexts/scheduling/application/internal/queryservices/scheduling-page-data.query.service";
 import { WeeklyCalendar } from "@/contexts/scheduling/interfaces/components/calendar/weekly-calendar";
 import { redirect } from "next/navigation";
-import { headers } from "next/headers";
 
 interface SchedulePageProps {
   searchParams: Promise<{ establishmentId?: string }>;
@@ -16,7 +15,7 @@ export default async function SchedulePage({ searchParams }: SchedulePageProps) 
   const establishmentId = paramEstId ?? defaultEstId ?? undefined;
 
   if (!establishmentId) {
-    redirect("/chat?error=no-establishment");
+    redirect("/?error=no-establishment");
   }
 
   const {
@@ -27,16 +26,7 @@ export default async function SchedulePage({ searchParams }: SchedulePageProps) 
   } = await policyService.getPermissions(establishmentId);
 
   if (!canReadAppointments) {
-    const headersList = await headers();
-    const referer = headersList.get("referer");
-    let redirectUrl = "/chat";
-    if (referer) {
-      try {
-        const refererUrl = new URL(referer);
-        redirectUrl = refererUrl.pathname;
-      } catch {}
-    }
-    redirect(`${redirectUrl}?denied=scheduling`);
+    redirect(`/?denied=scheduling`);
   }
 
   const { services, members, customers } = await loadSchedulingPageData(establishmentId);

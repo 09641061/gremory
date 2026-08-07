@@ -32,7 +32,7 @@ export function InvitationAcceptanceView({
 
   useEffect(() => {
     if (state.status === "success") {
-      window.location.assign("/chat");
+      window.location.assign("/");
     }
   }, [state.status]);
 
@@ -127,7 +127,7 @@ function InvitationAcceptedView({ redirecting = false }: { redirecting?: boolean
           : "You already have access to this workspace."}
       </p>
       {!redirecting ? (
-        <Link href="/chat" className={buttonVariants({ className: "mt-6 h-10 w-full" })}>
+        <Link href="/" className={buttonVariants({ className: "mt-6 h-10 w-full" })}>
           Continue to Takodu
         </Link>
       ) : null}
