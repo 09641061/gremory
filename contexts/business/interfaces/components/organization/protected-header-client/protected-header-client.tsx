@@ -12,13 +12,13 @@ import type { HeaderNavigationViewModel } from "@/contexts/shared/application/mo
 interface ProtectedHeaderClientProps {
   workspace: WorkspaceHeaderViewModel;
   navigation: HeaderNavigationViewModel;
-  homeHref?: string;
+  homeHref: string;
 }
 
 export function ProtectedHeaderClient({
   workspace,
   navigation,
-  homeHref = "/chat",
+  homeHref,
 }: ProtectedHeaderClientProps) {
   const router = useRouter();
   const pathname = usePathname();
