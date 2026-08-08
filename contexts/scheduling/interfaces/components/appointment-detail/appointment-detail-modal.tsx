@@ -9,13 +9,13 @@ import type {
 } from "../../../application/model/scheduling-page-data.view-model";
 import type { Appointment } from "../../../domain/model/entities/appointment";
 import { CancelConfirmDialog } from "../confirm-dialogs/cancel-confirm-dialog";
+import { StartConfirmDialog } from "../confirm-dialogs/start-confirm-dialog";
+import { CompleteConfirmDialog } from "../confirm-dialogs/complete-confirm-dialog";
+import { NoShowConfirmDialog } from "../confirm-dialogs/no-show-confirm-dialog";
 import { RescheduleFormModal } from "../appointment-form/reschedule-form-modal";
 import { AppointmentDetailActions } from "./appointment-detail-actions";
 import { AppointmentDetailInfo } from "./appointment-detail-info";
 import { AppointmentDetailSummary } from "./appointment-detail-summary";
-import { completeAppointmentAction } from "../../actions/complete-appointment.action";
-import { startAppointmentAction } from "../../actions/start-appointment.action";
-import { markNoShowAppointmentAction } from "../../actions/mark-no-show-appointment.action";
 import { Alert, AlertDescription, AlertTitle } from "@/contexts/shared/interfaces/components/ui/alert";
 import { AlertTriangle } from "lucide-react";
 import {
@@ -55,37 +55,22 @@ export function AppointmentDetailModal({
 }: AppointmentDetailModalProps) {
   const [isRescheduleOpen, setIsRescheduleOpen] = useState(false);
   const [isCancelOpen, setIsCancelOpen] = useState(false);
+  const [isStartOpen, setIsStartOpen] = useState(false);
+  const [isCompleteOpen, setIsCompleteOpen] = useState(false);
+  const [isNoShowOpen, setIsNoShowOpen] = useState(false);
 
   if (!appointment) return null;
 
-  const handleStart = async () => {
-    if (!confirm("Are you sure you want to start this appointment?")) return;
-    const res = await startAppointmentAction(appointment.id);
-    if (res.status === "success" && res.data) {
-      onUpdate(res.data);
-    } else if (res.error) {
-      alert(res.error);
-    }
+  const handleStart = () => {
+    setIsStartOpen(true);
   };
 
-  const handleComplete = async () => {
-    if (!confirm("Are you sure you want to complete this appointment?")) return;
-    const res = await completeAppointmentAction(appointment.id);
-    if (res.status === "success" && res.data) {
-      onUpdate(res.data);
-    } else if (res.error) {
-      alert(res.error);
-    }
+  const handleComplete = () => {
+    setIsCompleteOpen(true);
   };
 
-  const handleMarkNoShow = async () => {
-    if (!confirm("Are you sure you want to mark this appointment as a no-show?")) return;
-    const res = await markNoShowAppointmentAction(appointment.id);
-    if (res.status === "success" && res.data) {
-      onUpdate(res.data);
-    } else if (res.error) {
-      alert(res.error);
-    }
+  const handleMarkNoShow = () => {
+    setIsNoShowOpen(true);
   };
 
   const service = findAppointmentService(services, appointment);
@@ -175,6 +160,42 @@ export function AppointmentDetailModal({
           onOpenChange={setIsCancelOpen}
           appointmentId={appointment.id}
           onSuccess={onUpdate}
+        />
+      )}
+
+      {isStartOpen && (
+        <StartConfirmDialog
+          isOpen={isStartOpen}
+          onOpenChange={setIsStartOpen}
+          appointmentId={appointment.id}
+          onSuccess={(updated) => {
+            onUpdate(updated);
+            onOpenChange(false);
+          }}
+        />
+      )}
+
+      {isCompleteOpen && (
+        <CompleteConfirmDialog
+          isOpen={isCompleteOpen}
+          onOpenChange={setIsCompleteOpen}
+          appointmentId={appointment.id}
+          onSuccess={(updated) => {
+            onUpdate(updated);
+            onOpenChange(false);
+          }}
+        />
+      )}
+
+      {isNoShowOpen && (
+        <NoShowConfirmDialog
+          isOpen={isNoShowOpen}
+          onOpenChange={setIsNoShowOpen}
+          appointmentId={appointment.id}
+          onSuccess={(updated) => {
+            onUpdate(updated);
+            onOpenChange(false);
+          }}
         />
       )}
     </>
