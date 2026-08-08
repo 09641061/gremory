@@ -1,5 +1,5 @@
 import { createCrmAccessPolicyService } from "@/contexts/crm/application/internal/queryservices/crm-access-policy.service";
-import { CreateCustomerForm } from "@/contexts/crm/interfaces/components/create-customer-form";
+import { CreateCustomerForm } from "@/contexts/crm/interfaces/components/customer-registration/create-customer-form";
 import { redirect } from "next/navigation";
 
 interface NewCustomerPageProps {

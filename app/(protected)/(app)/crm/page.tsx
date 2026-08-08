@@ -1,5 +1,5 @@
 import { getCrmPageData } from "@/contexts/crm/application/internal/queryservices/crm-page-data.service";
-import { CrmClientWrapper } from "@/contexts/crm/interfaces/components/crm-client-wrapper";
+import { CrmClientWrapper } from "@/contexts/crm/interfaces/components/customer-directory/crm-client-wrapper";
 import { redirect } from "next/navigation";
 
 interface CrmPageProps {

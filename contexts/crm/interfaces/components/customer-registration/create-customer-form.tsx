@@ -5,8 +5,8 @@ import { useRouter } from "next/navigation";
 import { X } from "lucide-react";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import { ErrorAlert } from "@/contexts/shared/interfaces/components/ui/error";
-import { registerCustomerAction } from "../actions/register-customer.action";
-import { CustomerForm, CustomerFormData } from "./customer-form";
+import { registerCustomerAction } from "@/contexts/crm/interfaces/actions/register-customer.action";
+import { CustomerForm, CustomerFormData } from "@/contexts/crm/interfaces/components/customer-management/customer-form";
 
 interface CreateCustomerFormProps {
   establishmentId: string;
@@ -28,7 +28,8 @@ export function CreateCustomerForm({ establishmentId }: CreateCustomerFormProps)
       foreignResidentCard: data.docType === "foreign_resident_card" ? data.docNumber : null,
       passport: data.docType === "passport" ? data.docNumber : null,
       name: data.name,
-      phone: data.phonePrefix + data.phoneNumber,
+      phoneCountryCode: data.phoneCountryCode,
+      phoneNumber: data.phoneNumber,
       email: data.email,
     };
 

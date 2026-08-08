@@ -8,7 +8,12 @@ export const customerIdentityFields = {
   foreignResidentCard: nullableDoc,
   passport: nullableDoc,
   name: z.string().min(1, "Name is required"),
-  phone: z.string().min(1, "Phone is required"),
+  phoneCountryCode: z
+    .string()
+    .regex(/^\+?\d{1,3}$/, "Country code must contain 1 to 3 digits"),
+  phoneNumber: z
+    .string()
+    .regex(/^\d{4,15}$/, "Phone number must contain between 4 and 15 digits"),
   email: z.string().email("Invalid email address"),
 };
 

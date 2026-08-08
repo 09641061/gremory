@@ -61,7 +61,9 @@ export default async function SchedulePage({ searchParams }: SchedulePageProps) 
       documentType: c.documentType,
       documentNumber: c.documentNumber,
       name: c.name,
-      phone: c.phone,
+      phone: c.phoneCountryCode && c.phoneNumber
+        ? `${c.phoneCountryCode}${c.phoneNumber}`
+        : c.phone ?? "",
       email: c.email,
       taxpayerStatus: c.taxpayerStatus,
       taxpayerCondition: c.taxpayerCondition,

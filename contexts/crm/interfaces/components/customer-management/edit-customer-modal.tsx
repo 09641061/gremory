@@ -4,9 +4,9 @@ import * as React from "react";
 import { X, Save } from "lucide-react";
 import { ErrorAlert } from "@/contexts/shared/interfaces/components/ui/error";
 import { Dialog, DialogContent, DialogTitle, DialogDescription, DialogClose } from "@/contexts/shared/interfaces/components/ui/dialog";
-import { CustomerResponse } from "../../domain/model/entities/customer";
-import { updateCustomerAction } from "../actions/update-customer.action";
-import { CustomerForm, CustomerFormData } from "./customer-form";
+import { CustomerResponse } from "@/contexts/crm/domain/model/entities/customer";
+import { updateCustomerAction } from "@/contexts/crm/interfaces/actions/update-customer.action";
+import { CustomerForm, CustomerFormData } from "@/contexts/crm/interfaces/components/customer-management/customer-form";
 
 interface EditCustomerModalProps {
   customer: CustomerResponse;
@@ -35,7 +35,8 @@ export function EditCustomerModal({
       foreignResidentCard: data.docType === "foreign_resident_card" ? data.docNumber : null,
       passport: data.docType === "passport" ? data.docNumber : null,
       name: data.name,
-      phone: data.phonePrefix + data.phoneNumber,
+      phoneCountryCode: data.phoneCountryCode,
+      phoneNumber: data.phoneNumber,
       email: data.email,
     };
 
@@ -54,14 +55,15 @@ export function EditCustomerModal({
     }
   };
 
-  const isPeru = customer.phone.startsWith("+51");
+  const legacyPhone = customer.phone ?? "";
+  const legacyCountryCode = legacyPhone.startsWith("+51") ? "+51" : "";
   const initialData: CustomerFormData = {
     docType: customer.documentType.toLowerCase(),
     docNumber: customer.documentNumber,
     name: customer.name,
     email: customer.email,
-    phonePrefix: isPeru ? "+51" : customer.phone.startsWith("+") ? "+" : "+51",
-    phoneNumber: isPeru ? customer.phone.slice(3) : customer.phone.startsWith("+") ? customer.phone.slice(1) : customer.phone,
+    phoneCountryCode: customer.phoneCountryCode ?? legacyCountryCode,
+    phoneNumber: customer.phoneNumber ?? (legacyCountryCode ? legacyPhone.slice(3) : legacyPhone.replace(/^\+/, "")),
   };
 
   return (

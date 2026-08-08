@@ -7,14 +7,14 @@ import { Input } from "@/contexts/shared/interfaces/components/ui/input";
 import { Label } from "@/contexts/shared/interfaces/components/ui/label";
 import { Alert, AlertDescription, AlertTitle } from "@/contexts/shared/interfaces/components/ui/alert";
 import { PhoneInput } from "./phone-input";
-import { resolveDocumentAction } from "../actions/resolve-document.action";
+import { resolveDocumentAction } from "@/contexts/crm/interfaces/actions/resolve-document.action";
 
 export interface CustomerFormData {
   docType: string;
   docNumber: string;
   name: string;
   email: string;
-  phonePrefix: string;
+  phoneCountryCode: string;
   phoneNumber: string;
 }
 
@@ -41,7 +41,7 @@ export function CustomerForm({
   const [docNumber, setDocNumber] = React.useState(initialData?.docNumber || "");
   const [name, setName] = React.useState(initialData?.name || "");
   const [email, setEmail] = React.useState(initialData?.email || "");
-  const [phonePrefix, setPhonePrefix] = React.useState(initialData?.phonePrefix || "+51");
+  const [phoneCountryCode, setPhoneCountryCode] = React.useState(initialData?.phoneCountryCode || "+51");
   const [phoneNumber, setPhoneNumber] = React.useState(initialData?.phoneNumber || "");
   const [error, setError] = React.useState<string | null>(null);
 
@@ -95,19 +95,8 @@ export function CustomerForm({
       }
     }
 
-    // Basic phone validation based on selected prefix
-    const country = [
-      { code: "+51", length: 9 },
-      { code: "+1", length: 10 },
-      { code: "+34", length: 9 },
-      { code: "+52", length: 10 },
-      { code: "+54", length: 10 },
-      { code: "+56", length: 9 },
-      { code: "+57", length: 10 },
-    ].find((c) => c.code === phonePrefix);
-
-    if (country && phoneNumber.length !== country.length) {
-      setError(`The phone number for ${phonePrefix} must have exactly ${country.length} digits.`);
+    if (!/^\+?\d+$/.test(phoneCountryCode.trim()) || !/^\d+$/.test(phoneNumber)) {
+      setError("The country code must contain only digits and may start with +.");
       return;
     }
 
@@ -116,7 +105,7 @@ export function CustomerForm({
       docNumber,
       name,
       email,
-      phonePrefix,
+      phoneCountryCode: phoneCountryCode.trim(),
       phoneNumber,
     });
   };
@@ -222,9 +211,9 @@ export function CustomerForm({
         <PhoneInput
           id="phone"
           value={phoneNumber}
-          prefix={phonePrefix}
+          countryCode={phoneCountryCode}
           onChange={setPhoneNumber}
-          onPrefixChange={setPhonePrefix}
+          onCountryCodeChange={setPhoneCountryCode}
           required
         />
       </div>
