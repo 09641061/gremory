@@ -153,4 +153,20 @@ export class SchedulingApiGateway
       }
     );
   }
+
+  async completeAppointment(
+    id: string,
+    token?: string
+  ): Promise<Appointment> {
+    const authToken = await resolveAccessToken(token);
+    return apiClient.patch<Appointment>(
+      `${apiConfig.routes.scheduling.appointments}/${encodeURIComponent(id)}/complete`,
+      {},
+      {
+        token: authToken,
+        errorMessage: "Failed to complete appointment",
+        errorType: SchedulingApiError,
+      }
+    );
+  }
 }

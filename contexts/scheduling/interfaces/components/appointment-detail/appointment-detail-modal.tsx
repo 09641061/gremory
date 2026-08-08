@@ -13,6 +13,7 @@ import { RescheduleFormModal } from "../appointment-form/reschedule-form-modal";
 import { AppointmentDetailActions } from "./appointment-detail-actions";
 import { AppointmentDetailInfo } from "./appointment-detail-info";
 import { AppointmentDetailSummary } from "./appointment-detail-summary";
+import { completeAppointmentAction } from "../../actions/complete-appointment.action";
 import {
   findAppointmentCustomer,
   findAppointmentEmployee,
@@ -20,6 +21,7 @@ import {
   formatAppointmentDate,
   formatAppointmentTime,
   getAppointmentStatusClasses,
+  getAppointmentStatusLabel,
 } from "./appointment-detail-utils";
 
 interface AppointmentDetailModalProps {
@@ -52,13 +54,23 @@ export function AppointmentDetailModal({
 
   if (!appointment) return null;
 
+  const handleComplete = async () => {
+    if (!confirm("Are you sure you want to complete this appointment?")) return;
+    const res = await completeAppointmentAction(appointment.id);
+    if (res.status === "success" && res.data) {
+      onUpdate(res.data);
+    } else if (res.error) {
+      alert(res.error);
+    }
+  };
+
   const service = findAppointmentService(services, appointment);
   const customer = findAppointmentCustomer(customers, appointment);
   const employee = findAppointmentEmployee(members, appointment);
   const formattedDate = formatAppointmentDate(appointment.startsAt);
   const formattedTime = formatAppointmentTime(appointment.startsAt, appointment.endsAt);
   const isCancelled = appointment.status === "CANCELLED";
-  const statusLabel = appointment.status.toLowerCase();
+  const statusLabel = getAppointmentStatusLabel(appointment.status);
 
   return (
     <>
@@ -91,9 +103,10 @@ export function AppointmentDetailModal({
 
           <DialogFooter className="flex flex-col sm:flex-row gap-2">
             <AppointmentDetailActions
-              isCancelled={isCancelled}
+              status={appointment.status}
               onReschedule={() => setIsRescheduleOpen(true)}
               onCancel={() => setIsCancelOpen(true)}
+              onComplete={handleComplete}
               canUpdateAppointment={canUpdateAppointment}
               canDeleteAppointment={canDeleteAppointment}
             />
