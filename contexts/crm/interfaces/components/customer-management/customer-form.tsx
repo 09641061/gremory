@@ -188,7 +188,7 @@ export function CustomerForm({
             id="full_name"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder={isDniOrRuc ? "Awaiting document entry..." : "Enter full name"}
+            placeholder={isDniOrRuc ? "e.g. Juan Pérez García" : "e.g. Acme S.A.C."}
             required
           />
         </div>
@@ -221,11 +221,11 @@ export function CustomerForm({
       {/* Footer Actions */}
       <div className="flex justify-end gap-3 pt-4 border-t border-border mt-6">
         {onCancel && (
-          <Button type="button" variant="outline" onClick={onCancel} disabled={isSaving}>
+          <Button type="button" variant="ghost" onClick={onCancel} disabled={isSaving}>
             Cancel
           </Button>
         )}
-        <Button type="submit" disabled={isSaving}>
+        <Button type="submit" disabled={isSaving} className="gap-2">
           {isSaving ? (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
           ) : (
