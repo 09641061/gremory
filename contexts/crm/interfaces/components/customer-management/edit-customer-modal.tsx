@@ -4,9 +4,10 @@ import * as React from "react";
 import { X, Save } from "lucide-react";
 import { ErrorAlert } from "@/contexts/shared/interfaces/components/ui/error";
 import { Dialog, DialogContent, DialogTitle, DialogDescription, DialogClose } from "@/contexts/shared/interfaces/components/ui/dialog";
-import { CustomerResponse } from "../../domain/model/entities/customer";
-import { updateCustomerAction } from "../actions/update-customer.action";
-import { CustomerForm, CustomerFormData } from "./customer-form";
+import { CustomerResponse } from "@/contexts/crm/domain/model/entities/customer";
+import { updateCustomerAction } from "@/contexts/crm/interfaces/actions/update-customer.action";
+import { CustomerForm, CustomerFormData } from "@/contexts/crm/interfaces/components/customer-management/customer-form";
+import { toUpdateCustomerCommand } from "@/contexts/crm/application/transforms/customer-command.transforms";
 
 interface EditCustomerModalProps {
   customer: CustomerResponse;
@@ -28,16 +29,7 @@ export function EditCustomerModal({
     setIsSaving(true);
     setErrorMsg(null);
 
-    const command = {
-      id: customer.id,
-      dni: data.docType === "dni" ? data.docNumber : null,
-      ruc: data.docType === "ruc" ? data.docNumber : null,
-      foreignResidentCard: data.docType === "foreign_resident_card" ? data.docNumber : null,
-      passport: data.docType === "passport" ? data.docNumber : null,
-      name: data.name,
-      phone: data.phonePrefix + data.phoneNumber,
-      email: data.email,
-    };
+    const command = toUpdateCustomerCommand(data, customer.id);
 
     try {
       const result = await updateCustomerAction(command, customer.establishmentId);
@@ -54,14 +46,15 @@ export function EditCustomerModal({
     }
   };
 
-  const isPeru = customer.phone.startsWith("+51");
+  const legacyPhone = customer.phone ?? "";
+  const legacyCountryCode = legacyPhone.startsWith("+51") ? "+51" : "";
   const initialData: CustomerFormData = {
     docType: customer.documentType.toLowerCase(),
     docNumber: customer.documentNumber,
     name: customer.name,
     email: customer.email,
-    phonePrefix: isPeru ? "+51" : customer.phone.startsWith("+") ? "+" : "+51",
-    phoneNumber: isPeru ? customer.phone.slice(3) : customer.phone.startsWith("+") ? customer.phone.slice(1) : customer.phone,
+    phoneCountryCode: customer.phoneCountryCode ?? legacyCountryCode,
+    phoneNumber: customer.phoneNumber ?? (legacyCountryCode ? legacyPhone.slice(3) : legacyPhone.replace(/^\+/, "")),
   };
 
   return (
@@ -89,6 +82,7 @@ export function EditCustomerModal({
             isSaving={isSaving}
             submitLabel="Save Changes"
             submitIcon={<Save className="mr-2 h-4 w-4" />}
+            establishmentId={customer.establishmentId}
           />
         </DialogContent>
       </Dialog>

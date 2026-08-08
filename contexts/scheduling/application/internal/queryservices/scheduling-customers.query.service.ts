@@ -14,7 +14,10 @@ export async function loadSchedulingCustomers(
       id: customer.id,
       name: customer.name,
       email: customer.email,
-      phone: customer.phone,
+      phone:
+        customer.phoneCountryCode && customer.phoneNumber
+          ? `${customer.phoneCountryCode}${customer.phoneNumber}`
+          : customer.phone ?? "",
     }));
   } catch (error) {
     console.error("Failed to load customers for scheduler:", error);

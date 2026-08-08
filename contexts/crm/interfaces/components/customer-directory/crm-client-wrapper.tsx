@@ -32,17 +32,18 @@ import {
   AlertDialogFooter,
   AlertDialogCancel,
 } from "@/contexts/shared/interfaces/components/ui/alert-dialog";
-import { CustomerResponse } from "../../domain/model/entities/customer";
-import { PageResponse } from "../../application/services/crm-query.service";
-import { deleteCustomerAction } from "../actions/delete-customer.action";
-import { EditCustomerModal } from "./edit-customer-modal";
+import { CustomerResponse } from "@/contexts/crm/domain/model/entities/customer";
+import { PageResponse } from "@/contexts/crm/application/services/crm-query.service";
+import { deleteCustomerAction } from "@/contexts/crm/interfaces/actions/delete-customer.action";
+import { EditCustomerModal } from "@/contexts/crm/interfaces/components/customer-management/edit-customer-modal";
 
 interface CrmClientWrapperProps {
   initialCustomers: PageResponse<CustomerResponse>;
-  establishmentId: string;
+  establishmentId?: string;
   canCreateCustomer?: boolean;
   canUpdateCustomer?: boolean;
   canDeleteCustomer?: boolean;
+  loadError?: boolean;
 }
 
 export function CrmClientWrapper({
@@ -51,6 +52,7 @@ export function CrmClientWrapper({
   canCreateCustomer = true,
   canUpdateCustomer = true,
   canDeleteCustomer = true,
+  loadError = false,
 }: CrmClientWrapperProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -83,7 +85,7 @@ export function CrmClientWrapper({
   const handleRefresh = React.useTransition()[1];
 
   const handleDelete = async () => {
-    if (!customerToDelete) return;
+    if (!customerToDelete || !establishmentId) return;
     const id = customerToDelete.id;
     setIsDeleting(id);
     setErrorMsg(null);
@@ -112,6 +114,10 @@ export function CrmClientWrapper({
   return (
     <>
       <ErrorAlert title="Error" message={errorMsg ?? undefined} />
+      <ErrorAlert
+        title="Error loading customers"
+        message={loadError ? "Failed to load the customer list. Please try refreshing the page." : undefined}
+      />
 
       <main className="max-w-[1600px] mx-auto px-4 md:px-8 py-8 space-y-6">
         {/* Page Header */}
@@ -147,10 +153,11 @@ export function CrmClientWrapper({
             <table className="w-full text-left border-collapse text-sm">
               <thead className="bg-muted/50 border-b border-border">
                 <tr>
-                  <th className="px-6 py-4 font-semibold text-foreground uppercase tracking-wider">Customer Name</th>
-                  <th className="px-6 py-4 font-semibold text-foreground uppercase tracking-wider">Document ID</th>
-                  <th className="px-6 py-4 font-semibold text-foreground uppercase tracking-wider">Email Address</th>
-                  <th className="px-6 py-4 font-semibold text-foreground uppercase tracking-wider">Phone</th>
+                  <th className="px-6 py-4 font-semibold text-foreground tracking-wider">Customer name</th>
+                  <th className="px-6 py-4 font-semibold text-foreground tracking-wider">Document id</th>
+                  <th className="px-6 py-4 font-semibold text-foreground tracking-wider">Type</th>
+                  <th className="px-6 py-4 font-semibold text-foreground tracking-wider">Email address</th>
+                  <th className="px-6 py-4 font-semibold text-foreground tracking-wider">Phone</th>
                   {(canUpdateCustomer || canDeleteCustomer) && (
                     <th className="px-6 py-4 font-semibold text-foreground uppercase tracking-wider text-right"></th>
                   )}
@@ -159,7 +166,7 @@ export function CrmClientWrapper({
               <tbody className="divide-y divide-border">
                 {customers.length === 0 ? (
                   <tr>
-                    <td colSpan={canUpdateCustomer || canDeleteCustomer ? 5 : 4} className="px-6 py-12 text-center text-muted-foreground">
+                    <td colSpan={canUpdateCustomer || canDeleteCustomer ? 6 : 5} className="px-6 py-12 text-center text-muted-foreground">
                       No customers found in this establishment.
                     </td>
                   </tr>
@@ -169,11 +176,18 @@ export function CrmClientWrapper({
                       <td className="px-6 py-4">
                         <span className="font-semibold text-foreground">{cust.name}</span>
                       </td>
-                      <td className="px-6 py-4 font-mono text-xs text-muted-foreground">
-                        {cust.documentNumber} ({cust.documentType})
+                      <td className="px-6 py-4 text-muted-foreground">
+                        {cust.documentNumber}
+                      </td>
+                      <td className="px-6 py-4 text-muted-foreground">
+                        {cust.documentType}
                       </td>
                       <td className="px-6 py-4 text-muted-foreground">{cust.email}</td>
-                      <td className="px-6 py-4 text-muted-foreground">{cust.phone}</td>
+                      <td className="px-6 py-4 text-muted-foreground">
+                        {cust.phoneCountryCode && cust.phoneNumber
+                          ? `${cust.phoneCountryCode}${cust.phoneNumber}`
+                          : cust.phone ?? "—"}
+                      </td>
                       {(canUpdateCustomer || canDeleteCustomer) && (
                         <td className="px-6 py-4 text-right">
                           <DropdownMenu>

@@ -56,7 +56,7 @@ export function RescheduleFormModal({
   onDeleteSuccess,
 }: RescheduleFormModalProps) {
   const appointmentIdRef = useRef(appointment.id);
-  
+
   useEffect(() => {
     appointmentIdRef.current = appointment.id;
   }, [appointment.id]);
@@ -83,7 +83,7 @@ export function RescheduleFormModal({
   const [startTime, setStartTime] = useState(initTime);
 
   const selectedService = services.find((service) => service.id === selectedServiceId);
-  
+
   const serviceOptions = useMemo(() => createServiceOptions(services), [services]);
   const customerOptions = useMemo(() => createCustomerOptions(customers), [customers]);
   const employeeOptions = useMemo(() => createEmployeeOptions(members), [members]);

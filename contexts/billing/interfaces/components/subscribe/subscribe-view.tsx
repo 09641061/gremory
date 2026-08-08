@@ -41,7 +41,7 @@ const PLAN_METADATA: Record<
     description: "Try the core product experience.",
     features: [
       "Create and manage your organization",
-      "Core operational workflows",      
+      "Core operational workflows",
       "Upgrade later when you need automation",
     ],
     isPopular: false,

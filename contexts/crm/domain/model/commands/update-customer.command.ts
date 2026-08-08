@@ -5,7 +5,8 @@ export interface UpdateCustomerCommand {
   foreignResidentCard?: string | null;
   passport?: string | null;
   name?: string;
-  phone: string;
+  phoneCountryCode: string;
+  phoneNumber: string;
   email: string;
   establishmentId: string;
 }

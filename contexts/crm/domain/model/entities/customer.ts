@@ -14,7 +14,10 @@ export interface CustomerResponse {
   documentType: CustomerDocumentType;
   documentNumber: string;
   name: string;
-  phone: string;
+  phoneCountryCode?: string | null;
+  phoneNumber?: string | null;
+  /** Legacy combined value returned for records created before the phone split. */
+  phone?: string | null;
   email: string;
   taxpayerStatus?: string | null;
   taxpayerCondition?: string | null;

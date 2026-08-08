@@ -32,7 +32,7 @@ export function CancelConfirmDialog({
   onSuccess,
 }: CancelConfirmDialogProps) {
   const appointmentIdRef = useRef(appointmentId);
-  
+
   useEffect(() => {
     appointmentIdRef.current = appointmentId;
   }, [appointmentId]);

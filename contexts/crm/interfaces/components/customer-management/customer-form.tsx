@@ -7,14 +7,14 @@ import { Input } from "@/contexts/shared/interfaces/components/ui/input";
 import { Label } from "@/contexts/shared/interfaces/components/ui/label";
 import { Alert, AlertDescription, AlertTitle } from "@/contexts/shared/interfaces/components/ui/alert";
 import { PhoneInput } from "./phone-input";
-import { resolveDocumentAction } from "../actions/resolve-document.action";
+import { resolveDocumentAction } from "@/contexts/crm/interfaces/actions/resolve-document.action";
 
 export interface CustomerFormData {
   docType: string;
   docNumber: string;
   name: string;
   email: string;
-  phonePrefix: string;
+  phoneCountryCode: string;
   phoneNumber: string;
 }
 
@@ -25,6 +25,7 @@ interface CustomerFormProps {
   isSaving: boolean;
   submitLabel: string;
   submitIcon?: React.ReactNode;
+  establishmentId: string;
 }
 
 export function CustomerForm({
@@ -34,12 +35,13 @@ export function CustomerForm({
   isSaving,
   submitLabel,
   submitIcon,
+  establishmentId,
 }: CustomerFormProps) {
   const [docType, setDocType] = React.useState(initialData?.docType || "dni");
   const [docNumber, setDocNumber] = React.useState(initialData?.docNumber || "");
   const [name, setName] = React.useState(initialData?.name || "");
   const [email, setEmail] = React.useState(initialData?.email || "");
-  const [phonePrefix, setPhonePrefix] = React.useState(initialData?.phonePrefix || "+51");
+  const [phoneCountryCode, setPhoneCountryCode] = React.useState(initialData?.phoneCountryCode || "+51");
   const [phoneNumber, setPhoneNumber] = React.useState(initialData?.phoneNumber || "");
   const [error, setError] = React.useState<string | null>(null);
 
@@ -51,7 +53,7 @@ export function CustomerForm({
 
     setIsResolving(true);
     try {
-      const res = await resolveDocumentAction(docType as "dni" | "ruc", docNumber);
+      const res = await resolveDocumentAction(docType as "dni" | "ruc", docNumber, establishmentId);
       if (res.status === "success" && res.data) {
         setName(res.data.name);
       }
@@ -60,7 +62,7 @@ export function CustomerForm({
     } finally {
       setIsResolving(false);
     }
-  }, [docNumber, docType]);
+  }, [docNumber, docType, establishmentId]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -79,21 +81,22 @@ export function CustomerForm({
         setError("The RUC must have exactly 11 digits.");
         return;
       }
+    } else if (docType === "foreign_resident_card") {
+      const isNumeric = /^\d+$/.test(docNumber);
+      if (!isNumeric || docNumber.length < 9 || docNumber.length > 11) {
+        setError("The Foreign Resident Card must have between 9 and 11 digits.");
+        return;
+      }
+    } else if (docType === "passport") {
+      const isValid = /^[A-Z0-9]{6,15}$/.test(docNumber);
+      if (!isValid) {
+        setError("The Passport must be 6 to 15 alphanumeric characters.");
+        return;
+      }
     }
 
-    // Basic phone validation based on selected prefix
-    const country = [
-      { code: "+51", length: 9 },
-      { code: "+1", length: 10 },
-      { code: "+34", length: 9 },
-      { code: "+52", length: 10 },
-      { code: "+54", length: 10 },
-      { code: "+56", length: 9 },
-      { code: "+57", length: 10 },
-    ].find((c) => c.code === phonePrefix);
-
-    if (country && phoneNumber.length !== country.length) {
-      setError(`The phone number for ${phonePrefix} must have exactly ${country.length} digits.`);
+    if (!/^\+?\d+$/.test(phoneCountryCode.trim()) || !/^\d+$/.test(phoneNumber)) {
+      setError("The country code must contain only digits and may start with +.");
       return;
     }
 
@@ -102,7 +105,7 @@ export function CustomerForm({
       docNumber,
       name,
       email,
-      phonePrefix,
+      phoneCountryCode: phoneCountryCode.trim(),
       phoneNumber,
     });
   };
@@ -136,6 +139,8 @@ export function CustomerForm({
             >
               <option value="dni">DNI (National ID)</option>
               <option value="ruc">RUC (Corporate Tax ID)</option>
+              <option value="foreign_resident_card">Foreign Resident Card</option>
+              <option value="passport">Passport</option>
             </select>
           </div>
 
@@ -148,14 +153,17 @@ export function CustomerForm({
                 onChange={(e) => {
                   const val = e.target.value;
                   setError(null);
-                  if (/^\d*$/.test(val)) {
-                    setDocNumber(val);
+                  const pattern = docType === "passport" ? /^[A-Za-z0-9]*$/ : /^\d*$/;
+                  if (pattern.test(val)) {
+                    setDocNumber(docType === "passport" ? val.toUpperCase() : val);
                   }
                 }}
                 maxLength={
                   docType === "dni"
                     ? 8
-                    : 11
+                    : docType === "ruc" || docType === "foreign_resident_card"
+                    ? 11
+                    : 15
                 }
                 placeholder="Enter number..."
                 required
@@ -180,7 +188,7 @@ export function CustomerForm({
             id="full_name"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder={isDniOrRuc ? "Awaiting document entry..." : "Enter full name"}
+            placeholder={isDniOrRuc ? "e.g. Juan Pérez García" : "e.g. Acme S.A.C."}
             required
           />
         </div>
@@ -203,9 +211,9 @@ export function CustomerForm({
         <PhoneInput
           id="phone"
           value={phoneNumber}
-          prefix={phonePrefix}
+          countryCode={phoneCountryCode}
           onChange={setPhoneNumber}
-          onPrefixChange={setPhonePrefix}
+          onCountryCodeChange={setPhoneCountryCode}
           required
         />
       </div>
@@ -213,11 +221,11 @@ export function CustomerForm({
       {/* Footer Actions */}
       <div className="flex justify-end gap-3 pt-4 border-t border-border mt-6">
         {onCancel && (
-          <Button type="button" variant="outline" onClick={onCancel} disabled={isSaving}>
+          <Button type="button" variant="ghost" onClick={onCancel} disabled={isSaving}>
             Cancel
           </Button>
         )}
-        <Button type="submit" disabled={isSaving}>
+        <Button type="submit" disabled={isSaving} className="gap-2">
           {isSaving ? (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
           ) : (

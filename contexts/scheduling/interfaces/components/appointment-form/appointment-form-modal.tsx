@@ -66,7 +66,7 @@ export function AppointmentFormModal({
   const [startTime, setStartTime] = useState("");
 
   const selectedService = services.find((service) => service.id === selectedServiceId);
-  
+
   const serviceOptions = useMemo(() => createServiceOptions(services), [services]);
   const customerOptions = useMemo(() => createCustomerOptions(customers), [customers]);
   const employeeOptions = useMemo(() => createEmployeeOptions(members), [members]);
