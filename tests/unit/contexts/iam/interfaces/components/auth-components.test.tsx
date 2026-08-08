@@ -5,10 +5,10 @@ import { AuthForm } from "@/contexts/iam/interfaces/components/auth-form";
 import { LogoutButton } from "@/contexts/iam/interfaces/components/logout-button";
 import { AuthCallback } from "@/contexts/iam/interfaces/components/auth-callback";
 
-const mocks = vi.hoisted(() => ({
+const mocks = {
   router: { push: vi.fn(), replace: vi.fn() },
   signOut: vi.fn(),
-}));
+};
 
 vi.mock("next/navigation", () => ({ useRouter: () => mocks.router }));
 vi.mock("@/contexts/iam/interfaces/actions/request-email-sign-in.action", () => ({
@@ -82,7 +82,7 @@ describe("IAM client components", () => {
         body: JSON.stringify({ accessToken: "a", refreshToken: "r" }),
       })
     ));
-    await waitFor(() => expect(mocks.router.replace).toHaveBeenCalledWith("/chat"));
+    await waitFor(() => expect(mocks.router.replace).toHaveBeenCalledWith("/"));
   });
 
   it("should return to the invitation after authentication", async () => {

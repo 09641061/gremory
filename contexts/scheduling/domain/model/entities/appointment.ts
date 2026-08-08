@@ -1,3 +1,5 @@
+import { AppointmentStatusType } from "../valueobjects/appointment-status";
+
 export type Appointment = Readonly<{
   id: string;
   title: string;
@@ -7,7 +9,7 @@ export type Appointment = Readonly<{
   customerId: string | null;
   employeeId: string | null;
   establishmentId: string | null;
-  status: string;
+  status: AppointmentStatusType;
   createdBy: string | null;
   cancellationReason: string | null;
   cancelledAt: string | null;

@@ -17,6 +17,7 @@ import type { AssistantConversationSummaryReadModel } from "@/contexts/assistant
 import type { ProfileViewModel } from "@/contexts/profiles/application/services/profile.view-model";
 import { SidebarProfile } from "@/contexts/profiles/interfaces/components/profile/sidebar-profile";
 import { cn } from "@/lib/utils";
+import type { SidebarRouteId } from "@/contexts/shared/application/model/app-shell.view-models";
 
 const navigation = [
   { label: "New Chat", href: "/chat", icon: MessageCircle },
@@ -30,15 +31,15 @@ const navigation = [
 export function Sidebar({
   initialAssistantConversations,
   currentProfile,
-  canReadCatalog = true,
-  canReadCrm = true,
-  canReadTeam = true,
+  visibleRoutes,
+  showAssistantSection,
+  showAssistantNavigation,
 }: {
   initialAssistantConversations: AssistantConversationSummaryReadModel[];
   currentProfile: Pick<ProfileViewModel, "username" | "imageUrl"> | null;
-  canReadCatalog?: boolean;
-  canReadCrm?: boolean;
-  canReadTeam?: boolean;
+  visibleRoutes: ReadonlyArray<SidebarRouteId>;
+  showAssistantSection: boolean;
+  showAssistantNavigation: boolean;
 }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -49,17 +50,12 @@ export function Sidebar({
     .map((conversation) => `${conversation.id}:${conversation.updatedAt}:${conversation.title ?? ""}`)
     .join("|");
 
-  const filteredNavigation = navigation.filter(item => {
-    if (item.label === "Catalog") {
-      return canReadCatalog;
+  const visibleRouteSet = new Set(visibleRoutes);
+  const filteredNavigation = navigation.filter((item) => {
+    if (!showAssistantNavigation && item.href === "/chat") {
+      return false;
     }
-    if (item.label === "CRM") {
-      return canReadCrm;
-    }
-    if (item.label === "Team") {
-      return canReadTeam;
-    }
-    return true;
+    return visibleRouteSet.has(item.href as SidebarRouteId);
   });
 
   return (
@@ -101,10 +97,12 @@ export function Sidebar({
         </ul>
       </nav>
 
-      <AssistantChatsSection
-        key={assistantChatsSectionKey}
-        initialConversations={initialAssistantConversations}
-      />
+      {showAssistantSection ? (
+        <AssistantChatsSection
+          key={assistantChatsSectionKey}
+          initialConversations={initialAssistantConversations}
+        />
+      ) : null}
 
       <div className="mt-auto pt-5">
         <SidebarProfile

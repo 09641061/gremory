@@ -1,11 +1,11 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { SchedulingApiGateway } from "../../infrastructure/gateways/scheduling-api.gateway";
 import { cancelAppointmentSchema } from "../rest/schemas/appointment.schemas";
 import { ApiError } from "@/contexts/shared/infrastructure/http/api-client";
 import { Appointment } from "../../domain/model/entities/appointment";
-import { ActionState } from "./create-appointment.action";
+import { ActionState } from "./action-state";
+import { createSchedulingCommandService } from "../../application/internal/commandservices/scheduling-command.service.impl";
 
 export async function cancelAppointmentAction(
   appointmentId: string,
@@ -23,13 +23,14 @@ export async function cancelAppointmentAction(
       status: "error",
       data: null,
       error: parsed.error.issues[0]?.message ?? "Invalid cancellation reason.",
+      errorId: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
       fieldErrors: parsed.error.flatten().fieldErrors,
     };
   }
 
   try {
-    const gateway = new SchedulingApiGateway();
-    const result = await gateway.cancelAppointment(appointmentId, parsed.data);
+    const commandService = createSchedulingCommandService();
+    const result = await commandService.cancelAppointment(appointmentId, parsed.data);
     revalidatePath("/schedule");
     return { status: "success", data: result, error: null, fieldErrors: null };
   } catch (error: unknown) {
@@ -38,6 +39,12 @@ export async function cancelAppointmentAction(
     if (error instanceof ApiError && error.message) {
       message = error.message;
     }
-    return { status: "error", data: null, error: message, fieldErrors: null };
+    return {
+      status: "error",
+      data: null,
+      error: message,
+      errorId: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+      fieldErrors: null,
+    };
   }
 }

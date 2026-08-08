@@ -4,30 +4,57 @@ import { revalidatePath } from "next/cache";
 import { apiConfig } from "@/api.config";
 import { createOrganizationCommandService } from "../../application/internal/commandservices/organization-command.service";
 import {
+  createOrganizationCommand,
   updateOrganizationCommand,
 } from "../../domain/model/commands/business.commands";
 import { requireBusinessAccessToken } from "../../infrastructure/session/business-session";
-import { updateOrganizationSchema } from "../rest/schemas/organization.schemas";
+import { createOrganizationSchema, updateOrganizationSchema } from "../rest/schemas/organization.schemas";
 import {
   actionError,
   type BusinessActionResult,
 } from "./business-action-result";
 
+export async function createOrganizationAction(
+  _previous: BusinessActionResult,
+  formData: FormData,
+): Promise<BusinessActionResult> {
+  const parsed = createOrganizationSchema.safeParse({
+    name: formData.get("name"),
+  });
+  if (!parsed.success) return actionError(parsed.error.issues[0]?.message);
 
-async function updateOrganizationWithMultipart(
+  try {
+    const token = await requireBusinessAccessToken();
+    const photoFile = readPhotoFileFromFormData(formData);
+    const organizationId = await createOrganizationCommandService(token).create(
+      createOrganizationCommand(parsed.data),
+    );
+
+    if (photoFile) {
+      await uploadOrganizationImage(
+        organizationId.value,
+        parsed.data.name,
+        photoFile,
+        token,
+      );
+    }
+
+    revalidateBusinessViews();
+    return { status: "success", data: { id: organizationId.value }, error: null };
+  } catch (error) {
+    return actionError(error);
+  }
+}
+
+async function uploadOrganizationImage(
   organizationId: string,
   name: string,
-  photoFile: File | null,
-  currentPhotoUrl: string | null,
+  photoFile: File,
   token: string,
 ) {
   const formData = new FormData();
   formData.set("name", name);
-  if (photoFile) {
-    formData.set("photoFile", photoFile);
-  } else if (currentPhotoUrl) {
-    formData.set("imageUrl", currentPhotoUrl);
-  }
+  formData.set("photoFile", photoFile);
 
   const response = await fetch(
     `${apiConfig.baseUrl}${apiConfig.routes.organizations}/${encodeURIComponent(organizationId)}`,
@@ -64,11 +91,10 @@ export async function updateOrganizationAction(
     const token = await requireBusinessAccessToken();
 
     if (photoFile) {
-      await updateOrganizationWithMultipart(
+      await uploadOrganizationImage(
         id,
         name,
         photoFile,
-        typeof currentPhotoUrl === "string" ? currentPhotoUrl : null,
         token,
       );
     } else {

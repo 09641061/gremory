@@ -7,7 +7,7 @@ import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 export type SearchableOption = { id: string; name: string };
 
 interface SearchableOptionsProps<T extends SearchableOption> {
-  options: T[];
+  options: ReadonlyArray<T>;
   selectedId?: string;
   search: string;
   onSearchChange: (value: string) => void;

@@ -13,7 +13,7 @@ export type CreateSubscriptionActionResult =
 export interface CreateSubscriptionInput {
   planId: number;
   billingCycle: BillingCycleType;
-  currency: CurrencyCode;
+  currency?: CurrencyCode;
 }
 
 /**

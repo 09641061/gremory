@@ -29,10 +29,8 @@ export function AuthCallback({ returnTo = null }: { returnTo?: string | null }) 
             return;
           }
 
-          // The proxy is the single route decision point. It validates the
-          // new session and sends users without an active subscription to
-          // /subscribe.
-          router.replace(returnTo ?? "/chat");
+          // Let the proxy resolve the best landing page for the new session.
+          router.replace(returnTo ?? "/");
         } catch {
           router.replace(returnTo ? `/login?next=${encodeURIComponent(returnTo)}` : "/login");
         }

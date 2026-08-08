@@ -23,7 +23,7 @@ export default async function TeamPage({ searchParams }: TeamPageProps) {
   } = await policyService.getPermissions(establishmentId);
 
   if (!canReadTeam) {
-    redirect("/chat?denied=workforce");
+    redirect("/?denied=workforce");
   }
 
   let members: Awaited<ReturnType<ReturnType<typeof createTeamQueryService>["list"]>>["content"] = [];

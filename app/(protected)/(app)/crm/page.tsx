@@ -25,7 +25,7 @@ export default async function CrmPage({ searchParams }: CrmPageProps) {
   );
 
   if (!permissions.canReadCustomers) {
-    redirect("/chat?denied=crm");
+    redirect("/?denied=crm");
   }
 
   return (

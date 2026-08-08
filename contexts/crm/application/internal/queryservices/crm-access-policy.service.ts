@@ -1,6 +1,11 @@
 import { createTeamQueryService } from "@/contexts/workforce/application/internal/queryservices/team-query.service";
 import { createOrganizationQueryService } from "@/contexts/business/application/internal/queryservices/organization-query.service";
 import { createEstablishmentQueryService } from "@/contexts/business/application/internal/queryservices/establishment-query.service";
+import {
+  findFirstMatchingEstablishment,
+  hasAnyPermission,
+  hasReadRole,
+} from "@/contexts/shared/application/internal/queryservices/access-context.helpers";
 
 export interface CrmPermissions {
   canReadCustomers: boolean;
@@ -46,24 +51,22 @@ export class CrmAccessPolicyService {
         }
 
         const perms = estAccess.effectivePermissions;
-        const hasManage = perms.includes("crm:customers:manage");
-        const roles = estAccess.roles || [];
-        const hasReadRole = roles.some((role) => role.name.toLowerCase() === "read");
+        const hasManage = hasAnyPermission(perms, ["crm:customers:manage"]);
 
         return {
           canReadCustomers:
             hasManage ||
-            hasReadRole ||
-            perms.includes("crm:customers:read"),
+            hasReadRole(estAccess.roles) ||
+            hasAnyPermission(perms, ["crm:customers:read"]),
           canCreateCustomer:
             hasManage ||
-            perms.includes("crm:customers:create"),
+            hasAnyPermission(perms, ["crm:customers:create"]),
           canUpdateCustomer:
             hasManage ||
-            perms.includes("crm:customers:update"),
+            hasAnyPermission(perms, ["crm:customers:update"]),
           canDeleteCustomer:
             hasManage ||
-            perms.includes("crm:customers:delete"),
+            hasAnyPermission(perms, ["crm:customers:delete"]),
         };
       } catch {
         return {
@@ -90,17 +93,12 @@ export class CrmAccessPolicyService {
     } catch {
       try {
         const access = await createTeamQueryService().getAccessContext();
-        const allowedEst = access.establishments.find((item) => {
-          const roles = item.roles || [];
-          const hasReadRole = roles.some((role) => role.name.toLowerCase() === "read");
-          return (
-            item.effectivePermissions.some(
-              (perm) =>
-                perm === "crm:customers:read" ||
-                perm === "crm:customers:manage",
-            ) || hasReadRole
-          );
-        });
+        const allowedEst = findFirstMatchingEstablishment(access.establishments, (item) =>
+          hasAnyPermission(item.effectivePermissions, [
+            "crm:customers:read",
+            "crm:customers:manage",
+          ]) || hasReadRole(item.roles),
+        );
         return allowedEst?.establishmentId;
       } catch {
         return undefined;

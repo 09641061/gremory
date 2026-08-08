@@ -1,7 +1,6 @@
 "use client";
 
 import { ChevronDown, Store } from "lucide-react";
-import { usePathname, useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import {
@@ -15,22 +14,20 @@ import { useSelectorMenu } from "../../use-selector-menu";
 export type EstablishmentSelectorEstablishment = { id: string; name: string; photoUrl?: string | null };
 
 interface EstablishmentSelectorProps {
-  establishments: EstablishmentSelectorEstablishment[];
+  establishments: ReadonlyArray<EstablishmentSelectorEstablishment>;
   selectedEstablishmentId?: string;
   onSelect: (establishmentId: string) => void;
+  onSelectAll?: () => void;
   onNew?: () => void;
-  canRead?: boolean;
 }
 
 export function EstablishmentSelector({
   establishments,
   selectedEstablishmentId,
   onSelect,
+  onSelectAll,
   onNew,
-  canRead = true,
 }: EstablishmentSelectorProps) {
-  const router = useRouter();
-  const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState("");
   const selectorRef = useRef<HTMLDivElement>(null);
@@ -79,12 +76,7 @@ export function EstablishmentSelector({
             onSelect={selectEstablishment}
             onSelectAll={() => {
               setIsOpen(false);
-              if (canRead) {
-                const query = selectedEstablishmentId ? `?establishmentId=${selectedEstablishmentId}` : "";
-                router.push(`/establishments${query}`);
-              } else {
-                router.push(`${pathname}?denied=est`);
-              }
+              onSelectAll?.();
             }}
             allLabel="All Establishments"
             searchPlaceholder="Find establishment..."
@@ -92,11 +84,7 @@ export function EstablishmentSelector({
             newLabel="New establishment"
             onNew={() => {
               setIsOpen(false);
-              if (onNew) {
-                onNew();
-                return;
-              }
-              router.push("/establishments/new");
+              onNew?.();
             }}
           />
         </div>
