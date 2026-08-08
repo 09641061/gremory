@@ -14,5 +14,7 @@ export interface SchedulingCommandService {
   ): Promise<Appointment>;
   cancelAppointment(id: string, command: CancelAppointmentCommand, token?: string): Promise<Appointment>;
   completeAppointment(id: string, token?: string): Promise<Appointment>;
+  startAppointment(id: string, token?: string): Promise<Appointment>;
+  markNoShowAppointment(id: string, token?: string): Promise<Appointment>;
   deleteAppointment(id: string, token?: string): Promise<void>;
 }

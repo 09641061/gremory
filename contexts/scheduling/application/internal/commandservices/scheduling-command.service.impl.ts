@@ -43,6 +43,14 @@ export class SchedulingCommandServiceImpl implements SchedulingCommandService {
     return this.gateway.completeAppointment(id, token);
   }
 
+  startAppointment(id: string, token?: string): Promise<Appointment> {
+    return this.gateway.startAppointment(id, token);
+  }
+
+  markNoShowAppointment(id: string, token?: string): Promise<Appointment> {
+    return this.gateway.markNoShowAppointment(id, token);
+  }
+
   deleteAppointment(id: string, token?: string): Promise<void> {
     return this.gateway.deleteAppointment(id, token);
   }

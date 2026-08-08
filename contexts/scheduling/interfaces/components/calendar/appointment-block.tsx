@@ -24,6 +24,9 @@ export function AppointmentBlock({ appointment, onClick }: AppointmentBlockProps
   const [now] = useState(() => Date.now());
   const isPast = ends.getTime() < now;
 
+  const isConfirmed = appointment.status === "CONFIRMED";
+  const isOverdue = isConfirmed && starts.getTime() < now;
+
   const formattedTime = `${starts.toLocaleTimeString("en-US", {
     hour: "numeric",
     minute: "2-digit",
@@ -42,7 +45,9 @@ export function AppointmentBlock({ appointment, onClick }: AppointmentBlockProps
   } else if (isCompleted) {
     statusStyles = "border-blue-500/20 bg-blue-500/5 text-blue-600/80 opacity-70";
   } else if (isInProgress) {
-    statusStyles = "border-amber-500/30 bg-amber-500/10 text-amber-700 animate-pulse";
+    statusStyles = "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 animate-pulse";
+  } else if (isOverdue) {
+    statusStyles = "border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-300";
   } else if (isPast) {
     statusStyles = "border-muted/30 bg-muted/5 text-muted-foreground opacity-60";
   }
