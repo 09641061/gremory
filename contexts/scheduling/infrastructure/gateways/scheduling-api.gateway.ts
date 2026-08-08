@@ -153,4 +153,52 @@ export class SchedulingApiGateway
       }
     );
   }
+
+  async completeAppointment(
+    id: string,
+    token?: string
+  ): Promise<Appointment> {
+    const authToken = await resolveAccessToken(token);
+    return apiClient.patch<Appointment>(
+      `${apiConfig.routes.scheduling.appointments}/${encodeURIComponent(id)}/complete`,
+      {},
+      {
+        token: authToken,
+        errorMessage: "Failed to complete appointment",
+        errorType: SchedulingApiError,
+      }
+    );
+  }
+
+  async startAppointment(
+    id: string,
+    token?: string
+  ): Promise<Appointment> {
+    const authToken = await resolveAccessToken(token);
+    return apiClient.patch<Appointment>(
+      `${apiConfig.routes.scheduling.appointments}/${encodeURIComponent(id)}/start`,
+      {},
+      {
+        token: authToken,
+        errorMessage: "Failed to start appointment",
+        errorType: SchedulingApiError,
+      }
+    );
+  }
+
+  async markNoShowAppointment(
+    id: string,
+    token?: string
+  ): Promise<Appointment> {
+    const authToken = await resolveAccessToken(token);
+    return apiClient.patch<Appointment>(
+      `${apiConfig.routes.scheduling.appointments}/${encodeURIComponent(id)}/no-show`,
+      {},
+      {
+        token: authToken,
+        errorMessage: "Failed to mark appointment as no-show",
+        errorType: SchedulingApiError,
+      }
+    );
+  }
 }
