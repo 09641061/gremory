@@ -15,6 +15,11 @@ import { DetailedServiceDTO } from "@/contexts/catalog/application/model/catalog
 import { CustomerResponse } from "@/contexts/crm/domain/model/entities/customer";
 import { useSelectorMenu } from "@/contexts/business/interfaces/components/use-selector-menu";
 import { cn } from "@/lib/utils";
+import {
+  calculateAppointmentTimes,
+  generateAppointmentTimeSlots,
+  getAppointmentDuration,
+} from "@/contexts/scheduling/application/services/appointment-time.service";
 
 interface AppointmentFormModalProps {
   isOpen: boolean;
@@ -345,20 +350,6 @@ function DateField({ id, name, placeholder, value, onChange }: DateFieldProps) {
   );
 }
 
-// Generate options for time slots from 07:00 AM to 09:00 PM in 15-minute intervals
-const generateTimeSlots = () => {
-  const slots: string[] = [];
-  for (let hour = 7; hour <= 21; hour++) {
-    for (let minute = 0; minute < 60; minute += 15) {
-      if (hour === 21 && minute > 0) break; // End at exactly 9:00 PM
-      const hStr = String(hour).padStart(2, "0");
-      const mStr = String(minute).padStart(2, "0");
-      slots.push(`${hStr}:${mStr}`);
-    }
-  }
-  return slots;
-};
-
 export function AppointmentFormModal({
   isOpen,
   onOpenChange,
@@ -379,8 +370,7 @@ export function AppointmentFormModal({
   const [startDate, setStartDate] = useState("");
   const [startTime, setStartTime] = useState("");
 
-  const timeSlots = generateTimeSlots();
-  const selectedService = services.find((service) => service.id === selectedServiceId);
+  const timeSlots = generateAppointmentTimeSlots();
 
   const serviceOptions = services.map((service) => ({
     value: service.id,
@@ -416,58 +406,11 @@ export function AppointmentFormModal({
     }
   }, [state, onSuccess, onOpenChange]);
 
-  // Calculate dynamic calculated strings
-  const getCalculatedTimes = () => {
-    if (!startDate || !startTime || !selectedServiceId) {
-      return { startsAt: "", endsAt: "", formattedEnd: "" };
-    }
-
-    const duration = selectedService ? selectedService.durationMinutes : 30; // default 30 mins fallback
-
-    // Parse start datetime in local timezone context
-    const [startYear, startMonth, startDay] = startDate.split("-").map(Number);
-    const [startHour, startMin] = startTime.split(":").map(Number);
-    
-    // Construct local date
-    const startDateTime = new Date(startYear!, startMonth! - 1, startDay!, startHour!, startMin!, 0, 0);
-    const endDateTime = new Date(startDateTime.getTime() + duration * 60 * 1000);
-
-    // Helper to format ISO OffsetDateTime correctly for backend parser
-    const toLocalISOString = (date: Date) => {
-      const pad = (n: number) => String(n).padStart(2, "0");
-      const tzo = -date.getTimezoneOffset();
-      const dif = tzo >= 0 ? "+" : "-";
-      return (
-        date.getFullYear() +
-        "-" +
-        pad(date.getMonth() + 1) +
-        "-" +
-        pad(date.getDate()) +
-        "T" +
-        pad(date.getHours()) +
-        ":" +
-        pad(date.getMinutes()) +
-        ":" +
-        pad(date.getSeconds()) +
-        dif +
-        pad(Math.floor(Math.abs(tzo) / 60)) +
-        ":" +
-        pad(Math.abs(tzo) % 60)
-      );
-    };
-
-    return {
-      startsAt: toLocalISOString(startDateTime),
-      endsAt: toLocalISOString(endDateTime),
-      formattedEnd: `${endDateTime.toLocaleTimeString("en-US", {
-        hour: "numeric",
-        minute: "2-digit",
-        hour12: true,
-      })} (${duration} mins duration)`,
-    };
-  };
-
-  const { startsAt, endsAt, formattedEnd } = getCalculatedTimes();
+  const { startsAt, endsAt, formattedEnd } = calculateAppointmentTimes(
+    startDate,
+    startTime,
+    getAppointmentDuration(services, selectedServiceId),
+  );
 
   return (
     <>

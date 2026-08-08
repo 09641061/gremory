@@ -6,6 +6,7 @@ import { Save } from "lucide-react";
 import { ErrorAlert } from "@/contexts/shared/interfaces/components/ui/error";
 import { registerCustomerAction } from "@/contexts/crm/interfaces/actions/register-customer.action";
 import { CustomerForm, CustomerFormData } from "@/contexts/crm/interfaces/components/customer-management/customer-form";
+import { toCustomerIdentityFields } from "@/contexts/crm/application/transforms/customer-command.transforms";
 
 interface CreateCustomerFormProps {
   establishmentId: string;
@@ -21,16 +22,7 @@ export function CreateCustomerForm({ establishmentId }: CreateCustomerFormProps)
     setIsSaving(true);
     setErrorMsg(null);
 
-    const command = {
-      dni: data.docType === "dni" ? data.docNumber : null,
-      ruc: data.docType === "ruc" ? data.docNumber : null,
-      foreignResidentCard: data.docType === "foreign_resident_card" ? data.docNumber : null,
-      passport: data.docType === "passport" ? data.docNumber : null,
-      name: data.name,
-      phoneCountryCode: data.phoneCountryCode,
-      phoneNumber: data.phoneNumber,
-      email: data.email,
-    };
+    const command = toCustomerIdentityFields(data);
 
     try {
       const result = await registerCustomerAction(command, establishmentId);

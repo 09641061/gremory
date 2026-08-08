@@ -33,8 +33,9 @@ export function SearchableOptions<T extends SearchableOption>({
   newLabel,
   onNew,
 }: SearchableOptionsProps<T>) {
+  const normalizedSearch = search.trim().toLowerCase();
   const filteredOptions = options.filter((option) =>
-    option.name.toLowerCase().includes(search.trim().toLowerCase()),
+    option.name.toLowerCase().includes(normalizedSearch),
   );
 
   return (
@@ -71,16 +72,18 @@ export function SearchableOptions<T extends SearchableOption>({
         )}
       </div>
 
-      <Button
-        type="button"
-        variant="ghost"
-        onClick={onSelectAll}
-        className="mt-1 h-auto w-full justify-start rounded-md px-2 py-2 text-left text-sm text-muted-foreground"
-      >
-        {allLabel}
-      </Button>
+      {onSelectAll ? (
+        <Button
+          type="button"
+          variant="ghost"
+          onClick={onSelectAll}
+          className="mt-1 h-auto w-full justify-start rounded-md px-2 py-2 text-left text-sm text-muted-foreground"
+        >
+          {allLabel}
+        </Button>
+      ) : null}
 
-      {newLabel && onNew && (
+      {newLabel && onNew ? (
         <Button
           type="button"
           variant="ghost"
@@ -90,7 +93,7 @@ export function SearchableOptions<T extends SearchableOption>({
           <Plus className="size-4" />
           {newLabel}
         </Button>
-      )}
+      ) : null}
     </div>
   );
 }

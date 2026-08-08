@@ -9,7 +9,7 @@ import {
   AvatarFallback,
   AvatarImage,
 } from "@/contexts/shared/interfaces/components/ui/avatar";
-import { SearchableOptions } from "../../searchable-options";
+import { SearchableOptions } from "@/contexts/shared/interfaces/components/searchable-options";
 import { useSelectorMenu } from "../../use-selector-menu";
 
 export type EstablishmentSelectorEstablishment = { id: string; name: string; photoUrl?: string | null };

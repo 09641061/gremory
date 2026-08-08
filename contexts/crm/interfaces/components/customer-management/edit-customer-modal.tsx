@@ -7,6 +7,7 @@ import { Dialog, DialogContent, DialogTitle, DialogDescription, DialogClose } fr
 import { CustomerResponse } from "@/contexts/crm/domain/model/entities/customer";
 import { updateCustomerAction } from "@/contexts/crm/interfaces/actions/update-customer.action";
 import { CustomerForm, CustomerFormData } from "@/contexts/crm/interfaces/components/customer-management/customer-form";
+import { toUpdateCustomerCommand } from "@/contexts/crm/application/transforms/customer-command.transforms";
 
 interface EditCustomerModalProps {
   customer: CustomerResponse;
@@ -28,17 +29,7 @@ export function EditCustomerModal({
     setIsSaving(true);
     setErrorMsg(null);
 
-    const command = {
-      id: customer.id,
-      dni: data.docType === "dni" ? data.docNumber : null,
-      ruc: data.docType === "ruc" ? data.docNumber : null,
-      foreignResidentCard: data.docType === "foreign_resident_card" ? data.docNumber : null,
-      passport: data.docType === "passport" ? data.docNumber : null,
-      name: data.name,
-      phoneCountryCode: data.phoneCountryCode,
-      phoneNumber: data.phoneNumber,
-      email: data.email,
-    };
+    const command = toUpdateCustomerCommand(data, customer.id);
 
     try {
       const result = await updateCustomerAction(command, customer.establishmentId);
