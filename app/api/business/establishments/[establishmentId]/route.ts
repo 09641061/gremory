@@ -109,7 +109,7 @@ export async function PUT(
       return validationErrorResponse(parsed.error.issues[0]?.message);
     }
 
-    const token = await requireBusinessAccessToken();
+    await requireBusinessAccessToken();
     await createEstablishmentCommandService().update(
       updateEstablishmentCommand(parsed.data),
     );
@@ -141,7 +141,7 @@ export async function DELETE(
       return validationErrorResponse(idParsed.error.issues[0]?.message);
     }
 
-    const token = await requireBusinessAccessToken();
+    await requireBusinessAccessToken();
     await createEstablishmentCommandService().delete(
       deleteEstablishmentCommand({ id: idParsed.data }),
     );

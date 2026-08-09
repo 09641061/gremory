@@ -17,7 +17,7 @@ export async function POST(request: Request) {
       return validationErrorResponse(parsed.error.issues[0]?.message);
     }
 
-    const token = await requireBusinessAccessToken();
+    await requireBusinessAccessToken();
     const establishmentId = await createEstablishmentCommandService().create(
       createEstablishmentCommand(parsed.data),
     );
