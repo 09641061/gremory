@@ -1,12 +1,11 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { BillingApiGateway } from "@/contexts/billing/infrastructure/gateways/billing-api.gateway";
 import { createIamSessionQueryService } from "@/contexts/iam/application/internal/queryservices/iam-session-query.service";
-import { createSubscriptionAccessQueryService } from "@/contexts/billing/application/internal/queryservices/subscription-access-query.service";
-import { createLandingPathQueryService } from "@/contexts/iam/application/internal/queryservices/landing-path-query.service";
+import { createEntryRouteQueryService } from "@/contexts/shared/application/internal/queryservices/entry-route-query.service";
 import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-session-cookie";
 import { continueRequestWithSession } from "@/contexts/iam/interfaces/proxy/iam-session-request";
-import { apiConfig } from "@/api.config";
-import { ApiError, apiClient } from "@/contexts/shared/infrastructure/http/api-client";
+import { ApiError } from "@/contexts/shared/infrastructure/http/api-client";
 
 export async function proxy(request: NextRequest) {
   let accessToken = request.cookies.get(iamSessionCookies.accessToken)?.value;
@@ -38,26 +37,14 @@ export async function proxy(request: NextRequest) {
     response = continueRequestWithSession(request, session.rotatedSession);
   }
 
-  const subscriptionAccess = await getSubscriptionAccess(accessToken);
-
-  if (subscriptionAccess.status === "unauthenticated") {
-    return redirectToLogin(request);
-  }
-
-  // Do not convert an API outage into a false "no subscription" decision.
-  // Protected backend endpoints remain the final authorization boundary.
-  if (subscriptionAccess.status === "unavailable") {
+  // Subscription is a capability input, never an onboarding prerequisite.
+  if (pathname === "/subscribe") {
     return response ?? NextResponse.next();
   }
 
-  let subscriptionForLanding = null as { active?: boolean; status?: string; planId?: number } | null;
-  if (subscriptionAccess.status === "active") {
-    subscriptionForLanding = subscriptionAccess.subscription;
-  } else if (subscriptionAccess.status === "inactive") {
-    subscriptionForLanding = subscriptionAccess.subscription ?? null;
-  }
+  const subscriptionForLanding = await getSubscriptionSnapshot(accessToken);
 
-  const landing = await createLandingPathQueryService().resolveRoute({
+  const landing = await createEntryRouteQueryService().resolveRoute({
     accessToken,
     subscription: subscriptionForLanding,
   });
@@ -68,19 +55,21 @@ export async function proxy(request: NextRequest) {
     return response ?? NextResponse.next();
   }
 
+  if (landing.status === "organization-required" || landing.status === "establishment-required") {
+    if (pathname !== landing.setupHref) {
+      return redirectWithCookies(request, landing.setupHref, response);
+    }
+    return response ?? NextResponse.next();
+  }
+
   const homePath = landing.homeHref;
-  const activeAccess = subscriptionAccess.status === "active" || landing.hasWorkforceAccess;
 
-  if (activeAccess && (pathname === "/" || pathname === "/login" || pathname === "/subscribe")) {
+  if (pathname === "/") {
     return redirectWithCookies(request, homePath, response);
   }
 
-  if (activeAccess && homePath !== "/chat" && (pathname === "/chat" || pathname.startsWith("/chat/"))) {
+  if (homePath !== "/chat" && (pathname === "/chat" || pathname.startsWith("/chat/"))) {
     return redirectWithCookies(request, homePath, response);
-  }
-
-  if (!activeAccess && (pathname === "/" || pathname === "/login" || isPrivateRoute(pathname))) {
-    return redirectWithCookies(request, "/subscribe", response);
   }
 
   return response ?? NextResponse.next();
@@ -100,35 +89,17 @@ function isPrivateRoute(pathname: string) {
   ].some((route) => pathname === route || pathname.startsWith(`${route}/`));
 }
 
-type SubscriptionAccess =
-  | {
-      status: "active";
-      subscription: { active?: boolean; status?: string; planId?: number };
-    }
-  | {
-      status: "inactive";
-      subscription?: { active?: boolean; status?: string; planId?: number } | null;
-    }
-  | { status: "unauthenticated" | "unavailable" };
-
-async function getSubscriptionAccess(accessToken: string): Promise<SubscriptionAccess> {
+async function getSubscriptionSnapshot(accessToken: string): Promise<{
+  active?: boolean;
+  status?: string;
+  planId?: number;
+} | null> {
   try {
-    const subscription = await apiClient.get<{
-      active?: boolean;
-      status?: string;
-      planId?: number;
-    }>(
-      apiConfig.routes.subscriptions,
-      { token: accessToken },
-    );
-    const access = createSubscriptionAccessQueryService().resolve(subscription);
-    return access.isActive
-      ? { status: "active", subscription }
-      : { status: "inactive" };
+    return await new BillingApiGateway().getCurrentSubscription(accessToken);
   } catch (error) {
-    if (error instanceof ApiError && error.status === 401) return { status: "unauthenticated" };
-    if (error instanceof ApiError && error.status === 404) return { status: "inactive", subscription: null };
-    return { status: "unavailable" };
+    if (error instanceof ApiError && error.status === 401) return null;
+    // A missing or temporarily unavailable subscription must not block onboarding.
+    return null;
   }
 }
 
@@ -173,3 +144,4 @@ export const config = {
     "/establishments/:path*",
   ],
 };
+

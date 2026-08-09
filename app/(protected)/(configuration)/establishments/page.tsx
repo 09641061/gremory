@@ -13,7 +13,7 @@ export default async function EstablishmentsRoutePage({ searchParams }: Establis
     await policyService.getEstablishmentsPermissions(establishmentId);
 
   if (!canRead) {
-    redirect("/?denied=est");
+    redirect("/organizations?denied=est");
   }
 
   return (

@@ -15,7 +15,7 @@ export default async function SchedulePage({ searchParams }: SchedulePageProps) 
   const establishmentId = paramEstId ?? defaultEstId ?? undefined;
 
   if (!establishmentId) {
-    redirect("/?error=no-establishment");
+    redirect("/establishments/new");
   }
 
   const {

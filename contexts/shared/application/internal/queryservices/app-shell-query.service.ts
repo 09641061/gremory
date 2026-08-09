@@ -38,7 +38,7 @@ export class AppShellQueryService {
     return {
       workspace,
       hasAssistantAccess: subscriptionAccess.hasAssistantAccess,
-      homeHref: resolveHomeHref(subscriptionAccess.hasAssistantAccess, visibleSidebarRoutes),
+      homeHref: resolveHomeHref(subscriptionAccess.hasAssistantAccess, visibleSidebarRoutes, workspace),
       visibleSidebarRoutes,
       headerNavigation: {
         organizationListHref: workspace.canReadOrganizations ? "/organizations" : null,
@@ -85,7 +85,11 @@ function resolveVisibleSidebarRoutes(
 function resolveHomeHref(
   hasAssistantAccess: boolean,
   visibleRoutes: ReadonlyArray<SidebarRouteId>,
-): "/chat" | "/schedule" | "/crm" | "/catalog" | "/team" | "/organizations" {
+  workspace: AppShellViewModel["workspace"],
+): "/chat" | "/schedule" | "/crm" | "/catalog" | "/team" | "/organizations" | "/establishments/new" {
+  if (workspace.organization && workspace.establishments.length === 0 && workspace.canCreateEstablishment) {
+    return "/establishments/new";
+  }
   if (hasAssistantAccess) {
     return "/chat";
   }
