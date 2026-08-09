@@ -8,6 +8,7 @@ import { PlanPricingPolicy } from "@/contexts/billing/domain/services/plan-prici
 
 describe("Billing Domain Model & Policies", () => {
   it("validates PlanId value object invariants", () => {
+    expect(createPlanId(0).value).toBe(0);
     expect(createPlanId(1).value).toBe(1);
     expect(createPlanId(2).value).toBe(2);
     expect(() => createPlanId(3)).toThrow("Invalid PlanId");
@@ -36,6 +37,10 @@ describe("Billing Domain Model & Policies", () => {
   it("calculates plan pricing policy correctly for PEN, USD, and EUR", () => {
     const policy = new PlanPricingPolicy();
     
+    // Free plan is always zero cost
+    const usdFreeMonthly = policy.calculateMonthlyEquivalentPrice(0, "USD", "MONTHLY");
+    expect(usdFreeMonthly.amount).toBe(0);
+
     // Standard Monthly PEN
     const penStandardMonthly = policy.calculateMonthlyEquivalentPrice(1, "PEN", "MONTHLY");
     expect(penStandardMonthly.amount).toBe(75);

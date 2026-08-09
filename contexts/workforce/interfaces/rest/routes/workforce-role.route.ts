@@ -159,7 +159,7 @@ function roleToResource(role: WorkforceRole) {
     name: role.getName(),
     permissions: [...role.getPermissions()],
     systemRole: role.isSystemRole(),
-    position: role.position,
+    position: role.position ?? 1,
   };
 }
 

@@ -7,8 +7,8 @@ export interface PlanReadModel {
   id: number;
   name: string;
   description: string;
-  monthlyPrice: number;
-  annualPricePerMonth: number;
+  monthlyPriceAmount: number;
+  annualPriceAmount: number;
   features: readonly string[];
   isPopular: boolean;
 }
@@ -19,6 +19,19 @@ export class ListPlansQueryService {
   public getAvailablePlans(
     currencyCode: CurrencyCode
   ): PlanReadModel[] {
+    const freePlan = new Plan(
+      createPlanId(0),
+      "Free",
+      "Try the core product experience.",
+      1,
+      [
+        "Create and manage your organization",
+        "Core operational workflows",
+        "Upgrade later when you need automation",
+      ],
+      false
+    );
+
     const standardPlan = new Plan(
       createPlanId(1),
       "Standard",
@@ -48,14 +61,14 @@ export class ListPlansQueryService {
       true
     );
 
-    return [standardPlan, premiumPlan].map((plan) => {
+    return [freePlan, standardPlan, premiumPlan].map((plan) => {
       const planIdVal = plan.id.value;
       const monthlyPriceObj = this.pricingPolicy.calculateMonthlyEquivalentPrice(
         planIdVal,
         currencyCode,
         "MONTHLY"
       );
-      const annualPriceObj = this.pricingPolicy.calculateMonthlyEquivalentPrice(
+      const annualPriceObj = this.pricingPolicy.calculateTotalCyclePrice(
         planIdVal,
         currencyCode,
         "ANNUAL"
@@ -65,8 +78,8 @@ export class ListPlansQueryService {
         id: plan.id.value,
         name: plan.name,
         description: plan.description,
-        monthlyPrice: monthlyPriceObj.amount,
-        annualPricePerMonth: annualPriceObj.amount,
+        monthlyPriceAmount: monthlyPriceObj.amount,
+        annualPriceAmount: annualPriceObj.amount,
         features: plan.features,
         isPopular: plan.isPopular,
       };
