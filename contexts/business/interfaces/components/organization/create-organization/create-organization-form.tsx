@@ -32,6 +32,7 @@ export function CreateOrganizationForm() {
   useEffect(() => {
     if (state.status === "success" && !hasRedirected.current) {
       hasRedirected.current = true;
+      router.push("/establishments/new");
       router.refresh();
     }
   }, [router, state.status]);
@@ -135,14 +136,6 @@ export function CreateOrganizationForm() {
           </CardContent>
 
           <CardFooter className="justify-end gap-2 rounded-b-xl border-t border-border bg-card px-6 py-5">
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={() => router.push("/subscribe")}
-              disabled={pending}
-            >
-              Back
-            </Button>
             <Button type="submit" disabled={pending} className="gap-2">
               {pending ? <Spinner className="size-4" /> : <Plus className="size-4" />}
               {pending ? "Creating..." : "Create organization"}

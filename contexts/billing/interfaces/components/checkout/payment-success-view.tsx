@@ -26,8 +26,8 @@ export function PaymentSuccessView() {
         if (cancelled) return;
 
         if (hasActiveSubscription(subscription)) {
-          // Use a full navigation so auth and subscription proxies re-run with the latest session state.
-          window.location.assign("/chat");
+          // Re-run session, onboarding, workspace and capability resolution.
+          window.location.assign("/");
           return;
         }
 

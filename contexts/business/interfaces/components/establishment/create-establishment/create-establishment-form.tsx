@@ -35,7 +35,7 @@ export function CreateEstablishmentForm({ organizationId }: { organizationId: st
   useEffect(() => {
     if (state.status === "success" && !hasRedirected.current) {
       hasRedirected.current = true;
-      router.push("/establishments");
+      router.push("/");
       router.refresh();
     } else if (state.status === "error") {
       setTimeout(() => {
