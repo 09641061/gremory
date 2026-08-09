@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-
-import { BillingApiGateway } from "@/contexts/billing/infrastructure/gateways/billing-api.gateway";
+import { ListPlansQueryService } from "@/contexts/billing/application/internal/queryservices/list-plans-query.service";
 
 const currencySchema = z.enum(["PEN", "USD", "EUR"]);
 
@@ -28,7 +27,7 @@ export async function GET(request: Request) {
       return NextResponse.json({ message: parsedCurrency.error.issues[0]?.message ?? "Invalid currency" }, { status: 400 });
     }
 
-    const plans = await new BillingApiGateway().getPlans(parsedCurrency.data);
+    const plans = new ListPlansQueryService().getAvailablePlans(parsedCurrency.data ?? "USD");
     return NextResponse.json(plans);
   } catch (error) {
     return routeErrorResponse(error);

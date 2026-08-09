@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import { cookies } from "next/headers";
 import { ListConversationsQueryService } from "@/contexts/assistant/application/internal/queryservices/list-conversations-query.service";
 import type { AssistantConversationSummaryReadModel } from "@/contexts/assistant/application/internal/transforms/assistant.read-models";
-import { BillingApiGateway } from "@/contexts/billing/infrastructure/gateways/billing-api.gateway";
+import { createCurrentSubscriptionQueryService } from "@/contexts/billing/application/internal/queryservices/current-subscription-query.service";
 import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-session-cookie";
 import { Sidebar } from "@/contexts/shared/interfaces/components/sidebar";
 import { createAppShellQueryService } from "@/contexts/shared/application/internal/queryservices/app-shell-query.service";
@@ -20,10 +20,10 @@ export default async function AppLayout({
   const currentProfile = await getMyProfileServerQuery();
   const accessToken = (await cookies()).get(iamSessionCookies.accessToken)?.value;
   const subscription = accessToken
-    ? await new BillingApiGateway().getCurrentSubscription(accessToken).catch(() => null)
+    ? await createCurrentSubscriptionQueryService().getCurrentSubscription(accessToken)
     : null;
   const shell = accessToken
-    ? await createAppShellQueryService().resolve({ subscription }).catch(() => null)
+    ? await createAppShellQueryService().resolve({ subscription })
     : null;
   const hasAssistantAccess = shell?.hasAssistantAccess ?? false;
 

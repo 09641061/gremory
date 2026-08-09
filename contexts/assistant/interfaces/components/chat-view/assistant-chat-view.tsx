@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { useRouter } from "next/navigation";
 
+import { getAssistantConversationAction } from "@/contexts/assistant/interfaces/actions/get-conversation.action";
 import { submitAssistantMessageAction } from "@/contexts/assistant/interfaces/actions/assistant-chat.actions";
 import { ErrorAlert } from "@/contexts/shared/interfaces/components/ui/error";
 import type { AssistantConversationViewModel } from "@/contexts/assistant/interfaces/view-models/assistant-chat.view-model";
@@ -63,21 +64,14 @@ export function AssistantChatView({
 
     async function pollConversationTitle(attempt: number) {
       try {
-        const response = await fetch(
-          `/api/assistant/conversations/${encodeURIComponent(targetConversationId)}`,
-          {
-            cache: "no-store",
-          },
-        );
-
-        if (!response.ok) {
-          throw new Error("Failed to fetch assistant conversation");
-        }
-
-        const nextConversation = (await response.json()) as AssistantConversationViewModel;
+        const nextConversation = await getAssistantConversationAction(targetConversationId);
 
         if (cancelled) {
           return;
+        }
+
+        if (!nextConversation) {
+          throw new Error("Failed to fetch assistant conversation");
         }
 
         if (!isPendingTitle(nextConversation.title)) {

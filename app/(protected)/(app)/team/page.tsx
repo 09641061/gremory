@@ -28,11 +28,7 @@ export default async function TeamPage({ searchParams }: TeamPageProps) {
 
   let members: Awaited<ReturnType<ReturnType<typeof createTeamQueryService>["list"]>>["content"] = [];
   if (establishmentId) {
-    try {
-      members = (await createTeamQueryService().list({ establishmentId, size: 100 })).content;
-    } catch {
-      // Keep the team shell available while workforce is unavailable.
-    }
+    members = (await createTeamQueryService().list({ establishmentId, size: 100 })).content;
   }
   return (
     <TeamPageView

@@ -85,7 +85,8 @@ describe("Business server actions", () => {
       }),
     );
 
-    expect(mocks.establishmentFactory).toHaveBeenCalledWith("access-token");
+    expect(mocks.requireToken).toHaveBeenCalledTimes(1);
+    expect(mocks.establishmentFactory).toHaveBeenCalledWith();
     expect(mocks.establishmentService.create).toHaveBeenCalledWith({
       organizationId,
       name: "Main store",

@@ -129,8 +129,8 @@ export class LandingPathQueryService {
     let ownerData: LandingPathOwnerData | undefined;
 
     try {
-      const currentOrganization = await createOrganizationQueryService(accessToken).getMyOrganization();
-      const page = await createEstablishmentQueryService(accessToken).getByOrganization({
+      const currentOrganization = await createOrganizationQueryService().getMyOrganization();
+      const page = await createEstablishmentQueryService().getByOrganization({
         organizationId: currentOrganization.id,
         page: 0,
         size: 100,

@@ -17,12 +17,12 @@ export async function POST(request: Request) {
       return validationErrorResponse(parsed.error.issues[0]?.message);
     }
 
-    const token = await requireBusinessAccessToken();
-    const establishmentId = await createEstablishmentCommandService(token).create(
+    await requireBusinessAccessToken();
+    const establishmentId = await createEstablishmentCommandService().create(
       createEstablishmentCommand(parsed.data),
     );
 
-    const establishment = await createEstablishmentQueryService(token).getById({
+    const establishment = await createEstablishmentQueryService().getById({
       id: establishmentId.value,
     });
 

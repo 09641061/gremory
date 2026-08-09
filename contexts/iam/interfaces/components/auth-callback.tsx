@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Spinner } from "@/contexts/shared/interfaces/components/ui/spinner";
+import { createSessionAction } from "@/contexts/iam/interfaces/actions/create-session.action";
 
 export function AuthCallback({ returnTo = null }: { returnTo?: string | null }) {
   const router = useRouter();
@@ -15,20 +16,7 @@ export function AuthCallback({ returnTo = null }: { returnTo?: string | null }) 
     if (accessToken && refreshToken) {
       void (async () => {
         try {
-          const sessionResponse = await fetch("/api/iam/auth/session", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              accessToken,
-              refreshToken,
-            }),
-          });
-
-          if (!sessionResponse.ok) {
-            router.replace(returnTo ? `/login?next=${encodeURIComponent(returnTo)}` : "/login");
-            return;
-          }
-
+          await createSessionAction({ accessToken, refreshToken });
           // Let the proxy resolve the best landing page for the new session.
           router.replace(returnTo ?? "/");
         } catch {
