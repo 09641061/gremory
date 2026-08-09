@@ -1,5 +1,6 @@
 "use server";
 
+import "server-only";
 import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-session-cookie";

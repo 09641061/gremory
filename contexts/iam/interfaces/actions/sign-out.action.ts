@@ -1,5 +1,6 @@
 "use server";
 
+import "server-only";
 import { cookies } from "next/headers";
 import { createIamAuthenticationCommandService } from "../../application/internal/commandservices/iam-authentication-command.service";
 import { iamSessionCookies } from "../../infrastructure/session/iam-session-cookie";

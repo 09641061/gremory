@@ -1,5 +1,6 @@
 "use server";
 
+import "server-only";
 import { cookies } from "next/headers";
 
 import { createCurrentSubscriptionQueryService } from "@/contexts/billing/application/internal/queryservices/current-subscription-query.service";
