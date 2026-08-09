@@ -1,11 +1,16 @@
 import "server-only";
 
-import { BillingApiGateway, type SubscriptionResponse } from "../../../infrastructure/gateways/billing-api.gateway";
 import type { SubscriptionAccessSnapshot } from "../../../domain/services/subscription-access.policy";
+import {
+  createBillingSubscriptionOutboundService,
+  type BillingSubscriptionSnapshot,
+} from "../outboundservices/billing-subscription-outbound.service";
 
 export class CurrentSubscriptionQueryService {
   async getCurrentSubscription(accessToken: string): Promise<SubscriptionAccessSnapshot> {
-    const subscription = await new BillingApiGateway().getCurrentSubscription(accessToken);
+    const subscription = await createBillingSubscriptionOutboundService().getCurrentSubscription(
+      accessToken,
+    );
     return toSubscriptionAccessSnapshot(subscription);
   }
 }
@@ -15,7 +20,7 @@ export function createCurrentSubscriptionQueryService() {
 }
 
 function toSubscriptionAccessSnapshot(
-  subscription: SubscriptionResponse,
+  subscription: BillingSubscriptionSnapshot,
 ): SubscriptionAccessSnapshot {
   return {
     active: subscription.active,

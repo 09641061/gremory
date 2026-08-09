@@ -7,6 +7,8 @@ import {
 } from "../../../infrastructure/gateways/billing-api.gateway";
 import type { CreateSubscriptionCommand } from "../../../domain/model/commands/create-subscription.command";
 
+export type BillingSubscriptionSnapshot = SubscriptionResponse;
+
 export class BillingSubscriptionOutboundService {
   async getCurrentSubscription(accessToken: string): Promise<SubscriptionResponse> {
     return new BillingApiGateway().getCurrentSubscription(accessToken);

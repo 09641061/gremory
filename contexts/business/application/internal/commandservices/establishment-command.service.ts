@@ -11,7 +11,7 @@ import { createEstablishmentPhoto } from "../../../domain/model/valueobjects/est
 import { createOrganizationId } from "../../../domain/model/valueobjects/organization-id.vo";
 import type { EstablishmentRepository } from "../../../domain/services/business.repositories";
 import type { EstablishmentCommandService } from "../../services/business.services";
-import { EstablishmentApiGateway } from "../../../infrastructure/gateways/establishment-api.gateway";
+import { createEstablishmentOutboundService } from "../outboundservices/establishment-outbound.service";
 
 export class EstablishmentCommandServiceImpl implements EstablishmentCommandService {
   constructor(private readonly establishments: EstablishmentRepository) {}
@@ -41,7 +41,6 @@ export class EstablishmentCommandServiceImpl implements EstablishmentCommandServ
 }
 
 export function createEstablishmentCommandService(
-  token?: string,
 ): EstablishmentCommandService {
-  return new EstablishmentCommandServiceImpl(new EstablishmentApiGateway(token));
+  return new EstablishmentCommandServiceImpl(createEstablishmentOutboundService());
 }
