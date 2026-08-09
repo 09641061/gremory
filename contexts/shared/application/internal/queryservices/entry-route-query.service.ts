@@ -22,8 +22,26 @@ export class EntryRouteQueryService {
   async resolveRoute({ accessToken, subscription }: EntryRouteInput): Promise<EntryRouteResolution> {
     const organization = await this.tryGet(() => this.businessAccess.getOwnedOrganization(accessToken));
 
-    if (organization.status === "unauthenticated" || organization.status === "unavailable") {
+    if (organization.status === "unauthenticated") {
       return organization;
+    }
+
+    const workforce = await this.tryGet(() => this.workforceAccess.getAccessContext(accessToken));
+    if (workforce.status === "unauthenticated") {
+      return workforce;
+    }
+
+    if (workforce.status === "ready") {
+      const establishments = toEntryEstablishments(workforce.data);
+      if (establishments.length > 0) {
+        return {
+          status: "ready",
+          homeHref: resolveEmployeeEntryPath(
+            establishments,
+            createSubscriptionAccessQueryService().resolve(subscription).hasAssistantAccess,
+          ),
+        };
+      }
     }
 
     if (organization.status === "ready") {
@@ -44,27 +62,11 @@ export class EntryRouteQueryService {
       };
     }
 
-    const workforce = await this.tryGet(() => this.workforceAccess.getAccessContext(accessToken));
-    if (workforce.status === "unauthenticated" || workforce.status === "unavailable") {
-      return workforce;
+    if (organization.status === "unavailable" || workforce.status === "unavailable") {
+      return { status: "unavailable" };
     }
 
-    if (workforce.status === "not-found") {
-      return { status: "organization-required", setupHref: "/organizations" };
-    }
-
-    const establishments = toEntryEstablishments(workforce.data);
-    if (establishments.length === 0) {
-      return { status: "organization-required", setupHref: "/organizations" };
-    }
-
-    return {
-      status: "ready",
-      homeHref: resolveEmployeeEntryPath(
-        establishments,
-        createSubscriptionAccessQueryService().resolve(subscription).hasAssistantAccess,
-      ),
-    };
+    return { status: "organization-required", setupHref: "/organizations" };
   }
 
   private async tryGet<T>(load: () => Promise<T>): Promise<
@@ -110,4 +112,3 @@ function classifyApiError(error: unknown):
 export function createEntryRouteQueryService() {
   return new EntryRouteQueryService();
 }
-

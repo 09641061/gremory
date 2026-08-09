@@ -64,6 +64,10 @@ export async function proxy(request: NextRequest) {
 
   const homePath = landing.homeHref;
 
+  if (pathname === "/access-denied" && homePath !== "/access-denied") {
+    return redirectWithCookies(request, homePath, response);
+  }
+
   if (pathname === "/") {
     return redirectWithCookies(request, homePath, response);
   }
@@ -86,6 +90,7 @@ function isPrivateRoute(pathname: string) {
     "/settings",
     "/organizations",
     "/establishments",
+    "/access-denied",
   ].some((route) => pathname === route || pathname.startsWith(`${route}/`));
 }
 
@@ -142,6 +147,6 @@ export const config = {
     "/settings/:path*",
     "/organizations/:path*",
     "/establishments/:path*",
+    "/access-denied/:path*",
   ],
 };
-

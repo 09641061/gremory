@@ -16,6 +16,10 @@ import type {
 
 export class BusinessWorkspaceQueryService {
   async getHeaderViewModel(activeEstablishmentId?: string): Promise<WorkspaceHeaderViewModel> {
+    // Membership access has priority over an automatically-created personal organization.
+    const memberWorkspace = await this.getMemberWorkspace(activeEstablishmentId);
+    if (memberWorkspace) return memberWorkspace;
+
     try {
       const organization = await createOrganizationQueryService().getMyOrganization();
       const page = await createEstablishmentQueryService().getByOrganization({
@@ -52,81 +56,76 @@ export class BusinessWorkspaceQueryService {
         canCreateEstablishment: true,
       };
     } catch {
-      try {
-        const access = await createTeamQueryService().getAccessContext();
-        const activeEstablishment = pickActiveEstablishment(access.establishments, activeEstablishmentId);
+      return {
+        organizations: [],
+        establishments: [],
+        activeEstablishmentId: undefined,
+        canReadOrganizations: false,
+        canReadEstablishments: false,
+        canCreateEstablishment: false,
+      };
+    }
+  }
 
-        if (!activeEstablishment) {
-          return {
-            organizations: [],
-            establishments: [],
-            activeEstablishmentId: undefined,
-            canReadOrganizations: false,
-            canReadEstablishments: false,
-            canCreateEstablishment: false,
-          };
-        }
+  private async getMemberWorkspace(activeEstablishmentId?: string): Promise<WorkspaceHeaderViewModel | null> {
+    try {
+      const access = await createTeamQueryService().getAccessContext();
+      const activeEstablishment = pickActiveEstablishment(access.establishments, activeEstablishmentId);
 
-        const activeOrganizationId = activeEstablishment.organizationId;
-        const organizations = buildOrganizations(access.establishments);
-        const establishments = access.establishments
-          .filter((item) => item.organizationId === activeOrganizationId)
-          .map((item) => ({
-            id: item.establishmentId,
-            name: item.establishmentName,
-            photoUrl: null,
-          }));
+      if (!activeEstablishment) return null;
 
-        return {
-          organization:
-            organizations.find((item) => item.id === activeOrganizationId) ?? {
-              id: activeOrganizationId,
-              name: activeEstablishment.organizationName,
-              imageUrl: null,
-              defaultEstablishmentId: establishments[0]?.id,
-            },
-          organizations,
-          establishments,
-          activeEstablishmentId: activeEstablishment.establishmentId,
-          canReadOrganizations:
-            access.establishments.some(
-              (item) =>
-                item.organizationId === activeOrganizationId &&
-                hasAnyPermission(item.effectivePermissions, [
-                  "business:organizations:read",
-                  "business:organizations:manage",
-                  "business:manage",
-                ]),
-            ) || hasReadRole(activeEstablishment.roles),
-          canReadEstablishments:
-            access.establishments.some(
-              (item) =>
-                item.organizationId === activeOrganizationId &&
-                hasAnyPermission(item.effectivePermissions, [
-                  "business:establishments:read",
-                  "business:establishments:manage",
-                  "business:manage",
-                ]),
-            ) || hasReadRole(activeEstablishment.roles),
-          canCreateEstablishment: access.establishments.some(
+      const activeOrganizationId = activeEstablishment.organizationId;
+      const organizations = buildOrganizations(access.establishments);
+      const establishments = access.establishments
+        .filter((item) => item.organizationId === activeOrganizationId)
+        .map((item) => ({
+          id: item.establishmentId,
+          name: item.establishmentName,
+          photoUrl: null,
+        }));
+
+      return {
+        organization:
+          organizations.find((item) => item.id === activeOrganizationId) ?? {
+            id: activeOrganizationId,
+            name: activeEstablishment.organizationName,
+            imageUrl: null,
+            defaultEstablishmentId: establishments[0]?.id,
+          },
+        organizations,
+        establishments,
+        activeEstablishmentId: activeEstablishment.establishmentId,
+        canReadOrganizations:
+          access.establishments.some(
             (item) =>
               item.organizationId === activeOrganizationId &&
               hasAnyPermission(item.effectivePermissions, [
+                "business:organizations:read",
+                "business:organizations:manage",
+                "business:manage",
+              ]),
+          ) || hasReadRole(activeEstablishment.roles),
+        canReadEstablishments:
+          access.establishments.some(
+            (item) =>
+              item.organizationId === activeOrganizationId &&
+              hasAnyPermission(item.effectivePermissions, [
+                "business:establishments:read",
                 "business:establishments:manage",
                 "business:manage",
               ]),
-          ),
-        };
-      } catch {
-        return {
-          organizations: [],
-          establishments: [],
-          activeEstablishmentId: undefined,
-          canReadOrganizations: false,
-          canReadEstablishments: false,
-          canCreateEstablishment: false,
-        };
-      }
+          ) || hasReadRole(activeEstablishment.roles),
+        canCreateEstablishment: access.establishments.some(
+          (item) =>
+            item.organizationId === activeOrganizationId &&
+            hasAnyPermission(item.effectivePermissions, [
+              "business:establishments:manage",
+              "business:manage",
+            ]),
+        ),
+      };
+    } catch {
+      return null;
     }
   }
 
@@ -199,7 +198,6 @@ export class BusinessWorkspaceQueryService {
     }
   }
 }
-
 export function createBusinessWorkspaceQueryService() {
   return new BusinessWorkspaceQueryService();
 }

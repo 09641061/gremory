@@ -47,6 +47,10 @@ describe("IAM session proxy", () => {
         { status: 200, headers: { "Content-Type": "application/json" } },
       ))
       .mockResolvedValueOnce(new Response(
+        JSON.stringify({ active: false, establishments: [] }),
+        { status: 200, headers: { "Content-Type": "application/json" } },
+      ))
+      .mockResolvedValueOnce(new Response(
         JSON.stringify({ content: [{ id: "est-1" }] }),
         { status: 200, headers: { "Content-Type": "application/json" } },
       )));
@@ -172,6 +176,10 @@ describe("IAM session proxy", () => {
       ))
       .mockResolvedValueOnce(new Response(
         JSON.stringify({ id: "org-1" }),
+        { status: 200, headers: { "Content-Type": "application/json" } },
+      ))
+      .mockResolvedValueOnce(new Response(
+        JSON.stringify({ active: false, establishments: [] }),
         { status: 200, headers: { "Content-Type": "application/json" } },
       ))
       .mockResolvedValueOnce(new Response(

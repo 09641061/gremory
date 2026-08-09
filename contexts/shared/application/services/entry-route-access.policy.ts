@@ -21,7 +21,7 @@ export function resolveEmployeeEntryPath(
     { path: "/organizations", matches: hasOrganizationAccess },
   ];
 
-  return routeChecks.find((route) => establishments.some(route.matches))?.path ?? "/organizations";
+  return routeChecks.find((route) => establishments.some(route.matches))?.path ?? "/access-denied";
 }
 
 function hasSchedulingAccess(establishment: EntryRouteEstablishment) {
@@ -62,4 +62,3 @@ function hasOrganizationAccess(establishment: EntryRouteEstablishment) {
     "business:manage",
   ]) || hasReadRole(establishment.roles);
 }
-

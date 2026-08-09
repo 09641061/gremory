@@ -6,7 +6,8 @@ export type EntryRoutePath =
   | "/catalog"
   | "/crm"
   | "/team"
-  | "/organizations";
+  | "/organizations"
+  | "/access-denied";
 
 export type EntryRouteResolution =
   | { status: "ready"; homeHref: EntryRoutePath }
@@ -28,4 +29,3 @@ export type EntryRouteEstablishment = Readonly<{
   roles?: ReadonlyArray<{ name: string }>;
   effectivePermissions: ReadonlyArray<string>;
 }>;
-
