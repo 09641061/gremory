@@ -6,7 +6,6 @@ import {
   InvitationUnavailableView,
 } from "@/contexts/workforce/interfaces/components/invitations/invitation-acceptance-view";
 import type { TeamInvitationPreviewView } from "@/contexts/workforce/application/model/team.read-models";
-import { TeamApiError } from "@/contexts/workforce/infrastructure/gateways/team-api.gateway";
 
 export default async function InvitationAcceptPage({
   searchParams,
@@ -40,8 +39,14 @@ export default async function InvitationAcceptPage({
 }
 
 function isExpiredInvitationError(error: unknown): boolean {
-  if (!(error instanceof TeamApiError) || !error.details || typeof error.details !== "object") {
+  if (!error || typeof error !== "object") {
     return false;
   }
-  return (error.details as Record<string, unknown>).code === "INVITATION_EXPIRED";
+
+  const details = (error as { details?: unknown }).details;
+  if (!details || typeof details !== "object") {
+    return false;
+  }
+
+  return (details as Record<string, unknown>).code === "INVITATION_EXPIRED";
 }

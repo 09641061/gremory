@@ -7,10 +7,10 @@ import { createAppShellQueryService } from "@/contexts/shared/application/intern
 export default async function HomePage() {
   const accessToken = (await cookies()).get(iamSessionCookies.accessToken)?.value;
   const subscription = accessToken
-    ? await createCurrentSubscriptionQueryService().getCurrentSubscription(accessToken).catch(() => null)
+    ? await createCurrentSubscriptionQueryService().getCurrentSubscription(accessToken)
     : null;
   const shell = accessToken
-    ? await createAppShellQueryService().resolve({ subscription }).catch(() => null)
+    ? await createAppShellQueryService().resolve({ subscription })
     : null;
 
   redirect(shell?.homeHref ?? "/organizations");

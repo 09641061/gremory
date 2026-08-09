@@ -20,10 +20,10 @@ export default async function AppLayout({
   const currentProfile = await getMyProfileServerQuery();
   const accessToken = (await cookies()).get(iamSessionCookies.accessToken)?.value;
   const subscription = accessToken
-    ? await createCurrentSubscriptionQueryService().getCurrentSubscription(accessToken).catch(() => null)
+    ? await createCurrentSubscriptionQueryService().getCurrentSubscription(accessToken)
     : null;
   const shell = accessToken
-    ? await createAppShellQueryService().resolve({ subscription }).catch(() => null)
+    ? await createAppShellQueryService().resolve({ subscription })
     : null;
   const hasAssistantAccess = shell?.hasAssistantAccess ?? false;
 
