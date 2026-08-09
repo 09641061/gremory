@@ -23,9 +23,7 @@ import {
   createCustomerOptions,
   createEmployeeOptions,
   createServiceOptions,
-  createTimeOptions,
 } from "./scheduling-form-utils";
-import { TIME_SLOTS } from "./time-slots";
 
 interface AppointmentFormModalProps {
   isOpen: boolean;
@@ -71,7 +69,6 @@ export function AppointmentFormModal({
   const serviceOptions = useMemo(() => createServiceOptions(services), [services]);
   const customerOptions = useMemo(() => createCustomerOptions(customers), [customers]);
   const employeeOptions = useMemo(() => createEmployeeOptions(members), [members]);
-  const timeOptions = useMemo(() => createTimeOptions(TIME_SLOTS), []);
 
   useEffect(() => {
     if (state.status === "success" && !hasSucceeded.current) {

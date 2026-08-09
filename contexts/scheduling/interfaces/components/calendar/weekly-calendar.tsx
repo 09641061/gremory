@@ -68,10 +68,6 @@ export function WeeklyCalendar({
 
   const hours = useMemo(() => Array.from({ length: 15 }, (_, i) => 7 + i), []);
 
-  const formattedMonthYear = currentDate.toLocaleDateString("en-US", {
-    month: "long",
-    year: "numeric",
-  });
 
   const fetchAppointments = useCallback(() => {
     const reqId = ++requestIdRef.current;

@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import { useSelectorMenu } from "@/contexts/business/interfaces/components/use-selector-menu";
@@ -37,12 +37,16 @@ export function WeeklyCalendarHeader({
   const currentMonthIdx = currentDate.getMonth();
 
   const [tempYear, setTempYear] = useState(() => currentYear);
+  const [prevIsPickerOpen, setPrevIsPickerOpen] = useState(isPickerOpen);
+  const [prevYear, setPrevYear] = useState(currentYear);
 
-  useEffect(() => {
-    if (isPickerOpen) {
-      setTempYear(currentDate.getFullYear());
+  if (isPickerOpen !== prevIsPickerOpen || currentYear !== prevYear) {
+    setPrevIsPickerOpen(isPickerOpen);
+    setPrevYear(currentYear);
+    if (isPickerOpen || currentYear !== prevYear) {
+      setTempYear(currentYear);
     }
-  }, [currentDate, isPickerOpen]);
+  }
 
   const handleMonthSelect = (monthIdx: number) => {
     const nextDate = new Date(currentDate);

@@ -24,9 +24,7 @@ import {
   createCustomerOptions,
   createEmployeeOptions,
   createServiceOptions,
-  createTimeOptions,
 } from "./scheduling-form-utils";
-import { TIME_SLOTS } from "./time-slots";
 
 interface RescheduleFormModalProps {
   isOpen: boolean;
@@ -88,7 +86,6 @@ export function RescheduleFormModal({
   const serviceOptions = useMemo(() => createServiceOptions(services), [services]);
   const customerOptions = useMemo(() => createCustomerOptions(customers), [customers]);
   const employeeOptions = useMemo(() => createEmployeeOptions(members), [members]);
-  const timeOptions = useMemo(() => createTimeOptions(TIME_SLOTS), []);
 
   // Sincronizar el estado del formulario de forma segura si el prop cambia
   const [prevAppointmentId, setPrevAppointmentId] = useState(appointment.id);

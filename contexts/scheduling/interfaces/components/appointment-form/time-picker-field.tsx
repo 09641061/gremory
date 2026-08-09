@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import { ChevronUp, ChevronDown, Clock } from "lucide-react";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import { useSelectorMenu } from "@/contexts/business/interfaces/components/use-selector-menu";
@@ -33,10 +33,15 @@ export function TimePickerField({ id, value, onChange }: TimePickerFieldProps) {
   const [minInput, setMinInput] = useState(() => String(min).padStart(2, "0"));
 
   // Synchronize local state with props when picker is opened or props change
-  useEffect(() => {
+  const [prevValue, setPrevValue] = useState(value);
+  const [prevIsOpen, setPrevIsOpen] = useState(isOpen);
+
+  if (value !== prevValue || isOpen !== prevIsOpen) {
+    setPrevValue(value);
+    setPrevIsOpen(isOpen);
     setHourInput(String(hour12).padStart(2, "0"));
     setMinInput(String(min).padStart(2, "0"));
-  }, [value, isOpen]);
+  }
 
   const updateTime = (h: number, m: number) => {
     const hStr = String(h).padStart(2, "0");

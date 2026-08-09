@@ -156,7 +156,7 @@ export function DateField({ id, name, placeholder, value, onChange }: DateFieldP
                 ))}
               </div>
               <div className="grid grid-cols-7 gap-1">
-                {monthGrid.map((day, index) => {
+                {monthGrid.map((day) => {
                   const isCurrentMonth = day.getMonth() === visibleMonth.getMonth();
                   const isSelected = selectedDate ? isSameDay(day, selectedDate) : false;
                   const isToday = isSameDay(day, new Date());
