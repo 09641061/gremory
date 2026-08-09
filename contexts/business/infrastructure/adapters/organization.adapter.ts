@@ -1,12 +1,12 @@
 import "server-only";
 
 import { OrganizationApiGateway } from "@/contexts/business/infrastructure/gateways/organization-api.gateway";
-import type { Organization } from "../../../domain/model/entities/organization.entity";
-import type { OrganizationRepository } from "../../../domain/services/business.repositories";
-import type { OrganizationId } from "../../../domain/model/valueobjects/organization-id.vo";
-import type { OrganizationName } from "../../../domain/model/valueobjects/organization-name.vo";
+import type { Organization } from "@/contexts/business/domain/model/entities/organization.entity";
+import type { OrganizationRepository } from "@/contexts/business/domain/services/business.repositories";
+import type { OrganizationId } from "@/contexts/business/domain/model/valueobjects/organization-id.vo";
+import type { OrganizationName } from "@/contexts/business/domain/model/valueobjects/organization-name.vo";
 
-export class OrganizationOutboundService implements OrganizationRepository {
+export class OrganizationAdapter implements OrganizationRepository {
   constructor(private readonly gateway = new OrganizationApiGateway()) {}
 
   create(name: OrganizationName): Promise<Organization> {
@@ -26,6 +26,6 @@ export class OrganizationOutboundService implements OrganizationRepository {
   }
 }
 
-export function createOrganizationOutboundService() {
-  return new OrganizationOutboundService();
+export function createOrganizationAdapter() {
+  return new OrganizationAdapter();
 }

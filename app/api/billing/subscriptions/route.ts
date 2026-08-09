@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { createBillingSubscriptionOutboundService } from "@/contexts/billing/application/internal/outboundservices/billing-subscription-outbound.service";
+import { createBillingSubscriptionAdapter } from "@/contexts/billing/infrastructure/adapters/billing-subscription.adapter";
 import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-session-cookie";
 import { cookies } from "next/headers";
 
@@ -32,7 +32,7 @@ export async function GET() {
       return NextResponse.json({ message: "Authentication is required" }, { status: 401 });
     }
 
-    const subscription = await createBillingSubscriptionOutboundService().getCurrentSubscription(
+    const subscription = await createBillingSubscriptionAdapter().getCurrentSubscription(
       accessToken,
     );
     return NextResponse.json(subscription);
@@ -103,7 +103,7 @@ export async function POST(request: Request) {
       return validationErrorResponse(parsed.error.issues[0]?.message);
     }
 
-    const subscription = await createBillingSubscriptionOutboundService().createSubscription(
+    const subscription = await createBillingSubscriptionAdapter().createSubscription(
       accessToken,
       {
         planId: parsed.data.planId,
@@ -133,7 +133,7 @@ export async function PUT(request: Request) {
       return validationErrorResponse(parsed.error.issues[0]?.message);
     }
 
-    const subscription = await createBillingSubscriptionOutboundService().renewSubscription(
+    const subscription = await createBillingSubscriptionAdapter().renewSubscription(
       accessToken,
       {
         newPlanId: parsed.data.newPlanId,
@@ -154,7 +154,7 @@ export async function DELETE() {
       return NextResponse.json({ message: "Authentication is required" }, { status: 401 });
     }
 
-    const subscription = await createBillingSubscriptionOutboundService().cancelSubscription(
+    const subscription = await createBillingSubscriptionAdapter().cancelSubscription(
       accessToken,
     );
     return NextResponse.json(subscription);

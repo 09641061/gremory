@@ -11,7 +11,7 @@ import { createEstablishmentPhoto } from "../../../domain/model/valueobjects/est
 import { createOrganizationId } from "../../../domain/model/valueobjects/organization-id.vo";
 import type { EstablishmentRepository } from "../../../domain/services/business.repositories";
 import type { EstablishmentCommandService } from "../../services/business.services";
-import { createEstablishmentOutboundService } from "../outboundservices/establishment-outbound.service";
+import { createEstablishmentAdapter } from "@/contexts/business/infrastructure/adapters/establishment.adapter";
 
 export class EstablishmentCommandServiceImpl implements EstablishmentCommandService {
   constructor(private readonly establishments: EstablishmentRepository) {}
@@ -42,5 +42,5 @@ export class EstablishmentCommandServiceImpl implements EstablishmentCommandServ
 
 export function createEstablishmentCommandService(
 ): EstablishmentCommandService {
-  return new EstablishmentCommandServiceImpl(createEstablishmentOutboundService());
+  return new EstablishmentCommandServiceImpl(createEstablishmentAdapter());
 }

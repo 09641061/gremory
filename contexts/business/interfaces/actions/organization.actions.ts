@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createOrganizationCommandService } from "../../application/internal/commandservices/organization-command.service";
-import { createOrganizationImageUploadService } from "../../application/internal/outboundservices/organization-image-upload.service";
+import { createOrganizationImageUploadAdapter } from "@/contexts/business/infrastructure/adapters/organization-image-upload.adapter";
 import {
   createOrganizationCommand,
   updateOrganizationCommand,
@@ -25,7 +25,7 @@ export async function createOrganizationAction(
 
   try {
     const token = await requireBusinessAccessToken();
-    const imageUploadService = createOrganizationImageUploadService();
+    const imageUploadService = createOrganizationImageUploadAdapter();
     const photoFile = readPhotoFileFromFormData(formData);
     const organizationId = await createOrganizationCommandService(token).create(
       createOrganizationCommand(parsed.data),
@@ -58,7 +58,7 @@ export async function updateOrganizationAction(
 
   try {
     const token = await requireBusinessAccessToken();
-    const imageUploadService = createOrganizationImageUploadService();
+    const imageUploadService = createOrganizationImageUploadAdapter();
 
     if (photoFile) {
       await imageUploadService.upload(id, name, photoFile, token);

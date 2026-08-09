@@ -1,8 +1,14 @@
 import "server-only";
 
-import { AssistantApiGateway, type AssistantConversationResponse, type AssistantConversationSummaryResponse, type ListConversationsParams, type PageResponse } from "@/contexts/assistant/infrastructure/gateways/assistant-api.gateway";
+import {
+  AssistantApiGateway,
+  type AssistantConversationResponse,
+  type AssistantConversationSummaryResponse,
+  type ListConversationsParams,
+  type PageResponse,
+} from "@/contexts/assistant/infrastructure/gateways/assistant-api.gateway";
 
-export class AssistantConversationsOutboundService {
+export class AssistantConversationsAdapter {
   constructor(private readonly gateway = new AssistantApiGateway()) {}
 
   listConversations(
@@ -17,6 +23,6 @@ export class AssistantConversationsOutboundService {
   }
 }
 
-export function createAssistantConversationsOutboundService() {
-  return new AssistantConversationsOutboundService();
+export function createAssistantConversationsAdapter() {
+  return new AssistantConversationsAdapter();
 }

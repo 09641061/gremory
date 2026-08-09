@@ -4,14 +4,10 @@ import {
   BillingApiGateway,
   type InvoiceResponse,
   type PageResponse,
-} from "../../../infrastructure/gateways/billing-api.gateway";
+} from "@/contexts/billing/infrastructure/gateways/billing-api.gateway";
 
-export class BillingInvoicesOutboundService {
-  async getInvoices(
-    accessToken: string,
-    page = 0,
-    size = 20,
-  ): Promise<PageResponse<InvoiceResponse>> {
+export class BillingInvoicesAdapter {
+  async getInvoices(accessToken: string, page = 0, size = 20): Promise<PageResponse<InvoiceResponse>> {
     return new BillingApiGateway().getInvoices(accessToken, page, size);
   }
 
@@ -20,6 +16,6 @@ export class BillingInvoicesOutboundService {
   }
 }
 
-export function createBillingInvoicesOutboundService() {
-  return new BillingInvoicesOutboundService();
+export function createBillingInvoicesAdapter() {
+  return new BillingInvoicesAdapter();
 }

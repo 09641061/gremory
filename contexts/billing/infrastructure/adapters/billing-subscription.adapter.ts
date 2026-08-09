@@ -4,35 +4,35 @@ import {
   BillingApiGateway,
   type RenewSubscriptionRequest,
   type SubscriptionResponse,
-} from "../../../infrastructure/gateways/billing-api.gateway";
-import type { CreateSubscriptionCommand } from "../../../domain/model/commands/create-subscription.command";
+} from "@/contexts/billing/infrastructure/gateways/billing-api.gateway";
+import type { CreateSubscriptionCommand } from "@/contexts/billing/domain/model/commands/create-subscription.command";
 
 export type BillingSubscriptionSnapshot = SubscriptionResponse;
 
-export class BillingSubscriptionOutboundService {
-  async getCurrentSubscription(accessToken: string): Promise<SubscriptionResponse> {
+export class BillingSubscriptionAdapter {
+  getCurrentSubscription(accessToken: string): Promise<SubscriptionResponse> {
     return new BillingApiGateway().getCurrentSubscription(accessToken);
   }
 
-  async createSubscription(
+  createSubscription(
     accessToken: string,
     command: CreateSubscriptionCommand,
   ): Promise<SubscriptionResponse> {
     return new BillingApiGateway().createSubscription(accessToken, command);
   }
 
-  async renewSubscription(
+  renewSubscription(
     accessToken: string,
     request: RenewSubscriptionRequest,
   ): Promise<SubscriptionResponse> {
     return new BillingApiGateway().renewSubscription(accessToken, request);
   }
 
-  async cancelSubscription(accessToken: string): Promise<SubscriptionResponse> {
+  cancelSubscription(accessToken: string): Promise<SubscriptionResponse> {
     return new BillingApiGateway().cancelSubscription(accessToken);
   }
 }
 
-export function createBillingSubscriptionOutboundService() {
-  return new BillingSubscriptionOutboundService();
+export function createBillingSubscriptionAdapter() {
+  return new BillingSubscriptionAdapter();
 }

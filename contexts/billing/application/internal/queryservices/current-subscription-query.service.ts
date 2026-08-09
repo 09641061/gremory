@@ -2,13 +2,13 @@ import "server-only";
 
 import type { SubscriptionAccessSnapshot } from "../../../domain/services/subscription-access.policy";
 import {
-  createBillingSubscriptionOutboundService,
+  createBillingSubscriptionAdapter,
   type BillingSubscriptionSnapshot,
-} from "../outboundservices/billing-subscription-outbound.service";
+} from "@/contexts/billing/infrastructure/adapters/billing-subscription.adapter";
 
 export class CurrentSubscriptionQueryService {
   async getCurrentSubscription(accessToken: string): Promise<SubscriptionAccessSnapshot> {
-    const subscription = await createBillingSubscriptionOutboundService().getCurrentSubscription(
+    const subscription = await createBillingSubscriptionAdapter().getCurrentSubscription(
       accessToken,
     );
     return toSubscriptionAccessSnapshot(subscription);

@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createEstablishmentCommandService } from "../../application/internal/commandservices/establishment-command.service";
-import { createEstablishmentPhotoOutboundService } from "../../application/internal/outboundservices/establishment-photo-outbound.service";
+import { createEstablishmentPhotoAdapter } from "@/contexts/business/infrastructure/adapters/establishment-photo.adapter";
 import {
   createEstablishmentCommand,
   deleteEstablishmentCommand,
@@ -37,7 +37,7 @@ export async function createEstablishmentAction(
 
   try {
     const token = await requireBusinessAccessToken();
-    const photoService = createEstablishmentPhotoOutboundService();
+    const photoService = createEstablishmentPhotoAdapter();
     const photoFile = readPhotoFileFromFormData(formData);
     const photoUrl = photoFile
       ? await photoService.upload(photoFile, token)
@@ -68,7 +68,7 @@ export async function updateEstablishmentAction(
 
   try {
     const token = await requireBusinessAccessToken();
-    const photoService = createEstablishmentPhotoOutboundService();
+    const photoService = createEstablishmentPhotoAdapter();
     const removePhoto = readBoolFromFormData(formData, "removePhoto");
     const currentPhotoUrl = formData.get("currentPhotoUrl");
     const photoFile = readPhotoFileFromFormData(formData);

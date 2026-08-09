@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
-import { createEstablishmentPhotoOutboundService } from "@/contexts/business/application/internal/outboundservices/establishment-photo-outbound.service";
+import { createEstablishmentPhotoAdapter } from "@/contexts/business/infrastructure/adapters/establishment-photo.adapter";
 import { requireBusinessAccessToken } from "@/contexts/business/infrastructure/session/business-session";
 
 const uuidSchema = z.string().uuid();
@@ -18,7 +18,7 @@ export async function DELETE(
     }
 
     const token = await requireBusinessAccessToken();
-    await createEstablishmentPhotoOutboundService().delete(idParsed.data, token);
+    await createEstablishmentPhotoAdapter().delete(idParsed.data, token);
 
     return new Response(null, { status: 204 });
   } catch (error) {

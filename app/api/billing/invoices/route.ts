@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createBillingInvoicesOutboundService } from "@/contexts/billing/application/internal/outboundservices/billing-invoices-outbound.service";
+import { createBillingInvoicesAdapter } from "@/contexts/billing/infrastructure/adapters/billing-invoices.adapter";
 import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-session-cookie";
 import { cookies } from "next/headers";
 import { z } from "zod";
@@ -33,7 +33,7 @@ export async function GET(request: Request) {
       );
     }
 
-    const invoices = await createBillingInvoicesOutboundService().getInvoices(
+    const invoices = await createBillingInvoicesAdapter().getInvoices(
       accessToken,
       parsed.data.page,
       parsed.data.size,

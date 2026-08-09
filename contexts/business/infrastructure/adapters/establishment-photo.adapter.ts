@@ -10,7 +10,7 @@ type EstablishmentPhotoUploadResponse = {
   photoUrl?: string;
 };
 
-export class EstablishmentPhotoOutboundService {
+export class EstablishmentPhotoAdapter {
   async upload(file: File, token: string): Promise<string> {
     const formData = new FormData();
     formData.set("file", file);
@@ -43,6 +43,6 @@ export class EstablishmentPhotoOutboundService {
   }
 }
 
-export function createEstablishmentPhotoOutboundService() {
-  return new EstablishmentPhotoOutboundService();
+export function createEstablishmentPhotoAdapter() {
+  return new EstablishmentPhotoAdapter();
 }

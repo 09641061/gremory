@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { createBillingInvoicesOutboundService } from "@/contexts/billing/application/internal/outboundservices/billing-invoices-outbound.service";
+import { createBillingInvoicesAdapter } from "@/contexts/billing/infrastructure/adapters/billing-invoices.adapter";
 import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-session-cookie";
 import { cookies } from "next/headers";
 
@@ -30,7 +30,7 @@ export async function GET(
       return NextResponse.json({ message: "Authentication is required" }, { status: 401 });
     }
 
-    const invoice = await createBillingInvoicesOutboundService().getInvoiceById(
+    const invoice = await createBillingInvoicesAdapter().getInvoiceById(
       accessToken,
       parsed.data,
     );

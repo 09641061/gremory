@@ -1,14 +1,14 @@
 import "server-only";
 
 import { EstablishmentApiGateway } from "@/contexts/business/infrastructure/gateways/establishment-api.gateway";
-import type { Establishment } from "../../../domain/model/entities/establishment.entity";
-import type { EstablishmentId } from "../../../domain/model/valueobjects/establishment-id.vo";
-import type { EstablishmentName } from "../../../domain/model/valueobjects/establishment-name.vo";
-import type { EstablishmentPhoto } from "../../../domain/model/valueobjects/establishment-photo.vo";
-import type { OrganizationId } from "../../../domain/model/valueobjects/organization-id.vo";
-import type { EstablishmentRepository, PageResult } from "../../../domain/services/business.repositories";
+import type { Establishment } from "@/contexts/business/domain/model/entities/establishment.entity";
+import type { EstablishmentId } from "@/contexts/business/domain/model/valueobjects/establishment-id.vo";
+import type { EstablishmentName } from "@/contexts/business/domain/model/valueobjects/establishment-name.vo";
+import type { EstablishmentPhoto } from "@/contexts/business/domain/model/valueobjects/establishment-photo.vo";
+import type { OrganizationId } from "@/contexts/business/domain/model/valueobjects/organization-id.vo";
+import type { EstablishmentRepository, PageResult } from "@/contexts/business/domain/services/business.repositories";
 
-export class EstablishmentOutboundService implements EstablishmentRepository {
+export class EstablishmentAdapter implements EstablishmentRepository {
   constructor(private readonly gateway = new EstablishmentApiGateway()) {}
 
   create(
@@ -44,6 +44,6 @@ export class EstablishmentOutboundService implements EstablishmentRepository {
   }
 }
 
-export function createEstablishmentOutboundService() {
-  return new EstablishmentOutboundService();
+export function createEstablishmentAdapter() {
+  return new EstablishmentAdapter();
 }

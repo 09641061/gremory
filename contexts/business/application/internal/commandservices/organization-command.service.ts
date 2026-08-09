@@ -8,7 +8,7 @@ import { createOrganizationId } from "../../../domain/model/valueobjects/organiz
 import { createOrganizationName } from "../../../domain/model/valueobjects/organization-name.vo";
 import type { OrganizationRepository } from "../../../domain/services/business.repositories";
 import type { OrganizationCommandService } from "../../services/business.services";
-import { createOrganizationOutboundService } from "../outboundservices/organization-outbound.service";
+import { createOrganizationAdapter } from "@/contexts/business/infrastructure/adapters/organization.adapter";
 
 export class OrganizationCommandServiceImpl implements OrganizationCommandService {
   constructor(private readonly organizations: OrganizationRepository) {}
@@ -33,5 +33,5 @@ export class OrganizationCommandServiceImpl implements OrganizationCommandServic
 
 export function createOrganizationCommandService(
 ): OrganizationCommandService {
-  return new OrganizationCommandServiceImpl(createOrganizationOutboundService());
+  return new OrganizationCommandServiceImpl(createOrganizationAdapter());
 }
