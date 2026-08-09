@@ -17,6 +17,7 @@ import type {
 } from "../../../application/model/scheduling-page-data.view-model";
 import { DateField } from "./date-field";
 import { DropdownField } from "./dropdown-field";
+import { TimePickerField } from "./time-picker-field";
 import {
   computeAppointmentTimes,
   createCustomerOptions,
@@ -168,23 +169,18 @@ export function AppointmentFormModal({
 
               <div className="space-y-1.5">
                 <Label htmlFor="create-startTime">Start Time</Label>
-                <DropdownField
+                <TimePickerField
                   id="create-startTime"
-                  name="startTime"
-                  placeholder="Select time..."
                   value={startTime}
                   onChange={setStartTime}
-                  options={timeOptions}
                 />
               </div>
             </div>
 
-            {startsAt && endsAt && (
-              <div className="rounded-lg border border-border bg-muted/40 p-3 space-y-1">
-                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Calculated End Time</p>
-                <p className="text-sm font-medium text-foreground">{formattedEnd}</p>
-              </div>
-            )}
+            <div className="rounded-lg border border-border bg-muted/40 p-3 space-y-1">
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Calculated End Time</p>
+              <p className="text-sm font-medium text-foreground">{formattedEnd || "--"}</p>
+            </div>
 
             <DialogFooter>
               <Button type="button" variant="outline" disabled={isPending} onClick={() => onOpenChange(false)}>
