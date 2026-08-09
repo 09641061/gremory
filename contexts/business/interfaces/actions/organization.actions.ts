@@ -1,8 +1,8 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { apiConfig } from "@/api.config";
 import { createOrganizationCommandService } from "../../application/internal/commandservices/organization-command.service";
+import { createOrganizationImageUploadService } from "../../application/internal/outboundservices/organization-image-upload.service";
 import {
   createOrganizationCommand,
   updateOrganizationCommand,
@@ -25,51 +25,20 @@ export async function createOrganizationAction(
 
   try {
     const token = await requireBusinessAccessToken();
+    const imageUploadService = createOrganizationImageUploadService();
     const photoFile = readPhotoFileFromFormData(formData);
     const organizationId = await createOrganizationCommandService(token).create(
       createOrganizationCommand(parsed.data),
     );
 
     if (photoFile) {
-      await uploadOrganizationImage(
-        organizationId.value,
-        parsed.data.name,
-        photoFile,
-        token,
-      );
+      await imageUploadService.upload(organizationId.value, parsed.data.name, photoFile, token);
     }
 
     revalidateBusinessViews();
     return { status: "success", data: { id: organizationId.value }, error: null };
   } catch (error) {
     return actionError(error);
-  }
-}
-
-async function uploadOrganizationImage(
-  organizationId: string,
-  name: string,
-  photoFile: File,
-  token: string,
-) {
-  const formData = new FormData();
-  formData.set("name", name);
-  formData.set("photoFile", photoFile);
-
-  const response = await fetch(
-    `${apiConfig.baseUrl}${apiConfig.routes.organizations}/${encodeURIComponent(organizationId)}`,
-    {
-      method: "PUT",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-      body: formData,
-    },
-  );
-
-  if (!response.ok) {
-    const data = await response.json().catch(() => null);
-    throw new Error(data?.message || "Failed to update organization");
   }
 }
 
@@ -89,14 +58,10 @@ export async function updateOrganizationAction(
 
   try {
     const token = await requireBusinessAccessToken();
+    const imageUploadService = createOrganizationImageUploadService();
 
     if (photoFile) {
-      await uploadOrganizationImage(
-        id,
-        name,
-        photoFile,
-        token,
-      );
+      await imageUploadService.upload(id, name, photoFile, token);
     } else {
       const parsed = updateOrganizationSchema.safeParse({
         id,
