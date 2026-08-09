@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createEstablishmentQueryService } from "@/contexts/business/application/internal/queryservices/establishment-query.service";
-import { requireBusinessAccessToken } from "@/contexts/business/infrastructure/session/business-session";
 
 const uuidSchema = z.string().uuid();
 const paginationSchema = z.object({
@@ -29,8 +28,7 @@ export async function GET(
       return validationErrorResponse(parsed.error.issues[0]?.message);
     }
 
-    const token = await requireBusinessAccessToken();
-    const page = await createEstablishmentQueryService(token).getByOrganization({
+    const page = await createEstablishmentQueryService().getByOrganization({
       organizationId: organizationParsed.data,
       page: parsed.data.page,
       size: parsed.data.size,

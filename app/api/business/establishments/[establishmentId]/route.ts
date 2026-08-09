@@ -22,8 +22,7 @@ export async function GET(
       return validationErrorResponse(idParsed.error.issues[0]?.message);
     }
 
-    const token = await requireBusinessAccessToken();
-    const establishment = await createEstablishmentQueryService(token).getById({
+    const establishment = await createEstablishmentQueryService().getById({
       id: idParsed.data,
     });
 
@@ -111,11 +110,11 @@ export async function PUT(
     }
 
     const token = await requireBusinessAccessToken();
-    await createEstablishmentCommandService(token).update(
+    await createEstablishmentCommandService().update(
       updateEstablishmentCommand(parsed.data),
     );
 
-    const establishment = await createEstablishmentQueryService(token).getById({
+    const establishment = await createEstablishmentQueryService().getById({
       id: idParsed.data,
     });
     if (!establishment) {
@@ -143,7 +142,7 @@ export async function DELETE(
     }
 
     const token = await requireBusinessAccessToken();
-    await createEstablishmentCommandService(token).delete(
+    await createEstablishmentCommandService().delete(
       deleteEstablishmentCommand({ id: idParsed.data }),
     );
 

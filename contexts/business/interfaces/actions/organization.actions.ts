@@ -27,7 +27,7 @@ export async function createOrganizationAction(
     const token = await requireBusinessAccessToken();
     const imageUploadService = createOrganizationImageUploadAdapter();
     const photoFile = readPhotoFileFromFormData(formData);
-    const organizationId = await createOrganizationCommandService(token).create(
+    const organizationId = await createOrganizationCommandService().create(
       createOrganizationCommand(parsed.data),
     );
 
@@ -62,15 +62,15 @@ export async function updateOrganizationAction(
 
     if (photoFile) {
       await imageUploadService.upload(id, name, photoFile, token);
-    } else {
-      const parsed = updateOrganizationSchema.safeParse({
-        id,
-        name,
-        imageUrl: typeof currentPhotoUrl === "string" && currentPhotoUrl.trim() ? currentPhotoUrl : null,
-      });
+      } else {
+        const parsed = updateOrganizationSchema.safeParse({
+          id,
+          name,
+          imageUrl: typeof currentPhotoUrl === "string" && currentPhotoUrl.trim() ? currentPhotoUrl : null,
+        });
       if (!parsed.success) return actionError(parsed.error.issues[0]?.message);
 
-      await createOrganizationCommandService(token).update(
+      await createOrganizationCommandService().update(
         updateOrganizationCommand(parsed.data),
       );
     }

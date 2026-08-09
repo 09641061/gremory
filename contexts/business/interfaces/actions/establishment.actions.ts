@@ -42,7 +42,7 @@ export async function createEstablishmentAction(
     const photoUrl = photoFile
       ? await photoService.upload(photoFile, token)
       : parsed.data.photoUrl ?? null;
-    const establishmentId = await createEstablishmentCommandService(token).create(
+    const establishmentId = await createEstablishmentCommandService().create(
       createEstablishmentCommand({
         ...parsed.data,
         photoUrl,
@@ -83,7 +83,7 @@ export async function updateEstablishmentAction(
     if (removePhoto) {
       await photoService.delete(parsed.data.id, token);
     }
-    const establishmentId = await createEstablishmentCommandService(token).update(
+    const establishmentId = await createEstablishmentCommandService().update(
       updateEstablishmentCommand({
         ...parsed.data,
         photoUrl,
@@ -106,7 +106,7 @@ export async function deleteEstablishmentAction(
 
   try {
     const token = await requireBusinessAccessToken();
-    await createEstablishmentCommandService(token).delete(
+    await createEstablishmentCommandService().delete(
       deleteEstablishmentCommand({ id: parsed.data }),
     );
     revalidateBusinessViews();

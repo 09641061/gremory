@@ -3,7 +3,6 @@ import { z } from "zod";
 import { updateOrganizationCommand } from "@/contexts/business/domain/model/commands/business.commands";
 import { createOrganizationCommandService } from "@/contexts/business/application/internal/commandservices/organization-command.service";
 import { createOrganizationQueryService } from "@/contexts/business/application/internal/queryservices/organization-query.service";
-import { requireBusinessAccessToken } from "@/contexts/business/infrastructure/session/business-session";
 import { updateOrganizationSchema } from "@/contexts/business/interfaces/rest/schemas/organization.schemas";
 
 const uuidSchema = z.string().uuid();
@@ -19,8 +18,7 @@ export async function GET(
       return validationErrorResponse(parsed.error.issues[0]?.message);
     }
 
-    const token = await requireBusinessAccessToken();
-    const organization = await createOrganizationQueryService(token).getById({
+    const organization = await createOrganizationQueryService().getById({
       id: parsed.data,
     });
 
@@ -107,12 +105,11 @@ export async function PUT(
       return validationErrorResponse(parsed.error.issues[0]?.message);
     }
 
-    const token = await requireBusinessAccessToken();
-    await createOrganizationCommandService(token).update(
+    await createOrganizationCommandService().update(
       updateOrganizationCommand(parsed.data),
     );
 
-    const organization = await createOrganizationQueryService(token).getById({
+    const organization = await createOrganizationQueryService().getById({
       id: idParsed.data,
     });
     if (!organization) {
