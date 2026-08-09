@@ -67,7 +67,7 @@ export async function updateEstablishmentAction(
   if (!parsed.success) return actionError(parsed.error.issues[0]?.message);
 
   try {
-    await requireBusinessAccessToken();
+    const token = await requireBusinessAccessToken();
     const photoService = createEstablishmentPhotoAdapter();
     const removePhoto = readBoolFromFormData(formData, "removePhoto");
     const currentPhotoUrl = formData.get("currentPhotoUrl");
