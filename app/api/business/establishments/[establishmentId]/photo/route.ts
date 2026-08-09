@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
-import { createEstablishmentId } from "@/contexts/business/domain/model/valueobjects/establishment-id.vo";
-import { EstablishmentApiGateway } from "@/contexts/business/infrastructure/gateways/establishment-api.gateway";
+import { createEstablishmentPhotoOutboundService } from "@/contexts/business/application/internal/outboundservices/establishment-photo-outbound.service";
 import { requireBusinessAccessToken } from "@/contexts/business/infrastructure/session/business-session";
 
 const uuidSchema = z.string().uuid();
@@ -19,9 +18,7 @@ export async function DELETE(
     }
 
     const token = await requireBusinessAccessToken();
-    await new EstablishmentApiGateway(token).deletePhoto(
-      createEstablishmentId(idParsed.data),
-    );
+    await createEstablishmentPhotoOutboundService().delete(idParsed.data, token);
 
     return new Response(null, { status: 204 });
   } catch (error) {

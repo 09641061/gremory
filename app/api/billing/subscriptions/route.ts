@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { BillingApiGateway } from "@/contexts/billing/infrastructure/gateways/billing-api.gateway";
+import { createBillingSubscriptionOutboundService } from "@/contexts/billing/application/internal/outboundservices/billing-subscription-outbound.service";
 import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-session-cookie";
 import { cookies } from "next/headers";
 
@@ -32,7 +32,9 @@ export async function GET() {
       return NextResponse.json({ message: "Authentication is required" }, { status: 401 });
     }
 
-    const subscription = await new BillingApiGateway().getCurrentSubscription(accessToken);
+    const subscription = await createBillingSubscriptionOutboundService().getCurrentSubscription(
+      accessToken,
+    );
     return NextResponse.json(subscription);
   } catch (error) {
     return routeErrorResponse(error);
@@ -101,13 +103,16 @@ export async function POST(request: Request) {
       return validationErrorResponse(parsed.error.issues[0]?.message);
     }
 
-    const subscription = await new BillingApiGateway().createSubscription(accessToken, {
-      planId: parsed.data.planId,
-      billingCycle: parsed.data.billingCycle,
-      currency: parsed.data.currency,
-      successUrl: parsed.data.successUrl,
-      cancelUrl: parsed.data.cancelUrl,
-    });
+    const subscription = await createBillingSubscriptionOutboundService().createSubscription(
+      accessToken,
+      {
+        planId: parsed.data.planId,
+        billingCycle: parsed.data.billingCycle,
+        currency: parsed.data.currency,
+        successUrl: parsed.data.successUrl,
+        cancelUrl: parsed.data.cancelUrl,
+      },
+    );
 
     return NextResponse.json(subscription, { status: 201 });
   } catch (error) {
@@ -128,10 +133,13 @@ export async function PUT(request: Request) {
       return validationErrorResponse(parsed.error.issues[0]?.message);
     }
 
-    const subscription = await new BillingApiGateway().renewSubscription(accessToken, {
-      newPlanId: parsed.data.newPlanId,
-      newBillingCycle: parsed.data.newBillingCycle,
-    });
+    const subscription = await createBillingSubscriptionOutboundService().renewSubscription(
+      accessToken,
+      {
+        newPlanId: parsed.data.newPlanId,
+        newBillingCycle: parsed.data.newBillingCycle,
+      },
+    );
 
     return NextResponse.json(subscription);
   } catch (error) {
@@ -146,7 +154,9 @@ export async function DELETE() {
       return NextResponse.json({ message: "Authentication is required" }, { status: 401 });
     }
 
-    const subscription = await new BillingApiGateway().cancelSubscription(accessToken);
+    const subscription = await createBillingSubscriptionOutboundService().cancelSubscription(
+      accessToken,
+    );
     return NextResponse.json(subscription);
   } catch (error) {
     return routeErrorResponse(error);
