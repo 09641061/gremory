@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { ChevronUp, ChevronDown, Clock } from "lucide-react";
-import { Button, buttonVariants } from "@/contexts/shared/interfaces/components/ui/button";
+import { Button } from "@/contexts/shared/interfaces/components/ui/button";
+import { Input } from "@/contexts/shared/interfaces/components/ui/input";
 import {
   Popover,
   PopoverContent,
@@ -91,17 +92,14 @@ export function TimePickerField({ id, value, onChange }: TimePickerFieldProps) {
     commit(hour24, parsed);
   };
 
-  const spinnerFieldClass =
-    "h-10 w-12 rounded-md border border-border bg-background text-center text-sm text-foreground shadow-sm outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/50";
-
   return (
     <Popover>
       <PopoverTrigger
         id={id}
-        className={cn(
-          buttonVariants({ variant: "outline" }),
-          "w-full justify-between gap-3 px-3 text-left font-normal"
-        )}
+        render={<Button variant="outline" />}
+        // Matches Input/Textarea/SelectTrigger: transparent so it inherits the
+        // white card rather than painting `bg-background` grey.
+        className="w-full justify-between gap-3 bg-transparent px-3 text-left font-normal dark:bg-input/30"
       >
         <span className={cn("truncate", !value && "text-muted-foreground")}>
           {value ? `${pad(hour12)}:${pad(minute)} ${isPM ? "PM" : "AM"}` : "Select time..."}
@@ -121,14 +119,13 @@ export function TimePickerField({ id, value, onChange }: TimePickerFieldProps) {
             >
               <ChevronUp className="size-4" />
             </Button>
-            <input
-              type="text"
+            <Input
               inputMode="numeric"
               aria-label="Hour"
               value={hourInput}
               onChange={(event) => handleHourInput(event.target.value)}
               onBlur={handleHourBlur}
-              className={spinnerFieldClass}
+              className="w-12 text-center"
             />
             <Button
               type="button"
@@ -155,14 +152,13 @@ export function TimePickerField({ id, value, onChange }: TimePickerFieldProps) {
             >
               <ChevronUp className="size-4" />
             </Button>
-            <input
-              type="text"
+            <Input
               inputMode="numeric"
               aria-label="Minutes"
               value={minuteInput}
               onChange={(event) => handleMinuteInput(event.target.value)}
               onBlur={handleMinuteBlur}
-              className={spinnerFieldClass}
+              className="w-12 text-center"
             />
             <Button
               type="button"
@@ -180,7 +176,7 @@ export function TimePickerField({ id, value, onChange }: TimePickerFieldProps) {
             variant="outline"
             onClick={toggleMeridiem}
             aria-label={`Switch to ${isPM ? "AM" : "PM"}`}
-            className="ml-1.5 h-10 w-12 self-center"
+            className="ml-1.5 w-12 self-center"
           >
             {isPM ? "PM" : "AM"}
           </Button>

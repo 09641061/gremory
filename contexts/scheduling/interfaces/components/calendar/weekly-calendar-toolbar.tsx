@@ -1,14 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
-import { Button, buttonVariants } from "@/contexts/shared/interfaces/components/ui/button";
+import { ChevronDown, ChevronLeft, ChevronRight, Plus } from "lucide-react";
+import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/contexts/shared/interfaces/components/ui/popover";
-import { cn } from "@/lib/utils";
 
 const MONTHS = [
   "Jan", "Feb", "Mar", "Apr", "May", "Jun",
@@ -59,18 +58,20 @@ export function WeeklyCalendarToolbar({
 
   return (
     <div className="mb-6 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-2">
         <Popover open={isPickerOpen} onOpenChange={handleOpenChange}>
-          {/* Fixed width keeps the week buttons from shifting as the label changes. */}
+          {/* Rendering the real `Button` keeps the shared `[data-slot=button]`
+              control height from globals.css; a hand-applied `buttonVariants`
+              string silently opts out of it. Fixed width stops the week
+              controls from shifting as the label changes. */}
           <PopoverTrigger
-            className={cn(
-              buttonVariants({ variant: "ghost" }),
-              "w-44 shrink-0 justify-start px-2 text-xl font-semibold"
-            )}
+            render={<Button variant="outline" />}
+            className="w-44 shrink-0 justify-between px-2.5 text-lg font-semibold"
           >
             <span className="truncate">
               {currentDate.toLocaleDateString("en-US", { month: "long", year: "numeric" })}
             </span>
+            <ChevronDown className="size-4 shrink-0 text-muted-foreground" />
           </PopoverTrigger>
 
           <PopoverContent align="start" className="w-64 gap-0">
@@ -120,19 +121,27 @@ export function WeeklyCalendarToolbar({
           </PopoverContent>
         </Popover>
 
-        <div className="flex items-center gap-0.5 rounded-lg border border-border bg-card p-0.5">
-          <Button
-            variant="ghost"
-            size="icon-xs"
-            onClick={onPreviousWeek}
-            aria-label="Previous week"
-          >
-            <ChevronLeft className="size-4" />
-          </Button>
-          <Button variant="ghost" size="icon-xs" onClick={onNextWeek} aria-label="Next week">
-            <ChevronRight className="size-4" />
-          </Button>
-        </div>
+        {/* The four toolbar controls are peers: same `outline` variant, same
+            `--app-control-height`. Only the square sizing is spelled out here;
+            colours come from the variant. */}
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={onPreviousWeek}
+          aria-label="Previous week"
+          className="size-(--app-control-height)"
+        >
+          <ChevronLeft className="size-4" />
+        </Button>
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={onNextWeek}
+          aria-label="Next week"
+          className="size-(--app-control-height)"
+        >
+          <ChevronRight className="size-4" />
+        </Button>
 
         <Button variant="outline" size="sm" onClick={onToday}>
           Today

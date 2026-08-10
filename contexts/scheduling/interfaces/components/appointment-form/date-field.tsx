@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { CalendarIcon, ChevronLeft, ChevronRight } from "lucide-react";
-import { Button, buttonVariants } from "@/contexts/shared/interfaces/components/ui/button";
+import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import {
   Popover,
   PopoverContent,
@@ -71,10 +71,11 @@ export function DateField({ id, name, placeholder, value, onChange, min }: DateF
       <Popover open={isOpen} onOpenChange={handleOpenChange}>
         <PopoverTrigger
           id={id}
-          className={cn(
-            buttonVariants({ variant: "outline" }),
-            "w-full justify-between gap-3 px-3 text-left font-normal"
-          )}
+          render={<Button variant="outline" />}
+          // `bg-transparent`/`dark:bg-input/30` is the shared form-control
+          // treatment (see Input, Textarea, SelectTrigger): the field inherits
+          // the white card behind it instead of painting `bg-background` grey.
+          className="w-full justify-between gap-3 bg-transparent px-3 text-left font-normal dark:bg-input/30"
         >
           <span className={cn("truncate", !selectedDate && "text-muted-foreground")}>
             {selectedDate
