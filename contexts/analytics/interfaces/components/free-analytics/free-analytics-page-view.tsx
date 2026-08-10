@@ -1,8 +1,5 @@
-import Link from "next/link";
 import type { ReactNode } from "react";
-import { AlertTriangle, ArrowRight } from "lucide-react";
 
-import { Alert, AlertDescription, AlertTitle } from "@/contexts/shared/interfaces/components/ui/alert";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/contexts/shared/interfaces/components/ui/card";
 import type {
   AnalyticsTrendPoint,
@@ -22,28 +19,10 @@ export function FreeAnalyticsPageView({ analytics, errorMessage }: FreeAnalytics
   const statusTotal =
     analytics.completedAppointmentsLastSevenDays +
     analytics.cancelledAppointmentsLastSevenDays +
-    analytics.noShowAppointmentsLastSevenDays +
-    analytics.inProgressAppointmentsLastSevenDays;
+    analytics.noShowAppointmentsLastSevenDays;
 
   return (
     <main className="mx-auto flex w-full max-w-[1600px] flex-col gap-6 px-4 py-8 md:px-8">
-      {!analytics.hasOrganization ? (
-        <Alert className="border-dashed border-border/70 bg-background/70">
-          <AlertTriangle className="size-4 text-amber-600" />
-          <AlertTitle>No organization connected</AlertTitle>
-          <AlertDescription className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <span>Some metrics may stay at zero until you create or connect an organization.</span>
-            <Link
-              href="/organizations"
-              className="inline-flex h-8 shrink-0 items-center justify-center gap-1.5 rounded-lg border border-border bg-background px-2.5 text-sm font-medium text-foreground transition-colors hover:bg-muted"
-            >
-              Go to organizations
-              <ArrowRight className="size-3.5" />
-            </Link>
-          </AlertDescription>
-        </Alert>
-      ) : null}
-
       <div className="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
         <Card className="overflow-hidden rounded-xl border-border bg-card shadow-sm">
           <CardHeader className="border-b border-border/60 pb-4">
@@ -64,7 +43,6 @@ export function FreeAnalyticsPageView({ analytics, errorMessage }: FreeAnalytics
             <StatusBar label="Completed" value={analytics.completedAppointmentsLastSevenDays} total={statusTotal} tone="bg-emerald-500" />
             <StatusBar label="Cancelled" value={analytics.cancelledAppointmentsLastSevenDays} total={statusTotal} tone="bg-rose-500" />
             <StatusBar label="No show" value={analytics.noShowAppointmentsLastSevenDays} total={statusTotal} tone="bg-amber-500" />
-            <StatusBar label="In progress" value={analytics.inProgressAppointmentsLastSevenDays} total={statusTotal} tone="bg-sky-500" />
             <p className="text-xs text-muted-foreground">
               {statusTotal > 0
                 ? `${statusTotal} status events captured in the last 7 days.`
@@ -126,11 +104,10 @@ function FreeAnalyticsErrorState({ message }: { message: string }) {
     <main className="mx-auto flex w-full max-w-[1600px] flex-col gap-6 px-4 py-8 md:px-8">
       <Card className="overflow-hidden rounded-xl border-border bg-card shadow-sm">
         <CardContent className="space-y-4 p-6">
-          <Alert variant="destructive" className="border-destructive/20 bg-destructive/5">
-            <AlertTriangle className="size-4" />
-            <AlertTitle>Analytics unavailable</AlertTitle>
-            <AlertDescription>{message}</AlertDescription>
-          </Alert>
+          <div className="space-y-2 rounded-lg border border-dashed border-border/70 bg-background/70 p-4">
+            <p className="text-sm font-semibold text-foreground">Analytics unavailable</p>
+            <p className="text-sm text-muted-foreground">{message}</p>
+          </div>
           <p className="text-sm text-muted-foreground">
             The dashboard contract is wired, but the backend response is still needed for a live snapshot.
           </p>

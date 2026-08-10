@@ -8,23 +8,19 @@ El objetivo es mantener un solo endpoint, con baja complejidad y bajo costo comp
 
 La vista actual de `analytics` usa un subconjunto minimo del snapshot base y solo conserva lo que aporta lectura rapida:
 
-- `hasOrganization`
 - `appointmentsTrend`
 - `completedAppointmentsLastSevenDays`
 - `cancelledAppointmentsLastSevenDays`
 - `noShowAppointmentsLastSevenDays`
-- `inProgressAppointmentsLastSevenDays`
 - `topCustomers`
 - `topServices`
 
 ### Datos visibles hoy
 
-- `hasOrganization`
 - `appointmentsTrend`
 - `completedAppointmentsLastSevenDays`
 - `cancelledAppointmentsLastSevenDays`
 - `noShowAppointmentsLastSevenDays`
-- `inProgressAppointmentsLastSevenDays`
 - `topCustomers`
 - `topServices`
 
@@ -90,11 +86,9 @@ Respuesta exitosa:
 
 ```json
 {
-  "hasOrganization": true,
   "completedAppointmentsLastSevenDays": 31,
   "cancelledAppointmentsLastSevenDays": 6,
   "noShowAppointmentsLastSevenDays": 2,
-  "inProgressAppointmentsLastSevenDays": 3,
   "appointmentsTrend": [
     { "date": "2026-08-04", "value": 4 },
     { "date": "2026-08-05", "value": 7 }
@@ -132,11 +126,9 @@ Respuesta exitosa:
 
 | Campo | Tipo | Nullable | Descripcion |
 |---|---|---:|---|
-| `hasOrganization` | `boolean` | No | Indica si existe una organizacion activa para ese owner |
 | `completedAppointmentsLastSevenDays` | `number` | No | Citas completadas en los ultimos 7 dias |
 | `cancelledAppointmentsLastSevenDays` | `number` | No | Citas canceladas en los ultimos 7 dias |
 | `noShowAppointmentsLastSevenDays` | `number` | No | Citas no show en los ultimos 7 dias |
-| `inProgressAppointmentsLastSevenDays` | `number` | No | Citas en progreso en los ultimos 7 dias |
 | `appointmentsTrend` | `array` | No | Serie diaria de citas |
 | `topCustomers` | `array` | No | Ranking de clientes mas activos |
 | `topServices` | `array` | No | Ranking de servicios mas reservados |
@@ -183,10 +175,10 @@ Cada item de `topServices` tiene esta forma:
 ## Reglas de negocio del contrato
 
 - Las fechas se calculan en UTC.
-- Si la organizacion no existe, el backend devuelve `hasOrganization = false`.
 - Las series diarias vienen normalizadas para una ventana de 7 dias.
 - Si no hay datos, los valores se devuelven en cero.
 - `topCustomers` y `topServices` representan el ranking del mismo periodo de 7 dias.
+- Si no hay organizacion o no hay locales activos, el backend devuelve rankings vacios y el resto del snapshot sigue siendo valido.
 
 ## Errores posibles
 

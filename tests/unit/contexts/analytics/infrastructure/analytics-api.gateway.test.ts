@@ -16,11 +16,9 @@ describe("AnalyticsApiGateway", () => {
       Authorization: "Bearer access-token",
     });
     return jsonResponse({
-      hasOrganization: false,
       completedAppointmentsLastSevenDays: 0,
       cancelledAppointmentsLastSevenDays: 0,
       noShowAppointmentsLastSevenDays: 0,
-      inProgressAppointmentsLastSevenDays: 0,
       appointmentsTrend: [],
       topCustomers: [],
       topServices: [],
@@ -35,7 +33,7 @@ describe("AnalyticsApiGateway", () => {
     const gateway = new AnalyticsApiGateway();
     const result = await gateway.getFreeDashboard("access-token");
 
-    expect(result.hasOrganization).toBe(false);
+    expect(result.completedAppointmentsLastSevenDays).toBe(0);
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 });

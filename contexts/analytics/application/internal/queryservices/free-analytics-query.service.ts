@@ -47,19 +47,6 @@ export class FreeAnalyticsQueryService {
 
     const base = await this.gateway.getFreeDashboard(accessToken);
 
-    if (!base.hasOrganization) {
-      return {
-        hasOrganization: false,
-        completedAppointmentsLastSevenDays: 0,
-        cancelledAppointmentsLastSevenDays: 0,
-        noShowAppointmentsLastSevenDays: 0,
-        inProgressAppointmentsLastSevenDays: 0,
-        appointmentsTrend: [],
-        topCustomers: [],
-        topServices: [],
-      };
-    }
-
     try {
       const workspace = await createBusinessWorkspaceQueryService().getHeaderViewModel();
       const establishments = workspace.establishments.map((establishment) => ({
@@ -68,11 +55,9 @@ export class FreeAnalyticsQueryService {
 
       if (establishments.length === 0) {
         return {
-          hasOrganization: true,
           completedAppointmentsLastSevenDays: base.completedAppointmentsLastSevenDays,
           cancelledAppointmentsLastSevenDays: base.cancelledAppointmentsLastSevenDays,
           noShowAppointmentsLastSevenDays: base.noShowAppointmentsLastSevenDays,
-          inProgressAppointmentsLastSevenDays: base.inProgressAppointmentsLastSevenDays,
           appointmentsTrend: base.appointmentsTrend,
           topCustomers: [],
           topServices: [],
@@ -87,24 +72,14 @@ export class FreeAnalyticsQueryService {
       const topServices = await buildServiceRanking(aggregates.serviceBuckets, establishments, accessToken);
 
       return {
-        hasOrganization: true,
-        completedAppointmentsLastSevenDays: base.completedAppointmentsLastSevenDays,
-        cancelledAppointmentsLastSevenDays: base.cancelledAppointmentsLastSevenDays,
-        noShowAppointmentsLastSevenDays: base.noShowAppointmentsLastSevenDays,
-        inProgressAppointmentsLastSevenDays: base.inProgressAppointmentsLastSevenDays,
-        appointmentsTrend: base.appointmentsTrend,
+        ...base,
         topCustomers,
         topServices,
       };
     } catch (error) {
       console.error("Failed to enrich analytics snapshot:", error);
       return {
-        hasOrganization: base.hasOrganization,
-        completedAppointmentsLastSevenDays: base.completedAppointmentsLastSevenDays,
-        cancelledAppointmentsLastSevenDays: base.cancelledAppointmentsLastSevenDays,
-        noShowAppointmentsLastSevenDays: base.noShowAppointmentsLastSevenDays,
-        inProgressAppointmentsLastSevenDays: base.inProgressAppointmentsLastSevenDays,
-        appointmentsTrend: base.appointmentsTrend,
+        ...base,
         topCustomers: [],
         topServices: [],
       };

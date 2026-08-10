@@ -31,11 +31,9 @@ export interface AnalyticsRankingServiceItem {
 }
 
 export interface FreeAnalyticsDashboardResponse {
-  hasOrganization: boolean;
   completedAppointmentsLastSevenDays: number;
   cancelledAppointmentsLastSevenDays: number;
   noShowAppointmentsLastSevenDays: number;
-  inProgressAppointmentsLastSevenDays: number;
   appointmentsTrend: AnalyticsTrendPoint[];
   topCustomers: AnalyticsRankingCustomerItem[];
   topServices: AnalyticsRankingServiceItem[];
