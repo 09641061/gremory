@@ -25,15 +25,11 @@ export default async function PermissionsPage({ searchParams }: PermissionsPageP
   if (!canReadRoles) {
     redirect("/access-denied");
   }
-  
+
   let members: Awaited<ReturnType<ReturnType<typeof createTeamQueryService>["list"]>>["content"] = [];
 
   if (establishmentId) {
-    try {
-      members = (await createTeamQueryService().list({ establishmentId, size: 100 })).content;
-    } catch {
-      // Keep permissions page available if workforce members listing fails.
-    }
+    members = (await createTeamQueryService().list({ establishmentId, size: 100 })).content;
   }
 
   const [roleEntities, permissions] = await Promise.all([

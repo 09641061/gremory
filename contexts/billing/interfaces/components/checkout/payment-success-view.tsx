@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import { CheckCircle2, Loader2 } from "lucide-react";
 
 import { hasActiveSubscription } from "@/contexts/billing/domain/services/subscription-access.policy";
-import type { SubscriptionResponse } from "@/contexts/billing/infrastructure/gateways/billing-api.gateway";
+import { getCurrentSubscriptionAction } from "@/contexts/billing/interfaces/actions/get-current-subscription.action";
 import {
   Alert,
   AlertDescription,
@@ -20,8 +20,7 @@ export function PaymentSuccessView() {
 
     const checkSubscription = async () => {
       try {
-        const response = await fetch("/api/billing/subscriptions", { cache: "no-store" });
-        const subscription = response.ok ? ((await response.json()) as SubscriptionResponse) : null;
+        const subscription = await getCurrentSubscriptionAction();
 
         if (cancelled) return;
 

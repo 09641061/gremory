@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { BillingApiGateway } from "@/contexts/billing/infrastructure/gateways/billing-api.gateway";
+import { createBillingInvoicesAdapter } from "@/contexts/billing/infrastructure/adapters/billing-invoices.adapter";
 import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-session-cookie";
 import { cookies } from "next/headers";
 
@@ -30,7 +30,10 @@ export async function GET(
       return NextResponse.json({ message: "Authentication is required" }, { status: 401 });
     }
 
-    const invoice = await new BillingApiGateway().getInvoiceById(accessToken, parsed.data);
+    const invoice = await createBillingInvoicesAdapter().getInvoiceById(
+      accessToken,
+      parsed.data,
+    );
     return NextResponse.json(invoice);
   } catch (error) {
     return routeErrorResponse(error);

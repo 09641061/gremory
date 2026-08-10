@@ -8,7 +8,7 @@ import { createOrganizationId } from "../../../domain/model/valueobjects/organiz
 import type { OrganizationRepository } from "../../../domain/services/business.repositories";
 import type { OrganizationQueryService } from "../../services/business.services";
 import type { OrganizationSummary } from "../../model/business.read-models";
-import { OrganizationApiGateway } from "../../../infrastructure/gateways/organization-api.gateway";
+import { createOrganizationAdapter } from "@/contexts/business/infrastructure/adapters/organization.adapter";
 
 export class OrganizationQueryServiceImpl implements OrganizationQueryService {
   constructor(private readonly organizations: OrganizationRepository) {}
@@ -31,9 +31,8 @@ export class OrganizationQueryServiceImpl implements OrganizationQueryService {
 }
 
 export function createOrganizationQueryService(
-  token?: string,
 ): OrganizationQueryService {
-  return new OrganizationQueryServiceImpl(new OrganizationApiGateway(token));
+  return new OrganizationQueryServiceImpl(createOrganizationAdapter());
 }
 
 function toOrganizationSummary(

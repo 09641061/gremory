@@ -3,12 +3,10 @@ import { createOrganizationCommand } from "@/contexts/business/domain/model/comm
 import { createOrganizationCommandService } from "@/contexts/business/application/internal/commandservices/organization-command.service";
 import { createOrganizationQueryService } from "@/contexts/business/application/internal/queryservices/organization-query.service";
 import { createOrganizationSchema } from "@/contexts/business/interfaces/rest/schemas/organization.schemas";
-import { requireBusinessAccessToken } from "@/contexts/business/infrastructure/session/business-session";
 
 export async function GET() {
   try {
-    const token = await requireBusinessAccessToken();
-    const organization = await createOrganizationQueryService(token).getMyOrganization();
+    const organization = await createOrganizationQueryService().getMyOrganization();
     return NextResponse.json(organization);
   } catch (error) {
     return routeErrorResponse(error);
@@ -25,12 +23,11 @@ export async function POST(request: Request) {
       return validationErrorResponse(parsed.error.issues[0]?.message);
     }
 
-    const token = await requireBusinessAccessToken();
-    const organizationId = await createOrganizationCommandService(token).create(
+    const organizationId = await createOrganizationCommandService().create(
       createOrganizationCommand(parsed.data),
     );
 
-    const organization = await createOrganizationQueryService(token).getById({
+    const organization = await createOrganizationQueryService().getById({
       id: organizationId.value,
     });
 

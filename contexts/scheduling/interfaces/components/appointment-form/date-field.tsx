@@ -44,22 +44,31 @@ function isSameDay(a: Date, b: Date) {
 function buildMonthGrid(month: Date) {
   const firstDay = startOfMonth(month);
   const startWeekday = (firstDay.getDay() + 6) % 7;
+  const grid: Date[] = [];
+
+  // Previous month days to fill startWeekday cells
+  for (let i = startWeekday; i > 0; i--) {
+    const prevDate = new Date(firstDay);
+    prevDate.setDate(firstDay.getDate() - i);
+    grid.push(prevDate);
+  }
+
+  // Current month days
   const daysInMonth = new Date(month.getFullYear(), month.getMonth() + 1, 0).getDate();
-  const days: Array<Date | null> = [];
-
-  for (let i = 0; i < startWeekday; i += 1) {
-    days.push(null);
-  }
-
   for (let day = 1; day <= daysInMonth; day += 1) {
-    days.push(new Date(month.getFullYear(), month.getMonth(), day));
+    grid.push(new Date(month.getFullYear(), month.getMonth(), day));
   }
 
-  while (days.length % 7 !== 0) {
-    days.push(null);
+  // Next month days to fill up to exactly 42 days (6 weeks * 7 days)
+  const remainingCells = 42 - grid.length;
+  const lastDay = new Date(month.getFullYear(), month.getMonth(), daysInMonth);
+  for (let i = 1; i <= remainingCells; i++) {
+    const nextDate = new Date(lastDay);
+    nextDate.setDate(lastDay.getDate() + i);
+    grid.push(nextDate);
   }
 
-  return days;
+  return grid;
 }
 
 export function DateField({ id, name, placeholder, value, onChange }: DateFieldProps) {
@@ -141,15 +150,14 @@ export function DateField({ id, name, placeholder, value, onChange }: DateFieldP
               </Button>
             </div>
             <div className="p-2" style={{ maxHeight }}>
-              <div className="grid grid-cols-7 gap-1 px-1 pb-2 text-center text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+              <div className="grid grid-cols-7 gap-1 px-1 pb-2 text-center text-[11px] font-semibold tracking-[0.14em] text-muted-foreground">
                 {weekDays.map((day) => (
                   <div key={day}>{day}</div>
                 ))}
               </div>
               <div className="grid grid-cols-7 gap-1">
-                {monthGrid.map((day, index) => {
-                  if (!day) return <div key={`empty-${index}`} className="h-9" />;
-
+                {monthGrid.map((day) => {
+                  const isCurrentMonth = day.getMonth() === visibleMonth.getMonth();
                   const isSelected = selectedDate ? isSameDay(day, selectedDate) : false;
                   const isToday = isSameDay(day, new Date());
 
@@ -164,6 +172,8 @@ export function DateField({ id, name, placeholder, value, onChange }: DateFieldP
                       className={cn(
                         "h-9 rounded-xl text-sm transition-colors",
                         "hover:bg-muted/70 focus-visible:bg-muted/70 focus-visible:outline-none",
+                        !isCurrentMonth && "text-muted-foreground/35 hover:text-muted-foreground/60",
+                        isCurrentMonth && "text-foreground",
                         isToday && !isSelected && "bg-primary/5 text-primary",
                         isSelected && "bg-primary text-primary-foreground shadow-sm"
                       )}

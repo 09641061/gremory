@@ -36,17 +36,14 @@ export default async function CatalogPage({ searchParams }: CatalogPageProps) {
   let services: DetailedServiceDTO[] = [];
 
   if (establishmentId) {
-    try {
-      const categoryQueryService = createServiceCategoryQueryService();
-      const categoriesPage = await categoryQueryService.list(establishmentId, 0, 100);
-      categories = categoriesPage.content;
-
-      const serviceQueryService = createCatalogServiceQueryService();
-      const servicesPage = await serviceQueryService.search({ establishmentId, page: 0, size: 100 });
-      services = servicesPage.content;
-    } catch {
-      // Fallback arrays remain empty on fetch failure
-    }
+    const categoryQueryService = createServiceCategoryQueryService();
+    const serviceQueryService = createCatalogServiceQueryService();
+    const [categoriesPage, servicesPage] = await Promise.all([
+      categoryQueryService.list(establishmentId, 0, 100),
+      serviceQueryService.search({ establishmentId, page: 0, size: 100 }),
+    ]);
+    categories = categoriesPage.content;
+    services = servicesPage.content;
   }
 
   return (

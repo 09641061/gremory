@@ -45,6 +45,7 @@ describe("workforce role routes", () => {
       getName: () => "Catalog manager",
       getPermissions: () => ["catalog:manage"],
       isSystemRole: () => false,
+      position: 1,
     }]);
     mocks.service.permissions.mockResolvedValue(["business:organizations:read"]);
     mocks.service.create.mockResolvedValue({
@@ -52,12 +53,14 @@ describe("workforce role routes", () => {
       getName: () => "Catalog manager",
       getPermissions: () => ["catalog:manage"],
       isSystemRole: () => false,
+      position: 1,
     });
     mocks.service.patch.mockResolvedValue({
       id: "11111111-1111-4111-8111-111111111111",
       getName: () => "Catalog manager",
       getPermissions: () => ["catalog:manage"],
       isSystemRole: () => false,
+      position: 1,
     });
     mocks.service.assign.mockResolvedValue(undefined);
     mocks.service.delete.mockResolvedValue(undefined);

@@ -17,6 +17,9 @@ vi.mock("@/contexts/iam/interfaces/actions/request-email-sign-in.action", () => 
 vi.mock("@/contexts/iam/interfaces/actions/start-google-auth.action", () => ({
   startGoogleAuthAction: vi.fn(),
 }));
+vi.mock("@/contexts/iam/interfaces/actions/create-session.action", () => ({
+  createSessionAction: vi.fn().mockResolvedValue(undefined),
+}));
 vi.mock("@/contexts/iam/interfaces/actions/sign-out.action", () => ({
   signOutAction: () => mocks.signOut(),
 }));
@@ -67,28 +70,25 @@ describe("IAM client components", () => {
   it("should persist callback tokens and let the proxy decide the destination", async () => {
     // Arrange
     window.location.hash = "#access_token=a&refresh_token=r";
-    const fetchMock = vi.fn()
-      .mockResolvedValueOnce(new Response(null, { status: 204 }));
-    vi.stubGlobal("fetch", fetchMock);
+    const { createSessionAction } = await import("@/contexts/iam/interfaces/actions/create-session.action");
+    vi.mocked(createSessionAction).mockResolvedValueOnce(undefined);
 
     // Act
     render(<AuthCallback />);
 
     // Assert
-    await waitFor(() => expect(fetchMock).toHaveBeenCalledWith(
-      "/api/iam/auth/session",
-      expect.objectContaining({
-        method: "POST",
-        body: JSON.stringify({ accessToken: "a", refreshToken: "r" }),
-      })
-    ));
+    await waitFor(() => expect(createSessionAction).toHaveBeenCalledWith({
+      accessToken: "a",
+      refreshToken: "r",
+    }));
     await waitFor(() => expect(mocks.router.replace).toHaveBeenCalledWith("/"));
   });
 
   it("should return to the invitation after authentication", async () => {
     // Arrange
     window.location.hash = "#access_token=a&refresh_token=r";
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(null, { status: 204 })));
+    const { createSessionAction } = await import("@/contexts/iam/interfaces/actions/create-session.action");
+    vi.mocked(createSessionAction).mockResolvedValueOnce(undefined);
 
     // Act
     render(<AuthCallback returnTo="/invitations/accept?token=raw-token" />);

@@ -5,7 +5,7 @@ import { headers } from "next/headers";
 import { Header } from "@/contexts/shared/interfaces/components/header";
 import { ErrorBanner } from "@/contexts/shared/interfaces/components/error-banner";
 import { ProtectedHeaderClient } from "@/contexts/business/interfaces/components/organization/protected-header-client/protected-header-client";
-import { BillingApiGateway } from "@/contexts/billing/infrastructure/gateways/billing-api.gateway";
+import { createCurrentSubscriptionQueryService } from "@/contexts/billing/application/internal/queryservices/current-subscription-query.service";
 import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-session-cookie";
 import { createAppShellQueryService } from "@/contexts/shared/application/internal/queryservices/app-shell-query.service";
 
@@ -35,7 +35,7 @@ async function ProtectedHeader() {
   const organizationId = requestHeaders.get("x-takodu-organization-id") ?? undefined;
   const establishmentId = requestHeaders.get("x-takodu-establishment-id") ?? undefined;
   const subscription = accessToken
-    ? await new BillingApiGateway().getCurrentSubscription(accessToken).catch(() => null)
+    ? await createCurrentSubscriptionQueryService().getCurrentSubscription(accessToken)
     : null;
   const shell = accessToken
     ? await createAppShellQueryService().resolve({

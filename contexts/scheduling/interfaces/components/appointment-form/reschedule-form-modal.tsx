@@ -13,6 +13,7 @@ import { ActionState } from "../../actions/action-state";
 import { DeleteConfirmDialog } from "../confirm-dialogs/delete-confirm-dialog";
 import { DateField } from "./date-field";
 import { DropdownField } from "./dropdown-field";
+import { TimePickerField } from "./time-picker-field";
 import type {
   SchedulingCustomerViewModel,
   SchedulingMemberViewModel,
@@ -23,9 +24,7 @@ import {
   createCustomerOptions,
   createEmployeeOptions,
   createServiceOptions,
-  createTimeOptions,
 } from "./scheduling-form-utils";
-import { TIME_SLOTS } from "./time-slots";
 
 interface RescheduleFormModalProps {
   isOpen: boolean;
@@ -87,7 +86,6 @@ export function RescheduleFormModal({
   const serviceOptions = useMemo(() => createServiceOptions(services), [services]);
   const customerOptions = useMemo(() => createCustomerOptions(customers), [customers]);
   const employeeOptions = useMemo(() => createEmployeeOptions(members), [members]);
-  const timeOptions = useMemo(() => createTimeOptions(TIME_SLOTS), []);
 
   // Sincronizar el estado del formulario de forma segura si el prop cambia
   const [prevAppointmentId, setPrevAppointmentId] = useState(appointment.id);
@@ -192,23 +190,18 @@ export function RescheduleFormModal({
 
               <div className="space-y-1.5">
                 <Label htmlFor="reschedule-startTime">Time</Label>
-                <DropdownField
+                <TimePickerField
                   id="reschedule-startTime"
-                  name="startTime"
-                  placeholder="Select time..."
                   value={startTime}
                   onChange={setStartTime}
-                  options={timeOptions}
                 />
               </div>
             </div>
 
-            {startsAt && endsAt && (
-              <div className="rounded-lg border border-border bg-muted/40 p-3 space-y-1">
-                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Calculated End Time</p>
-                <p className="text-sm font-medium text-foreground">{formattedEnd}</p>
-              </div>
-            )}
+            <div className="rounded-lg border border-border bg-muted/40 p-3 space-y-1">
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Calculated End Time</p>
+              <p className="text-sm font-medium text-foreground">{formattedEnd || "--"}</p>
+            </div>
 
             <DialogFooter className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-2 pt-2">
               <Button

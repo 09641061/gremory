@@ -1,5 +1,6 @@
 "use server";
 
+import "server-only";
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { createEmail } from "../../domain/model/valueobjects/email";

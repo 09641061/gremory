@@ -1,5 +1,6 @@
 "use server";
 
+import "server-only";
 import { redirect } from "next/navigation";
 import { apiConfig } from "@/api.config";
 import { apiClient } from "@/contexts/shared/infrastructure/http/api-client";

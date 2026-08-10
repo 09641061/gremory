@@ -150,12 +150,16 @@ export async function removeWorkforceRoleAssignmentRoute(memberId: string, roleI
 }
 
 function roleToResource(role: WorkforceRole) {
+  if (!role.id) {
+    throw new Error("Workforce role must have an id");
+  }
+
   return {
-    id: role.id ?? "",
+    id: role.id,
     name: role.getName(),
     permissions: [...role.getPermissions()],
     systemRole: role.isSystemRole(),
-    position: role.position ?? (role.isSystemRole() ? 2_147_483_647 : 1),
+    position: role.position ?? 1,
   };
 }
 

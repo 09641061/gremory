@@ -7,6 +7,11 @@ const FIXED_PRICING_MATRIX: Record<
   PlanIdValue,
   Record<CurrencyCode, { monthly: number; annual: number }>
 > = {
+  0: {
+    PEN: { monthly: 0, annual: 0 },
+    USD: { monthly: 0, annual: 0 },
+    EUR: { monthly: 0, annual: 0 },
+  },
   1: {
     PEN: { monthly: 75.0, annual: 750.0 },
     USD: { monthly: 20.0, annual: 200.0 },

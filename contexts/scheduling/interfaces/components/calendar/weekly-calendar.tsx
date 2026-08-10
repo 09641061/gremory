@@ -68,10 +68,6 @@ export function WeeklyCalendar({
 
   const hours = useMemo(() => Array.from({ length: 15 }, (_, i) => 7 + i), []);
 
-  const formattedMonthYear = currentDate.toLocaleDateString("en-US", {
-    month: "long",
-    year: "numeric",
-  });
 
   const fetchAppointments = useCallback(() => {
     const reqId = ++requestIdRef.current;
@@ -141,7 +137,8 @@ export function WeeklyCalendar({
   return (
     <div className="flex flex-col h-[calc(100vh-140px)] w-full text-foreground bg-background">
       <WeeklyCalendarHeader
-        formattedMonthYear={formattedMonthYear}
+        currentDate={currentDate}
+        onDateChange={setCurrentDate}
         onPreviousWeek={() => navigateWeek("prev")}
         onNextWeek={() => navigateWeek("next")}
         onToday={navigateToday}
@@ -153,7 +150,7 @@ export function WeeklyCalendar({
         <div className="flex-1 overflow-y-auto relative">
           <div className="sticky top-0 z-10 grid grid-cols-[64px_repeat(7,1fr)] border-b border-border bg-card">
             <div className="flex items-center justify-center p-3 border-r border-border">
-              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+              <span className="text-[10px] font-bold text-muted-foreground tracking-wider">
                 Time
               </span>
             </div>
@@ -167,7 +164,7 @@ export function WeeklyCalendar({
                   }`}
                 >
                   <span
-                    className={`text-[11px] font-semibold uppercase ${
+                    className={`text-[11px] font-semibold ${
                       isToday ? "text-primary" : "text-muted-foreground"
                     }`}
                   >

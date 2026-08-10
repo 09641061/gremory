@@ -7,12 +7,13 @@ import { ArrowLeft } from "lucide-react";
 
 import type { BillingCycleType } from "../../../domain/model/value-objects/billing-cycle";
 import { getCurrencySymbol, type CurrencyCode } from "../../../domain/model/value-objects/currency";
-import type { BillingPlanResponse, SubscriptionResponse } from "../../../infrastructure/gateways/billing-api.gateway";
+import type { PlanReadModel } from "../../../application/internal/queryservices/list-plans-query.service";
 import { ErrorAlert } from "@/contexts/shared/interfaces/components/ui/error";
 import { SubscribeHero } from "./subscribe-hero";
 import { PlanCard } from "./plan-card";
 import { PaymentModal } from "../checkout/payment-modal";
 import { FreePlanSuccessModal } from "../checkout/free-plan-success-modal";
+import { listBillingPlansAction } from "@/contexts/billing/interfaces/actions/list-billing-plans.action";
 
 interface ActivePaymentState {
   clientSecret: string | null | undefined;
@@ -27,16 +28,15 @@ interface FeedbackState {
   id: number;
 }
 
-interface BillingPlanViewModel extends BillingPlanResponse {
+type BillingPlanMetadata = {
   description: string;
   features: string[];
   isPopular: boolean;
-}
+};
 
-const PLAN_METADATA: Record<
-  number,
-  Pick<BillingPlanViewModel, "description" | "features" | "isPopular">
-> = {
+type BillingPlanViewModel = PlanReadModel & BillingPlanMetadata;
+
+const PLAN_METADATA: Record<number, BillingPlanMetadata> = {
   0: {
     description: "Try the core product experience.",
     features: [
@@ -69,7 +69,7 @@ const PLAN_METADATA: Record<
   },
 };
 
-function enrichPlan(plan: BillingPlanResponse): BillingPlanViewModel | null {
+function enrichPlan(plan: PlanReadModel): BillingPlanViewModel | null {
   const metadata = PLAN_METADATA[plan.id];
   if (!metadata) return null;
 
@@ -100,19 +100,15 @@ export function SubscribeView() {
       setIsLoadingPlans(true);
 
       try {
-        const response = await fetch(`/api/billing/plans?currency=${encodeURIComponent(currency)}`, {
-          cache: "no-store",
-        });
-
-        if (!response.ok) {
-          throw new Error("Failed to load plans");
-        }
-
-        const data = (await response.json()) as BillingPlanResponse[];
+        const result = await listBillingPlansAction(currency);
         if (cancelled) return;
 
+        if (result.status === "error") {
+          throw new Error(result.error);
+        }
+
         setPlans(
-          data
+          result.data
             .map(enrichPlan)
             .filter((plan): plan is BillingPlanViewModel => plan !== null)
             .sort((left, right) => left.id - right.id),
@@ -145,7 +141,7 @@ export function SubscribeView() {
 
   const handlePlanSuccess = (plan: BillingPlanViewModel, displayPrice: number, data: unknown) => {
     setFeedbackMessage(null);
-    const response = data as SubscriptionResponse | undefined;
+    const response = data as { clientSecret?: string | null; stripePublicKey?: string | null } | undefined;
 
     if (plan.id === 0 || !response?.clientSecret || !response?.stripePublicKey) {
       if (plan.id === 0) {
