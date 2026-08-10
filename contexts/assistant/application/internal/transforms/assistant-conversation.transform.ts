@@ -16,6 +16,8 @@ import type {
   AssistantMessageReadModel,
 } from "./assistant.read-models";
 
+import { normalizeAssistantRole } from "../../../domain/model/value-objects/assistant-message-role";
+
 type ConversationMessageSource = {
   id: string;
   role?: string | null;
@@ -26,12 +28,12 @@ type ConversationMessageSource = {
 const DEFAULT_ASSISTANT_GREETING = "Hello. I am your assistant for business, customers, catalog, and scheduling.";
 
 function normalizeMessage(message: ConversationMessageSource): AssistantMessageReadModel {
-  const role = (message.role ?? "").toUpperCase();
+  const role = normalizeAssistantRole(message.role);
   const content = createAssistantMessageContent(message.content).value;
 
   return {
     id: message.id,
-    role: role === "ASSISTANT" || role === "AGENT" ? "assistant" : "user",
+    role,
     content,
     createdAt: message.createdAt,
   };
