@@ -6,7 +6,7 @@ import { Textarea } from "@/contexts/shared/interfaces/components/ui/textarea";
 import { Label } from "@/contexts/shared/interfaces/components/ui/label";
 import { useActionState, useEffect, useRef } from "react";
 import { cancelAppointmentAction } from "../../actions/cancel-appointment.action";
-import { ErrorAlert } from "@/contexts/shared/interfaces/components/ui/error";
+import { ErrorAlert } from "@/contexts/shared/interfaces/components/error";
 import { Appointment } from "../../../domain/model/entities/appointment";
 import { ActionState } from "../../actions/action-state";
 import { AppointmentConfirmDialogHeader, AppointmentConfirmDialogShell } from "./appointment-confirm-dialog-shell";

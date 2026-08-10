@@ -8,7 +8,7 @@ import {
   XIcon,
 } from "lucide-react";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
-import { ErrorAlert } from "@/contexts/shared/interfaces/components/ui/error";
+import { ErrorAlert } from "@/contexts/shared/interfaces/components/error";
 import { CategoryItem } from "./category-item";
 import { DeleteCategoryDialog } from "./delete-category-dialog";
 

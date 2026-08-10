@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { X, Save } from "lucide-react";
-import { ErrorAlert } from "@/contexts/shared/interfaces/components/ui/error";
+import { ErrorAlert } from "@/contexts/shared/interfaces/components/error";
 import { Dialog, DialogContent, DialogTitle, DialogDescription, DialogClose } from "@/contexts/shared/interfaces/components/ui/dialog";
 import { CustomerResponse } from "@/contexts/crm/domain/model/entities/customer";
 import { updateCustomerAction } from "@/contexts/crm/interfaces/actions/update-customer.action";

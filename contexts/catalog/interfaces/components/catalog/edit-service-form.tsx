@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { EyeIcon, EyeOffIcon, Save, MoreVertical } from "lucide-react";
-import { ErrorAlert } from "@/contexts/shared/interfaces/components/ui/error";
+import { EyeIcon, EyeOffIcon, Save, MoreVertical, Trash2 } from "lucide-react";
+import { ErrorAlert } from "@/contexts/shared/interfaces/components/error";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import { Spinner } from "@/contexts/shared/interfaces/components/ui/spinner";
 import { Card, CardContent } from "@/contexts/shared/interfaces/components/ui/card";
@@ -12,7 +12,6 @@ import {
   DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuDeleteItem,
 } from "@/contexts/shared/interfaces/components/ui/dropdown-menu";
 import { GeneralInfoSection } from "../new/general-info-section";
 import { FinancialsAndLogisticsSection } from "../new/financials-and-logistics-section";
@@ -105,9 +104,14 @@ export function EditServiceForm({ service, onCancel, canUpdateService, canDelete
                             </DropdownMenuItem>
                           )}
                           {canDeleteService && (
-                            <DropdownMenuDeleteItem
+                            <DropdownMenuItem
+                              variant="destructive"
+                              className="gap-2 cursor-pointer"
                               onClick={() => setIsDeleteDialogOpen(true)}
-                            />
+                            >
+                              <Trash2 className="size-3.5" />
+                              <span>Delete</span>
+                            </DropdownMenuItem>
                           )}
                         </DropdownMenuContent>
                       </DropdownMenu>

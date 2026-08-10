@@ -4,7 +4,7 @@ import { AlertDialogCancel } from "@/contexts/shared/interfaces/components/ui/al
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import { useTransition, useState } from "react";
 import { completeAppointmentAction } from "../../actions/complete-appointment.action";
-import { ErrorAlert } from "@/contexts/shared/interfaces/components/ui/error";
+import { ErrorAlert } from "@/contexts/shared/interfaces/components/error";
 import { Appointment } from "../../../domain/model/entities/appointment";
 import {
   AppointmentConfirmDialogHeader,

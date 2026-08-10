@@ -6,7 +6,7 @@ import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/contexts/shared/interfaces/components/ui/card";
 import { useChangeCatalogServiceStatus } from "../../hooks/use-change-catalog-service-status";
 import { Spinner } from "@/contexts/shared/interfaces/components/ui/spinner";
-import { ErrorAlert } from "@/contexts/shared/interfaces/components/ui/error";
+import { ErrorAlert } from "@/contexts/shared/interfaces/components/error";
 
 export type DetailedServiceDTO = {
   id: string;

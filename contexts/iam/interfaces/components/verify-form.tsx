@@ -3,7 +3,11 @@
 import { ClipboardEvent, KeyboardEvent, useRef, useState } from "react";
 import { useActionState } from "react";
 import { useRouter } from "next/navigation";
-import { ErrorAlert } from "@/contexts/shared/interfaces/components/ui/error";
+import {
+  Alert,
+  AlertDescription,
+  AlertTitle,
+} from "@/contexts/shared/interfaces/components/ui/alert";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import { Spinner } from "@/contexts/shared/interfaces/components/ui/spinner";
 import {
@@ -11,6 +15,7 @@ import {
   CardContent,
 } from "@/contexts/shared/interfaces/components/ui/card";
 import { Input } from "@/contexts/shared/interfaces/components/ui/input";
+import { Label } from "@/contexts/shared/interfaces/components/ui/label";
 import {
   confirmEmailSignInAction,
   type ConfirmEmailSignInActionState,
@@ -90,14 +95,16 @@ export function VerifyForm({
 
   return (
     <>
-      <ErrorAlert
-        title="Verification failed"
-        message={
-          initialError ??
-          (state.status === "error" ? state.error : undefined) ??
-          (resendState.status === "error" ? resendState.error : undefined)
-        }
-      />
+      {initialError || state.status === "error" || resendState.status === "error" ? (
+        <Alert variant="destructive" className="fixed top-4 right-4 z-50 w-[calc(100%-2rem)] max-w-md shadow-lg">
+          <AlertTitle>Verification failed</AlertTitle>
+          <AlertDescription>
+            {initialError ??
+              (state.status === "error" ? state.error : undefined) ??
+              (resendState.status === "error" ? resendState.error : undefined)}
+          </AlertDescription>
+        </Alert>
+      ) : null}
       <main className="flex min-h-screen items-center justify-center bg-background px-4 py-6 text-foreground">
         <section className="w-full max-w-[416px] text-center">
           <header className="mb-5">
@@ -122,9 +129,9 @@ export function VerifyForm({
                 </p>
 
                 <div className="mt-5 text-left">
-                  <p className="mb-3 text-[14px] text-muted-foreground">
+                  <Label className="mb-3 text-muted-foreground">
                     Enter the verification code
-                  </p>
+                  </Label>
 
                   <div className="grid grid-cols-6 gap-1.5">
                     {Array.from({ length: verificationCodeLength }, (_, index) => (

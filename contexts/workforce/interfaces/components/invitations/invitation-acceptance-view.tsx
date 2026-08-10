@@ -7,7 +7,7 @@ import type { TeamInvitationPreviewView } from "@/contexts/workforce/application
 import { acceptTeamInvitationAction } from "@/contexts/workforce/interfaces/actions/team.actions";
 import { initialTeamActionResult } from "@/contexts/workforce/interfaces/actions/team-action-result";
 import { Button, buttonVariants } from "@/contexts/shared/interfaces/components/ui/button";
-import { ErrorAlert } from "@/contexts/shared/interfaces/components/ui/error";
+import { ErrorAlert } from "@/contexts/shared/interfaces/components/error";
 import {
   Card,
   CardContent,

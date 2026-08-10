@@ -2,15 +2,22 @@
 
 import { useRouter } from "next/navigation";
 
-import { FolderIcon, MoreVerticalIcon, GripVertical, ChevronRight, ChevronDown } from "lucide-react";
+import {
+  ChevronDown,
+  ChevronRight,
+  FolderIcon,
+  GripVertical,
+  MoreVerticalIcon,
+  Pencil,
+  Plus,
+  Trash2,
+} from "lucide-react";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
   DropdownMenuContent,
-  DropdownMenuEditItem,
-  DropdownMenuCreateItem,
-  DropdownMenuDeleteItem,
+  DropdownMenuItem,
 } from "@/contexts/shared/interfaces/components/ui/dropdown-menu";
 import type { CategoryDTO, ServiceSummaryDTO } from "./category-sidebar";
 
@@ -111,8 +118,8 @@ export function CategoryItem({
               </DropdownMenuTrigger>
               <DropdownMenuContent className="p-2 space-y-1 w-44">
                 {canCreateService && (
-                  <DropdownMenuCreateItem
-                    label="Create Service"
+                  <DropdownMenuItem
+                    className="gap-2 cursor-pointer font-medium text-foreground"
                     onClick={() => {
                       setIsMobileOpen(false);
                       if (onCreateService) {
@@ -121,18 +128,26 @@ export function CategoryItem({
                         router.push("/catalog");
                       }
                     }}
-                  />
+                  >
+                    <Plus className="size-3.5 text-muted-foreground" />
+                    <span>Create Service</span>
+                  </DropdownMenuItem>
                 )}
                 {canUpdateCategory && (
-                  <DropdownMenuEditItem
+                  <DropdownMenuItem
+                    className="gap-2 cursor-pointer"
                     onClick={() => {
                       onOpenEditCategoryModal(cat);
                     }}
-                  />
+                  >
+                    <Pencil className="size-3.5 text-muted-foreground" />
+                    <span>Edit</span>
+                  </DropdownMenuItem>
                 )}
                 {canDeleteCategory && (
-                  <DropdownMenuDeleteItem
-                    className={catServices.length > 0 ? "opacity-50 cursor-not-allowed" : ""}
+                  <DropdownMenuItem
+                    variant="destructive"
+                    className={catServices.length > 0 ? "gap-2 cursor-not-allowed" : "gap-2 cursor-pointer"}
                     onClick={() => {
                       if (catServices.length > 0) {
                         setAlertMessage("You cannot delete a category that has services.");
@@ -140,7 +155,10 @@ export function CategoryItem({
                         onDeleteCategory(cat);
                       }
                     }}
-                  />
+                  >
+                    <Trash2 className="size-3.5" />
+                    <span>Delete</span>
+                  </DropdownMenuItem>
                 )}
               </DropdownMenuContent>
             </DropdownMenu>

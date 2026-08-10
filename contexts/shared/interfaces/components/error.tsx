@@ -8,7 +8,7 @@ import {
   Alert,
   AlertDescription,
   AlertTitle,
-} from "./alert";
+} from "./ui/alert";
 
 export function ErrorAlert({
   title,

@@ -4,7 +4,7 @@ import { useActionState, useEffect } from "react";
 import { UserPlus } from "lucide-react";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import { Input } from "@/contexts/shared/interfaces/components/ui/input";
-import { ErrorAlert } from "@/contexts/shared/interfaces/components/ui/error";
+import { ErrorAlert } from "@/contexts/shared/interfaces/components/error";
 import {
   AlertDialog,
   AlertDialogCancel,

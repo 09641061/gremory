@@ -3,10 +3,15 @@
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
 import { GoogleIcon } from "./icons/google";
-import { ErrorAlert } from "@/contexts/shared/interfaces/components/ui/error";
+import {
+  Alert,
+  AlertDescription,
+  AlertTitle,
+} from "@/contexts/shared/interfaces/components/ui/alert";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import { Card, CardContent } from "@/contexts/shared/interfaces/components/ui/card";
 import { Input } from "@/contexts/shared/interfaces/components/ui/input";
+import { Label } from "@/contexts/shared/interfaces/components/ui/label";
 import { Spinner } from "@/contexts/shared/interfaces/components/ui/spinner";
 import {
   requestEmailSignInAction,
@@ -47,10 +52,12 @@ export function AuthForm({ returnTo = null }: { returnTo?: string | null }) {
 
   return (
     <>
-      <ErrorAlert
-        title="Unable to continue"
-        message={state.status === "error" ? state.error : undefined}
-      />
+      {state.status === "error" ? (
+        <Alert variant="destructive" className="fixed top-4 right-4 z-50 w-[calc(100%-2rem)] max-w-md shadow-lg">
+          <AlertTitle>Unable to continue</AlertTitle>
+          <AlertDescription>{state.error}</AlertDescription>
+        </Alert>
+      ) : null}
       <main className="flex min-h-screen items-center justify-center bg-background px-4 py-6 text-foreground">
         <section className="w-full max-w-[416px] text-center">
         <header className="mb-5">
@@ -77,12 +84,16 @@ export function AuthForm({ returnTo = null }: { returnTo?: string | null }) {
 
           <form action={formAction}>
             {returnTo ? <input type="hidden" name="returnTo" value={returnTo} /> : null}
-            <Input
-              name="email"
-              type="email"
-              placeholder="Enter your email"
-              aria-label="Email address"
-            />
+            <div className="space-y-2 text-left">
+              <Label htmlFor="email">Email address</Label>
+              <Input
+                id="email"
+                name="email"
+                type="email"
+                placeholder="Enter your email"
+                autoComplete="email"
+              />
+            </div>
 
             <Button
               type="submit"

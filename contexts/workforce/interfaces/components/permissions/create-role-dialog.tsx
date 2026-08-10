@@ -15,7 +15,7 @@ import {
   AlertDialogTitle,
 } from "@/contexts/shared/interfaces/components/ui/alert-dialog";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
-import { ErrorAlert } from "@/contexts/shared/interfaces/components/ui/error";
+import { ErrorAlert } from "@/contexts/shared/interfaces/components/error";
 import { Input } from "@/contexts/shared/interfaces/components/ui/input";
 import { Spinner } from "@/contexts/shared/interfaces/components/ui/spinner";
 
