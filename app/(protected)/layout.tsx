@@ -35,7 +35,7 @@ async function ProtectedHeader() {
   const organizationId = requestHeaders.get("x-takodu-organization-id") ?? undefined;
   const establishmentId = requestHeaders.get("x-takodu-establishment-id") ?? undefined;
   const subscription = accessToken
-    ? await createCurrentSubscriptionQueryService().getCurrentSubscription(accessToken)
+    ? await createCurrentSubscriptionQueryService().getCurrentSubscriptionSnapshot(accessToken)
     : null;
   const shell = accessToken
     ? await createAppShellQueryService().resolve({

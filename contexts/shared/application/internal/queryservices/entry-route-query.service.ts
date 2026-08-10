@@ -53,7 +53,11 @@ export class EntryRouteQueryService {
         return establishments;
       }
       if (establishments.status === "not-found" || establishments.data.length === 0) {
-        return { status: "establishment-required", setupHref: "/establishments/new" };
+        return {
+          status: "establishment-required",
+          setupHref: "/establishments/new",
+          allowedPaths: ["/establishments/new"],
+        };
       }
 
       return {
@@ -66,7 +70,13 @@ export class EntryRouteQueryService {
       return { status: "unavailable" };
     }
 
-    return { status: "organization-required", setupHref: "/organizations" };
+    // A user without an owned organization is exactly the one allowed to create
+    // one, so the dedicated creation route stays reachable during setup.
+    return {
+      status: "organization-required",
+      setupHref: "/organizations",
+      allowedPaths: ["/organizations", "/organizations/new"],
+    };
   }
 
   private async tryGet<T>(load: () => Promise<T>): Promise<

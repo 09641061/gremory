@@ -22,7 +22,7 @@ export default async function AppLayout({
   const accessToken = (await cookies()).get(iamSessionCookies.accessToken)?.value;
   const requestHeaders = await headers();
   const subscription = accessToken
-    ? await createCurrentSubscriptionQueryService().getCurrentSubscription(accessToken)
+    ? await createCurrentSubscriptionQueryService().getCurrentSubscriptionSnapshot(accessToken)
     : null;
   const shell = accessToken
     ? await createAppShellQueryService().resolve({

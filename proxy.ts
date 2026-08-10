@@ -56,7 +56,7 @@ export async function proxy(request: NextRequest) {
   }
 
   if (landing.status === "organization-required" || landing.status === "establishment-required") {
-    if (pathname !== landing.setupHref) {
+    if (!landing.allowedPaths.includes(pathname)) {
       return redirectWithCookies(request, landing.setupHref, response);
     }
     return continueWithWorkspaceContext(request, response);
