@@ -1,8 +1,12 @@
 /** @vitest-environment jsdom */
-import { beforeEach, afterEach, describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 
 import { SubscribeView } from "@/contexts/billing/interfaces/components/subscribe/subscribe-view";
+import type {
+  PlanReadModel,
+  PlansByCurrencyReadModel,
+} from "@/contexts/billing/application/internal/queryservices/list-plans-query.service";
 
 const mocks = vi.hoisted(() => ({
   push: vi.fn(),
@@ -42,62 +46,45 @@ vi.mock("@stripe/react-stripe-js", () => ({
   useElements: () => ({ getElement: vi.fn() }),
 }));
 
-const plansByCurrency = {
-  USD: [
-    { id: 0, name: "Free", maxEstablishments: 1, monthlyPriceAmount: 0, annualPriceAmount: 0, currency: "USD", active: true },
-    { id: 1, name: "Standard", maxEstablishments: 1, monthlyPriceAmount: 20, annualPriceAmount: 200, currency: "USD", active: true },
-    { id: 2, name: "Premium", maxEstablishments: -1, monthlyPriceAmount: 50, annualPriceAmount: 500, currency: "USD", active: true },
-  ],
-  PEN: [
-    { id: 0, name: "Free", maxEstablishments: 1, monthlyPriceAmount: 0, annualPriceAmount: 0, currency: "PEN", active: true },
-    { id: 1, name: "Standard", maxEstablishments: 1, monthlyPriceAmount: 75, annualPriceAmount: 750, currency: "PEN", active: true },
-    { id: 2, name: "Premium", maxEstablishments: -1, monthlyPriceAmount: 190, annualPriceAmount: 1900, currency: "PEN", active: true },
-  ],
-  EUR: [
-    { id: 0, name: "Free", maxEstablishments: 1, monthlyPriceAmount: 0, annualPriceAmount: 0, currency: "EUR", active: true },
-    { id: 1, name: "Standard", maxEstablishments: 1, monthlyPriceAmount: 18, annualPriceAmount: 180, currency: "EUR", active: true },
-    { id: 2, name: "Premium", maxEstablishments: -1, monthlyPriceAmount: 45, annualPriceAmount: 450, currency: "EUR", active: true },
-  ],
-} as const;
-
-function jsonResponse(data: unknown, status = 200) {
-  return new Response(JSON.stringify(data), {
-    status,
-    headers: { "Content-Type": "application/json" },
-  });
+function plan(
+  id: number,
+  name: string,
+  monthlyPriceAmount: number,
+  annualPriceAmount: number,
+): PlanReadModel {
+  return {
+    id,
+    name,
+    description: `${name} description`,
+    monthlyPriceAmount,
+    annualPriceAmount,
+    features: [`${name} feature`],
+    isPopular: false,
+  };
 }
 
+// The page resolves every currency up front, so the view never fetches.
+const plansByCurrency: PlansByCurrencyReadModel = {
+  USD: [plan(0, "Free", 0, 0), plan(1, "Standard", 20, 200), plan(2, "Premium", 50, 500)],
+  PEN: [plan(0, "Free", 0, 0), plan(1, "Standard", 75, 750), plan(2, "Premium", 190, 1900)],
+  EUR: [plan(0, "Free", 0, 0), plan(1, "Standard", 18, 180), plan(2, "Premium", 45, 450)],
+};
+
 describe("SubscribeView Component", () => {
-  const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
-    const url = new URL(String(input), "http://localhost");
-    if (url.pathname === "/api/billing/plans") {
-      const currency = (url.searchParams.get("currency") ?? "USD") as keyof typeof plansByCurrency;
-      return jsonResponse(plansByCurrency[currency]);
-    }
 
-    return jsonResponse({ message: "Not found" }, 404);
-  });
-
-  beforeEach(() => {
-    vi.stubGlobal("fetch", fetchMock);
-  });
-
-  afterEach(() => {
-    fetchMock.mockClear();
-    vi.unstubAllGlobals();
-  });
-
-  it("renders Free, Standard and Premium when the plans endpoint returns them", async () => {
-    render(<SubscribeView />);
+  it("renders only the paid plans, dropping the free plan the endpoint returns", async () => {
+    render(<SubscribeView backHref="/chat" plansByCurrency={plansByCurrency} />);
 
     expect(await screen.findByText("Choose the plan that fits you")).toBeDefined();
-    expect(await screen.findByRole("button", { name: "Get Free plan" })).toBeDefined();
-    expect(screen.getByRole("button", { name: "Get Standard plan" })).toBeDefined();
+    expect(await screen.findByRole("button", { name: "Get Standard plan" })).toBeDefined();
     expect(screen.getByRole("button", { name: "Get Premium plan" })).toBeDefined();
+    // The catalog still serves the free plan; only the page hides it.
+    expect(screen.queryByRole("button", { name: "Get Free plan" })).toBeNull();
+    expect(screen.queryByText("Try the core product experience.")).toBeNull();
   });
 
   it("toggles billing cycle between Monthly and Annual", async () => {
-    render(<SubscribeView />);
+    render(<SubscribeView backHref="/chat" plansByCurrency={plansByCurrency} />);
 
     expect(await screen.findByText("$20")).toBeDefined();
 
@@ -109,7 +96,7 @@ describe("SubscribeView Component", () => {
   });
 
   it("switches currency between PEN, USD, and EUR", async () => {
-    render(<SubscribeView />);
+    render(<SubscribeView backHref="/chat" plansByCurrency={plansByCurrency} />);
 
     expect(await screen.findByText("$20")).toBeDefined();
 

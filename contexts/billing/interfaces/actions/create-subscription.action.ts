@@ -44,7 +44,7 @@ export async function createSubscriptionAction(
     });
     const result = await createBillingSubscriptionAdapter().createSubscription(accessToken, prepared);
 
-    revalidatePath("/subscribe");
+    revalidatePath("/upgrade");
     revalidatePath("/chat");
     revalidatePath("/schedule");
 

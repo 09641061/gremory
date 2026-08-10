@@ -3,18 +3,8 @@ import type {
   SchedulingMemberViewModel,
   SchedulingServiceViewModel,
 } from "../../../application/model/scheduling-page-data.view-model";
+import { formatClockTime, toLocalISOString } from "../scheduling-datetime";
 import type { DropdownOption } from "./types";
-
-function formatTimeLabel(hours: number, minutes: number) {
-  const suffix = hours >= 12 ? "PM" : "AM";
-  const normalizedHour = hours % 12 === 0 ? 12 : hours % 12;
-  return `${normalizedHour}:${String(minutes).padStart(2, "0")} ${suffix}`;
-}
-
-export function formatTimeSlotValue(slot: string) {
-  const [hours, minutes] = slot.split(":").map(Number);
-  return formatTimeLabel(hours, minutes);
-}
 
 export function createServiceOptions(services: SchedulingServiceViewModel[]): DropdownOption[] {
   return services.map((service) => ({
@@ -42,36 +32,17 @@ export function createEmployeeOptions(members: SchedulingMemberViewModel[]): Dro
   }));
 }
 
-export function createTimeOptions(slots: string[]): DropdownOption[] {
-  return slots.map((slot) => ({
-    value: slot,
-    label: formatTimeSlotValue(slot),
-  }));
-}
+export type AppointmentTimes = Readonly<{
+  /** Empty until date, time and a service duration are all known. */
+  startsAt: string;
+  endsAt: string;
+  formattedEnd: string;
+}>;
 
-function toLocalISOString(date: Date) {
-  const pad = (n: number) => String(n).padStart(2, "0");
-  const tzo = -date.getTimezoneOffset();
-  const dif = tzo >= 0 ? "+" : "-";
-  return (
-    date.getFullYear() +
-    "-" +
-    pad(date.getMonth() + 1) +
-    "-" +
-    pad(date.getDate()) +
-    "T" +
-    pad(date.getHours()) +
-    ":" +
-    pad(date.getMinutes()) +
-    ":" +
-    pad(date.getSeconds()) +
-    dif +
-    pad(Math.floor(Math.abs(tzo) / 60)) +
-    ":" +
-    pad(Math.abs(tzo) % 60)
-  );
-}
-
+/**
+ * Derives the submitted `startsAt`/`endsAt` from the picked local date, local
+ * time and the selected service's duration.
+ */
 export function computeAppointmentTimes({
   startDate,
   startTime,
@@ -80,23 +51,19 @@ export function computeAppointmentTimes({
   startDate: string;
   startTime: string;
   durationMinutes: number | null | undefined;
-}) {
+}): AppointmentTimes {
   if (!startDate || !startTime || !durationMinutes) {
     return { startsAt: "", endsAt: "", formattedEnd: "" };
   }
 
-  const [startYear, startMonth, startDay] = startDate.split("-").map(Number);
-  const [startHour, startMin] = startTime.split(":").map(Number);
-  const startDateTime = new Date(startYear!, startMonth! - 1, startDay!, startHour!, startMin!, 0, 0);
-  const endDateTime = new Date(startDateTime.getTime() + durationMinutes * 60 * 1000);
+  const [year, month, day] = startDate.split("-").map(Number);
+  const [hour, minute] = startTime.split(":").map(Number);
+  const start = new Date(year!, month! - 1, day!, hour!, minute!, 0, 0);
+  const end = new Date(start.getTime() + durationMinutes * 60 * 1000);
 
   return {
-    startsAt: toLocalISOString(startDateTime),
-    endsAt: toLocalISOString(endDateTime),
-    formattedEnd: `${endDateTime.toLocaleTimeString("en-US", {
-      hour: "numeric",
-      minute: "2-digit",
-      hour12: true,
-    })} (${durationMinutes} mins duration)`,
+    startsAt: toLocalISOString(start),
+    endsAt: toLocalISOString(end),
+    formattedEnd: `${formatClockTime(end)} (${durationMinutes} mins duration)`,
   };
 }

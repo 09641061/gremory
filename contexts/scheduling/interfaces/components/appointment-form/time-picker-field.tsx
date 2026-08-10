@@ -1,268 +1,187 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { ChevronUp, ChevronDown, Clock } from "lucide-react";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
-import { useSelectorMenu } from "@/contexts/business/interfaces/components/use-selector-menu";
-import { useAdaptivePopup } from "./use-adaptive-popup";
+import { Input } from "@/contexts/shared/interfaces/components/ui/input";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/contexts/shared/interfaces/components/ui/popover";
 import { cn } from "@/lib/utils";
+
+const MINUTE_STEP = 15;
+const DEFAULT_TIME = "09:00";
 
 interface TimePickerFieldProps {
   id: string;
-  value: string; // "HH:MM"
+  /** 24h `HH:MM`. Empty string means "nothing chosen yet". */
+  value: string;
   onChange: (value: string) => void;
 }
 
+function pad(value: number) {
+  return String(value).padStart(2, "0");
+}
+
+function to12Hour(hour24: number) {
+  return hour24 % 12 === 0 ? 12 : hour24 % 12;
+}
+
 export function TimePickerField({ id, value, onChange }: TimePickerFieldProps) {
-  const [isOpen, setIsOpen] = useState(false);
-  const selectorRef = useRef<HTMLDivElement>(null);
-  const buttonRef = useRef<HTMLButtonElement>(null);
-  const { placement } = useAdaptivePopup(isOpen, buttonRef);
-
-  useSelectorMenu(isOpen, setIsOpen, selectorRef);
-
-  // Default to "09:00" if no value selected
-  const timeStr = value || "09:00";
-  const [hour24, min] = timeStr.split(":").map(Number);
-
+  const [hour24, minute] = (value || DEFAULT_TIME).split(":").map(Number);
   const isPM = hour24 >= 12;
-  const hour12 = hour24 % 12 === 0 ? 12 : hour24 % 12;
+  const hour12 = to12Hour(hour24);
 
-  // Local inputs state for typing support
-  const [hourInput, setHourInput] = useState(() => String(hour12).padStart(2, "0"));
-  const [minInput, setMinInput] = useState(() => String(min).padStart(2, "0"));
-
-  // Synchronize local state with props when picker is opened or props change
+  // Free-typing buffers. They mirror the prop but tolerate the transient
+  // states ("", "1") that a controlled two-digit field must allow.
+  const [hourInput, setHourInput] = useState(() => pad(hour12));
+  const [minuteInput, setMinuteInput] = useState(() => pad(minute));
   const [prevValue, setPrevValue] = useState(value);
-  const [prevIsOpen, setPrevIsOpen] = useState(isOpen);
 
-  if (value !== prevValue || isOpen !== prevIsOpen) {
+  if (value !== prevValue) {
     setPrevValue(value);
-    setPrevIsOpen(isOpen);
-    setHourInput(String(hour12).padStart(2, "0"));
-    setMinInput(String(min).padStart(2, "0"));
+    setHourInput(pad(hour12));
+    setMinuteInput(pad(minute));
   }
 
-  const updateTime = (h: number, m: number) => {
-    const hStr = String(h).padStart(2, "0");
-    const mStr = String(m).padStart(2, "0");
-    onChange(`${hStr}:${mStr}`);
+  const commit = (nextHour24: number, nextMinute: number) => {
+    onChange(`${pad((nextHour24 + 24) % 24)}:${pad((nextMinute + 60) % 60)}`);
   };
 
-  const handleHourUp = () => {
-    let nextHour24 = hour24 + 1;
-    if (nextHour24 > 23) nextHour24 = 0;
-    updateTime(nextHour24, min);
-  };
+  const shiftHour = (delta: number) => commit(hour24 + delta, minute);
+  const shiftMinute = (delta: number) => commit(hour24, minute + delta);
+  const toggleMeridiem = () => commit(isPM ? hour24 - 12 : hour24 + 12, minute);
 
-  const handleHourDown = () => {
-    let nextHour24 = hour24 - 1;
-    if (nextHour24 < 0) nextHour24 = 23;
-    updateTime(nextHour24, min);
-  };
-
-  const handleMinUp = () => {
-    let nextMin = min + 15;
-    if (nextMin >= 60) nextMin = 0;
-    updateTime(hour24, nextMin);
-  };
-
-  const handleMinDown = () => {
-    let nextMin = min - 15;
-    if (nextMin < 0) nextMin = 45;
-    updateTime(hour24, nextMin);
-  };
-
-  const handleToggleAmPm = () => {
-    let nextHour24 = hour24;
-    if (isPM) {
-      nextHour24 -= 12;
-    } else {
-      nextHour24 += 12;
-    }
-    updateTime(nextHour24 % 24, min);
-  };
-
-  const handleHourInputChange = (val: string) => {
-    // Only allow digits
-    const cleaned = val.replace(/\D/g, "");
+  const handleHourInput = (raw: string) => {
+    const cleaned = raw.replace(/\D/g, "").slice(0, 2);
     setHourInput(cleaned);
 
-    const num = Number(cleaned);
-    if (cleaned && num >= 1 && num <= 12) {
-      // Calculate 24h hour based on current AM/PM status
-      let h24 = num;
-      if (isPM && h24 !== 12) {
-        h24 += 12;
-      } else if (!isPM && h24 === 12) {
-        h24 = 0;
-      }
-      updateTime(h24, min);
-    }
+    const parsed = Number(cleaned);
+    if (!cleaned || parsed < 1 || parsed > 12) return;
+    // Typing "1" on the way to "12" must not move the appointment to 1 o'clock,
+    // so a lone "1" waits for the second digit or for blur.
+    if (cleaned === "1") return;
+    commit(isPM ? (parsed % 12) + 12 : parsed % 12, minute);
   };
 
-  const handleHourInputBlur = () => {
-    const num = Number(hourInput);
-    if (!hourInput || isNaN(num) || num < 1 || num > 12) {
-      // Revert to valid prop state on invalid/empty blur
-      setHourInput(String(hour12).padStart(2, "0"));
-    } else {
-      setHourInput(String(num).padStart(2, "0"));
+  const handleHourBlur = () => {
+    const parsed = Number(hourInput);
+    if (!hourInput || Number.isNaN(parsed) || parsed < 1 || parsed > 12) {
+      setHourInput(pad(hour12));
+      return;
     }
+    commit(isPM ? (parsed % 12) + 12 : parsed % 12, minute);
   };
 
-  const handleMinInputChange = (val: string) => {
-    // Only allow digits
-    const cleaned = val.replace(/\D/g, "");
-    setMinInput(cleaned);
+  const handleMinuteInput = (raw: string) => {
+    const cleaned = raw.replace(/\D/g, "").slice(0, 2);
+    setMinuteInput(cleaned);
 
-    const num = Number(cleaned);
-    if (cleaned && num >= 0 && num <= 59) {
-      updateTime(hour24, num);
-    }
+    const parsed = Number(cleaned);
+    if (cleaned && parsed >= 0 && parsed <= 59) commit(hour24, parsed);
   };
 
-  const handleMinInputBlur = () => {
-    const num = Number(minInput);
-    if (!minInput || isNaN(num) || num < 0 || num > 59) {
-      // Revert to valid prop state on invalid/empty blur
-      setMinInput(String(min).padStart(2, "0"));
-    } else {
-      setMinInput(String(num).padStart(2, "0"));
+  const handleMinuteBlur = () => {
+    const parsed = Number(minuteInput);
+    if (!minuteInput || Number.isNaN(parsed) || parsed < 0 || parsed > 59) {
+      setMinuteInput(pad(minute));
+      return;
     }
-  };
-
-  // Convert "HH:MM" 24h to displayable "hh:mm AM/PM"
-  const getDisplayTime = () => {
-    if (!value) return "Select time...";
-    return `${String(hour12).padStart(2, "0")}:${String(min).padStart(2, "0")} ${isPM ? "PM" : "AM"}`;
+    commit(hour24, parsed);
   };
 
   return (
-    <div ref={selectorRef} className="relative w-full">
-      <Button
-        type="button"
-        variant="outline"
+    <Popover>
+      <PopoverTrigger
         id={id}
-        ref={buttonRef}
-        aria-haspopup="dialog"
-        aria-expanded={isOpen}
-        onClick={() => setIsOpen((open) => !open)}
-        className={cn(
-          "h-9 w-full justify-between gap-3 bg-transparent px-3 text-left font-normal text-foreground dark:bg-muted/30",
-          isOpen && "border-ring bg-card shadow-sm"
-        )}
+        render={<Button variant="outline" />}
+        // Matches Input/Textarea/SelectTrigger: transparent so it inherits the
+        // white card rather than painting `bg-background` grey.
+        className="w-full justify-between gap-3 bg-transparent px-3 text-left font-normal dark:bg-input/30"
       >
         <span className={cn("truncate", !value && "text-muted-foreground")}>
-          {getDisplayTime()}
+          {value ? `${pad(hour12)}:${pad(minute)} ${isPM ? "PM" : "AM"}` : "Select time..."}
         </span>
         <Clock className="size-4 shrink-0 text-muted-foreground" />
-      </Button>
+      </PopoverTrigger>
 
-      {isOpen && (
-        <div
-          className={cn(
-            "absolute left-0 z-50 w-fit",
-            placement === "top" ? "bottom-full mb-2" : "top-full mt-2"
-          )}
-        >
-          <div className="flex items-center justify-center gap-1.5 rounded-2xl border border-border bg-card p-3 shadow-xl">
-            {/* Hours Column */}
-            <div className="flex flex-col items-center">
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon-xs"
-                onClick={handleHourUp}
-                className="h-6 w-8 text-foreground hover:bg-transparent"
-              >
-                <ChevronUp className="size-4 stroke-[3px]" />
-              </Button>
-              <input
-                type="text"
-                value={hourInput}
-                onChange={(e) => handleHourInputChange(e.target.value)}
-                onBlur={handleHourInputBlur}
-                className="h-10 w-12 rounded-md border border-border bg-background text-center text-sm font-normal text-foreground shadow-sm focus:border-primary focus:outline-none"
-              />
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon-xs"
-                onClick={handleHourDown}
-                className="h-6 w-8 text-foreground hover:bg-transparent"
-              >
-                <ChevronDown className="size-4 stroke-[3px]" />
-              </Button>
-            </div>
-
-            {/* Colon Separator */}
-            <div className="font-normal text-sm text-foreground mt-1 self-center">:</div>
-
-            {/* Minutes Column */}
-            <div className="flex flex-col items-center">
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon-xs"
-                onClick={handleMinUp}
-                className="h-6 w-8 text-foreground hover:bg-transparent"
-              >
-                <ChevronUp className="size-4 stroke-[3px]" />
-              </Button>
-              <input
-                type="text"
-                value={minInput}
-                onChange={(e) => handleMinInputChange(e.target.value)}
-                onBlur={handleMinInputBlur}
-                className="h-10 w-12 rounded-md border border-border bg-background text-center text-sm font-normal text-foreground shadow-sm focus:border-primary focus:outline-none"
-              />
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon-xs"
-                onClick={handleMinDown}
-                className="h-6 w-8 text-foreground hover:bg-transparent"
-              >
-                <ChevronDown className="size-4 stroke-[3px]" />
-              </Button>
-            </div>
-
-            <div className="w-1"></div>
-
-            {/* AM/PM Column */}
-            <div className="flex flex-col items-center">
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon-xs"
-                onClick={handleToggleAmPm}
-                className="h-6 w-8 text-foreground hover:bg-transparent"
-              >
-                <ChevronUp className="size-4 stroke-[3px]" />
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={handleToggleAmPm}
-                className="h-10 w-12 rounded-md border-border bg-background text-sm font-normal shadow-sm hover:bg-muted/50"
-              >
-                {isPM ? "PM" : "AM"}
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon-xs"
-                onClick={handleToggleAmPm}
-                className="h-6 w-8 text-foreground hover:bg-transparent"
-              >
-                <ChevronDown className="size-4 stroke-[3px]" />
-              </Button>
-            </div>
+      <PopoverContent align="start" className="w-auto gap-0 p-3">
+        <div className="flex items-center gap-1.5">
+          <div className="flex flex-col items-center gap-1">
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-xs"
+              onClick={() => shiftHour(1)}
+              aria-label="Increase hour"
+            >
+              <ChevronUp className="size-4" />
+            </Button>
+            <Input
+              inputMode="numeric"
+              aria-label="Hour"
+              value={hourInput}
+              onChange={(event) => handleHourInput(event.target.value)}
+              onBlur={handleHourBlur}
+              className="w-12 text-center"
+            />
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-xs"
+              onClick={() => shiftHour(-1)}
+              aria-label="Decrease hour"
+            >
+              <ChevronDown className="size-4" />
+            </Button>
           </div>
+
+          <div aria-hidden className="self-center text-sm text-foreground">
+            :
+          </div>
+
+          <div className="flex flex-col items-center gap-1">
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-xs"
+              onClick={() => shiftMinute(MINUTE_STEP)}
+              aria-label={`Increase minutes by ${MINUTE_STEP}`}
+            >
+              <ChevronUp className="size-4" />
+            </Button>
+            <Input
+              inputMode="numeric"
+              aria-label="Minutes"
+              value={minuteInput}
+              onChange={(event) => handleMinuteInput(event.target.value)}
+              onBlur={handleMinuteBlur}
+              className="w-12 text-center"
+            />
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-xs"
+              onClick={() => shiftMinute(-MINUTE_STEP)}
+              aria-label={`Decrease minutes by ${MINUTE_STEP}`}
+            >
+              <ChevronDown className="size-4" />
+            </Button>
+          </div>
+
+          <Button
+            type="button"
+            variant="outline"
+            onClick={toggleMeridiem}
+            aria-label={`Switch to ${isPM ? "AM" : "PM"}`}
+            className="ml-1.5 w-12 self-center"
+          >
+            {isPM ? "PM" : "AM"}
+          </Button>
         </div>
-      )}
-    </div>
+      </PopoverContent>
+    </Popover>
   );
 }

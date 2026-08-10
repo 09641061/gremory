@@ -1,51 +1,57 @@
 "use client";
 
-import {
-  AlertDialog as AlertDialogPrimitive,
-  AlertDialogContent,
-  AlertDialogFooter,
-} from "@/contexts/shared/interfaces/components/ui/alert-dialog";
 import type { ReactNode } from "react";
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/contexts/shared/interfaces/components/ui/alert-dialog";
+import { cn } from "@/lib/utils";
 
 interface AppointmentConfirmDialogShellProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
-  children: ReactNode;
+  title: string;
+  description: string;
+  /** `destructive` tints the title for irreversible transitions. */
+  tone?: "default" | "destructive";
+  /** Optional body rendered between the header and the footer. */
+  children?: ReactNode;
   footer: ReactNode;
 }
 
+/**
+ * Presentation shell for every appointment confirmation dialog.
+ *
+ * It renders `AlertDialogTitle`/`AlertDialogDescription` rather than bare
+ * headings so the dialog is announced with an accessible name and description.
+ */
 export function AppointmentConfirmDialogShell({
   isOpen,
   onOpenChange,
+  title,
+  description,
+  tone = "default",
   children,
   footer,
 }: AppointmentConfirmDialogShellProps) {
   return (
-    <AlertDialogPrimitive open={isOpen} onOpenChange={onOpenChange}>
-      <AlertDialogContent className="relative max-w-md">
+    <AlertDialog open={isOpen} onOpenChange={onOpenChange}>
+      <AlertDialogContent className="sm:max-w-md">
+        <AlertDialogHeader>
+          <AlertDialogTitle className={cn(tone === "destructive" && "text-destructive")}>
+            {title}
+          </AlertDialogTitle>
+          <AlertDialogDescription>{description}</AlertDialogDescription>
+        </AlertDialogHeader>
+
         {children}
 
-        <AlertDialogFooter>
-          <div className="w-full">{footer}</div>
-        </AlertDialogFooter>
+        <AlertDialogFooter>{footer}</AlertDialogFooter>
       </AlertDialogContent>
-    </AlertDialogPrimitive>
-  );
-}
-
-export function AppointmentConfirmDialogHeader({
-  title,
-  description,
-  titleClassName,
-}: {
-  title: string;
-  description: string;
-  titleClassName?: string;
-}) {
-  return (
-    <div className="space-y-2">
-      <h2 className={titleClassName}>{title}</h2>
-      <p className="text-sm text-muted-foreground">{description}</p>
-    </div>
+    </AlertDialog>
   );
 }

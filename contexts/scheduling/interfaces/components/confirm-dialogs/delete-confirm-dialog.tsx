@@ -8,6 +8,8 @@ interface DeleteConfirmDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   appointmentId: string;
+  /** Shown in the dialog so the user can confirm what they are deleting. */
+  appointmentTitle: string;
   onSuccess: () => void;
 }
 
@@ -15,6 +17,7 @@ export function DeleteConfirmDialog({
   isOpen,
   onOpenChange,
   appointmentId,
+  appointmentTitle,
   onSuccess,
 }: DeleteConfirmDialogProps) {
   const [error, setError] = useState<string | null>(null);
@@ -23,13 +26,13 @@ export function DeleteConfirmDialog({
   const handleDelete = () => {
     setError(null);
     startTransition(async () => {
-      const res = await deleteAppointmentAction(appointmentId);
-      if (res.status === "error") {
-        setError(res.error);
-      } else {
-        onSuccess();
-        onOpenChange(false);
+      const result = await deleteAppointmentAction(appointmentId);
+      if (result.status === "error") {
+        setError(result.error);
+        return;
       }
+      onSuccess();
+      onOpenChange(false);
     });
   };
 
@@ -38,10 +41,9 @@ export function DeleteConfirmDialog({
       open={isOpen}
       onOpenChange={onOpenChange}
       entityLabel="appointment"
-      entityName=""
+      entityName={appointmentTitle}
       pending={isPending}
       error={error}
-      description="This will permanently delete this appointment. This action cannot be undone."
       onConfirm={handleDelete}
     />
   );

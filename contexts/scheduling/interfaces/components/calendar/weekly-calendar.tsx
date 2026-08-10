@@ -1,17 +1,25 @@
 "use client";
 
-import { useState, useTransition, useEffect, useCallback, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { Appointment } from "../../../domain/model/entities/appointment";
 import { listAppointmentsAction } from "../../actions/list-appointments.action";
 import { AppointmentDetailModal } from "../appointment-detail/appointment-detail-modal";
-import { AppointmentFormModal } from "../appointment-form/appointment-form-modal";
+import { WeeklyCalendarDaysHeader } from "./weekly-calendar-days-header";
 import { WeeklyCalendarGrid } from "./weekly-calendar-grid";
-import { WeeklyCalendarHeader } from "./weekly-calendar-header";
+import { WeeklyCalendarToolbar } from "./weekly-calendar-toolbar";
+import { getWeekRange, toDayKey, toLocalISOString } from "../scheduling-datetime";
+import { useNow } from "../use-now";
 import type {
   SchedulingCustomerViewModel,
   SchedulingMemberViewModel,
   SchedulingServiceViewModel,
 } from "../../../application/model/scheduling-page-data.view-model";
+
+const FIRST_HOUR = 7;
+const HOUR_COUNT = 15;
+/** Below this the seven day columns stop being readable, so the grid scrolls. */
+const GRID_MIN_WIDTH = 700;
 
 interface WeeklyCalendarProps {
   establishmentId: string;
@@ -23,18 +31,7 @@ interface WeeklyCalendarProps {
   canDeleteAppointment: boolean;
 }
 
-function getWeekRange(date: Date) {
-  const current = new Date(date);
-  const first = current.getDate() - current.getDay();
-  const sunday = new Date(current.setDate(first));
-  sunday.setHours(0, 0, 0, 0);
-
-  const saturday = new Date(sunday);
-  saturday.setDate(sunday.getDate() + 6);
-  saturday.setHours(23, 59, 59, 999);
-
-  return { sunday, saturday };
-}
+const HOURS = Array.from({ length: HOUR_COUNT }, (_, index) => FIRST_HOUR + index);
 
 export function WeeklyCalendar({
   establishmentId,
@@ -45,179 +42,111 @@ export function WeeklyCalendar({
   canUpdateAppointment,
   canDeleteAppointment,
 }: WeeklyCalendarProps) {
+  const router = useRouter();
   const [currentDate, setCurrentDate] = useState(() => new Date());
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
-  const [isDetailOpen, setIsDetailOpen] = useState(false);
-  const [isFormOpen, setIsFormOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
 
+  // Discards responses from superseded week requests.
   const requestIdRef = useRef(0);
+  const now = useNow();
+  const todayKey = now === null ? null : toDayKey(new Date(now));
 
-  const { sunday, saturday } = useMemo(() => getWeekRange(currentDate), [currentDate]);
+  const { start: weekStart, end: weekEnd } = useMemo(
+    () => getWeekRange(currentDate),
+    [currentDate]
+  );
 
   const weekDays = useMemo(
     () =>
-      Array.from({ length: 7 }, (_, i) => {
-        const d = new Date(sunday);
-        d.setDate(sunday.getDate() + i);
-        return d;
+      Array.from({ length: 7 }, (_, index) => {
+        const day = new Date(weekStart);
+        day.setDate(weekStart.getDate() + index);
+        return day;
       }),
-    [sunday]
+    [weekStart]
   );
 
-  const hours = useMemo(() => Array.from({ length: 15 }, (_, i) => 7 + i), []);
-
-
   const fetchAppointments = useCallback(() => {
-    const reqId = ++requestIdRef.current;
-
-    // Local function to convert a date to ISO with an offset
-    const toLocalISOString = (date: Date) => {
-      const pad = (n: number) => String(n).padStart(2, "0");
-      const tzo = -date.getTimezoneOffset();
-      const dif = tzo >= 0 ? "+" : "-";
-      return (
-        date.getFullYear() +
-        "-" +
-        pad(date.getMonth() + 1) +
-        "-" +
-        pad(date.getDate()) +
-        "T" +
-        pad(date.getHours()) +
-        ":" +
-        pad(date.getMinutes()) +
-        ":" +
-        pad(date.getSeconds()) +
-        dif +
-        pad(Math.floor(Math.abs(tzo) / 60)) +
-        ":" +
-        pad(Math.abs(tzo) % 60)
-      );
-    };
+    const requestId = ++requestIdRef.current;
 
     startTransition(async () => {
-      const fromStr = toLocalISOString(sunday);
-      const toStr = toLocalISOString(saturday);
-      const res = await listAppointmentsAction(fromStr, toStr, establishmentId);
-      if (reqId === requestIdRef.current) {
-        setAppointments(res.content);
+      const result = await listAppointmentsAction(
+        toLocalISOString(weekStart),
+        toLocalISOString(weekEnd),
+        establishmentId
+      );
+      if (requestId === requestIdRef.current) {
+        setAppointments(result.content);
       }
     });
-  }, [sunday, saturday, establishmentId, startTransition]);
+  }, [weekStart, weekEnd, establishmentId]);
 
   useEffect(() => {
     fetchAppointments();
   }, [fetchAppointments]);
 
-  const navigateWeek = (direction: "prev" | "next") => {
-    const newDate = new Date(currentDate);
-    if (direction === "prev") {
-      newDate.setDate(newDate.getDate() - 7);
-    } else {
-      newDate.setDate(newDate.getDate() + 7);
-    }
-    setCurrentDate(newDate);
-  };
-
-  const navigateToday = () => {
-    setCurrentDate(new Date());
-  };
-
-  const handleOpenDetail = (appt: Appointment) => {
-    setSelectedAppointment(appt);
-    setIsDetailOpen(true);
+  const shiftWeek = (direction: -1 | 1) => {
+    setCurrentDate((current) => {
+      const next = new Date(current);
+      next.setDate(next.getDate() + direction * 7);
+      return next;
+    });
   };
 
   const handleUpdate = (updated: Appointment) => {
-    setAppointments((prev) => prev.map((a) => (a.id === updated.id ? updated : a)));
+    setAppointments((current) =>
+      current.map((appointment) => (appointment.id === updated.id ? updated : appointment))
+    );
     setSelectedAppointment(updated);
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-140px)] w-full text-foreground bg-background">
-      <WeeklyCalendarHeader
+    <div className="flex h-[calc(100vh-140px)] w-full flex-col bg-background text-foreground">
+      <WeeklyCalendarToolbar
         currentDate={currentDate}
         onDateChange={setCurrentDate}
-        onPreviousWeek={() => navigateWeek("prev")}
-        onNextWeek={() => navigateWeek("next")}
-        onToday={navigateToday}
-        onCreateAppointment={() => setIsFormOpen(true)}
+        onPreviousWeek={() => shiftWeek(-1)}
+        onNextWeek={() => shiftWeek(1)}
+        onToday={() => setCurrentDate(new Date())}
+        onCreateAppointment={() => router.push("/schedule/new")}
         canCreateAppointment={canCreateAppointment}
       />
 
-      <div className="flex-1 border border-border rounded-xl bg-card shadow-sm flex flex-col overflow-hidden">
-        <div className="flex-1 overflow-y-auto relative">
-          <div className="sticky top-0 z-10 grid grid-cols-[64px_repeat(7,1fr)] border-b border-border bg-card">
-            <div className="flex items-center justify-center p-3 border-r border-border">
-              <span className="text-[10px] font-bold text-muted-foreground tracking-wider">
-                Time
-              </span>
-            </div>
-            {weekDays.map((day, idx) => {
-              const isToday = day.toDateString() === new Date().toDateString();
-              return (
-                <div
-                  key={idx}
-                  className={`p-3 flex flex-col items-center justify-center border-r border-border last:border-r-0 ${
-                    isToday ? "bg-primary/5" : ""
-                  }`}
-                >
-                  <span
-                    className={`text-[11px] font-semibold ${
-                      isToday ? "text-primary" : "text-muted-foreground"
-                    }`}
-                  >
-                    {day.toLocaleDateString("en-US", { weekday: "short" })}
-                  </span>
-                  <span
-                    className={`text-xl font-bold leading-none mt-1 ${
-                      isToday
-                        ? "bg-primary text-primary-foreground size-8 rounded-full flex items-center justify-center"
-                        : "text-foreground"
-                    }`}
-                  >
-                    {day.getDate()}
-                  </span>
-                </div>
-              );
-            })}
-          </div>
-
+      <div className="flex-1 overflow-auto rounded-xl border border-border bg-card shadow-sm">
+        {/* Header and grid share this track so they scroll horizontally together. */}
+        <div style={{ minWidth: GRID_MIN_WIDTH }}>
+          <WeeklyCalendarDaysHeader weekDays={weekDays} todayKey={todayKey} />
           <WeeklyCalendarGrid
             appointments={appointments}
             weekDays={weekDays}
-            hours={hours}
+            hours={HOURS}
             isPending={isPending}
-            onAppointmentClick={handleOpenDetail}
+            todayKey={todayKey}
+            now={now}
+            onAppointmentClick={setSelectedAppointment}
           />
         </div>
       </div>
 
-      {isDetailOpen && selectedAppointment && (
+      {selectedAppointment && (
         <AppointmentDetailModal
-          isOpen={isDetailOpen}
-          onOpenChange={setIsDetailOpen}
+          isOpen
+          onOpenChange={(open) => {
+            if (!open) setSelectedAppointment(null);
+          }}
           appointment={selectedAppointment}
           services={services}
           members={members}
           customers={customers}
           onUpdate={handleUpdate}
-          onDeleteSuccess={fetchAppointments}
+          onDeleteSuccess={() => {
+            setSelectedAppointment(null);
+            fetchAppointments();
+          }}
           canUpdateAppointment={canUpdateAppointment}
           canDeleteAppointment={canDeleteAppointment}
-        />
-      )}
-
-      {isFormOpen && (
-        <AppointmentFormModal
-          isOpen={isFormOpen}
-          onOpenChange={setIsFormOpen}
-          establishmentId={establishmentId}
-          services={services}
-          members={members}
-          customers={customers}
-          onSuccess={fetchAppointments}
         />
       )}
     </div>

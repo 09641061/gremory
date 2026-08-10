@@ -1,67 +1,61 @@
 "use client";
 
-import { useState } from "react";
 import { Appointment } from "../../../domain/model/entities/appointment";
+import { formatClockRange } from "../scheduling-datetime";
 import { cn } from "@/lib/utils";
 
 interface AppointmentBlockProps {
   appointment: Appointment;
+  /** Current time in ms, or `null` before mount. Owned by the calendar so every
+   *  block agrees on "now" and hydration stays deterministic. */
+  now: number | null;
   onClick: () => void;
 }
 
-export function AppointmentBlock({ appointment, onClick }: AppointmentBlockProps) {
+function getStatusStyles(appointment: Appointment, now: number | null) {
+  switch (appointment.status) {
+    case "CANCELLED":
+      return "border-destructive/20 bg-destructive/5 text-destructive/80 line-through opacity-60";
+    case "NO_SHOW":
+      return "border-muted-foreground/20 bg-muted text-muted-foreground opacity-70";
+    case "COMPLETED":
+      return "border-primary/20 bg-primary/5 text-primary/70";
+    case "IN_PROGRESS":
+      return "border-primary bg-primary/15 text-primary";
+    case "CONFIRMED": {
+      const isOverdue = now !== null && new Date(appointment.startsAt).getTime() < now;
+      return isOverdue
+        ? "border-primary/50 bg-primary/10 text-primary"
+        : "border-primary/20 bg-primary/5 text-primary";
+    }
+    default:
+      return "border-border bg-muted/40 text-muted-foreground";
+  }
+}
+
+export function AppointmentBlock({ appointment, now, onClick }: AppointmentBlockProps) {
   const starts = new Date(appointment.startsAt);
   const ends = new Date(appointment.endsAt);
-  
-  // Calculate relative height or styling (default block size is fine for simple calendar,
-  // we add visual indicators based on status)
-  const isCancelled = appointment.status === "CANCELLED";
-  const isCompleted = appointment.status === "COMPLETED";
-  const isNoShow = appointment.status === "NO_SHOW";
-  const isInProgress = appointment.status === "IN_PROGRESS";
-  
-  // R7: Check if appointment time is in the past using a pure state value
-  const [now] = useState(() => Date.now());
-  const isPast = ends.getTime() < now;
-
-  const isConfirmed = appointment.status === "CONFIRMED";
-  const isOverdue = isConfirmed && starts.getTime() < now;
-
-  const formattedTime = `${starts.toLocaleTimeString("en-US", {
-    hour: "numeric",
-    minute: "2-digit",
-    hour12: true,
-  })} - ${ends.toLocaleTimeString("en-US", {
-    hour: "numeric",
-    minute: "2-digit",
-    hour12: true,
-  })}`;
-
-  let statusStyles = "border-primary/20 bg-primary/5 text-primary";
-  if (isCancelled) {
-    statusStyles = "border-destructive/20 bg-destructive/5 text-destructive/80 opacity-50";
-  } else if (isNoShow) {
-    statusStyles = "border-muted bg-muted/40 text-muted-foreground opacity-60";
-  } else if (isCompleted) {
-    statusStyles = "border-primary/20 bg-primary/5 text-primary/80 opacity-70";
-  } else if (isInProgress) {
-    statusStyles = "border-primary/30 bg-primary/10 text-primary animate-pulse";
-  } else if (isOverdue) {
-    statusStyles = "border-primary/40 bg-primary/10 text-primary";
-  } else if (isPast) {
-    statusStyles = "border-muted/30 bg-muted/5 text-muted-foreground opacity-60";
-  }
+  const timeRange = formatClockRange(starts, ends);
 
   return (
-    <div
+    // A real button, so the block is reachable by Tab and activated by
+    // Enter/Space like every other control on the page.
+    <button
+      type="button"
       onClick={onClick}
+      aria-label={`${appointment.title}, ${timeRange}`}
       className={cn(
-        "w-full rounded-lg border p-2 text-left cursor-pointer transition-all hover:shadow-md hover:-translate-y-0.5",
-        statusStyles
+        "w-full rounded-lg border p-2 text-left transition-all",
+        "hover:-translate-y-0.5 hover:shadow-md",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50",
+        getStatusStyles(appointment, now)
       )}
     >
-      <p className="text-xs font-bold truncate leading-snug">{appointment.title}</p>
-      <p className="text-[10px] font-medium opacity-80 mt-0.5">{formattedTime}</p>
-    </div>
+      <span className="block truncate text-xs font-bold leading-snug">
+        {appointment.title}
+      </span>
+      <span className="mt-0.5 block text-[10px] font-medium opacity-80">{timeRange}</span>
+    </button>
   );
 }

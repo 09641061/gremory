@@ -1,7 +1,14 @@
+import "server-only";
+
+import { cacheLife, cacheTag } from "next/cache";
+
 import { Plan } from "../../../domain/model/entities/plan";
 import { createPlanId } from "../../../domain/model/value-objects/plan-id";
 import { PlanPricingPolicy } from "../../../domain/services/plan-pricing-policy";
-import type { CurrencyCode } from "../../../domain/model/value-objects/currency";
+import {
+  SUPPORTED_CURRENCIES,
+  type CurrencyCode,
+} from "../../../domain/model/value-objects/currency";
 
 export interface PlanReadModel {
   id: number;
@@ -85,4 +92,26 @@ export class ListPlansQueryService {
       };
     });
   }
+}
+
+/** The full catalogue priced in every supported currency. */
+export type PlansByCurrencyReadModel = Readonly<Record<CurrencyCode, PlanReadModel[]>>;
+
+/**
+ * Prices the catalogue in all supported currencies in one read.
+ *
+ * The catalogue is fixed and `PlanPricingPolicy` is a pure domain policy, so
+ * this read is fully deterministic and cacheable. Resolving every currency at
+ * once is what lets the client switch currency without a round-trip.
+ */
+export async function listPlansByCurrencyQueryService(): Promise<PlansByCurrencyReadModel> {
+  "use cache";
+  cacheLife("days");
+  cacheTag("billing-plans");
+
+  const service = new ListPlansQueryService();
+
+  return Object.fromEntries(
+    SUPPORTED_CURRENCIES.map(({ code }) => [code, service.getAvailablePlans(code)]),
+  ) as PlansByCurrencyReadModel;
 }
