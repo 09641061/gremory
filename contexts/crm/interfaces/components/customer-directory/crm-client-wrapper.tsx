@@ -11,21 +11,12 @@ import {
   ChevronRight,
   ChevronsLeft,
   ChevronsRight,
-  Loader2,
 } from "lucide-react";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import { Input } from "@/contexts/shared/interfaces/components/ui/input";
 import { ErrorAlert } from "@/contexts/shared/interfaces/components/error";
 import { EntityActionsMenu } from "@/contexts/shared/interfaces/components/entity-actions-menu";
-import {
-  AlertDialog,
-  AlertDialogContent,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogCancel,
-} from "@/contexts/shared/interfaces/components/ui/alert-dialog";
+import { DeleteConfirmDialog } from "@/contexts/shared/interfaces/components/delete-confirm-dialog";
 import {
   Table,
   TableBody,
@@ -113,7 +104,6 @@ export function CrmClientWrapper({
 
   return (
     <>
-      <ErrorAlert title="Error" message={errorMsg ?? undefined} />
       <ErrorAlert
         title="Error loading customers"
         message={loadError ? "Failed to load the customer list. Please try refreshing the page." : undefined}
@@ -267,39 +257,17 @@ export function CrmClientWrapper({
         </div>
       </main>
 
-      {/* Deletion Confirmation */}
-      <AlertDialog
+      <DeleteConfirmDialog
         open={customerToDelete !== null}
         onOpenChange={(open) => {
           if (!open) setCustomerToDelete(null);
         }}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the customer{" "}
-              <span className="font-semibold text-foreground">{customerToDelete?.name}</span> and remove their data from
-              our servers.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <Button
-              variant="destructive"
-              onClick={handleDelete}
-              disabled={isDeleting !== null}
-            >
-              {isDeleting ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <Trash2 className="mr-2 h-4 w-4" />
-              )}
-              Delete Customer
-            </Button>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+        entityLabel="customer"
+        entityName={customerToDelete?.name ?? ""}
+        pending={isDeleting !== null}
+        error={errorMsg}
+        onConfirm={handleDelete}
+      />
     </>
   );
 }

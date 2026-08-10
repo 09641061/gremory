@@ -74,7 +74,7 @@ export function EntityActionsMenu({
               variant={action.variant}
               disabled={action.disabled}
               onClick={action.onSelect}
-              className="gap-2"
+              className="gap-2 whitespace-nowrap"
             >
               {Icon && <Icon className="size-3.5" />}
               <span>{action.label}</span>

@@ -12,6 +12,11 @@ import {
 } from "@/contexts/workforce/interfaces/actions/workforce-role.actions";
 import { initialWorkforceRoleActionResult } from "@/contexts/workforce/interfaces/actions/workforce-role-action-result";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
+import {
+  Tabs,
+  TabsList,
+  TabsTrigger,
+} from "@/contexts/shared/interfaces/components/ui/tabs";
 import { Card, CardContent, CardFooter } from "@/contexts/shared/interfaces/components/ui/card";
 import { ErrorAlert } from "@/contexts/shared/interfaces/components/error";
 import { Input } from "@/contexts/shared/interfaces/components/ui/input";
@@ -116,26 +121,16 @@ export function PermissionsWorkspace({ role, permissions, members, onCancel, can
           message={state.status === "error" ? state.error : undefined}
         />
 
-        <div className="relative grid grid-cols-2 gap-1 rounded-lg bg-muted p-1 text-sm font-medium text-muted-foreground shrink-0">
-          <Button
-            type="button"
-            variant={activeTab === "permissions" ? "secondary" : "ghost"}
-            size="sm"
-            onClick={() => setActiveTab("permissions")}
-            className="h-8 w-full"
-          >
-            Permissions
-          </Button>
-          <Button
-            type="button"
-            variant={activeTab === "members" ? "secondary" : "ghost"}
-            size="sm"
-            onClick={() => setActiveTab("members")}
-            className="h-8 w-full"
-          >
-            Manage members
-          </Button>
-        </div>
+        <Tabs
+          value={activeTab}
+          onValueChange={(value) => setActiveTab(value as "permissions" | "members")}
+          className="shrink-0"
+        >
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="permissions">Permissions</TabsTrigger>
+            <TabsTrigger value="members">Manage members</TabsTrigger>
+          </TabsList>
+        </Tabs>
 
         {activeTab === "permissions" ? (
           <div className="flex min-h-0 flex-1 flex-col gap-4">

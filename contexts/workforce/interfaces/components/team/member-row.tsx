@@ -1,16 +1,11 @@
 "use client";
 
-import { useActionState, useEffect } from "react";
+import { startTransition, useActionState, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { MoreVertical, User, UserMinus, UserX } from "lucide-react";
-import { Button } from "@/contexts/shared/interfaces/components/ui/button";
+import { User, UserMinus, UserX } from "lucide-react";
 import { ErrorAlert } from "@/contexts/shared/interfaces/components/error";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/contexts/shared/interfaces/components/ui/dropdown-menu";
+import { EntityActionsMenu } from "@/contexts/shared/interfaces/components/entity-actions-menu";
+import { DeleteConfirmDialog } from "@/contexts/shared/interfaces/components/delete-confirm-dialog";
 import {
   removeTeamMemberAction,
   revokeTeamInvitationAction,
@@ -19,6 +14,17 @@ import type { TeamUserSummary } from "@/contexts/workforce/application/model/tea
 import { MemberRolesDropdown } from "./member-roles-dropdown";
 
 const initialActionState = { status: "idle", data: null, error: null } as const;
+
+/** Dispatches a Server Action that expects a single form field, without a <form> wrapper. */
+function submitField(
+  action: (formData: FormData) => void,
+  name: string,
+  value: string,
+) {
+  const formData = new FormData();
+  formData.append(name, value);
+  startTransition(() => action(formData));
+}
 
 export function MemberRow({
   member,
@@ -32,6 +38,7 @@ export function MemberRow({
   const [removeState, removeAction, removePending] = useActionState(removeTeamMemberAction, initialActionState);
   const [revokeState, revokeAction, revokePending] = useActionState(revokeTeamInvitationAction, initialActionState);
   const router = useRouter();
+  const [confirming, setConfirming] = useState<"remove" | "revoke" | null>(null);
 
   useEffect(() => {
     if ([removeState.status, revokeState.status].includes("success")) {
@@ -57,53 +64,71 @@ export function MemberRow({
       </div>
       <span className="text-[15px] text-muted-foreground">{formatStatus(member.status)}</span>
       <div className="flex flex-col items-end gap-2">
-        {canCancel || canRemove ? (
-          <DropdownMenu>
-            <DropdownMenuTrigger
-              render={
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon-sm"
-                  aria-label="Open member actions"
-                />
-              }
-            >
-              <MoreVertical className="size-4" />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent>
-              {canCancel ? (
-                <form action={revokeAction}>
-                  <input type="hidden" name="invitationId" value={member.invitationId} />
-                  <DropdownMenuItem
-                    nativeButton
-                    render={<button type="submit" className="w-full" />}
-                    className="gap-2 text-destructive focus:bg-destructive/10 focus:text-destructive"
-                    disabled={revokePending}
-                  >
-                    <UserX className="size-4" />
-                    {revokePending ? "Cancelling..." : "Cancel invite"}
-                  </DropdownMenuItem>
-                </form>
-              ) : null}
-              {canRemove ? (
-                <form action={removeAction}>
-                  <input type="hidden" name="memberId" value={memberId ?? ""} />
-                  <DropdownMenuItem
-                    nativeButton
-                    render={<button type="submit" className="w-full" />}
-                    className="gap-2 text-destructive focus:bg-destructive/10 focus:text-destructive"
-                    disabled={removePending}
-                  >
-                    <UserMinus className="size-4" />
-                    {removePending ? "Removing..." : "Remove member"}
-                  </DropdownMenuItem>
-                </form>
-              ) : null}
-            </DropdownMenuContent>
-          </DropdownMenu>
+        <EntityActionsMenu
+          label={`Member actions for ${member.email}`}
+          size="icon-sm"
+          actions={[
+            {
+              label: revokePending ? "Cancelling..." : "Cancel invite",
+              icon: UserX,
+              variant: "destructive",
+              hidden: !canCancel,
+              disabled: revokePending,
+              onSelect: () => setConfirming("revoke"),
+            },
+            {
+              label: removePending ? "Removing..." : "Remove member",
+              icon: UserMinus,
+              variant: "destructive",
+              hidden: !canRemove,
+              disabled: removePending,
+              onSelect: () => setConfirming("remove"),
+            },
+          ]}
+        />
+        {error && confirming === null ? (
+          <ErrorAlert title="Action failed" message={error} />
         ) : null}
-        <ErrorAlert title="Action failed" message={error ?? undefined} />
+
+        <DeleteConfirmDialog
+          open={confirming === "remove" && removeState.status !== "success"}
+          onOpenChange={(open) => {
+            if (!open) setConfirming(null);
+          }}
+          entityLabel="member"
+          entityName={member.email}
+          confirmLabel="Remove"
+          pendingLabel="Removing..."
+          pending={removePending}
+          error={removeState.error}
+          description={
+            <>
+              <span className="font-medium text-foreground">{member.email}</span> will lose access to this
+              workspace.
+            </>
+          }
+          onConfirm={() => submitField(removeAction, "memberId", memberId ?? "")}
+        />
+
+        <DeleteConfirmDialog
+          open={confirming === "revoke" && revokeState.status !== "success"}
+          onOpenChange={(open) => {
+            if (!open) setConfirming(null);
+          }}
+          entityLabel="invitation"
+          entityName={member.email}
+          confirmLabel="Cancel"
+          pendingLabel="Cancelling..."
+          pending={revokePending}
+          error={revokeState.error}
+          description={
+            <>
+              The invitation sent to{" "}
+              <span className="font-medium text-foreground">{member.email}</span> will no longer be valid.
+            </>
+          }
+          onConfirm={() => submitField(revokeAction, "invitationId", member.invitationId)}
+        />
       </div>
     </div>
   );
