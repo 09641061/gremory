@@ -20,8 +20,19 @@ describe("AnalyticsApiGateway", () => {
       cancelledAppointmentsLastSevenDays: 0,
       noShowAppointmentsLastSevenDays: 0,
       appointmentsTrend: [],
+      appointmentsByWeekday: [],
+      appointmentsByHour: [],
+      completionVsCancellationTrend: [],
+      leadTimeTrend: [],
+      newVsRecurringCustomers: {
+        newCustomers: 0,
+        recurrentCustomers: 0,
+        totalCustomers: 0,
+      },
       topCustomers: [],
       topServices: [],
+      cancellationRateByService: [],
+      noShowRateByService: [],
     });
   });
 

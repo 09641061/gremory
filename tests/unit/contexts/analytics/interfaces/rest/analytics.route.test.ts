@@ -20,8 +20,19 @@ describe("freeAnalyticsRoute", () => {
       cancelledAppointmentsLastSevenDays: 0,
       noShowAppointmentsLastSevenDays: 0,
       appointmentsTrend: [],
+      appointmentsByWeekday: [],
+      appointmentsByHour: [],
+      completionVsCancellationTrend: [],
+      leadTimeTrend: [],
+      newVsRecurringCustomers: {
+        newCustomers: 0,
+        recurrentCustomers: 0,
+        totalCustomers: 0,
+      },
       topCustomers: [],
       topServices: [],
+      cancellationRateByService: [],
+      noShowRateByService: [],
     });
   });
 
@@ -29,7 +40,13 @@ describe("freeAnalyticsRoute", () => {
     const response = await freeAnalyticsRoute();
 
     expect(response.status).toBe(200);
-    expect(await response.json()).toMatchObject({});
+    expect(await response.json()).toMatchObject({
+      appointmentsByWeekday: [],
+      appointmentsByHour: [],
+      newVsRecurringCustomers: {
+        totalCustomers: 0,
+      },
+    });
     expect(mocks.handle).toHaveBeenCalledTimes(1);
   });
 });

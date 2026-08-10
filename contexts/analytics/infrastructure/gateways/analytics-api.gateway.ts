@@ -8,6 +8,17 @@ export interface AnalyticsTrendPoint {
   value: number;
 }
 
+export interface AnalyticsCategoryPoint {
+  label: string;
+  value: number;
+}
+
+export interface AnalyticsDualTrendPoint {
+  date: string;
+  completed: number;
+  cancelled: number;
+}
+
 export interface AnalyticsRankingCustomerItem {
   rank: number;
   customerId: string;
@@ -30,13 +41,36 @@ export interface AnalyticsRankingServiceItem {
   lastBookedAt: string;
 }
 
+export interface AnalyticsServiceRateItem {
+  rank: number;
+  serviceId: string;
+  serviceName: string;
+  appointmentsCount: number;
+  affectedCount: number;
+  rate: number;
+  lastAppointmentAt: string;
+}
+
+export interface AnalyticsCustomerMix {
+  newCustomers: number;
+  recurrentCustomers: number;
+  totalCustomers: number;
+}
+
 export interface FreeAnalyticsDashboardResponse {
   completedAppointmentsLastSevenDays: number;
   cancelledAppointmentsLastSevenDays: number;
   noShowAppointmentsLastSevenDays: number;
   appointmentsTrend: AnalyticsTrendPoint[];
+  appointmentsByWeekday: AnalyticsCategoryPoint[];
+  appointmentsByHour: AnalyticsCategoryPoint[];
+  completionVsCancellationTrend: AnalyticsDualTrendPoint[];
+  leadTimeTrend: AnalyticsTrendPoint[];
+  newVsRecurringCustomers: AnalyticsCustomerMix;
   topCustomers: AnalyticsRankingCustomerItem[];
   topServices: AnalyticsRankingServiceItem[];
+  cancellationRateByService: AnalyticsServiceRateItem[];
+  noShowRateByService: AnalyticsServiceRateItem[];
 }
 
 export class AnalyticsApiGateway {
