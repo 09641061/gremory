@@ -159,7 +159,7 @@ export function AddMembersDialog({ roleId, availableMembers, onClose }: AddMembe
           </div>
         </div>
 
-        <AlertDialogFooter className="flex items-center justify-end gap-3 mt-2 shrink-0">
+        <AlertDialogFooter className="flex items-center justify-end gap-3 shrink-0">
           <AlertDialogCancel
             onClick={onClose}
             disabled={isPending}
