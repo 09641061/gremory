@@ -95,7 +95,7 @@ function resolveHomeHref(
   hasAssistantAccess: boolean,
   visibleRoutes: ReadonlyArray<SidebarRouteId>,
   workspace: AppShellViewModel["workspace"],
-): "/chat" | "/schedule" | "/crm" | "/catalog" | "/team" | "/organizations" | "/establishments/new" {
+): "/chat" | "/schedule" | "/crm" | "/catalog" | "/team" | "/organizations" | "/establishments/new" | "/access-denied" {
   if (workspace.organization && workspace.establishments.length === 0 && workspace.canCreateEstablishment) {
     return "/establishments/new";
   }
@@ -104,5 +104,9 @@ function resolveHomeHref(
   }
 
   const firstWorkRoute = visibleRoutes.find((route) => route !== "/analytics");
-  return firstWorkRoute ?? "/organizations";
+  if (firstWorkRoute) return firstWorkRoute;
+
+  if (workspace.organization?.canRead) return "/organizations";
+  if (!workspace.organization && workspace.organizations.length === 0) return "/organizations";
+  return "/access-denied";
 }

@@ -17,7 +17,7 @@ export type HeaderNavigationViewModel = Readonly<{
 export type AppShellViewModel = Readonly<{
   workspace: WorkspaceHeaderViewModel;
   hasAssistantAccess: boolean;
-  homeHref: "/chat" | "/schedule" | "/crm" | "/catalog" | "/team" | "/organizations" | "/establishments/new";
+  homeHref: "/chat" | "/schedule" | "/crm" | "/catalog" | "/team" | "/organizations" | "/establishments/new" | "/access-denied";
   visibleSidebarRoutes: ReadonlyArray<SidebarRouteId>;
   headerNavigation: HeaderNavigationViewModel;
 }>;

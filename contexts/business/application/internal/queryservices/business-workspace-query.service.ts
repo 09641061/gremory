@@ -4,6 +4,7 @@ import { BusinessWorkspaceApiGateway } from "@/contexts/business/infrastructure/
 import type { BusinessWorkspaceSelection } from "@/contexts/business/infrastructure/gateways/business-workspace-api.gateway";
 import type {
   OrganizationPageState,
+  WorkspaceHeaderEstablishment,
   WorkspaceHeaderOrganization,
   WorkspaceHeaderViewModel,
 } from "@/contexts/business/application/model/business-workspace.view-models";
@@ -19,19 +20,7 @@ export class BusinessWorkspaceQueryService {
     const activeOrganization = organizations.find(
       (organization) => organization.id === resource.activeOrganizationId,
     );
-    const activeResource = resource.organizations.find(
-      (organization) => organization.id === resource.activeOrganizationId,
-    );
-    const establishments = activeResource?.establishments
-      .filter((establishment) => establishment.permissions.canRead)
-      .map((establishment) => ({
-      id: establishment.id,
-      name: establishment.name,
-      photoUrl: establishment.photoUrl,
-      canRead: establishment.permissions.canRead,
-      canUpdate: establishment.permissions.canUpdate,
-      canDelete: establishment.permissions.canDelete,
-      })) ?? [];
+    const establishments = activeOrganization?.establishments ?? [];
     const activeEstablishmentId = establishments.some(
       (establishment) => establishment.id === resource.activeEstablishmentId,
     )
@@ -49,7 +38,12 @@ export class BusinessWorkspaceQueryService {
         activeOrganization?.mode === "OWNER" ||
         activeOrganization?.canCreateEstablishment === true ||
         establishments.some((establishment) => establishment.canRead),
-      canCreateEstablishment: activeOrganization?.canCreateEstablishment ?? false,
+    // The owner is authorized to attempt creation even when Billing rejects it
+    // because the plan limit was reached. The command/action remains the
+    // authoritative business validation boundary and will expose that error.
+    canCreateEstablishment:
+      activeOrganization?.mode === "OWNER" ||
+      activeOrganization?.canCreateEstablishment === true,
     };
   }
 
@@ -57,6 +51,14 @@ export class BusinessWorkspaceQueryService {
     try {
       const resource = await this.workspace.getWorkspace(query);
       const organizations = resource.organizations.map(toHeaderOrganization);
+      const activeOrganization = organizations.find(
+        (organization) => organization.id === resource.activeOrganizationId,
+      );
+
+      if (activeOrganization && !activeOrganization.canRead) {
+        return { status: "denied" };
+      }
+
       const readableOrganizations = organizations.filter((organization) => organization.canRead);
 
       if (readableOrganizations.length === 0) {
@@ -70,8 +72,13 @@ export class BusinessWorkspaceQueryService {
         organizations: readableOrganizations,
         activeOrganizationId: resource.activeOrganizationId ?? undefined,
       };
-    } catch {
-      return { status: "denied" };
+    } catch (error) {
+      // Organization creation is authorized by the backend command. A user
+      // without an eligible plan/access must still reach the form and see the
+      // backend error through the Server Action alert.
+      return isForbiddenError(error)
+        ? { status: "create" }
+        : { status: "denied" };
     }
   }
 }
@@ -83,6 +90,10 @@ export function createBusinessWorkspaceQueryService() {
 function toHeaderOrganization(
   organization: Awaited<ReturnType<BusinessWorkspaceApiGateway["getWorkspace"]>>["organizations"][number],
 ): WorkspaceHeaderOrganization {
+  const establishments = organization.establishments
+    .filter((establishment) => establishment.permissions.canRead)
+    .map(toHeaderEstablishment);
+
   return {
     id: organization.id,
     name: organization.name,
@@ -90,7 +101,29 @@ function toHeaderOrganization(
     mode: organization.mode,
     canRead: organization.permissions.canRead,
     canUpdate: organization.permissions.canUpdate,
-    canCreateEstablishment: organization.permissions.canCreateEstablishment,
-    defaultEstablishmentId: organization.establishments[0]?.id,
+    canCreateEstablishment:
+      organization.mode === "OWNER" || organization.permissions.canCreateEstablishment,
+    defaultEstablishmentId: establishments[0]?.id,
+    establishments,
   };
+}
+
+function toHeaderEstablishment(
+  establishment: Awaited<ReturnType<BusinessWorkspaceApiGateway["getWorkspace"]>>["organizations"][number]["establishments"][number],
+): WorkspaceHeaderEstablishment {
+  return {
+    id: establishment.id,
+    name: establishment.name,
+    photoUrl: establishment.photoUrl,
+    canRead: establishment.permissions.canRead,
+    canUpdate: establishment.permissions.canUpdate,
+    canDelete: establishment.permissions.canDelete,
+  };
+}
+
+function isForbiddenError(error: unknown): boolean {
+  if (typeof error !== "object" || error === null || !("status" in error)) {
+    return false;
+  }
+  return (error as { status?: unknown }).status === 403;
 }

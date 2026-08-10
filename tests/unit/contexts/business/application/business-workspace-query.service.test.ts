@@ -70,6 +70,31 @@ describe("business workspace query service", () => {
     }]);
   });
 
+  it("keeps the owner creation entry point visible when Billing reports a plan limit", async () => {
+    mocks.getWorkspace.mockResolvedValue({
+      activeOrganizationId: ownerOrganizationId,
+      activeEstablishmentId: null,
+      organizations: [{
+        id: ownerOrganizationId,
+        name: "Personal Org",
+        imageUrl: null,
+        mode: "OWNER",
+        establishments: [{
+          id: memberEstablishmentId,
+          name: "Existing location",
+          photoUrl: null,
+          permissions: { canRead: true, canUpdate: true, canDelete: true },
+        }],
+        permissions: { canRead: true, canUpdate: true, canCreateEstablishment: false },
+      }],
+    });
+
+    const result = await createBusinessWorkspaceQueryService().getHeaderViewModel();
+
+    expect(result.canCreateEstablishment).toBe(true);
+    expect(result.organization?.canCreateEstablishment).toBe(true);
+  });
+
   it("returns create state only when the backend reports no organizations", async () => {
     mocks.getWorkspace.mockResolvedValue({
       activeOrganizationId: null,
@@ -80,5 +105,42 @@ describe("business workspace query service", () => {
     const result = await createBusinessWorkspaceQueryService().getOrganizationPageState();
 
     expect(result).toEqual({ status: "create" });
+  });
+
+  it("keeps the organization form available when backend creation access is denied", async () => {
+    mocks.getWorkspace.mockRejectedValue({ status: 403 });
+
+    const result = await createBusinessWorkspaceQueryService().getOrganizationPageState();
+
+    expect(result).toEqual({ status: "create" });
+  });
+
+  it("denies the organizations page for an active organization without read permission", async () => {
+    mocks.getWorkspace.mockResolvedValue({
+      activeOrganizationId: memberOrganizationId,
+      activeEstablishmentId: memberEstablishmentId,
+      organizations: [
+        {
+          id: ownerOrganizationId,
+          name: "Personal Org",
+          imageUrl: null,
+          mode: "OWNER",
+          establishments: [],
+          permissions: { canRead: true, canUpdate: true, canCreateEstablishment: true },
+        },
+        {
+          id: memberOrganizationId,
+          name: "Restricted Org",
+          imageUrl: null,
+          mode: "MEMBER",
+          establishments: [],
+          permissions: { canRead: false, canUpdate: false, canCreateEstablishment: false },
+        },
+      ],
+    });
+
+    const result = await createBusinessWorkspaceQueryService().getOrganizationPageState();
+
+    expect(result).toEqual({ status: "denied" });
   });
 });

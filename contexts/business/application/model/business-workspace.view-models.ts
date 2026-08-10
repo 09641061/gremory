@@ -1,3 +1,12 @@
+export type WorkspaceHeaderEstablishment = Readonly<{
+  id: string;
+  name: string;
+  photoUrl?: string | null;
+  canRead?: boolean;
+  canUpdate?: boolean;
+  canDelete?: boolean;
+}>;
+
 export type WorkspaceHeaderOrganization = Readonly<{
   id: string;
   name: string;
@@ -7,15 +16,7 @@ export type WorkspaceHeaderOrganization = Readonly<{
   canRead?: boolean;
   canUpdate?: boolean;
   canCreateEstablishment?: boolean;
-}>;
-
-export type WorkspaceHeaderEstablishment = Readonly<{
-  id: string;
-  name: string;
-  photoUrl?: string | null;
-  canRead?: boolean;
-  canUpdate?: boolean;
-  canDelete?: boolean;
+  establishments: ReadonlyArray<WorkspaceHeaderEstablishment>;
 }>;
 
 export type WorkspaceHeaderViewModel = Readonly<{

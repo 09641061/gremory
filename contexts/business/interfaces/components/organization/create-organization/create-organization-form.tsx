@@ -32,10 +32,14 @@ export function CreateOrganizationForm() {
   useEffect(() => {
     if (state.status === "success" && !hasRedirected.current) {
       hasRedirected.current = true;
-      router.push("/establishments/new");
+      const organizationId = state.data?.id;
+      const nextPath = organizationId
+        ? `/establishments/new?organizationId=${encodeURIComponent(organizationId)}`
+        : "/establishments/new";
+      router.push(nextPath);
       router.refresh();
     }
-  }, [router, state.status]);
+  }, [router, state.data?.id, state.status]);
 
   useEffect(() => {
     return () => {
