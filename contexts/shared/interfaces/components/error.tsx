@@ -14,22 +14,27 @@ export function ErrorAlert({
   title,
   message,
   onDismiss,
+  resetKey,
 }: {
   title: string;
   message?: string;
   onDismiss?: () => void;
+  resetKey?: string | number;
 }) {
   const mounted = useSyncExternalStore(
     () => () => {},
     () => true,
-    () => false
+    () => false,
   );
-  const [dismissedMessage, setDismissedMessage] = useState<string | null>(null);
+  const [dismissedAlert, setDismissedAlert] = useState<{
+    message: string;
+    resetKey?: string | number;
+  } | null>(null);
 
   useEffect(() => {
     if (!message) {
       const resetId = window.setTimeout(() => {
-        setDismissedMessage(null);
+        setDismissedAlert(null);
       }, 0);
 
       return () => {
@@ -37,30 +42,34 @@ export function ErrorAlert({
       };
     }
 
-    if (message === dismissedMessage) {
+    if (
+      dismissedAlert?.message === message &&
+      dismissedAlert.resetKey === resetKey
+    ) {
       return;
     }
 
     const timeout = window.setTimeout(() => {
-      setDismissedMessage(message);
-      if (onDismiss) onDismiss();
+      setDismissedAlert({ message, resetKey });
+      onDismiss?.();
     }, 4000);
 
     return () => window.clearTimeout(timeout);
-  }, [message, dismissedMessage, onDismiss]);
+  }, [message, dismissedAlert, resetKey, onDismiss]);
 
   if (
     !mounted ||
     typeof document === "undefined" ||
     !message ||
-    message === dismissedMessage
+    (dismissedAlert?.message === message &&
+      dismissedAlert.resetKey === resetKey)
   ) {
     return null;
   }
 
   const handleDismiss = () => {
-    setDismissedMessage(message);
-    if (onDismiss) onDismiss();
+    setDismissedAlert({ message, resetKey });
+    onDismiss?.();
   };
 
   return createPortal(
@@ -70,7 +79,7 @@ export function ErrorAlert({
       message={message}
       onDismiss={handleDismiss}
     />,
-    document.body
+    document.body,
   );
 }
 
@@ -111,15 +120,18 @@ function ErrorToast({
       className={cn(
         "!fixed !right-4 !top-4 !z-[9999] w-[calc(100%-2rem)] max-w-sm overflow-hidden",
         "flex flex-col gap-1 rounded-xl border border-destructive/20 bg-background/95 p-4 shadow-xl backdrop-blur-md",
-        "animate-in fade-in slide-in-from-top-2 md:slide-in-from-right-2 duration-300",
-        "pr-10"
+        "animate-in fade-in slide-in-from-top-2 duration-300 md:slide-in-from-right-2",
+        "pr-10",
       )}
+      role="alert"
     >
-      <div className="flex gap-3 items-start">
-        <CircleAlertIcon className="text-destructive size-5 shrink-0 mt-0.5" />
+      <div className="flex items-start gap-3">
+        <CircleAlertIcon className="mt-0.5 size-5 shrink-0 text-destructive" />
         <div className="flex flex-col gap-0.5">
-          <AlertTitle className="text-sm font-semibold text-foreground leading-none">{title}</AlertTitle>
-          <AlertDescription className="text-xs text-muted-foreground leading-normal mt-1">
+          <AlertTitle className="text-sm font-semibold leading-none text-foreground">
+            {title}
+          </AlertTitle>
+          <AlertDescription className="!mt-1 text-xs leading-normal !text-muted-foreground">
             {message}
           </AlertDescription>
         </div>
@@ -128,15 +140,15 @@ function ErrorToast({
       <button
         type="button"
         onClick={onDismiss}
-        className="absolute top-3 right-3 rounded-lg p-1.5 text-muted-foreground/60 hover:text-foreground hover:bg-muted/50 transition-colors"
+        className="absolute top-3 right-3 rounded-lg p-1.5 text-muted-foreground/60 transition-colors hover:bg-muted/50 hover:text-foreground"
+        aria-label="Dismiss alert"
       >
         <X className="size-3.5" />
       </button>
 
-      {/* Progress timer bar */}
-      <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-muted">
+      <div className="absolute right-0 bottom-0 left-0 h-0.5 bg-muted">
         <div
-          className="h-full bg-destructive transition-all ease-linear duration-75"
+          className="h-full bg-destructive transition-all duration-75 ease-linear"
           style={{ width: `${progress}%` }}
         />
       </div>

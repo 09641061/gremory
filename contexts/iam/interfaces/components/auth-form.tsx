@@ -3,11 +3,7 @@
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
 import { GoogleIcon } from "./icons/google";
-import {
-  Alert,
-  AlertDescription,
-  AlertTitle,
-} from "@/contexts/shared/interfaces/components/ui/alert";
+import { ErrorAlert } from "@/contexts/shared/interfaces/components/error";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import { Card, CardContent } from "@/contexts/shared/interfaces/components/ui/card";
 import { Input } from "@/contexts/shared/interfaces/components/ui/input";
@@ -52,12 +48,11 @@ export function AuthForm({ returnTo = null }: { returnTo?: string | null }) {
 
   return (
     <>
-      {state.status === "error" ? (
-        <Alert variant="destructive" className="fixed top-4 right-4 z-50 w-[calc(100%-2rem)] max-w-md shadow-lg">
-          <AlertTitle>Unable to continue</AlertTitle>
-          <AlertDescription>{state.error}</AlertDescription>
-        </Alert>
-      ) : null}
+      <ErrorAlert
+        title="Unable to continue"
+        message={!pending && state.status === "error" ? state.error : undefined}
+        resetKey={pending ? "pending" : state.status}
+      />
       <main className="flex min-h-screen items-center justify-center bg-background px-4 py-6 text-foreground">
         <section className="w-full max-w-[416px] text-center">
         <header className="mb-5">
