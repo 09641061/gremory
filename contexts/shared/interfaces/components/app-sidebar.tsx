@@ -120,7 +120,7 @@ export function AppSidebar({
         <SidebarFooter className="px-3 pb-3">
           <SidebarProfile
             profile={currentProfile}
-            href={
+            settingsHref={
               searchParams.get("establishmentId")
                 ? `/settings?establishmentId=${searchParams.get("establishmentId")}`
                 : "/settings"

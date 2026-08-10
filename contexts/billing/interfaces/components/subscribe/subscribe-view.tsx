@@ -1,19 +1,20 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useMemo, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 
 import type { BillingCycleType } from "../../../domain/model/value-objects/billing-cycle";
 import { getCurrencySymbol, type CurrencyCode } from "../../../domain/model/value-objects/currency";
-import type { PlanReadModel } from "../../../application/internal/queryservices/list-plans-query.service";
+// Type-only: erased at compile time, so the server-only module is never bundled.
+import type {
+  PlanReadModel,
+  PlansByCurrencyReadModel,
+} from "../../../application/internal/queryservices/list-plans-query.service";
 import { ErrorAlert } from "@/contexts/shared/interfaces/components/error";
 import { SubscribeHero } from "./subscribe-hero";
 import { PlanCard } from "./plan-card";
 import { PaymentModal } from "../checkout/payment-modal";
-import { FreePlanSuccessModal } from "../checkout/free-plan-success-modal";
-import { listBillingPlansAction } from "@/contexts/billing/interfaces/actions/list-billing-plans.action";
 
 interface ActivePaymentState {
   clientSecret: string | null | undefined;
@@ -36,16 +37,12 @@ type BillingPlanMetadata = {
 
 type BillingPlanViewModel = PlanReadModel & BillingPlanMetadata;
 
+/**
+ * Paid plans only. Membership here is what puts a plan on the page: the
+ * catalog endpoint still returns the free plan, and `enrichPlan` drops
+ * anything without metadata.
+ */
 const PLAN_METADATA: Record<number, BillingPlanMetadata> = {
-  0: {
-    description: "Try the core product experience.",
-    features: [
-      "Create and manage your organization",
-      "Core operational workflows",
-      "Upgrade later when you need automation",
-    ],
-    isPopular: false,
-  },
   1: {
     description: "Perfect for startups and local shops.",
     features: [
@@ -83,57 +80,26 @@ function buildPlanButtonLabel(planName: string): string {
   return `Get ${planName} plan`;
 }
 
-export function SubscribeView() {
-  const router = useRouter();
+interface SubscribeViewProps {
+  /** Where the back arrow returns to. The page resolves it from the plan. */
+  backHref: string;
+  /** Every supported currency, priced server-side, so switching costs nothing. */
+  plansByCurrency: PlansByCurrencyReadModel;
+}
+
+export function SubscribeView({ backHref, plansByCurrency }: SubscribeViewProps) {
   const [billingCycle, setBillingCycle] = useState<BillingCycleType>("MONTHLY");
   const [currency, setCurrency] = useState<CurrencyCode>("USD");
   const [feedbackMessage, setFeedbackMessage] = useState<FeedbackState | null>(null);
   const [paymentModalState, setPaymentModalState] = useState<ActivePaymentState | null>(null);
-  const [freePlanModalOpen, setFreePlanModalOpen] = useState(false);
-  const [plans, setPlans] = useState<BillingPlanViewModel[]>([]);
-  const [isLoadingPlans, setIsLoadingPlans] = useState(true);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    async function loadPlans() {
-      setIsLoadingPlans(true);
-
-      try {
-        const result = await listBillingPlansAction(currency);
-        if (cancelled) return;
-
-        if (result.status === "error") {
-          throw new Error(result.error);
-        }
-
-        setPlans(
-          result.data
-            .map(enrichPlan)
-            .filter((plan): plan is BillingPlanViewModel => plan !== null)
-            .sort((left, right) => left.id - right.id),
-        );
-      } catch (error) {
-        if (!cancelled) {
-          setFeedbackMessage({
-            type: "error",
-            text: error instanceof Error ? error.message : "Unable to load the plan catalog.",
-            id: Date.now(),
-          });
-        }
-      } finally {
-        if (!cancelled) {
-          setIsLoadingPlans(false);
-        }
-      }
-    }
-
-    void loadPlans();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [currency]);
+  const plans = useMemo(
+    () =>
+      (plansByCurrency[currency] ?? [])
+        .map(enrichPlan)
+        .filter((plan): plan is BillingPlanViewModel => plan !== null)
+        .sort((left, right) => left.id - right.id),
+    [plansByCurrency, currency]
+  );
 
   const toggleCycle = () => {
     setBillingCycle((prev) => (prev === "MONTHLY" ? "ANNUAL" : "MONTHLY"));
@@ -143,10 +109,7 @@ export function SubscribeView() {
     setFeedbackMessage(null);
     const response = data as { clientSecret?: string | null; stripePublicKey?: string | null } | undefined;
 
-    if (plan.id === 0 || !response?.clientSecret || !response?.stripePublicKey) {
-      if (plan.id === 0) {
-        setFreePlanModalOpen(true);
-      }
+    if (!response?.clientSecret || !response?.stripePublicKey) {
       return;
     }
 
@@ -162,12 +125,12 @@ export function SubscribeView() {
   };
 
   return (
-    <main className="relative flex min-h-screen flex-col items-center justify-center gap-10 overflow-hidden bg-background px-4 py-12 text-foreground">
+    <main className="relative flex min-h-screen w-full flex-1 flex-col items-center justify-center gap-10 overflow-hidden bg-background px-4 py-12 text-foreground">
       <div className="absolute top-6 left-6 z-20 sm:left-8">
         <Link
-          href="/login"
-          aria-label="Back to Sign In"
-          title="Back to Sign In"
+          href={backHref}
+          aria-label="Back"
+          title="Back"
           className="inline-flex items-center justify-center text-muted-foreground transition-colors hover:text-foreground"
         >
           <ArrowLeft className="size-4 transition-transform group-hover:-translate-x-1" />
@@ -189,46 +152,39 @@ export function SubscribeView() {
         onCurrencyChange={setCurrency}
       />
 
-      <section className="grid w-full max-w-6xl grid-cols-1 items-stretch gap-8 md:grid-cols-2 lg:grid-cols-3">
-        {isLoadingPlans ? (
-          <div className="col-span-full flex min-h-[20rem] items-center justify-center rounded-lg border border-border/70 bg-card/70">
-            <div className="flex items-center gap-3 text-sm text-muted-foreground">
-              Loading plans...
-            </div>
-          </div>
-        ) : (
-          plans.map((plan) => {
-            const displayPrice = billingCycle === "ANNUAL" ? plan.annualPriceAmount / 12 : plan.monthlyPriceAmount;
+      <section className="grid w-full max-w-4xl grid-cols-1 items-stretch gap-8 md:grid-cols-2">
+        {plans.map((plan) => {
+          const displayPrice =
+            billingCycle === "ANNUAL" ? plan.annualPriceAmount / 12 : plan.monthlyPriceAmount;
 
-            return (
-              <PlanCard
-                key={plan.id}
-                planId={plan.id}
-                name={plan.name}
-                description={plan.description}
-                monthlyPrice={plan.monthlyPriceAmount}
-                annualPricePerMonth={plan.annualPriceAmount / 12}
-                currency={currency}
-                billingCycle={billingCycle}
-                features={[...plan.features]}
-                isPopular={plan.isPopular}
-                buttonLabel={buildPlanButtonLabel(plan.name)}
-                onSuccess={(data) => handlePlanSuccess(plan, displayPrice, data)}
-                onError={(err) =>
-                  setFeedbackMessage({
-                    type: "error",
-                    text: err || "You must be signed in to select a subscription plan.",
-                    id: Date.now(),
-                  })
-                }
-              />
-            );
-          })
-        )}
+          return (
+            <PlanCard
+              key={plan.id}
+              planId={plan.id}
+              name={plan.name}
+              description={plan.description}
+              monthlyPrice={plan.monthlyPriceAmount}
+              annualPricePerMonth={plan.annualPriceAmount / 12}
+              currency={currency}
+              billingCycle={billingCycle}
+              features={[...plan.features]}
+              isPopular={plan.isPopular}
+              buttonLabel={buildPlanButtonLabel(plan.name)}
+              onSuccess={(data) => handlePlanSuccess(plan, displayPrice, data)}
+              onError={(err) =>
+                setFeedbackMessage({
+                  type: "error",
+                  text: err || "You must be signed in to select a subscription plan.",
+                  id: Date.now(),
+                })
+              }
+            />
+          );
+        })}
       </section>
 
       <p className="text-xs text-center text-muted-foreground mt-12">
-        Cancel anytime Â· Secure billing Â· Plans can be changed later
+        Cancel anytime. Secure billing. Plans can be changed later.
       </p>
 
       {paymentModalState ? (
@@ -242,15 +198,6 @@ export function SubscribeView() {
           amountFormatted={paymentModalState.amountFormatted}
         />
       ) : null}
-
-      <FreePlanSuccessModal
-        isOpen={freePlanModalOpen}
-        onClose={() => setFreePlanModalOpen(false)}
-        onContinue={() => {
-          setFreePlanModalOpen(false);
-          router.push("/organizations");
-        }}
-      />
     </main>
   );
 }

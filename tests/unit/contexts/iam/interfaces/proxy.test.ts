@@ -193,8 +193,8 @@ describe("IAM session proxy", () => {
     expect(response.headers.get("location")).toBe("http://localhost/establishments/new");
   });
 
-  it("should keep subscription available for authenticated users", async () => {
-    const response = await proxy(requestWithSession("access-token", "refresh-token", "/subscribe"));
+  it("should keep the upgrade page available for authenticated users", async () => {
+    const response = await proxy(requestWithSession("access-token", "refresh-token", "/upgrade"));
 
     expect(response.status).toBe(200);
     expect(response.headers.get("location")).toBeNull();
