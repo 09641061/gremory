@@ -1,10 +1,10 @@
 # Assistant Backend Contrast Notes
 
-Fecha de referencia: 2026-07-26
+Reference date: 2026-07-26
 
-Este mini documento aclara el contrato real entre el frontend y el backend para el modulo `assistant`, con foco en autenticacion, paginacion y flujo de suscripcion.
+This short document clarifies el actual contract entre el frontend y el backend para el modulo `assistant`, with a focus on autenticacion, paginacion y flujo de suscripcion.
 
-## 1. Autenticacion
+## 1. Authentication
 
 El backend protege las rutas del API con JWT y espera el token en el header:
 
@@ -27,7 +27,7 @@ Base path:
 /api/assistant/conversations
 ```
 
-### Listado lateral
+### Sidebar list
 
 ```http
 GET /api/assistant/conversations?page=0&size=20
@@ -54,18 +54,18 @@ Cada item de `content` es un resumen con:
 - `lastMessageAt`
 - `messageCount`
 
-### Detalle de conversacion
+### Conversation details
 
 ```http
 GET /api/assistant/conversations/{id}
 ```
 
-Devuelve la conversacion completa con:
+Returns the full conversation with:
 
 - `messages`
 - historial completo del chat
 
-### Crear conversacion
+### Create conversation
 
 ```http
 POST /api/assistant/conversations
@@ -75,13 +75,13 @@ Body:
 
 ```json
 {
-  "title": "Nuevo chat"
+  "title": "New chat"
 }
 ```
 
 Respuesta esperada:
 
-- la conversacion creada en formato completo
+- the created conversation en formato completo
 - incluye `messages` vacio o inicial
 - incluye los campos de resumen:
   - `id`
@@ -91,7 +91,7 @@ Respuesta esperada:
   - `updatedAt`
   - `lastMessageAt`
 
-### Enviar mensaje
+### Send message
 
 ```http
 POST /api/assistant/conversations/{id}/messages
@@ -107,7 +107,7 @@ Body:
 
 Respuesta esperada:
 
-- la conversacion actualizada
+- the updated conversation
 - incluye la version mas reciente de `messages`
 - incluye los campos de resumen actualizados:
   - `id`
@@ -117,7 +117,7 @@ Respuesta esperada:
   - `updatedAt`
   - `lastMessageAt`
 
-### Archivar conversacion
+### Archive conversation
 
 ```http
 PATCH /api/assistant/conversations/{id}/archive
@@ -127,7 +127,7 @@ Sin body.
 
 Respuesta esperada:
 
-- la conversacion archivada
+- the archived conversation
 - el frontend usa la respuesta para quitarla del listado activo
 - idealmente devuelve al menos:
   - `id`
@@ -137,9 +137,9 @@ Respuesta esperada:
   - `updatedAt`
   - `lastMessageAt`
 
-## 3. Suscripcion / acceso
+## 3. Subscription / access
 
-La ruta correcta para consultar la suscripcion actual es:
+The correct route for querying la suscripcion actual es:
 
 ```http
 GET /api/billing/subscriptions
@@ -162,14 +162,14 @@ La UI puede considerar acceso valido cuando:
 - `active === true`
 - `status === "ACTIVE"`
 
-## 4. Flujo recomendado de la UI
+## 4. Recommended flow de la UI
 
 1. Obtener el `access_token` de la sesion actual.
 2. Llamar `GET /api/billing/subscriptions` para decidir si el usuario puede entrar al chat.
 3. Si el acceso esta activo, llamar `GET /api/assistant/conversations?page=0&size=20`.
 4. Al abrir una conversacion, llamar `GET /api/assistant/conversations/{id}`.
 5. Al enviar un mensaje, llamar `POST /api/assistant/conversations/{id}/messages`.
-6. Si el usuario quiere iniciar otro chat, crear una nueva conversacion con `POST /api/assistant/conversations`.
+6. If the user wants to start another chat, crear una nueva conversacion con `POST /api/assistant/conversations`.
 
 ## 5. Causas comunes de `403 Forbidden`
 
@@ -189,7 +189,7 @@ El `SubscriptionAccessFilter` bloquea el acceso si la suscripcion del owner no e
 
 Si el browser llama una ruta local de Next y Next llama al backend, esa ruta intermedia debe reenviar el token en `Authorization`.
 
-## 6. Lo que el frontend no debe asumir
+## 6. Lo que el frontend must not asumir
 
 - que las cookies autentican el backend por si solas
 - que `/api/billing/subscription/status` existe
@@ -220,14 +220,14 @@ Y la UI debe usar:
 - Usa `Page.content` para la barra lateral.
 - Usa `GET /api/assistant/conversations/{id}` para el panel principal.
 - No dependas de cookies para autenticar el API.
-- Si aparece `403`, primero revisa token y suscripcion activa.
+- Si aparece `403`, first check token y suscripcion activa.
 
 ## 9. Cambios a implementar en frontend
 
-1. Cuando se cree una conversacion nueva, asumir que puede regresar con un mensaje inicial del asistente y no con `messages` vacio.
+1. When a new conversation is created una conversacion nueva, assume it may return con un mensaje inicial del asistente y no con `messages` vacio.
 2. En la validacion de acceso, usar principalmente `active` y `status === "ACTIVE"` de `GET /api/billing/subscriptions`.
 3. Tratar el listado lateral como una respuesta paginada Spring `Page`, no como un array plano.
 4. Mantener `Authorization: Bearer <access_token>` en todas las requests protegidas, incluso si ya existen cookies de sesion.
-5. Al abrir una conversacion, cargar el detalle completo con `GET /api/assistant/conversations/{id}` en lugar de reutilizar el resumen lateral.
-6. Al enviar un mensaje, refrescar el estado de la conversacion con la respuesta devuelta por el backend para mantener sincronizados `messages`, `updatedAt` y `lastMessageAt`.
-7. Si el backend responde `403`, interpretar primero falta de header, token vencido o suscripcion inactiva antes de asumir un fallo de UI.
+5. Al abrir una conversacion, cargar el detalle completo con `GET /api/assistant/conversations/{id}` instead of reusing el resumen lateral.
+6. Al enviar un mensaje, refresh the state de la conversacion con la respuesta devuelta por el backend para keep synchronized `messages`, `updatedAt` y `lastMessageAt`.
+7. Si el backend responde `403`, first interpret a missing header, token vencido o suscripcion inactiva before assuming a UI failure.

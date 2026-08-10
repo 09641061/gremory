@@ -23,7 +23,7 @@ type ConversationMessageSource = {
   createdAt: string;
 };
 
-const DEFAULT_ASSISTANT_GREETING = "Hola. Soy tu asistente para negocio, clientes, catálogo y agenda.";
+const DEFAULT_ASSISTANT_GREETING = "Hello. I am your assistant for business, customers, catalog, and scheduling.";
 
 function normalizeMessage(message: ConversationMessageSource): AssistantMessageReadModel {
   const role = (message.role ?? "").toUpperCase();

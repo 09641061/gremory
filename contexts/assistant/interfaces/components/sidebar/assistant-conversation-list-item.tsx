@@ -26,7 +26,7 @@ export function AssistantConversationListItem({
   isMenuOpen,
   onOpenMenu,
 }: AssistantConversationListItemProps) {
-  const conversationTitle = conversation.title ?? "Nueva conversacion";
+  const conversationTitle = conversation.title ?? "New conversation";
 
   return (
     <li>

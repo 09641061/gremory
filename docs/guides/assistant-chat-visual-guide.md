@@ -1,11 +1,11 @@
 # Assistant Chat Visual Guide
 
-Este documento resume como esta armado hoy el chat del assistant para poder
+This document summarizes como esta armado hoy el chat del assistant para poder
 replicar la vista sin tener que reverse-enginear los componentes.
 
 La experiencia se divide en dos estados:
 
-- `Nuevo chat`
+- `New chat`
 - `Chat viejo` o `chat existente` desde el historial
 
 Ademas, la visual del `AssistantAvatar` y la composicion del composer son las
@@ -16,33 +16,33 @@ piezas que unifican toda la experiencia.
 - [Vista principal del chat](/C:/Users/jjqui/Documents/GitHub/Takodu/ui/contexts/assistant/interfaces/components/chat-view/assistant-chat-view.tsx)
 - [Empty state del chat](/C:/Users/jjqui/Documents/GitHub/Takodu/ui/contexts/assistant/interfaces/components/chat-view/assistant-chat-empty-state.tsx)
 - [Composer del chat](/C:/Users/jjqui/Documents/GitHub/Takodu/ui/contexts/assistant/interfaces/components/chat-view/assistant-chat-composer.tsx)
-- [Thread de mensajes](/C:/Users/jjqui/Documents/GitHub/Takodu/ui/contexts/assistant/interfaces/components/chat-view/assistant-chat-thread.tsx)
-- [Bubble de mensaje](/C:/Users/jjqui/Documents/GitHub/Takodu/ui/contexts/assistant/interfaces/components/chat-view/assistant-chat-message-bubble.tsx)
+- [Message thread](/C:/Users/jjqui/Documents/GitHub/Takodu/ui/contexts/assistant/interfaces/components/chat-view/assistant-chat-thread.tsx)
+- [Message bubble](/C:/Users/jjqui/Documents/GitHub/Takodu/ui/contexts/assistant/interfaces/components/chat-view/assistant-chat-message-bubble.tsx)
 - [Saludo / intro](/C:/Users/jjqui/Documents/GitHub/Takodu/ui/contexts/assistant/interfaces/components/chat-view/assistant-chat-welcome.tsx)
 - [Avatar del assistant](/C:/Users/jjqui/Documents/GitHub/Takodu/ui/contexts/assistant/interfaces/components/icons/assistant-avatar/assistant-avatar.tsx)
 - [Animacion del avatar](/C:/Users/jjqui/Documents/GitHub/Takodu/ui/contexts/assistant/interfaces/components/icons/assistant-avatar/use-assistant-avatar-animation.ts)
-- [Transform de conversaciones](/C:/Users/jjqui/Documents/GitHub/Takodu/ui/contexts/assistant/application/internal/transforms/assistant-conversation.transform.ts)
+- [Conversation transform](/C:/Users/jjqui/Documents/GitHub/Takodu/ui/contexts/assistant/application/internal/transforms/assistant-conversation.transform.ts)
 
 ## Estructura General
 
 La pagina `app/(protected)/(app)/chat/page.tsx` resuelve si existe o no
 `conversationId` en la URL.
 
-- sin `conversationId`: se renderiza el estado de `Nuevo chat`
+- sin `conversationId`: se renderiza el estado de `New chat`
 - con `conversationId`: se renderiza el historial o `chat viejo`
 
 La vista principal vive en `AssistantChatView` y decide:
 
-- si el chat esta en modo vacio o conversacional
+- si el chat is in empty or conversational mode
 - si el composer va en modo `minimal` o `floating`
 - si el hilo necesita saludo de intro
-- si la conversacion activa debe rehidratarse o actualizarse
+- si la active conversation should be rehydrated or updated
 
 ## Nuevo Chat
 
 ### Que se ve
 
-El estado de `Nuevo chat` es una pantalla centrada, limpia y muy ligera.
+El estado de `New chat` es una centered, clean, lightweight screen.
 
 Elementos visibles:
 
@@ -90,28 +90,28 @@ Visualmente:
 
 ### Que se ve
 
-Cuando existe `conversationId`, la pantalla cambia a una vista de historial
+Cuando existe `conversationId`, la pantalla cambia a una history view
 clasica.
 
 Componentes visibles:
 
-- lista de mensajes en un thread propio
+- message list en un dedicated thread
 - avatar del assistant en cada mensaje del assistant
 - composer flotante fijo abajo
 
 ### Composicion Visual
 
-- el area de mensajes ocupa todo el alto disponible
+- el message area ocupa todo el available height
 - el scroll vive dentro del thread, no en toda la pagina
 - el composer queda superpuesto en la parte inferior
-- hay padding inferior extra para que el ultimo mensaje no quede tapado
-- el bloque de mensajes tiene mas aire vertical que en versiones previas
+- there is extra bottom padding para que el last message no quede tapado
+- el bloque de mensajes tiene more vertical space que en previous versions
 
 ### Sensacion Visual
 
 Este modo busca parecerse a la captura de referencia:
 
-- mas separacion entre mensajes
+- more spacing between messages
 - mas amplitud en el canvas
 - assistant a la izquierda
 - usuario a la derecha
@@ -119,7 +119,7 @@ Este modo busca parecerse a la captura de referencia:
 
 ## Render de Mensajes
 
-### Mensajes del Usuario
+### User Messages
 
 - alineados a la derecha
 - bubble compacta
@@ -127,7 +127,7 @@ Este modo busca parecerse a la captura de referencia:
 - borde fino suave
 - ancho contenido para que no ocupe demasiado
 
-### Mensajes del Assistant
+### Assistant Messages
 
 - alineados a la izquierda
 - avatar circular antes del texto
@@ -141,9 +141,9 @@ La vista del assistant no intenta soportar todo Markdown posible. La regla
 actual es mantener lo que aporta valor real al negocio y reducir lo que solo
 agrega costo o complejidad visual.
 
-El render hoy ocurre directo en el cliente con `react-markdown` + `remark-gfm`.
+Rendering currently happens directly en el cliente con `react-markdown` + `remark-gfm`.
 Ya no existe una capa intermedia que convierta el contenido a HTML antes de
-llegar a la burbuja del mensaje.
+reach the message bubble.
 
 #### Soportado
 
@@ -167,7 +167,7 @@ llegar a la burbuja del mensaje.
 - HTML embebido
 - footnotes
 - task lists o checkboxes
-- encabezados con estilizado dedicado más allá del flujo normal del texto
+- headings with dedicated styling beyond the normal text flow
 
 #### Criterio de diseño
 
@@ -178,13 +178,13 @@ La meta no es renderizar todo, sino:
 - bajar carga de render sin perder tablas, listas ni código
 - mantener una lectura clara y rápida en el chat
 
-### Separacion Entre Mensajes
+### Spacing Between Messages
 
 La separacion vertical se aumento para que el hilo respire mejor.
 
 Rasgos:
 
-- gap amplio entre mensajes
+- large gap entre mensajes
 - padding superior e inferior mayor en el thread
 - lectura mas limpia cuando hay varios turnos
 - mejor distincion visual entre bloques sucesivos
@@ -211,7 +211,7 @@ Rasgos:
 - fondo blanco o tipo card
 - sin competir con el composer
 
-## Composer / Pildora De Mensaje
+## Composer / Message Pill
 
 ### Forma
 
@@ -256,18 +256,18 @@ En el chat existente:
    - muestra skeletons
    - alterna izquierda y derecha para simular dialogo
 
-2. `Con mensajes`
-   - renderiza una bubble por mensaje
+2. `With messages`
+   - renders one bubble por mensaje
    - aplica separacion amplia entre bloques
    - deja un `bottomRef` al final para autoscroll
 
-3. `Sin mensajes`
+3. `Without messages`
    - muestra el saludo / intro
    - mantiene el espacio visual limpio y centrado
 
 ## Loading State
 
-Mientras carga la conversacion, el thread usa skeletons:
+While loading la conversacion, el thread usa skeletons:
 
 - cuatro bloques
 - altura amplia
@@ -283,8 +283,8 @@ El icono del assistant no es decorativo. Define la identidad visual del chat.
 
 ### Donde aparece
 
-- en el empty state de `Nuevo chat`
-- al lado de los mensajes del assistant
+- en el empty state de `New chat`
+- beside the messages del assistant
 - en el saludo / intro
 - como base de la animacion del avatar
 
@@ -303,7 +303,7 @@ El avatar debe sentirse:
 - pequeno pero reconocible
 - limpio y sin un fondo que compita con el contenido
 - consistente con el sistema del chat
-- presente tanto en estados vacios como en contexto conversacional
+- presente tanto en empty states como en contexto conversacional
 
 ## Animacion Del Avatar
 
@@ -331,16 +331,16 @@ es mantenerlo simple y barato para el navegador.
 
 ## Normalizacion De Roles
 
-Esto es importante para que los mensajes viejos no queden todos del mismo lado.
+This is important so that los mensajes viejos no queden todos del mismo lado.
 
 ### Regla base
 
 - `USER` o cualquier variante no reconocida termina como `user`
 - `ASSISTANT` y `AGENT` terminan como `assistant`
 
-### Fallback para conversaciones legacy
+### Fallback for legacy conversations
 
-Algunas conversaciones antiguas llegan con roles planos o sin distincion real.
+Some older conversations arrive con roles planos o without real distinction.
 
 En ese caso:
 
@@ -359,32 +359,31 @@ Esto mantiene la izquierda/derecha aun cuando el backend venga incompleto.
 
 ## Reglas De Replica Visual
 
-Si queres recrear la experiencia con fidelidad, segu estas reglas:
+To faithfully recreate the experience, follow these rules:
 
-1. `Nuevo chat` debe verse centrado, limpio y abierto.
+1. `New chat` debe verse centrado, limpio y abierto.
 2. `Chat existente` debe priorizar el historial y reservar el composer abajo.
 3. El `AssistantAvatar` debe repetirse como firma visual.
 4. El composer debe sentirse como una pildora flexible, no como un textarea estandar.
-5. Los mensajes del assistant deben quedar a la izquierda.
-6. Los mensajes del usuario deben quedar a la derecha.
-7. La separacion entre mensajes debe ser generosa.
-8. Las conversaciones viejas deben tener un fallback de roles si el backend no distingue bien.
+5. Assistant messages should remain a la izquierda.
+6. User messages should remain a la derecha.
+7. Spacing between messages should be generous.
+8. Old conversations should have un fallback de roles si el backend no distingue bien.
 
 ## Mapa Rapido De Implementacion
 
-- `AssistantChatView`: decide entre nuevo chat y conversacion existente
-- `AssistantChatEmptyState`: pantalla inicial centrada
+- `AssistantChatView`: chooses between a new and existing conversation
+- `AssistantChatEmptyState`: centered initial screen
 - `AssistantChatThread`: layout del historial, saludo e hilo
 - `AssistantChatComposer`: input principal
-- `AssistantChatMessageBubble`: estetica y alineacion de mensajes
+- `AssistantChatMessageBubble`: styling and alignment de mensajes
 - `AssistantChatWelcome`: saludo / intro reutilizable
 - `AssistantAvatar`: identidad del assistant
 - `assistant-conversation.transform.ts`: normalizacion de roles para chats viejos
 
 ## Resumen Corto
 
-- `Nuevo chat` = empty state centrado + composer minimal + avatar protagonista
+- `New chat` = empty state centrado + composer minimal + avatar protagonista
 - `Chat viejo` = hilo con historial + bubbles alternadas + composer flotante
 - `AssistantAvatar` = firma visual comun en ambos estados
 - `Roles legacy` = fallback por orden si el backend no distingue assistant y user
-

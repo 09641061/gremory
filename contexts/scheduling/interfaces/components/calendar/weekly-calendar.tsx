@@ -76,7 +76,7 @@ export function WeeklyCalendar({
   const fetchAppointments = useCallback(() => {
     const reqId = ++requestIdRef.current;
 
-    // Función local para convertir fecha a ISO con offset
+    // Local function to convert a date to ISO with an offset
     const toLocalISOString = (date: Date) => {
       const pad = (n: number) => String(n).padStart(2, "0");
       const tzo = -date.getTimezoneOffset();

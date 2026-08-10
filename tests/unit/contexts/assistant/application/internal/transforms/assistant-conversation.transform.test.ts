@@ -14,7 +14,7 @@ describe("assistant conversation transform", () => {
         {
           id: "message-0",
           role: "ASSISTANT",
-          content: "Hola. Soy tu asistente para negocio, clientes, catálogo y agenda.",
+          content: "Hello. I am your assistant for business, customers, catalog, and scheduling.",
           createdAt: "2026-07-29T00:00:00.000Z",
         },
       ],
@@ -33,20 +33,20 @@ describe("assistant conversation transform", () => {
         {
           id: "message-1",
           role: "USER",
-          content: "Hola",
+          content: "Hello",
           createdAt: "2026-07-29T00:00:00.000Z",
         },
         {
           id: "message-2",
           role: "ASSISTANT",
-          content: "Hola, ¿en qué puedo ayudarte?",
+          content: "Hello, how can I help you?",
           createdAt: "2026-07-29T00:00:01.000Z",
         },
       ],
     });
 
     expect(conversation.messages.map((message) => message.role)).toEqual(["user", "assistant"]);
-    expect(conversation.messages[1]?.content).toContain("¿en qué puedo ayudarte?");
+    expect(conversation.messages[1]?.content).toContain("Hello, how can I help you?");
   });
 
   it("alternates roles for legacy conversations that arrive flattened", () => {
@@ -59,7 +59,7 @@ describe("assistant conversation transform", () => {
         {
           id: "message-1",
           role: "USER",
-          content: "Hola",
+          content: "Hello",
           createdAt: "2026-07-29T00:00:00.000Z",
         },
         {
@@ -94,19 +94,19 @@ describe("assistant conversation transform", () => {
         {
           id: "message-0",
           role: "ASSISTANT",
-          content: "Hola. Soy tu asistente para negocio, clientes, catálogo y agenda.",
+          content: "Hello. I am your assistant for business, customers, catalog, and scheduling.",
           createdAt: "2026-07-29T00:00:00.000Z",
         },
         {
           id: "message-1",
           role: "USER",
-          content: "Hola",
+          content: "Hello",
           createdAt: "2026-07-29T00:00:01.000Z",
         },
         {
           id: "message-2",
           role: "ASSISTANT",
-          content: "Hola, ¿en qué puedo ayudarte?",
+          content: "Hello, how can I help you?",
           createdAt: "2026-07-29T00:00:02.000Z",
         },
       ],
@@ -114,8 +114,8 @@ describe("assistant conversation transform", () => {
 
     expect(conversation.messages.map((message) => message.role)).toEqual(["user", "assistant"]);
     expect(conversation.messages.map((message) => message.content)).toEqual([
-      "Hola",
-      "Hola, ¿en qué puedo ayudarte?",
+      "Hello",
+      "Hello, how can I help you?",
     ]);
   });
 
@@ -129,7 +129,7 @@ describe("assistant conversation transform", () => {
         {
           id: "message-1",
           role: "USER",
-          content: "Hola",
+          content: "Hello",
           createdAt: "2026-07-29T00:00:00.000Z",
         },
         {
