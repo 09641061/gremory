@@ -47,6 +47,20 @@ export function EditServiceForm({ service, onCancel, canUpdateService, canDelete
 
   const isActionPending = updatePending || statusPending;
 
+  // The fields are uncontrolled, so their `defaultValue` must stay stable while mounted.
+  // Remount the form whenever the server data behind those defaults changes (e.g. after
+  // a save triggers router.refresh()).
+  const defaultsKey = JSON.stringify([
+    service.name,
+    service.description,
+    service.price,
+    service.durationMinutes,
+    service.preparationMinutes,
+    service.cleanupMinutes,
+    service.preServiceInstructions ?? "",
+    service.postServiceRecommendations ?? "",
+  ]);
+
   return (
     <>
       <ErrorAlert
@@ -57,7 +71,7 @@ export function EditServiceForm({ service, onCancel, canUpdateService, canDelete
       <div className="bg-background text-foreground flex flex-col">
         {/* Form Main Canvas */}
         <main className="flex-1 max-w-[800px] w-full mx-auto px-4 py-8">
-          <form action={formAction} key={`${service.id}-${service.status}-${resetKey}`} id="edit-service-form">
+          <form action={formAction} key={`${service.id}-${service.status}-${defaultsKey}-${resetKey}`} id="edit-service-form">
             <Card className="rounded-lg border-border bg-card p-6">
               <CardContent className="p-0 space-y-6">
                 <div className="flex justify-between items-center border-b border-border pb-4">

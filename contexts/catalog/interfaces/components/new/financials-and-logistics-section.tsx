@@ -13,6 +13,12 @@ interface FinancialsAndLogisticsSectionProps {
   disabled?: boolean;
 }
 
+// Zero is shown as an empty field so typing over it doesn't produce values like "05".
+// The server action coerces the empty prep/cleanup fields back to 0.
+function numberFieldValue(value?: number) {
+  return value ? String(value) : "";
+}
+
 export function FinancialsAndLogisticsSection({ defaultValues, disabled }: FinancialsAndLogisticsSectionProps) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -30,7 +36,7 @@ export function FinancialsAndLogisticsSection({ defaultValues, disabled }: Finan
               type="number"
               step="0.01"
               placeholder="0.00"
-              defaultValue={defaultValues?.price ?? ""}
+              defaultValue={numberFieldValue(defaultValues?.price)}
               required
               className="pl-10 bg-card border-border"
               disabled={disabled}
@@ -50,7 +56,7 @@ export function FinancialsAndLogisticsSection({ defaultValues, disabled }: Finan
               name="durationMinutes"
               type="number"
               placeholder="30"
-              defaultValue={defaultValues?.durationMinutes ?? ""}
+              defaultValue={numberFieldValue(defaultValues?.durationMinutes)}
               required
               className="bg-card border-border text-xs px-2"
               disabled={disabled}
@@ -62,8 +68,8 @@ export function FinancialsAndLogisticsSection({ defaultValues, disabled }: Finan
               id="preparationMinutes"
               name="preparationMinutes"
               type="number"
-              placeholder="5"
-              defaultValue={defaultValues?.preparationMinutes ?? 0}
+              placeholder="0"
+              defaultValue={numberFieldValue(defaultValues?.preparationMinutes)}
               className="bg-card border-border text-xs px-2"
               disabled={disabled}
             />
@@ -74,8 +80,8 @@ export function FinancialsAndLogisticsSection({ defaultValues, disabled }: Finan
               id="cleanupMinutes"
               name="cleanupMinutes"
               type="number"
-              placeholder="5"
-              defaultValue={defaultValues?.cleanupMinutes ?? 0}
+              placeholder="0"
+              defaultValue={numberFieldValue(defaultValues?.cleanupMinutes)}
               className="bg-card border-border text-xs px-2"
               disabled={disabled}
             />
