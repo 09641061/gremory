@@ -3,7 +3,7 @@
 import { useTransition } from "react";
 
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
-import { ErrorAlert } from "@/contexts/shared/interfaces/components/ui/error";
+import { ErrorAlert } from "@/contexts/shared/interfaces/components/error";
 import { Spinner } from "@/contexts/shared/interfaces/components/ui/spinner";
 
 type ErrorScreenProps = {

@@ -4,7 +4,7 @@ import { AlertDialogCancel } from "@/contexts/shared/interfaces/components/ui/al
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import { useTransition, useState } from "react";
 import { markNoShowAppointmentAction } from "../../actions/mark-no-show-appointment.action";
-import { ErrorAlert } from "@/contexts/shared/interfaces/components/ui/error";
+import { ErrorAlert } from "@/contexts/shared/interfaces/components/error";
 import { Appointment } from "../../../domain/model/entities/appointment";
 import {
   AppointmentConfirmDialogHeader,
@@ -57,7 +57,7 @@ export function NoShowConfirmDialog({
             <AlertDialogCancel type="button" disabled={isPending}>
               Cancel
             </AlertDialogCancel>
-            <Button type="button" variant="outline" className="border-gray-400 text-gray-600 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-900" disabled={isPending} onClick={handleNoShow}>
+            <Button type="button" variant="outline" disabled={isPending} onClick={handleNoShow}>
               {isPending ? "Marking..." : "Confirm No Show"}
             </Button>
           </>

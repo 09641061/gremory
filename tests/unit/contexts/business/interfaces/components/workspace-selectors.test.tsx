@@ -9,7 +9,7 @@ const establishments = [{ id: "est-1", name: "Main branch", photoUrl: null }];
 const organizations = [{ id: "org-1", name: "Acme", imageUrl: null }];
 
 function openMenu(name: RegExp) {
-  fireEvent.click(screen.getByRole("button", { name }));
+  fireEvent.click(screen.getByRole("combobox", { name }));
 }
 
 describe("workspace selectors", () => {

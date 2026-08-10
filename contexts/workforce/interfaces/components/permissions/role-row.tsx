@@ -1,14 +1,8 @@
 "use client";
 
-import { GripVertical, MoreVertical, Pencil, Trash2, User } from "lucide-react";
+import { GripVertical, Pencil, Trash2, User } from "lucide-react";
 import type { WorkforceRoleSummary } from "@/contexts/workforce/application/model/workforce-role.read-models";
-import { Button } from "@/contexts/shared/interfaces/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/contexts/shared/interfaces/components/ui/dropdown-menu";
+import { EntityActionsMenu } from "@/contexts/shared/interfaces/components/entity-actions-menu";
 
 interface RoleRowProps {
   role: WorkforceRoleSummary;
@@ -106,42 +100,25 @@ export function RoleRow({
         className="relative flex items-center justify-end gap-2"
         onClick={(event) => event.stopPropagation()}
       >
-        <DropdownMenu>
-          <DropdownMenuTrigger
-            render={
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon-sm"
-                aria-label={`More actions for ${role.name}`}
-              />
-            }
-          >
-            <MoreVertical className="size-4" />
-          </DropdownMenuTrigger>
-          <DropdownMenuContent>
-            <DropdownMenuItem
-              nativeButton
-              render={<button type="button" className="w-full" />}
-              className="gap-2"
-              disabled={!canEdit}
-              onClick={() => onEdit?.(role)}
-            >
-              <Pencil className="size-4" />
-              Edit
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              nativeButton
-              render={<button type="button" className="w-full" />}
-              className="gap-2 text-destructive focus:bg-destructive/10 focus:text-destructive"
-              disabled={!canDelete}
-              onClick={() => onDelete?.(role)}
-            >
-              <Trash2 className="size-4" />
-              Delete
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <EntityActionsMenu
+          label={`More actions for ${role.name}`}
+          size="icon-sm"
+          actions={[
+            {
+              label: "Edit",
+              icon: Pencil,
+              disabled: !canEdit,
+              onSelect: () => onEdit?.(role),
+            },
+            {
+              label: "Delete",
+              icon: Trash2,
+              variant: "destructive",
+              disabled: !canDelete,
+              onSelect: () => onDelete?.(role),
+            },
+          ]}
+        />
       </div>
     </div>
   );

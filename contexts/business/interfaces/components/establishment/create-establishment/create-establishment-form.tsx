@@ -9,7 +9,7 @@ import { initialBusinessActionResult } from "../../../actions/business-action-re
 import { Card, CardContent, CardFooter } from "@/contexts/shared/interfaces/components/ui/card";
 import { Input } from "@/contexts/shared/interfaces/components/ui/input";
 import { Button, buttonVariants } from "@/contexts/shared/interfaces/components/ui/button";
-import { ErrorAlert } from "@/contexts/shared/interfaces/components/ui/error";
+import { ErrorAlert } from "@/contexts/shared/interfaces/components/error";
 import { Spinner } from "@/contexts/shared/interfaces/components/ui/spinner";
 import {
   Avatar,

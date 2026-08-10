@@ -4,7 +4,7 @@ import { AlertDialogCancel } from "@/contexts/shared/interfaces/components/ui/al
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import { useTransition, useState } from "react";
 import { completeAppointmentAction } from "../../actions/complete-appointment.action";
-import { ErrorAlert } from "@/contexts/shared/interfaces/components/ui/error";
+import { ErrorAlert } from "@/contexts/shared/interfaces/components/error";
 import { Appointment } from "../../../domain/model/entities/appointment";
 import {
   AppointmentConfirmDialogHeader,
@@ -57,7 +57,7 @@ export function CompleteConfirmDialog({
             <AlertDialogCancel type="button" disabled={isPending}>
               Cancel
             </AlertDialogCancel>
-            <Button type="button" variant="default" className="bg-emerald-600 hover:bg-emerald-700 text-white" disabled={isPending} onClick={handleComplete}>
+            <Button type="button" variant="default" disabled={isPending} onClick={handleComplete}>
               {isPending ? "Completing..." : "Complete Appointment"}
             </Button>
           </>

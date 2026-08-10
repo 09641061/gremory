@@ -41,13 +41,13 @@ export function AppointmentBlock({ appointment, onClick }: AppointmentBlockProps
   if (isCancelled) {
     statusStyles = "border-destructive/20 bg-destructive/5 text-destructive/80 opacity-50";
   } else if (isNoShow) {
-    statusStyles = "border-gray-400/20 bg-gray-400/5 text-gray-500/80 opacity-60";
+    statusStyles = "border-muted bg-muted/40 text-muted-foreground opacity-60";
   } else if (isCompleted) {
-    statusStyles = "border-blue-500/20 bg-blue-500/5 text-blue-600/80 opacity-70";
+    statusStyles = "border-primary/20 bg-primary/5 text-primary/80 opacity-70";
   } else if (isInProgress) {
-    statusStyles = "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 animate-pulse";
+    statusStyles = "border-primary/30 bg-primary/10 text-primary animate-pulse";
   } else if (isOverdue) {
-    statusStyles = "border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-300";
+    statusStyles = "border-primary/40 bg-primary/10 text-primary";
   } else if (isPast) {
     statusStyles = "border-muted/30 bg-muted/5 text-muted-foreground opacity-60";
   }

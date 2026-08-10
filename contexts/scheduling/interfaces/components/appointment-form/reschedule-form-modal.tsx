@@ -7,7 +7,7 @@ import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import { Label } from "@/contexts/shared/interfaces/components/ui/label";
 import { Input } from "@/contexts/shared/interfaces/components/ui/input";
 import { updateAppointmentAction } from "../../actions/update-appointment.action";
-import { ErrorAlert } from "@/contexts/shared/interfaces/components/ui/error";
+import { ErrorAlert } from "@/contexts/shared/interfaces/components/error";
 import { Appointment } from "../../../domain/model/entities/appointment";
 import { ActionState } from "../../actions/action-state";
 import { DeleteConfirmDialog } from "../confirm-dialogs/delete-confirm-dialog";

@@ -5,37 +5,29 @@ import { useRouter, useSearchParams } from "next/navigation";
 import {
   Search,
   Plus,
-  MoreVertical,
   Edit,
   Trash2,
   ChevronLeft,
   ChevronRight,
   ChevronsLeft,
   ChevronsRight,
-  Loader2,
 } from "lucide-react";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import { Input } from "@/contexts/shared/interfaces/components/ui/input";
-import { ErrorAlert } from "@/contexts/shared/interfaces/components/ui/error";
+import { ErrorAlert } from "@/contexts/shared/interfaces/components/error";
+import { EntityActionsMenu } from "@/contexts/shared/interfaces/components/entity-actions-menu";
+import { DeleteConfirmDialog } from "@/contexts/shared/interfaces/components/delete-confirm-dialog";
 import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuItem,
-} from "@/contexts/shared/interfaces/components/ui/dropdown-menu";
-import {
-  AlertDialog,
-  AlertDialogContent,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogCancel,
-} from "@/contexts/shared/interfaces/components/ui/alert-dialog";
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/contexts/shared/interfaces/components/ui/table";
 import { CustomerResponse } from "@/contexts/crm/domain/model/entities/customer";
 import { PageResponse } from "@/contexts/crm/application/services/crm-query.service";
 import { deleteCustomerAction } from "@/contexts/crm/interfaces/actions/delete-customer.action";
-import { EditCustomerModal } from "@/contexts/crm/interfaces/components/customer-management/edit-customer-modal";
 
 interface CrmClientWrapperProps {
   initialCustomers: PageResponse<CustomerResponse>;
@@ -58,7 +50,6 @@ export function CrmClientWrapper({
   const searchParams = useSearchParams();
 
   const [searchTerm, setSearchTerm] = React.useState(searchParams.get("search") || "");
-  const [editingCustomer, setEditingCustomer] = React.useState<CustomerResponse | null>(null);
   const [customerToDelete, setCustomerToDelete] = React.useState<CustomerResponse | null>(null);
   const [errorMsg, setErrorMsg] = React.useState<string | null>(null);
   const [isDeleting, setIsDeleting] = React.useState<string | null>(null);
@@ -113,7 +104,6 @@ export function CrmClientWrapper({
 
   return (
     <>
-      <ErrorAlert title="Error" message={errorMsg ?? undefined} />
       <ErrorAlert
         title="Error loading customers"
         message={loadError ? "Failed to load the customer list. Please try refreshing the page." : undefined}
@@ -149,82 +139,73 @@ export function CrmClientWrapper({
 
         {/* Data Grid Table */}
         <div className="bg-card border border-border rounded-xl overflow-hidden shadow-sm">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse text-sm">
-              <thead className="bg-muted/50 border-b border-border">
-                <tr>
-                  <th className="px-6 py-4 font-semibold text-foreground tracking-wider">Customer name</th>
-                  <th className="px-6 py-4 font-semibold text-foreground tracking-wider">Document id</th>
-                  <th className="px-6 py-4 font-semibold text-foreground tracking-wider">Type</th>
-                  <th className="px-6 py-4 font-semibold text-foreground tracking-wider">Email address</th>
-                  <th className="px-6 py-4 font-semibold text-foreground tracking-wider">Phone</th>
+          <Table>
+              <TableHeader className="bg-muted/50">
+                <TableRow>
+                  <TableHead className="px-6 py-4 font-semibold tracking-wider">Customer name</TableHead>
+                  <TableHead className="px-6 py-4 font-semibold tracking-wider">Document id</TableHead>
+                  <TableHead className="px-6 py-4 font-semibold tracking-wider">Type</TableHead>
+                  <TableHead className="px-6 py-4 font-semibold tracking-wider">Email address</TableHead>
+                  <TableHead className="px-6 py-4 font-semibold tracking-wider">Phone</TableHead>
                   {(canUpdateCustomer || canDeleteCustomer) && (
-                    <th className="px-6 py-4 font-semibold text-foreground uppercase tracking-wider text-right"></th>
+                    <TableHead className="px-6 py-4"></TableHead>
                   )}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {customers.length === 0 ? (
-                  <tr>
-                    <td colSpan={canUpdateCustomer || canDeleteCustomer ? 6 : 5} className="px-6 py-12 text-center text-muted-foreground">
+                  <TableRow>
+                    <TableCell colSpan={canUpdateCustomer || canDeleteCustomer ? 6 : 5} className="px-6 py-12 text-center text-muted-foreground">
                       No customers found in this establishment.
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 ) : (
                   customers.map((cust) => (
-                    <tr key={cust.id} className="hover:bg-muted/30 transition-colors group">
-                      <td className="px-6 py-4">
+                    <TableRow key={cust.id} className="group">
+                      <TableCell className="px-6 py-4">
                         <span className="font-semibold text-foreground">{cust.name}</span>
-                      </td>
-                      <td className="px-6 py-4 text-muted-foreground">
+                      </TableCell>
+                      <TableCell className="px-6 py-4 text-muted-foreground">
                         {cust.documentNumber}
-                      </td>
-                      <td className="px-6 py-4 text-muted-foreground">
+                      </TableCell>
+                      <TableCell className="px-6 py-4 text-muted-foreground">
                         {cust.documentType}
-                      </td>
-                      <td className="px-6 py-4 text-muted-foreground">{cust.email}</td>
-                      <td className="px-6 py-4 text-muted-foreground">
+                      </TableCell>
+                      <TableCell className="px-6 py-4 text-muted-foreground">{cust.email}</TableCell>
+                      <TableCell className="px-6 py-4 text-muted-foreground">
                         {cust.phoneCountryCode && cust.phoneNumber
                           ? `${cust.phoneCountryCode}${cust.phoneNumber}`
                           : cust.phone ?? "—"}
-                      </td>
+                      </TableCell>
                       {(canUpdateCustomer || canDeleteCustomer) && (
-                        <td className="px-6 py-4 text-right">
-                          <DropdownMenu>
-                            <DropdownMenuTrigger
-                              render={
-                                <Button variant="ghost" size="icon" className="h-8 w-8">
-                                  <MoreVertical className="h-4 w-4" />
-                                </Button>
-                              }
-                            />
-                            <DropdownMenuContent>
-                              {canUpdateCustomer && (
-                                <DropdownMenuItem onClick={() => setEditingCustomer(cust)} className="gap-2 cursor-pointer">
-                                  <Edit className="h-3 w-3" />
-                                  Edit Profile
-                                </DropdownMenuItem>
-                              )}
-                              {canDeleteCustomer && (
-                                <DropdownMenuItem
-                                  onClick={() => setCustomerToDelete(cust)}
-                                  className="text-destructive gap-2 cursor-pointer hover:bg-destructive/10"
-                                  disabled={isDeleting === cust.id}
-                                >
-                                  <Trash2 className="h-3 w-3" />
-                                  Delete
-                                </DropdownMenuItem>
-                              )}
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </td>
+                        <TableCell className="px-6 py-4 text-right">
+                          <EntityActionsMenu
+                            label={`More actions for ${cust.name}`}
+                            actions={[
+                              {
+                                label: "Edit Profile",
+                                icon: Edit,
+                                hidden: !canUpdateCustomer,
+                                onSelect: () =>
+                                  router.push(`/crm/${cust.id}/edit?establishmentId=${encodeURIComponent(cust.establishmentId)}`),
+                              },
+                              {
+                                label: "Delete",
+                                icon: Trash2,
+                                variant: "destructive",
+                                hidden: !canDeleteCustomer,
+                                disabled: isDeleting === cust.id,
+                                onSelect: () => setCustomerToDelete(cust),
+                              },
+                            ]}
+                          />
+                        </TableCell>
                       )}
-                    </tr>
+                    </TableRow>
                   ))
                 )}
-              </tbody>
-            </table>
-          </div>
+              </TableBody>
+          </Table>
 
           {/* Pagination Footer */}
           {totalPages > 1 && (
@@ -276,56 +257,17 @@ export function CrmClientWrapper({
         </div>
       </main>
 
-      {/* Editing Modal */}
-      {editingCustomer && (
-        <EditCustomerModal
-          customer={editingCustomer}
-          open={editingCustomer !== null}
-          onOpenChange={(open) => {
-            if (!open) setEditingCustomer(null);
-          }}
-          onSuccess={() => {
-            setEditingCustomer(null);
-            handleRefresh(() => {
-              router.refresh();
-            });
-          }}
-        />
-      )}
-
-      {/* Deletion Confirmation */}
-      <AlertDialog
+      <DeleteConfirmDialog
         open={customerToDelete !== null}
         onOpenChange={(open) => {
           if (!open) setCustomerToDelete(null);
         }}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the customer{" "}
-              <span className="font-semibold text-foreground">{customerToDelete?.name}</span> and remove their data from
-              our servers.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <Button
-              variant="destructive"
-              onClick={handleDelete}
-              disabled={isDeleting !== null}
-            >
-              {isDeleting ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <Trash2 className="mr-2 h-4 w-4" />
-              )}
-              Delete Customer
-            </Button>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+        entityLabel="customer"
+        entityName={customerToDelete?.name ?? ""}
+        pending={isDeleting !== null}
+        error={errorMsg}
+        onConfirm={handleDelete}
+      />
     </>
   );
 }

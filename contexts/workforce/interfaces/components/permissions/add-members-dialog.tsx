@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Check, Search, User } from "lucide-react";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import { Input } from "@/contexts/shared/interfaces/components/ui/input";
-import { ErrorAlert } from "@/contexts/shared/interfaces/components/ui/error";
+import { ErrorAlert } from "@/contexts/shared/interfaces/components/error";
 import { Spinner } from "@/contexts/shared/interfaces/components/ui/spinner";
 import {
   AlertDialog,
@@ -159,7 +159,7 @@ export function AddMembersDialog({ roleId, availableMembers, onClose }: AddMembe
           </div>
         </div>
 
-        <AlertDialogFooter className="flex items-center justify-end gap-3 mt-2 shrink-0">
+        <AlertDialogFooter className="flex items-center justify-end gap-3 shrink-0">
           <AlertDialogCancel
             onClick={onClose}
             disabled={isPending}

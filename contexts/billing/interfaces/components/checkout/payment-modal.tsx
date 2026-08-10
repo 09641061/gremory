@@ -43,7 +43,7 @@ export function PaymentModal({
   const hasValidKeys = Boolean(clientSecret && stripePublicKey);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/50 p-4 animate-in fade-in duration-200">
       <Card
         role="dialog"
         aria-modal="true"

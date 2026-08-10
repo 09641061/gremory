@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { Save } from "lucide-react";
-import { ErrorAlert } from "@/contexts/shared/interfaces/components/ui/error";
+import { ErrorAlert } from "@/contexts/shared/interfaces/components/error";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import { Spinner } from "@/contexts/shared/interfaces/components/ui/spinner";
 import { Card, CardContent } from "@/contexts/shared/interfaces/components/ui/card";

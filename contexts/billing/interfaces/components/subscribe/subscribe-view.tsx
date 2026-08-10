@@ -8,7 +8,7 @@ import { ArrowLeft } from "lucide-react";
 import type { BillingCycleType } from "../../../domain/model/value-objects/billing-cycle";
 import { getCurrencySymbol, type CurrencyCode } from "../../../domain/model/value-objects/currency";
 import type { PlanReadModel } from "../../../application/internal/queryservices/list-plans-query.service";
-import { ErrorAlert } from "@/contexts/shared/interfaces/components/ui/error";
+import { ErrorAlert } from "@/contexts/shared/interfaces/components/error";
 import { SubscribeHero } from "./subscribe-hero";
 import { PlanCard } from "./plan-card";
 import { PaymentModal } from "../checkout/payment-modal";

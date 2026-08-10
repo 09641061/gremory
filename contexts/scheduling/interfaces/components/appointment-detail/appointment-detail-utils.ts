@@ -53,13 +53,13 @@ export function getAppointmentStatusClasses(status: string) {
     case "CANCELLED":
       return "border-destructive/20 bg-destructive/10 text-destructive";
     case "CONFIRMED":
-      return "border-emerald-500/20 bg-emerald-500/10 text-emerald-600";
+      return "border-primary/20 bg-primary/10 text-primary";
     case "IN_PROGRESS":
-      return "border-amber-500/20 bg-amber-500/10 text-amber-600";
+      return "border-primary/20 bg-primary/10 text-primary";
     case "COMPLETED":
-      return "border-blue-500/20 bg-blue-500/10 text-blue-600";
+      return "border-primary/20 bg-primary/10 text-primary";
     case "NO_SHOW":
-      return "border-gray-400/20 bg-gray-400/10 text-gray-500";
+      return "border-muted bg-muted/40 text-muted-foreground";
     default:
       return "border-primary/20 bg-primary/10 text-primary";
   }

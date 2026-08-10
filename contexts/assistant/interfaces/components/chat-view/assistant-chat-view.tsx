@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 
 import { getAssistantConversationAction } from "@/contexts/assistant/interfaces/actions/get-conversation.action";
 import { submitAssistantMessageAction } from "@/contexts/assistant/interfaces/actions/assistant-chat.actions";
-import { ErrorAlert } from "@/contexts/shared/interfaces/components/ui/error";
+import { ErrorAlert } from "@/contexts/shared/interfaces/components/error";
 import type { AssistantConversationViewModel } from "@/contexts/assistant/interfaces/view-models/assistant-chat.view-model";
 
 import { AssistantChatComposer } from "./assistant-chat-composer";
