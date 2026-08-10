@@ -49,10 +49,7 @@ export class AppShellQueryService {
       visibleSidebarRoutes,
       headerNavigation: {
         organizationListHref: workspace.canReadOrganizations ? "/organizations" : null,
-        establishmentListHref: workspace.canReadEstablishments ? "/establishments" : null,
-        newEstablishmentHref: workspace.canCreateEstablishment && workspace.activeOrganizationId
-          ? `/establishments/new?organizationId=${encodeURIComponent(workspace.activeOrganizationId)}`
-          : null,
+        newOrganizationHref: workspace.canCreateOrganization ? "/organizations/new" : null,
       },
     };
   }

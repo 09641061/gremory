@@ -8,10 +8,12 @@ export type SidebarRouteId =
   | "/team"
   | "/analytics";
 
+// Account-scoped navigation only. Establishment entry points depend on the
+// organization the user has selected in the header, so they are resolved from
+// the per-organization flags of the workspace view model instead.
 export type HeaderNavigationViewModel = Readonly<{
   organizationListHref: string | null;
-  establishmentListHref: string | null;
-  newEstablishmentHref: string | null;
+  newOrganizationHref: string | null;
 }>;
 
 export type AppShellViewModel = Readonly<{

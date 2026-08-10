@@ -15,6 +15,7 @@ export type WorkspaceHeaderOrganization = Readonly<{
   mode?: "OWNER" | "MEMBER";
   canRead?: boolean;
   canUpdate?: boolean;
+  canReadEstablishments?: boolean;
   canCreateEstablishment?: boolean;
   establishments: ReadonlyArray<WorkspaceHeaderEstablishment>;
 }>;
@@ -28,6 +29,7 @@ export type WorkspaceHeaderViewModel = Readonly<{
   canReadOrganizations: boolean;
   canReadEstablishments: boolean;
   canCreateEstablishment: boolean;
+  canCreateOrganization: boolean;
 }>;
 
 export type OrganizationPageState =
@@ -38,7 +40,12 @@ export type OrganizationPageState =
       status: "ready";
       organizations: ReadonlyArray<WorkspaceHeaderOrganization>;
       activeOrganizationId?: string;
+      canCreateOrganization: boolean;
     }>
   | Readonly<{
       status: "denied";
     }>;
+
+export type OrganizationCreationState = Readonly<{
+  status: "allowed" | "denied";
+}>;

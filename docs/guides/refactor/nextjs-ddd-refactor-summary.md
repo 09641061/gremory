@@ -194,14 +194,20 @@ Se agrego:
 Incluye:
 
 - `organizationListHref`
-- `establishmentListHref`
-- `newEstablishmentHref`
+- `newOrganizationHref`
 
 ### Por que existe
 
 So the application delivers al cliente solo lo que puede hacer.
 
 This prevents the client tenga que volver a evaluar permisos con ifs propios.
+
+### Alcance
+
+Solo navegacion de alcance de cuenta. Los accesos de establishment dependen de la
+organizacion seleccionada en el header, so se resuelven con los flags por
+organizacion del workspace view model (`canReadEstablishments`,
+`canCreateEstablishment`) y no con hrefs del shell.
 
 ## 9. Impacto por tipo de usuario
 

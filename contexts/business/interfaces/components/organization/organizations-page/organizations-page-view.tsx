@@ -9,9 +9,11 @@ import { OrganizationDetailCard } from "./organization-detail-card";
 export function OrganizationsPageView({
   organizations,
   activeOrganizationId,
+  canCreate = false,
 }: {
   organizations: ReadonlyArray<WorkspaceHeaderOrganization>;
   activeOrganizationId?: string;
+  canCreate?: boolean;
 }) {
   const [filter, setFilter] = useState("");
   const [selectedOrgId, setSelectedOrgId] = useState<string | null>(
@@ -42,7 +44,7 @@ export function OrganizationsPageView({
           </div>
         </div>
 
-        <OrganizationsSearchBar value={filter} onChange={setFilter} />
+        <OrganizationsSearchBar value={filter} onChange={setFilter} canCreate={canCreate} />
 
         <OrganizationListCard
           organizations={organizations}

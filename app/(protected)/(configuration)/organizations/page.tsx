@@ -24,6 +24,7 @@ export default async function OrganizationsRoutePage({ searchParams }: Organizat
       key={pageState.activeOrganizationId ?? "default"}
       organizations={pageState.organizations}
       activeOrganizationId={pageState.activeOrganizationId}
+      canCreate={pageState.canCreateOrganization}
     />
   );
 }

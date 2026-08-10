@@ -37,7 +37,12 @@ export function ProtectedHeaderClient({
     : selectedOrganization?.id === workspace.activeOrganizationId
       ? workspace.activeEstablishmentId
       : selectedOrganization?.defaultEstablishmentId;
+  // Establishment entry points follow the organization selected in the header,
+  // not the one the server resolved, so switching organizations never leaves a
+  // stale action behind.
+  const canReadEstablishments = selectedOrganization?.canReadEstablishments === true;
   const canCreateEstablishment = selectedOrganization?.canCreateEstablishment === true;
+  const { organizationListHref, newOrganizationHref } = navigation;
 
   function navigateToWorkspace(path: string) {
     router.push(path);
@@ -58,18 +63,17 @@ export function ProtectedHeaderClient({
           organization={selectedOrganization}
           organizations={workspace.organizations}
           onSelect={handleSelectOrganization}
-          onSelectAll={() => {
-            if (navigation.organizationListHref) {
-              navigateToWorkspace(buildWorkspacePath(
-                navigation.organizationListHref,
+          onSelectAll={organizationListHref
+            ? () => navigateToWorkspace(buildWorkspacePath(
+                organizationListHref,
                 searchParams,
                 selectedOrganizationId,
                 selectedEstablishmentId,
-              ));
-            } else {
-              navigateToWorkspace(`${pathname}?denied=org`);
-            }
-          }}
+              ))
+            : undefined}
+          onNew={newOrganizationHref
+            ? () => navigateToWorkspace(newOrganizationHref)
+            : undefined}
         />
       }
       establishmentSlot={
@@ -79,18 +83,14 @@ export function ProtectedHeaderClient({
           onSelect={(establishmentId) => {
             navigateToWorkspace(buildWorkspacePath(pathname, searchParams, selectedOrganizationId, establishmentId));
           }}
-          onSelectAll={() => {
-            if (navigation.establishmentListHref) {
-              navigateToWorkspace(buildWorkspacePath(
-                navigation.establishmentListHref,
+          onSelectAll={canReadEstablishments
+            ? () => navigateToWorkspace(buildWorkspacePath(
+                "/establishments",
                 searchParams,
                 selectedOrganizationId,
                 selectedEstablishmentId,
-              ));
-            } else {
-              navigateToWorkspace(`${pathname}?denied=est`);
-            }
-          }}
+              ))
+            : undefined}
           onNew={canCreateEstablishment
             ? () => navigateToWorkspace(buildWorkspacePath(
                 "/establishments/new",

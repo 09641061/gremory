@@ -3,6 +3,7 @@ import "server-only";
 import { BusinessWorkspaceApiGateway } from "@/contexts/business/infrastructure/gateways/business-workspace-api.gateway";
 import type { BusinessWorkspaceSelection } from "@/contexts/business/infrastructure/gateways/business-workspace-api.gateway";
 import type {
+  OrganizationCreationState,
   OrganizationPageState,
   WorkspaceHeaderEstablishment,
   WorkspaceHeaderOrganization,
@@ -34,16 +35,12 @@ export class BusinessWorkspaceQueryService {
       activeOrganizationId: resource.activeOrganizationId ?? undefined,
       activeEstablishmentId,
       canReadOrganizations: organizations.some((organization) => organization.canRead),
-      canReadEstablishments:
-        activeOrganization?.mode === "OWNER" ||
-        activeOrganization?.canCreateEstablishment === true ||
-        establishments.some((establishment) => establishment.canRead),
-    // The owner is authorized to attempt creation even when Billing rejects it
-    // because the plan limit was reached. The command/action remains the
-    // authoritative business validation boundary and will expose that error.
-    canCreateEstablishment:
-      activeOrganization?.mode === "OWNER" ||
-      activeOrganization?.canCreateEstablishment === true,
+      canReadEstablishments: activeOrganization?.canReadEstablishments === true,
+      // The owner is authorized to attempt creation even when Billing rejects it
+      // because the plan limit was reached. The command/action remains the
+      // authoritative business validation boundary and will expose that error.
+      canCreateEstablishment: activeOrganization?.canCreateEstablishment === true,
+      canCreateOrganization: canCreateOrganization(organizations),
     };
   }
 
@@ -71,6 +68,7 @@ export class BusinessWorkspaceQueryService {
         status: "ready",
         organizations: readableOrganizations,
         activeOrganizationId: resource.activeOrganizationId ?? undefined,
+        canCreateOrganization: canCreateOrganization(organizations),
       };
     } catch (error) {
       // Organization creation is authorized by the backend command. A user
@@ -79,6 +77,23 @@ export class BusinessWorkspaceQueryService {
       return isForbiddenError(error)
         ? { status: "create" }
         : { status: "denied" };
+    }
+  }
+
+  async getOrganizationCreationState(
+    query: BusinessWorkspaceQuery = {},
+  ): Promise<OrganizationCreationState> {
+    try {
+      const resource = await this.workspace.getWorkspace(query);
+      return {
+        status: canCreateOrganization(resource.organizations.map(toHeaderOrganization))
+          ? "allowed"
+          : "denied",
+      };
+    } catch (error) {
+      // Same rationale as getOrganizationPageState: the backend command owns the
+      // authorization decision, so a forbidden workspace read still reaches the form.
+      return { status: isForbiddenError(error) ? "allowed" : "denied" };
     }
   }
 }
@@ -94,6 +109,12 @@ function toHeaderOrganization(
     .filter((establishment) => establishment.permissions.canRead)
     .map(toHeaderEstablishment);
 
+  // The owner is authorized to attempt creation even when Billing rejects it
+  // because the plan limit was reached. The command/action remains the
+  // authoritative business validation boundary and will expose that error.
+  const canCreateEstablishment =
+    organization.mode === "OWNER" || organization.permissions.canCreateEstablishment;
+
   return {
     id: organization.id,
     name: organization.name,
@@ -101,11 +122,19 @@ function toHeaderOrganization(
     mode: organization.mode,
     canRead: organization.permissions.canRead,
     canUpdate: organization.permissions.canUpdate,
-    canCreateEstablishment:
-      organization.mode === "OWNER" || organization.permissions.canCreateEstablishment,
+    canReadEstablishments: canCreateEstablishment || establishments.length > 0,
+    canCreateEstablishment,
     defaultEstablishmentId: establishments[0]?.id,
     establishments,
   };
+}
+
+// A user owns at most one organization, so the creation entry point only exists
+// while no owned organization is present in the workspace.
+function canCreateOrganization(
+  organizations: ReadonlyArray<WorkspaceHeaderOrganization>,
+): boolean {
+  return !organizations.some((organization) => organization.mode === "OWNER");
 }
 
 function toHeaderEstablishment(

@@ -53,11 +53,11 @@ async function ProtectedHeader() {
         canReadOrganizations: false,
         canReadEstablishments: false,
         canCreateEstablishment: false,
+        canCreateOrganization: false,
       }}
       navigation={shell?.headerNavigation ?? {
         organizationListHref: null,
-        establishmentListHref: null,
-        newEstablishmentHref: null,
+        newOrganizationHref: null,
       }}
       homeHref={shell?.homeHref ?? "/organizations"}
     />
