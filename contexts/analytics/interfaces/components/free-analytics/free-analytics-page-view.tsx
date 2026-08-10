@@ -24,6 +24,7 @@ export function FreeAnalyticsPageView({ analytics, errorMessage }: FreeAnalytics
     analytics.completedAppointmentsLastSevenDays +
     analytics.cancelledAppointmentsLastSevenDays +
     analytics.noShowAppointmentsLastSevenDays;
+  const statusRange = formatTrendRange(analytics.appointmentsTrend[0]?.date, analytics.appointmentsTrend.at(-1)?.date);
 
   return (
     <main className="mx-auto flex w-full max-w-[1600px] flex-col gap-6 px-4 py-8 md:px-8">
@@ -42,11 +43,20 @@ export function FreeAnalyticsPageView({ analytics, errorMessage }: FreeAnalytics
           <CardHeader className="border-b border-border/60 pb-4">
             <CardTitle>Appointment status mix</CardTitle>
             <CardDescription>Completed, cancelled, and no-show appointments in the window.</CardDescription>
+            
           </CardHeader>
+
           <CardContent className="space-y-4 p-5">
+            <p className="pt-1 text-xs text-muted-foreground">{statusRange}</p>
             <StatusBar label="Completed" value={analytics.completedAppointmentsLastSevenDays} total={statusTotal} tone="bg-emerald-500" />
             <StatusBar label="Cancelled" value={analytics.cancelledAppointmentsLastSevenDays} total={statusTotal} tone="bg-rose-500" />
-            <StatusBar label="No show" value={analytics.noShowAppointmentsLastSevenDays} total={statusTotal} tone="bg-amber-500" />
+            <StatusBar
+              label="No show"
+              value={analytics.noShowAppointmentsLastSevenDays}
+              total={statusTotal}
+              tone="bg-amber-500"
+              inactiveTone="bg-muted"
+            />
             <p className="text-xs text-muted-foreground">
               {statusTotal > 0
                 ? `${statusTotal} final status events captured in the last 7 days.`
@@ -250,13 +260,16 @@ function StatusBar({
   value,
   total,
   tone,
+  inactiveTone = "bg-muted/40",
 }: {
   label: string;
   value: number;
   total: number;
   tone: string;
+  inactiveTone?: string;
 }) {
   const width = total > 0 ? Math.max(5, (value / total) * 100) : 0;
+  const barTone = value > 0 ? tone : inactiveTone;
 
   return (
     <div className="space-y-2">
@@ -265,7 +278,7 @@ function StatusBar({
         <span className="font-semibold text-foreground">{formatNumber(value)}</span>
       </div>
       <div className="h-2 overflow-hidden rounded-full bg-muted">
-        <div className={`h-full rounded-full ${tone}`} style={{ width: `${width}%` }} />
+        <div className={`h-full rounded-full ${barTone}`} style={{ width: `${width}%` }} />
       </div>
     </div>
   );
