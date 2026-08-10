@@ -92,8 +92,9 @@ export function DateField({ id, name, placeholder, value, onChange }: DateFieldP
   return (
     <div ref={selectorRef} className="relative">
       {name && <input type="hidden" name={name} value={value} />}
-      <button
+      <Button
         type="button"
+        variant="outline"
         id={id}
         ref={buttonRef}
         aria-haspopup="dialog"
@@ -103,8 +104,7 @@ export function DateField({ id, name, placeholder, value, onChange }: DateFieldP
           setIsOpen((open) => !open);
         }}
         className={cn(
-          "flex h-9 w-full items-center justify-between gap-3 rounded-lg border border-border bg-transparent px-3 text-left text-sm text-foreground transition-colors outline-none",
-          "focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 dark:bg-muted/30",
+          "h-9 w-full justify-between gap-3 bg-transparent px-3 text-left font-normal text-foreground dark:bg-muted/30",
           isOpen && "border-ring bg-card shadow-sm"
         )}
       >
@@ -118,7 +118,7 @@ export function DateField({ id, name, placeholder, value, onChange }: DateFieldP
             : placeholder}
         </span>
         <Calendar className="size-4 shrink-0 text-muted-foreground" />
-      </button>
+      </Button>
 
       {isOpen && (
         <div
@@ -127,7 +127,7 @@ export function DateField({ id, name, placeholder, value, onChange }: DateFieldP
             placement === "top" ? "bottom-full mb-2" : "top-full mt-2"
           )}
         >
-          <div className="overflow-hidden rounded-2xl border border-border/70 bg-card/95 shadow-[0_20px_45px_rgba(15,23,42,0.18)] backdrop-blur">
+          <div className="overflow-hidden rounded-2xl border border-border/70 bg-card/95 shadow-xl backdrop-blur">
             <div className="flex items-center justify-between border-b border-border/60 bg-muted/20 px-3 py-2">
               <Button
                 type="button"
@@ -162,16 +162,17 @@ export function DateField({ id, name, placeholder, value, onChange }: DateFieldP
                   const isToday = isSameDay(day, new Date());
 
                   return (
-                    <button
+                    <Button
                       key={formatDateInput(day)}
                       type="button"
+                      variant="ghost"
+                      size="sm"
                       onClick={() => {
                         onChange(formatDateInput(day));
                         setIsOpen(false);
                       }}
                       className={cn(
-                        "h-9 rounded-xl text-sm transition-colors",
-                        "hover:bg-muted/70 focus-visible:bg-muted/70 focus-visible:outline-none",
+                        "h-9 rounded-xl text-sm font-normal",
                         !isCurrentMonth && "text-muted-foreground/35 hover:text-muted-foreground/60",
                         isCurrentMonth && "text-foreground",
                         isToday && !isSelected && "bg-primary/5 text-primary",
@@ -179,7 +180,7 @@ export function DateField({ id, name, placeholder, value, onChange }: DateFieldP
                       )}
                     >
                       {day.getDate()}
-                    </button>
+                    </Button>
                   );
                 })}
               </div>

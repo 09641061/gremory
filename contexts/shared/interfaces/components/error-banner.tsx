@@ -2,6 +2,7 @@
 
 import { useSearchParams } from "next/navigation";
 import { Alert, AlertTitle, AlertDescription } from "@/contexts/shared/interfaces/components/ui/alert";
+import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import { ShieldAlert, X } from "lucide-react";
 import { useEffect, useState, Suspense } from "react";
 
@@ -35,13 +36,16 @@ function ErrorBannerContent() {
         <ShieldAlert className="size-4" />
         <AlertTitle>Access Denied</AlertTitle>
         <AlertDescription>{errorMsg}</AlertDescription>
-        <button
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon-xs"
           onClick={() => setErrorMsg(null)}
           className="absolute top-2.5 right-2.5 text-muted-foreground hover:text-foreground"
           aria-label="Dismiss alert"
         >
           <X className="size-4" />
-        </button>
+        </Button>
       </Alert>
     </div>
   );

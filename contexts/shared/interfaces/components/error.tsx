@@ -4,6 +4,7 @@ import { useEffect, useState, useSyncExternalStore } from "react";
 import { CircleAlertIcon, X } from "lucide-react";
 import { createPortal } from "react-dom";
 import { cn } from "@/lib/utils";
+import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import {
   Alert,
   AlertDescription,
@@ -137,14 +138,16 @@ function ErrorToast({
         </div>
       </div>
 
-      <button
+      <Button
         type="button"
+        variant="ghost"
+        size="icon-xs"
         onClick={onDismiss}
         className="absolute top-3 right-3 rounded-lg p-1.5 text-muted-foreground/60 transition-colors hover:bg-muted/50 hover:text-foreground"
         aria-label="Dismiss alert"
       >
         <X className="size-3.5" />
-      </button>
+      </Button>
 
       <div className="absolute right-0 bottom-0 left-0 h-0.5 bg-muted">
         <div

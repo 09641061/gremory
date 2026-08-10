@@ -40,6 +40,8 @@
   --app-sidebar-width-icon: 3rem;
   --app-sidebar-menu-gap: 0.25rem;
   --app-sidebar-control-height: 2rem;
+  --app-control-height: 2.25rem;
+  --app-control-height-compact: 2rem;
   --app-sidebar-control-gap: 0.5rem;
   --app-sidebar-control-padding-x: 0.625rem;
   --app-sidebar-item-radius: 0.375rem;
@@ -139,6 +141,19 @@
 }
 
 @layer components {
+  /* Application controls share one baseline height. Icon buttons keep their square sizes. */
+  [data-slot="button"][data-size="default"],
+  [data-slot="button"][data-size="sm"],
+  [data-slot="button"][data-size="lg"] {
+    height: var(--app-control-height) !important;
+  }
+
+  [data-slot="input"],
+  [data-slot="select-trigger"],
+  [data-slot="native-select"] {
+    height: var(--app-control-height) !important;
+  }
+
   .scrollbar-hide {
     -ms-overflow-style: none;
     scrollbar-width: none;

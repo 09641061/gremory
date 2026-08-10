@@ -140,16 +140,16 @@ export function TimePickerField({ id, value, onChange }: TimePickerFieldProps) {
 
   return (
     <div ref={selectorRef} className="relative w-full">
-      <button
+      <Button
         type="button"
+        variant="outline"
         id={id}
         ref={buttonRef}
         aria-haspopup="dialog"
         aria-expanded={isOpen}
         onClick={() => setIsOpen((open) => !open)}
         className={cn(
-          "flex h-9 w-full items-center justify-between gap-3 rounded-lg border border-border bg-transparent px-3 text-left text-sm text-foreground transition-colors outline-none",
-          "focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 dark:bg-muted/30",
+          "h-9 w-full justify-between gap-3 bg-transparent px-3 text-left font-normal text-foreground dark:bg-muted/30",
           isOpen && "border-ring bg-card shadow-sm"
         )}
       >
@@ -157,7 +157,7 @@ export function TimePickerField({ id, value, onChange }: TimePickerFieldProps) {
           {getDisplayTime()}
         </span>
         <Clock className="size-4 shrink-0 text-muted-foreground" />
-      </button>
+      </Button>
 
       {isOpen && (
         <div
@@ -166,7 +166,7 @@ export function TimePickerField({ id, value, onChange }: TimePickerFieldProps) {
             placement === "top" ? "bottom-full mb-2" : "top-full mt-2"
           )}
         >
-          <div className="flex items-center justify-center gap-1.5 p-3 rounded-2xl border border-border bg-card shadow-[0_20px_45px_rgba(15,23,42,0.18)]">
+          <div className="flex items-center justify-center gap-1.5 rounded-2xl border border-border bg-card p-3 shadow-xl">
             {/* Hours Column */}
             <div className="flex flex-col items-center">
               <Button
@@ -183,7 +183,7 @@ export function TimePickerField({ id, value, onChange }: TimePickerFieldProps) {
                 value={hourInput}
                 onChange={(e) => handleHourInputChange(e.target.value)}
                 onBlur={handleHourInputBlur}
-                className="w-12 h-10 border border-border rounded-md bg-white dark:bg-muted/20 text-center font-normal text-sm text-foreground shadow-sm focus:outline-none focus:border-primary"
+                className="h-10 w-12 rounded-md border border-border bg-background text-center text-sm font-normal text-foreground shadow-sm focus:border-primary focus:outline-none"
               />
               <Button
                 type="button"
@@ -215,7 +215,7 @@ export function TimePickerField({ id, value, onChange }: TimePickerFieldProps) {
                 value={minInput}
                 onChange={(e) => handleMinInputChange(e.target.value)}
                 onBlur={handleMinInputBlur}
-                className="w-12 h-10 border border-border rounded-md bg-white dark:bg-muted/20 text-center font-normal text-sm text-foreground shadow-sm focus:outline-none focus:border-primary"
+                className="h-10 w-12 rounded-md border border-border bg-background text-center text-sm font-normal text-foreground shadow-sm focus:border-primary focus:outline-none"
               />
               <Button
                 type="button"
@@ -241,13 +241,15 @@ export function TimePickerField({ id, value, onChange }: TimePickerFieldProps) {
               >
                 <ChevronUp className="size-4 stroke-[3px]" />
               </Button>
-              <button
+              <Button
                 type="button"
+                variant="outline"
+                size="sm"
                 onClick={handleToggleAmPm}
-                className="w-12 h-10 border border-border rounded-md bg-white dark:bg-muted/20 text-center font-normal text-sm text-foreground shadow-sm hover:bg-muted/50 focus:outline-none"
+                className="h-10 w-12 rounded-md border-border bg-background text-sm font-normal shadow-sm hover:bg-muted/50"
               >
                 {isPM ? "PM" : "AM"}
-              </button>
+              </Button>
               <Button
                 type="button"
                 variant="ghost"

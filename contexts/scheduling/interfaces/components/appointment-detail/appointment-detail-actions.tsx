@@ -38,13 +38,13 @@ export function AppointmentDetailActions({
           </Button>
         )}
         {isConfirmed && canUpdateAppointment && (
-          <Button type="button" variant="outline" size="sm" className="gap-1 border-gray-400 text-gray-600 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-900" onClick={onMarkNoShow}>
+          <Button type="button" variant="outline" size="sm" className="gap-1" onClick={onMarkNoShow}>
             <UserX className="size-4" />
             No Show
           </Button>
         )}
         {isInProgress && canUpdateAppointment && (
-          <Button type="button" variant="default" size="sm" className="gap-1 bg-emerald-600 hover:bg-emerald-700 text-white" onClick={onComplete}>
+          <Button type="button" variant="default" size="sm" className="gap-1" onClick={onComplete}>
             <Check className="size-4" />
             Complete
           </Button>

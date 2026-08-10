@@ -35,7 +35,6 @@ import {
 import { CustomerResponse } from "@/contexts/crm/domain/model/entities/customer";
 import { PageResponse } from "@/contexts/crm/application/services/crm-query.service";
 import { deleteCustomerAction } from "@/contexts/crm/interfaces/actions/delete-customer.action";
-import { EditCustomerModal } from "@/contexts/crm/interfaces/components/customer-management/edit-customer-modal";
 
 interface CrmClientWrapperProps {
   initialCustomers: PageResponse<CustomerResponse>;
@@ -58,7 +57,6 @@ export function CrmClientWrapper({
   const searchParams = useSearchParams();
 
   const [searchTerm, setSearchTerm] = React.useState(searchParams.get("search") || "");
-  const [editingCustomer, setEditingCustomer] = React.useState<CustomerResponse | null>(null);
   const [customerToDelete, setCustomerToDelete] = React.useState<CustomerResponse | null>(null);
   const [errorMsg, setErrorMsg] = React.useState<string | null>(null);
   const [isDeleting, setIsDeleting] = React.useState<string | null>(null);
@@ -200,7 +198,10 @@ export function CrmClientWrapper({
                             />
                             <DropdownMenuContent>
                               {canUpdateCustomer && (
-                                <DropdownMenuItem onClick={() => setEditingCustomer(cust)} className="gap-2 cursor-pointer">
+                                <DropdownMenuItem
+                                  onClick={() => router.push(`/crm/${cust.id}/edit?establishmentId=${encodeURIComponent(cust.establishmentId)}`)}
+                                  className="gap-2 cursor-pointer"
+                                >
                                   <Edit className="h-3 w-3" />
                                   Edit Profile
                                 </DropdownMenuItem>
@@ -275,23 +276,6 @@ export function CrmClientWrapper({
           )}
         </div>
       </main>
-
-      {/* Editing Modal */}
-      {editingCustomer && (
-        <EditCustomerModal
-          customer={editingCustomer}
-          open={editingCustomer !== null}
-          onOpenChange={(open) => {
-            if (!open) setEditingCustomer(null);
-          }}
-          onSuccess={() => {
-            setEditingCustomer(null);
-            handleRefresh(() => {
-              router.refresh();
-            });
-          }}
-        />
-      )}
 
       {/* Deletion Confirmation */}
       <AlertDialog

@@ -5,6 +5,7 @@ import { Loader2 } from "lucide-react";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import { Input } from "@/contexts/shared/interfaces/components/ui/input";
 import { Label } from "@/contexts/shared/interfaces/components/ui/label";
+import { NativeSelect, NativeSelectOption } from "@/contexts/shared/interfaces/components/ui/native-select";
 import { Alert, AlertDescription, AlertTitle } from "@/contexts/shared/interfaces/components/ui/alert";
 import { PhoneInput } from "./phone-input";
 import { resolveDocumentAction } from "@/contexts/crm/interfaces/actions/resolve-document.action";
@@ -125,8 +126,9 @@ export function CustomerForm({
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="space-y-1.5">
             <Label htmlFor="doc_type">Document Type</Label>
-            <select
+            <NativeSelect
               id="doc_type"
+              className="w-full"
               value={docType}
               onChange={(e) => {
                 const newType = e.target.value;
@@ -135,13 +137,12 @@ export function CustomerForm({
                 setDocNumber("");
                 setError(null);
               }}
-              className="w-full h-9 rounded-lg border border-border bg-transparent px-3 text-sm transition-colors outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
             >
-              <option value="dni">DNI (National ID)</option>
-              <option value="ruc">RUC (Corporate Tax ID)</option>
-              <option value="foreign_resident_card">Foreign Resident Card</option>
-              <option value="passport">Passport</option>
-            </select>
+              <NativeSelectOption value="dni">DNI (National ID)</NativeSelectOption>
+              <NativeSelectOption value="ruc">RUC (Corporate Tax ID)</NativeSelectOption>
+              <NativeSelectOption value="foreign_resident_card">Foreign Resident Card</NativeSelectOption>
+              <NativeSelectOption value="passport">Passport</NativeSelectOption>
+            </NativeSelect>
           </div>
 
           <div className="md:col-span-2 space-y-1.5">

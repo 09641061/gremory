@@ -59,7 +59,7 @@ export function AssistantConversationRenameModal({
       <button
         type="button"
         aria-label="Close modal"
-        className="absolute inset-0 cursor-default bg-black/50"
+        className="absolute inset-0 cursor-default bg-foreground/50"
         onClick={onClose}
       />
       <div className="absolute inset-0 flex items-center justify-center p-4">

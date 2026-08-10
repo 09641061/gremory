@@ -6,6 +6,7 @@ import { createPortal } from "react-dom";
 import { PencilLine, Trash2 } from "lucide-react";
 
 import type { AssistantConversationSummaryReadModel } from "@/contexts/assistant/application/internal/transforms/assistant.read-models";
+import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 
 type AssistantConversationActionsMenuProps = {
   conversation: AssistantConversationSummaryReadModel | null;
@@ -29,27 +30,31 @@ export function AssistantConversationActionsMenu({
   return createPortal(
     <div
       ref={menuRef}
-      className="fixed z-[60] w-44 rounded-2xl border border-border/70 bg-background p-1.5 shadow-xl shadow-black/20"
+      className="fixed z-[60] w-44 rounded-2xl border border-border/70 bg-background p-1.5 shadow-xl"
       style={{ top: `${menuPosition.top}px`, left: `${menuPosition.left}px` }}
     >
-      <button
+      <Button
         type="button"
+        variant="ghost"
+        size="sm"
         disabled={isMutating}
         onClick={() => onRename(conversation)}
-        className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm text-foreground hover:bg-muted disabled:opacity-50"
+        className="h-9 w-full justify-start gap-2 rounded-xl px-3 text-left text-sm font-normal"
       >
         <PencilLine className="size-4 text-muted-foreground" />
         <span>Edit name</span>
-      </button>
-      <button
+      </Button>
+      <Button
         type="button"
+        variant="ghost"
+        size="sm"
         disabled={isMutating}
         onClick={() => onDelete(conversation)}
-        className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm text-foreground hover:bg-muted disabled:opacity-50"
+        className="h-9 w-full justify-start gap-2 rounded-xl px-3 text-left text-sm font-normal"
       >
         <Trash2 className="size-4 text-muted-foreground" />
         <span>Delete</span>
-      </button>
+      </Button>
     </div>,
     document.body,
   );

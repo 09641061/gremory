@@ -195,7 +195,7 @@ export function CategorySidebar({
 
       {/* Mobile Drawer Overlay */}
       {isMobileOpen && (
-        <div className="fixed inset-0 z-50 flex md:hidden bg-black/50">
+        <div className="fixed inset-0 z-50 flex bg-foreground/50 md:hidden">
           <div className="h-full w-(--app-category-sidebar-mobile-width) bg-background shadow-xl animate-in slide-in-from-left">
             {sidebarContent}
           </div>

@@ -94,10 +94,10 @@ export function AppointmentDetailModal({
 
           <div className="space-y-6 py-4">
             {appointment.status === "CONFIRMED" && new Date(appointment.startsAt) < new Date() && (
-              <Alert variant="destructive" className="border-amber-500/50 bg-amber-500/5 text-amber-900 dark:text-amber-200">
-                <AlertTriangle className="size-4 text-amber-600 dark:text-amber-400" />
-                <AlertTitle className="text-amber-800 dark:text-amber-300 font-semibold">Appointment overdue</AlertTitle>
-                <AlertDescription className="text-amber-700/90 dark:text-amber-300/90">
+              <Alert className="border-primary/30 bg-primary/5 text-primary">
+                <AlertTriangle className="size-4 text-primary" />
+                <AlertTitle className="font-semibold text-primary">Appointment overdue</AlertTitle>
+                <AlertDescription className="text-primary/90">
                   This appointment was scheduled to start at {formattedTime.split(" - ")[0]}. The client has not arrived yet.
                 </AlertDescription>
               </Alert>

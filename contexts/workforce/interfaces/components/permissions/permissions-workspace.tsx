@@ -117,28 +117,24 @@ export function PermissionsWorkspace({ role, permissions, members, onCancel, can
         />
 
         <div className="relative grid grid-cols-2 gap-1 rounded-lg bg-muted p-1 text-sm font-medium text-muted-foreground shrink-0">
-          <button
+          <Button
             type="button"
+            variant={activeTab === "permissions" ? "secondary" : "ghost"}
+            size="sm"
             onClick={() => setActiveTab("permissions")}
-            className={`flex items-center justify-center rounded-md px-3 py-1.5 transition-all ${
-              activeTab === "permissions"
-                ? "bg-background text-foreground shadow-sm"
-                : "hover:text-foreground"
-            }`}
+            className="h-8 w-full"
           >
             Permissions
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
+            variant={activeTab === "members" ? "secondary" : "ghost"}
+            size="sm"
             onClick={() => setActiveTab("members")}
-            className={`flex items-center justify-center rounded-md px-3 py-1.5 transition-all ${
-              activeTab === "members"
-                ? "bg-background text-foreground shadow-sm"
-                : "hover:text-foreground"
-            }`}
+            className="h-8 w-full"
           >
             Manage members
-          </button>
+          </Button>
         </div>
 
         {activeTab === "permissions" ? (

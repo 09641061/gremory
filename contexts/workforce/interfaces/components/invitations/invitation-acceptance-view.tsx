@@ -117,7 +117,7 @@ export function InvitationAcceptanceView({
 function InvitationAcceptedView({ redirecting = false }: { redirecting?: boolean }) {
   return (
     <InvitationShell>
-      <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-600">
+      <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-primary/15 text-primary">
         <Check className="size-6" />
       </div>
       <h1 className="mt-5 text-2xl font-semibold tracking-tight">Invitation accepted</h1>

@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import { Check, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import { useSelectorMenu } from "@/contexts/business/interfaces/components/use-selector-menu";
 import { useAdaptivePopup } from "./use-adaptive-popup";
 import type { DropdownOption } from "./types";
@@ -36,16 +37,16 @@ export function DropdownField({
   return (
     <div ref={selectorRef} className="relative">
       <input type="hidden" name={name} value={value} />
-      <button
+      <Button
         type="button"
+        variant="outline"
         id={id}
         ref={buttonRef}
         aria-haspopup="listbox"
         aria-expanded={isOpen}
         onClick={() => setIsOpen((open) => !open)}
         className={cn(
-          "flex h-9 w-full items-center justify-between gap-3 rounded-lg border border-border bg-transparent px-3 text-left text-sm text-foreground transition-colors outline-none",
-          "focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 dark:bg-muted/30",
+          "h-9 w-full justify-between gap-3 bg-transparent px-3 text-left font-normal text-foreground dark:bg-muted/30",
           isOpen && "border-ring bg-card shadow-sm"
         )}
       >
@@ -53,7 +54,7 @@ export function DropdownField({
           {selectedOption?.label ?? placeholder}
         </span>
         <ChevronDown className="size-4 shrink-0 text-muted-foreground" />
-      </button>
+      </Button>
 
       {isOpen && (
         <div
@@ -62,21 +63,22 @@ export function DropdownField({
             placement === "top" ? "bottom-full mb-2" : "top-full mt-2"
           )}
         >
-          <div className="overflow-hidden rounded-2xl border border-border/70 bg-card/95 shadow-[0_20px_45px_rgba(15,23,42,0.18)] backdrop-blur">
+          <div className="overflow-hidden rounded-2xl border border-border/70 bg-card/95 shadow-xl backdrop-blur">
             <div className="overflow-y-auto p-2" style={{ maxHeight }}>
               {options.map((option) => {
                 const isSelected = option.value === value;
                 return (
-                  <button
+                  <Button
                     key={option.value}
                     type="button"
+                    variant="ghost"
+                    size="sm"
                     onClick={() => {
                       onChange(option.value);
                       setIsOpen(false);
                     }}
                     className={cn(
-                      "flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2 text-left transition-colors",
-                      "hover:bg-muted/70 focus-visible:bg-muted/70 focus-visible:outline-none",
+                      "h-auto min-h-9 w-full justify-between gap-3 rounded-xl px-3 py-2 text-left font-normal",
                       isSelected && "bg-primary/10 ring-1 ring-primary/15"
                     )}
                     role="option"
@@ -89,7 +91,7 @@ export function DropdownField({
                       )}
                     </div>
                     {isSelected && <Check className="size-4 shrink-0 text-primary" />}
-                  </button>
+                  </Button>
                 );
               })}
             </div>

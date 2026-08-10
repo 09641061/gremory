@@ -80,7 +80,7 @@ export function WeeklyCalendarHeader({
           </Button>
 
           {isPickerOpen && (
-            <div className="absolute left-0 top-full mt-2 z-50 w-64 rounded-2xl border border-border bg-card p-3 shadow-xl shadow-black/10">
+            <div className="absolute left-0 top-full z-50 mt-2 w-64 rounded-2xl border border-border bg-card p-3 shadow-xl">
               <div className="flex items-center justify-between mb-3 pb-2 border-b border-border">
                 <Button
                   type="button"
