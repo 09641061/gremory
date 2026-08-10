@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { ReactNode } from "react";
 import { AlertTriangle, ArrowRight } from "lucide-react";
 
 import { Alert, AlertDescription, AlertTitle } from "@/contexts/shared/interfaces/components/ui/alert";
@@ -26,21 +27,12 @@ export function FreeAnalyticsPageView({ analytics, errorMessage }: FreeAnalytics
 
   return (
     <main className="mx-auto flex w-full max-w-[1600px] flex-col gap-6 px-4 py-8 md:px-8">
-      
-
-      <section className="flex flex-wrap gap-2">
-        <MetricChip label="Customers" value={analytics.customersCount} />
-        <MetricChip label="Services" value={analytics.activeServicesCount} />
-      </section>
-
       {!analytics.hasOrganization ? (
         <Alert className="border-dashed border-border/70 bg-background/70">
           <AlertTriangle className="size-4 text-amber-600" />
           <AlertTitle>No organization connected</AlertTitle>
           <AlertDescription className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <span>
-              Some metrics may stay at zero until you create or connect an organization.
-            </span>
+            <span>Some metrics may stay at zero until you create or connect an organization.</span>
             <Link
               href="/organizations"
               className="inline-flex h-8 shrink-0 items-center justify-center gap-1.5 rounded-lg border border-border bg-background px-2.5 text-sm font-medium text-foreground transition-colors hover:bg-muted"
@@ -72,6 +64,7 @@ export function FreeAnalyticsPageView({ analytics, errorMessage }: FreeAnalytics
             <StatusBar label="Completed" value={analytics.completedAppointmentsLastSevenDays} total={statusTotal} tone="bg-emerald-500" />
             <StatusBar label="Cancelled" value={analytics.cancelledAppointmentsLastSevenDays} total={statusTotal} tone="bg-rose-500" />
             <StatusBar label="No show" value={analytics.noShowAppointmentsLastSevenDays} total={statusTotal} tone="bg-amber-500" />
+            <StatusBar label="In progress" value={analytics.inProgressAppointmentsLastSevenDays} total={statusTotal} tone="bg-sky-500" />
             <p className="text-xs text-muted-foreground">
               {statusTotal > 0
                 ? `${statusTotal} status events captured in the last 7 days.`
@@ -84,14 +77,45 @@ export function FreeAnalyticsPageView({ analytics, errorMessage }: FreeAnalytics
       <div className="grid gap-6 xl:grid-cols-2">
         <Card className="overflow-hidden rounded-xl border-border bg-card shadow-sm">
           <CardHeader className="border-b border-border/60 pb-4">
-            <CardTitle>Customers trend</CardTitle>
-            <CardDescription>Customer activity during the same 7-day window.</CardDescription>
+            <CardTitle>Top customers</CardTitle>
+            <CardDescription>Customers with the most appointments in the period.</CardDescription>
           </CardHeader>
           <CardContent className="p-5">
-            <TrendChart data={analytics.customersTrend} tone="secondary" />
+            <RankingList
+              items={analytics.topCustomers}
+              emptyLabel="No customer rankings available."
+              renderItem={(item) => (
+                <RankingRow
+                  rank={item.rank}
+                  label={item.customerName}
+                  value={item.appointmentsCount}
+                  meta={`${item.completedAppointmentsCount} completed / ${item.cancelledAppointmentsCount} cancelled`}
+                />
+              )}
+            />
           </CardContent>
         </Card>
-        
+
+        <Card className="overflow-hidden rounded-xl border-border bg-card shadow-sm">
+          <CardHeader className="border-b border-border/60 pb-4">
+            <CardTitle>Top services</CardTitle>
+            <CardDescription>Most booked services in the same period.</CardDescription>
+          </CardHeader>
+          <CardContent className="p-5">
+            <RankingList
+              items={analytics.topServices}
+              emptyLabel="No service rankings available."
+              renderItem={(item) => (
+                <RankingRow
+                  rank={item.rank}
+                  label={item.serviceName}
+                  value={item.appointmentsCount}
+                  meta={`${item.completedAppointmentsCount} completed / ${item.cancelledAppointmentsCount} cancelled`}
+                />
+              )}
+            />
+          </CardContent>
+        </Card>
       </div>
     </main>
   );
@@ -113,40 +137,6 @@ function FreeAnalyticsErrorState({ message }: { message: string }) {
         </CardContent>
       </Card>
     </main>
-  );
-}
-
-function InfoChip({
-  label,
-  value,
-}: {
-  label: string;
-  value: string;
-}) {
-  return (
-    <div className="rounded-xl border border-border bg-card px-4 py-3 shadow-sm">
-      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">{label}</p>
-      <p className="mt-1 text-sm font-medium text-foreground">{value}</p>
-    </div>
-  );
-}
-
-function MetricChip({
-  label,
-  value,
-}: {
-  label: string;
-  value: number;
-}) {
-  return (
-    <div className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 text-sm shadow-sm">
-      <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-        {label}
-      </span>
-      <span className="rounded-full bg-primary/10 px-2 py-0.5 text-sm font-semibold text-primary">
-        {formatNumber(value)}
-      </span>
-    </div>
   );
 }
 
@@ -175,6 +165,53 @@ function StatusBar({
     </div>
   );
 }
+
+function RankingList<T>({
+  items,
+  emptyLabel,
+  renderItem,
+}: {
+  items: ReadonlyArray<T>;
+  emptyLabel: string;
+  renderItem: (item: T) => ReactNode;
+}) {
+  if (items.length === 0) {
+    return <div className="rounded-lg border border-dashed border-border/70 px-4 py-8 text-sm text-muted-foreground">{emptyLabel}</div>;
+  }
+
+  return <div className="space-y-2">{items.map((item, index) => <div key={index}>{renderItem(item)}</div>)}</div>;
+}
+
+function RankingRow({
+  rank,
+  label,
+  value,
+  meta,
+}: {
+  rank: number;
+  label: string;
+  value: number;
+  meta: string;
+}) {
+  return (
+    <div className="flex items-center justify-between gap-4 rounded-lg border border-border/70 bg-background/70 px-4 py-3">
+      <div className="flex min-w-0 items-center gap-3">
+        <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
+          {rank}
+        </div>
+        <div className="min-w-0">
+          <p className="truncate text-sm font-medium text-foreground">{label}</p>
+          <p className="truncate text-xs text-muted-foreground">{meta}</p>
+        </div>
+      </div>
+      <div className="text-right">
+        <div className="text-sm font-semibold text-foreground">{formatNumber(value)}</div>
+        <div className="text-[11px] uppercase tracking-[0.16em] text-muted-foreground">Appointments</div>
+      </div>
+    </div>
+  );
+}
+
 
 function TrendChart({
   data,
@@ -226,32 +263,6 @@ function TrendChart({
           ))}
         </svg>
       </div>
-
-      <div className="grid grid-cols-3 gap-2 text-[11px] text-muted-foreground">
-        <TrendTick label={data[0]?.date} value={data[0]?.value} />
-        <TrendTick
-          label={data[Math.floor((data.length - 1) / 2)]?.date}
-          value={data[Math.floor((data.length - 1) / 2)]?.value}
-        />
-        <TrendTick label={data.at(-1)?.date} value={data.at(-1)?.value} alignRight />
-      </div>
-    </div>
-  );
-}
-
-function TrendTick({
-  label,
-  value,
-  alignRight = false,
-}: {
-  label?: string;
-  value?: number;
-  alignRight?: boolean;
-}) {
-  return (
-    <div className={alignRight ? "text-right" : "text-left"}>
-      <div className="font-medium text-foreground">{label ? formatTrendDate(label) : "N/A"}</div>
-      <div>{formatNumber(value ?? 0)}</div>
     </div>
   );
 }
@@ -296,16 +307,4 @@ function formatTrendDate(value?: string) {
 function formatTrendRange(start?: string, end?: string) {
   if (!start || !end) return "Last 7 days";
   return `${formatTrendDate(start)} - ${formatTrendDate(end)}`;
-}
-
-function formatDateTime(value: string) {
-  return new Intl.DateTimeFormat("en-US", {
-    dateStyle: "medium",
-    timeStyle: "short",
-    timeZone: "UTC",
-  }).format(new Date(value));
-}
-
-function shortenId(value: string) {
-  return `${value.slice(0, 8)}...${value.slice(-4)}`;
 }

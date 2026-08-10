@@ -8,29 +8,37 @@ export interface AnalyticsTrendPoint {
   value: number;
 }
 
+export interface AnalyticsRankingCustomerItem {
+  rank: number;
+  customerId: string;
+  customerName: string;
+  appointmentsCount: number;
+  completedAppointmentsCount: number;
+  cancelledAppointmentsCount: number;
+  noShowAppointmentsCount: number;
+  lastAppointmentAt: string;
+}
+
+export interface AnalyticsRankingServiceItem {
+  rank: number;
+  serviceId: string;
+  serviceName: string;
+  appointmentsCount: number;
+  completedAppointmentsCount: number;
+  cancelledAppointmentsCount: number;
+  noShowAppointmentsCount: number;
+  lastBookedAt: string;
+}
+
 export interface FreeAnalyticsDashboardResponse {
-  ownerId: string;
-  organizationId: string | null;
-  organizationName: string | null;
   hasOrganization: boolean;
-  establishmentsCount: number;
-  activeEstablishmentsCount: number;
-  customersCount: number;
-  activeCustomersCount: number;
-  activeServicesCount: number;
-  activeMembersCount: number;
-  appointmentsToday: number;
-  appointmentsLastSevenDays: number;
   completedAppointmentsLastSevenDays: number;
   cancelledAppointmentsLastSevenDays: number;
   noShowAppointmentsLastSevenDays: number;
   inProgressAppointmentsLastSevenDays: number;
-  assistantChatsLastSevenDays: number;
-  assistantMessagesLastSevenDays: number;
   appointmentsTrend: AnalyticsTrendPoint[];
-  customersTrend: AnalyticsTrendPoint[];
-  assistantMessagesTrend: AnalyticsTrendPoint[];
-  generatedAt: string;
+  topCustomers: AnalyticsRankingCustomerItem[];
+  topServices: AnalyticsRankingServiceItem[];
 }
 
 export class AnalyticsApiGateway {
@@ -41,4 +49,3 @@ export class AnalyticsApiGateway {
     });
   }
 }
-
