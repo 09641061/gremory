@@ -1,102 +1,59 @@
 # Contrato de API - Analytics Free
 
-Este contrato describe lo que el backend espera recibir y lo que devuelve para el dashboard de analytics del plan Free.
+Este documento define el contrato estable para la pagina `analytics` del plan Free.
 
-El objetivo es mantener un solo endpoint, con baja complejidad y bajo costo computacional, pero con suficiente valor visual para la UI actual.
-
-## Estado del frontend
-
-La vista actual de `analytics` usa un subconjunto minimo del snapshot base y solo conserva lo que aporta lectura rapida:
-
-- `appointmentsTrend`
-- `completedAppointmentsLastSevenDays`
-- `cancelledAppointmentsLastSevenDays`
-- `noShowAppointmentsLastSevenDays`
-- `appointmentsByWeekday`
-- `appointmentsByHour`
-- `completionVsCancellationTrend`
-- `leadTimeTrend`
-- `newVsRecurringCustomers`
-- `topCustomers`
-- `topServices`
-- `cancellationRateByService`
-- `noShowRateByService`
-
-### Datos visibles hoy
-
-- `appointmentsTrend`
-- `completedAppointmentsLastSevenDays`
-- `cancelledAppointmentsLastSevenDays`
-- `noShowAppointmentsLastSevenDays`
-- `appointmentsByWeekday`
-- `appointmentsByHour`
-- `completionVsCancellationTrend`
-- `leadTimeTrend`
-- `newVsRecurringCustomers`
-- `topCustomers`
-- `topServices`
-- `cancellationRateByService`
-- `noShowRateByService`
-
-### Datos retirados de esta vista
-
-Los siguientes campos ya no forman parte del contrato que consume la pagina de analytics Free:
-
-- `ownerId`
-- `organizationId`
-- `organizationName`
-- `establishmentsCount`
-- `activeEstablishmentsCount`
-- `activeCustomersCount`
-- `activeServicesCount`
-- `activeMembersCount`
-- `customersCount`
-- `appointmentsToday`
-- `appointmentsLastSevenDays`
-- `assistantChatsLastSevenDays`
-- `assistantMessagesLastSevenDays`
-- `customersTrend`
-- `assistantMessagesTrend`
-- `performanceRates`
-- `topItems`
-
-Se eliminaron porque no aportaban valor visual directo en esta pantalla y aumentaban el ruido del snapshot.
+Objetivos:
+- exponer un solo endpoint
+- devolver solo los bloques que la UI consume hoy
+- entregar series y rankings ya normalizados para pintar sin logica extra en frontend
 
 ## Endpoint
 
 `GET /api/analytics/free`
 
-## Autenticacion requerida
+## Autenticacion
 
-El backend espera que la peticion llegue autenticada con `Bearer JWT`.
-
-Headers esperados:
+La peticion debe llegar autenticada con `Bearer JWT`.
 
 ```http
 Authorization: Bearer <token>
 Accept: application/json
 ```
 
-## Lo que el backend recibe
+El backend toma la identidad autenticada y resuelve el snapshot de analytics para la organizacion activa asociada.
 
-Este endpoint no recibe body ni query params.
+## Que debe consultar el frontend
 
-El backend obtiene el `ownerId` desde la autenticacion actual:
+La vista debe consultar este endpoint cuando cargue la pagina `analytics`.
 
-- lee el `Authentication`
-- toma `authentication.getName()`
-- interpreta ese valor como `UUID`
+El frontend debe esperar un snapshot con estos bloques:
 
-Si el token no es valido o no existe autenticacion, el backend responde error.
+- `completedAppointmentsLastSevenDays`
+- `cancelledAppointmentsLastSevenDays`
+- `noShowAppointmentsLastSevenDays`
+- `appointmentsTrend`
+- `appointmentsByWeekday`
+- `appointmentsByHour`
+- `completionVsCancellationTrend`
+- `leadTimeTrend`
+- `newVsRecurringCustomers`
+- `topCustomers`
+- `topServices`
+- `cancellationRateByService`
+- `noShowRateByService`
 
-## Lo que el backend devuelve
+La UI no debe depender de:
 
-Respuesta exitosa:
+- `ownerId`
+- `organizationId`
+- `organizationName`
+- `hasOrganization`
+- `performanceRates`
+- `topItems`
+- series antiguas de mensajes o chats
+- cards de resumen que no forman parte de este contrato
 
-- `200 OK`
-- `application/json`
-
-### Estructura de respuesta
+## Respuesta esperada
 
 ```json
 {
@@ -109,254 +66,198 @@ Respuesta exitosa:
   ],
   "appointmentsByWeekday": [
     { "label": "Mon", "value": 8 },
-    { "label": "Tue", "value": 6 }
+    { "label": "Tue", "value": 6 },
+    { "label": "Wed", "value": 5 },
+    { "label": "Thu", "value": 4 },
+    { "label": "Fri", "value": 3 },
+    { "label": "Sat", "value": 2 },
+    { "label": "Sun", "value": 1 }
   ],
   "appointmentsByHour": [
-    { "label": "08:00", "value": 3 },
-    { "label": "09:00", "value": 5 }
+    { "label": "00:00", "value": 0 },
+    { "label": "01:00", "value": 0 },
+    { "label": "02:00", "value": 0 }
   ],
   "completionVsCancellationTrend": [
-    { "date": "2026-08-04", "completed": 3, "cancelled": 1 },
-    { "date": "2026-08-05", "completed": 5, "cancelled": 0 }
+    { "date": "2026-08-04", "completed": 3, "cancelled": 1 }
   ],
   "leadTimeTrend": [
-    { "date": "2026-08-04", "value": 12.4 },
-    { "date": "2026-08-05", "value": 9.1 }
+    { "date": "2026-08-04", "value": 12.4 }
   ],
   "newVsRecurringCustomers": {
     "newCustomers": 18,
     "recurrentCustomers": 12,
     "totalCustomers": 30
   },
-  "topCustomers": [
-    {
-      "rank": 1,
-      "customerId": "uuid",
-      "customerName": "string",
-      "appointmentsCount": 12,
-      "completedAppointmentsCount": 9,
-      "cancelledAppointmentsCount": 2,
-      "noShowAppointmentsCount": 1,
-      "lastAppointmentAt": "2026-08-09T12:00:00Z"
-    }
-  ],
-  "topServices": [
-    {
-      "rank": 1,
-      "serviceId": "uuid",
-      "serviceName": "string",
-      "appointmentsCount": 18,
-      "completedAppointmentsCount": 15,
-      "cancelledAppointmentsCount": 2,
-      "noShowAppointmentsCount": 1,
-      "lastBookedAt": "2026-08-09T12:00:00Z"
-    }
-  ],
-  "cancellationRateByService": [
-    {
-      "rank": 1,
-      "serviceId": "uuid",
-      "serviceName": "string",
-      "appointmentsCount": 18,
-      "affectedCount": 5,
-      "rate": 0.28,
-      "lastAppointmentAt": "2026-08-09T12:00:00Z"
-    }
-  ],
-  "noShowRateByService": [
-    {
-      "rank": 1,
-      "serviceId": "uuid",
-      "serviceName": "string",
-      "appointmentsCount": 18,
-      "affectedCount": 2,
-      "rate": 0.11,
-      "lastAppointmentAt": "2026-08-09T12:00:00Z"
-    }
-  ]
+  "topCustomers": [],
+  "topServices": [],
+  "cancellationRateByService": [],
+  "noShowRateByService": []
 }
 ```
 
-## Campos de respuesta
+## Contrato por bloque
 
-### Nivel raiz
+### Base
 
-| Campo | Tipo | Nullable | Descripcion |
-|---|---|---:|---|
-| `completedAppointmentsLastSevenDays` | `number` | No | Citas completadas en los ultimos 7 dias |
-| `cancelledAppointmentsLastSevenDays` | `number` | No | Citas canceladas en los ultimos 7 dias |
-| `noShowAppointmentsLastSevenDays` | `number` | No | Citas no show en los ultimos 7 dias |
-| `appointmentsTrend` | `array` | No | Serie diaria de citas |
-| `appointmentsByWeekday` | `array` | No | Citas agrupadas por dia de la semana |
-| `appointmentsByHour` | `array` | No | Citas agrupadas por hora UTC |
-| `completionVsCancellationTrend` | `array` | No | Tendencia diaria de completadas vs canceladas |
-| `leadTimeTrend` | `array` | No | Tendencia diaria del lead time promedio |
-| `newVsRecurringCustomers` | `object` | No | Clientes nuevos vs recurrentes en el periodo |
-| `topCustomers` | `array` | No | Ranking de clientes mas activos |
-| `topServices` | `array` | No | Ranking de servicios mas reservados |
-| `cancellationRateByService` | `array` | No | Servicios con mayor tasa de cancelacion |
-| `noShowRateByService` | `array` | No | Servicios con mayor tasa de no show |
+| Campo | Tipo | Descripcion |
+|---|---|---|
+| `completedAppointmentsLastSevenDays` | `number` | Citas completadas en la ventana de 7 dias |
+| `cancelledAppointmentsLastSevenDays` | `number` | Citas canceladas en la ventana de 7 dias |
+| `noShowAppointmentsLastSevenDays` | `number` | Citas marcadas como no show en la ventana de 7 dias |
 
-### Serie diaria
+### Series
 
-Cada item de `appointmentsTrend` tiene esta forma:
+| Campo | Tipo | Descripcion |
+|---|---|---|
+| `appointmentsTrend` | `array<{date,value}>` | Serie diaria de volumen |
+| `appointmentsByWeekday` | `array<{label,value}>` | 7 buckets fijos, de `Mon` a `Sun` |
+| `appointmentsByHour` | `array<{label,value}>` | 24 buckets fijos en UTC, de `00:00` a `23:00` |
+| `completionVsCancellationTrend` | `array<{date,completed,cancelled}>` | Serie diaria comparada |
+| `leadTimeTrend` | `array<{date,value}>` | Lead time promedio en horas |
 
-| Campo | Tipo | Nullable | Descripcion |
-|---|---|---:|---|
-| `date` | `string (YYYY-MM-DD)` | No | Dia de la serie |
-| `value` | `number` | No | Valor agregado de ese dia |
+### Mix de clientes
 
-### Series por categoria
+| Campo | Tipo | Descripcion |
+|---|---|---|
+| `newVsRecurringCustomers` | `object` | Segmentacion operacional de clientes |
 
-Cada item de `appointmentsByWeekday` y `appointmentsByHour` tiene esta forma:
+Definicion:
+- `newCustomers` = clientes con 1 cita en el periodo
+- `recurrentCustomers` = clientes con 2 o mas citas en el periodo
+- `totalCustomers` = clientes unicos con citas en el periodo
 
-| Campo | Tipo | Nullable | Descripcion |
-|---|---|---:|---|
-| `label` | `string` | No | Etiqueta visible de la categoria |
-| `value` | `number` | No | Total de citas en esa categoria |
+### Rankings
 
-### Tendencia comparada
+| Campo | Tipo | Descripcion |
+|---|---|---|
+| `topCustomers` | `array` | Top 5 clientes por cantidad de citas |
+| `topServices` | `array` | Top 5 servicios por cantidad de citas |
+| `cancellationRateByService` | `array` | Servicios ordenados por tasa de cancelacion |
+| `noShowRateByService` | `array` | Servicios ordenados por tasa de no show |
 
-Cada item de `completionVsCancellationTrend` tiene esta forma:
+## Forma de cada item
 
-| Campo | Tipo | Nullable | Descripcion |
-|---|---|---:|---|
-| `date` | `string (YYYY-MM-DD)` | No | Dia de la serie |
-| `completed` | `number` | No | Citas completadas ese dia |
-| `cancelled` | `number` | No | Citas canceladas ese dia |
+### `appointmentsTrend`
 
-### Lead time promedio
+| Campo | Tipo | Descripcion |
+|---|---|---|
+| `date` | `string` | Fecha en formato `YYYY-MM-DD` |
+| `value` | `number` | Cantidad total de citas del dia |
 
-Cada item de `leadTimeTrend` tiene esta forma:
+### `appointmentsByWeekday`
 
-| Campo | Tipo | Nullable | Descripcion |
-|---|---|---:|---|
-| `date` | `string (YYYY-MM-DD)` | No | Dia de la serie |
-| `value` | `number` | No | Lead time promedio en horas |
+| Campo | Tipo | Descripcion |
+|---|---|---|
+| `label` | `string` | Uno de `Mon`, `Tue`, `Wed`, `Thu`, `Fri`, `Sat`, `Sun` |
+| `value` | `number` | Cantidad de citas para el dia de la semana |
 
-### Clientes nuevos vs recurrentes
+### `appointmentsByHour`
 
-`newVsRecurringCustomers` tiene esta forma:
+| Campo | Tipo | Descripcion |
+|---|---|---|
+| `label` | `string` | Uno de `00:00` a `23:00` |
+| `value` | `number` | Cantidad de citas para esa hora UTC |
 
-| Campo | Tipo | Nullable | Descripcion |
-|---|---|---:|---|
-| `newCustomers` | `number` | No | Clientes con una sola cita en el periodo |
-| `recurrentCustomers` | `number` | No | Clientes con dos o mas citas en el periodo |
-| `totalCustomers` | `number` | No | Total de clientes unicos con citas en el periodo |
+### `completionVsCancellationTrend`
 
-### Ranking de clientes
+| Campo | Tipo | Descripcion |
+|---|---|---|
+| `date` | `string` | Fecha en formato `YYYY-MM-DD` |
+| `completed` | `number` | Citas completadas ese dia |
+| `cancelled` | `number` | Citas canceladas ese dia |
 
-Cada item de `topCustomers` tiene esta forma:
+### `leadTimeTrend`
 
-| Campo | Tipo | Nullable | Descripcion |
-|---|---|---:|---|
-| `rank` | `number` | No | Posicion en el ranking |
-| `customerId` | `string (UUID)` | No | Identificador del cliente |
-| `customerName` | `string` | No | Nombre visible del cliente |
-| `appointmentsCount` | `number` | No | Total de citas del periodo |
-| `completedAppointmentsCount` | `number` | No | Citas completadas del periodo |
-| `cancelledAppointmentsCount` | `number` | No | Citas canceladas del periodo |
-| `noShowAppointmentsCount` | `number` | No | Citas no show del periodo |
-| `lastAppointmentAt` | `string (date-time)` | No | Fecha de la ultima cita registrada |
+| Campo | Tipo | Descripcion |
+|---|---|---|
+| `date` | `string` | Fecha en formato `YYYY-MM-DD` |
+| `value` | `number` | Lead time promedio en horas |
 
-### Ranking de servicios
+### `newVsRecurringCustomers`
 
-Cada item de `topServices` tiene esta forma:
+| Campo | Tipo | Descripcion |
+|---|---|---|
+| `newCustomers` | `number` | Clientes con una sola cita en el periodo |
+| `recurrentCustomers` | `number` | Clientes con dos o mas citas en el periodo |
+| `totalCustomers` | `number` | Clientes unicos con citas en el periodo |
 
-| Campo | Tipo | Nullable | Descripcion |
-|---|---|---:|---|
-| `rank` | `number` | No | Posicion en el ranking |
-| `serviceId` | `string (UUID)` | No | Identificador del servicio |
-| `serviceName` | `string` | No | Nombre visible del servicio |
-| `appointmentsCount` | `number` | No | Total de citas del periodo |
-| `completedAppointmentsCount` | `number` | No | Citas completadas del periodo |
-| `cancelledAppointmentsCount` | `number` | No | Citas canceladas del periodo |
-| `noShowAppointmentsCount` | `number` | No | Citas no show del periodo |
-| `lastBookedAt` | `string (date-time)` | No | Fecha de la ultima reserva |
+### `topCustomers`
 
-### Tasa de cancelacion por servicio
+| Campo | Tipo | Descripcion |
+|---|---|---|
+| `rank` | `number` | Posicion en el ranking |
+| `customerId` | `string` | Identificador del cliente |
+| `customerName` | `string` | Nombre visible |
+| `appointmentsCount` | `number` | Total de citas |
+| `completedAppointmentsCount` | `number` | Citas completadas |
+| `cancelledAppointmentsCount` | `number` | Citas canceladas |
+| `noShowAppointmentsCount` | `number` | Citas no show |
+| `lastAppointmentAt` | `string` | Ultima cita registrada |
 
-Cada item de `cancellationRateByService` tiene esta forma:
+### `topServices`
 
-| Campo | Tipo | Nullable | Descripcion |
-|---|---|---:|---|
-| `rank` | `number` | No | Posicion en el ranking |
-| `serviceId` | `string (UUID)` | No | Identificador del servicio |
-| `serviceName` | `string` | No | Nombre visible del servicio |
-| `appointmentsCount` | `number` | No | Total de citas del servicio en el periodo |
-| `affectedCount` | `number` | No | Citas canceladas del servicio en el periodo |
-| `rate` | `number` | No | `affectedCount / appointmentsCount` |
-| `lastAppointmentAt` | `string (date-time)` | No | Fecha de la ultima cita registrada |
+| Campo | Tipo | Descripcion |
+|---|---|---|
+| `rank` | `number` | Posicion en el ranking |
+| `serviceId` | `string` | Identificador del servicio |
+| `serviceName` | `string` | Nombre visible |
+| `appointmentsCount` | `number` | Total de citas |
+| `completedAppointmentsCount` | `number` | Citas completadas |
+| `cancelledAppointmentsCount` | `number` | Citas canceladas |
+| `noShowAppointmentsCount` | `number` | Citas no show |
+| `lastBookedAt` | `string` | Ultima reserva |
 
-### Tasa de no show por servicio
+### `cancellationRateByService`
 
-Cada item de `noShowRateByService` tiene esta forma:
+| Campo | Tipo | Descripcion |
+|---|---|---|
+| `rank` | `number` | Posicion en el ranking |
+| `serviceId` | `string` | Identificador del servicio |
+| `serviceName` | `string` | Nombre visible |
+| `appointmentsCount` | `number` | Total de citas |
+| `affectedCount` | `number` | Citas canceladas |
+| `rate` | `number` | `affectedCount / appointmentsCount` |
+| `lastAppointmentAt` | `string` | Ultima cita registrada |
 
-| Campo | Tipo | Nullable | Descripcion |
-|---|---|---:|---|
-| `rank` | `number` | No | Posicion en el ranking |
-| `serviceId` | `string (UUID)` | No | Identificador del servicio |
-| `serviceName` | `string` | No | Nombre visible del servicio |
-| `appointmentsCount` | `number` | No | Total de citas del servicio en el periodo |
-| `affectedCount` | `number` | No | Citas no show del servicio en el periodo |
-| `rate` | `number` | No | `affectedCount / appointmentsCount` |
-| `lastAppointmentAt` | `string (date-time)` | No | Fecha de la ultima cita registrada |
+### `noShowRateByService`
 
-## Reglas de negocio del contrato
+| Campo | Tipo | Descripcion |
+|---|---|---|
+| `rank` | `number` | Posicion en el ranking |
+| `serviceId` | `string` | Identificador del servicio |
+| `serviceName` | `string` | Nombre visible |
+| `appointmentsCount` | `number` | Total de citas |
+| `affectedCount` | `number` | Citas no show |
+| `rate` | `number` | `affectedCount / appointmentsCount` |
+| `lastAppointmentAt` | `string` | Ultima cita registrada |
 
-- Las fechas se calculan en UTC.
-- Las series diarias vienen normalizadas para una ventana de 7 dias.
-- Si no hay datos, los valores se devuelven en cero.
-- `topCustomers` y `topServices` representan el ranking del mismo periodo de 7 dias.
-- `appointmentsByWeekday` y `appointmentsByHour` usan citas del mismo periodo de 7 dias.
-- `newVsRecurringCustomers` clasifica como nuevo al cliente con una sola cita en el periodo.
-- Si no hay organizacion o no hay locales activos, el backend devuelve rankings vacios y el resto del snapshot sigue siendo valido.
+## Reglas de calculo
 
-## Errores posibles
+- Ventana de 7 dias en UTC
+- `appointmentsTrend` y `completionVsCancellationTrend` se normalizan dia por dia, incluso si no hubo actividad
+- `appointmentsByWeekday` siempre viene en orden fijo de `Mon` a `Sun`
+- `appointmentsByHour` siempre viene en orden fijo de `00:00` a `23:00`
+- `appointmentsByHour` usa hora UTC
+- `newVsRecurringCustomers` es una clasificacion operacional del periodo, no historica
+- `topCustomers` y `topServices` devuelven como maximo 5 items
+- `cancellationRateByService` y `noShowRateByService` devuelven tasas entre `0` y `1`
+- Si no hay organizacion o no hay locales activos, el backend devuelve un snapshot valido con rankings vacios y series en cero
 
-### `401 Unauthorized`
+## Datos minimos requeridos
 
-Ocurre cuando la peticion no tiene autenticacion valida.
+Para calcular este contrato, cada cita debe exponer al menos:
 
-Ejemplo:
+- `startsAt`
+- `createdAt`
+- `status`
+- `customerId`
+- `serviceId`
+- `establishmentId`
 
-```json
-{
-  "status": 401,
-  "message": "Authentication required"
-}
-```
+## Notas para frontend
 
-### `403 Forbidden`
-
-Puede ocurrir si el usuario autenticado no tiene acceso activo segun la politica global de suscripcion.
-
-Ejemplo:
-
-```json
-{
-  "status": 403,
-  "message": "An active subscription is required"
-}
-```
-
-### `500 Internal Server Error`
-
-Puede ocurrir si hay un problema tecnico con la consulta o con el mapeo del dashboard.
-
-## Uso recomendado en frontend
-
-La pantalla del plan Free puede consumir este endpoint una sola vez al cargar la vista.
-
-Sugerencias:
-
-- usar `appointmentsTrend` como grafico principal
-- usar `appointmentsByWeekday` y `appointmentsByHour` para patrones operativos
-- usar `completionVsCancellationTrend` para comparar volumen de resultados finales
-- usar `leadTimeTrend` para medir anticipacion de reserva
-- usar `newVsRecurringCustomers` para segmentar la base de clientes
-- usar `topCustomers` como ranking de clientes
-- usar `topServices` como ranking de servicios
-- usar `cancellationRateByService` y `noShowRateByService` para detectar servicios con friccion
-
-## Observacion importante
+- No es necesario hacer transformaciones de buckets en cliente
+- No es necesario completar dias u horas faltantes en cliente
+- No es necesario inferir rankings ni tasas en cliente
+- Este contrato reemplaza cualquier payload anterior del modulo analytics free
