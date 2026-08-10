@@ -6,7 +6,8 @@ import { ListConversationsQueryService } from "@/contexts/assistant/application/
 import type { AssistantConversationSummaryReadModel } from "@/contexts/assistant/application/internal/transforms/assistant.read-models";
 import { createCurrentSubscriptionQueryService } from "@/contexts/billing/application/internal/queryservices/current-subscription-query.service";
 import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-session-cookie";
-import { Sidebar } from "@/contexts/shared/interfaces/components/sidebar";
+import { AppSidebar } from "@/contexts/shared/interfaces/components/app-sidebar";
+import { SidebarProvider } from "@/contexts/shared/interfaces/components/ui/sidebar";
 import { createAppShellQueryService } from "@/contexts/shared/application/internal/queryservices/app-shell-query.service";
 import { getMyProfileServerQuery } from "@/contexts/profiles/interfaces/queries/get-my-profile.query-handler";
 
@@ -40,15 +41,15 @@ export default async function AppLayout({
     : { content: [] as AssistantConversationSummaryReadModel[] };
 
   return (
-    <>
-      <Sidebar
+    <SidebarProvider>
+      <AppSidebar
         initialAssistantConversations={assistantConversations.content}
         currentProfile={currentProfile}
         visibleRoutes={shell?.visibleSidebarRoutes ?? ["/analytics"]}
         showAssistantSection={hasAssistantAccess}
         showAssistantNavigation={hasAssistantAccess}
       />
-      <main className="flex-1 p-6 pt-16 lg:ml-60">{children}</main>
-    </>
+      <main className="flex-1 p-6 pt-16 lg:ml-[var(--app-sidebar-width)]">{children}</main>
+    </SidebarProvider>
   );
 }

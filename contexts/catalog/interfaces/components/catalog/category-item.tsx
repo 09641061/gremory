@@ -80,7 +80,7 @@ export function CategoryItem({
       }`}
     >
       <div
-        className={`w-full flex items-center justify-between px-3 py-2 text-sm rounded-md transition-colors group/row ${
+        className={`group/row flex h-(--app-sidebar-control-height) w-full items-center justify-between rounded-(--app-sidebar-item-radius) px-(--app-sidebar-control-padding-x) text-sm transition-colors ${
           isCatSelected
             ? "bg-accent text-accent-foreground font-semibold"
             : "text-foreground hover:bg-accent/70 hover:text-accent-foreground"
@@ -181,7 +181,7 @@ export function CategoryItem({
                   onSelectService(svc.id);
                   setIsMobileOpen(false);
                 }}
-                className={`w-full flex items-center gap-3 text-left px-3 py-2 text-sm rounded-md transition-colors truncate ${
+                className={`flex h-(--app-sidebar-control-height) w-full items-center gap-(--app-sidebar-control-gap) truncate rounded-(--app-sidebar-item-radius) px-(--app-sidebar-control-padding-x) text-left text-sm transition-colors ${
                   selectedServiceId === svc.id
                     ? "bg-accent text-accent-foreground font-semibold"
                     : "text-foreground hover:bg-accent/70 hover:text-accent-foreground"

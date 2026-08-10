@@ -110,7 +110,7 @@ export function CategorySidebar({
   };
 
   const sidebarContent = (
-    <aside className="w-full md:w-[260px] bg-background border-r border-border/60 flex flex-col shrink-0 h-full">
+    <aside className="flex h-full w-full shrink-0 flex-col border-r border-border/60 bg-background md:w-(--app-category-sidebar-width)">
       <div className="p-4 flex flex-col gap-4 border-b border-border/60">
         <div className="flex items-center justify-center relative w-full">
 
@@ -118,7 +118,7 @@ export function CategorySidebar({
             variant="ghost"
             size="icon"
             onClick={() => setIsMobileOpen(false)}
-            className="absolute right-0 md:hidden h-8 w-8 text-muted-foreground"
+            className="absolute right-0 h-(--app-sidebar-control-height) w-(--app-sidebar-control-height) text-muted-foreground md:hidden"
           >
             <XIcon className="size-4" />
           </Button>
@@ -196,7 +196,7 @@ export function CategorySidebar({
       {/* Mobile Drawer Overlay */}
       {isMobileOpen && (
         <div className="fixed inset-0 z-50 flex md:hidden bg-black/50">
-          <div className="w-[280px] h-full bg-background shadow-xl animate-in slide-in-from-left">
+          <div className="h-full w-(--app-category-sidebar-mobile-width) bg-background shadow-xl animate-in slide-in-from-left">
             {sidebarContent}
           </div>
           <div className="flex-1" onClick={() => setIsMobileOpen(false)} />

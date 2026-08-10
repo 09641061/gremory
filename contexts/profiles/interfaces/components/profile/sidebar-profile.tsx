@@ -31,12 +31,12 @@ export function SidebarProfile({ profile, href, active = false }: SidebarProfile
       href={href}
       aria-current={active ? "page" : undefined}
       className={cn(
-        "group flex h-12 w-full items-center gap-3 rounded-md border border-border/60 bg-card px-3 text-left transition-colors",
+        "group flex h-(--app-sidebar-profile-height) w-full items-center gap-(--app-sidebar-control-gap) rounded-(--app-sidebar-item-radius) border border-border/60 bg-card px-(--app-sidebar-control-padding-x) text-left transition-colors",
         "hover:bg-accent/70 hover:text-accent-foreground",
         active && "border-accent/40 bg-accent text-accent-foreground",
       )}
     >
-      <Avatar className="size-8 shrink-0 border border-border/60 bg-muted">
+      <Avatar className="size-(--app-sidebar-avatar-size) shrink-0 border border-border/60 bg-muted">
         <AvatarImage src={imageUrl ?? undefined} alt={username} />
         <AvatarFallback className="bg-muted text-[0.7rem] font-semibold text-muted-foreground">
           {getProfileFallback(username)}
@@ -47,7 +47,7 @@ export function SidebarProfile({ profile, href, active = false }: SidebarProfile
 
       <MoreHorizontal
         className={cn(
-          "size-4 shrink-0 text-muted-foreground transition-colors group-hover:text-accent-foreground",
+          "size-(--app-sidebar-icon-size) shrink-0 text-muted-foreground transition-colors group-hover:text-accent-foreground",
           active && "text-accent-foreground",
         )}
         aria-hidden="true"
