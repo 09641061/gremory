@@ -5,9 +5,15 @@ import {
   PlusIcon,
   FolderXIcon,
   MenuIcon,
-  XIcon,
 } from "lucide-react";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/contexts/shared/interfaces/components/ui/sheet";
 import { ErrorAlert } from "@/contexts/shared/interfaces/components/error";
 import { CategoryItem } from "./category-item";
 import { DeleteCategoryDialog } from "./delete-category-dialog";
@@ -112,18 +118,6 @@ export function CategorySidebar({
   const sidebarContent = (
     <aside className="flex h-full w-full shrink-0 flex-col border-r border-border/60 bg-background md:w-(--app-category-sidebar-width)">
       <div className="p-4 flex flex-col gap-4 border-b border-border/60">
-        <div className="flex items-center justify-center relative w-full">
-
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setIsMobileOpen(false)}
-            className="absolute right-0 h-(--app-sidebar-control-height) w-(--app-sidebar-control-height) text-muted-foreground md:hidden"
-          >
-            <XIcon className="size-4" />
-          </Button>
-        </div>
-
         {canCreateCategory && (
           <Button
             onClick={() => {
@@ -177,31 +171,30 @@ export function CategorySidebar({
 
   return (
     <>
-      {/* Mobile Toggle Button */}
-      <div className="md:hidden p-3 bg-background border-b border-border/60 flex items-center justify-between">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => setIsMobileOpen(true)}
-          className="gap-2 text-xs"
+      {/* Mobile Drawer */}
+      <Sheet open={isMobileOpen} onOpenChange={setIsMobileOpen}>
+        <div className="md:hidden p-3 bg-background border-b border-border/60 flex items-center justify-between">
+          <SheetTrigger
+            render={<Button variant="outline" size="sm" className="gap-2 text-xs" />}
+          >
+            <MenuIcon className="size-4" />
+            <span>Categories ({categories.length})</span>
+          </SheetTrigger>
+        </div>
+
+        <SheetContent
+          side="left"
+          className="w-(--app-category-sidebar-mobile-width) gap-0 p-0 md:hidden"
         >
-          <MenuIcon className="size-4" />
-          <span>Categories ({categories.length})</span>
-        </Button>
-      </div>
+          <SheetHeader className="sr-only">
+            <SheetTitle>Categories</SheetTitle>
+          </SheetHeader>
+          {sidebarContent}
+        </SheetContent>
+      </Sheet>
 
       {/* Desktop Sidebar */}
       <div className="hidden md:block h-full">{sidebarContent}</div>
-
-      {/* Mobile Drawer Overlay */}
-      {isMobileOpen && (
-        <div className="fixed inset-0 z-50 flex bg-foreground/50 md:hidden">
-          <div className="h-full w-(--app-category-sidebar-mobile-width) bg-background shadow-xl animate-in slide-in-from-left">
-            {sidebarContent}
-          </div>
-          <div className="flex-1" onClick={() => setIsMobileOpen(false)} />
-        </div>
-      )}
       <ErrorAlert
         title="Cannot Delete"
         message={alertMessage ?? undefined}

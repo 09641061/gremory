@@ -128,7 +128,7 @@ export function ServiceDetailView({ service }: ServiceDetailViewProps) {
             <CardContent className="p-6">
               <div className="grid grid-cols-3 gap-6 text-center">
                 <div className="flex flex-col items-center p-4 bg-muted/40 rounded-lg border border-border">
-                  <ClockIcon className="size-5 text-sky-600 mb-2" />
+                  <ClockIcon className="size-5 text-muted-foreground mb-2" />
                   <span className="text-xs font-semibold uppercase text-muted-foreground">Preparation</span>
                   <span className="text-xl font-bold text-foreground mt-1">{service.preparationMinutes} min</span>
                 </div>
@@ -138,7 +138,7 @@ export function ServiceDetailView({ service }: ServiceDetailViewProps) {
                   <span className="text-xl font-bold text-primary mt-1">{service.durationMinutes} min</span>
                 </div>
                 <div className="flex flex-col items-center p-4 bg-muted/40 rounded-lg border border-border">
-                  <SparklesIcon className="size-5 text-rose-500 mb-2" />
+                  <SparklesIcon className="size-5 text-muted-foreground mb-2" />
                   <span className="text-xs font-semibold uppercase text-muted-foreground">Cleanup</span>
                   <span className="text-xl font-bold text-foreground mt-1">{service.cleanupMinutes} min</span>
                 </div>

@@ -5,20 +5,14 @@ import { useRouter } from "next/navigation";
 import {
   ChevronDown,
   ChevronRight,
-  FolderIcon,
+  FolderClosed,
+  FolderOpen,
   GripVertical,
-  MoreVerticalIcon,
   Pencil,
   Plus,
   Trash2,
 } from "lucide-react";
-import { Button } from "@/contexts/shared/interfaces/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuItem,
-} from "@/contexts/shared/interfaces/components/ui/dropdown-menu";
+import { EntityActionsMenu } from "@/contexts/shared/interfaces/components/entity-actions-menu";
 import type { CategoryDTO, ServiceSummaryDTO } from "./category-sidebar";
 
 interface CategoryItemProps {
@@ -97,71 +91,56 @@ export function CategoryItem({
           ) : (
             <ChevronRight className="size-4 text-muted-foreground/80 shrink-0" />
           )}
-          <FolderIcon className="size-4 text-muted-foreground shrink-0" />
+          {isExpanded ? (
+            <FolderOpen className="size-4 text-muted-foreground shrink-0" />
+          ) : (
+            <FolderClosed className="size-4 text-muted-foreground shrink-0" />
+          )}
           <span className="truncate">{cat.name}</span>
         </button>
 
         {(canCreateService || canUpdateCategory || canDeleteCategory) && (
           <div className="relative flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
-            <DropdownMenu>
-              <DropdownMenuTrigger
-                render={
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-6 w-6 text-muted-foreground hover:text-foreground transition-opacity"
-                    title="Category Options"
-                  />
-                }
-              >
-                <MoreVerticalIcon className="size-3" />
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="p-2 space-y-1 w-44">
-                {canCreateService && (
-                  <DropdownMenuItem
-                    className="gap-2 cursor-pointer font-medium text-foreground"
-                    onClick={() => {
-                      setIsMobileOpen(false);
-                      if (onCreateService) {
-                        onCreateService(cat.id);
-                      } else {
-                        router.push("/catalog");
-                      }
-                    }}
-                  >
-                    <Plus className="size-3.5 text-muted-foreground" />
-                    <span>Create Service</span>
-                  </DropdownMenuItem>
-                )}
-                {canUpdateCategory && (
-                  <DropdownMenuItem
-                    className="gap-2 cursor-pointer"
-                    onClick={() => {
-                      onOpenEditCategoryModal(cat);
-                    }}
-                  >
-                    <Pencil className="size-3.5 text-muted-foreground" />
-                    <span>Edit</span>
-                  </DropdownMenuItem>
-                )}
-                {canDeleteCategory && (
-                  <DropdownMenuItem
-                    variant="destructive"
-                    className={catServices.length > 0 ? "gap-2 cursor-not-allowed" : "gap-2 cursor-pointer"}
-                    onClick={() => {
-                      if (catServices.length > 0) {
-                        setAlertMessage("You cannot delete a category that has services.");
-                      } else {
-                        onDeleteCategory(cat);
-                      }
-                    }}
-                  >
-                    <Trash2 className="size-3.5" />
-                    <span>Delete</span>
-                  </DropdownMenuItem>
-                )}
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <EntityActionsMenu
+              label={`More actions for ${cat.name}`}
+              size="icon-sm"
+              triggerClassName="h-6 w-6 text-muted-foreground hover:text-foreground"
+              contentClassName="w-44"
+              actions={[
+                {
+                  label: "Create Service",
+                  icon: Plus,
+                  hidden: !canCreateService,
+                  onSelect: () => {
+                    setIsMobileOpen(false);
+                    if (onCreateService) {
+                      onCreateService(cat.id);
+                    } else {
+                      router.push("/catalog");
+                    }
+                  },
+                },
+                {
+                  label: "Edit",
+                  icon: Pencil,
+                  hidden: !canUpdateCategory,
+                  onSelect: () => onOpenEditCategoryModal(cat),
+                },
+                {
+                  label: "Delete",
+                  icon: Trash2,
+                  variant: "destructive",
+                  hidden: !canDeleteCategory,
+                  onSelect: () => {
+                    if (catServices.length > 0) {
+                      setAlertMessage("You cannot delete a category that has services.");
+                    } else {
+                      onDeleteCategory(cat);
+                    }
+                  },
+                },
+              ]}
+            />
           </div>
         )}
       </div>

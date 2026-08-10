@@ -1,15 +1,12 @@
 "use client";
 
-import { Building2, ChevronsUpDown } from "lucide-react";
-import { useRef, useState } from "react";
-import { Button } from "@/contexts/shared/interfaces/components/ui/button";
+import { Building2 } from "lucide-react";
 import {
   Avatar,
   AvatarFallback,
   AvatarImage,
 } from "@/contexts/shared/interfaces/components/ui/avatar";
 import { SearchableOptions } from "@/contexts/shared/interfaces/components/searchable-options";
-import { useSelectorMenu } from "../../use-selector-menu";
 
 export type OrganizationSelectorOrganization = {
   id: string;
@@ -33,64 +30,29 @@ export function OrganizationSelector({
   onSelectAll,
   onNew,
 }: OrganizationSelectorProps) {
-  const [isOpen, setIsOpen] = useState(false);
-  const [search, setSearch] = useState("");
-  const selectorRef = useRef<HTMLDivElement>(null);
-
-  useSelectorMenu(isOpen, setIsOpen, selectorRef);
-
   return (
-    <div ref={selectorRef} className="relative">
-      <Button
-        type="button"
-        variant="ghost"
-        size="lg"
-        onClick={() => setIsOpen((open) => !open)}
-        className="h-9 gap-2 px-2 font-medium"
-      >
-        <Avatar className="size-5 border border-border">
-          {organization?.imageUrl ? (
-            <AvatarImage src={organization.imageUrl} alt={organization.name} />
-          ) : (
-            <AvatarFallback className="bg-muted">
-              <Building2 className="size-3 text-muted-foreground" />
-            </AvatarFallback>
-          )}
-        </Avatar>
-        <span className="max-w-44 truncate">{organization?.name ?? "Organization"}</span>
-        <ChevronsUpDown className="size-3.5 text-muted-foreground" />
-      </Button>
-
-      {isOpen && (
-        <div className="absolute left-0 top-full mt-1">
-          <SearchableOptions
-            options={organizations}
-            selectedId={organization?.id}
-            search={search}
-            onSearchChange={setSearch}
-            onSelect={(org) => {
-              setIsOpen(false);
-              onSelect?.(org.id, org.defaultEstablishmentId);
-            }}
-            onSelectAll={onSelectAll
-              ? () => {
-                  setIsOpen(false);
-                  onSelectAll();
-                }
-              : undefined}
-            allLabel="All Organizations"
-            searchPlaceholder="Find organization..."
-            emptyMessage="No organizations found"
-            newLabel="New organization"
-            onNew={onNew
-              ? () => {
-                  setIsOpen(false);
-                  onNew();
-                }
-              : undefined}
-          />
-        </div>
-      )}
-    </div>
+    <SearchableOptions
+      options={organizations}
+      selectedId={organization?.id}
+      onSelect={(org) => onSelect?.(org.id, org.defaultEstablishmentId)}
+      onSelectAll={onSelectAll}
+      allLabel="All Organizations"
+      searchPlaceholder="Find organization..."
+      emptyMessage="No organizations found"
+      newLabel="New organization"
+      onNew={onNew}
+      triggerClassName="gap-2 px-2 font-medium"
+    >
+      <Avatar className="size-5 border border-border">
+        {organization?.imageUrl ? (
+          <AvatarImage src={organization.imageUrl} alt={organization.name} />
+        ) : (
+          <AvatarFallback className="bg-muted">
+            <Building2 className="size-3 text-muted-foreground" />
+          </AvatarFallback>
+        )}
+      </Avatar>
+      <span className="max-w-44 truncate">{organization?.name ?? "Organization"}</span>
+    </SearchableOptions>
   );
 }
