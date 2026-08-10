@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { MoreHorizontal } from "lucide-react";
+import { ChevronsUpDown } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/contexts/shared/interfaces/components/ui/avatar";
 import type { ProfileViewModel } from "@/contexts/profiles/application/services/profile.view-model";
@@ -45,7 +45,7 @@ export function SidebarProfile({ profile, href, active = false }: SidebarProfile
 
       <span className="min-w-0 flex-1 truncate text-sm font-medium">{username}</span>
 
-      <MoreHorizontal
+      <ChevronsUpDown
         className={cn(
           "size-(--app-sidebar-icon-size) shrink-0 text-muted-foreground transition-colors group-hover:text-accent-foreground",
           active && "text-accent-foreground",

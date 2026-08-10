@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronDown, Store } from "lucide-react";
+import { ChevronsUpDown, Store } from "lucide-react";
 import { useRef, useState } from "react";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import {
@@ -63,7 +63,7 @@ export function EstablishmentSelector({
         <span className="max-w-44 truncate">
           {activeEstablishment?.name ?? "Select establishment"}
         </span>
-        <ChevronDown className="size-3.5 text-muted-foreground" />
+        <ChevronsUpDown className="size-3.5 text-muted-foreground" />
       </Button>
 
       {isOpen && (

@@ -1,6 +1,6 @@
 "use client";
 
-import { Building2, ChevronDown } from "lucide-react";
+import { Building2, ChevronsUpDown } from "lucide-react";
 import { useRef, useState } from "react";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import {
@@ -58,7 +58,7 @@ export function OrganizationSelector({
           )}
         </Avatar>
         <span className="max-w-44 truncate">{organization?.name ?? "Organization"}</span>
-        <ChevronDown className="size-3.5 text-muted-foreground" />
+        <ChevronsUpDown className="size-3.5 text-muted-foreground" />
       </Button>
 
       {isOpen && (
