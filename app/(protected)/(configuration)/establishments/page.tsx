@@ -1,27 +1,31 @@
 import { EstablishmentsPage } from "@/contexts/business/interfaces/components/establishment/establishments-page/establishments-page";
-import { createBusinessAccessPolicyService } from "@/contexts/business/application/internal/queryservices/business-access-policy.service";
+import { createBusinessWorkspaceQueryService } from "@/contexts/business/application/internal/queryservices/business-workspace-query.service";
 import { redirect } from "next/navigation";
 
 interface EstablishmentsPageProps {
-  searchParams: Promise<{ establishmentId?: string }>;
+  searchParams: Promise<{ organizationId?: string; establishmentId?: string }>;
 }
 
 export default async function EstablishmentsRoutePage({ searchParams }: EstablishmentsPageProps) {
-  const { establishmentId } = await searchParams;
-  const policyService = createBusinessAccessPolicyService();
-  const { isOwner, canRead, canCreate, canUpdateMap, allowedEstablishments } =
-    await policyService.getEstablishmentsPermissions(establishmentId);
+  const query = await searchParams;
+  const workspace = await createBusinessWorkspaceQueryService().getHeaderViewModel(query);
 
-  if (!canRead) {
-    redirect("/organizations?denied=est");
+  if (!workspace.organization || !workspace.canReadEstablishments) {
+    redirect("/access-denied");
   }
 
   return (
     <EstablishmentsPage
-      establishments={allowedEstablishments}
-      canUpdateMap={canUpdateMap}
-      defaultCanUpdate={isOwner}
-      canCreate={canCreate}
+      establishments={workspace.establishments.map((establishment) => ({
+        id: establishment.id,
+        name: establishment.name,
+        photoUrl: establishment.photoUrl ?? null,
+      }))}
+      canUpdateMap={Object.fromEntries(
+        workspace.establishments.map((establishment) => [establishment.id, establishment.canUpdate === true]),
+      )}
+      defaultCanUpdate={workspace.organization.mode === "OWNER"}
+      canCreate={workspace.canCreateEstablishment}
     />
   );
 }

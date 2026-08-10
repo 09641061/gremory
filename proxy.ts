@@ -39,7 +39,7 @@ export async function proxy(request: NextRequest) {
 
   // Subscription is a capability input, never an onboarding prerequisite.
   if (pathname === "/subscribe") {
-    return response ?? NextResponse.next();
+    return continueWithWorkspaceContext(request, response);
   }
 
   const subscriptionForLanding = await getSubscriptionSnapshot(accessToken);
@@ -52,21 +52,17 @@ export async function proxy(request: NextRequest) {
     return redirectToLogin(request);
   }
   if (landing.status === "unavailable") {
-    return response ?? NextResponse.next();
+    return continueWithWorkspaceContext(request, response);
   }
 
   if (landing.status === "organization-required" || landing.status === "establishment-required") {
     if (pathname !== landing.setupHref) {
       return redirectWithCookies(request, landing.setupHref, response);
     }
-    return response ?? NextResponse.next();
+    return continueWithWorkspaceContext(request, response);
   }
 
   const homePath = landing.homeHref;
-
-  if (pathname === "/access-denied" && homePath !== "/access-denied") {
-    return redirectWithCookies(request, homePath, response);
-  }
 
   if (pathname === "/") {
     return redirectWithCookies(request, homePath, response);
@@ -76,7 +72,7 @@ export async function proxy(request: NextRequest) {
     return redirectWithCookies(request, homePath, response);
   }
 
-  return response ?? NextResponse.next();
+  return continueWithWorkspaceContext(request, response);
 }
 
 function isPrivateRoute(pathname: string) {
@@ -110,12 +106,7 @@ async function getSubscriptionSnapshot(accessToken: string): Promise<{
 
 function redirectWithCookies(request: NextRequest, path: string, response: NextResponse | null) {
   const redirectUrl = new URL(path, request.url);
-  if (path === "/schedule") {
-    const establishmentId = request.nextUrl.searchParams.get("establishmentId");
-    if (establishmentId) {
-      redirectUrl.searchParams.set("establishmentId", establishmentId);
-    }
-  }
+  copyWorkspaceSelection(request, redirectUrl);
 
   const redirectResponse = NextResponse.redirect(redirectUrl);
   if (response) {
@@ -124,6 +115,42 @@ function redirectWithCookies(request: NextRequest, path: string, response: NextR
     }
   }
   return redirectResponse;
+}
+
+function continueWithWorkspaceContext(request: NextRequest, response: NextResponse | null) {
+  const forwardedHeaders = new Headers(request.headers);
+  const organizationId = request.nextUrl.searchParams.get("organizationId");
+  const establishmentId = request.nextUrl.searchParams.get("establishmentId");
+
+  if (organizationId) forwardedHeaders.set("x-takodu-organization-id", organizationId);
+  else forwardedHeaders.delete("x-takodu-organization-id");
+  if (establishmentId) forwardedHeaders.set("x-takodu-establishment-id", establishmentId);
+  else forwardedHeaders.delete("x-takodu-establishment-id");
+
+  const nextResponse = NextResponse.next({
+    request: { headers: forwardedHeaders },
+  });
+  copyResponseCookies(response, nextResponse);
+  return nextResponse;
+}
+
+function copyWorkspaceSelection(request: NextRequest, url: URL) {
+  const organizationId = request.nextUrl.searchParams.get("organizationId");
+  const establishmentId = request.nextUrl.searchParams.get("establishmentId");
+  if (organizationId) url.searchParams.set("organizationId", organizationId);
+  if (establishmentId) url.searchParams.set("establishmentId", establishmentId);
+}
+
+function copyResponseCookies(source: NextResponse | null, target: NextResponse) {
+  if (!source) return;
+  for (const [name, value] of source.headers) {
+    if (name.startsWith("x-middleware-")) {
+      target.headers.set(name, value);
+    }
+  }
+  for (const cookie of source.cookies.getAll()) {
+    target.cookies.set(cookie);
+  }
 }
 
 function redirectToLogin(request: NextRequest) {

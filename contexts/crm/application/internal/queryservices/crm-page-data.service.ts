@@ -27,8 +27,7 @@ export async function getCrmPageData(
   size: number
 ): Promise<CrmPageData> {
   const policyService = createCrmAccessPolicyService();
-  const defaultEstId = await policyService.getDefaultEstablishmentId();
-  const establishmentId = requestedEstablishmentId ?? defaultEstId;
+  const establishmentId = requestedEstablishmentId;
 
   const permissions = await policyService.getPermissions(establishmentId);
 

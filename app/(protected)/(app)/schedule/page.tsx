@@ -2,17 +2,18 @@ import { createSchedulingAccessPolicyService } from "@/contexts/scheduling/appli
 import { loadSchedulingPageData } from "@/contexts/scheduling/application/internal/queryservices/scheduling-page-data.query.service";
 import { WeeklyCalendar } from "@/contexts/scheduling/interfaces/components/calendar/weekly-calendar";
 import { redirect } from "next/navigation";
+import { createBusinessWorkspaceQueryService } from "@/contexts/business/application/internal/queryservices/business-workspace-query.service";
 
 interface SchedulePageProps {
-  searchParams: Promise<{ establishmentId?: string }>;
+  searchParams: Promise<{ organizationId?: string; establishmentId?: string }>;
 }
 
 export default async function SchedulePage({ searchParams }: SchedulePageProps) {
-  const { establishmentId: paramEstId } = await searchParams;
+  const query = await searchParams;
+  const workspace = await createBusinessWorkspaceQueryService().getHeaderViewModel(query);
 
   const policyService = createSchedulingAccessPolicyService();
-  const defaultEstId = await policyService.getDefaultEstablishmentId();
-  const establishmentId = paramEstId ?? defaultEstId ?? undefined;
+  const establishmentId = query.establishmentId ?? workspace.activeEstablishmentId;
 
   if (!establishmentId) {
     redirect("/establishments/new");
@@ -26,7 +27,7 @@ export default async function SchedulePage({ searchParams }: SchedulePageProps) 
   } = await policyService.getPermissions(establishmentId);
 
   if (!canReadAppointments) {
-    redirect(`/?denied=scheduling`);
+    redirect("/access-denied");
   }
 
   const { services, members, customers } = await loadSchedulingPageData(establishmentId);

@@ -1,226 +1,96 @@
 import "server-only";
 
-import { createOrganizationQueryService } from "@/contexts/business/application/internal/queryservices/organization-query.service";
-import { createEstablishmentQueryService } from "@/contexts/business/application/internal/queryservices/establishment-query.service";
-import { createTeamQueryService } from "@/contexts/workforce/application/internal/queryservices/team-query.service";
-import {
-  hasAnyPermission,
-  hasReadRole,
-  pickActiveEstablishment,
-} from "@/contexts/shared/application/internal/queryservices/access-context.helpers";
+import { BusinessWorkspaceApiGateway } from "@/contexts/business/infrastructure/gateways/business-workspace-api.gateway";
+import type { BusinessWorkspaceSelection } from "@/contexts/business/infrastructure/gateways/business-workspace-api.gateway";
 import type {
   OrganizationPageState,
   WorkspaceHeaderOrganization,
   WorkspaceHeaderViewModel,
 } from "@/contexts/business/application/model/business-workspace.view-models";
 
+export type BusinessWorkspaceQuery = BusinessWorkspaceSelection;
+
 export class BusinessWorkspaceQueryService {
-  async getHeaderViewModel(activeEstablishmentId?: string): Promise<WorkspaceHeaderViewModel> {
-    // Membership access has priority over an automatically-created personal organization.
-    const memberWorkspace = await this.getMemberWorkspace(activeEstablishmentId);
-    if (memberWorkspace) return memberWorkspace;
+  constructor(private readonly workspace = new BusinessWorkspaceApiGateway()) {}
 
-    try {
-      const organization = await createOrganizationQueryService().getMyOrganization();
-      const page = await createEstablishmentQueryService().getByOrganization({
-        organizationId: organization.id,
-        page: 0,
-        size: 100,
-      });
+  async getHeaderViewModel(query: BusinessWorkspaceQuery = {}): Promise<WorkspaceHeaderViewModel> {
+    const resource = await this.workspace.getWorkspace(query);
+    const organizations = resource.organizations.map(toHeaderOrganization);
+    const activeOrganization = organizations.find(
+      (organization) => organization.id === resource.activeOrganizationId,
+    );
+    const activeResource = resource.organizations.find(
+      (organization) => organization.id === resource.activeOrganizationId,
+    );
+    const establishments = activeResource?.establishments
+      .filter((establishment) => establishment.permissions.canRead)
+      .map((establishment) => ({
+      id: establishment.id,
+      name: establishment.name,
+      photoUrl: establishment.photoUrl,
+      canRead: establishment.permissions.canRead,
+      canUpdate: establishment.permissions.canUpdate,
+      canDelete: establishment.permissions.canDelete,
+      })) ?? [];
+    const activeEstablishmentId = establishments.some(
+      (establishment) => establishment.id === resource.activeEstablishmentId,
+    )
+      ? resource.activeEstablishmentId ?? undefined
+      : undefined;
 
-      const establishments = page.content.map((establishment) => ({
-        id: establishment.id,
-        name: establishment.name,
-        photoUrl: establishment.photoUrl,
-      }));
-
-      return {
-        organization: {
-          id: organization.id,
-          name: organization.name,
-          imageUrl: organization.imageUrl,
-          defaultEstablishmentId: establishments[0]?.id,
-        },
-        organizations: [
-          {
-            id: organization.id,
-            name: organization.name,
-            imageUrl: organization.imageUrl,
-            defaultEstablishmentId: establishments[0]?.id,
-          },
-        ],
-        establishments,
-        activeEstablishmentId: activeEstablishmentId ?? establishments[0]?.id,
-        canReadOrganizations: true,
-        canReadEstablishments: true,
-        canCreateEstablishment: true,
-      };
-    } catch {
-      return {
-        organizations: [],
-        establishments: [],
-        activeEstablishmentId: undefined,
-        canReadOrganizations: false,
-        canReadEstablishments: false,
-        canCreateEstablishment: false,
-      };
-    }
+    return {
+      organization: activeOrganization,
+      organizations,
+      establishments,
+      activeOrganizationId: resource.activeOrganizationId ?? undefined,
+      activeEstablishmentId,
+      canReadOrganizations: organizations.some((organization) => organization.canRead),
+      canReadEstablishments:
+        activeOrganization?.mode === "OWNER" ||
+        activeOrganization?.canCreateEstablishment === true ||
+        establishments.some((establishment) => establishment.canRead),
+      canCreateEstablishment: activeOrganization?.canCreateEstablishment ?? false,
+    };
   }
 
-  private async getMemberWorkspace(activeEstablishmentId?: string): Promise<WorkspaceHeaderViewModel | null> {
+  async getOrganizationPageState(query: BusinessWorkspaceQuery = {}): Promise<OrganizationPageState> {
     try {
-      const access = await createTeamQueryService().getAccessContext();
-      const activeEstablishment = pickActiveEstablishment(access.establishments, activeEstablishmentId);
+      const resource = await this.workspace.getWorkspace(query);
+      const organizations = resource.organizations.map(toHeaderOrganization);
+      const readableOrganizations = organizations.filter((organization) => organization.canRead);
 
-      if (!activeEstablishment) return null;
+      if (readableOrganizations.length === 0) {
+        return resource.organizations.length === 0
+          ? { status: "create" }
+          : { status: "denied" };
+      }
 
-      const activeOrganizationId = activeEstablishment.organizationId;
-      const organizations = buildOrganizations(access.establishments);
-      const establishments = access.establishments
-        .filter((item) => item.organizationId === activeOrganizationId)
-        .map((item) => ({
-          id: item.establishmentId,
-          name: item.establishmentName,
-          photoUrl: null,
-        }));
-
-      return {
-        organization:
-          organizations.find((item) => item.id === activeOrganizationId) ?? {
-            id: activeOrganizationId,
-            name: activeEstablishment.organizationName,
-            imageUrl: null,
-            defaultEstablishmentId: establishments[0]?.id,
-          },
-        organizations,
-        establishments,
-        activeEstablishmentId: activeEstablishment.establishmentId,
-        canReadOrganizations:
-          access.establishments.some(
-            (item) =>
-              item.organizationId === activeOrganizationId &&
-              hasAnyPermission(item.effectivePermissions, [
-                "business:organizations:read",
-                "business:organizations:manage",
-                "business:manage",
-              ]),
-          ) || hasReadRole(activeEstablishment.roles),
-        canReadEstablishments:
-          access.establishments.some(
-            (item) =>
-              item.organizationId === activeOrganizationId &&
-              hasAnyPermission(item.effectivePermissions, [
-                "business:establishments:read",
-                "business:establishments:manage",
-                "business:manage",
-              ]),
-          ) || hasReadRole(activeEstablishment.roles),
-        canCreateEstablishment: access.establishments.some(
-          (item) =>
-            item.organizationId === activeOrganizationId &&
-            hasAnyPermission(item.effectivePermissions, [
-              "business:establishments:manage",
-              "business:manage",
-            ]),
-        ),
-      };
-    } catch {
-      return null;
-    }
-  }
-
-  async getOrganizationPageState(activeEstablishmentId?: string): Promise<OrganizationPageState> {
-    try {
-      const organization = await createOrganizationQueryService().getMyOrganization();
       return {
         status: "ready",
-        organization,
-        canUpdate: true,
+        organizations: readableOrganizations,
+        activeOrganizationId: resource.activeOrganizationId ?? undefined,
       };
     } catch {
-      try {
-        const access = await createTeamQueryService().getAccessContext();
-        const activeEstablishment = pickActiveEstablishment(access.establishments, activeEstablishmentId);
-
-        if (!activeEstablishment) {
-          return {
-            status: "create",
-          };
-        }
-
-        const activeOrganizationId = activeEstablishment.organizationId;
-        const canRead =
-          hasReadRole(activeEstablishment.roles) ||
-          access.establishments.some(
-            (item) =>
-              item.organizationId === activeOrganizationId &&
-              hasAnyPermission(item.effectivePermissions, [
-                "business:organizations:read",
-                "business:organizations:manage",
-                "business:manage",
-              ]),
-          );
-
-        if (!canRead) {
-          return {
-            status: "denied",
-          };
-        }
-
-        const organization = await createOrganizationQueryService().getById({
-          id: activeOrganizationId,
-        });
-
-        if (!organization) {
-          return {
-            status: "denied",
-          };
-        }
-
-        return {
-          status: "ready",
-          organization,
-          canUpdate: access.establishments.some(
-            (item) =>
-              item.organizationId === activeOrganizationId &&
-              hasAnyPermission(item.effectivePermissions, [
-                "business:organizations:update",
-                "business:organizations:manage",
-                "business:manage",
-              ]),
-          ),
-        };
-      } catch {
-        return {
-          status: "create",
-        };
-      }
+      return { status: "denied" };
     }
   }
 }
+
 export function createBusinessWorkspaceQueryService() {
   return new BusinessWorkspaceQueryService();
 }
 
-function buildOrganizations(
-  establishments: ReadonlyArray<{
-    organizationId: string;
-    organizationName: string;
-    establishmentId: string;
-  }>,
-): ReadonlyArray<WorkspaceHeaderOrganization> {
-  const organizations = new Map<string, WorkspaceHeaderOrganization>();
-
-  for (const establishment of establishments) {
-    if (!organizations.has(establishment.organizationId)) {
-      organizations.set(establishment.organizationId, {
-        id: establishment.organizationId,
-        name: establishment.organizationName,
-        imageUrl: null,
-        defaultEstablishmentId: establishment.establishmentId,
-      });
-    }
-  }
-
-  return Array.from(organizations.values());
+function toHeaderOrganization(
+  organization: Awaited<ReturnType<BusinessWorkspaceApiGateway["getWorkspace"]>>["organizations"][number],
+): WorkspaceHeaderOrganization {
+  return {
+    id: organization.id,
+    name: organization.name,
+    imageUrl: organization.imageUrl,
+    mode: organization.mode,
+    canRead: organization.permissions.canRead,
+    canUpdate: organization.permissions.canUpdate,
+    canCreateEstablishment: organization.permissions.canCreateEstablishment,
+    defaultEstablishmentId: organization.establishments[0]?.id,
+  };
 }

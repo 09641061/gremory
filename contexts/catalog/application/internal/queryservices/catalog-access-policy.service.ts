@@ -2,9 +2,7 @@ import { createTeamQueryService } from "@/contexts/workforce/application/interna
 import { createOrganizationQueryService } from "@/contexts/business/application/internal/queryservices/organization-query.service";
 import { createEstablishmentQueryService } from "@/contexts/business/application/internal/queryservices/establishment-query.service";
 import {
-  findFirstMatchingEstablishment,
   hasAnyPermission,
-  hasReadRole,
 } from "@/contexts/shared/application/internal/queryservices/access-context.helpers";
 
 export interface CatalogPermissions {
@@ -32,8 +30,7 @@ export class CatalogAccessPolicyService {
     }
 
     try {
-      // If user is owner, they have full permissions
-      await createOrganizationQueryService().getMyOrganization();
+      if (await ownsEstablishment(establishmentId)) {
       return {
         canReadCatalog: true,
         canCreateCategory: true,
@@ -43,9 +40,11 @@ export class CatalogAccessPolicyService {
         canUpdateService: true,
         canDeleteService: true,
       };
+      }
     } catch {
-      // Employee: load from workforce access context
-      try {
+      // Resolve member permissions below.
+    }
+    try {
         const access = await createTeamQueryService().getAccessContext();
         const estAccess = access.establishments.find(
           (item) => item.establishmentId === establishmentId,
@@ -99,36 +98,22 @@ export class CatalogAccessPolicyService {
         };
       }
     }
-  }
 
-  async getDefaultEstablishmentId(): Promise<string | undefined> {
-    try {
-      const org = await createOrganizationQueryService().getMyOrganization();
-      const page = await createEstablishmentQueryService().getByOrganization({
-        organizationId: org.id,
-        page: 0,
-        size: 1,
-      });
-      if (page.content.length > 0) {
-        return page.content[0].id;
-      }
-    } catch {
-      try {
-        const access = await createTeamQueryService().getAccessContext();
-        if (!access.active) {
-          return undefined;
-        }
-        const allowedEst = findFirstMatchingEstablishment(access.establishments, (item) =>
-          hasCatalogReadPermission(item.effectivePermissions ?? []) || hasReadRole(item.roles),
-        );
-        return allowedEst?.establishmentId;
-      } catch {
-        return undefined;
-      }
-    }
-  }
 }
 
+async function ownsEstablishment(establishmentId: string): Promise<boolean> {
+  try {
+    const organization = await createOrganizationQueryService().getMyOrganization();
+    const page = await createEstablishmentQueryService().getByOrganization({
+      organizationId: organization.id,
+      page: 0,
+      size: 100,
+    });
+    return page ? page.content.some((establishment) => establishment.id === establishmentId) : true;
+  } catch {
+    return false;
+  }
+}
 export function createCatalogAccessPolicyService() {
   return new CatalogAccessPolicyService();
 }

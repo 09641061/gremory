@@ -24,18 +24,19 @@ export function ProtectedHeaderClient({
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
+  const selectedOrganizationId = searchParams.get("organizationId") || workspace.activeOrganizationId;
   const selectedEstablishmentId = searchParams.get("establishmentId") || workspace.activeEstablishmentId;
   const newEstablishmentHref = navigation.newEstablishmentHref;
 
-  function handleSelectOrganization(_orgId: string, defaultEstablishmentId?: string) {
+  function handleSelectOrganization(orgId: string, defaultEstablishmentId?: string) {
     router.push(
-      buildPathWithEstablishmentId(pathname, searchParams, defaultEstablishmentId),
+      buildWorkspacePath(pathname, searchParams, orgId, defaultEstablishmentId),
     );
   }
 
   return (
     <Header
-      homeHref={resolveHomeHrefWithEstablishment(homeHref, selectedEstablishmentId)}
+      homeHref={resolveHomeHrefWithEstablishment(homeHref, selectedOrganizationId, selectedEstablishmentId)}
       organizationSlot={
         <OrganizationSelector
           organization={workspace.organization}
@@ -43,8 +44,12 @@ export function ProtectedHeaderClient({
           onSelect={handleSelectOrganization}
           onSelectAll={() => {
             if (navigation.organizationListHref) {
-              const query = selectedEstablishmentId ? `?establishmentId=${selectedEstablishmentId}` : "";
-              router.push(`${navigation.organizationListHref}${query}`);
+              router.push(buildWorkspacePath(
+                navigation.organizationListHref,
+                searchParams,
+                selectedOrganizationId,
+                selectedEstablishmentId,
+              ));
             } else {
               router.push(`${pathname}?denied=org`);
             }
@@ -56,12 +61,16 @@ export function ProtectedHeaderClient({
           establishments={workspace.establishments}
           selectedEstablishmentId={selectedEstablishmentId}
           onSelect={(establishmentId) => {
-            router.push(buildPathWithEstablishmentId(pathname, searchParams, establishmentId));
+            router.push(buildWorkspacePath(pathname, searchParams, selectedOrganizationId, establishmentId));
           }}
           onSelectAll={() => {
             if (navigation.establishmentListHref) {
-              const query = selectedEstablishmentId ? `?establishmentId=${selectedEstablishmentId}` : "";
-              router.push(`${navigation.establishmentListHref}${query}`);
+              router.push(buildWorkspacePath(
+                navigation.establishmentListHref,
+                searchParams,
+                selectedOrganizationId,
+                selectedEstablishmentId,
+              ));
             } else {
               router.push(`${pathname}?denied=est`);
             }
@@ -77,18 +86,24 @@ export function ProtectedHeaderClient({
   );
 }
 
-function resolveHomeHrefWithEstablishment(homeHref: string, establishmentId?: string) {
-  return establishmentId ? `${homeHref}?establishmentId=${establishmentId}` : homeHref;
+function resolveHomeHrefWithEstablishment(
+  homeHref: string,
+  organizationId?: string,
+  establishmentId?: string,
+) {
+  return buildWorkspacePath(homeHref, new URLSearchParams(), organizationId, establishmentId);
 }
 
-function buildPathWithEstablishmentId(
+function buildWorkspacePath(
   pathname: string,
-  searchParams: ReadonlyURLSearchParams,
+  searchParams: Pick<ReadonlyURLSearchParams, "toString">,
+  organizationId?: string,
   establishmentId?: string,
 ) {
   const params = new URLSearchParams(searchParams.toString());
-  if (establishmentId) {
-    params.set("establishmentId", establishmentId);
-  }
+  if (organizationId) params.set("organizationId", organizationId);
+  else params.delete("organizationId");
+  if (establishmentId) params.set("establishmentId", establishmentId);
+  else params.delete("establishmentId");
   return params.toString() ? `${pathname}?${params.toString()}` : pathname;
 }

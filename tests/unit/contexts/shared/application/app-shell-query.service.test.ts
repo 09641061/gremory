@@ -24,6 +24,7 @@ const mocks = vi.hoisted(() => ({
           photoUrl: null,
         },
       ],
+      activeOrganizationId: "org-1",
       activeEstablishmentId: "est-1",
       canReadOrganizations: true,
       canReadEstablishments: true,
@@ -37,16 +38,16 @@ const mocks = vi.hoisted(() => ({
     getHeaderViewModel: vi.fn(),
   },
   catalog: {
-    getDefaultEstablishmentId: vi.fn(),
+    getPermissions: vi.fn(),
   },
   crm: {
-    getDefaultEstablishmentId: vi.fn(),
+    getPermissions: vi.fn(),
   },
   scheduling: {
-    getDefaultEstablishmentId: vi.fn(),
+    getPermissions: vi.fn(),
   },
   workforce: {
-    getDefaultEstablishmentId: vi.fn(),
+    getPermissions: vi.fn(),
   },
 }));
 
@@ -103,10 +104,10 @@ describe("app shell query service", () => {
       homeHref: "/chat",
     });
     mocks.workspace.getHeaderViewModel.mockResolvedValue(mocks.shell.workspace);
-    mocks.catalog.getDefaultEstablishmentId.mockResolvedValue("est-1");
-    mocks.crm.getDefaultEstablishmentId.mockResolvedValue("est-1");
-    mocks.scheduling.getDefaultEstablishmentId.mockResolvedValue("est-1");
-    mocks.workforce.getDefaultEstablishmentId.mockResolvedValue("est-1");
+    mocks.catalog.getPermissions.mockResolvedValue({ canReadCatalog: true });
+    mocks.crm.getPermissions.mockResolvedValue({ canReadCustomers: true });
+    mocks.scheduling.getPermissions.mockResolvedValue({ canReadAppointments: true });
+    mocks.workforce.getPermissions.mockResolvedValue({ canReadTeam: true });
   });
 
   it("resolves the sidebar routes from application policies instead of UI labels", async () => {

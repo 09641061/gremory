@@ -1,22 +1,28 @@
-import type { OrganizationSummary } from "./business.read-models";
-
 export type WorkspaceHeaderOrganization = Readonly<{
   id: string;
   name: string;
   imageUrl?: string | null;
   defaultEstablishmentId?: string;
+  mode?: "OWNER" | "MEMBER";
+  canRead?: boolean;
+  canUpdate?: boolean;
+  canCreateEstablishment?: boolean;
 }>;
 
 export type WorkspaceHeaderEstablishment = Readonly<{
   id: string;
   name: string;
   photoUrl?: string | null;
+  canRead?: boolean;
+  canUpdate?: boolean;
+  canDelete?: boolean;
 }>;
 
 export type WorkspaceHeaderViewModel = Readonly<{
   organization?: WorkspaceHeaderOrganization;
   organizations: ReadonlyArray<WorkspaceHeaderOrganization>;
   establishments: ReadonlyArray<WorkspaceHeaderEstablishment>;
+  activeOrganizationId?: string;
   activeEstablishmentId?: string;
   canReadOrganizations: boolean;
   canReadEstablishments: boolean;
@@ -29,8 +35,8 @@ export type OrganizationPageState =
     }>
   | Readonly<{
       status: "ready";
-      organization: OrganizationSummary;
-      canUpdate: boolean;
+      organizations: ReadonlyArray<WorkspaceHeaderOrganization>;
+      activeOrganizationId?: string;
     }>
   | Readonly<{
       status: "denied";

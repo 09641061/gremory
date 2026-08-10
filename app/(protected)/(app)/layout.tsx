@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 
 import { cookies } from "next/headers";
+import { headers } from "next/headers";
 import { ListConversationsQueryService } from "@/contexts/assistant/application/internal/queryservices/list-conversations-query.service";
 import type { AssistantConversationSummaryReadModel } from "@/contexts/assistant/application/internal/transforms/assistant.read-models";
 import { BillingApiGateway } from "@/contexts/billing/infrastructure/gateways/billing-api.gateway";
@@ -19,11 +20,18 @@ export default async function AppLayout({
 }) {
   const currentProfile = await getMyProfileServerQuery();
   const accessToken = (await cookies()).get(iamSessionCookies.accessToken)?.value;
+  const requestHeaders = await headers();
   const subscription = accessToken
     ? await new BillingApiGateway().getCurrentSubscription(accessToken).catch(() => null)
     : null;
   const shell = accessToken
-    ? await createAppShellQueryService().resolve({ subscription }).catch(() => null)
+    ? await createAppShellQueryService().resolve({
+        subscription,
+        workspace: {
+          organizationId: requestHeaders.get("x-takodu-organization-id") ?? undefined,
+          establishmentId: requestHeaders.get("x-takodu-establishment-id") ?? undefined,
+        },
+      }).catch(() => null)
     : null;
   const hasAssistantAccess = shell?.hasAssistantAccess ?? false;
 

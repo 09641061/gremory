@@ -1,23 +1,24 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import type { OrganizationSummary } from "@/contexts/business/application/model/business.read-models";
+import type { WorkspaceHeaderOrganization } from "@/contexts/business/application/model/business-workspace.view-models";
 import { OrganizationsSearchBar } from "./organizations-search-bar";
 import { OrganizationListCard } from "./organization-list-card";
 import { OrganizationDetailCard } from "./organization-detail-card";
 
 export function OrganizationsPageView({
-  organization,
-  canUpdate = true,
+  organizations,
+  activeOrganizationId,
 }: {
-  organization: OrganizationSummary;
-  canUpdate?: boolean;
+  organizations: ReadonlyArray<WorkspaceHeaderOrganization>;
+  activeOrganizationId?: string;
 }) {
   const [filter, setFilter] = useState("");
-  const [selectedOrgId, setSelectedOrgId] = useState<string | null>(null);
-
-  const organizations = useMemo(() => [organization], [organization]);
-
+  const [selectedOrgId, setSelectedOrgId] = useState<string | null>(
+    activeOrganizationId && organizations.some((organization) => organization.id === activeOrganizationId)
+      ? activeOrganizationId
+      : organizations[0]?.id ?? null,
+  );
   const filteredOrganizations = useMemo(() => {
     const normalized = filter.trim().toLowerCase();
     if (!normalized) return organizations;
@@ -54,7 +55,7 @@ export function OrganizationsPageView({
       {/* Columna derecha */}
       <OrganizationDetailCard
         organization={selectedOrg}
-        canUpdate={canUpdate}
+        canUpdate={selectedOrg?.canUpdate ?? false}
         onCancel={() => setSelectedOrgId(null)}
       />
     </section>

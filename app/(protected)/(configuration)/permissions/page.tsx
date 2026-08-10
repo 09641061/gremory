@@ -5,23 +5,25 @@ import { PermissionsPageView } from "@/contexts/workforce/interfaces/components/
 
 import { createWorkforceAccessPolicyService } from "@/contexts/workforce/application/internal/queryservices/workforce-access-policy.service";
 import { redirect } from "next/navigation";
+import { createBusinessWorkspaceQueryService } from "@/contexts/business/application/internal/queryservices/business-workspace-query.service";
 
 interface PermissionsPageProps {
-  searchParams: Promise<{ establishmentId?: string }>;
+  searchParams: Promise<{ organizationId?: string; establishmentId?: string }>;
 }
 
 export default async function PermissionsPage({ searchParams }: PermissionsPageProps) {
-  const { establishmentId: paramEstId } = await searchParams;
+  const query = await searchParams;
+  const workspace = await createBusinessWorkspaceQueryService().getHeaderViewModel(query);
+  const { establishmentId: paramEstId } = query;
   const queryService = createWorkforceRoleQueryService();
 
   const policyService = createWorkforceAccessPolicyService();
-  const defaultEstId = await policyService.getDefaultEstablishmentId();
-  const establishmentId = paramEstId ?? defaultEstId ?? undefined;
+  const establishmentId = paramEstId ?? workspace.activeEstablishmentId;
 
   const { canReadRoles, canCreateRole, canUpdateRole, canDeleteRole } = await policyService.getPermissions(establishmentId);
 
   if (!canReadRoles) {
-    redirect("/team?denied=permissions");
+    redirect("/access-denied");
   }
   
   let members: Awaited<ReturnType<ReturnType<typeof createTeamQueryService>["list"]>>["content"] = [];
@@ -58,4 +60,3 @@ export default async function PermissionsPage({ searchParams }: PermissionsPageP
     />
   );
 }
-

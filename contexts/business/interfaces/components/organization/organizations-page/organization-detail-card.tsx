@@ -3,7 +3,11 @@
 import { useState, useEffect, useRef, useActionState } from "react";
 import { useRouter } from "next/navigation";
 import { Building2, Save } from "lucide-react";
-import type { OrganizationSummary } from "@/contexts/business/application/model/business.read-models";
+type OrganizationDetails = Readonly<{
+  id: string;
+  name: string;
+  imageUrl?: string | null;
+}>;
 import { updateOrganizationAction } from "@/contexts/business/interfaces/actions/organization.actions";
 import { initialBusinessActionResult } from "@/contexts/business/interfaces/actions/business-action-result";
 import { Card, CardContent, CardFooter } from "@/contexts/shared/interfaces/components/ui/card";
@@ -18,7 +22,7 @@ import {
 } from "@/contexts/shared/interfaces/components/ui/avatar";
 
 interface OrganizationDetailCardProps {
-  organization: OrganizationSummary | null;
+  organization: OrganizationDetails | null;
   canUpdate?: boolean;
   onCancel?: () => void;
 }
