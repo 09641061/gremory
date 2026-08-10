@@ -10,16 +10,30 @@ export async function loadSchedulingMembers(
     const teamQueryService = createTeamQueryService();
     const membersPage = await teamQueryService.list({ establishmentId, size: 100 });
 
-    return membersPage.content.map((user) => ({
-      id: user.memberId ?? "",
-      userId: user.userId ?? "",
-      name: user.email.split("@")[0] || "Employee",
-      email: user.email,
-      role: user.roleName,
-      status: user.status,
-    }));
+    return membersPage.content
+      .filter((user) => user.userId && canReadSchedulingAppointments(user.roles))
+      .map((user) => ({
+        id: user.memberId ?? "",
+        userId: user.userId!,
+        name: user.email.split("@")[0] || "Employee",
+        email: user.email,
+        role: user.roleName,
+        status: user.status,
+      }));
   } catch (error) {
     console.error("Failed to load team members for scheduler:", error);
     return [];
   }
+}
+
+function canReadSchedulingAppointments(
+  roles: ReadonlyArray<{ permissions: ReadonlyArray<string> }> | undefined,
+): boolean {
+  return roles?.some((role) =>
+    role.permissions.some((permission) =>
+      permission === "scheduling:appointments:read" ||
+      permission === "scheduling:appointments:manage" ||
+      permission === "scheduling:manage",
+    ),
+  ) ?? false;
 }
