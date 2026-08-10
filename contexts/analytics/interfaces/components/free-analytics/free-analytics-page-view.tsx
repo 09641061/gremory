@@ -1,4 +1,6 @@
-import type { ReactNode } from "react";
+"use client";
+
+import { useState, type ReactNode } from "react";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/contexts/shared/interfaces/components/ui/card";
 import type {
@@ -395,6 +397,14 @@ function TrendChart({
   const area = buildArea(points);
   const colorClass = tone === "primary" ? "text-primary" : tone === "secondary" ? "text-sky-600" : "text-emerald-600";
   const currentValue = data.at(-1)?.value ?? 0;
+  const maxValue = Math.max(...data.map((item) => item.value), 1);
+  const yAxisTicks = buildYAxisTicks(maxValue);
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+  const hoveredPoint = hoveredIndex !== null ? data[hoveredIndex] : null;
+  const hoveredCoords = hoveredIndex !== null ? points[hoveredIndex] : null;
+  const showTooltipBelow = hoveredCoords ? hoveredCoords.y < 20 : false;
+  const tooltipLeft = hoveredCoords ? Math.min(92, Math.max(8, hoveredCoords.x)) : 50;
+  const tooltipTop = hoveredCoords ? (showTooltipBelow ? Math.min(88, hoveredCoords.y + 8) : Math.max(10, hoveredCoords.y - 6)) : 0;
 
   return (
     <div className="space-y-3">
@@ -405,34 +415,77 @@ function TrendChart({
         </span>
       </div>
 
-      <div className="overflow-hidden rounded-xl border border-border/60 bg-background/60 p-4">
-        <svg viewBox="0 0 100 60" className="h-44 w-full">
-          <g className="text-border/70">
-            <line x1="0" y1="12" x2="100" y2="12" stroke="currentColor" strokeDasharray="1.5 2.5" />
-            <line x1="0" y1="30" x2="100" y2="30" stroke="currentColor" strokeDasharray="1.5 2.5" />
-            <line x1="0" y1="48" x2="100" y2="48" stroke="currentColor" strokeDasharray="1.5 2.5" />
-          </g>
-          <path d={area} fill="currentColor" fillOpacity="0.12" className={colorClass} />
-          <polyline
-            points={path}
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.2"
-            strokeLinejoin="round"
-            strokeLinecap="round"
-            className={colorClass}
-          />
-          {points.map((point, index) => (
-            <circle
-              key={`${point.x}-${point.y}-${index}`}
-              cx={point.x}
-              cy={point.y}
-              r="1.8"
-              className={colorClass}
-              fill="currentColor"
-            />
-          ))}
-        </svg>
+      <div className="overflow-visible rounded-xl border border-border/60 bg-background/60 p-4">
+        <div className="grid gap-3 md:grid-cols-[56px_minmax(0,1fr)]">
+          <div className="flex h-44 flex-col justify-between py-1 text-[11px] font-medium text-muted-foreground">
+            {yAxisTicks.map((tick) => (
+              <span key={tick.value}>{formatTrendTick(tick.value, valueFormatter)}</span>
+            ))}
+          </div>
+
+          <div className="relative overflow-visible">
+            {hoveredPoint && hoveredCoords ? (
+              <div
+                className={`pointer-events-none absolute z-20 max-w-[190px] rounded-lg border border-border/70 bg-card px-3 py-2 shadow-lg ${
+                  showTooltipBelow ? "translate-y-0" : "-translate-y-full"
+                }`}
+                style={{
+                  left: `${tooltipLeft}%`,
+                  top: `${tooltipTop}%`,
+                  transform: `translateX(-50%) ${showTooltipBelow ? "" : "translateY(-100%)"}`.trim(),
+                }}
+              >
+                <p className="text-xs font-semibold text-foreground">{formatTrendDateLabel(hoveredPoint.date)}</p>
+                <p className="text-xs text-muted-foreground">
+                  {valueFormatter ? valueFormatter(hoveredPoint.value) : formatNumber(hoveredPoint.value)} appointments
+                </p>
+              </div>
+            ) : null}
+
+            <svg viewBox="0 0 100 60" preserveAspectRatio="none" className="h-52 w-full">
+              <g className="text-border/70">
+                {yAxisTicks.map((tick) => (
+                  <line
+                    key={`grid-${tick.value}`}
+                    x1="6"
+                    y1={tick.y}
+                    x2="100"
+                    y2={tick.y}
+                    stroke="currentColor"
+                    strokeDasharray="1.5 2.5"
+                  />
+                ))}
+              </g>
+              <path d={area} fill="currentColor" fillOpacity="0.12" className={colorClass} />
+              <polyline
+                points={path}
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.2"
+                strokeLinejoin="round"
+                strokeLinecap="round"
+                className={colorClass}
+              />
+              {points.map((point, index) => (
+                <circle
+                  key={`${point.x}-${point.y}-${index}`}
+                  cx={point.x}
+                  cy={point.y}
+                  r={hoveredIndex === index ? "2.8" : "2"}
+                  className={colorClass}
+                  fill="currentColor"
+                  onMouseEnter={() => setHoveredIndex(index)}
+                  onMouseLeave={() => setHoveredIndex(null)}
+                  onFocus={() => setHoveredIndex(index)}
+                  onBlur={() => setHoveredIndex(null)}
+                  tabIndex={0}
+                  role="button"
+                  aria-label={`${formatTrendDateLabel(data[index]?.date)}: ${valueFormatter ? valueFormatter(data[index]?.value ?? 0) : formatNumber(data[index]?.value ?? 0)} appointments`}
+                />
+              ))}
+            </svg>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -586,9 +639,13 @@ function buildTrendPoints(values: number[]) {
   if (values.length === 0) return [];
 
   const maxValue = Math.max(...values, 1);
+  const left = 6;
+  const right = 96;
+  const top = 8;
+  const bottom = 52;
   return values.map((value, index) => ({
-    x: values.length === 1 ? 50 : (index / (values.length - 1)) * 100,
-    y: 52 - (value / maxValue) * 40,
+    x: values.length === 1 ? (left + right) / 2 : left + (index / (values.length - 1)) * (right - left),
+    y: bottom - (value / maxValue) * (bottom - top),
   }));
 }
 
@@ -622,4 +679,34 @@ function formatTrendDate(value?: string) {
     day: "numeric",
     timeZone: "UTC",
   }).format(date);
+}
+
+function formatTrendDateLabel(value?: string) {
+  if (!value) return "N/A";
+  const date = new Date(`${value}T00:00:00Z`);
+  return new Intl.DateTimeFormat("en-US", {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+    timeZone: "UTC",
+  }).format(date);
+}
+
+function formatTrendTick(value: number, valueFormatter?: (value: number) => string) {
+  const normalized = Number.isFinite(value) ? value : 0;
+  return valueFormatter ? valueFormatter(normalized) : formatNumber(Math.round(normalized));
+}
+
+function buildYAxisTicks(maxValue: number) {
+  const ceiling = Math.max(1, Math.ceil(maxValue));
+  const step = Math.max(1, Math.ceil(ceiling / 3));
+  const values = [ceiling, Math.max(0, ceiling - step), Math.max(0, ceiling - step * 2), 0];
+
+  const uniqueValues = values.filter((value, index) => values.indexOf(value) === index);
+  const positions = [8, 22, 36, 50];
+
+  return uniqueValues.map((value, index) => ({
+    value,
+    y: positions[index] ?? positions[positions.length - 1],
+  }));
 }
