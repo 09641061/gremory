@@ -103,6 +103,7 @@ export function CategoryItem({
           <div className="relative flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
             <EntityActionsMenu
               label={`More actions for ${cat.name}`}
+              title="Category Options"
               size="icon-sm"
               triggerClassName="h-6 w-6 text-muted-foreground hover:text-foreground"
               contentClassName="w-44"

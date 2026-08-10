@@ -25,6 +25,8 @@ interface EntityActionsMenuProps {
   actions: EntityAction[];
   /** Accessible name for the trigger, e.g. "More actions for Acme". */
   label: string;
+  /** Optional tooltip title when the UI uses a shorter legacy label. */
+  title?: string;
   disabled?: boolean;
   size?: "icon" | "icon-sm";
   triggerClassName?: string;
@@ -38,6 +40,7 @@ interface EntityActionsMenuProps {
 export function EntityActionsMenu({
   actions,
   label,
+  title,
   disabled,
   size = "icon",
   triggerClassName,
@@ -59,6 +62,7 @@ export function EntityActionsMenu({
             variant="ghost"
             size={size}
             aria-label={label}
+            title={title ?? label}
             className={triggerClassName}
           />
         }

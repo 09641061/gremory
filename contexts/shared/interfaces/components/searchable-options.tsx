@@ -68,6 +68,7 @@ export function SearchableOptions<T extends SearchableOption>({
     >
       <ComboboxTrigger
         render={<Button type="button" variant="ghost" className={triggerClassName} />}
+        aria-label={selectedOption?.name ?? allLabel}
         indicator={<ChevronsUpDown className="pointer-events-none size-4 text-muted-foreground" />}
       >
         {children}
