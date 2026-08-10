@@ -18,73 +18,63 @@ export function FreeAnalyticsPageView({ analytics, errorMessage }: FreeAnalytics
     return <FreeAnalyticsErrorState message={errorMessage ?? "Unable to load analytics right now."} />;
   }
 
-  const appointmentStatusTotal =
+  const statusTotal =
     analytics.completedAppointmentsLastSevenDays +
     analytics.cancelledAppointmentsLastSevenDays +
     analytics.noShowAppointmentsLastSevenDays +
     analytics.inProgressAppointmentsLastSevenDays;
 
   return (
-    <section className="relative mx-auto flex w-full max-w-7xl flex-col gap-6 overflow-hidden">
+    <main className="mx-auto flex w-full max-w-[1600px] flex-col gap-6 px-4 py-8 md:px-8">
       
-      <header className="relative overflow-hidden rounded-[2rem] border border-border/70 bg-card/95 p-6 shadow-sm backdrop-blur">
-        
-  
 
-                   
-            <InfoPill label="Updated" value={formatDateTime(analytics.generatedAt)} />
-          
-        
-          
+      <section className="flex flex-wrap gap-2">
+        <MetricChip label="Customers" value={analytics.customersCount} />
+        <MetricChip label="Services" value={analytics.activeServicesCount} />
+      </section>
 
-          
-        
-      </header>
+      {!analytics.hasOrganization ? (
+        <Alert className="border-dashed border-border/70 bg-background/70">
+          <AlertTriangle className="size-4 text-amber-600" />
+          <AlertTitle>No organization connected</AlertTitle>
+          <AlertDescription className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <span>
+              Some metrics may stay at zero until you create or connect an organization.
+            </span>
+            <Link
+              href="/organizations"
+              className="inline-flex h-8 shrink-0 items-center justify-center gap-1.5 rounded-lg border border-border bg-background px-2.5 text-sm font-medium text-foreground transition-colors hover:bg-muted"
+            >
+              Go to organizations
+              <ArrowRight className="size-3.5" />
+            </Link>
+          </AlertDescription>
+        </Alert>
+      ) : null}
 
       <div className="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
-        <Card className="rounded-[1.5rem] border-border/70 bg-card/95 shadow-sm">
+        <Card className="overflow-hidden rounded-xl border-border bg-card shadow-sm">
           <CardHeader className="border-b border-border/60 pb-4">
             <CardTitle>Appointments trend</CardTitle>
-            <CardDescription>Daily appointment volume normalized to the last 7 days.</CardDescription>
+            <CardDescription>Daily appointment volume across the last 7 days.</CardDescription>
           </CardHeader>
           <CardContent className="p-5">
             <TrendChart data={analytics.appointmentsTrend} tone="primary" />
           </CardContent>
         </Card>
 
-        <Card className="rounded-[1.5rem] border-border/70 bg-card/95 shadow-sm">
+        <Card className="overflow-hidden rounded-xl border-border bg-card shadow-sm">
           <CardHeader className="border-b border-border/60 pb-4">
             <CardTitle>Appointment status mix</CardTitle>
-            <CardDescription>How activity was distributed over the same 7-day window.</CardDescription>
+            <CardDescription>Distribution of the 7-day appointment window.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4 p-5">
-            <StatusBar
-              label="Completed"
-              value={analytics.completedAppointmentsLastSevenDays}
-              total={appointmentStatusTotal}
-              tone="bg-emerald-500"
-            />
-            <StatusBar
-              label="Cancelled"
-              value={analytics.cancelledAppointmentsLastSevenDays}
-              total={appointmentStatusTotal}
-              tone="bg-rose-500"
-            />
-            <StatusBar
-              label="No show"
-              value={analytics.noShowAppointmentsLastSevenDays}
-              total={appointmentStatusTotal}
-              tone="bg-amber-500"
-            />
-            <StatusBar
-              label="In progress"
-              value={analytics.inProgressAppointmentsLastSevenDays}
-              total={appointmentStatusTotal}
-              tone="bg-sky-500"
-            />
+            <StatusBar label="Completed" value={analytics.completedAppointmentsLastSevenDays} total={statusTotal} tone="bg-emerald-500" />
+            <StatusBar label="Cancelled" value={analytics.cancelledAppointmentsLastSevenDays} total={statusTotal} tone="bg-rose-500" />
+            <StatusBar label="No show" value={analytics.noShowAppointmentsLastSevenDays} total={statusTotal} tone="bg-amber-500" />
             <p className="text-xs text-muted-foreground">
-              {appointmentStatusTotal > 0
-                ? `${appointmentStatusTotal} status events captured in the last 7 days.`
+              {statusTotal > 0
+                ? `${statusTotal} status events captured in the last 7 days.`
                 : "No appointment status events captured in the last 7 days."}
             </p>
           </CardContent>
@@ -92,34 +82,25 @@ export function FreeAnalyticsPageView({ analytics, errorMessage }: FreeAnalytics
       </div>
 
       <div className="grid gap-6 xl:grid-cols-2">
-        <Card className="rounded-[1.5rem] border-border/70 bg-card/95 shadow-sm">
+        <Card className="overflow-hidden rounded-xl border-border bg-card shadow-sm">
           <CardHeader className="border-b border-border/60 pb-4">
             <CardTitle>Customers trend</CardTitle>
-            <CardDescription>Growth curve for customer activity over the same 7-day window.</CardDescription>
+            <CardDescription>Customer activity during the same 7-day window.</CardDescription>
           </CardHeader>
           <CardContent className="p-5">
             <TrendChart data={analytics.customersTrend} tone="secondary" />
           </CardContent>
         </Card>
-
-        <Card className="rounded-[1.5rem] border-border/70 bg-card/95 shadow-sm">
-          <CardHeader className="border-b border-border/60 pb-4">
-            <CardTitle>Assistant messages trend</CardTitle>
-            <CardDescription>Message activity line, useful to spot bursts and quiet days.</CardDescription>
-          </CardHeader>
-          <CardContent className="p-5">
-            <TrendChart data={analytics.assistantMessagesTrend} tone="accent" />
-          </CardContent>
-        </Card>
+        
       </div>
-    </section>
+    </main>
   );
 }
 
 function FreeAnalyticsErrorState({ message }: { message: string }) {
   return (
-    <div className="mx-auto flex w-full max-w-3xl flex-col gap-4">
-      <Card className="rounded-[1.5rem] border-border/70 bg-card/95 shadow-sm">
+    <main className="mx-auto flex w-full max-w-[1600px] flex-col gap-6 px-4 py-8 md:px-8">
+      <Card className="overflow-hidden rounded-xl border-border bg-card shadow-sm">
         <CardContent className="space-y-4 p-6">
           <Alert variant="destructive" className="border-destructive/20 bg-destructive/5">
             <AlertTriangle className="size-4" />
@@ -128,91 +109,43 @@ function FreeAnalyticsErrorState({ message }: { message: string }) {
           </Alert>
           <p className="text-sm text-muted-foreground">
             The dashboard contract is wired, but the backend response is still needed for a live snapshot.
-            Once the endpoint responds, this page will render the full overview.
           </p>
         </CardContent>
       </Card>
-    </div>
+    </main>
   );
 }
 
-function InfoPill({
+function InfoChip({
   label,
   value,
-  className,
 }: {
   label: string;
   value: string;
-  className?: string;
 }) {
   return (
-    <div
-      className={[
-        "rounded-2xl border border-border/70 bg-background/70 px-4 py-3",
-        className,
-      ]
-        .filter(Boolean)
-        .join(" ")}
-    >
+    <div className="rounded-xl border border-border bg-card px-4 py-3 shadow-sm">
       <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">{label}</p>
-      <p className="mt-1 truncate text-sm font-medium text-foreground">{value}</p>
+      <p className="mt-1 text-sm font-medium text-foreground">{value}</p>
     </div>
   );
 }
 
-function CompactFact({
+function MetricChip({
   label,
   value,
-  sublabel,
 }: {
   label: string;
   value: number;
-  sublabel: string;
 }) {
   return (
-    <div className="rounded-2xl border border-border/70 bg-background/80 px-4 py-3">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">{label}</p>
-          <p className="mt-1 text-2xl font-semibold tracking-tight text-foreground">{formatNumber(value)}</p>
-        </div>
-        <div className="mt-1 h-2.5 w-2.5 rounded-full bg-primary/70" />
-      </div>
-      <p className="mt-1 text-xs text-muted-foreground">{sublabel}</p>
-    </div>
-  );
-}
-
-function PulseIndicator({
-  label,
-  value,
-  total,
-  helper,
-}: {
-  label: string;
-  value: number;
-  total: number;
-  helper: string;
-}) {
-  const ratio = total > 0 ? Math.max(0.05, Math.min(1, value / total)) : 0;
-  const ratioPercent = Math.round(ratio * 100);
-  const ratioLabel = total > 0 ? `${ratioPercent}%` : "0%";
-
-  return (
-    <div className="rounded-2xl border border-border/70 bg-background/80 p-4">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">{label}</p>
-          <p className="mt-1 text-3xl font-semibold tracking-tight text-foreground">{formatNumber(value)}</p>
-        </div>
-        <div className="rounded-full bg-primary/10 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-primary">
-          {ratioLabel}
-        </div>
-      </div>
-      <div className="mt-4 h-2 overflow-hidden rounded-full bg-muted">
-        <div className="h-full rounded-full bg-primary" style={{ width: `${ratioPercent}%` }} />
-      </div>
-      <p className="mt-2 text-xs text-muted-foreground">{helper}</p>
+    <div className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 text-sm shadow-sm">
+      <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+        {label}
+      </span>
+      <span className="rounded-full bg-primary/10 px-2 py-0.5 text-sm font-semibold text-primary">
+        {formatNumber(value)}
+      </span>
     </div>
   );
 }
@@ -256,7 +189,7 @@ function TrendChart({
   const colorClass = tone === "primary" ? "text-primary" : tone === "secondary" ? "text-sky-600" : "text-emerald-600";
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       <div className="flex items-center justify-between text-xs text-muted-foreground">
         <span>{data.length ? formatTrendRange(data[0]?.date, data[data.length - 1]?.date) : "No trend data"}</span>
         <span className={`font-semibold uppercase tracking-[0.18em] ${colorClass}`}>
@@ -264,7 +197,7 @@ function TrendChart({
         </span>
       </div>
 
-      <div className="overflow-hidden rounded-2xl border border-border/60 bg-background/60 p-4">
+      <div className="overflow-hidden rounded-xl border border-border/60 bg-background/60 p-4">
         <svg viewBox="0 0 100 60" className="h-44 w-full">
           <g className="text-border/70">
             <line x1="0" y1="12" x2="100" y2="12" stroke="currentColor" strokeDasharray="1.5 2.5" />
