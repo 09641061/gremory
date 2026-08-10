@@ -1,8 +1,7 @@
 "use client";
 
-import { useActionState, useEffect, useState, useRef, useMemo } from "react";
-import { Calendar } from "lucide-react";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/contexts/shared/interfaces/components/ui/dialog";
+import { useActionState, useEffect, useMemo, useRef, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import { Label } from "@/contexts/shared/interfaces/components/ui/label";
 import { Input } from "@/contexts/shared/interfaces/components/ui/input";
@@ -25,14 +24,11 @@ import {
   createServiceOptions,
 } from "./scheduling-form-utils";
 
-interface AppointmentFormModalProps {
-  isOpen: boolean;
-  onOpenChange: (open: boolean) => void;
+interface CreateAppointmentFormProps {
   establishmentId: string;
   services: SchedulingServiceViewModel[];
   members: SchedulingMemberViewModel[];
   customers: SchedulingCustomerViewModel[];
-  onSuccess: () => void;
 }
 
 const initialActionState: ActionState<Appointment> = {
@@ -42,19 +38,18 @@ const initialActionState: ActionState<Appointment> = {
   fieldErrors: null,
 };
 
-export function AppointmentFormModal({
-  isOpen,
-  onOpenChange,
+export function CreateAppointmentForm({
   establishmentId,
   services,
   members,
   customers,
-  onSuccess,
-}: AppointmentFormModalProps) {
+}: CreateAppointmentFormProps) {
+  const router = useRouter();
   const [state, formAction, isPending] = useActionState(
     createAppointmentAction,
     initialActionState
   );
+  const [isNavigating, startTransition] = useTransition();
   const hasSucceeded = useRef(false);
 
   const [selectedServiceId, setSelectedServiceId] = useState("");
@@ -73,10 +68,12 @@ export function AppointmentFormModal({
   useEffect(() => {
     if (state.status === "success" && !hasSucceeded.current) {
       hasSucceeded.current = true;
-      onSuccess();
-      onOpenChange(false);
+      startTransition(() => {
+        router.push("/schedule");
+        router.refresh();
+      });
     }
-  }, [state.status, onSuccess, onOpenChange]);
+  }, [state.status, router, startTransition]);
 
   const { startsAt, endsAt, formattedEnd } = computeAppointmentTimes({
     startDate,
@@ -84,27 +81,29 @@ export function AppointmentFormModal({
     durationMinutes: selectedService?.durationMinutes,
   });
 
+  const isWorking = isPending || isNavigating;
+
   return (
-    <>
-      <Dialog open={isOpen} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-md">
-          <ErrorAlert
-            key={(state.status === "error" ? state.errorId : null) ?? "scheduling-error"}
-            title="Scheduling Failed"
-            message={state.error ?? undefined}
-          />
-          <form action={formAction} className="space-y-4">
+    <div className="bg-background text-foreground flex flex-col">
+      <main className="flex-1 max-w-[800px] w-full mx-auto px-4 py-8">
+        <ErrorAlert
+          key={(state.status === "error" ? state.errorId : null) ?? "scheduling-error"}
+          title="Scheduling Failed"
+          message={state.error ?? undefined}
+        />
+
+        <div className="rounded-lg border border-border bg-card p-6">
+          <div className="border-b border-border pb-4">
+            <h1 className="text-xl font-bold text-foreground">New Appointment</h1>
+            <p className="text-sm text-muted-foreground mt-1.5">
+              Fill in the details to schedule a new appointment.
+            </p>
+          </div>
+
+          <form action={formAction} className="space-y-4 pt-6">
             <input type="hidden" name="establishmentId" value={establishmentId} />
             <input type="hidden" name="startsAt" value={startsAt} />
             <input type="hidden" name="endsAt" value={endsAt} />
-
-            <DialogHeader>
-              <div className="flex items-center gap-2">
-                <Calendar className="text-primary size-5" />
-                <DialogTitle>New Appointment</DialogTitle>
-              </div>
-              <DialogDescription>Fill in the details to schedule a new appointment.</DialogDescription>
-            </DialogHeader>
 
             <div className="space-y-1.5">
               <Label htmlFor="create-title">Appointment Title</Label>
@@ -175,21 +174,21 @@ export function AppointmentFormModal({
             </div>
 
             <div className="rounded-lg border border-border bg-muted/40 p-3 space-y-1">
-              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Calculated End Time</p>
+              <p className="text-xs font-semibold text-muted-foreground">Calculated end time</p>
               <p className="text-sm font-medium text-foreground">{formattedEnd || "--"}</p>
             </div>
 
-            <DialogFooter>
-              <Button type="button" variant="outline" disabled={isPending} onClick={() => onOpenChange(false)}>
+            <div className="flex justify-end gap-2 pt-2">
+              <Button type="button" variant="outline" disabled={isWorking} onClick={() => router.back()}>
                 Cancel
               </Button>
-              <Button type="submit" disabled={isPending || !startsAt || !endsAt}>
-                {isPending ? "Scheduling..." : "Create Appointment"}
+              <Button type="submit" disabled={isWorking || !startsAt || !endsAt}>
+                {isWorking ? "Scheduling..." : "Create Appointment"}
               </Button>
-            </DialogFooter>
+            </div>
           </form>
-        </DialogContent>
-      </Dialog>
-    </>
+        </div>
+      </main>
+    </div>
   );
 }

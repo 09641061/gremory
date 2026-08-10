@@ -1,10 +1,10 @@
 "use client";
 
 import { useState, useTransition, useEffect, useCallback, useMemo, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { Appointment } from "../../../domain/model/entities/appointment";
 import { listAppointmentsAction } from "../../actions/list-appointments.action";
 import { AppointmentDetailModal } from "../appointment-detail/appointment-detail-modal";
-import { AppointmentFormModal } from "../appointment-form/appointment-form-modal";
 import { WeeklyCalendarGrid } from "./weekly-calendar-grid";
 import { WeeklyCalendarHeader } from "./weekly-calendar-header";
 import type {
@@ -45,11 +45,11 @@ export function WeeklyCalendar({
   canUpdateAppointment,
   canDeleteAppointment,
 }: WeeklyCalendarProps) {
+  const router = useRouter();
   const [currentDate, setCurrentDate] = useState(() => new Date());
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
-  const [isFormOpen, setIsFormOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
 
   const requestIdRef = useRef(0);
@@ -142,7 +142,7 @@ export function WeeklyCalendar({
         onPreviousWeek={() => navigateWeek("prev")}
         onNextWeek={() => navigateWeek("next")}
         onToday={navigateToday}
-        onCreateAppointment={() => setIsFormOpen(true)}
+        onCreateAppointment={() => router.push("/schedule/new")}
         canCreateAppointment={canCreateAppointment}
       />
 
@@ -206,18 +206,6 @@ export function WeeklyCalendar({
           onDeleteSuccess={fetchAppointments}
           canUpdateAppointment={canUpdateAppointment}
           canDeleteAppointment={canDeleteAppointment}
-        />
-      )}
-
-      {isFormOpen && (
-        <AppointmentFormModal
-          isOpen={isFormOpen}
-          onOpenChange={setIsFormOpen}
-          establishmentId={establishmentId}
-          services={services}
-          members={members}
-          customers={customers}
-          onSuccess={fetchAppointments}
         />
       )}
     </div>
