@@ -60,7 +60,7 @@ export function Sidebar({
 
   return (
     <aside className="fixed bottom-0 left-0 top-14 z-20 hidden w-60 shrink-0 border-r border-border/60 bg-background px-3 py-3 md:flex md:flex-col">
-      <nav aria-label="Modulos" className="mt-2">
+      <nav aria-label="Modules" className="mt-2">
         <ul className="space-y-1">
           {filteredNavigation.map(({ label, href, icon: Icon }) => {
             const active =

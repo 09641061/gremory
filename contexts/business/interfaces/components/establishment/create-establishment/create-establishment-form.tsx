@@ -35,7 +35,11 @@ export function CreateEstablishmentForm({ organizationId }: { organizationId: st
   useEffect(() => {
     if (state.status === "success" && !hasRedirected.current) {
       hasRedirected.current = true;
-      router.push("/establishments");
+      const establishmentId = state.data?.id;
+      const nextPath = establishmentId
+        ? `/?organizationId=${encodeURIComponent(organizationId)}&establishmentId=${encodeURIComponent(establishmentId)}`
+        : "/";
+      router.push(nextPath);
       router.refresh();
     } else if (state.status === "error") {
       setTimeout(() => {
@@ -47,7 +51,7 @@ export function CreateEstablishmentForm({ organizationId }: { organizationId: st
         setFormResetKey((k) => k + 1);
       }, 0);
     }
-  }, [router, state.status, state.error]);
+  }, [organizationId, router, state.data?.id, state.error, state.status]);
 
   useEffect(() => {
     return () => {

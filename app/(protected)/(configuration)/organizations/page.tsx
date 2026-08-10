@@ -4,20 +4,27 @@ import { createBusinessWorkspaceQueryService } from "@/contexts/business/applica
 import { redirect } from "next/navigation";
 
 interface OrganizationsPageProps {
-  searchParams: Promise<{ establishmentId?: string }>;
+  searchParams: Promise<{ organizationId?: string; establishmentId?: string }>;
 }
 
 export default async function OrganizationsRoutePage({ searchParams }: OrganizationsPageProps) {
-  const { establishmentId } = await searchParams;
-  const pageState = await createBusinessWorkspaceQueryService().getOrganizationPageState(establishmentId);
+  const query = await searchParams;
+  const pageState = await createBusinessWorkspaceQueryService().getOrganizationPageState(query);
 
   if (pageState.status === "create") {
     return <CreateOrganizationForm />;
   }
 
   if (pageState.status === "denied") {
-    redirect("/?denied=org");
+    redirect("/access-denied");
   }
 
-  return <OrganizationsPageView organization={pageState.organization} canUpdate={pageState.canUpdate} />;
+  return (
+    <OrganizationsPageView
+      key={pageState.activeOrganizationId ?? "default"}
+      organizations={pageState.organizations}
+      activeOrganizationId={pageState.activeOrganizationId}
+      canCreate={pageState.canCreateOrganization}
+    />
+  );
 }

@@ -23,6 +23,7 @@ interface OrganizationSelectorProps {
   organizations?: ReadonlyArray<OrganizationSelectorOrganization>;
   onSelect?: (organizationId: string, defaultEstablishmentId?: string) => void;
   onSelectAll?: () => void;
+  onNew?: () => void;
 }
 
 export function OrganizationSelector({
@@ -30,6 +31,7 @@ export function OrganizationSelector({
   organizations = organization ? [organization] : [],
   onSelect,
   onSelectAll,
+  onNew,
 }: OrganizationSelectorProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState("");
@@ -70,13 +72,22 @@ export function OrganizationSelector({
               setIsOpen(false);
               onSelect?.(org.id, org.defaultEstablishmentId);
             }}
-            onSelectAll={() => {
-              setIsOpen(false);
-              onSelectAll?.();
-            }}
+            onSelectAll={onSelectAll
+              ? () => {
+                  setIsOpen(false);
+                  onSelectAll();
+                }
+              : undefined}
             allLabel="All Organizations"
             searchPlaceholder="Find organization..."
             emptyMessage="No organizations found"
+            newLabel="New organization"
+            onNew={onNew
+              ? () => {
+                  setIsOpen(false);
+                  onNew();
+                }
+              : undefined}
           />
         </div>
       )}

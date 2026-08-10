@@ -1,201 +1,99 @@
 import "server-only";
 
-import { createOrganizationQueryService } from "@/contexts/business/application/internal/queryservices/organization-query.service";
-import { createEstablishmentQueryService } from "@/contexts/business/application/internal/queryservices/establishment-query.service";
-import { createTeamQueryService } from "@/contexts/workforce/application/internal/queryservices/team-query.service";
-import {
-  hasAnyPermission,
-  hasReadRole,
-  pickActiveEstablishment,
-} from "@/contexts/shared/application/internal/queryservices/access-context.helpers";
+import { BusinessWorkspaceApiGateway } from "@/contexts/business/infrastructure/gateways/business-workspace-api.gateway";
+import type { BusinessWorkspaceSelection } from "@/contexts/business/infrastructure/gateways/business-workspace-api.gateway";
 import type {
+  OrganizationCreationState,
   OrganizationPageState,
+  WorkspaceHeaderEstablishment,
   WorkspaceHeaderOrganization,
   WorkspaceHeaderViewModel,
 } from "@/contexts/business/application/model/business-workspace.view-models";
 
-export class BusinessWorkspaceQueryService {
-  async getHeaderViewModel(activeEstablishmentId?: string): Promise<WorkspaceHeaderViewModel> {
-    try {
-      const organization = await createOrganizationQueryService().getMyOrganization();
-      const page = await createEstablishmentQueryService().getByOrganization({
-        organizationId: organization.id,
-        page: 0,
-        size: 100,
-      });
+export type BusinessWorkspaceQuery = BusinessWorkspaceSelection;
 
-      const establishments = page.content.map((establishment) => ({
-        id: establishment.id,
-        name: establishment.name,
-        photoUrl: establishment.photoUrl,
-      }));
+export class BusinessWorkspaceQueryService {
+  constructor(private readonly workspace = new BusinessWorkspaceApiGateway()) {}
+
+  async getHeaderViewModel(query: BusinessWorkspaceQuery = {}): Promise<WorkspaceHeaderViewModel> {
+    const resource = await this.workspace.getWorkspace(query);
+    const organizations = resource.organizations.map(toHeaderOrganization);
+    const activeOrganization = organizations.find(
+      (organization) => organization.id === resource.activeOrganizationId,
+    );
+    const establishments = activeOrganization?.establishments ?? [];
+    const activeEstablishmentId = establishments.some(
+      (establishment) => establishment.id === resource.activeEstablishmentId,
+    )
+      ? resource.activeEstablishmentId ?? undefined
+      : undefined;
+
+    return {
+      organization: activeOrganization,
+      organizations,
+      establishments,
+      activeOrganizationId: resource.activeOrganizationId ?? undefined,
+      activeEstablishmentId,
+      canReadOrganizations: organizations.some((organization) => organization.canRead),
+      canReadEstablishments: activeOrganization?.canReadEstablishments === true,
+      // The owner is authorized to attempt creation even when Billing rejects it
+      // because the plan limit was reached. The command/action remains the
+      // authoritative business validation boundary and will expose that error.
+      canCreateEstablishment: activeOrganization?.canCreateEstablishment === true,
+      canCreateOrganization: canCreateOrganization(organizations),
+    };
+  }
+
+  async getOrganizationPageState(query: BusinessWorkspaceQuery = {}): Promise<OrganizationPageState> {
+    try {
+      const resource = await this.workspace.getWorkspace(query);
+      const organizations = resource.organizations.map(toHeaderOrganization);
+      const activeOrganization = organizations.find(
+        (organization) => organization.id === resource.activeOrganizationId,
+      );
+
+      if (activeOrganization && !activeOrganization.canRead) {
+        return { status: "denied" };
+      }
+
+      const readableOrganizations = organizations.filter((organization) => organization.canRead);
+
+      if (readableOrganizations.length === 0) {
+        return resource.organizations.length === 0
+          ? { status: "create" }
+          : { status: "denied" };
+      }
 
       return {
-        organization: {
-          id: organization.id,
-          name: organization.name,
-          imageUrl: organization.imageUrl,
-          defaultEstablishmentId: establishments[0]?.id,
-        },
-        organizations: [
-          {
-            id: organization.id,
-            name: organization.name,
-            imageUrl: organization.imageUrl,
-            defaultEstablishmentId: establishments[0]?.id,
-          },
-        ],
-        establishments,
-        activeEstablishmentId: activeEstablishmentId ?? establishments[0]?.id,
-        canReadOrganizations: true,
-        canReadEstablishments: true,
-        canCreateEstablishment: true,
+        status: "ready",
+        organizations: readableOrganizations,
+        activeOrganizationId: resource.activeOrganizationId ?? undefined,
+        canCreateOrganization: canCreateOrganization(organizations),
       };
-    } catch {
-      try {
-        const access = await createTeamQueryService().getAccessContext();
-        const activeEstablishment = pickActiveEstablishment(access.establishments, activeEstablishmentId);
-
-        if (!activeEstablishment) {
-          return {
-            organizations: [],
-            establishments: [],
-            activeEstablishmentId: undefined,
-            canReadOrganizations: false,
-            canReadEstablishments: false,
-            canCreateEstablishment: false,
-          };
-        }
-
-        const activeOrganizationId = activeEstablishment.organizationId;
-        const organizations = buildOrganizations(access.establishments);
-        const establishments = access.establishments
-          .filter((item) => item.organizationId === activeOrganizationId)
-          .map((item) => ({
-            id: item.establishmentId,
-            name: item.establishmentName,
-            photoUrl: null,
-          }));
-
-        return {
-          organization:
-            organizations.find((item) => item.id === activeOrganizationId) ?? {
-              id: activeOrganizationId,
-              name: activeEstablishment.organizationName,
-              imageUrl: null,
-              defaultEstablishmentId: establishments[0]?.id,
-            },
-          organizations,
-          establishments,
-          activeEstablishmentId: activeEstablishment.establishmentId,
-          canReadOrganizations:
-            access.establishments.some(
-              (item) =>
-                item.organizationId === activeOrganizationId &&
-                hasAnyPermission(item.effectivePermissions, [
-                  "business:organizations:read",
-                  "business:organizations:manage",
-                  "business:manage",
-                ]),
-            ) || hasReadRole(activeEstablishment.roles),
-          canReadEstablishments:
-            access.establishments.some(
-              (item) =>
-                item.organizationId === activeOrganizationId &&
-                hasAnyPermission(item.effectivePermissions, [
-                  "business:establishments:read",
-                  "business:establishments:manage",
-                  "business:manage",
-                ]),
-            ) || hasReadRole(activeEstablishment.roles),
-          canCreateEstablishment: access.establishments.some(
-            (item) =>
-              item.organizationId === activeOrganizationId &&
-              hasAnyPermission(item.effectivePermissions, [
-                "business:establishments:manage",
-                "business:manage",
-              ]),
-          ),
-        };
-      } catch {
-        return {
-          organizations: [],
-          establishments: [],
-          activeEstablishmentId: undefined,
-          canReadOrganizations: false,
-          canReadEstablishments: false,
-          canCreateEstablishment: false,
-        };
-      }
+    } catch (error) {
+      // Organization creation is authorized by the backend command. A user
+      // without an eligible plan/access must still reach the form and see the
+      // backend error through the Server Action alert.
+      return isForbiddenError(error)
+        ? { status: "create" }
+        : { status: "denied" };
     }
   }
 
-  async getOrganizationPageState(activeEstablishmentId?: string): Promise<OrganizationPageState> {
+  async getOrganizationCreationState(
+    query: BusinessWorkspaceQuery = {},
+  ): Promise<OrganizationCreationState> {
     try {
-      const organization = await createOrganizationQueryService().getMyOrganization();
+      const resource = await this.workspace.getWorkspace(query);
       return {
-        status: "ready",
-        organization,
-        canUpdate: true,
+        status: canCreateOrganization(resource.organizations.map(toHeaderOrganization))
+          ? "allowed"
+          : "denied",
       };
-    } catch {
-      try {
-        const access = await createTeamQueryService().getAccessContext();
-        const activeEstablishment = pickActiveEstablishment(access.establishments, activeEstablishmentId);
-
-        if (!activeEstablishment) {
-          return {
-            status: "create",
-          };
-        }
-
-        const activeOrganizationId = activeEstablishment.organizationId;
-        const canRead =
-          hasReadRole(activeEstablishment.roles) ||
-          access.establishments.some(
-            (item) =>
-              item.organizationId === activeOrganizationId &&
-              hasAnyPermission(item.effectivePermissions, [
-                "business:organizations:read",
-                "business:organizations:manage",
-                "business:manage",
-              ]),
-          );
-
-        if (!canRead) {
-          return {
-            status: "denied",
-          };
-        }
-
-        const organization = await createOrganizationQueryService().getById({
-          id: activeOrganizationId,
-        });
-
-        if (!organization) {
-          return {
-            status: "denied",
-          };
-        }
-
-        return {
-          status: "ready",
-          organization,
-          canUpdate: access.establishments.some(
-            (item) =>
-              item.organizationId === activeOrganizationId &&
-              hasAnyPermission(item.effectivePermissions, [
-                "business:organizations:update",
-                "business:organizations:manage",
-                "business:manage",
-              ]),
-          ),
-        };
-      } catch {
-        return {
-          status: "create",
-        };
-      }
+    } catch (error) {
+      // Same rationale as getOrganizationPageState: the backend command owns the
+      // authorization decision, so a forbidden workspace read still reaches the form.
+      return { status: isForbiddenError(error) ? "allowed" : "denied" };
     }
   }
 }
@@ -204,25 +102,57 @@ export function createBusinessWorkspaceQueryService() {
   return new BusinessWorkspaceQueryService();
 }
 
-function buildOrganizations(
-  establishments: ReadonlyArray<{
-    organizationId: string;
-    organizationName: string;
-    establishmentId: string;
-  }>,
-): ReadonlyArray<WorkspaceHeaderOrganization> {
-  const organizations = new Map<string, WorkspaceHeaderOrganization>();
+function toHeaderOrganization(
+  organization: Awaited<ReturnType<BusinessWorkspaceApiGateway["getWorkspace"]>>["organizations"][number],
+): WorkspaceHeaderOrganization {
+  const establishments = organization.establishments
+    .filter((establishment) => establishment.permissions.canRead)
+    .map(toHeaderEstablishment);
 
-  for (const establishment of establishments) {
-    if (!organizations.has(establishment.organizationId)) {
-      organizations.set(establishment.organizationId, {
-        id: establishment.organizationId,
-        name: establishment.organizationName,
-        imageUrl: null,
-        defaultEstablishmentId: establishment.establishmentId,
-      });
-    }
+  // The owner is authorized to attempt creation even when Billing rejects it
+  // because the plan limit was reached. The command/action remains the
+  // authoritative business validation boundary and will expose that error.
+  const canCreateEstablishment =
+    organization.mode === "OWNER" || organization.permissions.canCreateEstablishment;
+
+  return {
+    id: organization.id,
+    name: organization.name,
+    imageUrl: organization.imageUrl,
+    mode: organization.mode,
+    canRead: organization.permissions.canRead,
+    canUpdate: organization.permissions.canUpdate,
+    canReadEstablishments: canCreateEstablishment || establishments.length > 0,
+    canCreateEstablishment,
+    defaultEstablishmentId: establishments[0]?.id,
+    establishments,
+  };
+}
+
+// A user owns at most one organization, so the creation entry point only exists
+// while no owned organization is present in the workspace.
+function canCreateOrganization(
+  organizations: ReadonlyArray<WorkspaceHeaderOrganization>,
+): boolean {
+  return !organizations.some((organization) => organization.mode === "OWNER");
+}
+
+function toHeaderEstablishment(
+  establishment: Awaited<ReturnType<BusinessWorkspaceApiGateway["getWorkspace"]>>["organizations"][number]["establishments"][number],
+): WorkspaceHeaderEstablishment {
+  return {
+    id: establishment.id,
+    name: establishment.name,
+    photoUrl: establishment.photoUrl,
+    canRead: establishment.permissions.canRead,
+    canUpdate: establishment.permissions.canUpdate,
+    canDelete: establishment.permissions.canDelete,
+  };
+}
+
+function isForbiddenError(error: unknown): boolean {
+  if (typeof error !== "object" || error === null || !("status" in error)) {
+    return false;
   }
-
-  return Array.from(organizations.values());
+  return (error as { status?: unknown }).status === 403;
 }

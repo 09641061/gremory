@@ -1,31 +1,31 @@
 # Assistant Frontend Chat Flow
 
-Fecha de referencia: 2026-07-25
+Reference date: 2026-07-25
 
-Este documento resume cómo está funcionando hoy la vista de chat del frontend de Takodu, qué peticiones hace, qué envía en cada una y cuál es el punto de autenticación que el backend debe esperar.
+This document summarizes how it currently works la vista de chat del frontend de Takodu, which requests it makes, what it sends with each one y cuál es el authentication point que el backend debe esperar.
 
 ## Objetivo de la vista
 
-La pantalla de chat está pensada como una experiencia tipo ChatGPT:
+The chat screen is designed como una experiencia tipo ChatGPT:
 
-- barra lateral izquierda con conversaciones anteriores
-- panel principal derecho con la conversación activa
-- composer inferior para escribir y enviar mensajes
-- arranque en modo "Nuevo chat", sin abrir automáticamente una conversación vieja
+- left sidebar con previous conversations
+- right main panel con la active conversation
+- bottom composer for writing and sending messages
+- starts in "New chat", without automatically opening an old conversation
 
-## Flujo de arranque
+## Startup flow
 
 Cuando el usuario entra a `/chat`, la vista hace este orden:
 
-1. Verifica si hay acceso activo usando el estado de suscripción.
-2. Si el acceso está activo, carga el listado lateral de conversaciones.
-3. La pantalla arranca vacía, con saludo inicial del asistente.
+1. Checks whether access is active using subscription status.
+2. Si el acceso está activo, loads the sidebar list de conversaciones.
+3. La pantalla starts empty, con initial assistant greeting.
 4. El usuario puede empezar a escribir de inmediato.
-5. Si envía un mensaje sin haber creado conversación, el frontend crea una nueva y luego envía el mensaje.
+5. If the user sends a message without having created a conversation, el frontend crea una nueva y luego envía el mensaje.
 
-## Punto importante de autenticación
+## Important authentication point
 
-El backend no debe asumir que la cookie del navegador autentica por sí sola la request.
+El backend must not asumir que la cookie del navegador autentica por sí sola la request.
 
 La regla real es:
 
@@ -44,7 +44,7 @@ Base local usada por la UI:
 /api/assistant/conversations
 ```
 
-### 1. Verificación de suscripción
+### 1. Subscription verification
 
 ```http
 GET /api/billing/subscriptions
@@ -57,16 +57,16 @@ Qué envía:
 
 Para qué sirve:
 
-- confirmar si el usuario tiene acceso activo antes de cargar el módulo `assistant`
+- confirm that the user has active access before loading el módulo `assistant`
 - en el frontend esta ruta local de Next funciona como proxy del endpoint real del backend
 - el backend real expone `GET /api/billing/subscriptions`
 
 Si el acceso no está activo:
 
-- la UI no dispara requests al módulo `assistant`
+- the UI does not make requests al módulo `assistant`
 - se evita caer en errores como `403 Forbidden`
 
-### 2. Listado lateral de conversaciones
+### 2. Sidebar list de conversaciones
 
 ```http
 GET /api/assistant/conversations?page=0&size=20
@@ -84,7 +84,7 @@ Para qué sirve:
 
 - cargar la lista resumida de conversaciones antiguas
 
-### 3. Detalle de una conversación
+### 3. Conversation details
 
 ```http
 GET /api/assistant/conversations/{id}
@@ -97,9 +97,9 @@ Qué envía:
 
 Para qué sirve:
 
-- cargar la conversación completa con todos sus mensajes
+- load the full conversation con todos sus mensajes
 
-### 4. Crear una conversación nueva
+### 4. Create a new conversation
 
 ```http
 POST /api/assistant/conversations
@@ -109,16 +109,16 @@ Qué envía:
 
 ```json
 {
-  "title": "Nuevo chat"
+  "title": "New chat"
 }
 ```
 
 Para qué sirve:
 
-- crear la conversación inicial
-- también se usa automáticamente cuando el usuario envía el primer mensaje sin haber seleccionado una conversación
+- create the initial conversation
+- it is also used automatically cuando el usuario envía el primer mensaje sin haber seleccionado una conversación
 
-### 5. Enviar un mensaje
+### 5. Send a message
 
 ```http
 POST /api/assistant/conversations/{id}/messages
@@ -134,10 +134,10 @@ Qué envía:
 
 Para qué sirve:
 
-- guardar el mensaje del usuario
-- recibir la conversación actualizada con la respuesta del asistente
+- save the user's message
+- receive the updated conversation con la assistant response
 
-### 6. Archivar una conversación
+### 6. Archive a conversation
 
 ```http
 PATCH /api/assistant/conversations/{id}/archive
@@ -150,7 +150,7 @@ Qué envía:
 
 Para qué sirve:
 
-- sacar una conversación del listado activo
+- remove a conversation from the active list
 
 ## Headers esperados por el backend
 
@@ -162,17 +162,17 @@ Content-Type: application/json
 ```
 
 No basta con que exista la cookie en el navegador.  
-El token debe reenviarse explícitamente desde la capa Next al backend.
+The token must be explicitly forwarded desde la capa Next al backend.
 
-## Qué pasa en el frontend antes de llamar al backend
+## What happens in the frontend before calling the backend
 
 La vista de chat usa esta secuencia:
 
 1. Comprueba acceso activo con `/api/billing/subscriptions`.
-2. Si el acceso está bloqueado, no llama al módulo `assistant`.
-3. Si el acceso está activo, carga el listado lateral.
-4. Si el usuario selecciona una conversación, carga el detalle.
-5. Si el usuario escribe y envía, crea conversación si hace falta y luego manda el mensaje.
+2. If access is blocked, no llama al módulo `assistant`.
+3. Si el acceso está activo, loads the sidebar list.
+4. If the user selects una conversación, carga el detalle.
+5. Si el usuario escribe y envía, crea conversación if needed y luego manda el mensaje.
 
 ## Razones comunes de `403 Forbidden`
 
@@ -188,22 +188,22 @@ Authorization: Bearer ...
 
 Aunque el header exista, el backend puede rechazarlo si el token expiró o no pasa validación.
 
-### Suscripción no activa
+### Inactive subscription
 
-El backend puede bloquear el acceso al módulo `assistant` si la suscripción del owner no está activa.
+The backend may block el acceso al módulo `assistant` si la suscripción del owner no está activa.
 
 ## Estructura esperada de datos
 
 ### Respuesta de suscripción
 
-La ruta de verificación devuelve la suscripción actual y el frontend evalúa acceso con la policy de billing.
+The verification route returns la suscripción actual y el frontend evaluates access con la policy de billing.
 
 Campos relevantes:
 
 - `active`
 - `status`
 
-### Conversación resumida
+### Conversation summary
 
 Usada en la barra lateral.
 
@@ -217,7 +217,7 @@ Campos esperados:
 - `lastMessageAt`
 - `messageCount`
 
-### Conversación completa
+### Full conversation
 
 Usada en el panel principal.
 
@@ -233,7 +233,7 @@ Campos esperados:
 
 ### Mensaje
 
-Cada mensaje incluye:
+Each message includes:
 
 - `id`
 - `role`
@@ -246,6 +246,6 @@ Cada mensaje incluye:
 - La UI arranca en modo nuevo chat.
 - La barra lateral usa el listado resumido.
 - El panel principal usa el detalle completo.
-- El frontend no debe abrir automáticamente la última conversación.
+- El frontend must not automatically open la última conversación.
 - Cada request protegida debe reenviar `Authorization: Bearer <access_token>`.
-- Si no hay acceso activo, el frontend evita llamar al módulo `assistant`.
+- If there is no active access, el frontend evita llamar al módulo `assistant`.

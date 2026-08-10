@@ -108,7 +108,7 @@ export function AssistantChatsSection({
 
       <AssistantConversationRenameModal
         open={renameModalConversation !== null}
-        conversationTitle={renameModalConversation?.title ?? "Nueva conversacion"}
+        conversationTitle={renameModalConversation?.title ?? "New conversation"}
         value={renameTitle}
         error={renameError}
         isSaving={isRenameSaving}
@@ -124,7 +124,7 @@ export function AssistantChatsSection({
 
       <AssistantConversationDeleteDialog
         open={deleteModalConversation !== null}
-        title={deleteModalConversation?.title ?? "Nueva conversacion"}
+        title={deleteModalConversation?.title ?? "New conversation"}
         error={deleteError}
         isSaving={isDeleteSaving}
         onOpenChange={(open) => {

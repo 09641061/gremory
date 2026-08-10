@@ -74,18 +74,22 @@ export function EstablishmentSelector({
             search={search}
             onSearchChange={setSearch}
             onSelect={selectEstablishment}
-            onSelectAll={() => {
-              setIsOpen(false);
-              onSelectAll?.();
-            }}
+            onSelectAll={onSelectAll
+              ? () => {
+                  setIsOpen(false);
+                  onSelectAll();
+                }
+              : undefined}
             allLabel="All Establishments"
             searchPlaceholder="Find establishment..."
             emptyMessage="No establishments found"
             newLabel="New establishment"
-            onNew={() => {
-              setIsOpen(false);
-              onNew?.();
-            }}
+            onNew={onNew
+              ? () => {
+                  setIsOpen(false);
+                  onNew();
+                }
+              : undefined}
           />
         </div>
       )}

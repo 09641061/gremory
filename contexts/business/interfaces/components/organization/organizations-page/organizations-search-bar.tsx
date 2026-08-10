@@ -1,12 +1,15 @@
-import { Search } from "lucide-react";
+import Link from "next/link";
+import { Plus, Search } from "lucide-react";
+import { buttonVariants } from "@/contexts/shared/interfaces/components/ui/button";
 import { Input } from "@/contexts/shared/interfaces/components/ui/input";
 
 interface OrganizationsSearchBarProps {
   value: string;
   onChange: (value: string) => void;
+  canCreate?: boolean;
 }
 
-export function OrganizationsSearchBar({ value, onChange }: OrganizationsSearchBarProps) {
+export function OrganizationsSearchBar({ value, onChange, canCreate = false }: OrganizationsSearchBarProps) {
   return (
     <div className="mx-auto flex w-full max-w-4xl flex-col items-stretch gap-3 sm:flex-row sm:items-center shrink-0">
       <label className="relative block w-full flex-1">
@@ -19,6 +22,15 @@ export function OrganizationsSearchBar({ value, onChange }: OrganizationsSearchB
           className="pl-9"
         />
       </label>
+      {canCreate && (
+        <Link
+          href="/organizations/new"
+          className={buttonVariants({ className: "shrink-0 gap-2 sm:whitespace-nowrap" })}
+        >
+          <Plus className="size-4" />
+          Create organization
+        </Link>
+      )}
     </div>
   );
 }

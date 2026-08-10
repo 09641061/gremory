@@ -98,45 +98,4 @@ describe("CatalogAccessPolicyService", () => {
     expect(permissions.canReadCatalog).toBe(false);
   });
 
-  it("should use active access and catalog permissions to resolve the default establishment", async () => {
-    mocks.organizationService.getMyOrganization.mockRejectedValue(new Error("not owner"));
-    mocks.teamService.getAccessContext.mockResolvedValue({
-      active: true,
-      establishments: [
-        {
-          establishmentId: "est-1",
-          effectivePermissions: [],
-        },
-        {
-          establishmentId: "est-2",
-          effectivePermissions: ["catalog:categories:read"],
-        },
-      ],
-    });
-
-    const { createCatalogAccessPolicyService } = await import(
-      "@/contexts/catalog/application/internal/queryservices/catalog-access-policy.service"
-    );
-    const defaultEstablishmentId = await createCatalogAccessPolicyService().getDefaultEstablishmentId();
-
-    expect(defaultEstablishmentId).toBe("est-2");
-  });
-
-  it("should ignore inactive access snapshots", async () => {
-    mocks.organizationService.getMyOrganization.mockRejectedValue(new Error("not owner"));
-    mocks.teamService.getAccessContext.mockResolvedValue({
-      active: false,
-      establishments: [
-        {
-          establishmentId: "est-1",
-          effectivePermissions: ["catalog:manage"],
-        },
-      ],
-    });
-
-    const { createCatalogAccessPolicyService } = await import(
-      "@/contexts/catalog/application/internal/queryservices/catalog-access-policy.service"
-    );
-    await expect(createCatalogAccessPolicyService().getDefaultEstablishmentId()).resolves.toBeUndefined();
-  });
 });

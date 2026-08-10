@@ -1,5 +1,5 @@
 import { Building2 } from "lucide-react";
-import type { OrganizationSummary } from "@/contexts/business/application/model/business.read-models";
+import type { WorkspaceHeaderOrganization } from "@/contexts/business/application/model/business-workspace.view-models";
 import { Card, CardContent } from "@/contexts/shared/interfaces/components/ui/card";
 import {
   Avatar,
@@ -8,8 +8,8 @@ import {
 } from "@/contexts/shared/interfaces/components/ui/avatar";
 
 interface OrganizationListCardProps {
-  organizations: OrganizationSummary[];
-  filteredOrganizations: OrganizationSummary[];
+  organizations: ReadonlyArray<WorkspaceHeaderOrganization>;
+  filteredOrganizations: ReadonlyArray<WorkspaceHeaderOrganization>;
   selectedOrgId: string | null;
   onSelect: (id: string) => void;
 }
