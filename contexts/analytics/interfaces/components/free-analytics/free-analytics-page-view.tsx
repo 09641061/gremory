@@ -71,7 +71,7 @@ export function FreeAnalyticsPageView({ analytics, errorMessage }: FreeAnalytics
             <CardDescription>Booking volume by UTC hour across the last 7 days.</CardDescription>
           </CardHeader>
           <CardContent className="p-5">
-            <BarChart data={analytics.appointmentsByHour} tone="secondary" dense labelEvery={3} />
+            <HourHeatmap data={analytics.appointmentsByHour} />
           </CardContent>
         </Card>
       </div>
@@ -492,26 +492,18 @@ function DualTrendChart({
 function BarChart({
   data,
   tone,
-  dense = false,
-  labelEvery = 1,
 }: {
   data: AnalyticsCategoryPoint[];
   tone: "primary" | "secondary" | "accent";
-  dense?: boolean;
-  labelEvery?: number;
 }) {
   const maxValue = Math.max(...data.map((item) => item.value), 1);
   const barClass = tone === "primary" ? "bg-primary" : tone === "secondary" ? "bg-sky-500" : "bg-emerald-500";
 
   return (
     <div className="overflow-x-auto rounded-xl border border-border/60 bg-background/60 p-4">
-      <div
-        className={`grid items-end gap-2 ${dense ? "min-w-[1040px]" : "min-w-0"}`}
-        style={{ gridTemplateColumns: `repeat(${data.length}, minmax(0, 1fr))` }}
-      >
+      <div className="grid items-end gap-2 min-w-[560px]" style={{ gridTemplateColumns: `repeat(${data.length}, minmax(0, 1fr))` }}>
         {data.map((item) => {
           const height = maxValue > 0 ? Math.max(8, (item.value / maxValue) * 100) : 0;
-          const showLabel = labelEvery <= 1 || data.indexOf(item) % labelEvery === 0 || data.indexOf(item) === data.length - 1;
 
           return (
             <div key={item.label} className="flex min-w-0 flex-col items-center gap-2">
@@ -519,12 +511,57 @@ function BarChart({
                 <div className={`w-full rounded-t-md ${barClass}`} style={{ height: `${height}%` }} />
               </div>
               <div className="text-xs font-semibold text-foreground">{formatNumber(item.value)}</div>
-              <div className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
-                {showLabel ? item.label : "\u00a0"}
-              </div>
+              <div className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground">{item.label}</div>
             </div>
           );
         })}
+      </div>
+    </div>
+  );
+}
+
+function HourHeatmap({
+  data,
+}: {
+  data: AnalyticsCategoryPoint[];
+}) {
+  const maxValue = Math.max(...data.map((item) => item.value), 1);
+  const visibleLabels = new Set([0, 3, 6, 9, 12, 15, 18, 21, 23]);
+
+  return (
+    <div className="space-y-4">
+      <div className="overflow-x-auto rounded-xl border border-border/60 bg-background/60 p-4">
+        <div className="grid min-w-[960px] gap-2" style={{ gridTemplateColumns: "repeat(24, minmax(0, 1fr))" }}>
+          {data.map((item, index) => {
+            const intensity = maxValue > 0 ? item.value / maxValue : 0;
+            const shade =
+              intensity >= 0.8 ? "bg-sky-500" : intensity >= 0.55 ? "bg-sky-400" : intensity >= 0.3 ? "bg-sky-300" : "bg-sky-200";
+
+            return (
+              <div key={item.label} className="space-y-1">
+                <div
+                  className={`flex h-10 items-end justify-center rounded-md border border-border/60 ${item.value > 0 ? shade : "bg-muted/40"} text-[10px] font-semibold text-foreground/80`}
+                  title={`${item.label}: ${formatNumber(item.value)} appointments`}
+                >
+                  {item.value > 0 ? formatNumber(item.value) : ""}
+                </div>
+                <div className="h-4 text-center text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
+                  {visibleLabels.has(index) ? item.label : ""}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+      <div className="flex items-center justify-between text-xs text-muted-foreground">
+        <span>Low volume</span>
+        <div className="flex items-center gap-1.5">
+          <span className="size-3 rounded-sm bg-sky-200" />
+          <span className="size-3 rounded-sm bg-sky-300" />
+          <span className="size-3 rounded-sm bg-sky-400" />
+          <span className="size-3 rounded-sm bg-sky-500" />
+        </div>
+        <span>High volume</span>
       </div>
     </div>
   );
