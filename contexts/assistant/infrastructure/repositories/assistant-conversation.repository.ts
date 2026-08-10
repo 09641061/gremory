@@ -11,9 +11,10 @@ import { createAssistantMessageContent } from "@/contexts/assistant/domain/model
 import type { AssistantConversationRepository } from "@/contexts/assistant/domain/model/repositories/assistant-conversation.repository";
 import type { AssistantConversationResponse, AssistantMessageRole as ApiMessageRole } from "@/contexts/assistant/infrastructure/gateways/assistant-api.gateway";
 
+import { normalizeAssistantRole } from "@/contexts/assistant/domain/model/value-objects/assistant-message-role";
+
 function toAssistantMessageRole(role: ApiMessageRole): AssistantMessageRole {
-  const normalized = String(role ?? "").toUpperCase();
-  return normalized === "ASSISTANT" || normalized === "AGENT" ? "ASSISTANT" : "USER";
+  return normalizeAssistantRole(role).toUpperCase() as AssistantMessageRole;
 }
 
 function toAssistantConversationEntity(conversation: AssistantConversationResponse): AssistantConversation {

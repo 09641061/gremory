@@ -8,7 +8,7 @@ import type { AssistantConversationReadModel } from "../transforms/assistant.rea
 import { toConversationReadModelFromEntity } from "../transforms/assistant-conversation.transform";
 
 export class RenameConversationCommandService {
-  constructor(private readonly repository = new AssistantConversationRepositoryImpl()) {}
+  constructor(private readonly repository: AssistantConversationRepositoryImpl = new AssistantConversationRepositoryImpl()) {}
 
   async handle(command: RenameConversationCommand, token?: string): Promise<AssistantConversationReadModel> {
     const conversationId = createAssistantConversationId(command.conversationId).value;

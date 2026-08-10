@@ -43,4 +43,8 @@ export const apiConfig = Object.freeze({
     devices: "/api/devices",
     notifications: "/api/notifications",
   }),
+  assistant: Object.freeze({
+    useStreaming: process.env.NEXT_PUBLIC_ASSISTANT_STREAMING === "true",
+  }),
 });
+
