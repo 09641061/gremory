@@ -4,6 +4,7 @@ import type {
   SchedulingServiceViewModel,
 } from "../../../application/model/scheduling-page-data.view-model";
 import type { Appointment } from "../../../domain/model/entities/appointment";
+import { formatClockRange } from "../scheduling-datetime";
 
 export function findAppointmentService(
   services: SchedulingServiceViewModel[],
@@ -36,32 +37,29 @@ export function formatAppointmentDate(startsAt: string) {
 }
 
 export function formatAppointmentTime(startsAt: string, endsAt: string) {
-  const starts = new Date(startsAt);
-  const ends = new Date(endsAt);
-
-  return `${starts.toLocaleTimeString("en-US", {
-    hour: "2-digit",
-    minute: "2-digit",
-  })} - ${ends.toLocaleTimeString("en-US", {
-    hour: "2-digit",
-    minute: "2-digit",
-  })}`;
+  return formatClockRange(new Date(startsAt), new Date(endsAt));
 }
 
+/**
+ * Badge styling per status.
+ *
+ * Every status gets a distinct treatment: a badge that looks identical for
+ * Confirmed, In Progress and Completed carries no information.
+ */
 export function getAppointmentStatusClasses(status: string) {
   switch (status) {
+    case "CONFIRMED":
+      return "border-primary/30 bg-primary/10 text-primary";
+    case "IN_PROGRESS":
+      return "border-primary bg-primary text-primary-foreground";
+    case "COMPLETED":
+      return "border-primary/25 bg-transparent text-primary/80";
     case "CANCELLED":
       return "border-destructive/20 bg-destructive/10 text-destructive";
-    case "CONFIRMED":
-      return "border-primary/20 bg-primary/10 text-primary";
-    case "IN_PROGRESS":
-      return "border-primary/20 bg-primary/10 text-primary";
-    case "COMPLETED":
-      return "border-primary/20 bg-primary/10 text-primary";
     case "NO_SHOW":
-      return "border-muted bg-muted/40 text-muted-foreground";
+      return "border-muted-foreground/30 bg-muted text-muted-foreground";
     default:
-      return "border-primary/20 bg-primary/10 text-primary";
+      return "border-border bg-muted/50 text-muted-foreground";
   }
 }
 

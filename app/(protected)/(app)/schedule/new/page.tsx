@@ -24,11 +24,13 @@ export default async function NewAppointmentPage({ searchParams }: NewAppointmen
   const { services, members, customers } = await loadSchedulingPageData(establishmentId);
 
   return (
-    <CreateAppointmentForm
-      establishmentId={establishmentId}
-      services={services}
-      members={members}
-      customers={customers}
-    />
+    <main className="mx-auto w-full max-w-[800px] px-4 py-8">
+      <CreateAppointmentForm
+        establishmentId={establishmentId}
+        services={services}
+        members={members}
+        customers={customers}
+      />
+    </main>
   );
 }

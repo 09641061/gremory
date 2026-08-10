@@ -1,7 +1,20 @@
 "use client";
 
 import { useState } from "react";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/contexts/shared/interfaces/components/ui/dialog";
+import { AlertTriangle } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/contexts/shared/interfaces/components/ui/dialog";
+import {
+  Alert,
+  AlertDescription,
+  AlertTitle,
+} from "@/contexts/shared/interfaces/components/ui/alert";
 import type {
   SchedulingCustomerViewModel,
   SchedulingMemberViewModel,
@@ -9,15 +22,16 @@ import type {
 } from "../../../application/model/scheduling-page-data.view-model";
 import type { Appointment } from "../../../domain/model/entities/appointment";
 import { CancelConfirmDialog } from "../confirm-dialogs/cancel-confirm-dialog";
-import { StartConfirmDialog } from "../confirm-dialogs/start-confirm-dialog";
-import { CompleteConfirmDialog } from "../confirm-dialogs/complete-confirm-dialog";
-import { NoShowConfirmDialog } from "../confirm-dialogs/no-show-confirm-dialog";
+import {
+  AppointmentStatusConfirmDialog,
+  type AppointmentStatusTransition,
+} from "../confirm-dialogs/appointment-status-confirm-dialog";
 import { RescheduleFormModal } from "../appointment-form/reschedule-form-modal";
 import { AppointmentDetailActions } from "./appointment-detail-actions";
 import { AppointmentDetailInfo } from "./appointment-detail-info";
 import { AppointmentDetailSummary } from "./appointment-detail-summary";
-import { Alert, AlertDescription, AlertTitle } from "@/contexts/shared/interfaces/components/ui/alert";
-import { AlertTriangle } from "lucide-react";
+import { formatClockTime } from "../scheduling-datetime";
+import { useNow } from "../use-now";
 import {
   findAppointmentCustomer,
   findAppointmentEmployee,
@@ -27,6 +41,9 @@ import {
   getAppointmentStatusClasses,
   getAppointmentStatusLabel,
 } from "./appointment-detail-utils";
+
+/** Only one secondary flow can be open at a time, so one slot models them all. */
+type OpenFlow = AppointmentStatusTransition | "reschedule" | "cancel" | null;
 
 interface AppointmentDetailModalProps {
   isOpen: boolean;
@@ -53,52 +70,48 @@ export function AppointmentDetailModal({
   canUpdateAppointment,
   canDeleteAppointment,
 }: AppointmentDetailModalProps) {
-  const [isRescheduleOpen, setIsRescheduleOpen] = useState(false);
-  const [isCancelOpen, setIsCancelOpen] = useState(false);
-  const [isStartOpen, setIsStartOpen] = useState(false);
-  const [isCompleteOpen, setIsCompleteOpen] = useState(false);
-  const [isNoShowOpen, setIsNoShowOpen] = useState(false);
+  const [openFlow, setOpenFlow] = useState<OpenFlow>(null);
+  const now = useNow();
 
   if (!appointment) return null;
-
-  const handleStart = () => {
-    setIsStartOpen(true);
-  };
-
-  const handleComplete = () => {
-    setIsCompleteOpen(true);
-  };
-
-  const handleMarkNoShow = () => {
-    setIsNoShowOpen(true);
-  };
 
   const service = findAppointmentService(services, appointment);
   const customer = findAppointmentCustomer(customers, appointment);
   const employee = findAppointmentEmployee(members, appointment);
-  const formattedDate = formatAppointmentDate(appointment.startsAt);
-  const formattedTime = formatAppointmentTime(appointment.startsAt, appointment.endsAt);
-  const isCancelled = appointment.status === "CANCELLED";
-  const statusLabel = getAppointmentStatusLabel(appointment.status);
+  const startsAt = new Date(appointment.startsAt);
+
+  const isOverdue =
+    appointment.status === "CONFIRMED" && now !== null && startsAt.getTime() < now;
+
+  const closeFlow = () => setOpenFlow(null);
+
+  /** Status changes close the detail modal so the calendar shows the new state. */
+  const handleTransitionSuccess = (updated: Appointment) => {
+    onUpdate(updated);
+    onOpenChange(false);
+  };
 
   return (
     <>
       <Dialog open={isOpen} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Appointment Details</DialogTitle>
+            <DialogTitle>Appointment details</DialogTitle>
             <DialogDescription>
-              View detailed information of this appointment or make modifications.
+              Review this appointment or change its status.
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-6 py-4">
-            {appointment.status === "CONFIRMED" && new Date(appointment.startsAt) < new Date() && (
+            {isOverdue && (
               <Alert className="border-primary/30 bg-primary/5 text-primary">
                 <AlertTriangle className="size-4 text-primary" />
-                <AlertTitle className="font-semibold text-primary">Appointment overdue</AlertTitle>
+                <AlertTitle className="font-semibold text-primary">
+                  Appointment overdue
+                </AlertTitle>
                 <AlertDescription className="text-primary/90">
-                  This appointment was scheduled to start at {formattedTime.split(" - ")[0]}. The client has not arrived yet.
+                  This was scheduled to start at {formatClockTime(startsAt)} and the client
+                  has not arrived yet.
                 </AlertDescription>
               </Alert>
             )}
@@ -106,28 +119,28 @@ export function AppointmentDetailModal({
             <AppointmentDetailSummary
               title={appointment.title}
               serviceName={service?.name ?? "Unknown"}
-              statusLabel={statusLabel}
+              statusLabel={getAppointmentStatusLabel(appointment.status)}
               statusClassName={getAppointmentStatusClasses(appointment.status)}
             />
 
             <AppointmentDetailInfo
-              formattedTime={formattedTime}
-              formattedDate={formattedDate}
+              formattedTime={formatAppointmentTime(appointment.startsAt, appointment.endsAt)}
+              formattedDate={formatAppointmentDate(appointment.startsAt)}
               customerName={customer?.name ?? "Unknown"}
               employeeName={employee?.name ?? "Unknown"}
               cancellationReason={appointment.cancellationReason}
-              isCancelled={isCancelled}
+              isCancelled={appointment.status === "CANCELLED"}
             />
           </div>
 
-          <DialogFooter className="flex flex-col sm:flex-row gap-2">
+          <DialogFooter>
             <AppointmentDetailActions
               status={appointment.status}
-              onReschedule={() => setIsRescheduleOpen(true)}
-              onCancel={() => setIsCancelOpen(true)}
-              onComplete={handleComplete}
-              onStart={handleStart}
-              onMarkNoShow={handleMarkNoShow}
+              onReschedule={() => setOpenFlow("reschedule")}
+              onCancel={() => setOpenFlow("cancel")}
+              onStart={() => setOpenFlow("start")}
+              onComplete={() => setOpenFlow("complete")}
+              onMarkNoShow={() => setOpenFlow("no-show")}
               canUpdateAppointment={canUpdateAppointment}
               canDeleteAppointment={canDeleteAppointment}
             />
@@ -135,18 +148,15 @@ export function AppointmentDetailModal({
         </DialogContent>
       </Dialog>
 
-      {isRescheduleOpen && (
+      {openFlow === "reschedule" && (
         <RescheduleFormModal
-          isOpen={isRescheduleOpen}
-          onOpenChange={setIsRescheduleOpen}
+          isOpen
+          onOpenChange={closeFlow}
           appointment={appointment}
           services={services}
           members={members}
           customers={customers}
-          onSuccess={(updated) => {
-            onUpdate(updated);
-            onOpenChange(false);
-          }}
+          onSuccess={handleTransitionSuccess}
           onDeleteSuccess={() => {
             onDeleteSuccess();
             onOpenChange(false);
@@ -154,48 +164,22 @@ export function AppointmentDetailModal({
         />
       )}
 
-      {isCancelOpen && (
+      {openFlow === "cancel" && (
         <CancelConfirmDialog
-          isOpen={isCancelOpen}
-          onOpenChange={setIsCancelOpen}
+          isOpen
+          onOpenChange={closeFlow}
           appointmentId={appointment.id}
           onSuccess={onUpdate}
         />
       )}
 
-      {isStartOpen && (
-        <StartConfirmDialog
-          isOpen={isStartOpen}
-          onOpenChange={setIsStartOpen}
+      {(openFlow === "start" || openFlow === "complete" || openFlow === "no-show") && (
+        <AppointmentStatusConfirmDialog
+          isOpen
+          onOpenChange={closeFlow}
+          transition={openFlow}
           appointmentId={appointment.id}
-          onSuccess={(updated) => {
-            onUpdate(updated);
-            onOpenChange(false);
-          }}
-        />
-      )}
-
-      {isCompleteOpen && (
-        <CompleteConfirmDialog
-          isOpen={isCompleteOpen}
-          onOpenChange={setIsCompleteOpen}
-          appointmentId={appointment.id}
-          onSuccess={(updated) => {
-            onUpdate(updated);
-            onOpenChange(false);
-          }}
-        />
-      )}
-
-      {isNoShowOpen && (
-        <NoShowConfirmDialog
-          isOpen={isNoShowOpen}
-          onOpenChange={setIsNoShowOpen}
-          appointmentId={appointment.id}
-          onSuccess={(updated) => {
-            onUpdate(updated);
-            onOpenChange(false);
-          }}
+          onSuccess={handleTransitionSuccess}
         />
       )}
     </>

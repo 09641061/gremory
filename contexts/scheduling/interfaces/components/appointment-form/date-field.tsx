@@ -1,11 +1,25 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
-import { Calendar, ChevronLeft, ChevronRight } from "lucide-react";
-import { Button } from "@/contexts/shared/interfaces/components/ui/button";
+import { useMemo, useState } from "react";
+import { CalendarIcon, ChevronLeft, ChevronRight } from "lucide-react";
+import { Button, buttonVariants } from "@/contexts/shared/interfaces/components/ui/button";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/contexts/shared/interfaces/components/ui/popover";
 import { cn } from "@/lib/utils";
-import { useSelectorMenu } from "@/contexts/business/interfaces/components/use-selector-menu";
-import { useAdaptivePopup } from "./use-adaptive-popup";
+import {
+  addMonths,
+  isSameDay,
+  parseDateInputValue,
+  startOfMonth,
+  toDateInputValue,
+} from "../scheduling-datetime";
+import { useNow } from "../use-now";
+
+const WEEK_DAYS = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"] as const;
+const GRID_CELLS = 42;
 
 interface DateFieldProps {
   id: string;
@@ -13,181 +27,155 @@ interface DateFieldProps {
   placeholder: string;
   value: string;
   onChange: (value: string) => void;
+  /** Earliest selectable day, as `YYYY-MM-DD`. Earlier days render disabled. */
+  min?: string;
 }
 
-function parseDateInput(value: string) {
-  if (!value) return null;
-  const [year, month, day] = value.split("-").map(Number);
-  if (!year || !month || !day) return null;
-  return new Date(year, month - 1, day);
-}
-
-function formatDateInput(date: Date) {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-}
-
-function startOfMonth(date: Date) {
-  return new Date(date.getFullYear(), date.getMonth(), 1);
-}
-
-function addMonths(date: Date, amount: number) {
-  return new Date(date.getFullYear(), date.getMonth() + amount, 1);
-}
-
-function isSameDay(a: Date, b: Date) {
-  return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
-}
-
-function buildMonthGrid(month: Date) {
+/** Six full weeks starting on Monday, so the grid never changes height. */
+function buildMonthGrid(month: Date): Date[] {
   const firstDay = startOfMonth(month);
-  const startWeekday = (firstDay.getDay() + 6) % 7;
-  const grid: Date[] = [];
+  const leadingDays = (firstDay.getDay() + 6) % 7;
+  const gridStart = new Date(firstDay);
+  gridStart.setDate(firstDay.getDate() - leadingDays);
 
-  // Previous month days to fill startWeekday cells
-  for (let i = startWeekday; i > 0; i--) {
-    const prevDate = new Date(firstDay);
-    prevDate.setDate(firstDay.getDate() - i);
-    grid.push(prevDate);
-  }
-
-  // Current month days
-  const daysInMonth = new Date(month.getFullYear(), month.getMonth() + 1, 0).getDate();
-  for (let day = 1; day <= daysInMonth; day += 1) {
-    grid.push(new Date(month.getFullYear(), month.getMonth(), day));
-  }
-
-  // Next month days to fill up to exactly 42 days (6 weeks * 7 days)
-  const remainingCells = 42 - grid.length;
-  const lastDay = new Date(month.getFullYear(), month.getMonth(), daysInMonth);
-  for (let i = 1; i <= remainingCells; i++) {
-    const nextDate = new Date(lastDay);
-    nextDate.setDate(lastDay.getDate() + i);
-    grid.push(nextDate);
-  }
-
-  return grid;
+  return Array.from({ length: GRID_CELLS }, (_, index) => {
+    const day = new Date(gridStart);
+    day.setDate(gridStart.getDate() + index);
+    return day;
+  });
 }
 
-export function DateField({ id, name, placeholder, value, onChange }: DateFieldProps) {
+export function DateField({ id, name, placeholder, value, onChange, min }: DateFieldProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [visibleMonth, setVisibleMonth] = useState(() => startOfMonth(parseDateInput(value) ?? new Date()));
-  const selectorRef = useRef<HTMLDivElement>(null);
-  const buttonRef = useRef<HTMLButtonElement>(null);
-  const { placement, maxHeight } = useAdaptivePopup(isOpen, buttonRef);
-
-  useSelectorMenu(isOpen, setIsOpen, selectorRef);
-
-  const selectedDate = parseDateInput(value);
-  const monthLabel = visibleMonth.toLocaleDateString("en-US", {
-    month: "long",
-    year: "numeric",
-  });
+  const selectedDate = parseDateInputValue(value);
+  const [visibleMonth, setVisibleMonth] = useState(() =>
+    startOfMonth(selectedDate ?? new Date())
+  );
 
   const monthGrid = useMemo(() => buildMonthGrid(visibleMonth), [visibleMonth]);
-  const weekDays = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"];
+  const minDate = min ? parseDateInputValue(min) : null;
+  // `null` until mounted, so the "today" ring never causes a hydration mismatch.
+  const now = useNow();
+  const today = now === null ? null : new Date(now);
+
+  const handleOpenChange = (open: boolean) => {
+    // Reopening always lands on the selected month rather than wherever the
+    // user browsed to last time.
+    if (open) setVisibleMonth(startOfMonth(parseDateInputValue(value) ?? new Date()));
+    setIsOpen(open);
+  };
 
   return (
-    <div ref={selectorRef} className="relative">
+    <>
       {name && <input type="hidden" name={name} value={value} />}
-      <Button
-        type="button"
-        variant="outline"
-        id={id}
-        ref={buttonRef}
-        aria-haspopup="dialog"
-        aria-expanded={isOpen}
-        onClick={() => {
-          if (!isOpen) setVisibleMonth(startOfMonth(parseDateInput(value) ?? new Date()));
-          setIsOpen((open) => !open);
-        }}
-        className={cn(
-          "h-9 w-full justify-between gap-3 bg-transparent px-3 text-left font-normal text-foreground dark:bg-muted/30",
-          isOpen && "border-ring bg-card shadow-sm"
-        )}
-      >
-        <span className={cn("truncate", !selectedDate && "text-muted-foreground")}>
-          {selectedDate
-            ? selectedDate.toLocaleDateString("en-US", {
-                month: "short",
-                day: "numeric",
-                year: "numeric",
-              })
-            : placeholder}
-        </span>
-        <Calendar className="size-4 shrink-0 text-muted-foreground" />
-      </Button>
-
-      {isOpen && (
-        <div
+      <Popover open={isOpen} onOpenChange={handleOpenChange}>
+        <PopoverTrigger
+          id={id}
           className={cn(
-            "absolute left-0 z-50 w-[19rem]",
-            placement === "top" ? "bottom-full mb-2" : "top-full mt-2"
+            buttonVariants({ variant: "outline" }),
+            "w-full justify-between gap-3 px-3 text-left font-normal"
           )}
         >
-          <div className="overflow-hidden rounded-2xl border border-border/70 bg-card/95 shadow-xl backdrop-blur">
-            <div className="flex items-center justify-between border-b border-border/60 bg-muted/20 px-3 py-2">
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon-xs"
-                onClick={() => setVisibleMonth((current) => addMonths(current, -1))}
-                aria-label="Previous month"
-              >
-                <ChevronLeft className="size-4" />
-              </Button>
-              <div className="text-sm font-medium text-foreground">{monthLabel}</div>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon-xs"
-                onClick={() => setVisibleMonth((current) => addMonths(current, 1))}
-                aria-label="Next month"
-              >
-                <ChevronRight className="size-4" />
-              </Button>
-            </div>
-            <div className="p-2" style={{ maxHeight }}>
-              <div className="grid grid-cols-7 gap-1 px-1 pb-2 text-center text-[11px] font-semibold tracking-[0.14em] text-muted-foreground">
-                {weekDays.map((day) => (
-                  <div key={day}>{day}</div>
-                ))}
-              </div>
-              <div className="grid grid-cols-7 gap-1">
-                {monthGrid.map((day) => {
-                  const isCurrentMonth = day.getMonth() === visibleMonth.getMonth();
-                  const isSelected = selectedDate ? isSameDay(day, selectedDate) : false;
-                  const isToday = isSameDay(day, new Date());
+          <span className={cn("truncate", !selectedDate && "text-muted-foreground")}>
+            {selectedDate
+              ? selectedDate.toLocaleDateString("en-US", {
+                  month: "short",
+                  day: "numeric",
+                  year: "numeric",
+                })
+              : placeholder}
+          </span>
+          <CalendarIcon className="size-4 shrink-0 text-muted-foreground" />
+        </PopoverTrigger>
 
-                  return (
-                    <Button
-                      key={formatDateInput(day)}
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => {
-                        onChange(formatDateInput(day));
-                        setIsOpen(false);
-                      }}
-                      className={cn(
-                        "h-9 rounded-xl text-sm font-normal",
-                        !isCurrentMonth && "text-muted-foreground/35 hover:text-muted-foreground/60",
-                        isCurrentMonth && "text-foreground",
-                        isToday && !isSelected && "bg-primary/5 text-primary",
-                        isSelected && "bg-primary text-primary-foreground shadow-sm"
-                      )}
-                    >
-                      {day.getDate()}
-                    </Button>
-                  );
-                })}
-              </div>
+        <PopoverContent align="start" className="w-auto gap-0 p-2">
+          <div className="mb-2 flex items-center justify-between gap-2">
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-xs"
+              onClick={() => setVisibleMonth((current) => addMonths(current, -1))}
+              aria-label="Previous month"
+            >
+              <ChevronLeft className="size-4" />
+            </Button>
+            <div aria-live="polite" className="text-sm font-medium">
+              {visibleMonth.toLocaleDateString("en-US", { month: "long", year: "numeric" })}
+            </div>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-xs"
+              onClick={() => setVisibleMonth((current) => addMonths(current, 1))}
+              aria-label="Next month"
+            >
+              <ChevronRight className="size-4" />
+            </Button>
+          </div>
+
+          <div
+            role="grid"
+            aria-label={visibleMonth.toLocaleDateString("en-US", {
+              month: "long",
+              year: "numeric",
+            })}
+          >
+            <div role="row" className="grid grid-cols-7 gap-1 pb-1">
+              {WEEK_DAYS.map((day) => (
+                <div
+                  key={day}
+                  role="columnheader"
+                  className="text-center text-[11px] font-semibold tracking-wide text-muted-foreground"
+                >
+                  {day}
+                </div>
+              ))}
+            </div>
+
+            <div className="grid grid-cols-7 gap-1">
+              {monthGrid.map((day) => {
+                const dayValue = toDateInputValue(day);
+                const isCurrentMonth = day.getMonth() === visibleMonth.getMonth();
+                const isSelected = selectedDate ? isSameDay(day, selectedDate) : false;
+                const isDisabled = minDate ? day < minDate : false;
+                const isToday = today ? isSameDay(day, today) : false;
+
+                return (
+                  // A plain button keeps 42 cells cheap; the styled `Button`
+                  // component would mount 42 variant-resolving wrappers.
+                  <button
+                    key={dayValue}
+                    type="button"
+                    role="gridcell"
+                    disabled={isDisabled}
+                    aria-selected={isSelected}
+                    aria-label={day.toLocaleDateString("en-US", {
+                      weekday: "long",
+                      month: "long",
+                      day: "numeric",
+                      year: "numeric",
+                    })}
+                    onClick={() => {
+                      onChange(dayValue);
+                      setIsOpen(false);
+                    }}
+                    className={cn(
+                      "size-9 rounded-lg text-sm outline-none transition-colors",
+                      "hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring/50",
+                      "disabled:pointer-events-none disabled:opacity-30",
+                      isCurrentMonth ? "text-foreground" : "text-muted-foreground/40",
+                      isToday && !isSelected && "ring-1 ring-primary/40 text-primary",
+                      isSelected && "bg-primary text-primary-foreground hover:bg-primary"
+                    )}
+                  >
+                    {day.getDate()}
+                  </button>
+                );
+              })}
             </div>
           </div>
-        </div>
-      )}
-    </div>
+        </PopoverContent>
+      </Popover>
+    </>
   );
 }
