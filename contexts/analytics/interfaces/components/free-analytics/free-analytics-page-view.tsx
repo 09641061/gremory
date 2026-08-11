@@ -25,12 +25,9 @@ export function FreeAnalyticsPageView({ analytics, errorMessage }: FreeAnalytics
     analytics.cancelledAppointmentsLastSevenDays +
     analytics.noShowAppointmentsLastSevenDays;
   const statusRange = formatTrendRange(analytics.appointmentsTrend[0]?.date, analytics.appointmentsTrend.at(-1)?.date);
-  const weekdayRange = statusRange;
+  const monthRange = formatMonthRange(analytics.appointmentsByMonth);
   const hourRange = statusRange;
-  const weekdayData = reorderWeekdaySeries(
-    analytics.appointmentsByWeekday,
-    analytics.appointmentsTrend[0]?.date,
-  );
+  const monthData = analytics.appointmentsByMonth;
   const hourData = buildTwoHourSeries(analytics.appointmentsByHour);
 
   return (
@@ -75,12 +72,12 @@ export function FreeAnalyticsPageView({ analytics, errorMessage }: FreeAnalytics
       <div className="grid gap-6 xl:grid-cols-2">
         <Card className="overflow-hidden rounded-xl border-border bg-card shadow-sm">
           <CardHeader className="border-b border-border/60 pb-4">
-            <CardTitle>Appointments by weekday</CardTitle>
-            <CardDescription>Which days of the week receive the most bookings.</CardDescription>
-            <p className="pt-1 text-xs text-muted-foreground">{weekdayRange}</p>
+            <CardTitle>Appointments by month</CardTitle>
+            <CardDescription>Monthly appointment volume in the current year.</CardDescription>
+            <p className="pt-1 text-xs text-muted-foreground">{monthRange}</p>
           </CardHeader>
           <CardContent className="p-5">
-            <BarChart data={weekdayData} tone="primary" />
+            <BarChart data={monthData} tone="primary" />
           </CardContent>
         </Card>
 
@@ -107,19 +104,6 @@ export function FreeAnalyticsPageView({ analytics, errorMessage }: FreeAnalytics
           </CardContent>
         </Card>
 
-        <Card className="overflow-hidden rounded-xl border-border bg-card shadow-sm">
-          <CardHeader className="border-b border-border/60 pb-4">
-            <CardTitle>Lead time average</CardTitle>
-            <CardDescription>Average hours between booking creation and appointment start.</CardDescription>
-          </CardHeader>
-          <CardContent className="p-5">
-            <TrendChart
-              data={analytics.leadTimeTrend}
-              tone="accent"
-              valueFormatter={(value) => `${value.toFixed(1)}h`}
-            />
-          </CardContent>
-        </Card>
       </div>
 
       <div className="grid gap-6 xl:grid-cols-2">
@@ -825,29 +809,11 @@ function formatTrendTick(value: number, valueFormatter?: (value: number) => stri
   return valueFormatter ? valueFormatter(normalized) : formatNumber(Math.round(normalized));
 }
 
-function reorderWeekdaySeries(data: AnalyticsCategoryPoint[], startDate?: string) {
-  if (!startDate || data.length === 0) return data;
+function formatMonthRange(data: AnalyticsCategoryPoint[]) {
+  if (data.length === 0) return "Current year to date";
+  if (data.length === 1) return `${data[0]?.label ?? "N/A"} ${new Date().getFullYear()}`;
 
-  const startDay = new Date(`${startDate}T00:00:00Z`).getUTCDay();
-  const order = [startDay, (startDay + 1) % 7, (startDay + 2) % 7, (startDay + 3) % 7, (startDay + 4) % 7, (startDay + 5) % 7, (startDay + 6) % 7];
-  const labelByIndex = new Map<number, string>([
-    [0, "Sun"],
-    [1, "Mon"],
-    [2, "Tue"],
-    [3, "Wed"],
-    [4, "Thu"],
-    [5, "Fri"],
-    [6, "Sat"],
-  ]);
-  const valueByLabel = new Map(data.map((item) => [item.label, item.value]));
-
-  return order.map((dayIndex) => {
-    const label = labelByIndex.get(dayIndex) ?? "Mon";
-    return {
-      label,
-      value: valueByLabel.get(label) ?? 0,
-    };
-  });
+  return `${data[0]?.label ?? "N/A"} - ${data.at(-1)?.label ?? "N/A"} ${new Date().getFullYear()}`;
 }
 
 function buildYAxisTicks(maxValue: number) {
