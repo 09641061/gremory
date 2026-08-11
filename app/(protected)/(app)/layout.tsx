@@ -48,7 +48,6 @@ export default async function AppLayout({
         visibleRoutes={shell?.visibleSidebarRoutes ?? ["/analytics"]}
         showAssistantSection={hasAssistantAccess}
         showAssistantNavigation={hasAssistantAccess}
-        planId={subscription?.planId}
       />
       <main className="flex-1 p-6 pt-16 lg:ml-[var(--app-sidebar-width)]">{children}</main>
     </SidebarProvider>

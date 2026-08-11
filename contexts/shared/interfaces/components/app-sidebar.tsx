@@ -42,14 +42,12 @@ export function AppSidebar({
   visibleRoutes,
   showAssistantSection,
   showAssistantNavigation,
-  planId,
 }: {
   initialAssistantConversations: AssistantConversationSummaryReadModel[];
   currentProfile: Pick<ProfileViewModel, "username" | "imageUrl"> | null;
   visibleRoutes: ReadonlyArray<SidebarRouteId>;
   showAssistantSection: boolean;
   showAssistantNavigation: boolean;
-  planId?: number;
 }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
