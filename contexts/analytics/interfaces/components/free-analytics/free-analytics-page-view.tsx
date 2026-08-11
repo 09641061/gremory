@@ -26,10 +26,12 @@ export function FreeAnalyticsPageView({ analytics, errorMessage }: FreeAnalytics
     analytics.noShowAppointmentsLastSevenDays;
   const statusRange = formatTrendRange(analytics.appointmentsTrend[0]?.date, analytics.appointmentsTrend.at(-1)?.date);
   const weekdayRange = statusRange;
+  const hourRange = statusRange;
   const weekdayData = reorderWeekdaySeries(
     analytics.appointmentsByWeekday,
     analytics.appointmentsTrend[0]?.date,
   );
+  const hourData = buildTwoHourSeries(analytics.appointmentsByHour);
 
   return (
     <main className="mx-auto flex w-full max-w-[1600px] flex-col gap-6 px-4 py-8 md:px-8">
@@ -82,13 +84,14 @@ export function FreeAnalyticsPageView({ analytics, errorMessage }: FreeAnalytics
           </CardContent>
         </Card>
 
-        <Card className="overflow-hidden rounded-xl border-border bg-card shadow-sm xl:col-span-2">
+        <Card className="overflow-hidden rounded-xl border-border bg-card shadow-sm">
           <CardHeader className="border-b border-border/60 pb-4">
             <CardTitle>Appointments by hour</CardTitle>
-            <CardDescription>Booking volume by UTC hour across the last 7 days.</CardDescription>
+            <CardDescription>Booking volume by local hour across the last 7 days.</CardDescription>
+            <p className="pt-1 text-xs text-muted-foreground">{hourRange}</p>
           </CardHeader>
           <CardContent className="p-5">
-            <HourHeatmap data={analytics.appointmentsByHour} />
+            <CompactHourHeatmap data={hourData} />
           </CardContent>
         </Card>
       </div>
@@ -591,19 +594,18 @@ function BarChart({
   );
 }
 
-function HourHeatmap({
+function CompactHourHeatmap({
   data,
 }: {
   data: AnalyticsCategoryPoint[];
 }) {
   const maxValue = Math.max(...data.map((item) => item.value), 1);
-  const visibleLabels = new Set([0, 3, 6, 9, 12, 15, 18, 21, 23]);
 
   return (
     <div className="space-y-4">
-      <div className="overflow-x-auto rounded-xl border border-border/60 bg-background/60 p-4">
-        <div className="grid min-w-[960px] gap-2" style={{ gridTemplateColumns: "repeat(24, minmax(0, 1fr))" }}>
-          {data.map((item, index) => {
+      <div className="overflow-hidden rounded-xl border border-border/60 bg-background/60 p-4">
+        <div className="grid grid-cols-6 gap-2">
+          {data.map((item) => {
             const intensity = maxValue > 0 ? item.value / maxValue : 0;
             const shade =
               intensity >= 0.8 ? "bg-sky-500" : intensity >= 0.55 ? "bg-sky-400" : intensity >= 0.3 ? "bg-sky-300" : "bg-sky-200";
@@ -611,13 +613,13 @@ function HourHeatmap({
             return (
               <div key={item.label} className="space-y-1">
                 <div
-                  className={`flex h-10 items-end justify-center rounded-md border border-border/60 ${item.value > 0 ? shade : "bg-muted/40"} text-[10px] font-semibold text-foreground/80`}
+                  className={`flex h-16 items-end justify-center rounded-md border border-border/60 ${item.value > 0 ? shade : "bg-muted/40"} text-[10px] font-semibold text-foreground/80`}
                   title={`${item.label}: ${formatNumber(item.value)} appointments`}
                 >
                   {item.value > 0 ? formatNumber(item.value) : ""}
                 </div>
-                <div className="h-4 text-center text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
-                  {visibleLabels.has(index) ? item.label : ""}
+                <div className="text-center text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
+                  {item.label}
                 </div>
               </div>
             );
@@ -636,6 +638,32 @@ function HourHeatmap({
       </div>
     </div>
   );
+}
+
+function buildTwoHourSeries(data: AnalyticsCategoryPoint[]) {
+  if (data.length === 0) return [];
+
+  const localHours = Array.from({ length: 24 }, () => 0);
+  const referenceDate = new Date();
+
+  for (let hour = 0; hour < 24; hour += 1) {
+    referenceDate.setUTCHours(hour, 0, 0, 0);
+    const localHour = referenceDate.getHours();
+    localHours[localHour] += data[hour]?.value ?? 0;
+  }
+
+  const buckets: AnalyticsCategoryPoint[] = [];
+
+  for (let hour = 0; hour < 24; hour += 2) {
+    const first = localHours[hour] ?? 0;
+    const second = localHours[hour + 1] ?? 0;
+    buckets.push({
+      label: `${String(hour).padStart(2, "0")}-${String(hour + 1).padStart(2, "0")}`,
+      value: first + second,
+    });
+  }
+
+  return buckets;
 }
 
 function Legend({
