@@ -2,6 +2,7 @@ export type SubscriptionAccessSnapshot = Readonly<{
   active?: boolean;
   status?: string;
   planId?: number;
+  billingCycle?: string;
 }>;
 
 /**

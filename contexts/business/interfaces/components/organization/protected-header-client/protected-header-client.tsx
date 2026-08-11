@@ -13,12 +13,14 @@ interface ProtectedHeaderClientProps {
   workspace: WorkspaceHeaderViewModel;
   navigation: HeaderNavigationViewModel;
   homeHref: string;
+  planId?: number;
 }
 
 export function ProtectedHeaderClient({
   workspace,
   navigation,
   homeHref,
+  planId,
 }: ProtectedHeaderClientProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -57,6 +59,7 @@ export function ProtectedHeaderClient({
 
   return (
     <Header
+      planId={planId}
       homeHref={resolveHomeHrefWithEstablishment(homeHref, selectedOrganizationId, selectedEstablishmentId)}
       organizationSlot={
         <OrganizationSelector

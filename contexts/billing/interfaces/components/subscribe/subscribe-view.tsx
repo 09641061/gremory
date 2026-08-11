@@ -11,6 +11,7 @@ import type {
   PlanReadModel,
   PlansByCurrencyReadModel,
 } from "../../../application/internal/queryservices/list-plans-query.service";
+import type { SubscriptionAccessSnapshot } from "../../../domain/services/subscription-access.policy";
 import { ErrorAlert } from "@/contexts/shared/interfaces/components/error";
 import { SubscribeHero } from "./subscribe-hero";
 import { PlanCard } from "./plan-card";
@@ -85,9 +86,10 @@ interface SubscribeViewProps {
   backHref: string;
   /** Every supported currency, priced server-side, so switching costs nothing. */
   plansByCurrency: PlansByCurrencyReadModel;
+  currentSubscription?: SubscriptionAccessSnapshot | null;
 }
 
-export function SubscribeView({ backHref, plansByCurrency }: SubscribeViewProps) {
+export function SubscribeView({ backHref, plansByCurrency, currentSubscription }: SubscribeViewProps) {
   const [billingCycle, setBillingCycle] = useState<BillingCycleType>("MONTHLY");
   const [currency, setCurrency] = useState<CurrencyCode>("USD");
   const [feedbackMessage, setFeedbackMessage] = useState<FeedbackState | null>(null);
@@ -157,6 +159,11 @@ export function SubscribeView({ backHref, plansByCurrency }: SubscribeViewProps)
           const displayPrice =
             billingCycle === "ANNUAL" ? plan.annualPriceAmount / 12 : plan.monthlyPriceAmount;
 
+          const isCurrent =
+            currentSubscription?.active &&
+            currentSubscription.planId === plan.id &&
+            currentSubscription.billingCycle === billingCycle;
+
           return (
             <PlanCard
               key={plan.id}
@@ -169,7 +176,8 @@ export function SubscribeView({ backHref, plansByCurrency }: SubscribeViewProps)
               billingCycle={billingCycle}
               features={[...plan.features]}
               isPopular={plan.isPopular}
-              buttonLabel={buildPlanButtonLabel(plan.name)}
+              buttonLabel={isCurrent ? "Current plan" : buildPlanButtonLabel(plan.name)}
+              buttonDisabled={isCurrent}
               onSuccess={(data) => handlePlanSuccess(plan, displayPrice, data)}
               onError={(err) =>
                 setFeedbackMessage({

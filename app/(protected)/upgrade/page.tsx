@@ -33,6 +33,7 @@ export default async function UpgradePage() {
     <SubscribeView
       backHref={shell?.homeHref ?? "/organizations"}
       plansByCurrency={await listPlansByCurrencyQueryService()}
+      currentSubscription={subscription}
     />
   );
 }

@@ -23,6 +23,7 @@ interface PlanCardProps {
   features: string[];
   isPopular?: boolean;
   buttonLabel?: string;
+  buttonDisabled?: boolean;
   onSuccess?: (data: unknown) => void;
   onError?: (error: string) => void;
 }
@@ -40,6 +41,7 @@ export function PlanCard({
   billingCycle,
   features,
   buttonLabel,
+  buttonDisabled = false,
   onSuccess,
   onError,
 }: PlanCardProps) {
@@ -113,11 +115,14 @@ export function PlanCard({
         {/* Action Button */}
         <Button
           type="button"
-          disabled={isPending}
+          disabled={isPending || buttonDisabled}
           onClick={handleSelectPlan}
           variant="outline"
           size="lg"
-          className="w-full rounded-md border-border bg-background px-4 text-sm font-semibold text-foreground hover:bg-muted transition-all duration-150 active:scale-[0.99] shadow-xs"
+          className={cn(
+            "w-full rounded-md border-border bg-background px-4 text-sm font-semibold text-foreground hover:bg-muted transition-all duration-150 active:scale-[0.99] shadow-xs",
+            buttonDisabled && "opacity-50 cursor-not-allowed hover:bg-background text-muted-foreground"
+          )}
         >
           {isPending ? (
             <Loader2 className="size-4 animate-spin" />
