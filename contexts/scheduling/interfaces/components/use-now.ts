@@ -16,18 +16,21 @@ function tick() {
 function subscribe(listener: () => void) {
   listeners.add(listener);
 
-  if (intervalId === undefined) {
-    // Seeded without notifying: React reads the snapshot again right after
-    // subscribing, which is what promotes `null` to a real timestamp.
-    snapshot = Date.now();
+  // Update snapshot with a fresh timestamp immediately on new subscriptions
+  // so that new subscribers do not get stale data from the last tick.
+  snapshot = Date.now();
+
+  if (intervalId === undefined && typeof window !== "undefined") {
     intervalId = window.setInterval(tick, TICK_MS);
   }
 
   return () => {
     listeners.delete(listener);
     if (listeners.size === 0) {
-      window.clearInterval(intervalId);
-      intervalId = undefined;
+      if (intervalId !== undefined && typeof window !== "undefined") {
+        window.clearInterval(intervalId);
+        intervalId = undefined;
+      }
     }
   };
 }

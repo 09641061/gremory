@@ -46,6 +46,7 @@ async function ProtectedHeader() {
 
   return (
     <ProtectedHeaderClient
+      planId={subscription?.planId}
       workspace={shell?.workspace ?? {
         organizations: [],
         establishments: [],

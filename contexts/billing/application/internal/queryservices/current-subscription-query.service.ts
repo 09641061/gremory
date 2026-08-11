@@ -42,5 +42,6 @@ function toSubscriptionAccessSnapshot(
     active: subscription.active,
     status: subscription.status,
     planId: subscription.planId,
+    billingCycle: subscription.billingCycle,
   };
 }
