@@ -4,6 +4,7 @@ import { createEstablishmentQueryService } from "@/contexts/business/application
 import {
   hasAnyPermission,
 } from "@/contexts/shared/application/internal/queryservices/access-context.helpers";
+import { workforcePermissions } from "@/contexts/workforce/domain/model/enums/workforce-permission";
 
 export interface CatalogPermissions {
   canReadCatalog: boolean;
@@ -63,28 +64,16 @@ export class CatalogAccessPolicyService {
 
         const perms = estAccess.effectivePermissions ?? [];
         const hasReadCatalog = hasCatalogReadPermission(perms);
-        const hasManage = hasAnyPermission(perms, ["catalog:manage"]);
+        const hasManage = hasAnyPermission(perms, [workforcePermissions.catalog.manage]);
 
         return {
           canReadCatalog: hasReadCatalog,
-          canCreateCategory:
-            hasManage ||
-            hasAnyPermission(perms, ["catalog:categories:create", "catalog:categories:manage"]),
-          canUpdateCategory:
-            hasManage ||
-            hasAnyPermission(perms, ["catalog:categories:update", "catalog:categories:manage"]),
-          canDeleteCategory:
-            hasManage ||
-            hasAnyPermission(perms, ["catalog:categories:delete", "catalog:categories:manage"]),
-          canCreateService:
-            hasManage ||
-            hasAnyPermission(perms, ["catalog:services:create", "catalog:services:manage"]),
-          canUpdateService:
-            hasManage ||
-            hasAnyPermission(perms, ["catalog:services:update", "catalog:services:manage"]),
-          canDeleteService:
-            hasManage ||
-            hasAnyPermission(perms, ["catalog:services:delete", "catalog:services:manage"]),
+          canCreateCategory: hasManage,
+          canUpdateCategory: hasManage,
+          canDeleteCategory: hasManage,
+          canCreateService: hasManage,
+          canUpdateService: hasManage,
+          canDeleteService: hasManage,
         };
       } catch {
         return {
@@ -119,10 +108,8 @@ export function createCatalogAccessPolicyService() {
 }
 
 function hasCatalogReadPermission(permissions: ReadonlyArray<string>): boolean {
-  return permissions.some(
-    (permission) =>
-    permission === "catalog:manage" ||
-      permission === "catalog:services:read" ||
-      permission === "catalog:categories:read",
-  );
+  return hasAnyPermission(permissions, [
+    workforcePermissions.catalog.read,
+    workforcePermissions.catalog.manage,
+  ]);
 }

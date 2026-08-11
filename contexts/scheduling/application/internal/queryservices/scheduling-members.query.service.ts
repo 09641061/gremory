@@ -1,6 +1,7 @@
 import "server-only";
 
 import { createTeamQueryService } from "@/contexts/workforce/application/internal/queryservices/team-query.service";
+import { workforcePermissions } from "@/contexts/workforce/domain/model/enums/workforce-permission";
 import type { SchedulingMemberViewModel } from "../../model/scheduling-page-data.view-model";
 
 export async function loadSchedulingMembers(
@@ -30,10 +31,10 @@ function canReadSchedulingAppointments(
   roles: ReadonlyArray<{ permissions: ReadonlyArray<string> }> | undefined,
 ): boolean {
   return roles?.some((role) =>
-    role.permissions.some((permission) =>
-      permission === "scheduling:appointments:read" ||
-      permission === "scheduling:appointments:manage" ||
-      permission === "scheduling:manage",
+    role.permissions.some(
+      (permission) =>
+        permission === workforcePermissions.scheduling.read ||
+        permission === workforcePermissions.scheduling.manage,
     ),
   ) ?? false;
 }

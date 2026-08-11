@@ -47,7 +47,7 @@ describe("workforce role routes", () => {
       isSystemRole: () => false,
       position: 1,
     }]);
-    mocks.service.permissions.mockResolvedValue(["business:organizations:read"]);
+    mocks.service.permissions.mockResolvedValue(["business:read"]);
     mocks.service.create.mockResolvedValue({
       id: "11111111-1111-4111-8111-111111111111",
       getName: () => "Catalog manager",
@@ -85,7 +85,7 @@ describe("workforce role routes", () => {
     const response = await listWorkforceRolePermissionsRoute();
 
     expect(response.status).toBe(200);
-    expect(await response.json()).toContain("business:organizations:read");
+    expect(await response.json()).toContain("business:read");
   });
 
   it("should create a role", async () => {
