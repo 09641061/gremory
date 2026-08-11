@@ -1,4 +1,3 @@
-import { hasAnyPermission } from "@/contexts/shared/application/internal/queryservices/access-context.helpers";
 import type {
   EntryRouteEstablishment,
   EntryRoutePath,
@@ -58,4 +57,11 @@ function hasOrganizationAccess(establishment: EntryRouteEstablishment) {
     workforcePermissions.business.manage,
     workforcePermissions.business.read,
   ]);
+}
+
+function hasAnyPermission(
+  permissions: ReadonlyArray<string>,
+  allowed: ReadonlyArray<string>,
+) {
+  return allowed.some((permission) => permissions.includes(permission));
 }

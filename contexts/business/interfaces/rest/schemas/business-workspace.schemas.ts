@@ -14,6 +14,7 @@ export const businessWorkspaceResourceSchema = z.object({
       id: uuidSchema,
       name: z.string().trim().min(1),
       photoUrl: z.string().nullable(),
+      effectivePermissions: z.array(z.string()).default([]),
       permissions: z.object({
         canRead: z.boolean(),
         canUpdate: z.boolean(),

@@ -2,6 +2,7 @@ export type WorkspaceHeaderEstablishment = Readonly<{
   id: string;
   name: string;
   photoUrl?: string | null;
+  effectivePermissions?: ReadonlyArray<string>;
   canRead?: boolean;
   canUpdate?: boolean;
   canDelete?: boolean;

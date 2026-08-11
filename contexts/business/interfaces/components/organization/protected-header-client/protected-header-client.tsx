@@ -8,6 +8,7 @@ import type {
   WorkspaceHeaderViewModel,
 } from "@/contexts/business/application/model/business-workspace.view-models";
 import type { HeaderNavigationViewModel } from "@/contexts/shared/application/model/app-shell.view-models";
+import { resolveEmployeeEntryPath } from "@/contexts/shared/application/services/entry-route-access.policy";
 
 interface ProtectedHeaderClientProps {
   workspace: WorkspaceHeaderViewModel;
@@ -46,12 +47,21 @@ export function ProtectedHeaderClient({
 
   function navigateToWorkspace(path: string) {
     router.push(path);
-    router.refresh();
+  }
+
+  function switchWorkspace(path: string) {
+    globalThis.location.assign(path);
   }
 
   function handleSelectOrganization(orgId: string, defaultEstablishmentId?: string) {
-    navigateToWorkspace(
-      buildWorkspacePath(pathname, searchParams, orgId, defaultEstablishmentId),
+    const organization = workspace.organizations.find((item) => item.id === orgId);
+    switchWorkspace(
+      buildWorkspacePath(
+        resolveOrganizationEntryPath(organization, homeHref),
+        searchParams,
+        orgId,
+        defaultEstablishmentId,
+      ),
     );
   }
 
@@ -81,7 +91,13 @@ export function ProtectedHeaderClient({
           establishments={establishments}
           selectedEstablishmentId={selectedEstablishmentId}
           onSelect={(establishmentId) => {
-            navigateToWorkspace(buildWorkspacePath(pathname, searchParams, selectedOrganizationId, establishmentId));
+            const establishment = establishments.find((item) => item.id === establishmentId);
+            switchWorkspace(buildWorkspacePath(
+              resolveEstablishmentEntryPath(selectedOrganization, establishment, pathname),
+              searchParams,
+              selectedOrganizationId,
+              establishmentId,
+            ));
           }}
           onSelectAll={canReadEstablishments
             ? () => navigateToWorkspace(buildWorkspacePath(
@@ -102,6 +118,45 @@ export function ProtectedHeaderClient({
       }
     />
   );
+}
+
+function resolveOrganizationEntryPath(
+  organization: WorkspaceHeaderViewModel["organizations"][number] | undefined,
+  fallbackPath: string,
+) {
+  if (!organization) return fallbackPath;
+  if (organization.establishments.length === 0) {
+    return organization.mode === "OWNER" ? "/establishments/new" : "/access-denied";
+  }
+  if (organization.mode === "OWNER") return "/schedule";
+
+  return resolveEmployeeEntryPath(
+    organization.establishments.map((establishment) => toEntryEstablishment(organization, establishment)),
+    false,
+  );
+}
+
+function resolveEstablishmentEntryPath(
+  organization: WorkspaceHeaderViewModel["organizations"][number] | undefined,
+  establishment: WorkspaceHeaderViewModel["establishments"][number] | undefined,
+  fallbackPath: string,
+) {
+  if (!organization || !establishment) return fallbackPath;
+  if (organization.mode === "OWNER") return fallbackPath;
+  return resolveEmployeeEntryPath([toEntryEstablishment(organization, establishment)], false);
+}
+
+function toEntryEstablishment(
+  organization: WorkspaceHeaderViewModel["organizations"][number],
+  establishment: WorkspaceHeaderViewModel["establishments"][number],
+) {
+  return {
+    organizationId: organization.id,
+    organizationName: organization.name,
+    establishmentId: establishment.id,
+    establishmentName: establishment.name,
+    effectivePermissions: establishment.effectivePermissions ?? [],
+  };
 }
 
 function resolveHomeHrefWithEstablishment(
