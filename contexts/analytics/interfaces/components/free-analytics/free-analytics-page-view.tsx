@@ -25,6 +25,11 @@ export function FreeAnalyticsPageView({ analytics, errorMessage }: FreeAnalytics
     analytics.cancelledAppointmentsLastSevenDays +
     analytics.noShowAppointmentsLastSevenDays;
   const statusRange = formatTrendRange(analytics.appointmentsTrend[0]?.date, analytics.appointmentsTrend.at(-1)?.date);
+  const weekdayRange = statusRange;
+  const weekdayData = reorderWeekdaySeries(
+    analytics.appointmentsByWeekday,
+    analytics.appointmentsTrend[0]?.date,
+  );
 
   return (
     <main className="mx-auto flex w-full max-w-[1600px] flex-col gap-6 px-4 py-8 md:px-8">
@@ -43,11 +48,10 @@ export function FreeAnalyticsPageView({ analytics, errorMessage }: FreeAnalytics
           <CardHeader className="border-b border-border/60 pb-4">
             <CardTitle>Appointment status mix</CardTitle>
             <CardDescription>Completed, cancelled, and no-show appointments in the window.</CardDescription>
-            
+            <p className="pt-1 text-xs text-muted-foreground">{statusRange}</p>
           </CardHeader>
 
           <CardContent className="space-y-4 p-5">
-            <p className="pt-1 text-xs text-muted-foreground">{statusRange}</p>
             <StatusBar label="Completed" value={analytics.completedAppointmentsLastSevenDays} total={statusTotal} tone="bg-emerald-500" />
             <StatusBar label="Cancelled" value={analytics.cancelledAppointmentsLastSevenDays} total={statusTotal} tone="bg-rose-500" />
             <StatusBar
@@ -71,9 +75,10 @@ export function FreeAnalyticsPageView({ analytics, errorMessage }: FreeAnalytics
           <CardHeader className="border-b border-border/60 pb-4">
             <CardTitle>Appointments by weekday</CardTitle>
             <CardDescription>Which days of the week receive the most bookings.</CardDescription>
+            <p className="pt-1 text-xs text-muted-foreground">{weekdayRange}</p>
           </CardHeader>
           <CardContent className="p-5">
-            <BarChart data={analytics.appointmentsByWeekday} tone="primary" />
+            <BarChart data={weekdayData} tone="primary" />
           </CardContent>
         </Card>
 
@@ -708,6 +713,31 @@ function formatTrendDateLabel(value?: string) {
 function formatTrendTick(value: number, valueFormatter?: (value: number) => string) {
   const normalized = Number.isFinite(value) ? value : 0;
   return valueFormatter ? valueFormatter(normalized) : formatNumber(Math.round(normalized));
+}
+
+function reorderWeekdaySeries(data: AnalyticsCategoryPoint[], startDate?: string) {
+  if (!startDate || data.length === 0) return data;
+
+  const startDay = new Date(`${startDate}T00:00:00Z`).getUTCDay();
+  const order = [startDay, (startDay + 1) % 7, (startDay + 2) % 7, (startDay + 3) % 7, (startDay + 4) % 7, (startDay + 5) % 7, (startDay + 6) % 7];
+  const labelByIndex = new Map<number, string>([
+    [0, "Sun"],
+    [1, "Mon"],
+    [2, "Tue"],
+    [3, "Wed"],
+    [4, "Thu"],
+    [5, "Fri"],
+    [6, "Sat"],
+  ]);
+  const valueByLabel = new Map(data.map((item) => [item.label, item.value]));
+
+  return order.map((dayIndex) => {
+    const label = labelByIndex.get(dayIndex) ?? "Mon";
+    return {
+      label,
+      value: valueByLabel.get(label) ?? 0,
+    };
+  });
 }
 
 function buildYAxisTicks(maxValue: number) {
