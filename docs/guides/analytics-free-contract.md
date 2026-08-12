@@ -46,7 +46,7 @@ El endpoint devuelve un snapshot unico con estos campos:
 
 ### Activity
 
-- `appointmentsTrend` se pinta como linea de tendencia de 7 dias.
+- `appointmentsTrend` se pinta como linea de tendencia de 7 dias y representa conteo de citas por dia.
 - `completedAppointmentsLastSevenDays`, `cancelledAppointmentsLastSevenDays` y `noShowAppointmentsLastSevenDays` se muestran como mix de estado final.
 - `appointmentsTrend` tambien se usa para derivar el dia pico.
 - `appointmentsByHour` se usa para derivar la hora pico.
@@ -164,7 +164,7 @@ El endpoint devuelve un snapshot unico con estos campos:
 | `completedAppointmentsLastSevenDays` | `number` | Citas completadas en los ultimos 7 dias |
 | `cancelledAppointmentsLastSevenDays` | `number` | Citas canceladas en los ultimos 7 dias |
 | `noShowAppointmentsLastSevenDays` | `number` | Citas marcadas como no show en los ultimos 7 dias |
-| `appointmentsTrend` | `array<{date,value}>` | Serie diaria de actividad |
+| `appointmentsTrend` | `array<{date,value}>` | Serie diaria de conteo de citas |
 | `appointmentsByHour` | `array<{label,value}>` | 24 buckets fijos de `00:00` a `23:00` |
 | `weeklyRevenueBalance` | `object` | Balance semanal de ingresos con tendencia diaria |
 | `topServicesByRevenue` | `array` | Top 5 servicios por ingreso |
@@ -194,3 +194,9 @@ El endpoint devuelve un snapshot unico con estos campos:
 - El backend resuelve la zona horaria IANA desde el establecimiento activo de la organizacion
 - Si no puede encontrar una zona horaria valida, usa `UTC` como fallback
 - El payload no cambia aunque la base temporal interna del negocio cambie
+
+## Nota de semantica
+
+- `appointmentsTrend` nunca debe contener valores monetarios
+- `weeklyRevenueBalance.dailyTrend` es la serie de dinero recaudado por dia
+- Si ambos valores muestran el mismo numero visual, el backend esta cruzando las metricas y debe corregirse
