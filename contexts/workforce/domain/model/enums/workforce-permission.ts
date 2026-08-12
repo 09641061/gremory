@@ -23,6 +23,9 @@ export const workforcePermissions = {
     read: "scheduling:read",
     manage: "scheduling:manage",
   },
+  audit: {
+    read: "audit:read",
+  },
 } as const;
 
 type DeepValue<T> = T extends string
