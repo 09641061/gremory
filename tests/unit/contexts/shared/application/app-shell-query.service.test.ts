@@ -121,6 +121,7 @@ describe("app shell query service", () => {
       "/catalog",
       "/team",
       "/analytics",
+      "/audit-log",
     ]);
   });
 
@@ -140,6 +141,7 @@ describe("app shell query service", () => {
       "/catalog",
       "/team",
       "/analytics",
+      "/audit-log",
     ]);
   });
 
@@ -156,6 +158,7 @@ describe("app shell query service", () => {
       "/crm",
       "/catalog",
       "/analytics",
+      "/audit-log",
     ]);
   });
 });

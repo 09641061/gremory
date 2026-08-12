@@ -6,7 +6,8 @@ export type SidebarRouteId =
   | "/crm"
   | "/catalog"
   | "/team"
-  | "/analytics";
+  | "/analytics"
+  | "/audit-log";
 
 // Account-scoped navigation only. Establishment entry points depend on the
 // organization the user has selected in the header, so they are resolved from
