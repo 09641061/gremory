@@ -17,7 +17,7 @@ interface FreeAnalyticsPageViewProps {
 }
 
 export function FreeAnalyticsPageView({ analytics, errorMessage }: FreeAnalyticsPageViewProps) {
-  const [selectedGroup, setSelectedGroup] = useState<AnalyticsGroup>("operational");
+  const [selectedGroup, setSelectedGroup] = useState<AnalyticsGroup>("activity");
 
   if (!analytics) {
     return <FreeAnalyticsErrorState message={errorMessage ?? "Unable to load analytics right now."} />;
@@ -63,23 +63,19 @@ export function FreeAnalyticsPageView({ analytics, errorMessage }: FreeAnalytics
         </div>
         <div className="rounded-full border border-border bg-card p-1 shadow-sm">
           <div className="flex flex-wrap gap-1">
-            <GroupTab label="Operational" active={selectedGroup === "operational"} onClick={() => setSelectedGroup("operational")} />
-            <GroupTab label="Financial" active={selectedGroup === "financial"} onClick={() => setSelectedGroup("financial")} />
-            <GroupTab label="Comparative" active={selectedGroup === "comparative"} onClick={() => setSelectedGroup("comparative")} />
-            <GroupTab
-              label="Rankings"
-              active={selectedGroup === "rankings"}
-              onClick={() => setSelectedGroup("rankings")}
-            />
+            <GroupTab label="Activity" active={selectedGroup === "activity"} onClick={() => setSelectedGroup("activity")} />
+            <GroupTab label="Revenue" active={selectedGroup === "revenue"} onClick={() => setSelectedGroup("revenue")} />
+            <GroupTab label="Rankings" active={selectedGroup === "rankings"} onClick={() => setSelectedGroup("rankings")} />
+            <GroupTab label="Friction" active={selectedGroup === "friction"} onClick={() => setSelectedGroup("friction")} />
           </div>
         </div>
       </div>
 
-      {selectedGroup === "operational" ? (
+      {selectedGroup === "activity" ? (
       <AnalyticsSection
-        id="operational"
-        title="Operational"
-        description="Activity, timing and customer mix."
+        id="activity"
+        title="Activity"
+        description="Appointments, timing, mix and outcome trend."
       >
         <div className="grid gap-6 lg:grid-cols-2">
           <Card className="overflow-hidden rounded-xl border-border bg-card shadow-sm">
@@ -142,38 +138,50 @@ export function FreeAnalyticsPageView({ analytics, errorMessage }: FreeAnalytics
           </Card>
         </div>
 
-        <Card className="overflow-hidden rounded-xl border-border bg-card shadow-sm">
-          <CardHeader className="border-b border-border/60 pb-4">
-            <CardTitle>New vs recurring customers</CardTitle>
-            <CardDescription>
-              Customers with a single appointment in the period vs those who booked more than once.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4 p-5">
-            <SplitMetricRow
-              label="New"
-              value={analytics.newVsRecurringCustomers.newCustomers}
-              total={analytics.newVsRecurringCustomers.totalCustomers}
-              tone="bg-primary"
-            />
-            <SplitMetricRow
-              label="Recurring"
-              value={analytics.newVsRecurringCustomers.recurrentCustomers}
-              total={analytics.newVsRecurringCustomers.totalCustomers}
-              tone="bg-sky-500"
-            />
-            <p className="text-xs text-muted-foreground">
-              New is treated as one appointment in the selected period. It is a low-cost operational proxy, not a lifetime customer classification.
-            </p>
-          </CardContent>
-        </Card>
+        <div className="grid gap-6 xl:grid-cols-2">
+          <Card className="overflow-hidden rounded-xl border-border bg-card shadow-sm">
+            <CardHeader className="border-b border-border/60 pb-4">
+              <CardTitle>New vs recurring customers</CardTitle>
+              <CardDescription>
+                Customers with a single appointment in the period vs those who booked more than once.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4 p-5">
+              <SplitMetricRow
+                label="New"
+                value={analytics.newVsRecurringCustomers.newCustomers}
+                total={analytics.newVsRecurringCustomers.totalCustomers}
+                tone="bg-primary"
+              />
+              <SplitMetricRow
+                label="Recurring"
+                value={analytics.newVsRecurringCustomers.recurrentCustomers}
+                total={analytics.newVsRecurringCustomers.totalCustomers}
+                tone="bg-sky-500"
+              />
+              <p className="text-xs text-muted-foreground">
+                New is treated as one appointment in the selected period. It is a low-cost operational proxy, not a lifetime customer classification.
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="overflow-hidden rounded-xl border-border bg-card shadow-sm">
+            <CardHeader className="border-b border-border/60 pb-4">
+              <CardTitle>Completed vs cancelled</CardTitle>
+              <CardDescription>Trend comparison for the two final outcomes that matter most.</CardDescription>
+            </CardHeader>
+            <CardContent className="p-5">
+              <DualTrendChart data={analytics.completionVsCancellationTrend} />
+            </CardContent>
+          </Card>
+        </div>
       </AnalyticsSection>
       ) : null}
 
-      {selectedGroup === "financial" ? (
+      {selectedGroup === "revenue" ? (
       <AnalyticsSection
-        id="financial"
-        title="Financial"
+        id="revenue"
+        title="Revenue"
         description="Revenue, ticket size and revenue lost."
       >
         <div className="grid gap-6 xl:grid-cols-[1.5fr_0.9fr]">
@@ -295,29 +303,11 @@ export function FreeAnalyticsPageView({ analytics, errorMessage }: FreeAnalytics
       </AnalyticsSection>
       ) : null}
 
-      {selectedGroup === "comparative" ? (
-      <AnalyticsSection
-        id="comparative"
-        title="Comparative"
-        description="Outcome trends that compare one result against another."
-      >
-        <Card className="overflow-hidden rounded-xl border-border bg-card shadow-sm">
-          <CardHeader className="border-b border-border/60 pb-4">
-            <CardTitle>Completed vs cancelled</CardTitle>
-            <CardDescription>Trend comparison for the two final outcomes that matter most.</CardDescription>
-          </CardHeader>
-          <CardContent className="p-5">
-            <DualTrendChart data={analytics.completionVsCancellationTrend} />
-          </CardContent>
-        </Card>
-      </AnalyticsSection>
-      ) : null}
-
       {selectedGroup === "rankings" ? (
       <AnalyticsSection
         id="rankings"
-        title="Rankings and friction"
-        description="Who leads, and where the operational friction appears."
+        title="Rankings"
+        description="The most booked services and most active customers."
       >
         <div className="grid gap-6 xl:grid-cols-2">
           <Card className="overflow-hidden rounded-xl border-border bg-card shadow-sm">
@@ -362,7 +352,15 @@ export function FreeAnalyticsPageView({ analytics, errorMessage }: FreeAnalytics
             </CardContent>
           </Card>
         </div>
+      </AnalyticsSection>
+      ) : null}
 
+      {selectedGroup === "friction" ? (
+      <AnalyticsSection
+        id="friction"
+        title="Friction"
+        description="Where service friction appears in cancellations and no-shows."
+      >
         <div className="grid gap-6 xl:grid-cols-2">
           <Card className="overflow-hidden rounded-xl border-border bg-card shadow-sm">
             <CardHeader className="border-b border-border/60 pb-4">
@@ -438,7 +436,7 @@ function AnalyticsSection({
   );
 }
 
-type AnalyticsGroup = "operational" | "financial" | "comparative" | "rankings";
+type AnalyticsGroup = "activity" | "revenue" | "rankings" | "friction";
 
 function GroupTab({
   active,

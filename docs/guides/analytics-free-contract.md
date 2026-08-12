@@ -175,4 +175,4 @@ Ademas, para resolver la organizacion del usuario autenticado, el backend necesi
 - No es necesario inferir rankings ni tasas en cliente
 - El bloque monetario usa el precio vigente del servicio asociado para estimar ingresos, porque las citas no almacenan historico de precio
 - Si un cliente necesita un subconjunto, puede ignorar los campos que no use sin romper compatibilidad
-- En pantalla, la vista se organiza por grupos para facilitar la busqueda: operacional, financiero, comparativo y rankings/friccion
+- En pantalla, la vista se organiza por grupos para facilitar la busqueda: activity, revenue, rankings y friction
