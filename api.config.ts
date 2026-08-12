@@ -37,6 +37,9 @@ export const apiConfig = Object.freeze({
       roles: "/api/workforce/roles",
       rolePermissions: "/api/workforce/roles/permissions",
     }),
+    audit: Object.freeze({
+      events: "/api/audit/events",
+    }),
     scheduling: Object.freeze({
       appointments: "/api/scheduling/appointments",
     }),
@@ -47,4 +50,3 @@ export const apiConfig = Object.freeze({
     useStreaming: process.env.NEXT_PUBLIC_ASSISTANT_STREAMING === "true",
   }),
 });
-

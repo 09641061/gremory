@@ -30,7 +30,9 @@ export function TeamPageView({
   const [filter, setFilter] = useState("");
   const [inviteOpen, setInviteOpen] = useState(false);
   const router = useRouter();
-  const filteredMembers = useMemo(() => members.filter((member) => member.email.toLowerCase().includes(filter.toLowerCase())), [filter, members]);
+  const filteredMembers = useMemo(() => members.filter((member) =>
+    [member.name, member.email].some((value) => value?.toLowerCase().includes(filter.toLowerCase()))
+  ), [filter, members]);
 
   return (
     <section className="mx-auto w-full max-w-7xl space-y-6">
@@ -57,12 +59,16 @@ export function TeamPageView({
           <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input value={filter} onChange={(event) => setFilter(event.target.value)} placeholder="Filter members" aria-label="Filter members" className="pl-9" />
         </label>
+        <span className="shrink-0 text-sm font-medium text-muted-foreground">
+          {members.length} {members.length === 1 ? "Member" : "Members"}
+        </span>
       </div>
       <Card className="overflow-hidden rounded-xl border-border bg-card shadow-sm">
         <CardContent className="p-0">
-          <div className="min-w-[720px]">
-            <div className="grid grid-cols-[minmax(320px,1.4fr)_minmax(150px,.55fr)_minmax(150px,.55fr)_minmax(170px,.7fr)] border-b border-border px-5 py-4 text-sm font-medium text-muted-foreground">
-              <span>{members.length} {members.length === 1 ? "Member" : "Members"}</span>
+          <div className="min-w-[920px]">
+            <div className="grid grid-cols-[minmax(300px,1.4fr)_minmax(220px,1fr)_minmax(150px,.8fr)_minmax(150px,.55fr)_minmax(170px,.7fr)] border-b border-border px-5 py-4 text-sm font-medium text-muted-foreground">
+              <span>Name</span>
+              <span>Email</span>
               <span>Role</span>
               <span>Status</span>
               <div className="flex justify-end">
@@ -85,4 +91,3 @@ export function TeamPageView({
     </section>
   );
 }
-

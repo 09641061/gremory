@@ -72,6 +72,8 @@ describe("Team application services", () => {
       invitationId,
       memberId: null,
       userId: null,
+      name: null,
+      imageUrl: null,
       email: "employee@example.com",
       roleId,
       roleName: "Everyone",

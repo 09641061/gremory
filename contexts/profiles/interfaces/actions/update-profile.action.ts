@@ -2,7 +2,7 @@
 
 import "server-only";
 import { cookies } from "next/headers";
-import { revalidateTag } from "next/cache";
+import { updateTag } from "next/cache";
 import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-session-cookie";
 import { updateProfileSchema } from "../rest/schemas/profile.schemas";
 import { createUsername } from "../../domain/model/valueobjects/username";
@@ -44,7 +44,7 @@ export async function updateProfileAction(
     const service = createProfileCommandService();
     const profile = await service.updateProfile(command, accessToken);
 
-    revalidateTag("profile", "");
+    updateTag("profile");
 
     return {
       status: "success",

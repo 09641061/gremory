@@ -20,6 +20,8 @@ export const workforceUserResourceSchema = z.object({
   invitationId: uuidSchema,
   memberId: uuidSchema.nullable(),
   userId: uuidSchema.nullable(),
+  username: z.string().trim().min(1).nullable().optional(),
+  imageUrl: z.string().url().nullable().optional(),
   email: z.string().email(),
   roleId: uuidSchema.optional(),
   roleName: z.string().trim().min(1).optional(),
