@@ -22,7 +22,6 @@ describe("freeAnalyticsRoute", () => {
       appointmentsTrend: [],
       appointmentsByMonth: [],
       appointmentsByHour: [],
-      completionVsCancellationTrend: [],
       newVsRecurringCustomers: {
         newCustomers: 0,
         recurrentCustomers: 0,

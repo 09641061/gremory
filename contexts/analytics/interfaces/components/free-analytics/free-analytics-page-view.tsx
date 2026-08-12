@@ -6,7 +6,6 @@ import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/contexts/shared/interfaces/components/ui/card";
 import type {
   AnalyticsCategoryPoint,
-  AnalyticsDualTrendPoint,
   AnalyticsTrendPoint,
   FreeAnalyticsDashboardResponse,
 } from "@/contexts/analytics/infrastructure/gateways/analytics-api.gateway";
@@ -75,10 +74,10 @@ export function FreeAnalyticsPageView({ analytics, errorMessage }: FreeAnalytics
       <AnalyticsSection
         id="activity"
         title="Activity"
-        description="Appointments, timing, mix and outcome trend."
+        description="Appointments, timing, mix and customer behavior."
       >
-        <div className="grid gap-6 lg:grid-cols-2">
-          <Card className="overflow-hidden rounded-xl border-border bg-card shadow-sm">
+        <div className="grid gap-6 xl:grid-cols-3">
+          <Card className="overflow-hidden rounded-xl border-border bg-card shadow-sm xl:col-span-2">
             <CardHeader className="border-b border-border/60 pb-4">
               <CardTitle>Appointments trend</CardTitle>
               <CardDescription>Daily appointment volume across the last 7 days.</CardDescription>
@@ -114,8 +113,8 @@ export function FreeAnalyticsPageView({ analytics, errorMessage }: FreeAnalytics
           </Card>
         </div>
 
-        <div className="grid gap-6 xl:grid-cols-2">
-          <Card className="overflow-hidden rounded-xl border-border bg-card shadow-sm">
+        <div className="grid gap-6 xl:grid-cols-3">
+          <Card className="overflow-hidden rounded-xl border-border bg-card shadow-sm xl:col-span-2">
             <CardHeader className="border-b border-border/60 pb-4">
               <CardTitle>Appointments by month</CardTitle>
               <CardDescription>Monthly appointment volume in the current year.</CardDescription>
@@ -138,43 +137,31 @@ export function FreeAnalyticsPageView({ analytics, errorMessage }: FreeAnalytics
           </Card>
         </div>
 
-        <div className="grid gap-6 xl:grid-cols-2">
-          <Card className="overflow-hidden rounded-xl border-border bg-card shadow-sm">
-            <CardHeader className="border-b border-border/60 pb-4">
-              <CardTitle>New vs recurring customers</CardTitle>
-              <CardDescription>
-                Customers with a single appointment in the period vs those who booked more than once.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4 p-5">
-              <SplitMetricRow
-                label="New"
-                value={analytics.newVsRecurringCustomers.newCustomers}
-                total={analytics.newVsRecurringCustomers.totalCustomers}
-                tone="bg-primary"
-              />
-              <SplitMetricRow
-                label="Recurring"
-                value={analytics.newVsRecurringCustomers.recurrentCustomers}
-                total={analytics.newVsRecurringCustomers.totalCustomers}
-                tone="bg-sky-500"
-              />
-              <p className="text-xs text-muted-foreground">
-                New is treated as one appointment in the selected period. It is a low-cost operational proxy, not a lifetime customer classification.
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="overflow-hidden rounded-xl border-border bg-card shadow-sm">
-            <CardHeader className="border-b border-border/60 pb-4">
-              <CardTitle>Completed vs cancelled</CardTitle>
-              <CardDescription>Trend comparison for the two final outcomes that matter most.</CardDescription>
-            </CardHeader>
-            <CardContent className="p-5">
-              <DualTrendChart data={analytics.completionVsCancellationTrend} />
-            </CardContent>
-          </Card>
-        </div>
+        <Card className="overflow-hidden rounded-xl border-border bg-card shadow-sm">
+          <CardHeader className="border-b border-border/60 pb-4">
+            <CardTitle>New vs recurring customers</CardTitle>
+            <CardDescription>
+              Customers with a single appointment in the period vs those who booked more than once.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4 p-5">
+            <SplitMetricRow
+              label="New"
+              value={analytics.newVsRecurringCustomers.newCustomers}
+              total={analytics.newVsRecurringCustomers.totalCustomers}
+              tone="bg-primary"
+            />
+            <SplitMetricRow
+              label="Recurring"
+              value={analytics.newVsRecurringCustomers.recurrentCustomers}
+              total={analytics.newVsRecurringCustomers.totalCustomers}
+              tone="bg-sky-500"
+            />
+            <p className="text-xs text-muted-foreground">
+              New is treated as one appointment in the selected period. It is a low-cost operational proxy, not a lifetime customer classification.
+            </p>
+          </CardContent>
+        </Card>
       </AnalyticsSection>
       ) : null}
 
@@ -738,139 +725,6 @@ function TrendChart({
   );
 }
 
-function DualTrendChart({
-  data,
-}: {
-  data: AnalyticsDualTrendPoint[];
-}) {
-  const completedPoints = buildTrendPoints(data.map((item) => item.completed));
-  const cancelledPoints = buildTrendPoints(data.map((item) => item.cancelled));
-  const completedPath = buildPolyline(completedPoints);
-  const cancelledPath = buildPolyline(cancelledPoints);
-  const completedArea = buildArea(completedPoints);
-  const cancelledArea = buildArea(cancelledPoints);
-  const maxValue = Math.max(...data.flatMap((item) => [item.completed, item.cancelled]), 1);
-  const yAxisTicks = buildYAxisTicks(maxValue);
-  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
-  const hoveredPoint = hoveredIndex !== null ? data[hoveredIndex] : null;
-  const hoveredCoords =
-    hoveredIndex !== null
-      ? {
-          x: completedPoints[hoveredIndex]?.x ?? 0,
-          y: Math.min(completedPoints[hoveredIndex]?.y ?? 0, cancelledPoints[hoveredIndex]?.y ?? 0),
-        }
-      : null;
-  const showTooltipBelow = hoveredCoords ? hoveredCoords.y < 22 : false;
-  const tooltipLeft = hoveredCoords ? Math.min(90, Math.max(10, hoveredCoords.x)) : 50;
-  const tooltipTop = hoveredCoords ? (showTooltipBelow ? Math.min(86, hoveredCoords.y + 8) : Math.max(10, hoveredCoords.y - 6)) : 0;
-  const rangeLabel = formatTrendRange(data[0]?.date, data.at(-1)?.date);
-
-  return (
-    <div className="space-y-3">
-      <div className="flex items-center justify-between text-xs text-muted-foreground">
-        <span>{rangeLabel}</span>
-        <span className="font-semibold uppercase tracking-[0.18em] text-emerald-600">Trend view</span>
-      </div>
-      <div className="flex items-center gap-4 text-xs text-muted-foreground">
-        <Legend label="Completed" tone="bg-emerald-500" />
-        <Legend label="Cancelled" tone="bg-rose-500" />
-      </div>
-      <div className="overflow-visible rounded-xl border border-border/60 bg-background/60 p-4">
-        <div className="grid gap-3 md:grid-cols-[56px_minmax(0,1fr)]">
-          <div className="flex h-56 flex-col justify-between py-1 text-[11px] font-medium text-muted-foreground">
-            {yAxisTicks.map((tick) => (
-              <span key={tick.value}>{formatTrendTick(tick.value)}</span>
-            ))}
-          </div>
-
-          <div className="relative overflow-visible">
-            {hoveredPoint && hoveredCoords ? (
-              <div
-                className={`pointer-events-none absolute z-20 max-w-[210px] rounded-lg border border-border/70 bg-card px-3 py-2 shadow-lg ${
-                  showTooltipBelow ? "translate-y-0" : "-translate-y-full"
-                }`}
-                style={{
-                  left: `${tooltipLeft}%`,
-                  top: `${tooltipTop}%`,
-                  transform: `translateX(-50%) ${showTooltipBelow ? "" : "translateY(-100%)"}`.trim(),
-                }}
-              >
-                <p className="text-xs font-semibold text-foreground">{formatTrendDateLabel(hoveredPoint.date)}</p>
-                <p className="text-xs text-emerald-600">Completed: {formatNumber(hoveredPoint.completed)}</p>
-                <p className="text-xs text-rose-600">Cancelled: {formatNumber(hoveredPoint.cancelled)}</p>
-              </div>
-            ) : null}
-
-            <svg viewBox="0 0 100 60" preserveAspectRatio="none" className="h-56 w-full">
-          <g className="text-border/70">
-            {yAxisTicks.map((tick) => (
-              <line
-                key={`completed-cancelled-grid-${tick.value}`}
-                x1="6"
-                y1={tick.y}
-                x2="100"
-                y2={tick.y}
-                stroke="currentColor"
-                strokeDasharray="1.5 2.5"
-              />
-            ))}
-          </g>
-          <path d={completedArea} fill="currentColor" fillOpacity="0.12" className="text-emerald-500" />
-          <path d={cancelledArea} fill="currentColor" fillOpacity="0.12" className="text-rose-500" />
-          <polyline
-            points={completedPath}
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.2"
-            strokeLinejoin="round"
-            strokeLinecap="round"
-            className="text-emerald-500"
-          />
-          <polyline
-            points={cancelledPath}
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.2"
-            strokeLinejoin="round"
-            strokeLinecap="round"
-            className="text-rose-500"
-          />
-              {completedPoints.map((point, index) => (
-                <circle
-                  key={`completed-${point.x}-${point.y}-${index}`}
-                  cx={point.x}
-                  cy={point.y}
-                  r={hoveredIndex === index ? "2.4" : "1.6"}
-                  className="text-emerald-500"
-                  fill="currentColor"
-                  onMouseEnter={() => setHoveredIndex(index)}
-                  onMouseLeave={() => setHoveredIndex(null)}
-                  onFocus={() => setHoveredIndex(index)}
-                  onBlur={() => setHoveredIndex(null)}
-                  tabIndex={0}
-                  role="button"
-                  aria-label={`${formatTrendDateLabel(data[index]?.date)} completed ${formatNumber(data[index]?.completed)} cancelled ${formatNumber(data[index]?.cancelled)}`}
-                />
-              ))}
-              {cancelledPoints.map((point, index) => (
-                <circle
-                  key={`cancelled-${point.x}-${point.y}-${index}`}
-                  cx={point.x}
-                  cy={point.y}
-                  r="0.9"
-                  className="text-rose-500"
-                  fill="currentColor"
-                  opacity="0.75"
-                />
-              ))}
-            </svg>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 function BarChart({
   data,
   tone,
@@ -974,21 +828,6 @@ function buildTwoHourSeries(data: AnalyticsCategoryPoint[]) {
   }
 
   return buckets;
-}
-
-function Legend({
-  label,
-  tone,
-}: {
-  label: string;
-  tone: string;
-}) {
-  return (
-    <span className="inline-flex items-center gap-2">
-      <span className={`size-2 rounded-full ${tone}`} />
-      <span>{label}</span>
-    </span>
-  );
 }
 
 function buildTrendPoints(values: number[]) {

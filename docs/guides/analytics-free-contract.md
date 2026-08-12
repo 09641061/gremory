@@ -23,7 +23,6 @@ El frontend debe esperar estos bloques en la misma respuesta:
 - `appointmentsTrend`
 - `appointmentsByMonth`
 - `appointmentsByHour`
-- `completionVsCancellationTrend`
 - `weeklyRevenueBalance`
 - `topServicesByRevenue`
 - `topCustomersBySpend`
@@ -60,9 +59,6 @@ El frontend debe esperar estos bloques en la misma respuesta:
     { "label": "00:00", "value": 0 },
     { "label": "01:00", "value": 0 },
     { "label": "02:00", "value": 0 }
-  ],
-  "completionVsCancellationTrend": [
-    { "date": "2026-08-04", "completed": 3, "cancelled": 1 }
   ],
   "weeklyRevenueBalance": {
     "totalRevenue": 1540.5,
@@ -125,7 +121,6 @@ El frontend debe esperar estos bloques en la misma respuesta:
 | `appointmentsTrend` | `array<{date,value}>` | Serie diaria de volumen |
 | `appointmentsByMonth` | `array<{label,value}>` | Buckets mensuales en orden cronologico, de enero al mes actual |
 | `appointmentsByHour` | `array<{label,value}>` | 24 buckets fijos en UTC, de `00:00` a `23:00` |
-| `completionVsCancellationTrend` | `array<{date,completed,cancelled}>` | Serie diaria comparada |
 | `weeklyRevenueBalance` | `object` | Balance semanal de ingresos con total, cantidad y tendencia diaria |
 | `topServicesByRevenue` | `array` | Top 5 servicios por ingreso generado |
 | `topCustomersBySpend` | `array` | Top 5 clientes por gasto total |
@@ -140,7 +135,7 @@ El frontend debe esperar estos bloques en la misma respuesta:
 ## Reglas
 
 - Ventana de 7 dias en UTC
-- `appointmentsTrend` y `completionVsCancellationTrend` se normalizan dia por dia, incluso si no hubo actividad
+- `appointmentsTrend` se normaliza dia por dia, incluso si no hubo actividad
 - `appointmentsByMonth` cubre de enero al mes actual y siempre viene en orden cronologico
 - `appointmentsByHour` siempre viene en orden fijo de `00:00` a `23:00`
 - `appointmentsByHour` usa hora UTC

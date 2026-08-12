@@ -13,12 +13,6 @@ export interface AnalyticsCategoryPoint {
   value: number;
 }
 
-export interface AnalyticsDualTrendPoint {
-  date: string;
-  completed: number;
-  cancelled: number;
-}
-
 export interface AnalyticsRankingCustomerItem {
   rank: number;
   customerId: string;
@@ -101,7 +95,6 @@ export interface FreeAnalyticsDashboardResponse {
   appointmentsTrend: AnalyticsTrendPoint[];
   appointmentsByMonth: AnalyticsCategoryPoint[];
   appointmentsByHour: AnalyticsCategoryPoint[];
-  completionVsCancellationTrend: AnalyticsDualTrendPoint[];
   newVsRecurringCustomers: AnalyticsCustomerMix;
   weeklyRevenueBalance: AnalyticsWeeklyRevenueBalance;
   topServicesByRevenue: AnalyticsRevenueServiceItem[];
