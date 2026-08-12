@@ -25,43 +25,61 @@ export function AppointmentDetailActions({
   canDeleteAppointment,
 }: AppointmentDetailActionsProps) {
   const isConfirmed = status === "CONFIRMED";
-  const isActive = status === "CONFIRMED" || status === "IN_PROGRESS";
   const isInProgress = status === "IN_PROGRESS";
+  const isActive = isConfirmed || isInProgress;
+
+  const canEdit = canUpdateAppointment && isConfirmed;
 
   return (
-    <div className="flex gap-2 w-full justify-end">
-      <div className="flex gap-2">
-        {isConfirmed && canUpdateAppointment && (
-          <Button type="button" variant="default" size="sm" className="gap-1 bg-primary hover:bg-primary/95 text-primary-foreground" onClick={onStart}>
-            <Play className="size-4" />
-            Start
-          </Button>
-        )}
-        {isConfirmed && canUpdateAppointment && (
-          <Button type="button" variant="outline" size="sm" className="gap-1 border-gray-400 text-gray-600 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-900" onClick={onMarkNoShow}>
-            <UserX className="size-4" />
-            No Show
-          </Button>
-        )}
-        {isInProgress && canUpdateAppointment && (
-          <Button type="button" variant="default" size="sm" className="gap-1 bg-emerald-600 hover:bg-emerald-700 text-white" onClick={onComplete}>
-            <Check className="size-4" />
-            Complete
-          </Button>
-        )}
-        {isConfirmed && canUpdateAppointment && (
-          <Button type="button" variant="outline" size="sm" className="gap-1" onClick={onReschedule}>
-            <CalendarClock className="size-4" />
-            Reschedule
-          </Button>
-        )}
-        {isActive && canDeleteAppointment && (
-          <Button type="button" variant="destructive" size="sm" className="gap-1" onClick={onCancel}>
-            <Ban className="size-4" />
-            Cancel
-          </Button>
-        )}
-      </div>
+    <div className="flex flex-wrap justify-end gap-2">
+      {canEdit && (
+        <Button type="button" size="sm" className="gap-1" onClick={onStart}>
+          <Play className="size-4" />
+          Start
+        </Button>
+      )}
+      {canEdit && (
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="gap-1"
+          onClick={onMarkNoShow}
+        >
+          <UserX className="size-4" />
+          No show
+        </Button>
+      )}
+      {canUpdateAppointment && isInProgress && (
+        <Button type="button" size="sm" className="gap-1" onClick={onComplete}>
+          <Check className="size-4" />
+          Complete
+        </Button>
+      )}
+      {canEdit && (
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="gap-1"
+          onClick={onReschedule}
+        >
+          <CalendarClock className="size-4" />
+          Reschedule
+        </Button>
+      )}
+      {canDeleteAppointment && isActive && (
+        <Button
+          type="button"
+          variant="destructive"
+          size="sm"
+          className="gap-1"
+          onClick={onCancel}
+        >
+          <Ban className="size-4" />
+          Cancel
+        </Button>
+      )}
     </div>
   );
 }

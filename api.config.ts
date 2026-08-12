@@ -20,6 +20,7 @@ export const apiConfig = Object.freeze({
       preferences: "/api/v1/profiles/preferences",
     }),
     organizations: "/api/business/organizations",
+    workspace: "/api/business/workspace",
     organizationImages: "/api/business/organizations/images",
     establishments: "/api/business/establishments",
     establishmentImages: "/api/business/establishments/images",
@@ -44,6 +45,9 @@ export const apiConfig = Object.freeze({
     }),
     devices: "/api/devices",
     notifications: "/api/notifications",
+  }),
+  assistant: Object.freeze({
+    useStreaming: process.env.NEXT_PUBLIC_ASSISTANT_STREAMING === "true",
   }),
 });
 

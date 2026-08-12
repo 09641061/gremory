@@ -1,86 +1,86 @@
-# Guía de Permisos de Workforce en Frontend (CRM, Catalog, Business y Scheduling)
+# Workforce Permissions Guide de Workforce en Frontend (CRM, Catalog, Business y Scheduling)
 
-Esta guía detalla la estructura de permisos granulares del sistema y cómo deben ser implementados en el Frontend para controlar el acceso a módulos, vistas y acciones interactivas.
+This guide details la estructura de permisos granulares del sistema y how they should be implemented en el Frontend para controlar el access to modules, views and interactive actions.
 
 ---
 
-## 1. Permisos del Contexto de Scheduling (Agenda y Citas)
+## 1. Context Permissions de Scheduling (Scheduling and Appointments)
 
-Se han introducido permisos específicos para gestionar la creación, visualización y modificación de citas. En el frontend, se deben usar para proteger el calendario, formularios de reserva y flujos de edición.
+The following permissions were introduced specific permissions para manage the creation, viewing, and modification de appointments. En el frontend, se deben usar para proteger el calendar, booking forms y editing workflows.
 
-### Permisos Granulares de Scheduling
+### Granular Permissions de Scheduling
 - **`scheduling:appointments:read`**
-  - **Uso**: Permite ver el calendario de citas, realizar búsquedas de disponibilidad y consultar los detalles de una cita específica por su ID.
-  - **Componentes a proteger**: Calendario principal, listado de citas, modales de detalle de cita.
+  - **Use**: Allows users to view el calendar de appointments, search availability y view the details de una cita específica por su ID.
+  - **Components to protect**: Calendario principal, list of appointments, detail modals de cita.
 - **`scheduling:appointments:create`**
-  - **Uso**: Permite agendar una nueva cita (creación inicial).
-  - **Componentes a proteger**: Botón de "Nueva Cita", formulario de reserva.
+  - **Use**: Permite schedule a new cita (initial creation).
+  - **Components to protect**: Button for "New Appointment", booking form.
 - **`scheduling:appointments:update`**
-  - **Uso**: Permite modificar los datos de una cita o reprogramarla (cambiar de fecha, hora o empleado).
-  - **Componentes a proteger**: Botones de "Editar cita", "Arrastrar y soltar" (drag-and-drop) en el calendario, y formulario de reprogramación.
+  - **Use**: Permite modify the details de una cita o reschedule it (change the date, time, or employee).
+  - **Components to protect**: Botones de "Edit appointment", "Drag and drop" (drag-and-drop) en el calendar, y rescheduling form.
 - **`scheduling:appointments:delete`**
-  - **Uso**: Permite cancelar una cita o eliminarla permanentemente del roster activo.
-  - **Componentes a proteger**: Botones de "Cancelar Cita" y "Eliminar".
+  - **Use**: Permite cancel or permanently delete an appointment del roster activo.
+  - **Components to protect**: Botones de "Cancel Appointment" y "Delete".
 - **`scheduling:appointments:manage`**
-  - **Uso**: Otorga control administrativo total sobre la agenda. Equivalente a poseer todos los permisos anteriores.
+  - **Use**: Otorga full administrative control sobre la agenda. Equivalent to having all previous permissions.
 
-### Regla Crítica del Frontend para Scheduling
-- Al realizar la búsqueda/listado de citas (calendario), el parámetro `establishmentId` es **obligatorio**. Si no se proporciona o el usuario no tiene permisos en ese establecimiento, la API responderá con `400 Bad Request` o `403 Forbidden`. Por lo tanto, el frontend siempre debe asegurar la selección de un establecimiento antes de cargar el calendario.
-
----
-
-## 2. Permisos del Contexto de CRM (Clientes)
-
-Controla la gestión de fichas de clientes y visualización de su historial.
-
-### Permisos Granulares de CRM
-- **`crm:customers:read`**: Ver lista de clientes y buscar por nombre/teléfono.
-- **`crm:customers:create`**: Agregar nuevos clientes al sistema.
-- **`crm:customers:update`**: Modificar datos de clientes existentes.
-- **`crm:customers:delete`**: Borrar clientes.
-- **`crm:customers:manage`**: Permiso total de administración de clientes.
+### Critical Rule del Frontend para Scheduling
+- Al realizar la búsqueda/list of appointments (calendar), el parámetro `establishmentId` es **required**. If it is not provided o the user does not have permission en ese establecimiento, la API responderá con `400 Bad Request` o `403 Forbidden`. Therefore, el frontend siempre debe ensure selection de un establecimiento before loading el calendar.
 
 ---
 
-## 3. Permisos de Workforce (Personal y Roles)
+## 2. Context Permissions de CRM (Customers)
 
-Controla quién puede invitar personal, revocar invitaciones, eliminar miembros y configurar roles.
+Controls customer records and history visibility.
 
-### Permisos Granulares de Workforce
-- **`workforce:roles:read`**: Listar roles y permisos asignables.
-- **`workforce:roles:create`**: Crear nuevos roles organizacionales.
+### Granular Permissions de CRM
+- **`crm:customers:read`**: View the customer list and search by name/phone.
+- **`crm:customers:create`**: Add new customers to the system.
+- **`crm:customers:update`**: Modify existing customer data.
+- **`crm:customers:delete`**: Delete customers.
+- **`crm:customers:manage`**: Full customer management permission.
+
+---
+
+## 3. Permisos de Workforce (Staff and Roles)
+
+Controls who can invite staff, revoke invitations, remove members, and configure roles.
+
+### Granular Permissions de Workforce
+- **`workforce:roles:read`**: List roles and assignable permissions.
+- **`workforce:roles:create`**: Create new organization roles.
 - **`workforce:roles:update`**: Modificar roles existentes, asignar roles a miembros o revocar roles de miembros.
-- **`workforce:roles:delete`**: Eliminar roles de la organización.
-- **`workforce:roles:manage`**: Gestión total de roles.
+- **`workforce:roles:delete`**: Delete organization roles.
+- **`workforce:roles:manage`**: Full role management.
 - **`workforce:invitations:create`**: Invitar nuevo personal.
 - **`workforce:invitations:read`**: Ver estado de invitaciones enviadas.
-- **`workforce:invitations:delete`**: Revocar invitaciones pendientes de aceptación.
-- **`workforce:invitations:manage`**: Gestión total de invitaciones.
-- **`workforce:members:read`**: Ver lista de personal activo y removed del establecimiento.
-- **`workforce:members:delete`**: Dar de baja a un miembro de personal del establecimiento.
-- **`workforce:members:manage`**: Gestión total de miembros de personal.
+- **`workforce:invitations:delete`**: Revoke pending invitations.
+- **`workforce:invitations:manage`**: Full invitation management.
+- **`workforce:members:read`**: View active staff and removed members for the establishment.
+- **`workforce:members:delete`**: Remove a staff member from the establishment.
+- **`workforce:members:manage`**: Full staff member management.
 
 ---
 
-## 4. Eliminación de Permisos Redundantes (Acceso)
+## 4. Removal of Redundant Permissions (Acceso)
 
-Se han eliminado por completo del backend los permisos gatekeeper globales:
+The following have been completely removed del backend los permisos gatekeeper globales:
 - `business:access` (eliminado)
 - `catalog:access` (eliminado)
 
-**Importante**: El frontend **no debe** utilizar ni validar estos strings. Si el backend recibe una validación o consulta asociada a estos permisos, no surtirá efecto o dará error.
+**Important**: El frontend **must not** use or validate estos strings. If the backend receives una validation or query associated a estos permisos, it will have no effect or will return an error.
 
-### ¿Cómo manejar el acceso a nivel de módulo en los menús de navegación del frontend?
-Para decidir si se muestra una sección o módulo completo (ej: botón del menú lateral), el frontend debe evaluar si el usuario tiene **al menos uno** de los permisos específicos de ese contexto.
+### How should module-level access be handled in frontend navigation menus?
+To decide whether to show una an entire section or module (ej: sidebar menu button), el frontend should check whether the user has **at least one** de los specific permissions de ese contexto.
 
-**Ejemplos de lógica en Frontend:**
+**Logic examples en Frontend:**
 ```typescript
-// Mostrar menú de Clientes (CRM)
+// Show the Customers (CRM)
 const canAccessCRM = hasPermission("crm:customers:read") || hasPermission("crm:customers:manage");
 
-// Mostrar menú de Calendario/Agenda (Scheduling)
+// Show the Calendario/Agenda (Scheduling)
 const canAccessScheduling = hasPermission("scheduling:appointments:read") || hasPermission("scheduling:appointments:manage");
 
-// Mostrar menú de Personal (Workforce)
+// Show the Personal (Workforce)
 const canAccessWorkforce = hasPermission("workforce:members:read") || hasPermission("workforce:roles:read");
 ```

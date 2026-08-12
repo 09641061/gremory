@@ -3,10 +3,11 @@
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
 import { GoogleIcon } from "./icons/google";
-import { ErrorAlert } from "@/contexts/shared/interfaces/components/ui/error";
+import { ErrorAlert } from "@/contexts/shared/interfaces/components/error";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import { Card, CardContent } from "@/contexts/shared/interfaces/components/ui/card";
 import { Input } from "@/contexts/shared/interfaces/components/ui/input";
+import { Label } from "@/contexts/shared/interfaces/components/ui/label";
 import { Spinner } from "@/contexts/shared/interfaces/components/ui/spinner";
 import {
   requestEmailSignInAction,
@@ -49,7 +50,8 @@ export function AuthForm({ returnTo = null }: { returnTo?: string | null }) {
     <>
       <ErrorAlert
         title="Unable to continue"
-        message={state.status === "error" ? state.error : undefined}
+        message={!pending && state.status === "error" ? state.error : undefined}
+        resetKey={pending ? "pending" : state.status}
       />
       <main className="flex min-h-screen items-center justify-center bg-background px-4 py-6 text-foreground">
         <section className="w-full max-w-[416px] text-center">
@@ -77,12 +79,16 @@ export function AuthForm({ returnTo = null }: { returnTo?: string | null }) {
 
           <form action={formAction}>
             {returnTo ? <input type="hidden" name="returnTo" value={returnTo} /> : null}
-            <Input
-              name="email"
-              type="email"
-              placeholder="Enter your email"
-              aria-label="Email address"
-            />
+            <div className="space-y-2 text-left">
+              <Label htmlFor="email">Email address</Label>
+              <Input
+                id="email"
+                name="email"
+                type="email"
+                placeholder="Enter your email"
+                autoComplete="email"
+              />
+            </div>
 
             <Button
               type="submit"

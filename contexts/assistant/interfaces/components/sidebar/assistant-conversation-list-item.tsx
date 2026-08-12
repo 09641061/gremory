@@ -26,7 +26,7 @@ export function AssistantConversationListItem({
   isMenuOpen,
   onOpenMenu,
 }: AssistantConversationListItemProps) {
-  const conversationTitle = conversation.title ?? "Nueva conversacion";
+  const conversationTitle = conversation.title ?? "New conversation";
 
   return (
     <li>
@@ -36,7 +36,7 @@ export function AssistantConversationListItem({
           aria-current={active ? "page" : undefined}
           className={cn(
             buttonVariants({ variant: "ghost", size: "lg" }),
-            "min-w-0 flex-1 justify-start gap-2.5 rounded-2xl border border-transparent px-3 py-3 text-left text-sm font-medium text-foreground hover:border-accent/40 hover:bg-accent/70 hover:text-accent-foreground",
+            "h-(--app-sidebar-control-height) min-w-0 flex-1 justify-start gap-(--app-sidebar-control-gap) rounded-(--app-sidebar-item-radius) border border-transparent px-(--app-sidebar-control-padding-x) py-0 text-left text-sm font-medium",
             active &&
               "!border-accent/40 !bg-accent !text-accent-foreground hover:!border-accent/40 hover:!bg-accent hover:!text-accent-foreground",
           )}

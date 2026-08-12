@@ -23,7 +23,7 @@ export async function createServiceCategoryAction(
   const parsed = createServiceCategorySchema.safeParse(rawData);
 
   if (!parsed.success) {
-    const firstError = parsed.error.issues[0]?.message ?? "Datos de categoría inválidos";
+    const firstError = parsed.error.issues[0]?.message ?? "Invalid category data";
     return { status: "error", error: firstError };
   }
 
@@ -38,7 +38,7 @@ export async function createServiceCategoryAction(
   } catch (err) {
     return {
       status: "error",
-      error: err instanceof Error ? err.message : "Error al crear la categoría",
+      error: err instanceof Error ? err.message : "Error while creating the category",
     };
   }
 }
@@ -55,7 +55,7 @@ export async function updateServiceCategoryAction(
   const parsed = updateServiceCategorySchema.safeParse(rawData);
 
   if (!parsed.success) {
-    return { status: "error", error: parsed.error.issues[0]?.message ?? "Datos inválidos" };
+    return { status: "error", error: parsed.error.issues[0]?.message ?? "Invalid data" };
   }
 
   try {
@@ -68,7 +68,7 @@ export async function updateServiceCategoryAction(
   } catch (err) {
     return {
       status: "error",
-      error: err instanceof Error ? err.message : "Error al actualizar la categoría",
+      error: err instanceof Error ? err.message : "Error while updating the category",
     };
   }
 }
@@ -83,7 +83,7 @@ export async function deleteServiceCategoryAction(id: string): Promise<CategoryA
   } catch (err) {
     return {
       status: "error",
-      error: err instanceof Error ? err.message : "Error al eliminar la categoría",
+      error: err instanceof Error ? err.message : "Error while deleting the category",
     };
   }
 }

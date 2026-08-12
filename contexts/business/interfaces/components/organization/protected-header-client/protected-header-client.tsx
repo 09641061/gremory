@@ -13,82 +13,118 @@ interface ProtectedHeaderClientProps {
   workspace: WorkspaceHeaderViewModel;
   navigation: HeaderNavigationViewModel;
   homeHref: string;
+  planId?: number;
 }
 
 export function ProtectedHeaderClient({
   workspace,
   navigation,
   homeHref,
+  planId,
 }: ProtectedHeaderClientProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  const selectedEstablishmentId = searchParams.get("establishmentId") || workspace.activeEstablishmentId;
-  const newEstablishmentHref = navigation.newEstablishmentHref;
+  const selectedOrganizationId = searchParams.get("organizationId") || workspace.activeOrganizationId;
+  const selectedOrganization = workspace.organizations.find(
+    (organization) => organization.id === selectedOrganizationId,
+  ) ?? workspace.organization;
+  const establishments = selectedOrganization?.establishments ?? workspace.establishments;
+  const requestedEstablishmentId = searchParams.get("establishmentId");
+  const selectedEstablishmentId = requestedEstablishmentId && establishments.some(
+    (establishment) => establishment.id === requestedEstablishmentId,
+  )
+    ? requestedEstablishmentId
+    : selectedOrganization?.id === workspace.activeOrganizationId
+      ? workspace.activeEstablishmentId
+      : selectedOrganization?.defaultEstablishmentId;
+  // Establishment entry points follow the organization selected in the header,
+  // not the one the server resolved, so switching organizations never leaves a
+  // stale action behind.
+  const canReadEstablishments = selectedOrganization?.canReadEstablishments === true;
+  const canCreateEstablishment = selectedOrganization?.canCreateEstablishment === true;
+  const { organizationListHref, newOrganizationHref } = navigation;
 
-  function handleSelectOrganization(_orgId: string, defaultEstablishmentId?: string) {
-    router.push(
-      buildPathWithEstablishmentId(pathname, searchParams, defaultEstablishmentId),
+  function navigateToWorkspace(path: string) {
+    router.push(path);
+    router.refresh();
+  }
+
+  function handleSelectOrganization(orgId: string, defaultEstablishmentId?: string) {
+    navigateToWorkspace(
+      buildWorkspacePath(pathname, searchParams, orgId, defaultEstablishmentId),
     );
   }
 
   return (
     <Header
-      homeHref={resolveHomeHrefWithEstablishment(homeHref, selectedEstablishmentId)}
+      planId={planId}
+      homeHref={resolveHomeHrefWithEstablishment(homeHref, selectedOrganizationId, selectedEstablishmentId)}
       organizationSlot={
         <OrganizationSelector
-          organization={workspace.organization}
+          organization={selectedOrganization}
           organizations={workspace.organizations}
           onSelect={handleSelectOrganization}
-          onSelectAll={() => {
-            if (navigation.organizationListHref) {
-              const query = selectedEstablishmentId ? `?establishmentId=${selectedEstablishmentId}` : "";
-              router.push(`${navigation.organizationListHref}${query}`);
-            } else {
-              router.push(`${pathname}?denied=org`);
-            }
-          }}
+          onSelectAll={organizationListHref
+            ? () => navigateToWorkspace(buildWorkspacePath(
+                organizationListHref,
+                searchParams,
+                selectedOrganizationId,
+                selectedEstablishmentId,
+              ))
+            : undefined}
+          onNew={newOrganizationHref
+            ? () => navigateToWorkspace(newOrganizationHref)
+            : undefined}
         />
       }
       establishmentSlot={
         <EstablishmentSelector
-          establishments={workspace.establishments}
+          establishments={establishments}
           selectedEstablishmentId={selectedEstablishmentId}
           onSelect={(establishmentId) => {
-            router.push(buildPathWithEstablishmentId(pathname, searchParams, establishmentId));
+            navigateToWorkspace(buildWorkspacePath(pathname, searchParams, selectedOrganizationId, establishmentId));
           }}
-          onSelectAll={() => {
-            if (navigation.establishmentListHref) {
-              const query = selectedEstablishmentId ? `?establishmentId=${selectedEstablishmentId}` : "";
-              router.push(`${navigation.establishmentListHref}${query}`);
-            } else {
-              router.push(`${pathname}?denied=est`);
-            }
-          }}
-          onNew={
-            newEstablishmentHref
-              ? () => router.push(newEstablishmentHref)
-              : undefined
-          }
+          onSelectAll={canReadEstablishments
+            ? () => navigateToWorkspace(buildWorkspacePath(
+                "/establishments",
+                searchParams,
+                selectedOrganizationId,
+                selectedEstablishmentId,
+              ))
+            : undefined}
+          onNew={canCreateEstablishment
+            ? () => navigateToWorkspace(buildWorkspacePath(
+                "/establishments/new",
+                searchParams,
+                selectedOrganization?.id,
+              ))
+            : undefined}
         />
       }
     />
   );
 }
 
-function resolveHomeHrefWithEstablishment(homeHref: string, establishmentId?: string) {
-  return establishmentId ? `${homeHref}?establishmentId=${establishmentId}` : homeHref;
+function resolveHomeHrefWithEstablishment(
+  homeHref: string,
+  organizationId?: string,
+  establishmentId?: string,
+) {
+  return buildWorkspacePath(homeHref, new URLSearchParams(), organizationId, establishmentId);
 }
 
-function buildPathWithEstablishmentId(
+function buildWorkspacePath(
   pathname: string,
-  searchParams: ReadonlyURLSearchParams,
+  searchParams: Pick<ReadonlyURLSearchParams, "toString">,
+  organizationId?: string,
   establishmentId?: string,
 ) {
   const params = new URLSearchParams(searchParams.toString());
-  if (establishmentId) {
-    params.set("establishmentId", establishmentId);
-  }
+  if (organizationId) params.set("organizationId", organizationId);
+  else params.delete("organizationId");
+  if (establishmentId) params.set("establishmentId", establishmentId);
+  else params.delete("establishmentId");
   return params.toString() ? `${pathname}?${params.toString()}` : pathname;
 }

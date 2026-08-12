@@ -1,30 +1,31 @@
 "use client";
 
-import { useActionState, useEffect, useState, useRef, useMemo } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import { CalendarClock, Trash2 } from "lucide-react";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/contexts/shared/interfaces/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/contexts/shared/interfaces/components/ui/dialog";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
-import { Label } from "@/contexts/shared/interfaces/components/ui/label";
-import { Input } from "@/contexts/shared/interfaces/components/ui/input";
+import { Spinner } from "@/contexts/shared/interfaces/components/ui/spinner";
+import { ErrorAlert } from "@/contexts/shared/interfaces/components/error";
 import { updateAppointmentAction } from "../../actions/update-appointment.action";
-import { ErrorAlert } from "@/contexts/shared/interfaces/components/ui/error";
-import { Appointment } from "../../../domain/model/entities/appointment";
-import { ActionState } from "../../actions/action-state";
-import { DeleteConfirmDialog } from "../confirm-dialogs/delete-confirm-dialog";
-import { DateField } from "./date-field";
-import { DropdownField } from "./dropdown-field";
-import { TimePickerField } from "./time-picker-field";
+import type { Appointment } from "../../../domain/model/entities/appointment";
+import type { ActionState } from "../../actions/action-state";
 import type {
   SchedulingCustomerViewModel,
   SchedulingMemberViewModel,
   SchedulingServiceViewModel,
 } from "../../../application/model/scheduling-page-data.view-model";
-import {
-  computeAppointmentTimes,
-  createCustomerOptions,
-  createEmployeeOptions,
-  createServiceOptions,
-} from "./scheduling-form-utils";
+import { DeleteConfirmDialog } from "../confirm-dialogs/delete-confirm-dialog";
+import { AppointmentFormFields } from "./appointment-form-fields";
+import { computeAppointmentTimes } from "./scheduling-form-utils";
+import type { AppointmentFormValues } from "./types";
+import { toDateInputValue, toTimeInputValue } from "../scheduling-datetime";
 import { getTimeZoneParts } from "../scheduling-timezone.utils";
 
 interface RescheduleFormModalProps {
@@ -45,6 +46,20 @@ const initialActionState: ActionState<Appointment> = {
   error: null,
   fieldErrors: null,
 };
+
+function toFormValues(appointment: Appointment, timeZone: string): AppointmentFormValues {
+  const parts = getTimeZoneParts(new Date(appointment.startsAt), timeZone);
+  const localStart = new Date(Date.UTC(parts.year, parts.month - 1, parts.day, parts.hour, parts.minute));
+
+  return {
+    title: appointment.title,
+    serviceId: appointment.serviceId ?? "",
+    customerId: appointment.customerId ?? "",
+    employeeId: appointment.employeeId ?? "",
+    startDate: toDateInputValue(localStart),
+    startTime: toTimeInputValue(localStart),
+  };
+}
 
 export function RescheduleFormModal({
   isOpen,
@@ -72,36 +87,18 @@ export function RescheduleFormModal({
 
   const hasSucceeded = useRef(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
-  const [title, setTitle] = useState(appointment.title);
-  const [selectedServiceId, setSelectedServiceId] = useState(appointment.serviceId ?? "");
-  const [selectedCustomerId, setSelectedCustomerId] = useState(appointment.customerId ?? "");
-  const [selectedEmployeeId, setSelectedEmployeeId] = useState(appointment.employeeId ?? "");
+  const [values, setValues] = useState(() => toFormValues(appointment, timeZone));
 
-  const existingStart = getTimeZoneParts(new Date(appointment.startsAt), timeZone);
-  const initDate = `${existingStart.year}-${String(existingStart.month).padStart(2, "0")}-${String(existingStart.day).padStart(2, "0")}`;
-  const initTime = `${String(existingStart.hour).padStart(2, "0")}:${String(existingStart.minute).padStart(2, "0")}`;
-
-  const [startDate, setStartDate] = useState(initDate);
-  const [startTime, setStartTime] = useState(initTime);
-
-  const selectedService = services.find((service) => service.id === selectedServiceId);
-
-  const serviceOptions = useMemo(() => createServiceOptions(services), [services]);
-  const customerOptions = useMemo(() => createCustomerOptions(customers), [customers]);
-  const employeeOptions = useMemo(() => createEmployeeOptions(members), [members]);
-
-  // Sincronizar el estado del formulario de forma segura si el prop cambia
   const [prevAppointmentId, setPrevAppointmentId] = useState(appointment.id);
   if (appointment.id !== prevAppointmentId) {
     setPrevAppointmentId(appointment.id);
-    setTitle(appointment.title);
-    setSelectedServiceId(appointment.serviceId ?? "");
-    setSelectedCustomerId(appointment.customerId ?? "");
-    setSelectedEmployeeId(appointment.employeeId ?? "");
-    const currentStart = getTimeZoneParts(new Date(appointment.startsAt), timeZone);
-    setStartDate(`${currentStart.year}-${String(currentStart.month).padStart(2, "0")}-${String(currentStart.day).padStart(2, "0")}`);
-    setStartTime(`${String(currentStart.hour).padStart(2, "0")}:${String(currentStart.minute).padStart(2, "0")}`);
+    setValues(toFormValues(appointment, timeZone));
   }
+
+  const updateField = <K extends keyof AppointmentFormValues>(
+    field: K,
+    value: AppointmentFormValues[K]
+  ) => setValues((current) => ({ ...current, [field]: value }));
 
   useEffect(() => {
     if (state.status === "success" && state.data && !hasSucceeded.current) {
@@ -111,118 +108,71 @@ export function RescheduleFormModal({
     }
   }, [state.status, state.data, onSuccess, onOpenChange]);
 
+  const selectedService = services.find((service) => service.id === values.serviceId);
   const { startsAt, endsAt, formattedEnd } = computeAppointmentTimes({
-    startDate,
-    startTime,
+    startDate: values.startDate,
+    startTime: values.startTime,
     durationMinutes: selectedService?.durationMinutes,
     timeZone,
   });
 
   return (
     <>
+      <ErrorAlert
+        key={(state.status === "error" ? state.errorId : null) ?? "update-error"}
+        title="Update failed"
+        message={state.error ?? undefined}
+      />
+
       <Dialog open={isOpen} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-md">
-          <ErrorAlert
-            key={(state.status === "error" ? state.errorId : null) ?? "update-error"}
-            title="Update Failed"
-            message={state.error ?? undefined}
-          />
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <div className="flex items-center gap-2">
+              <CalendarClock className="size-5 text-primary" />
+              <DialogTitle>Edit appointment</DialogTitle>
+            </div>
+            <DialogDescription>
+              Modify the details, assignee, customer and schedule in one place.
+            </DialogDescription>
+          </DialogHeader>
+
           <form action={formAction} className="space-y-4">
             <input type="hidden" name="startsAt" value={startsAt} />
             <input type="hidden" name="endsAt" value={endsAt} />
 
-            <DialogHeader>
-              <div className="flex items-center gap-2">
-                <CalendarClock className="text-primary size-5" />
-                <DialogTitle>Edit Appointment</DialogTitle>
-              </div>
-              <DialogDescription>
-                Modify appointment details, assignee, customer, and schedules in one place.
-              </DialogDescription>
-            </DialogHeader>
+            <AppointmentFormFields
+              idPrefix="reschedule-appointment"
+              values={values}
+              onChange={updateField}
+              services={services}
+              members={members}
+              customers={customers}
+              fieldErrors={state.status === "error" ? state.fieldErrors : null}
+              formattedEnd={formattedEnd}
+            />
 
-            <div className="space-y-1.5">
-              <Label htmlFor="reschedule-title">Appointment Title</Label>
-              <Input id="reschedule-title" name="title" required value={title} onChange={(e) => setTitle(e.target.value)} />
-              {state.fieldErrors?.title && <p className="text-xs text-destructive">{state.fieldErrors.title[0]}</p>}
-            </div>
-
-            <div className="space-y-1.5">
-              <Label htmlFor="reschedule-service">Service</Label>
-              <DropdownField
-                id="reschedule-service"
-                name="serviceId"
-                placeholder="Select a service..."
-                value={selectedServiceId}
-                onChange={setSelectedServiceId}
-                options={serviceOptions}
-              />
-              {state.fieldErrors?.serviceId && <p className="text-xs text-destructive">{state.fieldErrors.serviceId[0]}</p>}
-            </div>
-
-            <div className="space-y-1.5">
-              <Label htmlFor="reschedule-customer">Customer</Label>
-              <DropdownField
-                id="reschedule-customer"
-                name="customerId"
-                placeholder="Select a customer..."
-                value={selectedCustomerId}
-                onChange={setSelectedCustomerId}
-                options={customerOptions}
-              />
-              {state.fieldErrors?.customerId && <p className="text-xs text-destructive">{state.fieldErrors.customerId[0]}</p>}
-            </div>
-
-            <div className="space-y-1.5">
-              <Label htmlFor="reschedule-employee">Employee / Specialist</Label>
-              <DropdownField
-                id="reschedule-employee"
-                name="employeeId"
-                placeholder="Select an employee..."
-                value={selectedEmployeeId}
-                onChange={setSelectedEmployeeId}
-                options={employeeOptions}
-              />
-              {state.fieldErrors?.employeeId && <p className="text-xs text-destructive">{state.fieldErrors.employeeId[0]}</p>}
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <Label htmlFor="reschedule-startDate">Date</Label>
-                <DateField id="reschedule-startDate" placeholder="Select date..." value={startDate} onChange={setStartDate} />
-              </div>
-
-              <div className="space-y-1.5">
-                <Label htmlFor="reschedule-startTime">Time</Label>
-                <TimePickerField
-                  id="reschedule-startTime"
-                  value={startTime}
-                  onChange={setStartTime}
-                />
-              </div>
-            </div>
-
-            <div className="rounded-lg border border-border bg-muted/40 p-3 space-y-1">
-              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Calculated End Time</p>
-              <p className="text-sm font-medium text-foreground">{formattedEnd || "--"}</p>
-            </div>
-
-            <DialogFooter className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-2 pt-2">
+            <DialogFooter className="flex-col items-stretch gap-2 pt-2 sm:flex-row sm:items-center sm:justify-between">
               <Button
                 type="button"
                 variant="ghost"
-                className="text-destructive hover:bg-destructive/10 justify-center sm:justify-start gap-1.5"
+                className="justify-center gap-1.5 text-destructive hover:bg-destructive/10 sm:justify-start"
                 onClick={() => setIsDeleteOpen(true)}
               >
                 <Trash2 className="size-4" />
                 Delete
               </Button>
-              <div className="flex flex-col sm:flex-row gap-2 justify-end">
-                <Button type="button" variant="outline" disabled={isPending} onClick={() => onOpenChange(false)}>
+              <div className="flex flex-col justify-end gap-2 sm:flex-row">
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={isPending}
+                  onClick={() => onOpenChange(false)}
+                >
                   Cancel
                 </Button>
-                <Button type="submit" disabled={isPending || !startsAt || !endsAt}>
-                  {isPending ? "Saving..." : "Confirm Changes"}
+                <Button type="submit" disabled={isPending || !startsAt} className="gap-2">
+                  {isPending && <Spinner className="size-4" />}
+                  {isPending ? "Saving..." : "Confirm changes"}
                 </Button>
               </div>
             </DialogFooter>
@@ -235,6 +185,7 @@ export function RescheduleFormModal({
           isOpen={isDeleteOpen}
           onOpenChange={setIsDeleteOpen}
           appointmentId={appointment.id}
+          appointmentTitle={appointment.title}
           onSuccess={() => {
             onDeleteSuccess();
             onOpenChange(false);

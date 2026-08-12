@@ -72,6 +72,11 @@ export function formatTimeInTimeZone(date: Date, timeZone: string) {
   });
 }
 
+export function toTimeZoneDayKey(date: Date, timeZone: string) {
+  const parts = getTimeZoneParts(date, timeZone);
+  return `${parts.year}-${pad(parts.month)}-${pad(parts.day)}`;
+}
+
 export function getCalendarAnchorDate(timeZone: string, baseDate = new Date()) {
   const parts = getTimeZoneParts(baseDate, timeZone);
   return new Date(Date.UTC(parts.year, parts.month - 1, parts.day, 12, 0, 0, 0));
@@ -97,15 +102,15 @@ export function addCalendarDays(date: Date, days: number) {
   return next;
 }
 
-export function formatCalendarMonthYear(date: Date) {
-  return formatDateInTimeZone(date, "UTC", {
+export function formatCalendarMonthYear(date: Date, timeZone: string) {
+  return formatDateInTimeZone(date, timeZone, {
     month: "long",
     year: "numeric",
   });
 }
 
-export function formatCalendarWeekday(date: Date) {
-  return formatDateInTimeZone(date, "UTC", {
+export function formatCalendarWeekday(date: Date, timeZone: string) {
+  return formatDateInTimeZone(date, timeZone, {
     weekday: "short",
   });
 }

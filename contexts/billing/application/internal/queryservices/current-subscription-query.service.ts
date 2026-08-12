@@ -13,6 +13,22 @@ export class CurrentSubscriptionQueryService {
     );
     return toSubscriptionAccessSnapshot(subscription);
   }
+
+  /**
+   * Subscription is a capability input, never a prerequisite: a user that owns
+   * no subscription (an invited member, for instance) has no plan, not an
+   * error. Callers that render the app shell must keep working, so the absence
+   * is modelled as `null` instead of a thrown Billing failure.
+   */
+  async getCurrentSubscriptionSnapshot(
+    accessToken: string,
+  ): Promise<SubscriptionAccessSnapshot | null> {
+    try {
+      return await this.getCurrentSubscription(accessToken);
+    } catch {
+      return null;
+    }
+  }
 }
 
 export function createCurrentSubscriptionQueryService() {
@@ -26,5 +42,6 @@ function toSubscriptionAccessSnapshot(
     active: subscription.active,
     status: subscription.status,
     planId: subscription.planId,
+    billingCycle: subscription.billingCycle,
   };
 }

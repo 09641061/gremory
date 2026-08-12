@@ -13,6 +13,7 @@ interface WeeklyCalendarHeaderProps {
   onToday: () => void;
   onCreateAppointment: () => void;
   canCreateAppointment: boolean;
+  timeZone: string;
 }
 
 export function WeeklyCalendarHeader({
@@ -23,13 +24,14 @@ export function WeeklyCalendarHeader({
   onToday,
   onCreateAppointment,
   canCreateAppointment,
+  timeZone,
 }: WeeklyCalendarHeaderProps) {
   const [isPickerOpen, setIsPickerOpen] = useState(false);
   const selectorRef = useRef<HTMLDivElement>(null);
 
   useSelectorMenu(isPickerOpen, setIsPickerOpen, selectorRef);
 
-  const formattedMonthYear = formatCalendarMonthYear(currentDate);
+  const formattedMonthYear = formatCalendarMonthYear(currentDate, timeZone);
 
   const currentYear = currentDate.getUTCFullYear();
   const currentMonthIdx = currentDate.getUTCMonth();

@@ -4,6 +4,7 @@ import React from "react";
 import type { BillingCycle, Currency } from "../../../domain/model/commands/create-subscription.command";
 import { CurrencySelector } from "./currency-selector";
 import { cn } from "@/lib/utils";
+import { Switch } from "@/contexts/shared/interfaces/components/ui/switch";
 
 interface SubscribeHeroProps {
   billingCycle: BillingCycle;
@@ -45,24 +46,7 @@ export function SubscribeHero({
             Monthly
           </span>
 
-          <button
-            type="button"
-            role="switch"
-            aria-checked={isAnnual}
-            onClick={onCycleToggle}
-            aria-label="Toggle annual billing"
-            className={cn(
-              "relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden ring-2 ring-primary/20",
-              isAnnual ? "bg-primary" : "bg-muted"
-            )}
-          >
-            <span
-              className={cn(
-                "pointer-events-none inline-block size-5 transform rounded-full bg-primary-foreground shadow-md ring-0 transition duration-200 ease-in-out",
-                isAnnual ? "translate-x-5" : "translate-x-0"
-              )}
-            />
-          </button>
+          <Switch checked={isAnnual} onCheckedChange={onCycleToggle} aria-label="Toggle annual billing" />
 
           <span
             className={cn(

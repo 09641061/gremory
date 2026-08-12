@@ -2,35 +2,38 @@
 
 import { useMemo } from "react";
 import { Appointment } from "../../../domain/model/entities/appointment";
+import { Skeleton } from "@/contexts/shared/interfaces/components/ui/skeleton";
+import { cn } from "@/lib/utils";
 import { AppointmentBlock } from "./appointment-block";
-import { getTimeZoneParts, isSameCalendarDate } from "../scheduling-timezone.utils";
+import { toTimeZoneDayKey } from "../scheduling-timezone.utils";
+
+const ROW_MIN_HEIGHT = 80;
+const CARD_HEIGHT = 72;
+const ROW_PADDING = 16;
 
 interface WeeklyCalendarGridProps {
   appointments: Appointment[];
   weekDays: Date[];
   hours: number[];
   isPending: boolean;
+  todayKey: string | null;
+  now: number | null;
   timeZone: string;
-  todayDate: Date;
   onAppointmentClick: (appointment: Appointment) => void;
 }
 
-const BASE_ROW_HEIGHT = 80;
-const CARD_HEIGHT = 72;
-const ROW_PADDING = 16;
-
 function formatHour(hour: number) {
-  if (hour > 12) return `${hour - 12} PM`;
+  if (hour === 0) return "12 AM";
   if (hour === 12) return "12 PM";
-  return `${hour} AM`;
+  return hour > 12 ? `${hour - 12} PM` : `${hour} AM`;
 }
 
 function CalendarSkeleton() {
   return (
     <div className="space-y-4 p-6">
-      <div className="h-10 w-full animate-pulse bg-muted rounded" />
-      <div className="h-20 w-full animate-pulse bg-muted rounded" />
-      <div className="h-20 w-full animate-pulse bg-muted rounded" />
+      <Skeleton className="h-10 w-full" />
+      <Skeleton className="h-20 w-full" />
+      <Skeleton className="h-20 w-full" />
     </div>
   );
 }
@@ -40,19 +43,21 @@ export function WeeklyCalendarGrid({
   weekDays,
   hours,
   isPending,
+  todayKey,
+  now,
   timeZone,
-  todayDate,
   onAppointmentClick,
 }: WeeklyCalendarGridProps) {
-  const appointmentsByDayHour = useMemo(() => {
+  const appointmentsByCell = useMemo(() => {
     const map = new Map<string, Appointment[]>();
-    appointments.forEach((appointment) => {
-      const starts = getTimeZoneParts(new Date(appointment.startsAt), timeZone);
-      const key = `${starts.year}-${starts.month}-${starts.day}-${starts.hour}`;
-      const current = map.get(key) ?? [];
-      current.push(appointment);
-      map.set(key, current);
-    });
+    for (const appointment of appointments) {
+      const dayKey = toTimeZoneDayKey(new Date(appointment.startsAt), timeZone);
+      const starts = new Date(appointment.startsAt);
+      const key = `${dayKey}-${starts.getHours()}`;
+      const bucket = map.get(key);
+      if (bucket) bucket.push(appointment);
+      else map.set(key, [appointment]);
+    }
     return map;
   }, [appointments, timeZone]);
 
@@ -61,58 +66,52 @@ export function WeeklyCalendarGrid({
   }
 
   return (
-    <div className="relative select-none min-w-[700px]">
-      <div className="absolute inset-0 grid grid-cols-[64px_repeat(7,1fr)] pointer-events-none">
-        <div className="border-r border-border h-full" />
-        {Array.from({ length: 7 }).map((_, i) => (
-          <div key={i} className="border-r border-border last:border-r-0 h-full" />
-        ))}
-      </div>
+    <div className="select-none">
+      {hours.map((hour) => {
+        const busiestDay = weekDays.reduce((max, day) => {
+          const dayKey = toTimeZoneDayKey(day, timeZone);
+          const count = appointmentsByCell.get(`${dayKey}-${hour}`)?.length ?? 0;
+          return Math.max(max, count);
+        }, 0);
+        const rowHeight = Math.max(ROW_MIN_HEIGHT, busiestDay * CARD_HEIGHT + ROW_PADDING);
 
-      {hours.map((hour) => (
-        <div
-          key={hour}
-          className="border-b border-border flex relative"
-          style={{
-            minHeight: BASE_ROW_HEIGHT,
-          }}
-        >
-          <div className="w-16 border-r border-border shrink-0 flex items-start justify-center pt-2 text-[10px] font-semibold text-muted-foreground">
-            {formatHour(hour)}
-          </div>
+        return (
+          <div
+            key={hour}
+            className="grid grid-cols-[64px_repeat(7,1fr)] border-b border-border"
+            style={{ minHeight: rowHeight }}
+          >
+            <div className="border-r border-border pt-2 text-center text-[10px] font-semibold text-muted-foreground">
+              {formatHour(hour)}
+            </div>
 
-          <div className="flex-1 grid grid-cols-7 relative">
-            {weekDays.map((day, dayIdx) => {
-              const dayAppts = appointmentsByDayHour.get(
-                `${day.getUTCFullYear()}-${day.getUTCMonth() + 1}-${day.getUTCDate()}-${hour}`
-              ) ?? [];
-              const rowHeight = Math.max(
-                BASE_ROW_HEIGHT,
-                dayAppts.length > 0 ? dayAppts.length * CARD_HEIGHT + ROW_PADDING : BASE_ROW_HEIGHT
-              );
+            {weekDays.map((day) => {
+              const dayKey = toTimeZoneDayKey(day, timeZone);
+              const cellAppointments = appointmentsByCell.get(`${dayKey}-${hour}`) ?? [];
 
               return (
                 <div
-                  key={dayIdx}
-                  className={`relative p-1 h-full flex flex-col gap-2 ${isSameCalendarDate(day, todayDate) ? "bg-primary/5" : ""}`}
-                  style={{
-                    minHeight: rowHeight,
-                  }}
+                  key={dayKey}
+                  className={cn(
+                    "flex flex-col gap-2 border-r border-border p-1 last:border-r-0",
+                    dayKey === todayKey && "bg-primary/5"
+                  )}
                 >
-                  {dayAppts.map((appt) => (
+                  {cellAppointments.map((appointment) => (
                     <AppointmentBlock
-                      key={appt.id}
-                      appointment={appt}
+                      key={appointment.id}
+                      appointment={appointment}
+                      now={now}
                       timeZone={timeZone}
-                      onClick={() => onAppointmentClick(appt)}
+                      onClick={() => onAppointmentClick(appointment)}
                     />
                   ))}
                 </div>
               );
             })}
           </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }

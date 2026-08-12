@@ -19,7 +19,7 @@ export default async function ChatPage({
   const accessToken = (await cookies()).get(iamSessionCookies.accessToken)?.value;
 
   const subscription = accessToken
-    ? await createCurrentSubscriptionQueryService().getCurrentSubscription(accessToken)
+    ? await createCurrentSubscriptionQueryService().getCurrentSubscriptionSnapshot(accessToken)
     : null;
   const hasAssistantAccess = createSubscriptionAccessQueryService().resolve(subscription).hasAssistantAccess;
 

@@ -9,7 +9,7 @@ import { initialBusinessActionResult } from "../../../actions/business-action-re
 import { Card, CardContent, CardFooter } from "@/contexts/shared/interfaces/components/ui/card";
 import { Input } from "@/contexts/shared/interfaces/components/ui/input";
 import { Button, buttonVariants } from "@/contexts/shared/interfaces/components/ui/button";
-import { ErrorAlert } from "@/contexts/shared/interfaces/components/ui/error";
+import { ErrorAlert } from "@/contexts/shared/interfaces/components/error";
 import { Spinner } from "@/contexts/shared/interfaces/components/ui/spinner";
 import {
   Avatar,
@@ -37,7 +37,11 @@ export function CreateEstablishmentForm({ organizationId }: { organizationId: st
   useEffect(() => {
     if (state.status === "success" && !hasRedirected.current) {
       hasRedirected.current = true;
-      router.push("/establishments");
+      const establishmentId = state.data?.id;
+      const nextPath = establishmentId
+        ? `/?organizationId=${encodeURIComponent(organizationId)}&establishmentId=${encodeURIComponent(establishmentId)}`
+        : "/";
+      router.push(nextPath);
       router.refresh();
     } else if (state.status === "error") {
       setTimeout(() => {
@@ -49,7 +53,7 @@ export function CreateEstablishmentForm({ organizationId }: { organizationId: st
         setFormResetKey((k) => k + 1);
       }, 0);
     }
-  }, [router, state.status, state.error]);
+  }, [organizationId, router, state.data?.id, state.error, state.status]);
 
   useEffect(() => {
     return () => {

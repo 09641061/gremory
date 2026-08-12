@@ -31,7 +31,7 @@ export async function updateCatalogServiceAction(
   const parsed = updateCatalogServiceSchema.safeParse(rawData);
 
   if (!parsed.success) {
-    const firstError = parsed.error.issues[0]?.message ?? "Datos inválidos";
+    const firstError = parsed.error.issues[0]?.message ?? "Invalid data";
     return { status: "error", error: firstError };
   }
 
@@ -47,7 +47,7 @@ export async function updateCatalogServiceAction(
   } catch (err) {
     return {
       status: "error",
-      error: err instanceof Error ? err.message : "Error al actualizar el servicio",
+      error: err instanceof Error ? err.message : "Error while updating the service",
     };
   }
 }
@@ -66,7 +66,7 @@ export async function changeCatalogServiceStatusAction(
   } catch (err) {
     return {
       status: "error",
-      error: err instanceof Error ? err.message : "Error al cambiar estado del servicio",
+      error: err instanceof Error ? err.message : "Error while changing the service status",
     };
   }
 }
@@ -84,7 +84,7 @@ export async function deleteCatalogServiceAction(
   } catch (err) {
     return {
       status: "error",
-      error: err instanceof Error ? err.message : "Error al eliminar el servicio",
+      error: err instanceof Error ? err.message : "Error while deleting the service",
     };
   }
 }

@@ -22,7 +22,7 @@ describe("AssistantChatThread", () => {
         {
           id: "message-1",
           role: "user",
-          content: "Hola",
+          content: "Hello",
           createdAt: "2026-07-30T00:00:00.000Z",
         },
       ],
@@ -37,8 +37,8 @@ describe("AssistantChatThread", () => {
     );
 
     expect(
-      screen.queryByText("Hola, soy tu asistente. Escribime lo que necesitas y empezamos."),
+      screen.queryByText("Hello, I am your assistant. Tell me what you need and let’s get started."),
     ).not.toBeInTheDocument();
-    expect(screen.getByText("Hola")).toBeVisible();
+    expect(screen.getByText("Hello")).toBeVisible();
   });
 });

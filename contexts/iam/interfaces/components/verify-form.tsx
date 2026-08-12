@@ -3,7 +3,7 @@
 import { ClipboardEvent, KeyboardEvent, useRef, useState } from "react";
 import { useActionState } from "react";
 import { useRouter } from "next/navigation";
-import { ErrorAlert } from "@/contexts/shared/interfaces/components/ui/error";
+import { ErrorAlert } from "@/contexts/shared/interfaces/components/error";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import { Spinner } from "@/contexts/shared/interfaces/components/ui/spinner";
 import {
@@ -11,6 +11,7 @@ import {
   CardContent,
 } from "@/contexts/shared/interfaces/components/ui/card";
 import { Input } from "@/contexts/shared/interfaces/components/ui/input";
+import { Label } from "@/contexts/shared/interfaces/components/ui/label";
 import {
   confirmEmailSignInAction,
   type ConfirmEmailSignInActionState,
@@ -93,9 +94,16 @@ export function VerifyForm({
       <ErrorAlert
         title="Verification failed"
         message={
-          initialError ??
-          (state.status === "error" ? state.error : undefined) ??
-          (resendState.status === "error" ? resendState.error : undefined)
+          !pending && !resendPending
+            ? initialError ??
+              (state.status === "error" ? state.error : undefined) ??
+              (resendState.status === "error" ? resendState.error : undefined)
+            : undefined
+        }
+        resetKey={
+          pending || resendPending
+            ? "pending"
+            : `${state.status}-${resendState.status}`
         }
       />
       <main className="flex min-h-screen items-center justify-center bg-background px-4 py-6 text-foreground">
@@ -122,9 +130,9 @@ export function VerifyForm({
                 </p>
 
                 <div className="mt-5 text-left">
-                  <p className="mb-3 text-[14px] text-muted-foreground">
+                  <Label className="mb-3 text-muted-foreground">
                     Enter the verification code
-                  </p>
+                  </Label>
 
                   <div className="grid grid-cols-6 gap-1.5">
                     {Array.from({ length: verificationCodeLength }, (_, index) => (

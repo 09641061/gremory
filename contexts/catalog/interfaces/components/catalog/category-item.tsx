@@ -2,16 +2,17 @@
 
 import { useRouter } from "next/navigation";
 
-import { FolderIcon, MoreVerticalIcon, GripVertical, ChevronRight, ChevronDown } from "lucide-react";
-import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuEditItem,
-  DropdownMenuCreateItem,
-  DropdownMenuDeleteItem,
-} from "@/contexts/shared/interfaces/components/ui/dropdown-menu";
+  ChevronDown,
+  ChevronRight,
+  FolderClosed,
+  FolderOpen,
+  GripVertical,
+  Pencil,
+  Plus,
+  Trash2,
+} from "lucide-react";
+import { EntityActionsMenu } from "@/contexts/shared/interfaces/components/entity-actions-menu";
 import type { CategoryDTO, ServiceSummaryDTO } from "./category-sidebar";
 
 interface CategoryItemProps {
@@ -73,7 +74,7 @@ export function CategoryItem({
       }`}
     >
       <div
-        className={`w-full flex items-center justify-between px-3 py-2 text-sm rounded-md transition-colors group/row ${
+        className={`group/row flex h-(--app-sidebar-control-height) w-full items-center justify-between rounded-(--app-sidebar-item-radius) px-(--app-sidebar-control-padding-x) text-sm transition-colors ${
           isCatSelected
             ? "bg-accent text-accent-foreground font-semibold"
             : "text-foreground hover:bg-accent/70 hover:text-accent-foreground"
@@ -90,60 +91,57 @@ export function CategoryItem({
           ) : (
             <ChevronRight className="size-4 text-muted-foreground/80 shrink-0" />
           )}
-          <FolderIcon className="size-4 text-muted-foreground shrink-0" />
+          {isExpanded ? (
+            <FolderOpen className="size-4 text-muted-foreground shrink-0" />
+          ) : (
+            <FolderClosed className="size-4 text-muted-foreground shrink-0" />
+          )}
           <span className="truncate">{cat.name}</span>
         </button>
 
         {(canCreateService || canUpdateCategory || canDeleteCategory) && (
           <div className="relative flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
-            <DropdownMenu>
-              <DropdownMenuTrigger
-                render={
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-6 w-6 text-muted-foreground hover:text-foreground transition-opacity"
-                    title="Category Options"
-                  />
-                }
-              >
-                <MoreVerticalIcon className="size-3" />
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="p-2 space-y-1 w-44">
-                {canCreateService && (
-                  <DropdownMenuCreateItem
-                    label="Create Service"
-                    onClick={() => {
-                      setIsMobileOpen(false);
-                      if (onCreateService) {
-                        onCreateService(cat.id);
-                      } else {
-                        router.push("/catalog");
-                      }
-                    }}
-                  />
-                )}
-                {canUpdateCategory && (
-                  <DropdownMenuEditItem
-                    onClick={() => {
-                      onOpenEditCategoryModal(cat);
-                    }}
-                  />
-                )}
-                {canDeleteCategory && (
-                  <DropdownMenuDeleteItem
-                    className={catServices.length > 0 ? "opacity-50 cursor-not-allowed" : ""}
-                    onClick={() => {
-                      if (catServices.length > 0) {
-                        setAlertMessage("You cannot delete a category that has services.");
-                      } else {
-                        onDeleteCategory(cat);
-                      }
-                    }}
-                  />
-                )}
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <EntityActionsMenu
+              label={`More actions for ${cat.name}`}
+              title="Category Options"
+              size="icon-sm"
+              triggerClassName="h-6 w-6 text-muted-foreground hover:text-foreground"
+              contentClassName="w-44"
+              actions={[
+                {
+                  label: "Create Service",
+                  icon: Plus,
+                  hidden: !canCreateService,
+                  onSelect: () => {
+                    setIsMobileOpen(false);
+                    if (onCreateService) {
+                      onCreateService(cat.id);
+                    } else {
+                      router.push("/catalog");
+                    }
+                  },
+                },
+                {
+                  label: "Edit",
+                  icon: Pencil,
+                  hidden: !canUpdateCategory,
+                  onSelect: () => onOpenEditCategoryModal(cat),
+                },
+                {
+                  label: "Delete",
+                  icon: Trash2,
+                  variant: "destructive",
+                  hidden: !canDeleteCategory,
+                  onSelect: () => {
+                    if (catServices.length > 0) {
+                      setAlertMessage("You cannot delete a category that has services.");
+                    } else {
+                      onDeleteCategory(cat);
+                    }
+                  },
+                },
+              ]}
+            />
           </div>
         )}
       </div>
@@ -163,7 +161,7 @@ export function CategoryItem({
                   onSelectService(svc.id);
                   setIsMobileOpen(false);
                 }}
-                className={`w-full flex items-center gap-3 text-left px-3 py-2 text-sm rounded-md transition-colors truncate ${
+                className={`flex h-(--app-sidebar-control-height) w-full items-center gap-(--app-sidebar-control-gap) truncate rounded-(--app-sidebar-item-radius) px-(--app-sidebar-control-padding-x) text-left text-sm transition-colors ${
                   selectedServiceId === svc.id
                     ? "bg-accent text-accent-foreground font-semibold"
                     : "text-foreground hover:bg-accent/70 hover:text-accent-foreground"

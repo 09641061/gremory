@@ -79,7 +79,7 @@ function AssistantChatMessageBubbleComponent({ message }: AssistantChatMessageBu
         <div
           className={cn(
             "max-w-[min(22rem,calc(100vw-6rem))] whitespace-pre-wrap break-words text-[15px] leading-7 text-foreground sm:max-w-[26rem]",
-            "rounded-2xl border border-[#e7edf4] bg-[#f8fafc] px-4 py-3 shadow-none",
+            "rounded-2xl border border-border bg-muted/40 px-4 py-3 shadow-none",
           )}
         >
           {message.content}

@@ -1,10 +1,13 @@
 "use client";
 
-import { useRef, useState } from "react";
-import { Check, ChevronDown } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { useSelectorMenu } from "@/contexts/business/interfaces/components/use-selector-menu";
-import { useAdaptivePopup } from "./use-adaptive-popup";
+import { useMemo } from "react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/contexts/shared/interfaces/components/ui/select";
 import type { DropdownOption } from "./types";
 
 interface DropdownFieldProps {
@@ -14,8 +17,16 @@ interface DropdownFieldProps {
   value: string;
   options: DropdownOption[];
   onChange: (value: string) => void;
+  emptyMessage?: string;
 }
 
+/**
+ * Single-choice field backed by the shared `Select` primitive.
+ *
+ * Delegating to the primitive is what buys arrow-key navigation, type-ahead,
+ * correct `listbox`/`option` semantics and the hidden input that carries the
+ * value to the Server Action — none of which a hand-rolled popup provided.
+ */
 export function DropdownField({
   id,
   name,
@@ -23,79 +34,42 @@ export function DropdownField({
   value,
   options,
   onChange,
+  emptyMessage = "No options available",
 }: DropdownFieldProps) {
-  const [isOpen, setIsOpen] = useState(false);
-  const selectorRef = useRef<HTMLDivElement>(null);
-  const buttonRef = useRef<HTMLButtonElement>(null);
-  const { placement, maxHeight } = useAdaptivePopup(isOpen, buttonRef);
-
-  useSelectorMenu(isOpen, setIsOpen, selectorRef);
-
-  const selectedOption = options.find((option) => option.value === value);
+  // Lets `SelectValue` resolve the trigger label without re-rendering option rows.
+  const items = useMemo(
+    () => options.map((option) => ({ value: option.value, label: option.label })),
+    [options]
+  );
 
   return (
-    <div ref={selectorRef} className="relative">
-      <input type="hidden" name={name} value={value} />
-      <button
-        type="button"
-        id={id}
-        ref={buttonRef}
-        aria-haspopup="listbox"
-        aria-expanded={isOpen}
-        onClick={() => setIsOpen((open) => !open)}
-        className={cn(
-          "flex h-9 w-full items-center justify-between gap-3 rounded-lg border border-border bg-transparent px-3 text-left text-sm text-foreground transition-colors outline-none",
-          "focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 dark:bg-muted/30",
-          isOpen && "border-ring bg-card shadow-sm"
+    <Select
+      name={name}
+      items={items}
+      value={value || null}
+      onValueChange={(next: string | null) => onChange(next ?? "")}
+    >
+      <SelectTrigger id={id} className="w-full">
+        <SelectValue placeholder={placeholder} />
+      </SelectTrigger>
+      <SelectContent>
+        {options.length === 0 ? (
+          <div className="px-2 py-3 text-sm text-muted-foreground">{emptyMessage}</div>
+        ) : (
+          options.map((option) => (
+            <SelectItem key={option.value} value={option.value} label={option.label}>
+              <span className="flex min-w-0 flex-col">
+                <span className="truncate">{option.label}</span>
+                {option.description && (
+                  <span className="truncate text-xs text-muted-foreground">
+                    {option.description}
+                  </span>
+                )}
+              </span>
+            </SelectItem>
+          ))
         )}
-      >
-        <span className={cn("truncate", !selectedOption && "text-muted-foreground")}>
-          {selectedOption?.label ?? placeholder}
-        </span>
-        <ChevronDown className="size-4 shrink-0 text-muted-foreground" />
-      </button>
-
-      {isOpen && (
-        <div
-          className={cn(
-            "absolute left-0 z-50 w-full",
-            placement === "top" ? "bottom-full mb-2" : "top-full mt-2"
-          )}
-        >
-          <div className="overflow-hidden rounded-2xl border border-border/70 bg-card/95 shadow-[0_20px_45px_rgba(15,23,42,0.18)] backdrop-blur">
-            <div className="overflow-y-auto p-2" style={{ maxHeight }}>
-              {options.map((option) => {
-                const isSelected = option.value === value;
-                return (
-                  <button
-                    key={option.value}
-                    type="button"
-                    onClick={() => {
-                      onChange(option.value);
-                      setIsOpen(false);
-                    }}
-                    className={cn(
-                      "flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2 text-left transition-colors",
-                      "hover:bg-muted/70 focus-visible:bg-muted/70 focus-visible:outline-none",
-                      isSelected && "bg-primary/10 ring-1 ring-primary/15"
-                    )}
-                    role="option"
-                    aria-selected={isSelected}
-                  >
-                    <div className="min-w-0 flex-1">
-                      <div className="truncate text-sm font-medium text-foreground">{option.label}</div>
-                      {option.description && (
-                        <div className="truncate text-xs text-muted-foreground">{option.description}</div>
-                      )}
-                    </div>
-                    {isSelected && <Check className="size-4 shrink-0 text-primary" />}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
+      </SelectContent>
+    </Select>
   );
 }

@@ -34,7 +34,7 @@ export async function createCatalogServiceAction(
   const parsed = createCatalogServiceSchema.safeParse(rawData);
 
   if (!parsed.success) {
-    const firstError = parsed.error.issues[0]?.message ?? "Datos inválidos en el formulario";
+    const firstError = parsed.error.issues[0]?.message ?? "Invalid form data";
     return { status: "error", data: null, error: firstError };
   }
 
@@ -56,7 +56,7 @@ export async function createCatalogServiceAction(
     return {
       status: "error",
       data: null,
-      error: err instanceof Error ? err.message : "Error inesperado al crear el servicio",
+      error: err instanceof Error ? err.message : "Unexpected error while creating the service",
     };
   }
 }

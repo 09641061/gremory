@@ -137,6 +137,27 @@ export class AssistantApiGateway {
     );
   }
 
+  async sendMessageStream(
+    id: string,
+    command: SendAssistantMessageRequest,
+    token?: string,
+  ): Promise<Response> {
+    const authToken = await resolveAccessToken(token);
+
+    return fetch(
+      `${apiClient.buildUrl(apiConfig.routes.assistantConversations)}/${encodeURIComponent(id)}/messages/stream`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "text/event-stream",
+          "Authorization": authToken ? `Bearer ${authToken}` : "",
+        },
+        body: JSON.stringify(command),
+      },
+    );
+  }
+
   async renameConversation(
     id: string,
     command: RenameConversationRequest,

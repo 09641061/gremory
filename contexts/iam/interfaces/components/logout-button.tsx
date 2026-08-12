@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
+import { ErrorAlert } from "@/contexts/shared/interfaces/components/error";
 import { Spinner } from "@/contexts/shared/interfaces/components/ui/spinner";
 import { signOutAction } from "../actions/sign-out.action";
 
@@ -36,7 +37,11 @@ export function LogoutButton() {
           "Log out"
         )}
       </Button>
-      {error ? <p className="text-sm text-muted-foreground">{error}</p> : null}
+      <ErrorAlert
+        title="Unable to log out"
+        message={!pending ? error ?? undefined : undefined}
+        resetKey={pending ? "pending" : error ?? "idle"}
+      />
     </div>
   );
 }

@@ -1,12 +1,11 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { BillingApiGateway } from "@/contexts/billing/infrastructure/gateways/billing-api.gateway";
 import { createIamSessionQueryService } from "@/contexts/iam/application/internal/queryservices/iam-session-query.service";
-import { createSubscriptionAccessQueryService } from "@/contexts/billing/application/internal/queryservices/subscription-access-query.service";
-import { createLandingPathQueryService } from "@/contexts/iam/application/internal/queryservices/landing-path-query.service";
+import { createEntryRouteQueryService } from "@/contexts/shared/application/internal/queryservices/entry-route-query.service";
 import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-session-cookie";
 import { continueRequestWithSession } from "@/contexts/iam/interfaces/proxy/iam-session-request";
-import { apiConfig } from "@/api.config";
-import { ApiError, apiClient } from "@/contexts/shared/infrastructure/http/api-client";
+import { ApiError } from "@/contexts/shared/infrastructure/http/api-client";
 
 export async function proxy(request: NextRequest) {
   let accessToken = request.cookies.get(iamSessionCookies.accessToken)?.value;
@@ -38,26 +37,14 @@ export async function proxy(request: NextRequest) {
     response = continueRequestWithSession(request, session.rotatedSession);
   }
 
-  const subscriptionAccess = await getSubscriptionAccess(accessToken);
-
-  if (subscriptionAccess.status === "unauthenticated") {
-    return redirectToLogin(request);
+  // Subscription is a capability input, never an onboarding prerequisite.
+  if (pathname === "/upgrade") {
+    return continueWithWorkspaceContext(request, response);
   }
 
-  // Do not convert an API outage into a false "no subscription" decision.
-  // Protected backend endpoints remain the final authorization boundary.
-  if (subscriptionAccess.status === "unavailable") {
-    return response ?? NextResponse.next();
-  }
+  const subscriptionForLanding = await getSubscriptionSnapshot(accessToken);
 
-  let subscriptionForLanding = null as { active?: boolean; status?: string; planId?: number } | null;
-  if (subscriptionAccess.status === "active") {
-    subscriptionForLanding = subscriptionAccess.subscription;
-  } else if (subscriptionAccess.status === "inactive") {
-    subscriptionForLanding = subscriptionAccess.subscription ?? null;
-  }
-
-  const landing = await createLandingPathQueryService().resolveRoute({
+  const landing = await createEntryRouteQueryService().resolveRoute({
     accessToken,
     subscription: subscriptionForLanding,
   });
@@ -65,25 +52,27 @@ export async function proxy(request: NextRequest) {
     return redirectToLogin(request);
   }
   if (landing.status === "unavailable") {
-    return response ?? NextResponse.next();
+    return continueWithWorkspaceContext(request, response);
+  }
+
+  if (landing.status === "organization-required" || landing.status === "establishment-required") {
+    if (!landing.allowedPaths.includes(pathname)) {
+      return redirectWithCookies(request, landing.setupHref, response);
+    }
+    return continueWithWorkspaceContext(request, response);
   }
 
   const homePath = landing.homeHref;
-  const activeAccess = subscriptionAccess.status === "active" || landing.hasWorkforceAccess;
 
-  if (activeAccess && (pathname === "/" || pathname === "/login" || pathname === "/subscribe")) {
+  if (pathname === "/") {
     return redirectWithCookies(request, homePath, response);
   }
 
-  if (activeAccess && homePath !== "/chat" && (pathname === "/chat" || pathname.startsWith("/chat/"))) {
+  if (homePath !== "/chat" && (pathname === "/chat" || pathname.startsWith("/chat/"))) {
     return redirectWithCookies(request, homePath, response);
   }
 
-  if (!activeAccess && (pathname === "/" || pathname === "/login" || isPrivateRoute(pathname))) {
-    return redirectWithCookies(request, "/subscribe", response);
-  }
-
-  return response ?? NextResponse.next();
+  return continueWithWorkspaceContext(request, response);
 }
 
 function isPrivateRoute(pathname: string) {
@@ -97,49 +86,29 @@ function isPrivateRoute(pathname: string) {
     "/settings",
     "/organizations",
     "/establishments",
+    "/access-denied",
+    // Lives under app/(protected): plans are shown to signed-in users only.
+    "/upgrade",
   ].some((route) => pathname === route || pathname.startsWith(`${route}/`));
 }
 
-type SubscriptionAccess =
-  | {
-      status: "active";
-      subscription: { active?: boolean; status?: string; planId?: number };
-    }
-  | {
-      status: "inactive";
-      subscription?: { active?: boolean; status?: string; planId?: number } | null;
-    }
-  | { status: "unauthenticated" | "unavailable" };
-
-async function getSubscriptionAccess(accessToken: string): Promise<SubscriptionAccess> {
+async function getSubscriptionSnapshot(accessToken: string): Promise<{
+  active?: boolean;
+  status?: string;
+  planId?: number;
+} | null> {
   try {
-    const subscription = await apiClient.get<{
-      active?: boolean;
-      status?: string;
-      planId?: number;
-    }>(
-      apiConfig.routes.subscriptions,
-      { token: accessToken },
-    );
-    const access = createSubscriptionAccessQueryService().resolve(subscription);
-    return access.isActive
-      ? { status: "active", subscription }
-      : { status: "inactive" };
+    return await new BillingApiGateway().getCurrentSubscription(accessToken);
   } catch (error) {
-    if (error instanceof ApiError && error.status === 401) return { status: "unauthenticated" };
-    if (error instanceof ApiError && error.status === 404) return { status: "inactive", subscription: null };
-    return { status: "unavailable" };
+    if (error instanceof ApiError && error.status === 401) return null;
+    // A missing or temporarily unavailable subscription must not block onboarding.
+    return null;
   }
 }
 
 function redirectWithCookies(request: NextRequest, path: string, response: NextResponse | null) {
   const redirectUrl = new URL(path, request.url);
-  if (path === "/schedule") {
-    const establishmentId = request.nextUrl.searchParams.get("establishmentId");
-    if (establishmentId) {
-      redirectUrl.searchParams.set("establishmentId", establishmentId);
-    }
-  }
+  copyWorkspaceSelection(request, redirectUrl);
 
   const redirectResponse = NextResponse.redirect(redirectUrl);
   if (response) {
@@ -148,6 +117,42 @@ function redirectWithCookies(request: NextRequest, path: string, response: NextR
     }
   }
   return redirectResponse;
+}
+
+function continueWithWorkspaceContext(request: NextRequest, response: NextResponse | null) {
+  const forwardedHeaders = new Headers(request.headers);
+  const organizationId = request.nextUrl.searchParams.get("organizationId");
+  const establishmentId = request.nextUrl.searchParams.get("establishmentId");
+
+  if (organizationId) forwardedHeaders.set("x-takodu-organization-id", organizationId);
+  else forwardedHeaders.delete("x-takodu-organization-id");
+  if (establishmentId) forwardedHeaders.set("x-takodu-establishment-id", establishmentId);
+  else forwardedHeaders.delete("x-takodu-establishment-id");
+
+  const nextResponse = NextResponse.next({
+    request: { headers: forwardedHeaders },
+  });
+  copyResponseCookies(response, nextResponse);
+  return nextResponse;
+}
+
+function copyWorkspaceSelection(request: NextRequest, url: URL) {
+  const organizationId = request.nextUrl.searchParams.get("organizationId");
+  const establishmentId = request.nextUrl.searchParams.get("establishmentId");
+  if (organizationId) url.searchParams.set("organizationId", organizationId);
+  if (establishmentId) url.searchParams.set("establishmentId", establishmentId);
+}
+
+function copyResponseCookies(source: NextResponse | null, target: NextResponse) {
+  if (!source) return;
+  for (const [name, value] of source.headers) {
+    if (name.startsWith("x-middleware-")) {
+      target.headers.set(name, value);
+    }
+  }
+  for (const cookie of source.cookies.getAll()) {
+    target.cookies.set(cookie);
+  }
 }
 
 function redirectToLogin(request: NextRequest) {
@@ -161,7 +166,7 @@ export const config = {
   matcher: [
     "/",
     "/login",
-    "/subscribe",
+    "/upgrade",
     "/chat/:path*",
     "/analytics/:path*",
     "/schedule/:path*",
@@ -171,5 +176,6 @@ export const config = {
     "/settings/:path*",
     "/organizations/:path*",
     "/establishments/:path*",
+    "/access-denied/:path*",
   ],
 };

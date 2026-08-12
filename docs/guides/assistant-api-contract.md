@@ -1,12 +1,12 @@
 # Assistant API Contract
 
-Fecha de referencia: 2026-07-26
+Reference date: 2026-07-26
 
 | Endpoint | Método | Header requerido | Query / Params | Body | Devuelve |
 |---|---|---|---|---|---|
 | `/api/assistant/conversations` | `GET` | `Authorization: Bearer <access_token>` | `page` opcional, `size` opcional, `search` opcional | No | Página con resúmenes de conversaciones |
-| `/api/assistant/conversations/{id}` | `GET` | `Authorization: Bearer <access_token>` | `id` en la ruta | No | Conversación completa con mensajes |
-| `/api/assistant/conversations` | `POST` | `Authorization: Bearer <access_token>` | No | `{ "title": "Nuevo chat" }` | Conversación creada con mensaje inicial |
+| `/api/assistant/conversations/{id}` | `GET` | `Authorization: Bearer <access_token>` | `id` en la ruta | No | Full conversation con mensajes |
+| `/api/assistant/conversations` | `POST` | `Authorization: Bearer <access_token>` | No | `{ "title": "New chat" }` | Conversación creada con mensaje inicial |
 | `/api/assistant/conversations/{id}/messages` | `POST` | `Authorization: Bearer <access_token>` | `id` en la ruta | `{ "message": "..." }` | Conversación actualizada con respuesta del assistant |
 | `/api/assistant/conversations/{id}/archive` | `PATCH` | `Authorization: Bearer <access_token>` | `id` en la ruta | No | Conversación archivada |
 
@@ -28,7 +28,7 @@ Response:
   "content": [
     {
       "id": "55516e31-f55e-4cf7-aabc-3304881cc169",
-      "title": "Nuevo chat",
+      "title": "New chat",
       "status": "ACTIVE",
       "createdAt": "2026-07-25T20:23:59.1612253-05:00",
       "updatedAt": "2026-07-25T20:24:02.7462948-05:00",
@@ -61,7 +61,7 @@ Response:
 ```json
 {
   "id": "55516e31-f55e-4cf7-aabc-3304881cc169",
-  "title": "Nuevo chat",
+  "title": "New chat",
   "status": "ACTIVE",
   "createdAt": "2026-07-25T20:23:59.1612253-05:00",
   "updatedAt": "2026-07-25T20:24:02.7462948-05:00",
@@ -88,7 +88,7 @@ Authorization: Bearer <access_token>
 Content-Type: application/json
 
 {
-  "title": "Nuevo chat"
+  "title": "New chat"
 }
 ```
 
@@ -97,7 +97,7 @@ Response:
 ```json
 {
   "id": "55516e31-f55e-4cf7-aabc-3304881cc169",
-  "title": "Nuevo chat",
+  "title": "New chat",
   "status": "ACTIVE",
   "createdAt": "2026-07-25T20:23:59.1612253-05:00",
   "updatedAt": "2026-07-25T20:23:59.1612253-05:00",
@@ -133,7 +133,7 @@ Response:
 ```json
 {
   "id": "55516e31-f55e-4cf7-aabc-3304881cc169",
-  "title": "Nuevo chat",
+  "title": "New chat",
   "status": "ACTIVE",
   "createdAt": "2026-07-25T20:23:59.1612253-05:00",
   "updatedAt": "2026-07-25T20:24:02.7462948-05:00",
@@ -178,7 +178,7 @@ Response:
 ```json
 {
   "id": "55516e31-f55e-4cf7-aabc-3304881cc169",
-  "title": "Nuevo chat",
+  "title": "New chat",
   "status": "ARCHIVED",
   "createdAt": "2026-07-25T20:23:59.1612253-05:00",
   "updatedAt": "2026-07-25T20:25:00.0000000-05:00",

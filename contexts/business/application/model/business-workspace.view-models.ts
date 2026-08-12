@@ -1,26 +1,36 @@
-import type { OrganizationSummary } from "./business.read-models";
+export type WorkspaceHeaderEstablishment = Readonly<{
+  id: string;
+  name: string;
+  photoUrl?: string | null;
+  timeZone?: string | null;
+  canRead?: boolean;
+  canUpdate?: boolean;
+  canDelete?: boolean;
+}>;
 
 export type WorkspaceHeaderOrganization = Readonly<{
   id: string;
   name: string;
   imageUrl?: string | null;
   defaultEstablishmentId?: string;
-}>;
-
-export type WorkspaceHeaderEstablishment = Readonly<{
-  id: string;
-  name: string;
-  photoUrl?: string | null;
+  mode?: "OWNER" | "MEMBER";
+  canRead?: boolean;
+  canUpdate?: boolean;
+  canReadEstablishments?: boolean;
+  canCreateEstablishment?: boolean;
+  establishments: ReadonlyArray<WorkspaceHeaderEstablishment>;
 }>;
 
 export type WorkspaceHeaderViewModel = Readonly<{
   organization?: WorkspaceHeaderOrganization;
   organizations: ReadonlyArray<WorkspaceHeaderOrganization>;
   establishments: ReadonlyArray<WorkspaceHeaderEstablishment>;
+  activeOrganizationId?: string;
   activeEstablishmentId?: string;
   canReadOrganizations: boolean;
   canReadEstablishments: boolean;
   canCreateEstablishment: boolean;
+  canCreateOrganization: boolean;
 }>;
 
 export type OrganizationPageState =
@@ -29,9 +39,14 @@ export type OrganizationPageState =
     }>
   | Readonly<{
       status: "ready";
-      organization: OrganizationSummary;
-      canUpdate: boolean;
+      organizations: ReadonlyArray<WorkspaceHeaderOrganization>;
+      activeOrganizationId?: string;
+      canCreateOrganization: boolean;
     }>
   | Readonly<{
       status: "denied";
     }>;
+
+export type OrganizationCreationState = Readonly<{
+  status: "allowed" | "denied";
+}>;

@@ -14,36 +14,42 @@ import type {
 
 export interface AppShellQueryInput {
   subscription: SubscriptionAccessSnapshot | null | undefined;
+  workspace?: Readonly<{
+    organizationId?: string;
+    establishmentId?: string;
+  }>;
 }
 
 export class AppShellQueryService {
-  async resolve({ subscription }: AppShellQueryInput): Promise<AppShellViewModel> {
+  async resolve({ subscription, workspace: workspaceSelection }: AppShellQueryInput): Promise<AppShellViewModel> {
     const subscriptionAccess = createSubscriptionAccessQueryService().resolve(subscription);
-    const workspace = await createBusinessWorkspaceQueryService().getHeaderViewModel();
-    const [schedulingEstablishmentId, catalogEstablishmentId, crmEstablishmentId, teamEstablishmentId] =
-      await Promise.all([
-        createSchedulingAccessPolicyService().getDefaultEstablishmentId(),
-        createCatalogAccessPolicyService().getDefaultEstablishmentId(),
-        createCrmAccessPolicyService().getDefaultEstablishmentId(),
-        createWorkforceAccessPolicyService().getDefaultEstablishmentId(),
-      ]);
+    const workspace = await createBusinessWorkspaceQueryService().getHeaderViewModel(workspaceSelection);
+    const activeEstablishmentId = workspace.activeEstablishmentId;
+    const [schedulingPermissions, catalogPermissions, crmPermissions, workforcePermissions] =
+      activeEstablishmentId
+        ? await Promise.all([
+            createSchedulingAccessPolicyService().getPermissions(activeEstablishmentId),
+            createCatalogAccessPolicyService().getPermissions(activeEstablishmentId),
+            createCrmAccessPolicyService().getPermissions(activeEstablishmentId),
+            createWorkforceAccessPolicyService().getPermissions(activeEstablishmentId),
+          ])
+        : [null, null, null, null];
     const visibleSidebarRoutes = resolveVisibleSidebarRoutes(
-      Boolean(schedulingEstablishmentId),
-      Boolean(catalogEstablishmentId),
-      Boolean(crmEstablishmentId),
-      Boolean(teamEstablishmentId),
+      schedulingPermissions?.canReadAppointments ?? false,
+      catalogPermissions?.canReadCatalog ?? false,
+      crmPermissions?.canReadCustomers ?? false,
+      workforcePermissions?.canReadTeam ?? false,
       subscriptionAccess.hasAssistantAccess,
     );
 
     return {
       workspace,
       hasAssistantAccess: subscriptionAccess.hasAssistantAccess,
-      homeHref: resolveHomeHref(subscriptionAccess.hasAssistantAccess, visibleSidebarRoutes),
+      homeHref: resolveHomeHref(subscriptionAccess.hasAssistantAccess, visibleSidebarRoutes, workspace),
       visibleSidebarRoutes,
       headerNavigation: {
         organizationListHref: workspace.canReadOrganizations ? "/organizations" : null,
-        establishmentListHref: workspace.canReadEstablishments ? "/establishments" : null,
-        newEstablishmentHref: workspace.canCreateEstablishment ? "/establishments/new" : null,
+        newOrganizationHref: workspace.canCreateOrganization ? "/organizations/new" : null,
       },
     };
   }
@@ -85,11 +91,19 @@ function resolveVisibleSidebarRoutes(
 function resolveHomeHref(
   hasAssistantAccess: boolean,
   visibleRoutes: ReadonlyArray<SidebarRouteId>,
-): "/chat" | "/schedule" | "/crm" | "/catalog" | "/team" | "/organizations" {
+  workspace: AppShellViewModel["workspace"],
+): "/chat" | "/schedule" | "/crm" | "/catalog" | "/team" | "/organizations" | "/establishments/new" | "/access-denied" {
+  if (workspace.organization && workspace.establishments.length === 0 && workspace.canCreateEstablishment) {
+    return "/establishments/new";
+  }
   if (hasAssistantAccess) {
     return "/chat";
   }
 
   const firstWorkRoute = visibleRoutes.find((route) => route !== "/analytics");
-  return firstWorkRoute ?? "/organizations";
+  if (firstWorkRoute) return firstWorkRoute;
+
+  if (workspace.organization?.canRead) return "/organizations";
+  if (!workspace.organization && workspace.organizations.length === 0) return "/organizations";
+  return "/access-denied";
 }

@@ -4,17 +4,19 @@ import { createServiceCategoryQueryService } from "@/contexts/catalog/applicatio
 import type { CategoryDTO, DetailedServiceDTO } from "@/contexts/catalog/application/model/catalog-view.models";
 import { CatalogClientWrapper } from "@/contexts/catalog/interfaces/components/catalog/catalog-client-wrapper";
 import { createCatalogAccessPolicyService } from "@/contexts/catalog/application/internal/queryservices/catalog-access-policy.service";
+import { createBusinessWorkspaceQueryService } from "@/contexts/business/application/internal/queryservices/business-workspace-query.service";
 
 interface CatalogPageProps {
-  searchParams: Promise<{ establishmentId?: string; serviceId?: string }>;
+  searchParams: Promise<{ organizationId?: string; establishmentId?: string; serviceId?: string }>;
 }
 
 export default async function CatalogPage({ searchParams }: CatalogPageProps) {
-  const { establishmentId: paramEstId, serviceId: paramServiceId } = await searchParams;
+  const query = await searchParams;
+  const { establishmentId: paramEstId, serviceId: paramServiceId } = query;
+  const workspace = await createBusinessWorkspaceQueryService().getHeaderViewModel(query);
 
   const policyService = createCatalogAccessPolicyService();
-  const defaultEstId = await policyService.getDefaultEstablishmentId();
-  const establishmentId = paramEstId ?? defaultEstId;
+  const establishmentId = paramEstId ?? workspace.activeEstablishmentId;
 
   const {
     canReadCatalog,
@@ -27,7 +29,7 @@ export default async function CatalogPage({ searchParams }: CatalogPageProps) {
   } = await policyService.getPermissions(establishmentId);
 
   if (!canReadCatalog) {
-    redirect("/?denied=catalog");
+    redirect("/access-denied");
   }
 
   let categories: CategoryDTO[] = [];

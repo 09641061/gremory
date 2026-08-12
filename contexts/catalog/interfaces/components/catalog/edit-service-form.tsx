@@ -2,18 +2,12 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { EyeIcon, EyeOffIcon, Save, MoreVertical } from "lucide-react";
-import { ErrorAlert } from "@/contexts/shared/interfaces/components/ui/error";
+import { EyeIcon, EyeOffIcon, Save, Trash2 } from "lucide-react";
+import { ErrorAlert } from "@/contexts/shared/interfaces/components/error";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import { Spinner } from "@/contexts/shared/interfaces/components/ui/spinner";
 import { Card, CardContent } from "@/contexts/shared/interfaces/components/ui/card";
-import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuDeleteItem,
-} from "@/contexts/shared/interfaces/components/ui/dropdown-menu";
+import { EntityActionsMenu } from "@/contexts/shared/interfaces/components/entity-actions-menu";
 import { GeneralInfoSection } from "../new/general-info-section";
 import { FinancialsAndLogisticsSection } from "../new/financials-and-logistics-section";
 import { InstructionsSection } from "../new/instructions-section";
@@ -48,6 +42,20 @@ export function EditServiceForm({ service, onCancel, canUpdateService, canDelete
 
   const isActionPending = updatePending || statusPending;
 
+  // The fields are uncontrolled, so their `defaultValue` must stay stable while mounted.
+  // Remount the form whenever the server data behind those defaults changes (e.g. after
+  // a save triggers router.refresh()).
+  const defaultsKey = JSON.stringify([
+    service.name,
+    service.description,
+    service.price,
+    service.durationMinutes,
+    service.preparationMinutes,
+    service.cleanupMinutes,
+    service.preServiceInstructions ?? "",
+    service.postServiceRecommendations ?? "",
+  ]);
+
   return (
     <>
       <ErrorAlert
@@ -58,7 +66,7 @@ export function EditServiceForm({ service, onCancel, canUpdateService, canDelete
       <div className="bg-background text-foreground flex flex-col">
         {/* Form Main Canvas */}
         <main className="flex-1 max-w-[800px] w-full mx-auto px-4 py-8">
-          <form action={formAction} key={`${service.id}-${service.status}-${resetKey}`} id="edit-service-form">
+          <form action={formAction} key={`${service.id}-${service.status}-${defaultsKey}-${resetKey}`} id="edit-service-form">
             <Card className="rounded-lg border-border bg-card p-6">
               <CardContent className="p-0 space-y-6">
                 <div className="flex justify-between items-center border-b border-border pb-4">
@@ -77,40 +85,27 @@ export function EditServiceForm({ service, onCancel, canUpdateService, canDelete
                   
                   {(canUpdateService || canDeleteService) && (
                     <div className="flex items-center gap-3">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger
-                          disabled={statusPending || isActionPending}
-                          className="group/button inline-flex shrink-0 items-center justify-center rounded-lg border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:hover:bg-muted/50 h-8 w-8 p-0"
-                        >
-                          <MoreVertical className="size-4 text-muted-foreground" />
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent>
-                          {canUpdateService && (
-                            <DropdownMenuItem
-                              onClick={() => changeStatus(service.id, !isActive)}
-                              disabled={statusPending}
-                              className="gap-2 cursor-pointer"
-                            >
-                              {isActive ? (
-                                <>
-                                  <EyeOffIcon className="size-3.5 text-muted-foreground" />
-                                  <span>Deactivate</span>
-                                </>
-                              ) : (
-                                <>
-                                  <EyeIcon className="size-3.5 text-primary" />
-                                  <span>Activate</span>
-                                </>
-                              )}
-                            </DropdownMenuItem>
-                          )}
-                          {canDeleteService && (
-                            <DropdownMenuDeleteItem
-                              onClick={() => setIsDeleteDialogOpen(true)}
-                            />
-                          )}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                      <EntityActionsMenu
+                        label={`More actions for ${service.name}`}
+                        size="icon-sm"
+                        disabled={statusPending || isActionPending}
+                        actions={[
+                          {
+                            label: isActive ? "Deactivate" : "Activate",
+                            icon: isActive ? EyeOffIcon : EyeIcon,
+                            hidden: !canUpdateService,
+                            disabled: statusPending,
+                            onSelect: () => changeStatus(service.id, !isActive),
+                          },
+                          {
+                            label: "Delete",
+                            icon: Trash2,
+                            variant: "destructive",
+                            hidden: !canDeleteService,
+                            onSelect: () => setIsDeleteDialogOpen(true),
+                          },
+                        ]}
+                      />
                     </div>
                   )}
                 </div>

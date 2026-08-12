@@ -1,25 +1,31 @@
 "use client";
 
-import { useState, useTransition, useEffect, useCallback, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { Appointment } from "../../../domain/model/entities/appointment";
 import { listAppointmentsAction } from "../../actions/list-appointments.action";
 import { AppointmentDetailModal } from "../appointment-detail/appointment-detail-modal";
-import { AppointmentFormModal } from "../appointment-form/appointment-form-modal";
+import { WeeklyCalendarDaysHeader } from "./weekly-calendar-days-header";
 import { WeeklyCalendarGrid } from "./weekly-calendar-grid";
-import { WeeklyCalendarHeader } from "./weekly-calendar-header";
+import { WeeklyCalendarToolbar } from "./weekly-calendar-toolbar";
 import {
   addCalendarDays,
   calendarDateToZonedIso,
-  formatCalendarWeekday,
   getCalendarAnchorDate,
   getCalendarWeekRange,
-  isSameCalendarDate,
+  toTimeZoneDayKey,
 } from "../scheduling-timezone.utils";
+import { useNow } from "../use-now";
 import type {
   SchedulingCustomerViewModel,
   SchedulingMemberViewModel,
   SchedulingServiceViewModel,
 } from "../../../application/model/scheduling-page-data.view-model";
+
+const FIRST_HOUR = 7;
+const HOUR_COUNT = 15;
+const GRID_MIN_WIDTH = 700;
+const HOURS = Array.from({ length: HOUR_COUNT }, (_, index) => FIRST_HOUR + index);
 
 interface WeeklyCalendarProps {
   establishmentId: string;
@@ -42,151 +48,106 @@ export function WeeklyCalendar({
   canDeleteAppointment,
   timeZone,
 }: WeeklyCalendarProps) {
+  const router = useRouter();
   const [currentDate, setCurrentDate] = useState(() => getCalendarAnchorDate(timeZone));
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
-  const [isDetailOpen, setIsDetailOpen] = useState(false);
-  const [isFormOpen, setIsFormOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
-
   const requestIdRef = useRef(0);
+  const now = useNow();
+  const todayKey = now === null ? null : toTimeZoneDayKey(new Date(now), timeZone);
 
   useEffect(() => {
     setCurrentDate(getCalendarAnchorDate(timeZone));
   }, [timeZone]);
 
-  const { sunday, saturday } = useMemo(() => getCalendarWeekRange(currentDate), [currentDate]);
-  const todayDate = useMemo(() => getCalendarAnchorDate(timeZone), [timeZone]);
-
-  const weekDays = useMemo(
-    () => Array.from({ length: 7 }, (_, i) => addCalendarDays(sunday, i)),
-    [sunday]
+  const { sunday: weekStart, saturday: weekEnd } = useMemo(
+    () => getCalendarWeekRange(currentDate),
+    [currentDate]
   );
 
-  const hours = useMemo(() => Array.from({ length: 15 }, (_, i) => 7 + i), []);
+  const weekDays = useMemo(
+    () =>
+      Array.from({ length: 7 }, (_, index) => addCalendarDays(weekStart, index)),
+    [weekStart]
+  );
 
   const fetchAppointments = useCallback(() => {
-    const reqId = ++requestIdRef.current;
+    const requestId = ++requestIdRef.current;
 
     startTransition(async () => {
-      const fromStr = calendarDateToZonedIso(sunday, timeZone, false);
-      const toStr = calendarDateToZonedIso(saturday, timeZone, true);
-      const res = await listAppointmentsAction(fromStr, toStr, establishmentId);
-      if (reqId === requestIdRef.current) {
-        setAppointments(res.content);
+      const result = await listAppointmentsAction(
+        calendarDateToZonedIso(weekStart, timeZone, false),
+        calendarDateToZonedIso(weekEnd, timeZone, true),
+        establishmentId
+      );
+      if (requestId === requestIdRef.current) {
+        setAppointments(result.content);
       }
     });
-  }, [sunday, saturday, timeZone, establishmentId, startTransition]);
+  }, [weekStart, weekEnd, establishmentId, timeZone, startTransition]);
 
   useEffect(() => {
     fetchAppointments();
   }, [fetchAppointments]);
 
-  const navigateWeek = (direction: "prev" | "next") => {
-    setCurrentDate((date) => addCalendarDays(date, direction === "prev" ? -7 : 7));
-  };
-
-  const navigateToday = () => {
-    setCurrentDate(getCalendarAnchorDate(timeZone));
-  };
-
-  const handleOpenDetail = (appt: Appointment) => {
-    setSelectedAppointment(appt);
-    setIsDetailOpen(true);
+  const shiftWeek = (direction: -1 | 1) => {
+    setCurrentDate((current) => addCalendarDays(current, direction * 7));
   };
 
   const handleUpdate = (updated: Appointment) => {
-    setAppointments((prev) => prev.map((a) => (a.id === updated.id ? updated : a)));
+    setAppointments((current) =>
+      current.map((appointment) => (appointment.id === updated.id ? updated : appointment))
+    );
     setSelectedAppointment(updated);
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-140px)] w-full text-foreground bg-background">
-      <WeeklyCalendarHeader
+    <div className="flex h-[calc(100vh-140px)] w-full flex-col bg-background text-foreground">
+      <WeeklyCalendarToolbar
         currentDate={currentDate}
         onDateChange={setCurrentDate}
-        onPreviousWeek={() => navigateWeek("prev")}
-        onNextWeek={() => navigateWeek("next")}
-        onToday={navigateToday}
-        onCreateAppointment={() => setIsFormOpen(true)}
+        onPreviousWeek={() => shiftWeek(-1)}
+        onNextWeek={() => shiftWeek(1)}
+        onToday={() => setCurrentDate(getCalendarAnchorDate(timeZone))}
+        onCreateAppointment={() => router.push("/schedule/new")}
         canCreateAppointment={canCreateAppointment}
+        timeZone={timeZone}
       />
 
-      <div className="flex-1 border border-border rounded-xl bg-card shadow-sm flex flex-col overflow-hidden">
-        <div className="flex-1 overflow-y-auto relative">
-          <div className="sticky top-0 z-10 grid grid-cols-[64px_repeat(7,1fr)] border-b border-border bg-card">
-            <div className="flex items-center justify-center p-3 border-r border-border">
-              <span className="text-[10px] font-bold text-muted-foreground tracking-wider">
-                Time
-              </span>
-            </div>
-            {weekDays.map((day, idx) => {
-              const isToday = isSameCalendarDate(day, todayDate);
-              return (
-                <div
-                  key={idx}
-                  className={`p-3 flex flex-col items-center justify-center border-r border-border last:border-r-0 ${
-                    isToday ? "bg-primary/5" : ""
-                  }`}
-                >
-                  <span
-                    className={`text-[11px] font-semibold ${
-                      isToday ? "text-primary" : "text-muted-foreground"
-                    }`}
-                  >
-                    {formatCalendarWeekday(day)}
-                  </span>
-                  <span
-                    className={`text-xl font-bold leading-none mt-1 ${
-                      isToday
-                        ? "bg-primary text-primary-foreground size-8 rounded-full flex items-center justify-center"
-                        : "text-foreground"
-                    }`}
-                  >
-                    {day.getUTCDate()}
-                  </span>
-                </div>
-              );
-            })}
-          </div>
-
+      <div className="flex-1 overflow-auto rounded-xl border border-border bg-card shadow-sm">
+        <div style={{ minWidth: GRID_MIN_WIDTH }}>
+          <WeeklyCalendarDaysHeader weekDays={weekDays} todayKey={todayKey} timeZone={timeZone} />
           <WeeklyCalendarGrid
             appointments={appointments}
             weekDays={weekDays}
-            hours={hours}
+            hours={HOURS}
             isPending={isPending}
+            todayKey={todayKey}
+            now={now}
             timeZone={timeZone}
-            todayDate={todayDate}
-            onAppointmentClick={handleOpenDetail}
+            onAppointmentClick={setSelectedAppointment}
           />
         </div>
       </div>
 
-      {isDetailOpen && selectedAppointment && (
+      {selectedAppointment && (
         <AppointmentDetailModal
-          isOpen={isDetailOpen}
-          onOpenChange={setIsDetailOpen}
+          isOpen
+          onOpenChange={(open) => {
+            if (!open) setSelectedAppointment(null);
+          }}
           appointment={selectedAppointment}
           services={services}
           members={members}
           customers={customers}
           onUpdate={handleUpdate}
-          onDeleteSuccess={fetchAppointments}
+          onDeleteSuccess={() => {
+            setSelectedAppointment(null);
+            fetchAppointments();
+          }}
           canUpdateAppointment={canUpdateAppointment}
           canDeleteAppointment={canDeleteAppointment}
-          timeZone={timeZone}
-        />
-      )}
-
-      {isFormOpen && (
-        <AppointmentFormModal
-          isOpen={isFormOpen}
-          onOpenChange={setIsFormOpen}
-          establishmentId={establishmentId}
-          services={services}
-          members={members}
-          customers={customers}
-          onSuccess={fetchAppointments}
           timeZone={timeZone}
         />
       )}

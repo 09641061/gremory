@@ -2,7 +2,7 @@
 
 import { ChevronDown } from "lucide-react";
 
-import { Button } from "@/contexts/shared/interfaces/components/ui/button";
+import { SidebarMenuButton } from "@/contexts/shared/interfaces/components/ui/sidebar";
 import { cn } from "@/lib/utils";
 
 import type { AssistantConversationSummaryReadModel } from "@/contexts/assistant/application/internal/transforms/assistant.read-models";
@@ -52,11 +52,10 @@ export function AssistantChatsSection({
 
   return (
     <section ref={sectionRef} className="mt-2">
-      <Button
+      <SidebarMenuButton
         type="button"
-        variant="ghost"
         onClick={toggleOpen}
-        className="h-10 w-full justify-between rounded-md px-2.5 text-sm font-medium text-foreground hover:bg-accent/70 hover:text-accent-foreground"
+        className="h-(--app-sidebar-control-height) justify-between rounded-(--app-sidebar-item-radius) px-(--app-sidebar-control-padding-x) text-sm font-medium"
         aria-expanded={isOpen}
       >
         <span>Chats</span>
@@ -66,7 +65,7 @@ export function AssistantChatsSection({
             isOpen && "rotate-180",
           )}
         />
-      </Button>
+      </SidebarMenuButton>
 
       {isOpen ? (
         <div className="mt-2 pl-2">
@@ -108,7 +107,7 @@ export function AssistantChatsSection({
 
       <AssistantConversationRenameModal
         open={renameModalConversation !== null}
-        conversationTitle={renameModalConversation?.title ?? "Nueva conversacion"}
+        conversationTitle={renameModalConversation?.title ?? "New conversation"}
         value={renameTitle}
         error={renameError}
         isSaving={isRenameSaving}
@@ -124,7 +123,7 @@ export function AssistantChatsSection({
 
       <AssistantConversationDeleteDialog
         open={deleteModalConversation !== null}
-        title={deleteModalConversation?.title ?? "Nueva conversacion"}
+        title={deleteModalConversation?.title ?? "New conversation"}
         error={deleteError}
         isSaving={isDeleteSaving}
         onOpenChange={(open) => {

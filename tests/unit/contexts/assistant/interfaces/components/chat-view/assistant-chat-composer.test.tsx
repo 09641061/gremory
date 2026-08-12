@@ -38,7 +38,7 @@ describe("AssistantChatComposer", () => {
   it("should switch to the send action as soon as text exists", async () => {
     render(
       <AssistantChatComposer
-        value="Hola"
+        value="Hello"
         isSending={false}
         onValueChange={vi.fn()}
         onSubmit={vi.fn()}

@@ -5,7 +5,7 @@ import type { DeleteConversationCommand } from "../../../domain/model/commands/d
 import { AssistantConversationRepositoryImpl } from "@/contexts/assistant/infrastructure/repositories/assistant-conversation.repository";
 
 export class DeleteConversationCommandService {
-  constructor(private readonly repository = new AssistantConversationRepositoryImpl()) {}
+  constructor(private readonly repository: AssistantConversationRepositoryImpl = new AssistantConversationRepositoryImpl()) {}
 
   async handle(command: DeleteConversationCommand, token?: string): Promise<void> {
     const conversationId = createAssistantConversationId(command.conversationId).value;

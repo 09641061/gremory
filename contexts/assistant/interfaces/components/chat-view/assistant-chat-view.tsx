@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 
 import { getAssistantConversationAction } from "@/contexts/assistant/interfaces/actions/get-conversation.action";
 import { submitAssistantMessageAction } from "@/contexts/assistant/interfaces/actions/assistant-chat.actions";
-import { ErrorAlert } from "@/contexts/shared/interfaces/components/ui/error";
+import { ErrorAlert } from "@/contexts/shared/interfaces/components/error";
 import type { AssistantConversationViewModel } from "@/contexts/assistant/interfaces/view-models/assistant-chat.view-model";
 
 import { AssistantChatComposer } from "./assistant-chat-composer";
@@ -186,24 +186,168 @@ export function AssistantChatView({
     }
 
     try {
-      const result = await submitAssistantMessageAction({
-        conversationId,
-        message,
-      });
+      let currentConvId = conversationId;
 
-      if (result.status === "error") {
-        setError(result.error);
+      // Si es un chat nuevo, debemos crearlo primero en el backend de forma síncrona
+      if (!currentConvId) {
+        const result = await submitAssistantMessageAction({
+          conversationId: null,
+          message,
+        });
+
+        if (result.status === "error") {
+          setError(result.error);
+          setPendingConversation(null);
+          return;
+        }
+
+        currentConvId = result.data.id;
+        window.dispatchEvent(
+          new CustomEvent("assistant-conversations-updated", {
+            detail: { type: "upsert", conversation: result.data, moveToFront: true },
+          }),
+        );
+        setActiveConversation(result.data);
+        setPendingConversation(null);
+        router.replace(buildConversationUrl(currentConvId), { scroll: false });
+        setIsSendingMessage(false);
         return;
       }
 
-      window.dispatchEvent(
-        new CustomEvent("assistant-conversations-updated", {
-          detail: { type: "upsert", conversation: result.data, moveToFront: true },
-        }),
-      );
-      setPendingConversation(null);
-      setActiveConversation(result.data);
-      router.replace(buildConversationUrl(result.data.id), { scroll: false });
+      // Si el streaming está activo, consumimos vía fetch SSE
+      const isStreamingEnabled = process.env.NEXT_PUBLIC_ASSISTANT_STREAMING === "true";
+      if (isStreamingEnabled && currentConvId) {
+        // Añadimos el mensaje del usuario localmente primero
+        const userMsgNow = new Date().toISOString();
+        const updatedMessagesWithUser = [
+          ...(activeConversation?.messages ?? []),
+          {
+            id: `user-msg-${userMsgNow}`,
+            role: "user" as const,
+            content: message,
+            createdAt: userMsgNow,
+          },
+        ];
+
+        // Añadimos burbuja temporal para la respuesta del asistente (thinking/vacia)
+        const agentMsgNow = new Date().toISOString();
+        const placeholderAgentMsg = {
+          id: `agent-placeholder-${agentMsgNow}`,
+          role: "assistant" as const,
+          content: "Kodu is thinking...",
+          createdAt: agentMsgNow,
+        };
+
+        const tempConversation = {
+          ...activeConversation!,
+          messages: [...updatedMessagesWithUser, placeholderAgentMsg],
+        };
+
+        setActiveConversation(tempConversation);
+
+        const response = await fetch(`/api/assistant/conversations/${encodeURIComponent(currentConvId)}/messages`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ message }),
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to send message via streaming API");
+        }
+
+        if (!response.body) {
+          throw new Error("No response body received from stream");
+        }
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder("utf-8");
+        let buffer = "";
+        let finalResponseText = "";
+
+        while (true) {
+          const { value, done } = await reader.read();
+          if (done) break;
+
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split("\n");
+          buffer = lines.pop() || "";
+
+          let currentEvent = "";
+
+          for (const line of lines) {
+            const trimmed = line.trim();
+            if (!trimmed) continue;
+
+            if (trimmed.startsWith("event:")) {
+              currentEvent = trimmed.replace("event:", "").trim();
+            } else if (trimmed.startsWith("data:")) {
+              const dataStr = trimmed.replace("data:", "").trim();
+              if (currentEvent === "status") {
+                // Actualiza la burbuja con el status del backend ("Generating response...")
+                setActiveConversation((prev) => {
+                  if (!prev) return null;
+                  const messagesCopy = [...prev.messages];
+                  if (messagesCopy.length > 0) {
+                    messagesCopy[messagesCopy.length - 1] = {
+                      ...messagesCopy[messagesCopy.length - 1],
+                      content: dataStr,
+                    };
+                  }
+                  return { ...prev, messages: messagesCopy };
+                });
+              } else if (currentEvent === "message") {
+                // El backend retorna la respuesta completa en el evento 'message'
+                finalResponseText = dataStr;
+              }
+            }
+          }
+        }
+
+        // Al finalizar la lectura del stream, refrescamos el chat entero desde el backend para sincronizar ids reales
+        const nextConversation = await getAssistantConversationAction(currentConvId);
+        if (nextConversation) {
+          setActiveConversation(nextConversation);
+          window.dispatchEvent(
+            new CustomEvent("assistant-conversations-updated", {
+              detail: { type: "upsert", conversation: nextConversation, moveToFront: true },
+            }),
+          );
+        } else if (finalResponseText) {
+          // Fallback local si falla la re-hidratación
+          setActiveConversation((prev) => {
+            if (!prev) return null;
+            const messagesCopy = [...prev.messages];
+            if (messagesCopy.length > 0) {
+              messagesCopy[messagesCopy.length - 1] = {
+                ...messagesCopy[messagesCopy.length - 1],
+                content: finalResponseText,
+              };
+            }
+            return { ...prev, messages: messagesCopy };
+          });
+        }
+      } else {
+        // Flujo síncrono tradicional
+        const result = await submitAssistantMessageAction({
+          conversationId: currentConvId,
+          message,
+        });
+
+        if (result.status === "error") {
+          setError(result.error);
+          return;
+        }
+
+        window.dispatchEvent(
+          new CustomEvent("assistant-conversations-updated", {
+            detail: { type: "upsert", conversation: result.data, moveToFront: true },
+          }),
+        );
+        setPendingConversation(null);
+        setActiveConversation(result.data);
+      }
     } catch (requestError) {
       setDraft(message);
       setPendingConversation(null);

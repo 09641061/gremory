@@ -3,23 +3,12 @@ import type {
   SchedulingMemberViewModel,
   SchedulingServiceViewModel,
 } from "../../../application/model/scheduling-page-data.view-model";
+import type { DropdownOption } from "./types";
 import {
   formatInstantAsZonedIso,
   formatTimeInTimeZone,
   zonedDateTimeToIso,
 } from "../scheduling-timezone.utils";
-import type { DropdownOption } from "./types";
-
-function formatTimeLabel(hours: number, minutes: number) {
-  const suffix = hours >= 12 ? "PM" : "AM";
-  const normalizedHour = hours % 12 === 0 ? 12 : hours % 12;
-  return `${normalizedHour}:${String(minutes).padStart(2, "0")} ${suffix}`;
-}
-
-export function formatTimeSlotValue(slot: string) {
-  const [hours, minutes] = slot.split(":").map(Number);
-  return formatTimeLabel(hours, minutes);
-}
 
 export function createServiceOptions(services: SchedulingServiceViewModel[]): DropdownOption[] {
   return services.map((service) => ({
@@ -47,12 +36,11 @@ export function createEmployeeOptions(members: SchedulingMemberViewModel[]): Dro
   }));
 }
 
-export function createTimeOptions(slots: string[]): DropdownOption[] {
-  return slots.map((slot) => ({
-    value: slot,
-    label: formatTimeSlotValue(slot),
-  }));
-}
+export type AppointmentTimes = Readonly<{
+  startsAt: string;
+  endsAt: string;
+  formattedEnd: string;
+}>;
 
 export function computeAppointmentTimes({
   startDate,
@@ -64,15 +52,15 @@ export function computeAppointmentTimes({
   startTime: string;
   durationMinutes: number | null | undefined;
   timeZone: string;
-}) {
+}): AppointmentTimes {
   if (!startDate || !startTime || !durationMinutes) {
     return { startsAt: "", endsAt: "", formattedEnd: "" };
   }
 
-  const [startYear, startMonth, startDay] = startDate.split("-").map(Number);
-  const [startHour, startMin] = startTime.split(":").map(Number);
-  const startDateString = `${startYear}-${String(startMonth).padStart(2, "0")}-${String(startDay).padStart(2, "0")}`;
-  const startTimeString = `${String(startHour).padStart(2, "0")}:${String(startMin).padStart(2, "0")}:00`;
+  const [year, month, day] = startDate.split("-").map(Number);
+  const [hour, minute] = startTime.split(":").map(Number);
+  const startDateString = `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+  const startTimeString = `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}:00`;
   const startInstant = new Date(
     zonedDateTimeToIso({
       dateString: startDateString,

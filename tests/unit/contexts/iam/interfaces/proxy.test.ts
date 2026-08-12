@@ -45,6 +45,14 @@ describe("IAM session proxy", () => {
           imageUrl: null,
         }),
         { status: 200, headers: { "Content-Type": "application/json" } },
+      ))
+      .mockResolvedValueOnce(new Response(
+        JSON.stringify({ active: false, establishments: [] }),
+        { status: 200, headers: { "Content-Type": "application/json" } },
+      ))
+      .mockResolvedValueOnce(new Response(
+        JSON.stringify({ content: [{ id: "est-1" }] }),
+        { status: 200, headers: { "Content-Type": "application/json" } },
       )));
   });
 
@@ -160,6 +168,38 @@ describe("IAM session proxy", () => {
     expect(response.headers.get("location")).toBe("http://localhost/organizations");
   });
 
+  it("should send an owner with an empty organization to the first-establishment setup", async () => {
+    vi.stubGlobal("fetch", vi.fn()
+      .mockResolvedValueOnce(new Response(
+        JSON.stringify({ active: true, status: "ACTIVE", planId: 0 }),
+        { status: 200, headers: { "Content-Type": "application/json" } },
+      ))
+      .mockResolvedValueOnce(new Response(
+        JSON.stringify({ id: "org-1" }),
+        { status: 200, headers: { "Content-Type": "application/json" } },
+      ))
+      .mockResolvedValueOnce(new Response(
+        JSON.stringify({ active: false, establishments: [] }),
+        { status: 200, headers: { "Content-Type": "application/json" } },
+      ))
+      .mockResolvedValueOnce(new Response(
+        JSON.stringify({ content: [] }),
+        { status: 200, headers: { "Content-Type": "application/json" } },
+      )));
+
+    const response = await proxy(requestWithSession("access-token", "refresh-token", "/chat"));
+
+    expect(response.status).toBe(307);
+    expect(response.headers.get("location")).toBe("http://localhost/establishments/new");
+  });
+
+  it("should keep the upgrade page available for authenticated users", async () => {
+    const response = await proxy(requestWithSession("access-token", "refresh-token", "/upgrade"));
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get("location")).toBeNull();
+  });
+
   it("should allow an active workforce member without a personal subscription on schedule", async () => {
     const fetchMock = vi.fn()
       .mockResolvedValueOnce(new Response(
@@ -273,23 +313,18 @@ describe("IAM session proxy", () => {
     expect(response.headers.get("location")).toBe("http://localhost/catalog");
   });
 
-  it("should redirect a removed workforce member to subscribe", async () => {
+  it("should not redirect a removed workforce member to subscribe", async () => {
     vi.stubGlobal("fetch", vi.fn()
       .mockResolvedValueOnce(new Response(
         JSON.stringify({ message: "Subscription not found" }),
         { status: 404, headers: { "Content-Type": "application/json" } },
       ))
       .mockResolvedValueOnce(new Response(
-        JSON.stringify({ active: false, member: true }),
-        { status: 200, headers: { "Content-Type": "application/json" } },
+        JSON.stringify({ message: "Organization not found" }),
+        { status: 404, headers: { "Content-Type": "application/json" } },
       ))
       .mockResolvedValueOnce(new Response(
-        JSON.stringify({
-          id: "org-1",
-          ownerId: "owner-1",
-          name: "Takodu",
-          imageUrl: null,
-        }),
+        JSON.stringify({ active: false, establishments: [] }),
         { status: 200, headers: { "Content-Type": "application/json" } },
       )));
 
@@ -300,7 +335,7 @@ describe("IAM session proxy", () => {
     ));
 
     expect(response.status).toBe(307);
-    expect(response.headers.get("location")).toBe("http://localhost/subscribe");
+    expect(response.headers.get("location")).toBe("http://localhost/organizations");
   });
 
   it("should redirect free sessions away from chat to organizations when setup is missing", async () => {

@@ -3,7 +3,7 @@
 import * as React from "react";
 import { useRouter } from "next/navigation";
 import { Save } from "lucide-react";
-import { ErrorAlert } from "@/contexts/shared/interfaces/components/ui/error";
+import { ErrorAlert } from "@/contexts/shared/interfaces/components/error";
 import { registerCustomerAction } from "@/contexts/crm/interfaces/actions/register-customer.action";
 import { CustomerForm, CustomerFormData } from "@/contexts/crm/interfaces/components/customer-management/customer-form";
 import { toCustomerIdentityFields } from "@/contexts/crm/application/transforms/customer-command.transforms";
