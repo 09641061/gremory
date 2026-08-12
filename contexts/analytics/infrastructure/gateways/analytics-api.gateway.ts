@@ -57,6 +57,43 @@ export interface AnalyticsCustomerMix {
   totalCustomers: number;
 }
 
+export interface AnalyticsWeeklyRevenueBalance {
+  totalRevenue: number;
+  appointmentsCount: number;
+  averageTicket: number;
+  dailyTrend: AnalyticsTrendPoint[];
+}
+
+export interface AnalyticsRevenueServiceItem {
+  rank: number;
+  serviceId: string;
+  serviceName: string;
+  revenue: number;
+  appointmentsCount: number;
+  averagePrice: number;
+}
+
+export interface AnalyticsRevenueCustomerItem {
+  rank: number;
+  customerId: string;
+  customerName: string;
+  totalSpent: number;
+  appointmentsCount: number;
+  averageTicket: number;
+}
+
+export interface AnalyticsLostRevenue {
+  cancelledRevenue: number;
+  noShowRevenue: number;
+  totalLostRevenue: number;
+}
+
+export interface AnalyticsAverageTicket {
+  currentValue: number;
+  lastPeriodValue: number;
+  delta: number;
+}
+
 export interface FreeAnalyticsDashboardResponse {
   completedAppointmentsLastSevenDays: number;
   cancelledAppointmentsLastSevenDays: number;
@@ -66,6 +103,11 @@ export interface FreeAnalyticsDashboardResponse {
   appointmentsByHour: AnalyticsCategoryPoint[];
   completionVsCancellationTrend: AnalyticsDualTrendPoint[];
   newVsRecurringCustomers: AnalyticsCustomerMix;
+  weeklyRevenueBalance: AnalyticsWeeklyRevenueBalance;
+  topServicesByRevenue: AnalyticsRevenueServiceItem[];
+  topCustomersBySpend: AnalyticsRevenueCustomerItem[];
+  lostRevenue: AnalyticsLostRevenue;
+  averageTicket: AnalyticsAverageTicket;
   topCustomers: AnalyticsRankingCustomerItem[];
   topServices: AnalyticsRankingServiceItem[];
   cancellationRateByService: AnalyticsServiceRateItem[];

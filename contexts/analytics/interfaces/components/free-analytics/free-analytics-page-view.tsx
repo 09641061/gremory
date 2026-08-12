@@ -27,8 +27,27 @@ export function FreeAnalyticsPageView({ analytics, errorMessage }: FreeAnalytics
   const statusRange = formatTrendRange(analytics.appointmentsTrend[0]?.date, analytics.appointmentsTrend.at(-1)?.date);
   const monthRange = formatMonthRange(analytics.appointmentsByMonth);
   const hourRange = statusRange;
-  const monthData = analytics.appointmentsByMonth;
-  const hourData = buildTwoHourSeries(analytics.appointmentsByHour);
+  const monthData = analytics.appointmentsByMonth ?? [];
+  const hourData = buildTwoHourSeries(analytics.appointmentsByHour ?? []);
+  const weeklyRevenueBalance = analytics.weeklyRevenueBalance ?? {
+    totalRevenue: 0,
+    appointmentsCount: 0,
+    averageTicket: 0,
+    dailyTrend: [],
+  };
+  const weeklyRevenueRange = formatTrendRange(weeklyRevenueBalance.dailyTrend[0]?.date, weeklyRevenueBalance.dailyTrend.at(-1)?.date);
+  const topServicesByRevenue = analytics.topServicesByRevenue ?? [];
+  const topCustomersBySpend = analytics.topCustomersBySpend ?? [];
+  const lostRevenue = analytics.lostRevenue ?? {
+    cancelledRevenue: 0,
+    noShowRevenue: 0,
+    totalLostRevenue: 0,
+  };
+  const averageTicket = analytics.averageTicket ?? {
+    currentValue: 0,
+    lastPeriodValue: 0,
+    delta: 0,
+  };
 
   return (
     <main className="mx-auto flex w-full max-w-[1600px] flex-col gap-6 px-4 py-8 md:px-8">
@@ -69,6 +88,81 @@ export function FreeAnalyticsPageView({ analytics, errorMessage }: FreeAnalytics
         </Card>
       </div>
 
+      <div className="grid gap-6 xl:grid-cols-[1.5fr_0.9fr]">
+        <Card className="overflow-hidden rounded-xl border-border bg-card shadow-sm">
+          <CardHeader className="border-b border-border/60 pb-4">
+            <CardTitle>Weekly revenue balance</CardTitle>
+            <CardDescription>Completed revenue across the last 7 days.</CardDescription>
+            <p className="pt-1 text-xs text-muted-foreground">{weeklyRevenueRange}</p>
+          </CardHeader>
+          <CardContent className="space-y-4 p-5">
+            <div className="grid gap-3 sm:grid-cols-2">
+              <StatBadge label="Total revenue" value={formatMoney(weeklyRevenueBalance.totalRevenue)} />
+              <StatBadge
+                label="Completed appointments"
+                value={formatNumber(weeklyRevenueBalance.appointmentsCount)}
+              />
+            </div>
+            <TrendChart data={weeklyRevenueBalance.dailyTrend} tone="accent" valueFormatter={formatMoney} unitLabel="revenue" />
+          </CardContent>
+        </Card>
+
+        <div className="grid gap-6">
+          <Card className="overflow-hidden rounded-xl border-border bg-card shadow-sm">
+            <CardHeader className="border-b border-border/60 pb-4">
+              <CardTitle>Average ticket</CardTitle>
+              <CardDescription>Revenue per completed appointment in the current period.</CardDescription>
+              <p className="pt-1 text-xs text-muted-foreground">{weeklyRevenueRange}</p>
+            </CardHeader>
+            <CardContent className="space-y-4 p-5">
+              <div className="rounded-2xl border border-border/70 bg-primary/5 p-4">
+                <p className="text-3xl font-semibold tracking-tight text-foreground">
+                  {formatMoney(averageTicket.currentValue)}
+                </p>
+                <p className="text-sm text-muted-foreground">vs previous period</p>
+                <p className={`pt-2 text-sm font-semibold ${averageTicket.delta >= 0 ? "text-emerald-600" : "text-rose-600"}`}>
+                  {averageTicket.delta >= 0 ? "+" : "-"}
+                  {formatMoney(Math.abs(averageTicket.delta))}
+                </p>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <StatBadge label="Current" value={formatMoney(averageTicket.currentValue)} />
+                <StatBadge label="Previous" value={formatMoney(averageTicket.lastPeriodValue)} />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="overflow-hidden rounded-xl border-border bg-card shadow-sm">
+            <CardHeader className="border-b border-border/60 pb-4">
+              <CardTitle>Lost revenue</CardTitle>
+              <CardDescription>Estimated revenue lost to cancellations and no-shows.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4 p-5">
+              <SplitMetricRow
+                label="Cancelled"
+                value={lostRevenue.cancelledRevenue}
+                total={lostRevenue.totalLostRevenue}
+                tone="bg-rose-500"
+                valueFormatter={formatMoney}
+              />
+              <SplitMetricRow
+                label="No-show"
+                value={lostRevenue.noShowRevenue}
+                total={lostRevenue.totalLostRevenue}
+                tone="bg-amber-500"
+                inactiveTone="bg-muted"
+                valueFormatter={formatMoney}
+              />
+              <p className="text-xs text-muted-foreground">
+                {lostRevenue.totalLostRevenue > 0
+                  ? `Total lost revenue: ${formatMoney(lostRevenue.totalLostRevenue)}.`
+                  : "No lost revenue recorded in the selected window."}
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+
       <div className="grid gap-6 xl:grid-cols-2">
         <Card className="overflow-hidden rounded-xl border-border bg-card shadow-sm">
           <CardHeader className="border-b border-border/60 pb-4">
@@ -104,6 +198,48 @@ export function FreeAnalyticsPageView({ analytics, errorMessage }: FreeAnalytics
           </CardContent>
         </Card>
 
+      </div>
+
+      <div className="grid gap-6 xl:grid-cols-2">
+        <Card className="overflow-hidden rounded-xl border-border bg-card shadow-sm">
+          <CardHeader className="border-b border-border/60 pb-4">
+            <CardTitle>Top services by revenue</CardTitle>
+            <CardDescription>Services that generated the most completed revenue in the period.</CardDescription>
+          </CardHeader>
+          <CardContent className="p-5">
+            <BarChart
+              data={topServicesByRevenue.map((item) => ({
+                label: item.serviceName,
+                value: item.revenue,
+              }))}
+              tone="accent"
+              valueFormatter={formatMoney}
+            />
+          </CardContent>
+        </Card>
+
+        <Card className="overflow-hidden rounded-xl border-border bg-card shadow-sm">
+          <CardHeader className="border-b border-border/60 pb-4">
+            <CardTitle>Top customers by spend</CardTitle>
+            <CardDescription>Customers with the highest completed spend in the period.</CardDescription>
+          </CardHeader>
+          <CardContent className="p-5">
+            <RankingList
+              items={topCustomersBySpend}
+              emptyLabel="No spend rankings available."
+              renderItem={(item) => (
+                <RankingRow
+                  rank={item.rank}
+                  label={item.customerName}
+                  value={item.totalSpent}
+                  meta={`${item.appointmentsCount} appointments - avg ${formatMoney(item.averageTicket)}`}
+                  valueFormatter={formatMoney}
+                  valueLabel="Spent"
+                />
+              )}
+            />
+          </CardContent>
+        </Card>
       </div>
 
       <div className="grid gap-6 xl:grid-cols-2">
@@ -281,24 +417,29 @@ function SplitMetricRow({
   value,
   total,
   tone,
+  valueFormatter = formatNumber,
+  inactiveTone = "bg-muted/40",
 }: {
   label: string;
   value: number;
   total: number;
   tone: string;
+  valueFormatter?: (value: number) => string;
+  inactiveTone?: string;
 }) {
   const width = total > 0 ? Math.max(8, (value / total) * 100) : 0;
+  const barTone = value > 0 ? tone : inactiveTone;
 
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between text-sm">
         <span className="font-medium text-foreground">{label}</span>
         <span className="font-semibold text-foreground">
-          {formatNumber(value)} {total > 0 ? `(${Math.round((value / total) * 100)}%)` : ""}
+          {valueFormatter(value)} {total > 0 ? `(${Math.round((value / total) * 100)}%)` : ""}
         </span>
       </div>
       <div className="h-2 overflow-hidden rounded-full bg-muted">
-        <div className={`h-full rounded-full ${tone}`} style={{ width: `${width}%` }} />
+        <div className={`h-full rounded-full ${barTone}`} style={{ width: `${width}%` }} />
       </div>
     </div>
   );
@@ -325,11 +466,15 @@ function RankingRow({
   label,
   value,
   meta,
+  valueFormatter = formatNumber,
+  valueLabel = "Appointments",
 }: {
   rank: number;
   label: string;
   value: number;
   meta: string;
+  valueFormatter?: (value: number) => string;
+  valueLabel?: string;
 }) {
   return (
     <div className="flex items-center justify-between gap-4 rounded-lg border border-border/70 bg-background/70 px-4 py-3">
@@ -343,8 +488,8 @@ function RankingRow({
         </div>
       </div>
       <div className="text-right">
-        <div className="text-sm font-semibold text-foreground">{formatNumber(value)}</div>
-        <div className="text-[11px] uppercase tracking-[0.16em] text-muted-foreground">Appointments</div>
+        <div className="text-sm font-semibold text-foreground">{valueFormatter(value)}</div>
+        <div className="text-[11px] uppercase tracking-[0.16em] text-muted-foreground">{valueLabel}</div>
       </div>
     </div>
   );
@@ -392,10 +537,12 @@ function TrendChart({
   data,
   tone,
   valueFormatter,
+  unitLabel = "appointments",
 }: {
   data: AnalyticsTrendPoint[];
   tone: "primary" | "secondary" | "accent";
   valueFormatter?: (value: number) => string;
+  unitLabel?: string;
 }) {
   const points = buildTrendPoints(data.map((item) => item.value));
   const path = buildPolyline(points);
@@ -442,7 +589,7 @@ function TrendChart({
               >
                 <p className="text-xs font-semibold text-foreground">{formatTrendDateLabel(hoveredPoint.date)}</p>
                 <p className="text-xs text-muted-foreground">
-                  {valueFormatter ? valueFormatter(hoveredPoint.value) : formatNumber(hoveredPoint.value)} appointments
+                  {valueFormatter ? valueFormatter(hoveredPoint.value) : formatNumber(hoveredPoint.value)} {unitLabel}
                 </p>
               </div>
             ) : null}
@@ -485,7 +632,7 @@ function TrendChart({
                   onBlur={() => setHoveredIndex(null)}
                   tabIndex={0}
                   role="button"
-                  aria-label={`${formatTrendDateLabel(data[index]?.date)}: ${valueFormatter ? valueFormatter(data[index]?.value ?? 0) : formatNumber(data[index]?.value ?? 0)} appointments`}
+                  aria-label={`${formatTrendDateLabel(data[index]?.date)}: ${valueFormatter ? valueFormatter(data[index]?.value ?? 0) : formatNumber(data[index]?.value ?? 0)} ${unitLabel}`}
                 />
               ))}
             </svg>
@@ -632,9 +779,11 @@ function DualTrendChart({
 function BarChart({
   data,
   tone,
+  valueFormatter = formatNumber,
 }: {
   data: AnalyticsCategoryPoint[];
   tone: "primary" | "secondary" | "accent";
+  valueFormatter?: (value: number) => string;
 }) {
   const maxValue = Math.max(...data.map((item) => item.value), 1);
   const barClass = tone === "primary" ? "bg-primary" : tone === "secondary" ? "bg-sky-500" : "bg-emerald-500";
@@ -650,7 +799,7 @@ function BarChart({
               <div className="flex h-36 w-full items-end">
                 <div className={`w-full rounded-t-md ${barClass}`} style={{ height: `${height}%` }} />
               </div>
-              <div className="text-xs font-semibold text-foreground">{formatNumber(item.value)}</div>
+              <div className="text-xs font-semibold text-foreground">{valueFormatter(item.value)}</div>
               <div className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground">{item.label}</div>
             </div>
           );
@@ -778,6 +927,13 @@ function formatNumber(value: number) {
   return new Intl.NumberFormat("en-US").format(value);
 }
 
+function formatMoney(value: number) {
+  return new Intl.NumberFormat("en-US", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(value);
+}
+
 function formatTrendRange(start?: string, end?: string) {
   if (!start || !end) return "Last 7 days";
   return `${formatTrendDate(start)} - ${formatTrendDate(end)}`;
@@ -816,6 +972,21 @@ function formatMonthRange(data: AnalyticsCategoryPoint[]) {
   return `${data[0]?.label ?? "N/A"} - ${data.at(-1)?.label ?? "N/A"} ${new Date().getFullYear()}`;
 }
 
+function StatBadge({
+  label,
+  value,
+}: {
+  label: string;
+  value: string;
+}) {
+  return (
+    <div className="rounded-xl border border-border/70 bg-background/70 px-4 py-3">
+      <p className="text-[11px] uppercase tracking-[0.16em] text-muted-foreground">{label}</p>
+      <p className="mt-1 text-sm font-semibold text-foreground">{value}</p>
+    </div>
+  );
+}
+
 function buildYAxisTicks(maxValue: number) {
   const ceiling = Math.max(1, Math.ceil(maxValue));
   const step = Math.max(1, Math.ceil(ceiling / 3));
@@ -829,3 +1000,5 @@ function buildYAxisTicks(maxValue: number) {
     y: positions[index] ?? positions[positions.length - 1],
   }));
 }
+
+
