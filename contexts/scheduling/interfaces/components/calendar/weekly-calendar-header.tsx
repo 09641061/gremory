@@ -3,6 +3,7 @@ import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import { useSelectorMenu } from "@/contexts/business/interfaces/components/use-selector-menu";
 import { cn } from "@/lib/utils";
+import { formatCalendarMonthYear } from "../scheduling-timezone.utils";
 
 interface WeeklyCalendarHeaderProps {
   currentDate: Date;
@@ -28,13 +29,10 @@ export function WeeklyCalendarHeader({
 
   useSelectorMenu(isPickerOpen, setIsPickerOpen, selectorRef);
 
-  const formattedMonthYear = currentDate.toLocaleDateString("en-US", {
-    month: "long",
-    year: "numeric",
-  });
+  const formattedMonthYear = formatCalendarMonthYear(currentDate);
 
-  const currentYear = currentDate.getFullYear();
-  const currentMonthIdx = currentDate.getMonth();
+  const currentYear = currentDate.getUTCFullYear();
+  const currentMonthIdx = currentDate.getUTCMonth();
 
   const [tempYear, setTempYear] = useState(() => currentYear);
   const [prevIsPickerOpen, setPrevIsPickerOpen] = useState(isPickerOpen);
@@ -50,8 +48,8 @@ export function WeeklyCalendarHeader({
 
   const handleMonthSelect = (monthIdx: number) => {
     const nextDate = new Date(currentDate);
-    nextDate.setFullYear(tempYear);
-    nextDate.setMonth(monthIdx);
+    nextDate.setUTCFullYear(tempYear);
+    nextDate.setUTCMonth(monthIdx);
     onDateChange(nextDate);
     setIsPickerOpen(false);
   };

@@ -25,6 +25,7 @@ import {
   createEmployeeOptions,
   createServiceOptions,
 } from "./scheduling-form-utils";
+import { getTimeZoneParts } from "../scheduling-timezone.utils";
 
 interface RescheduleFormModalProps {
   isOpen: boolean;
@@ -35,6 +36,7 @@ interface RescheduleFormModalProps {
   customers: SchedulingCustomerViewModel[];
   onSuccess: (updatedAppointment: Appointment) => void;
   onDeleteSuccess: () => void;
+  timeZone: string;
 }
 
 const initialActionState: ActionState<Appointment> = {
@@ -53,6 +55,7 @@ export function RescheduleFormModal({
   customers,
   onSuccess,
   onDeleteSuccess,
+  timeZone,
 }: RescheduleFormModalProps) {
   const appointmentIdRef = useRef(appointment.id);
 
@@ -74,9 +77,9 @@ export function RescheduleFormModal({
   const [selectedCustomerId, setSelectedCustomerId] = useState(appointment.customerId ?? "");
   const [selectedEmployeeId, setSelectedEmployeeId] = useState(appointment.employeeId ?? "");
 
-  const existingStart = new Date(appointment.startsAt);
-  const initDate = `${existingStart.getFullYear()}-${String(existingStart.getMonth() + 1).padStart(2, "0")}-${String(existingStart.getDate()).padStart(2, "0")}`;
-  const initTime = `${String(existingStart.getHours()).padStart(2, "0")}:${String(existingStart.getMinutes()).padStart(2, "0")}`;
+  const existingStart = getTimeZoneParts(new Date(appointment.startsAt), timeZone);
+  const initDate = `${existingStart.year}-${String(existingStart.month).padStart(2, "0")}-${String(existingStart.day).padStart(2, "0")}`;
+  const initTime = `${String(existingStart.hour).padStart(2, "0")}:${String(existingStart.minute).padStart(2, "0")}`;
 
   const [startDate, setStartDate] = useState(initDate);
   const [startTime, setStartTime] = useState(initTime);
@@ -95,9 +98,9 @@ export function RescheduleFormModal({
     setSelectedServiceId(appointment.serviceId ?? "");
     setSelectedCustomerId(appointment.customerId ?? "");
     setSelectedEmployeeId(appointment.employeeId ?? "");
-    const currentStart = new Date(appointment.startsAt);
-    setStartDate(`${currentStart.getFullYear()}-${String(currentStart.getMonth() + 1).padStart(2, "0")}-${String(currentStart.getDate()).padStart(2, "0")}`);
-    setStartTime(`${String(currentStart.getHours()).padStart(2, "0")}:${String(currentStart.getMinutes()).padStart(2, "0")}`);
+    const currentStart = getTimeZoneParts(new Date(appointment.startsAt), timeZone);
+    setStartDate(`${currentStart.year}-${String(currentStart.month).padStart(2, "0")}-${String(currentStart.day).padStart(2, "0")}`);
+    setStartTime(`${String(currentStart.hour).padStart(2, "0")}:${String(currentStart.minute).padStart(2, "0")}`);
   }
 
   useEffect(() => {
@@ -112,6 +115,7 @@ export function RescheduleFormModal({
     startDate,
     startTime,
     durationMinutes: selectedService?.durationMinutes,
+    timeZone,
   });
 
   return (

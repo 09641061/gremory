@@ -16,6 +16,7 @@ import {
   AvatarFallback,
   AvatarImage,
 } from "@/contexts/shared/interfaces/components/ui/avatar";
+import { TimeZoneField } from "../time-zone-field";
 
 interface EstablishmentDetailCardProps {
   establishment: EstablishmentListItem | null;
@@ -30,11 +31,13 @@ export function EstablishmentDetailCard({ establishment, canUpdate = true, onCan
   const [prevEstablishment, setPrevEstablishment] = useState(establishment);
   const [name, setName] = useState(establishment?.name ?? "");
   const [previewUrl, setPreviewUrl] = useState<string | null>(establishment?.photoUrl ?? null);
+  const [timeZone, setTimeZone] = useState(establishment?.timeZone ?? "America/Lima");
 
   if (establishment !== prevEstablishment) {
     setPrevEstablishment(establishment);
     setName(establishment?.name ?? "");
     setPreviewUrl(establishment?.photoUrl ?? null);
+    setTimeZone(establishment?.timeZone ?? "America/Lima");
   }
 
   const [state, formAction, pending] = useActionState(
@@ -63,6 +66,7 @@ export function EstablishmentDetailCard({ establishment, canUpdate = true, onCan
   const handleCancel = () => {
     setName(establishment?.name ?? "");
     setPreviewUrl(establishment?.photoUrl ?? null);
+    setTimeZone(establishment?.timeZone ?? "America/Lima");
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
@@ -157,6 +161,25 @@ export function EstablishmentDetailCard({ establishment, canUpdate = true, onCan
                     onChange={(e) => setName(e.target.value)}
                     placeholder="Establishment name"
                     maxLength={32}
+                    disabled={!canUpdate}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="flex flex-col border-t border-border">
+              <div className="space-y-4 p-6">
+                <div className="space-y-1">
+                  <h3 className="text-base font-semibold text-foreground">Time zone</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Used for scheduling and analytics in local time.
+                  </p>
+                </div>
+                <div className="max-w-xs">
+                  <TimeZoneField
+                    name="timeZone"
+                    value={timeZone}
+                    onChange={setTimeZone}
                     disabled={!canUpdate}
                   />
                 </div>

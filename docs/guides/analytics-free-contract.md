@@ -1,7 +1,16 @@
 # Contrato de API - Analytics Free
 
-Este documento define el contrato estable para la pagina `analytics` del plan Free.
-Todo sale de un solo endpoint: `GET /api/analytics/free`.
+Snapshot del estado actual del proyecto al `2026-08-12`.
+Este documento sirve como referencia historica de lo que el frontend consume hoy en la pagina `analytics` del plan Free.
+
+## Estado actual del frontend
+
+- La pagina muestra analytics por grupos.
+- Los grupos visibles son `Activity`, `Revenue`, `Rankings` y `Friction`.
+- El usuario solo ve un grupo a la vez para mantener la pantalla mas limpia.
+- Los graficos se muestran ya normalizados por el backend.
+- Las cards compactas de snapshot fueron reducidas a badges y KPIs de bajo costo visual.
+- Ya no se usan los bloques legacy `appointmentsByMonth`, `completionVsCancellationTrend` ni `leadTimeTrend`.
 
 ## Endpoint
 
@@ -9,19 +18,18 @@ Todo sale de un solo endpoint: `GET /api/analytics/free`.
 
 ## Autenticacion
 
-La peticion debe llegar autenticada con `Bearer JWT`.
+- Requiere `Bearer JWT`
+- El backend resuelve el `ownerId` desde el token
+- El `ownerId` no viaja en el payload
 
-El backend resuelve el `ownerId` desde el token y con eso busca la organizacion activa. Ese identificador no debe venir en el payload.
+## Respuesta actual
 
-## Respuesta
-
-El frontend debe esperar estos bloques en la misma respuesta:
+El endpoint devuelve un snapshot unico con estos campos:
 
 - `completedAppointmentsLastSevenDays`
 - `cancelledAppointmentsLastSevenDays`
 - `noShowAppointmentsLastSevenDays`
 - `appointmentsTrend`
-- `appointmentsByMonth`
 - `appointmentsByHour`
 - `weeklyRevenueBalance`
 - `topServicesByRevenue`
@@ -34,6 +42,54 @@ El frontend debe esperar estos bloques en la misma respuesta:
 - `cancellationRateByService`
 - `noShowRateByService`
 
+## Como se usa hoy en pantalla
+
+### Activity
+
+- `appointmentsTrend` se pinta como linea de tendencia de 7 dias.
+- `completedAppointmentsLastSevenDays`, `cancelledAppointmentsLastSevenDays` y `noShowAppointmentsLastSevenDays` se muestran como mix de estado final.
+- `appointmentsTrend` tambien se usa para derivar el dia pico.
+- `appointmentsByHour` se usa para derivar la hora pico.
+- `newVsRecurringCustomers` se muestra como comparativa compacta.
+
+### Revenue
+
+- `weeklyRevenueBalance` se muestra como balance semanal con linea diaria.
+- `averageTicket` se muestra como KPI.
+- `lostRevenue` se muestra como bloque de perdida estimada por cancelados y no-show.
+- `topServicesByRevenue` se muestra como barras.
+- `topCustomersBySpend` se muestra como ranking.
+
+### Rankings
+
+- `topServices` se muestra como ranking de servicios mas usados.
+- `topCustomers` se muestra como ranking de clientes mas activos.
+
+### Friction
+
+- `cancellationRateByService` se muestra como ranking por tasa de cancelacion.
+- `noShowRateByService` se muestra como ranking por tasa de no-show.
+
+## Cambios que debe hacer el frontend
+
+- No esperar `appointmentsByMonth`
+- No esperar `completionVsCancellationTrend`
+- No esperar `leadTimeTrend`
+- Consumir `appointmentsTrend` como serie diaria ya normalizada
+- Consumir `appointmentsByHour` como buckets ya ordenados de `00:00` a `23:00`
+- Tratar `weeklyRevenueBalance`, `lostRevenue`, `averageTicket` y `newVsRecurringCustomers` como bloques fijos del snapshot
+- Mostrar los rankings como maximo con 5 elementos
+- Mantener el selector de grupos como la forma principal de navegar la pagina
+
+## Cambios que debe hacer el backend
+
+- Resolver la zona horaria IANA del establecimiento activo y usarla como referencia para todo el snapshot
+- Calcular `appointmentsTrend` en hora y dia local del negocio, no en UTC
+- Calcular `appointmentsByHour` en la hora local del negocio, con buckets fijos de `00:00` a `23:00`
+- Mantener las series ya normalizadas, sin pedirle al frontend que complete huecos o recalcule buckets
+- Limitar `topCustomers`, `topServices`, `topServicesByRevenue` y `topCustomersBySpend` a maximo 5 items
+- Exponer `weeklyRevenueBalance`, `lostRevenue`, `averageTicket` y `newVsRecurringCustomers` en el mismo snapshot para no separar consultas
+
 ## Ejemplo
 
 ```json
@@ -44,16 +100,6 @@ El frontend debe esperar estos bloques en la misma respuesta:
   "appointmentsTrend": [
     { "date": "2026-08-04", "value": 4 },
     { "date": "2026-08-05", "value": 7 }
-  ],
-  "appointmentsByMonth": [
-    { "label": "Jan", "value": 8 },
-    { "label": "Feb", "value": 6 },
-    { "label": "Mar", "value": 5 },
-    { "label": "Apr", "value": 4 },
-    { "label": "May", "value": 3 },
-    { "label": "Jun", "value": 2 },
-    { "label": "Jul", "value": 1 },
-    { "label": "Aug", "value": 0 }
   ],
   "appointmentsByHour": [
     { "label": "00:00", "value": 0 },
@@ -111,63 +157,40 @@ El frontend debe esperar estos bloques en la misma respuesta:
 }
 ```
 
-## Contrato
+## Campos
 
 | Campo | Tipo | Descripcion |
 |---|---|---|
-| `completedAppointmentsLastSevenDays` | `number` | Citas completadas en la ventana de 7 dias |
-| `cancelledAppointmentsLastSevenDays` | `number` | Citas canceladas en la ventana de 7 dias |
-| `noShowAppointmentsLastSevenDays` | `number` | Citas marcadas como no show en la ventana de 7 dias |
-| `appointmentsTrend` | `array<{date,value}>` | Serie diaria de volumen |
-| `appointmentsByMonth` | `array<{label,value}>` | Buckets mensuales en orden cronologico, de enero al mes actual |
-| `appointmentsByHour` | `array<{label,value}>` | 24 buckets fijos en UTC, de `00:00` a `23:00` |
-| `weeklyRevenueBalance` | `object` | Balance semanal de ingresos con total, cantidad y tendencia diaria |
-| `topServicesByRevenue` | `array` | Top 5 servicios por ingreso generado |
-| `topCustomersBySpend` | `array` | Top 5 clientes por gasto total |
+| `completedAppointmentsLastSevenDays` | `number` | Citas completadas en los ultimos 7 dias |
+| `cancelledAppointmentsLastSevenDays` | `number` | Citas canceladas en los ultimos 7 dias |
+| `noShowAppointmentsLastSevenDays` | `number` | Citas marcadas como no show en los ultimos 7 dias |
+| `appointmentsTrend` | `array<{date,value}>` | Serie diaria de actividad |
+| `appointmentsByHour` | `array<{label,value}>` | 24 buckets fijos de `00:00` a `23:00` |
+| `weeklyRevenueBalance` | `object` | Balance semanal de ingresos con tendencia diaria |
+| `topServicesByRevenue` | `array` | Top 5 servicios por ingreso |
+| `topCustomersBySpend` | `array` | Top 5 clientes por gasto |
 | `lostRevenue` | `object` | Ingreso estimado perdido por cancelaciones y no-shows |
 | `averageTicket` | `object` | Ticket promedio del periodo actual y comparacion contra el periodo anterior |
-| `newVsRecurringCustomers` | `object` | Segmentacion operacional de clientes |
+| `newVsRecurringCustomers` | `object` | Segmentacion de clientes nuevos vs recurrentes |
 | `topCustomers` | `array` | Top 5 clientes por cantidad de citas |
 | `topServices` | `array` | Top 5 servicios por cantidad de citas |
 | `cancellationRateByService` | `array` | Servicios ordenados por tasa de cancelacion |
 | `noShowRateByService` | `array` | Servicios ordenados por tasa de no show |
 
-## Reglas
+## Reglas de consumo
 
-- Ventana de 7 dias en UTC
-- `appointmentsTrend` se normaliza dia por dia, incluso si no hubo actividad
-- `appointmentsByMonth` cubre de enero al mes actual y siempre viene en orden cronologico
-- `appointmentsByHour` siempre viene en orden fijo de `00:00` a `23:00`
-- `appointmentsByHour` usa hora UTC
-- `weeklyRevenueBalance`, `topServicesByRevenue`, `topCustomersBySpend`, `lostRevenue` y `averageTicket` vienen en el mismo payload del endpoint, no en una ruta separada
+- El frontend no debe enviar `ownerId`
+- El frontend no debe reconstruir buckets por su cuenta
+- `appointmentsTrend` ya viene normalizado por dia
+- `appointmentsByHour` ya viene ordenado de `00:00` a `23:00`
 - `topCustomers` y `topServices` devuelven como maximo 5 items
-- `cancellationRateByService` y `noShowRateByService` devuelven tasas entre `0` y `1`
-- Si no hay organizacion o no hay locales activos, el backend devuelve un snapshot valido con rankings vacios y series en cero
+- `cancellationRateByService` y `noShowRateByService` devuelven valores entre `0` y `1`
+- Si no hay organizacion o no hay locales activos, el backend devuelve un snapshot valido con series en cero y rankings vacios
+- El frontend no debe depender de campos legacy que ya no forman parte del contrato
 
-## Datos minimos requeridos
+## Nota de tiempo
 
-Para que el backend calcule el snapshot actual, el origen de datos debe exponer al menos:
-
-- `startsAt`
-- `createdAt`
-- `status`
-- `customerId`
-- `serviceId`
-- `establishmentId`
-- `price` del servicio asociado para calcular los montos monetarios
-
-Ademas, para resolver la organizacion del usuario autenticado, el backend necesita que exista relacion entre:
-
-- `ownerId`
-- `organizationId`
-- `establishmentId`
-- `active` en establecimientos
-
-## Notas
-
-- No es necesario hacer transformaciones de buckets en cliente
-- No es necesario completar meses, dias u horas faltantes en cliente
-- No es necesario inferir rankings ni tasas en cliente
-- El bloque monetario usa el precio vigente del servicio asociado para estimar ingresos, porque las citas no almacenan historico de precio
-- Si un cliente necesita un subconjunto, puede ignorar los campos que no use sin romper compatibilidad
-- En pantalla, la vista se organiza por grupos para facilitar la busqueda: activity, revenue, rankings y friction
+- Todo lo que llegue con fecha u hora en este endpoint debe interpretarse y agruparse en la zona horaria del local, no en la del navegador ni en UTC
+- El backend resuelve la zona horaria IANA desde el establecimiento activo de la organizacion
+- Si no puede encontrar una zona horaria valida, usa `UTC` como fallback
+- El payload no cambia aunque la base temporal interna del negocio cambie

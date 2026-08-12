@@ -20,7 +20,6 @@ describe("AnalyticsApiGateway", () => {
       cancelledAppointmentsLastSevenDays: 0,
       noShowAppointmentsLastSevenDays: 0,
       appointmentsTrend: [],
-      appointmentsByMonth: [],
       appointmentsByHour: [],
       newVsRecurringCustomers: {
         newCustomers: 0,

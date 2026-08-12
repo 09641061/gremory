@@ -3,6 +3,11 @@ import type {
   SchedulingMemberViewModel,
   SchedulingServiceViewModel,
 } from "../../../application/model/scheduling-page-data.view-model";
+import {
+  formatInstantAsZonedIso,
+  formatTimeInTimeZone,
+  zonedDateTimeToIso,
+} from "../scheduling-timezone.utils";
 import type { DropdownOption } from "./types";
 
 function formatTimeLabel(hours: number, minutes: number) {
@@ -49,37 +54,16 @@ export function createTimeOptions(slots: string[]): DropdownOption[] {
   }));
 }
 
-function toLocalISOString(date: Date) {
-  const pad = (n: number) => String(n).padStart(2, "0");
-  const tzo = -date.getTimezoneOffset();
-  const dif = tzo >= 0 ? "+" : "-";
-  return (
-    date.getFullYear() +
-    "-" +
-    pad(date.getMonth() + 1) +
-    "-" +
-    pad(date.getDate()) +
-    "T" +
-    pad(date.getHours()) +
-    ":" +
-    pad(date.getMinutes()) +
-    ":" +
-    pad(date.getSeconds()) +
-    dif +
-    pad(Math.floor(Math.abs(tzo) / 60)) +
-    ":" +
-    pad(Math.abs(tzo) % 60)
-  );
-}
-
 export function computeAppointmentTimes({
   startDate,
   startTime,
   durationMinutes,
+  timeZone,
 }: {
   startDate: string;
   startTime: string;
   durationMinutes: number | null | undefined;
+  timeZone: string;
 }) {
   if (!startDate || !startTime || !durationMinutes) {
     return { startsAt: "", endsAt: "", formattedEnd: "" };
@@ -87,16 +71,24 @@ export function computeAppointmentTimes({
 
   const [startYear, startMonth, startDay] = startDate.split("-").map(Number);
   const [startHour, startMin] = startTime.split(":").map(Number);
-  const startDateTime = new Date(startYear!, startMonth! - 1, startDay!, startHour!, startMin!, 0, 0);
-  const endDateTime = new Date(startDateTime.getTime() + durationMinutes * 60 * 1000);
+  const startDateString = `${startYear}-${String(startMonth).padStart(2, "0")}-${String(startDay).padStart(2, "0")}`;
+  const startTimeString = `${String(startHour).padStart(2, "0")}:${String(startMin).padStart(2, "0")}:00`;
+  const startInstant = new Date(
+    zonedDateTimeToIso({
+      dateString: startDateString,
+      timeString: startTimeString,
+      timeZone,
+    })
+  );
+  const endInstant = new Date(startInstant.getTime() + durationMinutes * 60 * 1000);
 
   return {
-    startsAt: toLocalISOString(startDateTime),
-    endsAt: toLocalISOString(endDateTime),
-    formattedEnd: `${endDateTime.toLocaleTimeString("en-US", {
-      hour: "numeric",
-      minute: "2-digit",
-      hour12: true,
-    })} (${durationMinutes} mins duration)`,
+    startsAt: zonedDateTimeToIso({
+      dateString: startDateString,
+      timeString: startTimeString,
+      timeZone,
+    }),
+    endsAt: formatInstantAsZonedIso(endInstant, timeZone),
+    formattedEnd: `${formatTimeInTimeZone(endInstant, timeZone)} (${durationMinutes} mins duration)`,
   };
 }

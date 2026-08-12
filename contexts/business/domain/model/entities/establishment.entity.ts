@@ -8,6 +8,7 @@ export interface EstablishmentProps {
   organizationId: OrganizationId;
   name: EstablishmentName;
   photoUrl: EstablishmentPhoto;
+  timeZone?: string | null;
   active: boolean;
 }
 
@@ -17,6 +18,7 @@ export class Establishment {
     public readonly organizationId: OrganizationId,
     private currentName: EstablishmentName,
     private currentPhotoUrl: EstablishmentPhoto,
+    private currentTimeZone: string,
     public readonly active: boolean,
   ) {}
 
@@ -26,6 +28,7 @@ export class Establishment {
       props.organizationId,
       props.name,
       props.photoUrl ?? createEstablishmentPhoto(),
+      props.timeZone?.trim() || "UTC",
       props.active,
     );
   }
@@ -38,8 +41,13 @@ export class Establishment {
     return this.currentPhotoUrl;
   }
 
-  update(name: string, photoUrl?: string | null): void {
+  get timeZone(): string {
+    return this.currentTimeZone;
+  }
+
+  update(name: string, photoUrl?: string | null, timeZone?: string | null): void {
     this.currentName = createEstablishmentName(name);
     this.currentPhotoUrl = createEstablishmentPhoto(photoUrl);
+    this.currentTimeZone = timeZone?.trim() || this.currentTimeZone;
   }
 }

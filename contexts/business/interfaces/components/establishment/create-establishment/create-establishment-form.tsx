@@ -16,6 +16,7 @@ import {
   AvatarFallback,
   AvatarImage,
 } from "@/contexts/shared/interfaces/components/ui/avatar";
+import { TimeZoneField } from "../time-zone-field";
 
 export function CreateEstablishmentForm({ organizationId }: { organizationId: string }) {
   const router = useRouter();
@@ -23,6 +24,7 @@ export function CreateEstablishmentForm({ organizationId }: { organizationId: st
 
   const [name, setName] = useState("");
   const [photoPreviewUrl, setPhotoPreviewUrl] = useState<string | null>(null);
+  const [timeZone, setTimeZone] = useState("America/Lima");
 
   const [state, formAction, pending] = useActionState(
     createEstablishmentAction,
@@ -145,6 +147,24 @@ export function CreateEstablishmentForm({ organizationId }: { organizationId: st
                       placeholder="Establishment name"
                       maxLength={32}
                       required
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex flex-col border-t border-border">
+                <div className="space-y-4 p-6">
+                  <div className="space-y-1">
+                    <h3 className="text-base font-semibold text-foreground">Time zone</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Use an IANA zone like America/Lima. This is used for local scheduling and analytics.
+                    </p>
+                  </div>
+                  <div className="max-w-xs">
+                    <TimeZoneField
+                      name="timeZone"
+                      value={timeZone}
+                      onChange={setTimeZone}
                     />
                   </div>
                 </div>

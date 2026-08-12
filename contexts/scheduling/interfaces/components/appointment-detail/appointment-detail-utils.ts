@@ -4,6 +4,7 @@ import type {
   SchedulingServiceViewModel,
 } from "../../../application/model/scheduling-page-data.view-model";
 import type { Appointment } from "../../../domain/model/entities/appointment";
+import { formatDateInTimeZone, formatTimeInTimeZone } from "../scheduling-timezone.utils";
 
 export function findAppointmentService(
   services: SchedulingServiceViewModel[],
@@ -26,8 +27,8 @@ export function findAppointmentEmployee(
   return members.find((member) => member.userId === appointment.employeeId);
 }
 
-export function formatAppointmentDate(startsAt: string) {
-  return new Date(startsAt).toLocaleDateString("en-US", {
+export function formatAppointmentDate(startsAt: string, timeZone: string) {
+  return formatDateInTimeZone(new Date(startsAt), timeZone, {
     weekday: "long",
     year: "numeric",
     month: "long",
@@ -35,17 +36,8 @@ export function formatAppointmentDate(startsAt: string) {
   });
 }
 
-export function formatAppointmentTime(startsAt: string, endsAt: string) {
-  const starts = new Date(startsAt);
-  const ends = new Date(endsAt);
-
-  return `${starts.toLocaleTimeString("en-US", {
-    hour: "2-digit",
-    minute: "2-digit",
-  })} - ${ends.toLocaleTimeString("en-US", {
-    hour: "2-digit",
-    minute: "2-digit",
-  })}`;
+export function formatAppointmentTime(startsAt: string, endsAt: string, timeZone: string) {
+  return `${formatTimeInTimeZone(new Date(startsAt), timeZone)} - ${formatTimeInTimeZone(new Date(endsAt), timeZone)}`;
 }
 
 export function getAppointmentStatusClasses(status: string) {

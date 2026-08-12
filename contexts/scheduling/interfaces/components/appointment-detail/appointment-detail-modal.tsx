@@ -39,6 +39,7 @@ interface AppointmentDetailModalProps {
   onDeleteSuccess: () => void;
   canUpdateAppointment: boolean;
   canDeleteAppointment: boolean;
+  timeZone: string;
 }
 
 export function AppointmentDetailModal({
@@ -52,6 +53,7 @@ export function AppointmentDetailModal({
   onDeleteSuccess,
   canUpdateAppointment,
   canDeleteAppointment,
+  timeZone,
 }: AppointmentDetailModalProps) {
   const [isRescheduleOpen, setIsRescheduleOpen] = useState(false);
   const [isCancelOpen, setIsCancelOpen] = useState(false);
@@ -76,8 +78,8 @@ export function AppointmentDetailModal({
   const service = findAppointmentService(services, appointment);
   const customer = findAppointmentCustomer(customers, appointment);
   const employee = findAppointmentEmployee(members, appointment);
-  const formattedDate = formatAppointmentDate(appointment.startsAt);
-  const formattedTime = formatAppointmentTime(appointment.startsAt, appointment.endsAt);
+  const formattedDate = formatAppointmentDate(appointment.startsAt, timeZone);
+  const formattedTime = formatAppointmentTime(appointment.startsAt, appointment.endsAt, timeZone);
   const isCancelled = appointment.status === "CANCELLED";
   const statusLabel = getAppointmentStatusLabel(appointment.status);
 
@@ -151,6 +153,7 @@ export function AppointmentDetailModal({
             onDeleteSuccess();
             onOpenChange(false);
           }}
+          timeZone={timeZone}
         />
       )}
 

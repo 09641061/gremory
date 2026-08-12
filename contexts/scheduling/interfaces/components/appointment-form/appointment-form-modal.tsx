@@ -33,6 +33,7 @@ interface AppointmentFormModalProps {
   members: SchedulingMemberViewModel[];
   customers: SchedulingCustomerViewModel[];
   onSuccess: () => void;
+  timeZone: string;
 }
 
 const initialActionState: ActionState<Appointment> = {
@@ -50,6 +51,7 @@ export function AppointmentFormModal({
   members,
   customers,
   onSuccess,
+  timeZone,
 }: AppointmentFormModalProps) {
   const [state, formAction, isPending] = useActionState(
     createAppointmentAction,
@@ -82,6 +84,7 @@ export function AppointmentFormModal({
     startDate,
     startTime,
     durationMinutes: selectedService?.durationMinutes,
+    timeZone,
   });
 
   return (

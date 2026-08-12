@@ -91,6 +91,7 @@ describe("Business server actions", () => {
       organizationId,
       name: "Main store",
       photoUrl: "https://example.com/store.png",
+      timeZone: "America/Lima",
     });
     expect(result).toEqual({
       status: "success",

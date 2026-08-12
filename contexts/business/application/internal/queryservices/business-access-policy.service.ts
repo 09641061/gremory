@@ -9,7 +9,7 @@ export interface BusinessPermissions {
   canRead: boolean;
   canCreate: boolean;
   canUpdateMap: Record<string, boolean>;
-  allowedEstablishments: { id: string; name: string; photoUrl: string | null }[];
+  allowedEstablishments: { id: string; name: string; photoUrl: string | null; timeZone: string | null }[];
 }
 
 export class BusinessAccessPolicyService {
@@ -63,6 +63,7 @@ export class BusinessAccessPolicyService {
             id: est.id,
             name: est.name,
             photoUrl: est.photoUrl,
+            timeZone: est.timeZone,
           })),
         };
       } catch {
@@ -133,6 +134,7 @@ export class BusinessAccessPolicyService {
             id: item.establishmentId,
             name: item.establishmentName,
             photoUrl: null,
+            timeZone: null,
           };
         });
 

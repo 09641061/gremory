@@ -3,13 +3,15 @@
 import { useState } from "react";
 import { Appointment } from "../../../domain/model/entities/appointment";
 import { cn } from "@/lib/utils";
+import { formatTimeInTimeZone } from "../scheduling-timezone.utils";
 
 interface AppointmentBlockProps {
   appointment: Appointment;
+  timeZone: string;
   onClick: () => void;
 }
 
-export function AppointmentBlock({ appointment, onClick }: AppointmentBlockProps) {
+export function AppointmentBlock({ appointment, timeZone, onClick }: AppointmentBlockProps) {
   const starts = new Date(appointment.startsAt);
   const ends = new Date(appointment.endsAt);
   
@@ -27,15 +29,7 @@ export function AppointmentBlock({ appointment, onClick }: AppointmentBlockProps
   const isConfirmed = appointment.status === "CONFIRMED";
   const isOverdue = isConfirmed && starts.getTime() < now;
 
-  const formattedTime = `${starts.toLocaleTimeString("en-US", {
-    hour: "numeric",
-    minute: "2-digit",
-    hour12: true,
-  })} - ${ends.toLocaleTimeString("en-US", {
-    hour: "numeric",
-    minute: "2-digit",
-    hour12: true,
-  })}`;
+  const formattedTime = `${formatTimeInTimeZone(starts, timeZone)} - ${formatTimeInTimeZone(ends, timeZone)}`;
 
   let statusStyles = "border-primary/20 bg-primary/5 text-primary";
   if (isCancelled) {

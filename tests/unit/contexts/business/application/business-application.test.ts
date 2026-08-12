@@ -98,6 +98,7 @@ describe("Business query services", () => {
         organizationId,
         name: "Main store",
         photoUrl: null,
+        timeZone: "UTC",
       },
     ]);
     expect(result.content[0]).not.toBeInstanceOf(Establishment);
@@ -114,12 +115,13 @@ function organization(name: string) {
   });
 }
 
-function establishment(name: string, photoUrl: string | null) {
+function establishment(name: string, photoUrl: string | null, timeZone = "UTC") {
   return Establishment.create({
     id: createEstablishmentId(establishmentId),
     organizationId: createOrganizationId(organizationId),
     name: createEstablishmentName(name),
     photoUrl: createEstablishmentPhoto(photoUrl),
+    timeZone,
     active: true,
   });
 }
@@ -137,8 +139,8 @@ function organizationRepository(): OrganizationRepository {
 
 function establishmentRepository(): EstablishmentRepository {
   return {
-    create: vi.fn(async (_organizationId, name, photoUrl) =>
-      establishment(name.value, photoUrl.value),
+    create: vi.fn(async (_organizationId, name, photoUrl, timeZone) =>
+      establishment(name.value, photoUrl.value, timeZone),
     ),
     findById: vi.fn(async () => establishment("Main store", null)),
     findByOrganization: vi.fn(async () => ({

@@ -20,7 +20,6 @@ describe("freeAnalyticsRoute", () => {
       cancelledAppointmentsLastSevenDays: 0,
       noShowAppointmentsLastSevenDays: 0,
       appointmentsTrend: [],
-      appointmentsByMonth: [],
       appointmentsByHour: [],
       newVsRecurringCustomers: {
         newCustomers: 0,
@@ -57,7 +56,6 @@ describe("freeAnalyticsRoute", () => {
 
     expect(response.status).toBe(200);
     expect(await response.json()).toMatchObject({
-      appointmentsByMonth: [],
       appointmentsByHour: [],
       newVsRecurringCustomers: {
         totalCustomers: 0,

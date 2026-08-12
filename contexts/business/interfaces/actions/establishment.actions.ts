@@ -32,6 +32,7 @@ export async function createEstablishmentAction(
     organizationId: formData.get("organizationId"),
     name: formData.get("name"),
     photoUrl: formData.get("photoUrl"),
+    timeZone: formData.get("timeZone") ?? "America/Lima",
   });
   if (!parsed.success) return actionError(parsed.error.issues[0]?.message);
 
@@ -63,6 +64,7 @@ export async function updateEstablishmentAction(
     id: formData.get("id"),
     name: formData.get("name"),
     photoUrl: formData.get("photoUrl"),
+    timeZone: formData.get("timeZone") ?? "America/Lima",
   });
   if (!parsed.success) return actionError(parsed.error.issues[0]?.message);
 

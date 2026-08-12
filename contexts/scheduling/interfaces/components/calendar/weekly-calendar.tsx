@@ -7,6 +7,14 @@ import { AppointmentDetailModal } from "../appointment-detail/appointment-detail
 import { AppointmentFormModal } from "../appointment-form/appointment-form-modal";
 import { WeeklyCalendarGrid } from "./weekly-calendar-grid";
 import { WeeklyCalendarHeader } from "./weekly-calendar-header";
+import {
+  addCalendarDays,
+  calendarDateToZonedIso,
+  formatCalendarWeekday,
+  getCalendarAnchorDate,
+  getCalendarWeekRange,
+  isSameCalendarDate,
+} from "../scheduling-timezone.utils";
 import type {
   SchedulingCustomerViewModel,
   SchedulingMemberViewModel,
@@ -21,19 +29,7 @@ interface WeeklyCalendarProps {
   canCreateAppointment: boolean;
   canUpdateAppointment: boolean;
   canDeleteAppointment: boolean;
-}
-
-function getWeekRange(date: Date) {
-  const current = new Date(date);
-  const first = current.getDate() - current.getDay();
-  const sunday = new Date(current.setDate(first));
-  sunday.setHours(0, 0, 0, 0);
-
-  const saturday = new Date(sunday);
-  saturday.setDate(sunday.getDate() + 6);
-  saturday.setHours(23, 59, 59, 999);
-
-  return { sunday, saturday };
+  timeZone: string;
 }
 
 export function WeeklyCalendar({
@@ -44,8 +40,9 @@ export function WeeklyCalendar({
   canCreateAppointment,
   canUpdateAppointment,
   canDeleteAppointment,
+  timeZone,
 }: WeeklyCalendarProps) {
-  const [currentDate, setCurrentDate] = useState(() => new Date());
+  const [currentDate, setCurrentDate] = useState(() => getCalendarAnchorDate(timeZone));
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
@@ -54,74 +51,43 @@ export function WeeklyCalendar({
 
   const requestIdRef = useRef(0);
 
-  const { sunday, saturday } = useMemo(() => getWeekRange(currentDate), [currentDate]);
+  useEffect(() => {
+    setCurrentDate(getCalendarAnchorDate(timeZone));
+  }, [timeZone]);
+
+  const { sunday, saturday } = useMemo(() => getCalendarWeekRange(currentDate), [currentDate]);
+  const todayDate = useMemo(() => getCalendarAnchorDate(timeZone), [timeZone]);
 
   const weekDays = useMemo(
-    () =>
-      Array.from({ length: 7 }, (_, i) => {
-        const d = new Date(sunday);
-        d.setDate(sunday.getDate() + i);
-        return d;
-      }),
+    () => Array.from({ length: 7 }, (_, i) => addCalendarDays(sunday, i)),
     [sunday]
   );
 
   const hours = useMemo(() => Array.from({ length: 15 }, (_, i) => 7 + i), []);
 
-
   const fetchAppointments = useCallback(() => {
     const reqId = ++requestIdRef.current;
 
-    // Función local para convertir fecha a ISO con offset
-    const toLocalISOString = (date: Date) => {
-      const pad = (n: number) => String(n).padStart(2, "0");
-      const tzo = -date.getTimezoneOffset();
-      const dif = tzo >= 0 ? "+" : "-";
-      return (
-        date.getFullYear() +
-        "-" +
-        pad(date.getMonth() + 1) +
-        "-" +
-        pad(date.getDate()) +
-        "T" +
-        pad(date.getHours()) +
-        ":" +
-        pad(date.getMinutes()) +
-        ":" +
-        pad(date.getSeconds()) +
-        dif +
-        pad(Math.floor(Math.abs(tzo) / 60)) +
-        ":" +
-        pad(Math.abs(tzo) % 60)
-      );
-    };
-
     startTransition(async () => {
-      const fromStr = toLocalISOString(sunday);
-      const toStr = toLocalISOString(saturday);
+      const fromStr = calendarDateToZonedIso(sunday, timeZone, false);
+      const toStr = calendarDateToZonedIso(saturday, timeZone, true);
       const res = await listAppointmentsAction(fromStr, toStr, establishmentId);
       if (reqId === requestIdRef.current) {
         setAppointments(res.content);
       }
     });
-  }, [sunday, saturday, establishmentId, startTransition]);
+  }, [sunday, saturday, timeZone, establishmentId, startTransition]);
 
   useEffect(() => {
     fetchAppointments();
   }, [fetchAppointments]);
 
   const navigateWeek = (direction: "prev" | "next") => {
-    const newDate = new Date(currentDate);
-    if (direction === "prev") {
-      newDate.setDate(newDate.getDate() - 7);
-    } else {
-      newDate.setDate(newDate.getDate() + 7);
-    }
-    setCurrentDate(newDate);
+    setCurrentDate((date) => addCalendarDays(date, direction === "prev" ? -7 : 7));
   };
 
   const navigateToday = () => {
-    setCurrentDate(new Date());
+    setCurrentDate(getCalendarAnchorDate(timeZone));
   };
 
   const handleOpenDetail = (appt: Appointment) => {
@@ -155,7 +121,7 @@ export function WeeklyCalendar({
               </span>
             </div>
             {weekDays.map((day, idx) => {
-              const isToday = day.toDateString() === new Date().toDateString();
+              const isToday = isSameCalendarDate(day, todayDate);
               return (
                 <div
                   key={idx}
@@ -168,7 +134,7 @@ export function WeeklyCalendar({
                       isToday ? "text-primary" : "text-muted-foreground"
                     }`}
                   >
-                    {day.toLocaleDateString("en-US", { weekday: "short" })}
+                    {formatCalendarWeekday(day)}
                   </span>
                   <span
                     className={`text-xl font-bold leading-none mt-1 ${
@@ -177,7 +143,7 @@ export function WeeklyCalendar({
                         : "text-foreground"
                     }`}
                   >
-                    {day.getDate()}
+                    {day.getUTCDate()}
                   </span>
                 </div>
               );
@@ -189,6 +155,8 @@ export function WeeklyCalendar({
             weekDays={weekDays}
             hours={hours}
             isPending={isPending}
+            timeZone={timeZone}
+            todayDate={todayDate}
             onAppointmentClick={handleOpenDetail}
           />
         </div>
@@ -206,6 +174,7 @@ export function WeeklyCalendar({
           onDeleteSuccess={fetchAppointments}
           canUpdateAppointment={canUpdateAppointment}
           canDeleteAppointment={canDeleteAppointment}
+          timeZone={timeZone}
         />
       )}
 
@@ -218,6 +187,7 @@ export function WeeklyCalendar({
           members={members}
           customers={customers}
           onSuccess={fetchAppointments}
+          timeZone={timeZone}
         />
       )}
     </div>

@@ -9,6 +9,7 @@ export type EstablishmentListItem = {
   id: string;
   name: string;
   photoUrl: string | null;
+  timeZone: string | null;
 };
 
 export function EstablishmentsPage({

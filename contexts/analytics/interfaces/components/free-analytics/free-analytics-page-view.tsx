@@ -27,10 +27,8 @@ export function FreeAnalyticsPageView({ analytics, errorMessage }: FreeAnalytics
     analytics.cancelledAppointmentsLastSevenDays +
     analytics.noShowAppointmentsLastSevenDays;
   const statusRange = formatTrendRange(analytics.appointmentsTrend[0]?.date, analytics.appointmentsTrend.at(-1)?.date);
-  const monthRange = formatMonthRange(analytics.appointmentsByMonth);
-  const hourRange = statusRange;
-  const monthData = analytics.appointmentsByMonth ?? [];
-  const hourData = buildTwoHourSeries(analytics.appointmentsByHour ?? []);
+  const peakDay = findPeakTrendPoint(analytics.appointmentsTrend ?? []);
+  const peakHour = findPeakCategoryPoint(analytics.appointmentsByHour ?? []);
   const weeklyRevenueBalance = analytics.weeklyRevenueBalance ?? {
     totalRevenue: 0,
     appointmentsCount: 0,
@@ -74,7 +72,7 @@ export function FreeAnalyticsPageView({ analytics, errorMessage }: FreeAnalytics
       <AnalyticsSection
         id="activity"
         title="Activity"
-        description="Appointments, timing, mix and customer behavior."
+        description="Appointments, timing, mix and a compact activity snapshot."
       >
         <div className="grid gap-6 xl:grid-cols-3">
           <Card className="overflow-hidden rounded-xl border-border bg-card shadow-sm xl:col-span-2">
@@ -114,54 +112,51 @@ export function FreeAnalyticsPageView({ analytics, errorMessage }: FreeAnalytics
         </div>
 
         <div className="grid gap-6 xl:grid-cols-3">
-          <Card className="overflow-hidden rounded-xl border-border bg-card shadow-sm xl:col-span-2">
+          <Card className="overflow-hidden rounded-xl border-border bg-card shadow-sm">
             <CardHeader className="border-b border-border/60 pb-4">
-              <CardTitle>Appointments by month</CardTitle>
-              <CardDescription>Monthly appointment volume in the current year.</CardDescription>
-              <p className="pt-1 text-xs text-muted-foreground">{monthRange}</p>
+              <CardTitle>Activity snapshot</CardTitle>
+              <CardDescription>Derived from the trend and hourly buckets already returned by the endpoint.</CardDescription>
             </CardHeader>
-            <CardContent className="p-5">
-              <BarChart data={monthData} tone="primary" />
+            <CardContent className="grid gap-3 p-5">
+              <StatBadge
+                label="Peak day"
+                value={peakDay.label}
+                detail={`${formatNumber(peakDay.value)} appointments`}
+              />
+              <StatBadge
+                label="Peak hour"
+                value={peakHour.label}
+                detail={`${formatNumber(peakHour.value)} appointments`}
+              />
             </CardContent>
           </Card>
 
-          <Card className="overflow-hidden rounded-xl border-border bg-card shadow-sm">
+          <Card className="overflow-hidden rounded-xl border-border bg-card shadow-sm xl:col-span-2">
             <CardHeader className="border-b border-border/60 pb-4">
-              <CardTitle>Appointments by hour</CardTitle>
-              <CardDescription>Booking volume by local hour across the last 7 days.</CardDescription>
-              <p className="pt-1 text-xs text-muted-foreground">{hourRange}</p>
+              <CardTitle>New vs recurring customers</CardTitle>
+              <CardDescription>
+                Customers with a single appointment in the period vs those who booked more than once.
+              </CardDescription>
             </CardHeader>
-            <CardContent className="p-5">
-              <CompactHourHeatmap data={hourData} />
+            <CardContent className="space-y-4 p-5">
+              <SplitMetricRow
+                label="New"
+                value={analytics.newVsRecurringCustomers.newCustomers}
+                total={analytics.newVsRecurringCustomers.totalCustomers}
+                tone="bg-primary"
+              />
+              <SplitMetricRow
+                label="Recurring"
+                value={analytics.newVsRecurringCustomers.recurrentCustomers}
+                total={analytics.newVsRecurringCustomers.totalCustomers}
+                tone="bg-sky-500"
+              />
+              <p className="text-xs text-muted-foreground">
+                New is treated as one appointment in the selected period. It is a low-cost operational proxy, not a lifetime customer classification.
+              </p>
             </CardContent>
           </Card>
         </div>
-
-        <Card className="overflow-hidden rounded-xl border-border bg-card shadow-sm">
-          <CardHeader className="border-b border-border/60 pb-4">
-            <CardTitle>New vs recurring customers</CardTitle>
-            <CardDescription>
-              Customers with a single appointment in the period vs those who booked more than once.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4 p-5">
-            <SplitMetricRow
-              label="New"
-              value={analytics.newVsRecurringCustomers.newCustomers}
-              total={analytics.newVsRecurringCustomers.totalCustomers}
-              tone="bg-primary"
-            />
-            <SplitMetricRow
-              label="Recurring"
-              value={analytics.newVsRecurringCustomers.recurrentCustomers}
-              total={analytics.newVsRecurringCustomers.totalCustomers}
-              tone="bg-sky-500"
-            />
-            <p className="text-xs text-muted-foreground">
-              New is treated as one appointment in the selected period. It is a low-cost operational proxy, not a lifetime customer classification.
-            </p>
-          </CardContent>
-        </Card>
       </AnalyticsSection>
       ) : null}
 
@@ -758,78 +753,6 @@ function BarChart({
   );
 }
 
-function CompactHourHeatmap({
-  data,
-}: {
-  data: AnalyticsCategoryPoint[];
-}) {
-  const maxValue = Math.max(...data.map((item) => item.value), 1);
-
-  return (
-    <div className="space-y-4">
-      <div className="overflow-hidden rounded-xl border border-border/60 bg-background/60 p-4">
-        <div className="grid grid-cols-6 gap-2">
-          {data.map((item) => {
-            const intensity = maxValue > 0 ? item.value / maxValue : 0;
-            const shade =
-              intensity >= 0.8 ? "bg-sky-500" : intensity >= 0.55 ? "bg-sky-400" : intensity >= 0.3 ? "bg-sky-300" : "bg-sky-200";
-
-            return (
-              <div key={item.label} className="space-y-1">
-                <div
-                  className={`flex h-16 items-end justify-center rounded-md border border-border/60 ${item.value > 0 ? shade : "bg-muted/40"} text-[10px] font-semibold text-foreground/80`}
-                  title={`${item.label}: ${formatNumber(item.value)} appointments`}
-                >
-                  {item.value > 0 ? formatNumber(item.value) : ""}
-                </div>
-                <div className="text-center text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
-                  {item.label}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-      <div className="flex items-center justify-between text-xs text-muted-foreground">
-        <span>Low volume</span>
-        <div className="flex items-center gap-1.5">
-          <span className="size-3 rounded-sm bg-sky-200" />
-          <span className="size-3 rounded-sm bg-sky-300" />
-          <span className="size-3 rounded-sm bg-sky-400" />
-          <span className="size-3 rounded-sm bg-sky-500" />
-        </div>
-        <span>High volume</span>
-      </div>
-    </div>
-  );
-}
-
-function buildTwoHourSeries(data: AnalyticsCategoryPoint[]) {
-  if (data.length === 0) return [];
-
-  const localHours = Array.from({ length: 24 }, () => 0);
-  const referenceDate = new Date();
-
-  for (let hour = 0; hour < 24; hour += 1) {
-    referenceDate.setUTCHours(hour, 0, 0, 0);
-    const localHour = referenceDate.getHours();
-    localHours[localHour] += data[hour]?.value ?? 0;
-  }
-
-  const buckets: AnalyticsCategoryPoint[] = [];
-
-  for (let hour = 0; hour < 24; hour += 2) {
-    const first = localHours[hour] ?? 0;
-    const second = localHours[hour + 1] ?? 0;
-    buckets.push({
-      label: `${String(hour).padStart(2, "0")}-${String(hour + 1).padStart(2, "0")}`,
-      value: first + second,
-    });
-  }
-
-  return buckets;
-}
-
 function buildTrendPoints(values: number[]) {
   if (values.length === 0) return [];
 
@@ -875,22 +798,20 @@ function formatTrendRange(start?: string, end?: string) {
 
 function formatTrendDate(value?: string) {
   if (!value) return "N/A";
-  const date = new Date(`${value}T00:00:00Z`);
+  const date = new Date(`${value}T00:00:00`);
   return new Intl.DateTimeFormat("en-US", {
     month: "short",
     day: "numeric",
-    timeZone: "UTC",
   }).format(date);
 }
 
 function formatTrendDateLabel(value?: string) {
   if (!value) return "N/A";
-  const date = new Date(`${value}T00:00:00Z`);
+  const date = new Date(`${value}T00:00:00`);
   return new Intl.DateTimeFormat("en-US", {
     weekday: "short",
     month: "short",
     day: "numeric",
-    timeZone: "UTC",
   }).format(date);
 }
 
@@ -899,26 +820,54 @@ function formatTrendTick(value: number, valueFormatter?: (value: number) => stri
   return valueFormatter ? valueFormatter(normalized) : formatNumber(Math.round(normalized));
 }
 
-function formatMonthRange(data: AnalyticsCategoryPoint[]) {
-  if (data.length === 0) return "Current year to date";
-  if (data.length === 1) return `${data[0]?.label ?? "N/A"} ${new Date().getFullYear()}`;
-
-  return `${data[0]?.label ?? "N/A"} - ${data.at(-1)?.label ?? "N/A"} ${new Date().getFullYear()}`;
-}
-
 function StatBadge({
   label,
   value,
+  detail,
 }: {
   label: string;
   value: string;
+  detail?: string;
 }) {
   return (
     <div className="rounded-xl border border-border/70 bg-background/70 px-4 py-3">
       <p className="text-[11px] uppercase tracking-[0.16em] text-muted-foreground">{label}</p>
       <p className="mt-1 text-sm font-semibold text-foreground">{value}</p>
+      {detail ? <p className="mt-1 text-xs text-muted-foreground">{detail}</p> : null}
     </div>
   );
+}
+
+function findPeakTrendPoint(data: AnalyticsTrendPoint[]) {
+  if (data.length === 0) {
+    return {
+      label: "N/A",
+      value: 0,
+    };
+  }
+
+  const peakPoint = data.reduce((best, current) => (current.value >= best.value ? current : best), data[0]);
+
+  return {
+    label: formatTrendDateLabel(peakPoint.date),
+    value: peakPoint.value,
+  };
+}
+
+function findPeakCategoryPoint(data: AnalyticsCategoryPoint[]) {
+  if (data.length === 0) {
+    return {
+      label: "N/A",
+      value: 0,
+    };
+  }
+
+  const peakPoint = data.reduce((best, current) => (current.value >= best.value ? current : best), data[0]);
+
+  return {
+    label: peakPoint.label,
+    value: peakPoint.value,
+  };
 }
 
 function buildYAxisTicks(maxValue: number) {

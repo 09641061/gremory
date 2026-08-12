@@ -27,6 +27,7 @@ export class EstablishmentApiGateway implements EstablishmentRepository {
     organizationId: OrganizationId,
     name: EstablishmentName,
     photoUrl: EstablishmentPhoto,
+    timeZone: string,
   ): Promise<Establishment> {
     const authToken = await requireBusinessAccessToken(this.providedToken);
     const resource = await businessPost<EstablishmentResource>(
@@ -35,6 +36,7 @@ export class EstablishmentApiGateway implements EstablishmentRepository {
         organizationId: organizationId.value,
         name: name.value,
         photoUrl: photoUrl.value,
+        timeZone,
       },
       authToken,
     );
@@ -82,6 +84,7 @@ export class EstablishmentApiGateway implements EstablishmentRepository {
       {
         name: establishment.name.value,
         photoUrl: establishment.photoUrl.value,
+        timeZone: establishment.timeZone,
       },
       authToken
     );
@@ -111,6 +114,7 @@ function toEstablishment(resource: EstablishmentResource): Establishment {
     organizationId: createOrganizationId(resource.organizationId),
     name: createEstablishmentName(resource.name),
     photoUrl: createEstablishmentPhoto(resource.photoUrl),
+    timeZone: resource.timeZone ?? "UTC",
     active: true,
   });
 }

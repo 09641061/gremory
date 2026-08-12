@@ -3,12 +3,15 @@
 import { useMemo } from "react";
 import { Appointment } from "../../../domain/model/entities/appointment";
 import { AppointmentBlock } from "./appointment-block";
+import { getTimeZoneParts, isSameCalendarDate } from "../scheduling-timezone.utils";
 
 interface WeeklyCalendarGridProps {
   appointments: Appointment[];
   weekDays: Date[];
   hours: number[];
   isPending: boolean;
+  timeZone: string;
+  todayDate: Date;
   onAppointmentClick: (appointment: Appointment) => void;
 }
 
@@ -20,10 +23,6 @@ function formatHour(hour: number) {
   if (hour > 12) return `${hour - 12} PM`;
   if (hour === 12) return "12 PM";
   return `${hour} AM`;
-}
-
-function isToday(date: Date) {
-  return date.toDateString() === new Date().toDateString();
 }
 
 function CalendarSkeleton() {
@@ -41,19 +40,21 @@ export function WeeklyCalendarGrid({
   weekDays,
   hours,
   isPending,
+  timeZone,
+  todayDate,
   onAppointmentClick,
 }: WeeklyCalendarGridProps) {
   const appointmentsByDayHour = useMemo(() => {
     const map = new Map<string, Appointment[]>();
     appointments.forEach((appointment) => {
-      const starts = new Date(appointment.startsAt);
-      const key = `${starts.toDateString()}-${starts.getHours()}`;
+      const starts = getTimeZoneParts(new Date(appointment.startsAt), timeZone);
+      const key = `${starts.year}-${starts.month}-${starts.day}-${starts.hour}`;
       const current = map.get(key) ?? [];
       current.push(appointment);
       map.set(key, current);
     });
     return map;
-  }, [appointments]);
+  }, [appointments, timeZone]);
 
   if (isPending) {
     return <CalendarSkeleton />;
@@ -82,7 +83,9 @@ export function WeeklyCalendarGrid({
 
           <div className="flex-1 grid grid-cols-7 relative">
             {weekDays.map((day, dayIdx) => {
-              const dayAppts = appointmentsByDayHour.get(`${day.toDateString()}-${hour}`) ?? [];
+              const dayAppts = appointmentsByDayHour.get(
+                `${day.getUTCFullYear()}-${day.getUTCMonth() + 1}-${day.getUTCDate()}-${hour}`
+              ) ?? [];
               const rowHeight = Math.max(
                 BASE_ROW_HEIGHT,
                 dayAppts.length > 0 ? dayAppts.length * CARD_HEIGHT + ROW_PADDING : BASE_ROW_HEIGHT
@@ -91,7 +94,7 @@ export function WeeklyCalendarGrid({
               return (
                 <div
                   key={dayIdx}
-                  className={`relative p-1 h-full flex flex-col gap-2 ${isToday(day) ? "bg-primary/5" : ""}`}
+                  className={`relative p-1 h-full flex flex-col gap-2 ${isSameCalendarDate(day, todayDate) ? "bg-primary/5" : ""}`}
                   style={{
                     minHeight: rowHeight,
                   }}
@@ -100,6 +103,7 @@ export function WeeklyCalendarGrid({
                     <AppointmentBlock
                       key={appt.id}
                       appointment={appt}
+                      timeZone={timeZone}
                       onClick={() => onAppointmentClick(appt)}
                     />
                   ))}

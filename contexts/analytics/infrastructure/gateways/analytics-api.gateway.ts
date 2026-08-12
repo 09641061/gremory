@@ -93,7 +93,6 @@ export interface FreeAnalyticsDashboardResponse {
   cancelledAppointmentsLastSevenDays: number;
   noShowAppointmentsLastSevenDays: number;
   appointmentsTrend: AnalyticsTrendPoint[];
-  appointmentsByMonth: AnalyticsCategoryPoint[];
   appointmentsByHour: AnalyticsCategoryPoint[];
   newVsRecurringCustomers: AnalyticsCustomerMix;
   weeklyRevenueBalance: AnalyticsWeeklyRevenueBalance;
