@@ -2,6 +2,7 @@
 
 import { useState, type ReactNode } from "react";
 
+import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/contexts/shared/interfaces/components/ui/card";
 import type {
   AnalyticsCategoryPoint,
@@ -16,6 +17,8 @@ interface FreeAnalyticsPageViewProps {
 }
 
 export function FreeAnalyticsPageView({ analytics, errorMessage }: FreeAnalyticsPageViewProps) {
+  const [selectedGroup, setSelectedGroup] = useState<AnalyticsGroup>("operational");
+
   if (!analytics) {
     return <FreeAnalyticsErrorState message={errorMessage ?? "Unable to load analytics right now."} />;
   }
@@ -50,199 +53,95 @@ export function FreeAnalyticsPageView({ analytics, errorMessage }: FreeAnalytics
   };
 
   return (
-    <main className="mx-auto flex w-full max-w-[1600px] flex-col gap-6 px-4 py-8 md:px-8">
-      <div className="grid gap-6 lg:grid-cols-2">
-        <Card className="overflow-hidden rounded-xl border-border bg-card shadow-sm">
-          <CardHeader className="border-b border-border/60 pb-4">
-            <CardTitle>Appointments trend</CardTitle>
-            <CardDescription>Daily appointment volume across the last 7 days.</CardDescription>
-          </CardHeader>
-          <CardContent className="p-5">
-            <TrendChart data={analytics.appointmentsTrend} tone="primary" />
-          </CardContent>
-        </Card>
-
-        <Card className="overflow-hidden rounded-xl border-border bg-card shadow-sm">
-          <CardHeader className="border-b border-border/60 pb-4">
-            <CardTitle>Appointment status mix</CardTitle>
-            <CardDescription>Completed, cancelled, and no-show appointments in the window.</CardDescription>
-            <p className="pt-1 text-xs text-muted-foreground">{statusRange}</p>
-          </CardHeader>
-
-          <CardContent className="space-y-4 p-5">
-            <StatusBar label="Completed" value={analytics.completedAppointmentsLastSevenDays} total={statusTotal} tone="bg-emerald-500" />
-            <StatusBar label="Cancelled" value={analytics.cancelledAppointmentsLastSevenDays} total={statusTotal} tone="bg-rose-500" />
-            <StatusBar
-              label="No show"
-              value={analytics.noShowAppointmentsLastSevenDays}
-              total={statusTotal}
-              tone="bg-amber-500"
-              inactiveTone="bg-muted"
+    <main className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-8 md:px-8">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div className="space-y-2">
+          <h1 className="page-title">Analytics</h1>
+          <p className="page-description max-w-2xl">
+            View only the group you need. Each group keeps the screen lighter and easier to read.
+          </p>
+        </div>
+        <div className="rounded-full border border-border bg-card p-1 shadow-sm">
+          <div className="flex flex-wrap gap-1">
+            <GroupTab label="Operational" active={selectedGroup === "operational"} onClick={() => setSelectedGroup("operational")} />
+            <GroupTab label="Financial" active={selectedGroup === "financial"} onClick={() => setSelectedGroup("financial")} />
+            <GroupTab label="Comparative" active={selectedGroup === "comparative"} onClick={() => setSelectedGroup("comparative")} />
+            <GroupTab
+              label="Rankings"
+              active={selectedGroup === "rankings"}
+              onClick={() => setSelectedGroup("rankings")}
             />
-            <p className="text-xs text-muted-foreground">
-              {statusTotal > 0
-                ? `${statusTotal} final status events captured in the last 7 days.`
-                : "No final appointment status events captured in the last 7 days."}
-            </p>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-[1.5fr_0.9fr]">
-        <Card className="overflow-hidden rounded-xl border-border bg-card shadow-sm">
-          <CardHeader className="border-b border-border/60 pb-4">
-            <CardTitle>Weekly revenue balance</CardTitle>
-            <CardDescription>Completed revenue across the last 7 days.</CardDescription>
-            <p className="pt-1 text-xs text-muted-foreground">{weeklyRevenueRange}</p>
-          </CardHeader>
-          <CardContent className="space-y-4 p-5">
-            <div className="grid gap-3 sm:grid-cols-2">
-              <StatBadge label="Total revenue" value={formatMoney(weeklyRevenueBalance.totalRevenue)} />
-              <StatBadge
-                label="Completed appointments"
-                value={formatNumber(weeklyRevenueBalance.appointmentsCount)}
-              />
-            </div>
-            <TrendChart data={weeklyRevenueBalance.dailyTrend} tone="accent" valueFormatter={formatMoney} unitLabel="revenue" />
-          </CardContent>
-        </Card>
-
-        <div className="grid gap-6">
+      {selectedGroup === "operational" ? (
+      <AnalyticsSection
+        id="operational"
+        title="Operational"
+        description="Activity, timing and customer mix."
+      >
+        <div className="grid gap-6 lg:grid-cols-2">
           <Card className="overflow-hidden rounded-xl border-border bg-card shadow-sm">
             <CardHeader className="border-b border-border/60 pb-4">
-              <CardTitle>Average ticket</CardTitle>
-              <CardDescription>Revenue per completed appointment in the current period.</CardDescription>
-              <p className="pt-1 text-xs text-muted-foreground">{weeklyRevenueRange}</p>
+              <CardTitle>Appointments trend</CardTitle>
+              <CardDescription>Daily appointment volume across the last 7 days.</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4 p-5">
-              <div className="rounded-2xl border border-border/70 bg-primary/5 p-4">
-                <p className="text-3xl font-semibold tracking-tight text-foreground">
-                  {formatMoney(averageTicket.currentValue)}
-                </p>
-                <p className="text-sm text-muted-foreground">vs previous period</p>
-                <p className={`pt-2 text-sm font-semibold ${averageTicket.delta >= 0 ? "text-emerald-600" : "text-rose-600"}`}>
-                  {averageTicket.delta >= 0 ? "+" : "-"}
-                  {formatMoney(Math.abs(averageTicket.delta))}
-                </p>
-              </div>
-              <div className="grid gap-3 sm:grid-cols-2">
-                <StatBadge label="Current" value={formatMoney(averageTicket.currentValue)} />
-                <StatBadge label="Previous" value={formatMoney(averageTicket.lastPeriodValue)} />
-              </div>
+            <CardContent className="p-5">
+              <TrendChart data={analytics.appointmentsTrend} tone="primary" />
             </CardContent>
           </Card>
 
           <Card className="overflow-hidden rounded-xl border-border bg-card shadow-sm">
             <CardHeader className="border-b border-border/60 pb-4">
-              <CardTitle>Lost revenue</CardTitle>
-              <CardDescription>Estimated revenue lost to cancellations and no-shows.</CardDescription>
+              <CardTitle>Appointment status mix</CardTitle>
+              <CardDescription>Completed, cancelled, and no-show appointments in the window.</CardDescription>
+              <p className="pt-1 text-xs text-muted-foreground">{statusRange}</p>
             </CardHeader>
+
             <CardContent className="space-y-4 p-5">
-              <SplitMetricRow
-                label="Cancelled"
-                value={lostRevenue.cancelledRevenue}
-                total={lostRevenue.totalLostRevenue}
-                tone="bg-rose-500"
-                valueFormatter={formatMoney}
-              />
-              <SplitMetricRow
-                label="No-show"
-                value={lostRevenue.noShowRevenue}
-                total={lostRevenue.totalLostRevenue}
+              <StatusBar label="Completed" value={analytics.completedAppointmentsLastSevenDays} total={statusTotal} tone="bg-emerald-500" />
+              <StatusBar label="Cancelled" value={analytics.cancelledAppointmentsLastSevenDays} total={statusTotal} tone="bg-rose-500" />
+              <StatusBar
+                label="No show"
+                value={analytics.noShowAppointmentsLastSevenDays}
+                total={statusTotal}
                 tone="bg-amber-500"
                 inactiveTone="bg-muted"
-                valueFormatter={formatMoney}
               />
               <p className="text-xs text-muted-foreground">
-                {lostRevenue.totalLostRevenue > 0
-                  ? `Total lost revenue: ${formatMoney(lostRevenue.totalLostRevenue)}.`
-                  : "No lost revenue recorded in the selected window."}
+                {statusTotal > 0
+                  ? `${statusTotal} final status events captured in the last 7 days.`
+                  : "No final appointment status events captured in the last 7 days."}
               </p>
             </CardContent>
           </Card>
         </div>
-      </div>
 
-      <div className="grid gap-6 xl:grid-cols-2">
-        <Card className="overflow-hidden rounded-xl border-border bg-card shadow-sm">
-          <CardHeader className="border-b border-border/60 pb-4">
-            <CardTitle>Appointments by month</CardTitle>
-            <CardDescription>Monthly appointment volume in the current year.</CardDescription>
-            <p className="pt-1 text-xs text-muted-foreground">{monthRange}</p>
-          </CardHeader>
-          <CardContent className="p-5">
-            <BarChart data={monthData} tone="primary" />
-          </CardContent>
-        </Card>
+        <div className="grid gap-6 xl:grid-cols-2">
+          <Card className="overflow-hidden rounded-xl border-border bg-card shadow-sm">
+            <CardHeader className="border-b border-border/60 pb-4">
+              <CardTitle>Appointments by month</CardTitle>
+              <CardDescription>Monthly appointment volume in the current year.</CardDescription>
+              <p className="pt-1 text-xs text-muted-foreground">{monthRange}</p>
+            </CardHeader>
+            <CardContent className="p-5">
+              <BarChart data={monthData} tone="primary" />
+            </CardContent>
+          </Card>
 
-        <Card className="overflow-hidden rounded-xl border-border bg-card shadow-sm">
-          <CardHeader className="border-b border-border/60 pb-4">
-            <CardTitle>Appointments by hour</CardTitle>
-            <CardDescription>Booking volume by local hour across the last 7 days.</CardDescription>
-            <p className="pt-1 text-xs text-muted-foreground">{hourRange}</p>
-          </CardHeader>
-          <CardContent className="p-5">
-            <CompactHourHeatmap data={hourData} />
-          </CardContent>
-        </Card>
-      </div>
+          <Card className="overflow-hidden rounded-xl border-border bg-card shadow-sm">
+            <CardHeader className="border-b border-border/60 pb-4">
+              <CardTitle>Appointments by hour</CardTitle>
+              <CardDescription>Booking volume by local hour across the last 7 days.</CardDescription>
+              <p className="pt-1 text-xs text-muted-foreground">{hourRange}</p>
+            </CardHeader>
+            <CardContent className="p-5">
+              <CompactHourHeatmap data={hourData} />
+            </CardContent>
+          </Card>
+        </div>
 
-      <div className="grid gap-6 xl:grid-cols-2">
-        <Card className="overflow-hidden rounded-xl border-border bg-card shadow-sm">
-          <CardHeader className="border-b border-border/60 pb-4">
-            <CardTitle>Completed vs cancelled</CardTitle>
-            <CardDescription>Trend comparison for the two final outcomes that matter most.</CardDescription>
-          </CardHeader>
-          <CardContent className="p-5">
-            <DualTrendChart data={analytics.completionVsCancellationTrend} />
-          </CardContent>
-        </Card>
-
-      </div>
-
-      <div className="grid gap-6 xl:grid-cols-2">
-        <Card className="overflow-hidden rounded-xl border-border bg-card shadow-sm">
-          <CardHeader className="border-b border-border/60 pb-4">
-            <CardTitle>Top services by revenue</CardTitle>
-            <CardDescription>Services that generated the most completed revenue in the period.</CardDescription>
-          </CardHeader>
-          <CardContent className="p-5">
-            <BarChart
-              data={topServicesByRevenue.map((item) => ({
-                label: item.serviceName,
-                value: item.revenue,
-              }))}
-              tone="accent"
-              valueFormatter={formatMoney}
-            />
-          </CardContent>
-        </Card>
-
-        <Card className="overflow-hidden rounded-xl border-border bg-card shadow-sm">
-          <CardHeader className="border-b border-border/60 pb-4">
-            <CardTitle>Top customers by spend</CardTitle>
-            <CardDescription>Customers with the highest completed spend in the period.</CardDescription>
-          </CardHeader>
-          <CardContent className="p-5">
-            <RankingList
-              items={topCustomersBySpend}
-              emptyLabel="No spend rankings available."
-              renderItem={(item) => (
-                <RankingRow
-                  rank={item.rank}
-                  label={item.customerName}
-                  value={item.totalSpent}
-                  meta={`${item.appointmentsCount} appointments - avg ${formatMoney(item.averageTicket)}`}
-                  valueFormatter={formatMoney}
-                  valueLabel="Spent"
-                />
-              )}
-            />
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="grid gap-6 xl:grid-cols-2">
         <Card className="overflow-hidden rounded-xl border-border bg-card shadow-sm">
           <CardHeader className="border-b border-border/60 pb-4">
             <CardTitle>New vs recurring customers</CardTitle>
@@ -268,100 +167,298 @@ export function FreeAnalyticsPageView({ analytics, errorMessage }: FreeAnalytics
             </p>
           </CardContent>
         </Card>
+      </AnalyticsSection>
+      ) : null}
 
+      {selectedGroup === "financial" ? (
+      <AnalyticsSection
+        id="financial"
+        title="Financial"
+        description="Revenue, ticket size and revenue lost."
+      >
+        <div className="grid gap-6 xl:grid-cols-[1.5fr_0.9fr]">
+          <Card className="overflow-hidden rounded-xl border-border bg-card shadow-sm">
+            <CardHeader className="border-b border-border/60 pb-4">
+              <CardTitle>Weekly revenue balance</CardTitle>
+              <CardDescription>Completed revenue across the last 7 days.</CardDescription>
+              <p className="pt-1 text-xs text-muted-foreground">{weeklyRevenueRange}</p>
+            </CardHeader>
+            <CardContent className="space-y-4 p-5">
+              <div className="grid gap-3 sm:grid-cols-2">
+                <StatBadge label="Total revenue" value={formatMoney(weeklyRevenueBalance.totalRevenue)} />
+                <StatBadge
+                  label="Completed appointments"
+                  value={formatNumber(weeklyRevenueBalance.appointmentsCount)}
+                />
+              </div>
+              <TrendChart data={weeklyRevenueBalance.dailyTrend} tone="accent" valueFormatter={formatMoney} unitLabel="revenue" />
+            </CardContent>
+          </Card>
+
+          <div className="grid gap-6">
+            <Card className="overflow-hidden rounded-xl border-border bg-card shadow-sm">
+              <CardHeader className="border-b border-border/60 pb-4">
+                <CardTitle>Average ticket</CardTitle>
+                <CardDescription>Revenue per completed appointment in the current period.</CardDescription>
+                <p className="pt-1 text-xs text-muted-foreground">{weeklyRevenueRange}</p>
+              </CardHeader>
+              <CardContent className="space-y-4 p-5">
+                <div className="rounded-2xl border border-border/70 bg-primary/5 p-4">
+                  <p className="text-3xl font-semibold tracking-tight text-foreground">
+                    {formatMoney(averageTicket.currentValue)}
+                  </p>
+                  <p className="text-sm text-muted-foreground">vs previous period</p>
+                  <p className={`pt-2 text-sm font-semibold ${averageTicket.delta >= 0 ? "text-emerald-600" : "text-rose-600"}`}>
+                    {averageTicket.delta >= 0 ? "+" : "-"}
+                    {formatMoney(Math.abs(averageTicket.delta))}
+                  </p>
+                </div>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <StatBadge label="Current" value={formatMoney(averageTicket.currentValue)} />
+                  <StatBadge label="Previous" value={formatMoney(averageTicket.lastPeriodValue)} />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="overflow-hidden rounded-xl border-border bg-card shadow-sm">
+              <CardHeader className="border-b border-border/60 pb-4">
+                <CardTitle>Lost revenue</CardTitle>
+                <CardDescription>Estimated revenue lost to cancellations and no-shows.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4 p-5">
+                <SplitMetricRow
+                  label="Cancelled"
+                  value={lostRevenue.cancelledRevenue}
+                  total={lostRevenue.totalLostRevenue}
+                  tone="bg-rose-500"
+                  valueFormatter={formatMoney}
+                />
+                <SplitMetricRow
+                  label="No-show"
+                  value={lostRevenue.noShowRevenue}
+                  total={lostRevenue.totalLostRevenue}
+                  tone="bg-amber-500"
+                  inactiveTone="bg-muted"
+                  valueFormatter={formatMoney}
+                />
+                <p className="text-xs text-muted-foreground">
+                  {lostRevenue.totalLostRevenue > 0
+                    ? `Total lost revenue: ${formatMoney(lostRevenue.totalLostRevenue)}.`
+                    : "No lost revenue recorded in the selected window."}
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+
+        <div className="grid gap-6 xl:grid-cols-2">
+          <Card className="overflow-hidden rounded-xl border-border bg-card shadow-sm">
+            <CardHeader className="border-b border-border/60 pb-4">
+              <CardTitle>Top services by revenue</CardTitle>
+              <CardDescription>Services that generated the most completed revenue in the period.</CardDescription>
+            </CardHeader>
+            <CardContent className="p-5">
+              <BarChart
+                data={topServicesByRevenue.map((item) => ({
+                  label: item.serviceName,
+                  value: item.revenue,
+                }))}
+                tone="accent"
+                valueFormatter={formatMoney}
+              />
+            </CardContent>
+          </Card>
+
+          <Card className="overflow-hidden rounded-xl border-border bg-card shadow-sm">
+            <CardHeader className="border-b border-border/60 pb-4">
+              <CardTitle>Top customers by spend</CardTitle>
+              <CardDescription>Customers with the highest completed spend in the period.</CardDescription>
+            </CardHeader>
+            <CardContent className="p-5">
+              <RankingList
+                items={topCustomersBySpend}
+                emptyLabel="No spend rankings available."
+                renderItem={(item) => (
+                  <RankingRow
+                    rank={item.rank}
+                    label={item.customerName}
+                    value={item.totalSpent}
+                    meta={`${item.appointmentsCount} appointments - avg ${formatMoney(item.averageTicket)}`}
+                    valueFormatter={formatMoney}
+                    valueLabel="Spent"
+                  />
+                )}
+              />
+            </CardContent>
+          </Card>
+        </div>
+      </AnalyticsSection>
+      ) : null}
+
+      {selectedGroup === "comparative" ? (
+      <AnalyticsSection
+        id="comparative"
+        title="Comparative"
+        description="Outcome trends that compare one result against another."
+      >
         <Card className="overflow-hidden rounded-xl border-border bg-card shadow-sm">
           <CardHeader className="border-b border-border/60 pb-4">
-            <CardTitle>Top services</CardTitle>
-            <CardDescription>Most booked services in the period.</CardDescription>
+            <CardTitle>Completed vs cancelled</CardTitle>
+            <CardDescription>Trend comparison for the two final outcomes that matter most.</CardDescription>
           </CardHeader>
           <CardContent className="p-5">
-            <RankingList
-              items={analytics.topServices}
-              emptyLabel="No service rankings available."
-              renderItem={(item) => (
-                <RankingRow
-                  rank={item.rank}
-                  label={item.serviceName}
-                  value={item.appointmentsCount}
-                  meta={`${item.completedAppointmentsCount} completed / ${item.cancelledAppointmentsCount} cancelled`}
-                />
-              )}
-            />
+            <DualTrendChart data={analytics.completionVsCancellationTrend} />
           </CardContent>
         </Card>
-      </div>
+      </AnalyticsSection>
+      ) : null}
 
-      <div className="grid gap-6 xl:grid-cols-2">
-        <Card className="overflow-hidden rounded-xl border-border bg-card shadow-sm">
-          <CardHeader className="border-b border-border/60 pb-4">
-            <CardTitle>Top customers</CardTitle>
-            <CardDescription>Customers with the most appointments in the period.</CardDescription>
-          </CardHeader>
-          <CardContent className="p-5">
-            <RankingList
-              items={analytics.topCustomers}
-              emptyLabel="No customer rankings available."
-              renderItem={(item) => (
-                <RankingRow
-                  rank={item.rank}
-                  label={item.customerName}
-                  value={item.appointmentsCount}
-                  meta={`${item.completedAppointmentsCount} completed / ${item.cancelledAppointmentsCount} cancelled`}
-                />
-              )}
-            />
-          </CardContent>
-        </Card>
+      {selectedGroup === "rankings" ? (
+      <AnalyticsSection
+        id="rankings"
+        title="Rankings and friction"
+        description="Who leads, and where the operational friction appears."
+      >
+        <div className="grid gap-6 xl:grid-cols-2">
+          <Card className="overflow-hidden rounded-xl border-border bg-card shadow-sm">
+            <CardHeader className="border-b border-border/60 pb-4">
+              <CardTitle>Top services</CardTitle>
+              <CardDescription>Most booked services in the period.</CardDescription>
+            </CardHeader>
+            <CardContent className="p-5">
+              <RankingList
+                items={analytics.topServices}
+                emptyLabel="No service rankings available."
+                renderItem={(item) => (
+                  <RankingRow
+                    rank={item.rank}
+                    label={item.serviceName}
+                    value={item.appointmentsCount}
+                    meta={`${item.completedAppointmentsCount} completed / ${item.cancelledAppointmentsCount} cancelled`}
+                  />
+                )}
+              />
+            </CardContent>
+          </Card>
 
-        <Card className="overflow-hidden rounded-xl border-border bg-card shadow-sm">
-          <CardHeader className="border-b border-border/60 pb-4">
-            <CardTitle>Cancellation rate by service</CardTitle>
-            <CardDescription>Services with the highest share of cancelled bookings.</CardDescription>
-          </CardHeader>
-          <CardContent className="p-5">
-            <RankingList
-              items={analytics.cancellationRateByService}
-              emptyLabel="No cancellation rate rankings available."
-              renderItem={(item) => (
-                <RateRankingRow
-                  rank={item.rank}
-                  label={item.serviceName}
-                  rate={item.rate}
-                  affectedCount={item.affectedCount}
-                  appointmentsCount={item.appointmentsCount}
-                  suffix="cancelled"
-                />
-              )}
-            />
-          </CardContent>
-        </Card>
-      </div>
+          <Card className="overflow-hidden rounded-xl border-border bg-card shadow-sm">
+            <CardHeader className="border-b border-border/60 pb-4">
+              <CardTitle>Top customers</CardTitle>
+              <CardDescription>Customers with the most appointments in the period.</CardDescription>
+            </CardHeader>
+            <CardContent className="p-5">
+              <RankingList
+                items={analytics.topCustomers}
+                emptyLabel="No customer rankings available."
+                renderItem={(item) => (
+                  <RankingRow
+                    rank={item.rank}
+                    label={item.customerName}
+                    value={item.appointmentsCount}
+                    meta={`${item.completedAppointmentsCount} completed / ${item.cancelledAppointmentsCount} cancelled`}
+                  />
+                )}
+              />
+            </CardContent>
+          </Card>
+        </div>
 
-      <div className="grid gap-6 xl:grid-cols-2">
-        <Card className="overflow-hidden rounded-xl border-border bg-card shadow-sm">
-          <CardHeader className="border-b border-border/60 pb-4">
-            <CardTitle>No-show rate by service</CardTitle>
-            <CardDescription>Services with the highest share of no-shows.</CardDescription>
-          </CardHeader>
-          <CardContent className="p-5">
-            <RankingList
-              items={analytics.noShowRateByService}
-              emptyLabel="No no-show rate rankings available."
-              renderItem={(item) => (
-                <RateRankingRow
-                  rank={item.rank}
-                  label={item.serviceName}
-                  rate={item.rate}
-                  affectedCount={item.affectedCount}
-                  appointmentsCount={item.appointmentsCount}
-                  suffix="no shows"
-                />
-              )}
-            />
-          </CardContent>
-        </Card>
-      </div>
+        <div className="grid gap-6 xl:grid-cols-2">
+          <Card className="overflow-hidden rounded-xl border-border bg-card shadow-sm">
+            <CardHeader className="border-b border-border/60 pb-4">
+              <CardTitle>Cancellation rate by service</CardTitle>
+              <CardDescription>Services with the highest share of cancelled bookings.</CardDescription>
+            </CardHeader>
+            <CardContent className="p-5">
+              <RankingList
+                items={analytics.cancellationRateByService}
+                emptyLabel="No cancellation rate rankings available."
+                renderItem={(item) => (
+                  <RateRankingRow
+                    rank={item.rank}
+                    label={item.serviceName}
+                    rate={item.rate}
+                    affectedCount={item.affectedCount}
+                    appointmentsCount={item.appointmentsCount}
+                    suffix="cancelled"
+                  />
+                )}
+              />
+            </CardContent>
+          </Card>
+
+          <Card className="overflow-hidden rounded-xl border-border bg-card shadow-sm">
+            <CardHeader className="border-b border-border/60 pb-4">
+              <CardTitle>No-show rate by service</CardTitle>
+              <CardDescription>Services with the highest share of no-shows.</CardDescription>
+            </CardHeader>
+            <CardContent className="p-5">
+              <RankingList
+                items={analytics.noShowRateByService}
+                emptyLabel="No no-show rate rankings available."
+                renderItem={(item) => (
+                  <RateRankingRow
+                    rank={item.rank}
+                    label={item.serviceName}
+                    rate={item.rate}
+                    affectedCount={item.affectedCount}
+                    appointmentsCount={item.appointmentsCount}
+                    suffix="no shows"
+                  />
+                )}
+              />
+            </CardContent>
+          </Card>
+        </div>
+      </AnalyticsSection>
+      ) : null}
     </main>
+  );
+}
+
+function AnalyticsSection({
+  id,
+  title,
+  description,
+  children,
+}: {
+  id: string;
+  title: string;
+  description: string;
+  children: ReactNode;
+}) {
+  return (
+    <section id={id} className="space-y-4 scroll-mt-8">
+      <div className="flex flex-col gap-1 px-1">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">{title}</p>
+        <p className="text-sm text-muted-foreground">{description}</p>
+      </div>
+      {children}
+    </section>
+  );
+}
+
+type AnalyticsGroup = "operational" | "financial" | "comparative" | "rankings";
+
+function GroupTab({
+  active,
+  label,
+  onClick,
+}: {
+  active: boolean;
+  label: string;
+  onClick: () => void;
+}) {
+  return (
+    <Button
+      type="button"
+      size="sm"
+      variant={active ? "default" : "outline"}
+      onClick={onClick}
+      className="rounded-full"
+    >
+      {label}
+    </Button>
   );
 }
 

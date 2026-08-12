@@ -29,7 +29,6 @@ El frontend debe esperar estos bloques en la misma respuesta:
 - `topCustomersBySpend`
 - `lostRevenue`
 - `averageTicket`
-- `leadTimeTrend`
 - `newVsRecurringCustomers`
 - `topCustomers`
 - `topServices`
@@ -104,9 +103,6 @@ El frontend debe esperar estos bloques en la misma respuesta:
     "lastPeriodValue": 51.4,
     "delta": 3.62
   },
-  "leadTimeTrend": [
-    { "date": "2026-08-04", "value": 2.5 }
-  ],
   "newVsRecurringCustomers": {
     "newCustomers": 18,
     "recurrentCustomers": 12,
@@ -135,7 +131,6 @@ El frontend debe esperar estos bloques en la misma respuesta:
 | `topCustomersBySpend` | `array` | Top 5 clientes por gasto total |
 | `lostRevenue` | `object` | Ingreso estimado perdido por cancelaciones y no-shows |
 | `averageTicket` | `object` | Ticket promedio del periodo actual y comparacion contra el periodo anterior |
-| `leadTimeTrend` | `array<{date,value}>` | Serie diaria del tiempo de anticipacion promedio |
 | `newVsRecurringCustomers` | `object` | Segmentacion operacional de clientes |
 | `topCustomers` | `array` | Top 5 clientes por cantidad de citas |
 | `topServices` | `array` | Top 5 servicios por cantidad de citas |
@@ -180,3 +175,4 @@ Ademas, para resolver la organizacion del usuario autenticado, el backend necesi
 - No es necesario inferir rankings ni tasas en cliente
 - El bloque monetario usa el precio vigente del servicio asociado para estimar ingresos, porque las citas no almacenan historico de precio
 - Si un cliente necesita un subconjunto, puede ignorar los campos que no use sin romper compatibilidad
+- En pantalla, la vista se organiza por grupos para facilitar la busqueda: operacional, financiero, comparativo y rankings/friccion
