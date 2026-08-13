@@ -1,29 +1,27 @@
 import "server-only";
 
-import { cookies } from "next/headers";
+import type { FreeAnalyticsQueryService } from "@/contexts/analytics/application/services/free-analytics-query.service";
+import type {
+  FreeAnalyticsDashboard,
+} from "@/contexts/analytics/domain/model/free-analytics-dashboard";
+import type { GetFreeAnalyticsQuery } from "@/contexts/analytics/domain/model/queries/get-free-analytics.query";
+import type { FreeAnalyticsRepository } from "@/contexts/analytics/domain/services/free-analytics.repository";
+import { AnalyticsApiGateway } from "@/contexts/analytics/infrastructure/gateways/analytics-api.gateway";
 
-import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-session-cookie";
-import {
-  AnalyticsApiGateway,
-  type FreeAnalyticsDashboardResponse,
-} from "@/contexts/analytics/infrastructure/gateways/analytics-api.gateway";
+export class FreeAnalyticsQueryServiceImpl implements FreeAnalyticsQueryService {
+  constructor(private readonly repository: FreeAnalyticsRepository) {}
 
-export class FreeAnalyticsQueryService {
-  constructor(private readonly gateway = new AnalyticsApiGateway()) {}
-
-  async handle(): Promise<FreeAnalyticsDashboardResponse> {
-    const accessToken = (await cookies()).get(iamSessionCookies.accessToken)?.value;
-
-    if (!accessToken) {
+  async handle(query: GetFreeAnalyticsQuery): Promise<FreeAnalyticsDashboard> {
+    if (!query.accessToken) {
       const error = new Error("Authentication required");
       (error as Error & { status?: number }).status = 401;
       throw error;
     }
 
-    return this.gateway.getFreeDashboard(accessToken);
+    return this.repository.getFreeDashboard(query.accessToken);
   }
 }
 
 export function createFreeAnalyticsQueryService() {
-  return new FreeAnalyticsQueryService();
+  return new FreeAnalyticsQueryServiceImpl(new AnalyticsApiGateway());
 }

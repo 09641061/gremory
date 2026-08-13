@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import type { GetFreeAnalyticsQuery } from "@/contexts/analytics/domain/model/queries/get-free-analytics.query";
 import { createFreeAnalyticsQueryService } from "@/contexts/analytics/application/internal/queryservices/free-analytics-query.service";
 
 function routeErrorResponse(error: unknown): Response {
@@ -15,12 +16,11 @@ function routeErrorResponse(error: unknown): Response {
   return NextResponse.json({ message: "Unexpected error" }, { status: 500 });
 }
 
-export async function freeAnalyticsRoute() {
+export async function freeAnalyticsRoute(query: GetFreeAnalyticsQuery) {
   try {
-    const data = await createFreeAnalyticsQueryService().handle();
+    const data = await createFreeAnalyticsQueryService().handle(query);
     return NextResponse.json(data);
   } catch (error) {
     return routeErrorResponse(error);
   }
 }
-

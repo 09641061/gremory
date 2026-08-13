@@ -52,7 +52,7 @@ describe("freeAnalyticsRoute", () => {
   });
 
   it("returns the analytics snapshot from the query service", async () => {
-    const response = await freeAnalyticsRoute();
+    const response = await freeAnalyticsRoute({ accessToken: "access-token" });
 
     expect(response.status).toBe(200);
     expect(await response.json()).toMatchObject({
@@ -62,5 +62,6 @@ describe("freeAnalyticsRoute", () => {
       },
     });
     expect(mocks.handle).toHaveBeenCalledTimes(1);
+    expect(mocks.handle).toHaveBeenCalledWith({ accessToken: "access-token" });
   });
 });

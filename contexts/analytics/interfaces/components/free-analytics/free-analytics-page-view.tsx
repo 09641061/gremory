@@ -8,11 +8,11 @@ import { Tabs, TabsList, TabsTrigger } from "@/contexts/shared/interfaces/compon
 import type {
   AnalyticsCategoryPoint,
   AnalyticsTrendPoint,
-  FreeAnalyticsDashboardResponse,
-} from "@/contexts/analytics/infrastructure/gateways/analytics-api.gateway";
+  FreeAnalyticsDashboard,
+} from "@/contexts/analytics/interfaces/view-models/free-analytics.view-model";
 
 interface FreeAnalyticsPageViewProps {
-  analytics?: FreeAnalyticsDashboardResponse | null;
+  analytics?: FreeAnalyticsDashboard | null;
   errorMessage?: string | null;
 }
 

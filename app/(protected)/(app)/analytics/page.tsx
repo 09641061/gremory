@@ -1,12 +1,17 @@
 import { createFreeAnalyticsQueryService } from "@/contexts/analytics/application/internal/queryservices/free-analytics-query.service";
 import { FreeAnalyticsPageView } from "@/contexts/analytics/interfaces/components/free-analytics/free-analytics-page-view";
+import type { FreeAnalyticsDashboard } from "@/contexts/analytics/interfaces/view-models/free-analytics.view-model";
+import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-session-cookie";
+import { cookies } from "next/headers";
 
 export default async function AnalyticsPage() {
-  let analytics;
+  let analytics: FreeAnalyticsDashboard | null = null;
   let errorMessage = "Unable to load analytics.";
+  const cookieStore = await cookies();
+  const accessToken = cookieStore.get(iamSessionCookies.accessToken)?.value ?? null;
 
   try {
-    analytics = await createFreeAnalyticsQueryService().handle();
+    analytics = await createFreeAnalyticsQueryService().handle({ accessToken });
   } catch (error) {
     errorMessage = error instanceof Error ? error.message : errorMessage;
   }
