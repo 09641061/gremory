@@ -67,24 +67,12 @@ export class CatalogAccessPolicyService {
 
         return {
           canReadCatalog: hasReadCatalog,
-          canCreateCategory:
-            hasManage ||
-            hasAnyPermission(perms, ["catalog:categories:create", "catalog:categories:manage"]),
-          canUpdateCategory:
-            hasManage ||
-            hasAnyPermission(perms, ["catalog:categories:update", "catalog:categories:manage"]),
-          canDeleteCategory:
-            hasManage ||
-            hasAnyPermission(perms, ["catalog:categories:delete", "catalog:categories:manage"]),
-          canCreateService:
-            hasManage ||
-            hasAnyPermission(perms, ["catalog:services:create", "catalog:services:manage"]),
-          canUpdateService:
-            hasManage ||
-            hasAnyPermission(perms, ["catalog:services:update", "catalog:services:manage"]),
-          canDeleteService:
-            hasManage ||
-            hasAnyPermission(perms, ["catalog:services:delete", "catalog:services:manage"]),
+          canCreateCategory: hasManage,
+          canUpdateCategory: hasManage,
+          canDeleteCategory: hasManage,
+          canCreateService: hasManage,
+          canUpdateService: hasManage,
+          canDeleteService: hasManage,
         };
       } catch {
         return {
@@ -121,8 +109,7 @@ export function createCatalogAccessPolicyService() {
 function hasCatalogReadPermission(permissions: ReadonlyArray<string>): boolean {
   return permissions.some(
     (permission) =>
-    permission === "catalog:manage" ||
-      permission === "catalog:services:read" ||
-      permission === "catalog:categories:read",
+      permission === "catalog:manage" ||
+      permission === "catalog:read",
   );
 }

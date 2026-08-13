@@ -26,39 +26,35 @@ export function resolveEmployeeEntryPath(
 
 function hasSchedulingAccess(establishment: EntryRouteEstablishment) {
   return hasAnyPermission(establishment.effectivePermissions, [
-    "scheduling:appointments:manage",
-    "scheduling:appointments:read",
+    "scheduling:manage",
+    "scheduling:read",
   ]) || hasReadRole(establishment.roles);
 }
 
 function hasCatalogAccess(establishment: EntryRouteEstablishment) {
   return hasAnyPermission(establishment.effectivePermissions, [
     "catalog:manage",
-    "catalog:categories:read",
-    "catalog:services:read",
+    "catalog:read",
   ]);
 }
 
 function hasCrmAccess(establishment: EntryRouteEstablishment) {
   return hasAnyPermission(establishment.effectivePermissions, [
-    "crm:customers:manage",
-    "crm:customers:read",
+    "crm:manage",
+    "crm:read",
   ]) || hasReadRole(establishment.roles);
 }
 
 function hasTeamAccess(establishment: EntryRouteEstablishment) {
   return hasAnyPermission(establishment.effectivePermissions, [
-    "workforce:members:manage",
-    "workforce:members:read",
-    "workforce:invitations:manage",
-    "workforce:invitations:read",
+    "workforce:manage",
+    "workforce:read",
   ]) || hasReadRole(establishment.roles);
 }
 
 function hasOrganizationAccess(establishment: EntryRouteEstablishment) {
   return hasAnyPermission(establishment.effectivePermissions, [
-    "business:organizations:manage",
-    "business:organizations:read",
     "business:manage",
+    "business:read",
   ]) || hasReadRole(establishment.roles);
 }

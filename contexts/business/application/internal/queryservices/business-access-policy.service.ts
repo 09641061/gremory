@@ -101,8 +101,7 @@ export class BusinessAccessPolicyService {
             (item) =>
               item.organizationId === activeOrgId &&
               hasAnyPermission(item.effectivePermissions, [
-                "business:establishments:read",
-                "business:establishments:manage",
+                "business:read",
                 "business:manage",
               ]),
           );
@@ -112,7 +111,6 @@ export class BusinessAccessPolicyService {
           (item) =>
             item.organizationId === activeOrgId &&
             hasAnyPermission(item.effectivePermissions, [
-              "business:establishments:manage",
               "business:manage",
             ]),
         );
@@ -124,8 +122,6 @@ export class BusinessAccessPolicyService {
 
         const allowedEstablishments = filteredEsts.map((item) => {
           const canUpdate = hasAnyPermission(item.effectivePermissions, [
-            "business:establishments:manage",
-            "business:establishments:update",
             "business:manage",
           ]);
           canUpdateMap[item.establishmentId] = canUpdate;
@@ -208,8 +204,7 @@ export class BusinessAccessPolicyService {
               (item) =>
                 item.organizationId === activeOrgId &&
                 hasAnyPermission(item.effectivePermissions, [
-                  "business:organizations:read",
-                  "business:organizations:manage",
+                  "business:read",
                   "business:manage",
                 ]),
             );
@@ -223,8 +218,6 @@ export class BusinessAccessPolicyService {
               (item) =>
                 item.organizationId === activeOrgId &&
                 hasAnyPermission(item.effectivePermissions, [
-                  "business:organizations:update",
-                  "business:organizations:manage",
                   "business:manage",
                 ]),
             );

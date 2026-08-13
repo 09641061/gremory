@@ -51,22 +51,16 @@ export class CrmAccessPolicyService {
         }
 
         const perms = estAccess.effectivePermissions;
-        const hasManage = hasAnyPermission(perms, ["crm:customers:manage"]);
+        const hasManage = hasAnyPermission(perms, ["crm:manage"]);
 
         return {
           canReadCustomers:
             hasManage ||
             hasReadRole(estAccess.roles) ||
-            hasAnyPermission(perms, ["crm:customers:read"]),
-          canCreateCustomer:
-            hasManage ||
-            hasAnyPermission(perms, ["crm:customers:create"]),
-          canUpdateCustomer:
-            hasManage ||
-            hasAnyPermission(perms, ["crm:customers:update"]),
-          canDeleteCustomer:
-            hasManage ||
-            hasAnyPermission(perms, ["crm:customers:delete"]),
+            hasAnyPermission(perms, ["crm:read"]),
+          canCreateCustomer: hasManage,
+          canUpdateCustomer: hasManage,
+          canDeleteCustomer: hasManage,
         };
       } catch {
         return {

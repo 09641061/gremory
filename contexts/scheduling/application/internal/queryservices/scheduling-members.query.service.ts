@@ -31,8 +31,7 @@ function canReadSchedulingAppointments(
 ): boolean {
   return roles?.some((role) =>
     role.permissions.some((permission) =>
-      permission === "scheduling:appointments:read" ||
-      permission === "scheduling:appointments:manage" ||
+      permission === "scheduling:read" ||
       permission === "scheduling:manage",
     ),
   ) ?? false;

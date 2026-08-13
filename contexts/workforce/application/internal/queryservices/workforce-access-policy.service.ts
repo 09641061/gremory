@@ -67,38 +67,23 @@ export class WorkforceAccessPolicyService {
         }
 
         const perms = estAccess.effectivePermissions;
-        const hasManageRoles = hasAnyPermission(perms, ["workforce:roles:manage"]);
-        const hasManageInvitations = hasAnyPermission(perms, ["workforce:invitations:manage"]);
-        const hasManageMembers = hasAnyPermission(perms, ["workforce:members:manage"]);
+        const hasManage = hasAnyPermission(perms, ["workforce:manage"]);
 
         return {
           canReadTeam:
-            hasManageMembers ||
-            hasManageInvitations ||
+            hasManage ||
             hasReadRole(estAccess.roles) ||
-            hasAnyPermission(perms, ["workforce:members:read", "workforce:invitations:read"]),
-          canDeleteMember:
-            hasManageMembers ||
-            hasAnyPermission(perms, ["workforce:members:delete"]),
-          canCreateInvitation:
-            hasManageInvitations ||
-            hasAnyPermission(perms, ["workforce:invitations:create"]),
-          canDeleteInvitation:
-            hasManageInvitations ||
-            hasAnyPermission(perms, ["workforce:invitations:delete"]),
+            hasAnyPermission(perms, ["workforce:read"]),
+          canDeleteMember: hasManage,
+          canCreateInvitation: hasManage,
+          canDeleteInvitation: hasManage,
           canReadRoles:
-            hasManageRoles ||
+            hasManage ||
             hasReadRole(estAccess.roles) ||
-            hasAnyPermission(perms, ["workforce:roles:read"]),
-          canCreateRole:
-            hasManageRoles ||
-            hasAnyPermission(perms, ["workforce:roles:create"]),
-          canUpdateRole:
-            hasManageRoles ||
-            hasAnyPermission(perms, ["workforce:roles:update"]),
-          canDeleteRole:
-            hasManageRoles ||
-            hasAnyPermission(perms, ["workforce:roles:delete"]),
+            hasAnyPermission(perms, ["workforce:read"]),
+          canCreateRole: hasManage,
+          canUpdateRole: hasManage,
+          canDeleteRole: hasManage,
         };
       } catch {
         return {
