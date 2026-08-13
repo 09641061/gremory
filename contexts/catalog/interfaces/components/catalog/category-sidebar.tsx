@@ -16,7 +16,11 @@ import {
 } from "@/contexts/shared/interfaces/components/ui/sheet";
 import { ErrorAlert } from "@/contexts/shared/interfaces/components/error";
 import { CategoryItem } from "./category-item";
+import { ServiceRow } from "./service-row";
 import { DeleteCategoryDialog } from "./delete-category-dialog";
+
+// Sentinel used as drop-target key for the "Uncategorized" bucket, which has no real category id
+const UNCATEGORIZED_DROP_ID = "__uncategorized__";
 
 export type CategoryDTO = {
   id: string;
@@ -38,8 +42,8 @@ interface CategorySidebarProps {
   onSelectCategory: (id?: string) => void;
   onOpenCreateCategoryModal: () => void;
   onOpenEditCategoryModal: (category: CategoryDTO) => void;
-  onMoveServiceCategory?: (serviceId: string, newCategoryId: string) => void;
-  onCreateService?: (categoryId: string) => void;
+  onMoveServiceCategory?: (serviceId: string, newCategoryId: string | null) => void;
+  onCreateService?: (categoryId?: string) => void;
   canCreateCategory: boolean;
   canUpdateCategory: boolean;
   canDeleteCategory: boolean;
@@ -73,6 +77,10 @@ export function CategorySidebar({
     new Set(selectedCategoryId ? [selectedCategoryId] : [])
   );
 
+  // Services with no category still belong in the sidebar, listed loose at the top
+  const uncategorizedServices = services.filter((s) => !s.categoryId);
+  const isEmpty = categories.length === 0 && uncategorizedServices.length === 0;
+
 
 
   // Toggle category expansion on click without collapsing other categories
@@ -95,18 +103,28 @@ export function CategorySidebar({
     setDraggedServiceId(serviceId);
   };
 
-  const handleDragOver = (e: React.DragEvent, categoryId: string) => {
+  const handleDragEnd = () => {
+    setDraggedServiceId(null);
+    setDragOverCategoryId(null);
+  };
+
+  // Categories sit inside the nav, which is itself a drop target, so each handler stops
+  // propagation to keep the innermost target the effective one
+  const handleDragOver = (e: React.DragEvent, dropTargetId: string) => {
     e.preventDefault();
-    setDragOverCategoryId(categoryId);
+    e.stopPropagation();
+    setDragOverCategoryId(dropTargetId);
   };
 
   const handleDragLeave = (e: React.DragEvent) => {
     e.preventDefault();
+    e.stopPropagation();
     setDragOverCategoryId(null);
   };
 
-  const handleDrop = (e: React.DragEvent, categoryId: string) => {
+  const handleDrop = (e: React.DragEvent, categoryId: string | null) => {
     e.preventDefault();
+    e.stopPropagation();
     const serviceId = e.dataTransfer.getData("text/plain") || draggedServiceId;
     if (serviceId && onMoveServiceCategory) {
       onMoveServiceCategory(serviceId, categoryId);
@@ -130,40 +148,77 @@ export function CategorySidebar({
             <span>Create Category</span>
           </Button>
         )}
+        {canCreateService && (
+          <Button
+            variant="outline"
+            onClick={() => {
+              setIsMobileOpen(false);
+              onCreateService?.(undefined);
+            }}
+            className="w-full font-medium gap-2"
+          >
+            <PlusIcon className="size-4" />
+            <span>Create Service</span>
+          </Button>
+        )}
       </div>
 
-      <nav className="flex-1 overflow-y-auto p-2 space-y-1">
-        {categories.length === 0 ? (
+      {/* Dropping on the sidebar's free space (outside any category) clears the service's category */}
+      <nav
+        onDragOver={(e) => handleDragOver(e, UNCATEGORIZED_DROP_ID)}
+        onDragLeave={handleDragLeave}
+        onDrop={(e) => handleDrop(e, null)}
+        className={`flex-1 overflow-y-auto p-2 space-y-1 transition-colors ${
+          dragOverCategoryId === UNCATEGORIZED_DROP_ID ? "bg-primary/5" : ""
+        }`}
+      >
+        {isEmpty ? (
           <div className="p-6 text-center text-muted-foreground flex flex-col items-center justify-center space-y-2">
             <FolderXIcon className="size-8 opacity-40 text-muted-foreground" />
             <p className="text-xs font-medium">No categories available</p>
           </div>
         ) : (
-          categories.map((cat) => (
-            <CategoryItem
-              key={cat.id}
-              cat={cat}
-              services={services}
-              selectedCategoryId={selectedCategoryId}
-              selectedServiceId={selectedServiceId}
-              isExpanded={expandedCategoryIds.has(cat.id)}
-              isDragTarget={dragOverCategoryId === cat.id}
-              onToggleExpand={handleToggleCategory}
-              onSelectService={onSelectService}
-              onOpenEditCategoryModal={onOpenEditCategoryModal}
-              onDragStart={handleDragStart}
-              onDragOver={handleDragOver}
-              onDragLeave={handleDragLeave}
-              onDrop={handleDrop}
-              setIsMobileOpen={setIsMobileOpen}
-              onDeleteCategory={setCategoryToDelete}
-              setAlertMessage={setAlertMessage}
-              onCreateService={onCreateService}
-              canUpdateCategory={canUpdateCategory}
-              canDeleteCategory={canDeleteCategory}
-              canCreateService={canCreateService}
-            />
-          ))
+          <>
+            {/* Services with no category hang loose at the top, no bucket around them */}
+            {uncategorizedServices.map((svc) => (
+              <ServiceRow
+                key={svc.id}
+                svc={svc}
+                isSelected={selectedServiceId === svc.id}
+                onSelectService={onSelectService}
+                onDragStart={handleDragStart}
+                onDragEnd={handleDragEnd}
+                setIsMobileOpen={setIsMobileOpen}
+              />
+            ))}
+
+            {categories.map((cat) => (
+              <CategoryItem
+                key={cat.id}
+                cat={cat}
+                services={services}
+                selectedCategoryId={selectedCategoryId}
+                selectedServiceId={selectedServiceId}
+                isExpanded={expandedCategoryIds.has(cat.id)}
+                isDragTarget={dragOverCategoryId === cat.id}
+                onToggleExpand={handleToggleCategory}
+                onSelectService={onSelectService}
+                onOpenEditCategoryModal={onOpenEditCategoryModal}
+                onDragStart={handleDragStart}
+                onDragEnd={handleDragEnd}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+                setIsMobileOpen={setIsMobileOpen}
+                onDeleteCategory={setCategoryToDelete}
+                setAlertMessage={setAlertMessage}
+                onCreateService={onCreateService}
+                canUpdateCategory={canUpdateCategory}
+                canDeleteCategory={canDeleteCategory}
+                canCreateService={canCreateService}
+              />
+            ))}
+          </>
         )}
       </nav>
     </aside>

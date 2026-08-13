@@ -38,6 +38,7 @@ export function CatalogLayout({
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | undefined>(selectedCategoryIdFallback);
   const [selectedServiceId, setSelectedServiceId] = useState<string | undefined>(initialSelectedServiceId);
   const [createdService, setCreatedService] = useState<DetailedServiceDTO | null>(null);
+  const [isCreatingService, setIsCreatingService] = useState(false);
   const [creatingServiceCategoryId, setCreatingServiceCategoryId] = useState<string | undefined>(undefined);
   const [serviceOverrides, setServiceOverrides] = useState<Record<string, Partial<DetailedServiceDTO>>>({});
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
@@ -70,12 +71,13 @@ export function CatalogLayout({
   const serviceSummaries: ServiceSummaryDTO[] = servicesList.map((s) => ({
     id: s.id,
     name: s.name,
-    categoryId: s.categoryId ?? categories[0]?.id,
+    categoryId: s.categoryId ?? null,
   }));
 
-  const handleMoveServiceCategory = async (serviceId: string, newCategoryId: string) => {
+  const handleMoveServiceCategory = async (serviceId: string, newCategoryId: string | null) => {
     const targetService = servicesList.find((s) => s.id === serviceId);
     if (!targetService) return;
+    if ((targetService.categoryId ?? null) === newCategoryId) return;
 
     setServiceOverrides((prev) => ({
       ...prev,
@@ -93,7 +95,8 @@ export function CatalogLayout({
     formData.append("durationMinutes", String(targetService.durationMinutes));
     formData.append("preparationMinutes", String(targetService.preparationMinutes));
     formData.append("cleanupMinutes", String(targetService.cleanupMinutes));
-    formData.append("categoryId", newCategoryId);
+    // An empty value clears the category server-side (the action maps "" to undefined)
+    formData.append("categoryId", newCategoryId ?? "");
 
     const result = await updateCatalogServiceAction({ status: "idle", error: null }, formData);
     if (result.status !== "success") {
@@ -116,17 +119,20 @@ export function CatalogLayout({
           onSelectCategory={(id) => {
             setSelectedCategoryId(id);
             setSelectedServiceId(undefined);
+            setIsCreatingService(false);
             setCreatingServiceCategoryId(undefined);
           }}
           onSelectService={(id) => {
             setSelectedServiceId(id);
             setSelectedCategoryId(undefined);
+            setIsCreatingService(false);
             setCreatingServiceCategoryId(undefined);
           }}
           onOpenCreateCategoryModal={() => setIsCategoryModalOpen(true)}
           onOpenEditCategoryModal={(category) => setEditingCategory(category)}
           onMoveServiceCategory={handleMoveServiceCategory}
           onCreateService={(catId) => {
+            setIsCreatingService(true);
             setCreatingServiceCategoryId(catId);
             setSelectedServiceId(undefined);
             setSelectedCategoryId(catId);
@@ -138,18 +144,20 @@ export function CatalogLayout({
         />
 
         <main className="flex-1 overflow-y-auto bg-background p-4 md:p-6">
-          {creatingServiceCategoryId ? (
+          {isCreatingService ? (
             <CreateServiceForm
-              key={`create-service-${creatingServiceCategoryId}`}
+              key={`create-service-${creatingServiceCategoryId ?? "uncategorized"}`}
               establishmentId={activeEstablishmentId ?? ""}
               categoryId={creatingServiceCategoryId}
               onSuccess={(service) => {
                 setCreatedService(service);
                 setSelectedServiceId(service.id);
                 setSelectedCategoryId(undefined);
+                setIsCreatingService(false);
                 setCreatingServiceCategoryId(undefined);
               }}
               onCancel={() => {
+                setIsCreatingService(false);
                 setCreatingServiceCategoryId(undefined);
               }}
             />
