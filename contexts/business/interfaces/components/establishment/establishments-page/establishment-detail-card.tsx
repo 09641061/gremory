@@ -1,7 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useActionState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useRef, useActionState } from "react";
 import { Save, Store } from "lucide-react";
 import type { EstablishmentListItem } from "./establishments-page";
 import { updateEstablishmentAction } from "@/contexts/business/interfaces/actions/establishment.actions";
@@ -25,31 +24,16 @@ interface EstablishmentDetailCardProps {
 }
 
 export function EstablishmentDetailCard({ establishment, canUpdate = true, onCancel }: EstablishmentDetailCardProps) {
-  const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const [prevEstablishment, setPrevEstablishment] = useState(establishment);
   const [name, setName] = useState(establishment?.name ?? "");
   const [previewUrl, setPreviewUrl] = useState<string | null>(establishment?.photoUrl ?? null);
   const [timeZone, setTimeZone] = useState(establishment?.timeZone ?? "America/Lima");
-
-  if (establishment !== prevEstablishment) {
-    setPrevEstablishment(establishment);
-    setName(establishment?.name ?? "");
-    setPreviewUrl(establishment?.photoUrl ?? null);
-    setTimeZone(establishment?.timeZone ?? "America/Lima");
-  }
 
   const [state, formAction, pending] = useActionState(
     updateEstablishmentAction,
     initialBusinessActionResult,
   );
-
-  useEffect(() => {
-    if (state.status === "success") {
-      router.refresh();
-    }
-  }, [state.status, router]);
 
   const handleAvatarClick = () => {
     fileInputRef.current?.click();

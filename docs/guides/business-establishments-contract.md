@@ -1,53 +1,32 @@
 # Contrato de API - Business Establishments
 
-Snapshot del estado actual del proyecto al `2026-08-12`.
-Este documento registra el flujo de locales tal como lo consume hoy el frontend.
-
-## Estado actual del frontend
-
-- La pantalla de crear local ya incluye selector de `timeZone`.
-- La pantalla de editar local ya permite modificar `timeZone`.
-- El detalle del local muestra `timeZone`.
-- El frontend usa la zona IANA del local como referencia para agenda y analytics.
-- `America/Lima` sigue siendo el valor sugerido por defecto cuando no hay otra zona elegida.
+Este contrato define los payloads que el frontend debe usar para crear, editar y leer locales.
 
 ## Endpoint base
 
 `/api/business/establishments`
 
-## Regla de zona horaria
+## Resumen para frontend
 
-- El frontend debe enviar `timeZone` cuando cree o edite un local
+- `timeZone` ya forma parte del contrato del local
+- El backend lo devuelve en todas las respuestas de `establishment`
+- El frontend debe enviarlo al crear y editar
 - El valor debe ser una zona IANA valida, por ejemplo `America/Lima`
-- Si el frontend no envia `timeZone`, el backend usa `UTC` por compatibilidad
-- El campo se devuelve siempre en la respuesta del local
+- Si no se envia en create, el backend usa `UTC` por compatibilidad
+- Si no se envia en update JSON, el backend conserva la zona actual
 
-## Flujo actual de datos
+## Formatos soportados
 
-- El backend devuelve `timeZone` en listados y detalles de locales
-- El frontend guarda esa zona en el formulario de crear y editar
-- El detalle del local tambien la presenta al usuario
-- Esa misma zona sirve como base para scheduling y analytics del local
+### 1. JSON
 
-## Cambios que debe hacer el frontend
+Usar cuando solo se envia texto y no se sube archivo.
 
-- Agregar un selector de zona horaria en los formularios de crear y editar local
-- Usar zonas IANA, no offsets sueltos
-- Sugerir `America/Lima` como valor por defecto cuando no haya una zona elegida
-- Mostrar `timeZone` en el detalle del local
-- Mantener la zona horaria del local como referencia para agenda y analytics, no la del navegador del usuario
+#### Crear local
 
-## Cambios que debe hacer el backend
-
-- Persistir `timeZone` en la entidad del local
-- Validar que `timeZone` sea una zona IANA valida antes de guardar
-- Devolver `timeZone` en `GET`, `POST` y `PUT` del local
-- Usar `timeZone` como fuente de verdad para scheduling y analytics del local
-- Mantener `UTC` como fallback solo si el dato no llega o no se puede resolver
-
-## Crear local
-
-### Request JSON
+```http
+POST /api/business/establishments
+Content-Type: application/json
+```
 
 ```json
 {
@@ -58,16 +37,78 @@ Este documento registra el flujo de locales tal como lo consume hoy el frontend.
 }
 ```
 
-### Campos
+#### Editar local
+
+```http
+PUT /api/business/establishments/{id}
+Content-Type: application/json
+```
+
+```json
+{
+  "name": "San Isidro Branch",
+  "photoUrl": "establishments/sanisidro.jpg",
+  "timeZone": "America/Lima"
+}
+```
+
+### 2. multipart/form-data
+
+Usar cuando se sube una imagen desde el frontend.
+
+#### Crear local
+
+```http
+POST /api/business/establishments
+Content-Type: multipart/form-data
+```
+
+Campos:
 
 | Campo | Tipo | Requerido | Descripcion |
 |---|---|---|---|
 | `organizationId` | `UUID` | Si | Organizacion padre |
 | `name` | `string` | Si | Nombre del local |
-| `photoUrl` | `string` | No | Ruta o URL de la imagen |
+| `photoFile` | `file` | No | Imagen a subir |
+| `photoUrl` | `string` | No | Ruta o URL de imagen si no se sube archivo |
 | `timeZone` | `string` | No | Zona horaria IANA del local |
 
-### Response
+Ejemplo de campos:
+
+```text
+organizationId=3fa85f64-5717-4562-b3fc-2c963f66afa6
+name=Miraflores Branch
+photoFile=<archivo>
+timeZone=America/Lima
+```
+
+#### Editar local
+
+```http
+PUT /api/business/establishments/{id}
+Content-Type: multipart/form-data
+```
+
+Campos:
+
+| Campo | Tipo | Requerido | Descripcion |
+|---|---|---|---|
+| `name` | `string` | Si | Nuevo nombre del local |
+| `photoFile` | `file` | No | Nueva imagen a subir |
+| `photoUrl` | `string` | No | Ruta o URL de imagen si no se sube archivo |
+| `timeZone` | `string` | No | Nueva zona horaria IANA del local |
+
+Ejemplo de campos:
+
+```text
+name=San Isidro Branch
+photoFile=<archivo>
+timeZone=America/Bogota
+```
+
+## Respuesta del local
+
+El backend siempre devuelve esta forma:
 
 ```json
 {
@@ -79,32 +120,23 @@ Este documento registra el flujo de locales tal como lo consume hoy el frontend.
 }
 ```
 
-## Editar local
-
-### Request JSON
-
-```json
-{
-  "name": "San Isidro Branch",
-  "photoUrl": "establishments/sanisidro.jpg",
-  "timeZone": "America/Lima"
-}
-```
-
-### Campos
-
-| Campo | Tipo | Requerido | Descripcion |
-|---|---|---|---|
-| `name` | `string` | Si | Nuevo nombre del local |
-| `photoUrl` | `string` | No | Nueva ruta o URL de la imagen |
-| `timeZone` | `string` | No | Nueva zona horaria IANA del local |
-
 ## Reglas para frontend
 
 - Usa `America/Lima` como valor sugerido si el usuario no elige otra zona
 - Si el negocio opera en varias ciudades, toma la zona horaria del local, no la del navegador
 - No conviertas fechas de negocio usando la zona del usuario final para el guardado
 - Usa la zona del local para visualizacion, para construir el payload y para interpretar analytics de ese local
+- Si el usuario sube archivo, manda `photoFile` y no dependas de `photoUrl`
+- Si no sube archivo, puedes mandar `photoUrl` como ruta almacenada o URL publica
+- No envias `timeZone` vacio; si no aplica, omite el campo
+
+## Cambios que debe hacer el backend
+
+- Persistir `timeZone` en la entidad del local
+- Validar que `timeZone` sea una zona IANA valida antes de guardar
+- Devolver `timeZone` en `GET`, `POST` y `PUT` del local
+- Usar `timeZone` como fuente de verdad para scheduling y analytics del local
+- Mantener `UTC` como fallback solo si el dato no llega o no se puede resolver
 
 ## Notas tecnicas
 
