@@ -2,8 +2,9 @@
 
 import { useState, type ReactNode } from "react";
 
-import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/contexts/shared/interfaces/components/ui/card";
+import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/contexts/shared/interfaces/components/ui/empty";
+import { Tabs, TabsList, TabsTrigger } from "@/contexts/shared/interfaces/components/ui/tabs";
 import type {
   AnalyticsCategoryPoint,
   AnalyticsTrendPoint,
@@ -58,22 +59,21 @@ export function FreeAnalyticsPageView({ analytics, errorMessage }: FreeAnalytics
             View only the group you need. Each group keeps the screen lighter and easier to read.
           </p>
         </div>
-        <div className="rounded-full border border-border bg-card p-1 shadow-sm">
-          <div className="flex flex-wrap gap-1">
-            <GroupTab label="Activity" active={selectedGroup === "activity"} onClick={() => setSelectedGroup("activity")} />
-            <GroupTab label="Revenue" active={selectedGroup === "revenue"} onClick={() => setSelectedGroup("revenue")} />
-            <GroupTab label="Rankings" active={selectedGroup === "rankings"} onClick={() => setSelectedGroup("rankings")} />
-            <GroupTab label="Friction" active={selectedGroup === "friction"} onClick={() => setSelectedGroup("friction")} />
-          </div>
-        </div>
+        <Tabs value={selectedGroup} onValueChange={(value) => setSelectedGroup(value as AnalyticsGroup)} className="gap-0">
+          <TabsList
+            variant="line"
+            className="w-full flex-wrap justify-start rounded-full border border-border bg-card p-1 shadow-sm"
+          >
+            <TabsTrigger value="activity">Activity</TabsTrigger>
+            <TabsTrigger value="revenue">Revenue</TabsTrigger>
+            <TabsTrigger value="rankings">Rankings</TabsTrigger>
+            <TabsTrigger value="friction">Friction</TabsTrigger>
+          </TabsList>
+        </Tabs>
       </div>
 
       {selectedGroup === "activity" ? (
-      <AnalyticsSection
-        id="activity"
-        title="Activity"
-        description="Appointments, timing, mix and a compact activity snapshot."
-      >
+      <AnalyticsSection id="activity">
         <div className="grid gap-6 xl:grid-cols-3">
           <Card className="overflow-hidden rounded-xl border-border bg-card shadow-sm xl:col-span-2">
             <CardHeader className="border-b border-border/60 pb-4">
@@ -161,11 +161,7 @@ export function FreeAnalyticsPageView({ analytics, errorMessage }: FreeAnalytics
       ) : null}
 
       {selectedGroup === "revenue" ? (
-      <AnalyticsSection
-        id="revenue"
-        title="Revenue"
-        description="Revenue, ticket size and revenue lost."
-      >
+      <AnalyticsSection id="revenue">
         <div className="grid gap-6 xl:grid-cols-[1.5fr_0.9fr]">
           <Card className="overflow-hidden rounded-xl border-border bg-card shadow-sm">
             <CardHeader className="border-b border-border/60 pb-4">
@@ -286,11 +282,7 @@ export function FreeAnalyticsPageView({ analytics, errorMessage }: FreeAnalytics
       ) : null}
 
       {selectedGroup === "rankings" ? (
-      <AnalyticsSection
-        id="rankings"
-        title="Rankings"
-        description="The most booked services and most active customers."
-      >
+      <AnalyticsSection id="rankings">
         <div className="grid gap-6 xl:grid-cols-2">
           <Card className="overflow-hidden rounded-xl border-border bg-card shadow-sm">
             <CardHeader className="border-b border-border/60 pb-4">
@@ -338,11 +330,7 @@ export function FreeAnalyticsPageView({ analytics, errorMessage }: FreeAnalytics
       ) : null}
 
       {selectedGroup === "friction" ? (
-      <AnalyticsSection
-        id="friction"
-        title="Friction"
-        description="Where service friction appears in cancellations and no-shows."
-      >
+      <AnalyticsSection id="friction">
         <div className="grid gap-6 xl:grid-cols-2">
           <Card className="overflow-hidden rounded-xl border-border bg-card shadow-sm">
             <CardHeader className="border-b border-border/60 pb-4">
@@ -398,21 +386,13 @@ export function FreeAnalyticsPageView({ analytics, errorMessage }: FreeAnalytics
 
 function AnalyticsSection({
   id,
-  title,
-  description,
   children,
 }: {
   id: string;
-  title: string;
-  description: string;
   children: ReactNode;
 }) {
   return (
     <section id={id} className="space-y-4 scroll-mt-8">
-      <div className="flex flex-col gap-1 px-1">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">{title}</p>
-        <p className="text-sm text-muted-foreground">{description}</p>
-      </div>
       {children}
     </section>
   );
@@ -420,37 +400,20 @@ function AnalyticsSection({
 
 type AnalyticsGroup = "activity" | "revenue" | "rankings" | "friction";
 
-function GroupTab({
-  active,
-  label,
-  onClick,
-}: {
-  active: boolean;
-  label: string;
-  onClick: () => void;
-}) {
-  return (
-    <Button
-      type="button"
-      size="sm"
-      variant={active ? "default" : "outline"}
-      onClick={onClick}
-      className="rounded-full"
-    >
-      {label}
-    </Button>
-  );
-}
-
 function FreeAnalyticsErrorState({ message }: { message: string }) {
   return (
     <main className="mx-auto flex w-full max-w-[1600px] flex-col gap-6 px-4 py-8 md:px-8">
       <Card className="overflow-hidden rounded-xl border-border bg-card shadow-sm">
         <CardContent className="space-y-4 p-6">
-          <div className="space-y-2 rounded-lg border border-dashed border-border/70 bg-background/70 p-4">
-            <p className="text-sm font-semibold text-foreground">Analytics unavailable</p>
-            <p className="text-sm text-muted-foreground">{message}</p>
-          </div>
+          <Empty className="border-border/70 bg-background/70">
+            <EmptyHeader>
+              <EmptyMedia variant="icon" />
+              <EmptyContent>
+                <EmptyTitle>Analytics unavailable</EmptyTitle>
+                <EmptyDescription>{message}</EmptyDescription>
+              </EmptyContent>
+            </EmptyHeader>
+          </Empty>
           <p className="text-sm text-muted-foreground">
             The dashboard contract is wired, but the backend response is still needed for a live snapshot.
           </p>
@@ -532,7 +495,17 @@ function RankingList<T>({
   renderItem: (item: T) => ReactNode;
 }) {
   if (items.length === 0) {
-    return <div className="rounded-lg border border-dashed border-border/70 px-4 py-8 text-sm text-muted-foreground">{emptyLabel}</div>;
+    return (
+      <Empty className="border-border/70 bg-background/70 py-10">
+        <EmptyHeader>
+          <EmptyMedia variant="icon" />
+          <EmptyContent>
+            <EmptyTitle>No data yet</EmptyTitle>
+            <EmptyDescription>{emptyLabel}</EmptyDescription>
+          </EmptyContent>
+        </EmptyHeader>
+      </Empty>
+    );
   }
 
   return <div className="space-y-2">{items.map((item, index) => <div key={index}>{renderItem(item)}</div>)}</div>;
