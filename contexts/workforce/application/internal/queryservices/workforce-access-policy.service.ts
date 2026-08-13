@@ -111,7 +111,3 @@ async function ownsEstablishment(establishmentId: string): Promise<boolean> {
 export function createWorkforceAccessPolicyService() {
   return new WorkforceAccessPolicyService();
 }
-
-function hasReadRole(roles?: ReadonlyArray<{ name: string }>): boolean {
-  return roles?.some((role) => role.name.toLowerCase() === "read") ?? false;
-}

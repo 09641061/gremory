@@ -43,5 +43,7 @@ function toSubscriptionAccessSnapshot(
     status: subscription.status,
     planId: subscription.planId,
     billingCycle: subscription.billingCycle,
+    cancelAtPeriodEnd: subscription.cancelAtPeriodEnd,
+    currentPeriodEnd: subscription.currentPeriodEnd,
   };
 }

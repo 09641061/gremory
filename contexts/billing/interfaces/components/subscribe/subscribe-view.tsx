@@ -16,6 +16,8 @@ import { ErrorAlert } from "@/contexts/shared/interfaces/components/error";
 import { SubscribeHero } from "./subscribe-hero";
 import { PlanCard } from "./plan-card";
 import { PaymentModal } from "../checkout/payment-modal";
+import { CancelSubscriptionModal } from "../cancel/cancel-subscription-modal";
+import { useRouter } from "next/navigation";
 
 interface ActivePaymentState {
   clientSecret: string | null | undefined;
@@ -90,10 +92,13 @@ interface SubscribeViewProps {
 }
 
 export function SubscribeView({ backHref, plansByCurrency, currentSubscription }: SubscribeViewProps) {
+  const router = useRouter();
   const [billingCycle, setBillingCycle] = useState<BillingCycleType>("MONTHLY");
   const [currency, setCurrency] = useState<CurrencyCode>("USD");
   const [feedbackMessage, setFeedbackMessage] = useState<FeedbackState | null>(null);
   const [paymentModalState, setPaymentModalState] = useState<ActivePaymentState | null>(null);
+  const [cancelModalOpen, setCancelModalOpen] = useState(false);
+
   const plans = useMemo(
     () =>
       (plansByCurrency[currency] ?? [])
@@ -126,6 +131,8 @@ export function SubscribeView({ backHref, plansByCurrency, currentSubscription }
     });
   };
 
+  const currentPlanName = currentSubscription?.planId === 2 ? "Premium" : currentSubscription?.planId === 1 ? "Standard" : "Free";
+
   return (
     <main className="relative flex min-h-screen w-full flex-1 flex-col items-center justify-center gap-10 overflow-hidden bg-background px-4 py-12 text-foreground">
       <div className="absolute top-6 left-6 z-20 sm:left-8">
@@ -147,53 +154,91 @@ export function SubscribeView({ backHref, plansByCurrency, currentSubscription }
         />
       ) : null}
 
-      <SubscribeHero
-        billingCycle={billingCycle}
-        selectedCurrency={currency}
-        onCycleToggle={toggleCycle}
-        onCurrencyChange={setCurrency}
-      />
+      <div className="w-full max-w-4xl space-y-6">
+        <SubscribeHero
+          billingCycle={billingCycle}
+          selectedCurrency={currency}
+          onCycleToggle={toggleCycle}
+          onCurrencyChange={setCurrency}
+        />
 
-      <section className="grid w-full max-w-4xl grid-cols-1 items-stretch gap-8 md:grid-cols-2">
-        {plans.map((plan) => {
-          const displayPrice =
-            billingCycle === "ANNUAL" ? plan.annualPriceAmount / 12 : plan.monthlyPriceAmount;
+        <section className="grid w-full grid-cols-1 items-stretch gap-8 md:grid-cols-2">
+          {plans.map((plan) => {
+            const displayPrice =
+              billingCycle === "ANNUAL" ? plan.annualPriceAmount / 12 : plan.monthlyPriceAmount;
 
-          const isCurrent =
-            currentSubscription?.active &&
-            currentSubscription.planId === plan.id &&
-            currentSubscription.billingCycle === billingCycle;
+            const isCurrent =
+              currentSubscription?.active &&
+              currentSubscription.planId === plan.id &&
+              currentSubscription.billingCycle === billingCycle;
 
-          return (
-            <PlanCard
-              key={plan.id}
-              planId={plan.id}
-              name={plan.name}
-              description={plan.description}
-              monthlyPrice={plan.monthlyPriceAmount}
-              annualPricePerMonth={plan.annualPriceAmount / 12}
-              currency={currency}
-              billingCycle={billingCycle}
-              features={[...plan.features]}
-              isPopular={plan.isPopular}
-              buttonLabel={isCurrent ? "Current plan" : buildPlanButtonLabel(plan.name)}
-              buttonDisabled={isCurrent}
-              onSuccess={(data) => handlePlanSuccess(plan, displayPrice, data)}
-              onError={(err) =>
-                setFeedbackMessage({
-                  type: "error",
-                  text: err || "You must be signed in to select a subscription plan.",
-                  id: Date.now(),
-                })
-              }
-            />
-          );
-        })}
-      </section>
+            return (
+              <PlanCard
+                key={plan.id}
+                planId={plan.id}
+                name={plan.name}
+                description={plan.description}
+                monthlyPrice={plan.monthlyPriceAmount}
+                annualPricePerMonth={plan.annualPriceAmount / 12}
+                currency={currency}
+                billingCycle={billingCycle}
+                features={[...plan.features]}
+                isPopular={plan.isPopular}
+                buttonLabel={isCurrent ? "Current plan" : buildPlanButtonLabel(plan.name)}
+                buttonDisabled={isCurrent}
+                onSuccess={(data) => handlePlanSuccess(plan, displayPrice, data)}
+                onError={(err) =>
+                  setFeedbackMessage({
+                    type: "error",
+                    text: err || "You must be signed in to select a subscription plan.",
+                    id: Date.now(),
+                  })
+                }
+              />
+            );
+          })}
+        </section>
 
-      <p className="text-xs text-center text-muted-foreground mt-12">
-        Cancel anytime. Secure billing. Plans can be changed later.
-      </p>
+        {/* Moviendo la sección de Suscripción Actual debajo de las tarjetas de los planes */}
+        {currentSubscription && (currentSubscription.planId ?? 0) > 0 && (
+          <div className="rounded-xl border border-border bg-card p-6 shadow-sm mt-8">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div>
+                <span className="text-xs font-semibold text-primary uppercase tracking-wider">Current Subscription</span>
+                <h2 className="text-xl font-bold text-foreground mt-1 flex items-center gap-2">
+                  Takodu {currentPlanName} Plan
+                  {currentSubscription.cancelAtPeriodEnd && (
+                    <span className="text-xs px-2.5 py-0.5 rounded-full font-medium bg-amber-500/10 text-amber-500 border border-amber-500/20">
+                      Scheduled for Cancellation
+                    </span>
+                  )}
+                </h2>
+                {currentSubscription.cancelAtPeriodEnd && currentSubscription.currentPeriodEnd && (
+                  <p className="text-sm text-muted-foreground mt-2 leading-relaxed">
+                    Your subscription will end and downgrade to the Free plan on <span className="font-semibold text-foreground">{new Date(currentSubscription.currentPeriodEnd).toLocaleDateString()}</span>. You still have access to all premium features until then.
+                  </p>
+                )}
+              </div>
+              
+              {!currentSubscription.cancelAtPeriodEnd && (
+                <button
+                  type="button"
+                  onClick={() => setCancelModalOpen(true)}
+                  className="sm:self-center px-4 py-2 text-sm font-semibold text-destructive hover:bg-destructive/5 border border-destructive/20 hover:border-destructive/30 rounded-md transition-colors w-full sm:w-auto"
+                >
+                  Cancel subscription
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+
+      <div className="flex flex-col items-center gap-2 mt-12">
+        <p className="text-xs text-center text-muted-foreground">
+          Cancel anytime. Secure billing. Plans can be changed later.
+        </p>
+      </div>
 
       {paymentModalState ? (
         <PaymentModal
@@ -206,6 +251,17 @@ export function SubscribeView({ backHref, plansByCurrency, currentSubscription }
           amountFormatted={paymentModalState.amountFormatted}
         />
       ) : null}
+
+      {currentSubscription && (
+        <CancelSubscriptionModal
+          isOpen={cancelModalOpen}
+          onClose={() => setCancelModalOpen(false)}
+          planName={currentPlanName}
+          onCancelled={() => {
+            router.refresh();
+          }}
+        />
+      )}
     </main>
   );
 }
