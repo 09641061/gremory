@@ -61,7 +61,8 @@ export function SidebarProfile({
         )}
       >
         <Avatar className="size-(--app-sidebar-avatar-size) shrink-0 border border-border/60 bg-muted">
-          <AvatarImage src={imageUrl ?? undefined} alt="" />
+          {/* Above the fold on every route, so it competes for bandwidth. */}
+          <AvatarImage src={imageUrl ?? undefined} alt="" fetchPriority="high" />
           <AvatarFallback className="bg-muted text-[0.7rem] font-semibold text-muted-foreground">
             {getProfileFallback(username)}
           </AvatarFallback>

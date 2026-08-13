@@ -3,6 +3,7 @@
 import { startTransition, useActionState, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { User, UserMinus, UserX } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/contexts/shared/interfaces/components/ui/avatar";
 import { ErrorAlert } from "@/contexts/shared/interfaces/components/error";
 import { EntityActionsMenu } from "@/contexts/shared/interfaces/components/entity-actions-menu";
 import { DeleteConfirmDialog } from "@/contexts/shared/interfaces/components/delete-confirm-dialog";
@@ -52,13 +53,17 @@ export function MemberRow({
   const error = removeState.error ?? revokeState.error;
 
   return (
-    <div className="grid min-h-[96px] grid-cols-[minmax(320px,1.4fr)_minmax(150px,.55fr)_minmax(150px,.55fr)_minmax(170px,.7fr)] items-center border-b border-border px-5 py-4 last:border-b-0">
+    <div className="grid min-h-[96px] grid-cols-[minmax(300px,1.4fr)_minmax(220px,1fr)_minmax(150px,.8fr)_minmax(150px,.55fr)_minmax(170px,.7fr)] items-center border-b border-border px-5 py-4 last:border-b-0">
       <div className="flex items-center gap-4">
-        <span className="flex size-12 shrink-0 items-center justify-center rounded-full border border-border bg-muted/40 text-muted-foreground">
-          <User className="size-5" />
-        </span>
-        <span className="truncate text-[15px] text-foreground">{member.email}</span>
+        <Avatar className="size-12 shrink-0 border border-border">
+          <AvatarImage src={member.imageUrl ?? undefined} alt={member.name ?? member.email} />
+          <AvatarFallback className="bg-muted/40 text-muted-foreground">
+            {member.name ? initials(member.name) : <User className="size-5" />}
+          </AvatarFallback>
+        </Avatar>
+        <span className="truncate text-[15px] text-foreground">{member.name ?? "—"}</span>
       </div>
+      <span className="truncate text-[15px] text-muted-foreground">{member.email}</span>
       <div>
         <MemberRolesDropdown roles={member.roles} />
       </div>
@@ -138,3 +143,11 @@ function formatStatus(status: TeamUserSummary["status"]): string {
   return status.charAt(0) + status.slice(1).toLowerCase();
 }
 
+function initials(name: string): string {
+  return name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() ?? "")
+    .join("");
+}

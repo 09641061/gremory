@@ -3,7 +3,6 @@ import { createOrganizationQueryService } from "@/contexts/business/application/
 import { createEstablishmentQueryService } from "@/contexts/business/application/internal/queryservices/establishment-query.service";
 import {
   hasAnyPermission,
-  hasReadRole,
 } from "@/contexts/shared/application/internal/queryservices/access-context.helpers";
 
 export interface SchedulingPermissions {
@@ -93,4 +92,8 @@ async function ownsEstablishment(establishmentId: string): Promise<boolean> {
 }
 export function createSchedulingAccessPolicyService() {
   return new SchedulingAccessPolicyService();
+}
+
+function hasReadRole(roles?: ReadonlyArray<{ name: string }>): boolean {
+  return roles?.some((role) => role.name.toLowerCase() === "read") ?? false;
 }

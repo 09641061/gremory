@@ -1,4 +1,3 @@
-import { hasAnyPermission, hasReadRole } from "@/contexts/shared/application/internal/queryservices/access-context.helpers";
 import type {
   EntryRouteEstablishment,
   EntryRoutePath,
@@ -35,7 +34,7 @@ function hasCatalogAccess(establishment: EntryRouteEstablishment) {
   return hasAnyPermission(establishment.effectivePermissions, [
     "catalog:manage",
     "catalog:read",
-  ]);
+  ]) || hasReadRole(establishment.roles);
 }
 
 function hasCrmAccess(establishment: EntryRouteEstablishment) {
@@ -57,4 +56,15 @@ function hasOrganizationAccess(establishment: EntryRouteEstablishment) {
     "business:manage",
     "business:read",
   ]) || hasReadRole(establishment.roles);
+}
+
+function hasAnyPermission(
+  permissions: ReadonlyArray<string>,
+  allowed: ReadonlyArray<string>,
+) {
+  return allowed.some((permission) => permissions.includes(permission));
+}
+
+function hasReadRole(roles?: ReadonlyArray<{ name: string }>) {
+  return roles?.some((role) => role.name.toLowerCase() === "read") ?? false;
 }

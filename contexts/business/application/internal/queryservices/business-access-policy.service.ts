@@ -2,7 +2,7 @@ import { createOrganizationQueryService } from "@/contexts/business/application/
 import { createEstablishmentQueryService } from "@/contexts/business/application/internal/queryservices/establishment-query.service";
 import { createTeamQueryService } from "@/contexts/workforce/application/internal/queryservices/team-query.service";
 import type { OrganizationSummary } from "@/contexts/business/application/model/business.read-models";
-import { hasAnyPermission, hasReadRole, pickActiveEstablishment } from "@/contexts/shared/application/internal/queryservices/access-context.helpers";
+import { hasAnyPermission, pickActiveEstablishment } from "@/contexts/shared/application/internal/queryservices/access-context.helpers";
 
 export interface BusinessPermissions {
   isOwner: boolean;
@@ -244,4 +244,8 @@ export class BusinessAccessPolicyService {
 
 export function createBusinessAccessPolicyService() {
   return new BusinessAccessPolicyService();
+}
+
+function hasReadRole(roles?: ReadonlyArray<{ name: string }>): boolean {
+  return roles?.some((role) => role.name.toLowerCase() === "read") ?? false;
 }

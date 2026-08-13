@@ -79,6 +79,8 @@ function toTeamUserSummary(
     invitationId: user.invitationId.value,
     memberId: user.memberId?.value ?? null,
     userId: user.userId?.value ?? null,
+    name: user.name,
+    imageUrl: user.imageUrl,
     email: user.email.value,
     roleId: user.roleId.value,
     roleName: user.roleName,

@@ -13,6 +13,8 @@ export interface TeamUserProps {
   invitationId: InvitationId;
   memberId: MemberId | null;
   userId: TeamUserId | null;
+  name?: string | null;
+  imageUrl?: string | null;
   email: InvitedEmail;
   roleId?: TeamRoleId;
   roleName?: string;
@@ -41,6 +43,8 @@ export class TeamUser {
     public readonly invitationId: InvitationId,
     public readonly memberId: MemberId | null,
     public readonly userId: TeamUserId | null,
+    public readonly name: string | null,
+    public readonly imageUrl: string | null,
     public readonly email: InvitedEmail,
     public readonly roleId: TeamRoleId,
     public readonly roleName: string,
@@ -79,6 +83,8 @@ export class TeamUser {
       props.invitationId,
       props.memberId,
       props.userId,
+      normalizeName(props.name),
+      normalizeImageUrl(props.imageUrl),
       props.email,
       primaryRole.id,
       primaryRole.name.trim(),
@@ -110,6 +116,18 @@ export class TeamUser {
 
 function normalizeEstablishmentName(value: string | null): string | null {
   if (value === null) return null;
+  const normalized = value.trim();
+  return normalized || null;
+}
+
+function normalizeName(value: string | null | undefined): string | null {
+  if (value == null) return null;
+  const normalized = value.trim();
+  return normalized || null;
+}
+
+function normalizeImageUrl(value: string | null | undefined): string | null {
+  if (value == null) return null;
   const normalized = value.trim();
   return normalized || null;
 }

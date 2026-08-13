@@ -15,6 +15,7 @@ export const businessWorkspaceResourceSchema = z.object({
       name: z.string().trim().min(1),
       photoUrl: z.string().nullable(),
       timeZone: z.string().nullable().optional(),
+      effectivePermissions: z.array(z.string()).default([]),
       permissions: z.object({
         canRead: z.boolean(),
         canUpdate: z.boolean(),

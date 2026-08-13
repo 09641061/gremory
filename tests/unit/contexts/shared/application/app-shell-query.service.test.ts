@@ -142,4 +142,20 @@ describe("app shell query service", () => {
       "/analytics",
     ]);
   });
+
+  it("hides schedule and team when their read capabilities are denied", async () => {
+    mocks.scheduling.getPermissions.mockResolvedValue({ canReadAppointments: false });
+    mocks.workforce.getPermissions.mockResolvedValue({ canReadTeam: false });
+
+    const shell = await createAppShellQueryService().resolve({
+      subscription: { active: true, status: "ACTIVE", planId: 1 },
+    });
+
+    expect(shell.visibleSidebarRoutes).toEqual([
+      "/chat",
+      "/crm",
+      "/catalog",
+      "/analytics",
+    ]);
+  });
 });

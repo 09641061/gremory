@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useRef, useState, useTransition } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Appointment } from "../../../domain/model/entities/appointment";
 import { listAppointmentsAction } from "../../actions/list-appointments.action";
