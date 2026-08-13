@@ -2,7 +2,7 @@
 
 import { useState, type ReactNode } from "react";
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/contexts/shared/interfaces/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/contexts/shared/interfaces/components/ui/card";
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/contexts/shared/interfaces/components/ui/empty";
 import { Tabs, TabsList, TabsTrigger } from "@/contexts/shared/interfaces/components/ui/tabs";
 import type {
@@ -78,7 +78,6 @@ export function FreeAnalyticsPageView({ analytics, errorMessage }: FreeAnalytics
           <Card className="overflow-hidden rounded-xl border-border bg-card shadow-sm xl:col-span-2">
             <CardHeader className="border-b border-border/60 pb-4">
               <CardTitle>Appointments trend</CardTitle>
-              <CardDescription>Daily appointment volume across the last 7 days.</CardDescription>
             </CardHeader>
             <CardContent className="p-5">
               <TrendChart data={analytics.appointmentsTrend} tone="primary" />
@@ -88,7 +87,6 @@ export function FreeAnalyticsPageView({ analytics, errorMessage }: FreeAnalytics
           <Card className="overflow-hidden rounded-xl border-border bg-card shadow-sm">
             <CardHeader className="border-b border-border/60 pb-4">
               <CardTitle>Appointment status mix</CardTitle>
-              <CardDescription>Completed, cancelled, and no-show appointments in the window.</CardDescription>
               <p className="pt-1 text-xs text-muted-foreground">{statusRange}</p>
             </CardHeader>
 
@@ -115,7 +113,6 @@ export function FreeAnalyticsPageView({ analytics, errorMessage }: FreeAnalytics
           <Card className="overflow-hidden rounded-xl border-border bg-card shadow-sm">
             <CardHeader className="border-b border-border/60 pb-4">
               <CardTitle>Activity snapshot</CardTitle>
-              <CardDescription>Derived from the trend and hourly buckets already returned by the endpoint.</CardDescription>
             </CardHeader>
             <CardContent className="grid gap-3 p-5">
               <StatBadge
@@ -134,9 +131,6 @@ export function FreeAnalyticsPageView({ analytics, errorMessage }: FreeAnalytics
           <Card className="overflow-hidden rounded-xl border-border bg-card shadow-sm xl:col-span-2">
             <CardHeader className="border-b border-border/60 pb-4">
               <CardTitle>New vs recurring customers</CardTitle>
-              <CardDescription>
-                Customers with a single appointment in the period vs those who booked more than once.
-              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4 p-5">
               <SplitMetricRow
@@ -166,7 +160,6 @@ export function FreeAnalyticsPageView({ analytics, errorMessage }: FreeAnalytics
           <Card className="overflow-hidden rounded-xl border-border bg-card shadow-sm">
             <CardHeader className="border-b border-border/60 pb-4">
               <CardTitle>Weekly revenue balance</CardTitle>
-              <CardDescription>Completed revenue across the last 7 days.</CardDescription>
               <p className="pt-1 text-xs text-muted-foreground">{weeklyRevenueRange}</p>
             </CardHeader>
             <CardContent className="space-y-4 p-5">
@@ -182,12 +175,11 @@ export function FreeAnalyticsPageView({ analytics, errorMessage }: FreeAnalytics
           </Card>
 
           <div className="grid gap-6">
-            <Card className="overflow-hidden rounded-xl border-border bg-card shadow-sm">
-              <CardHeader className="border-b border-border/60 pb-4">
-                <CardTitle>Average ticket</CardTitle>
-                <CardDescription>Revenue per completed appointment in the current period.</CardDescription>
-                <p className="pt-1 text-xs text-muted-foreground">{weeklyRevenueRange}</p>
-              </CardHeader>
+          <Card className="overflow-hidden rounded-xl border-border bg-card shadow-sm">
+            <CardHeader className="border-b border-border/60 pb-4">
+              <CardTitle>Average ticket</CardTitle>
+              <p className="pt-1 text-xs text-muted-foreground">{weeklyRevenueRange}</p>
+            </CardHeader>
               <CardContent className="space-y-4 p-5">
                 <div className="rounded-2xl border border-border/70 bg-primary/5 p-4">
                   <p className="text-3xl font-semibold tracking-tight text-foreground">
@@ -206,11 +198,10 @@ export function FreeAnalyticsPageView({ analytics, errorMessage }: FreeAnalytics
               </CardContent>
             </Card>
 
-            <Card className="overflow-hidden rounded-xl border-border bg-card shadow-sm">
-              <CardHeader className="border-b border-border/60 pb-4">
-                <CardTitle>Lost revenue</CardTitle>
-                <CardDescription>Estimated revenue lost to cancellations and no-shows.</CardDescription>
-              </CardHeader>
+          <Card className="overflow-hidden rounded-xl border-border bg-card shadow-sm">
+            <CardHeader className="border-b border-border/60 pb-4">
+              <CardTitle>Lost revenue</CardTitle>
+            </CardHeader>
               <CardContent className="space-y-4 p-5">
                 <SplitMetricRow
                   label="Cancelled"
@@ -241,7 +232,6 @@ export function FreeAnalyticsPageView({ analytics, errorMessage }: FreeAnalytics
           <Card className="overflow-hidden rounded-xl border-border bg-card shadow-sm">
             <CardHeader className="border-b border-border/60 pb-4">
               <CardTitle>Top services by revenue</CardTitle>
-              <CardDescription>Services that generated the most completed revenue in the period.</CardDescription>
             </CardHeader>
             <CardContent className="p-5">
               <BarChart
@@ -258,7 +248,6 @@ export function FreeAnalyticsPageView({ analytics, errorMessage }: FreeAnalytics
           <Card className="overflow-hidden rounded-xl border-border bg-card shadow-sm">
             <CardHeader className="border-b border-border/60 pb-4">
               <CardTitle>Top customers by spend</CardTitle>
-              <CardDescription>Customers with the highest completed spend in the period.</CardDescription>
             </CardHeader>
             <CardContent className="p-5">
               <RankingList
@@ -287,7 +276,6 @@ export function FreeAnalyticsPageView({ analytics, errorMessage }: FreeAnalytics
           <Card className="overflow-hidden rounded-xl border-border bg-card shadow-sm">
             <CardHeader className="border-b border-border/60 pb-4">
               <CardTitle>Top services</CardTitle>
-              <CardDescription>Most booked services in the period.</CardDescription>
             </CardHeader>
             <CardContent className="p-5">
               <RankingList
@@ -308,7 +296,6 @@ export function FreeAnalyticsPageView({ analytics, errorMessage }: FreeAnalytics
           <Card className="overflow-hidden rounded-xl border-border bg-card shadow-sm">
             <CardHeader className="border-b border-border/60 pb-4">
               <CardTitle>Top customers</CardTitle>
-              <CardDescription>Customers with the most appointments in the period.</CardDescription>
             </CardHeader>
             <CardContent className="p-5">
               <RankingList
@@ -335,7 +322,6 @@ export function FreeAnalyticsPageView({ analytics, errorMessage }: FreeAnalytics
           <Card className="overflow-hidden rounded-xl border-border bg-card shadow-sm">
             <CardHeader className="border-b border-border/60 pb-4">
               <CardTitle>Cancellation rate by service</CardTitle>
-              <CardDescription>Services with the highest share of cancelled bookings.</CardDescription>
             </CardHeader>
             <CardContent className="p-5">
               <RankingList
@@ -358,7 +344,6 @@ export function FreeAnalyticsPageView({ analytics, errorMessage }: FreeAnalytics
           <Card className="overflow-hidden rounded-xl border-border bg-card shadow-sm">
             <CardHeader className="border-b border-border/60 pb-4">
               <CardTitle>No-show rate by service</CardTitle>
-              <CardDescription>Services with the highest share of no-shows.</CardDescription>
             </CardHeader>
             <CardContent className="p-5">
               <RankingList
