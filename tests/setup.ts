@@ -1,6 +1,21 @@
 import "@testing-library/jest-dom/vitest";
 
 /**
+ * Vitest helpers added in newer releases are not guaranteed in the bundled
+ * version available in this workspace. Keep the test suite compatible by
+ * polyfilling the small subset we rely on.
+ */
+if (typeof vi !== "undefined") {
+  if (typeof vi.hoisted !== "function") {
+    vi.hoisted = (factory: () => unknown) => factory();
+  }
+
+  if (typeof vi.mocked !== "function") {
+    vi.mocked = ((value: unknown) => value) as typeof vi.mocked;
+  }
+}
+
+/**
  * Browser APIs that jsdom does not implement but Base UI's floating primitives
  * (popover, select, dropdown menu) call on open. Without them the popup never
  * mounts and interaction tests silently see an empty portal.

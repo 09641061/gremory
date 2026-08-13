@@ -4,7 +4,6 @@ import type { PageResponse } from "../../../domain/services/catalog-service.serv
 import type { ServiceCategoryQueryService } from "../../../domain/services/service-category.services";
 import type { CategoryDTO } from "../../model/catalog-view.models";
 import { ServiceCategoryApiGateway } from "../../../infrastructure/gateways/service-category-api.gateway";
-import { cacheLife, cacheTag } from "next/cache";
 import { createServiceCategoryReadModel } from "../../model/service-category.read-model";
 
 export class ServiceCategoryQueryServiceImpl implements ServiceCategoryQueryService {
@@ -15,7 +14,11 @@ export class ServiceCategoryQueryServiceImpl implements ServiceCategoryQueryServ
     token?: string
   ): Promise<PageResponse<CategoryDTO>> {
     const authToken = await resolveAccessToken(token);
-    return listServiceCategoriesCached(establishmentId, page, size, authToken);
+    const result = await new ServiceCategoryApiGateway().list(establishmentId, page, size, authToken);
+    return {
+      ...result,
+      content: result.content.map(createServiceCategoryReadModel),
+    };
   }
 }
 
@@ -30,22 +33,3 @@ async function resolveAccessToken(providedToken?: string): Promise<string | unde
   const cookieStore = await cookies();
   return cookieStore.get(iamSessionCookies.accessToken)?.value;
 }
-
-async function listServiceCategoriesCached(
-  establishmentId: string,
-  page?: number,
-  size?: number,
-  authToken?: string
-): Promise<PageResponse<CategoryDTO>> {
-  "use cache";
-  cacheLife("minutes");
-  cacheTag("catalog-categories");
-  cacheTag(`catalog-categories:${establishmentId}`);
-
-  const result = await new ServiceCategoryApiGateway().list(establishmentId, page, size, authToken);
-  return {
-    ...result,
-    content: result.content.map(createServiceCategoryReadModel),
-  };
-}
-

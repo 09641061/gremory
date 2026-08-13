@@ -38,6 +38,7 @@ export async function submitAssistantMessageAction(
       {
         conversationId: parsed.conversationId,
         message: parsed.message,
+        establishmentId: parsed.establishmentId,
       },
       accessToken,
     );

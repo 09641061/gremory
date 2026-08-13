@@ -41,6 +41,7 @@ export interface PageResponse<T> {
 
 export interface CreateConversationRequest {
   messageContent: string;
+  establishmentId?: string | null;
 }
 
 export interface RenameConversationRequest {
@@ -49,6 +50,7 @@ export interface RenameConversationRequest {
 
 export interface SendAssistantMessageRequest {
   messageContent: string;
+  establishmentId?: string | null;
 }
 
 export interface ListConversationsParams {

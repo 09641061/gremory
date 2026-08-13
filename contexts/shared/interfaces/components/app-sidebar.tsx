@@ -65,6 +65,12 @@ export function AppSidebar({
   const selectedConversationId = pathname.startsWith("/chat")
     ? searchParams.get("conversationId")
     : null;
+  const requestedEstablishmentId = searchParams.get("establishmentId");
+  const establishmentId =
+    requestedEstablishmentId &&
+    workspace.establishments.some((item) => item.id === requestedEstablishmentId)
+      ? requestedEstablishmentId
+      : workspace.activeEstablishmentId ?? null;
   const assistantChatsSectionKey = initialAssistantConversations
     .map((conversation) => `${conversation.id}:${conversation.updatedAt}:${conversation.title ?? ""}`)
     .join("|");
@@ -76,8 +82,6 @@ export function AppSidebar({
     }
     return visibleRouteSet.has(item.href as SidebarRouteId);
   });
-  const establishmentId = searchParams.get("establishmentId");
-
   return (
     <ShadcnSidebar collapsible="offcanvas">
       <SidebarHeader className="border-b border-border/60 p-3">
@@ -125,6 +129,7 @@ export function AppSidebar({
           <AssistantChatsSection
             key={assistantChatsSectionKey}
             initialConversations={initialAssistantConversations}
+            establishmentId={establishmentId}
           />
         ) : null}
       </SidebarContent>
