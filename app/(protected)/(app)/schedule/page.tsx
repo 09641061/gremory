@@ -38,6 +38,7 @@ export default async function SchedulePage({ searchParams }: SchedulePageProps) 
   return (
     <main className="p-6">
       <WeeklyCalendar
+        key={`${establishmentId}-${timeZone}`}
         establishmentId={establishmentId}
         services={services}
         members={members}

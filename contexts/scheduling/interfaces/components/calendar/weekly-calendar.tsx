@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
+import { useCallback, useMemo, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Appointment } from "../../../domain/model/entities/appointment";
 import { listAppointmentsAction } from "../../actions/list-appointments.action";
@@ -56,10 +56,6 @@ export function WeeklyCalendar({
   const requestIdRef = useRef(0);
   const now = useNow();
   const todayKey = now === null ? null : toTimeZoneDayKey(new Date(now), timeZone);
-
-  useEffect(() => {
-    setCurrentDate(getCalendarAnchorDate(timeZone));
-  }, [timeZone]);
 
   const { sunday: weekStart, saturday: weekEnd } = useMemo(
     () => getCalendarWeekRange(currentDate),
