@@ -201,4 +201,19 @@ export class SchedulingApiGateway
       }
     );
   }
+
+  async getSchedulingEmployees(
+    establishmentId: string,
+    token?: string
+  ): Promise<{ userId: string; name: string; imageUrl: string | null }[]> {
+    const authToken = await resolveAccessToken(token);
+    return apiClient.get<{ userId: string; name: string; imageUrl: string | null }[]>(
+      `${apiConfig.routes.scheduling.appointments}/employees?establishmentId=${encodeURIComponent(establishmentId)}`,
+      {
+        token: authToken,
+        errorMessage: "Failed to fetch scheduling employees",
+        errorType: SchedulingApiError,
+      }
+    );
+  }
 }
