@@ -29,7 +29,6 @@ export function InvitationAcceptanceView({
     acceptTeamInvitationAction,
     initialTeamActionResult,
   );
-  const [redirecting, setRedirecting] = useState(false);
   const [redirectAttempt, setRedirectAttempt] = useState(0);
   const [redirectError, setRedirectError] = useState<string | null>(null);
 
@@ -38,21 +37,12 @@ export function InvitationAcceptanceView({
 
   useEffect(() => {
     if (!shouldResolveWorkspace) {
-      setRedirecting(false);
-      setRedirectError(null);
       return;
     }
 
-    let cancelled = false;
-    setRedirecting(true);
-    setRedirectError(null);
-
     void resolveWorkspaceEntryPath()
       .then((target) => {
-        if (cancelled) return;
-
         if (!target) {
-          setRedirecting(false);
           setRedirectError(
             "We could not prepare your workspace yet. Please try again in a moment.",
           );
@@ -62,26 +52,22 @@ export function InvitationAcceptanceView({
         window.location.assign(target);
       })
       .catch((error: unknown) => {
-        if (cancelled) return;
-        setRedirecting(false);
         setRedirectError(
           error instanceof Error
             ? error.message
             : "We could not prepare your workspace yet. Please try again.",
         );
       });
-
-    return () => {
-      cancelled = true;
-    };
   }, [redirectAttempt, shouldResolveWorkspace]);
 
   if (shouldResolveWorkspace) {
     return (
       <InvitationAcceptedView
-        redirecting={redirecting}
         redirectError={redirectError}
-        onRetry={() => setRedirectAttempt((value) => value + 1)}
+        onRetry={() => {
+          setRedirectError(null);
+          setRedirectAttempt((value) => value + 1);
+        }}
         returnTo={returnTo}
       />
     );
@@ -157,16 +143,16 @@ export function InvitationAcceptanceView({
 }
 
 function InvitationAcceptedView({
-  redirecting = false,
   redirectError = null,
   onRetry,
   returnTo,
 }: {
-  redirecting?: boolean;
   redirectError?: string | null;
   onRetry?: () => void;
   returnTo: string;
 }) {
+  const redirecting = !redirectError;
+
   return (
     <InvitationShell>
       <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-primary/15 text-primary">
