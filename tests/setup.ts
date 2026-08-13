@@ -7,7 +7,7 @@ import "@testing-library/jest-dom/vitest";
  */
 if (typeof vi !== "undefined") {
   if (typeof vi.hoisted !== "function") {
-    vi.hoisted = (factory: () => unknown) => factory();
+    vi.hoisted = ((factory: () => unknown) => factory()) as typeof vi.hoisted;
   }
 
   if (typeof vi.mocked !== "function") {

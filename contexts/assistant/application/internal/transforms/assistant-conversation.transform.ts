@@ -26,10 +26,27 @@ type ConversationMessageSource = {
 };
 
 const DEFAULT_ASSISTANT_GREETING = "Hello. I am your assistant for business, customers, catalog, and scheduling.";
+const INTERNAL_CALL_TAG_PATTERN = /\[call:[^\]]*\]/gi;
 
-function normalizeMessage(message: ConversationMessageSource): AssistantMessageReadModel {
+function hasInternalCallTag(content: string): boolean {
+  return /\[call:[^\]]*\]/i.test(content);
+}
+
+function stripInternalCallTags(content: string): string {
+  return content
+    .replace(INTERNAL_CALL_TAG_PATTERN, "")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+}
+
+function normalizeMessage(message: ConversationMessageSource): AssistantMessageReadModel | null {
   const role = normalizeAssistantRole(message.role);
-  const content = createAssistantMessageContent(message.content).value;
+  const rawContent = createAssistantMessageContent(message.content).value;
+  const content = role === "assistant" ? stripInternalCallTags(rawContent) : rawContent;
+
+  if (role === "assistant" && !content && hasInternalCallTag(rawContent)) {
+    return null;
+  }
 
   return {
     id: message.id,
@@ -37,6 +54,12 @@ function normalizeMessage(message: ConversationMessageSource): AssistantMessageR
     content,
     createdAt: message.createdAt,
   };
+}
+
+function isAssistantMessageReadModel(
+  message: AssistantMessageReadModel | null,
+): message is AssistantMessageReadModel {
+  return message !== null;
 }
 
 function stripDefaultGreeting(messages: AssistantMessageReadModel[]): AssistantMessageReadModel[] {
@@ -55,7 +78,7 @@ function stripDefaultGreeting(messages: AssistantMessageReadModel[]): AssistantM
 function normalizeConversationMessages(
   messages: ConversationMessageSource[],
 ): AssistantMessageReadModel[] {
-  const normalizedMessages = stripDefaultGreeting(messages.map(normalizeMessage));
+  const normalizedMessages = stripDefaultGreeting(messages.map(normalizeMessage).filter(isAssistantMessageReadModel));
   const hasAssistantMessage = normalizedMessages.some((message) => message.role === "assistant");
 
   if (hasAssistantMessage || normalizedMessages.length <= 1) {
