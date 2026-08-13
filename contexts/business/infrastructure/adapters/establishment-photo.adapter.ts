@@ -1,7 +1,13 @@
 import "server-only";
 
+import type { EstablishmentPhotoStorage } from "@/contexts/business/application/services/business.services";
 import { EstablishmentApiGateway } from "@/contexts/business/infrastructure/gateways/establishment-api.gateway";
-import { createEstablishmentId } from "@/contexts/business/domain/model/valueobjects/establishment-id.vo";
+import type { EstablishmentId } from "@/contexts/business/domain/model/valueobjects/establishment-id.vo";
+import {
+  createEstablishmentPhoto,
+  type EstablishmentPhoto,
+} from "@/contexts/business/domain/model/valueobjects/establishment-photo.vo";
+import { requireBusinessAccessToken } from "@/contexts/business/infrastructure/session/business-session";
 import { apiConfig } from "@/api.config";
 
 type EstablishmentPhotoUploadResponse = {
@@ -10,15 +16,18 @@ type EstablishmentPhotoUploadResponse = {
   photoUrl?: string;
 };
 
-export class EstablishmentPhotoAdapter {
-  async upload(file: File, token: string): Promise<string> {
+export class EstablishmentPhotoAdapter implements EstablishmentPhotoStorage {
+  constructor(private readonly providedToken?: string) {}
+
+  async upload(photo: File): Promise<EstablishmentPhoto> {
+    const authToken = await requireBusinessAccessToken(this.providedToken);
     const formData = new FormData();
-    formData.set("file", file);
+    formData.set("file", photo);
 
     const response = await fetch(`${apiConfig.baseUrl}${apiConfig.routes.establishmentImages}`, {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${token}`,
+        Authorization: `Bearer ${authToken}`,
       },
       body: formData,
     });
@@ -31,18 +40,19 @@ export class EstablishmentPhotoAdapter {
       );
     }
 
-    if (!data?.photoUrl && !data?.storedPath) {
+    const storedReference = data?.photoUrl ?? data?.storedPath;
+    if (!storedReference) {
       throw new Error("Failed to upload establishment image");
     }
 
-    return data.photoUrl ?? data.storedPath ?? "";
+    return createEstablishmentPhoto(storedReference);
   }
 
-  async delete(establishmentId: string, token: string): Promise<void> {
-    await new EstablishmentApiGateway(token).deletePhoto(createEstablishmentId(establishmentId));
+  async remove(id: EstablishmentId): Promise<void> {
+    await new EstablishmentApiGateway(this.providedToken).deletePhoto(id);
   }
 }
 
-export function createEstablishmentPhotoAdapter() {
+export function createEstablishmentPhotoAdapter(): EstablishmentPhotoStorage {
   return new EstablishmentPhotoAdapter();
 }

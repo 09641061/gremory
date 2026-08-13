@@ -85,6 +85,7 @@ describe("Business server actions", () => {
       name: "Main store",
       photoUrl: "https://example.com/store.png",
       timeZone: "America/Lima",
+      photoFile: null,
     });
     expect(result).toEqual({
       status: "success",
@@ -118,9 +119,20 @@ describe("Business server actions", () => {
       id: organizationId,
       name: "Acme Group",
       imageUrl: null,
+      imageFile: null,
     });
     expect(updated.status).toBe("success");
     expect(mocks.revalidatePath).toHaveBeenCalledWith("/organization");
+  });
+
+  it("rejects an invalid organization id before reaching the application service", async () => {
+    const result = await updateOrganizationAction(
+      initialBusinessActionResult,
+      form({ id: "not-a-uuid", name: "Acme Group" }),
+    );
+
+    expect(result.status).toBe("error");
+    expect(mocks.organizationFactory).not.toHaveBeenCalled();
   });
 
   it("returns a stable error when authentication fails", async () => {

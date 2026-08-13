@@ -1,23 +1,30 @@
 import "server-only";
 
+import type { OrganizationImageStorage } from "@/contexts/business/application/services/business.services";
+import type { OrganizationId } from "@/contexts/business/domain/model/valueobjects/organization-id.vo";
+import type { OrganizationName } from "@/contexts/business/domain/model/valueobjects/organization-name.vo";
+import { requireBusinessAccessToken } from "@/contexts/business/infrastructure/session/business-session";
 import { apiConfig } from "@/api.config";
 
 type OrganizationImageUploadResponse = {
   message?: string;
 };
 
-export class OrganizationImageUploadAdapter {
-  async upload(organizationId: string, name: string, photoFile: File, token: string): Promise<void> {
+export class OrganizationImageUploadAdapter implements OrganizationImageStorage {
+  constructor(private readonly providedToken?: string) {}
+
+  async upload(id: OrganizationId, name: OrganizationName, image: File): Promise<void> {
+    const authToken = await requireBusinessAccessToken(this.providedToken);
     const formData = new FormData();
-    formData.set("name", name);
-    formData.set("photoFile", photoFile);
+    formData.set("name", name.value);
+    formData.set("photoFile", image);
 
     const response = await fetch(
-      `${apiConfig.baseUrl}${apiConfig.routes.organizations}/${encodeURIComponent(organizationId)}`,
+      `${apiConfig.baseUrl}${apiConfig.routes.organizations}/${encodeURIComponent(id.value)}`,
       {
         method: "PUT",
         headers: {
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${authToken}`,
         },
         body: formData,
       },
@@ -30,6 +37,6 @@ export class OrganizationImageUploadAdapter {
   }
 }
 
-export function createOrganizationImageUploadAdapter() {
+export function createOrganizationImageUploadAdapter(): OrganizationImageStorage {
   return new OrganizationImageUploadAdapter();
 }
