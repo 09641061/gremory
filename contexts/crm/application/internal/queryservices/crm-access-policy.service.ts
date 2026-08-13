@@ -3,8 +3,8 @@ import { createOrganizationQueryService } from "@/contexts/business/application/
 import { createEstablishmentQueryService } from "@/contexts/business/application/internal/queryservices/establishment-query.service";
 import {
   hasAnyPermission,
-  hasReadRole,
 } from "@/contexts/shared/application/internal/queryservices/access-context.helpers";
+import { workforcePermissions } from "@/contexts/workforce/domain/model/enums/workforce-permission";
 
 export interface CrmPermissions {
   canReadCustomers: boolean;
@@ -51,22 +51,15 @@ export class CrmAccessPolicyService {
         }
 
         const perms = estAccess.effectivePermissions;
-        const hasManage = hasAnyPermission(perms, ["crm:customers:manage"]);
+        const hasManage = hasAnyPermission(perms, [workforcePermissions.crm.manage]);
 
         return {
           canReadCustomers:
             hasManage ||
-            hasReadRole(estAccess.roles) ||
-            hasAnyPermission(perms, ["crm:customers:read"]),
-          canCreateCustomer:
-            hasManage ||
-            hasAnyPermission(perms, ["crm:customers:create"]),
-          canUpdateCustomer:
-            hasManage ||
-            hasAnyPermission(perms, ["crm:customers:update"]),
-          canDeleteCustomer:
-            hasManage ||
-            hasAnyPermission(perms, ["crm:customers:delete"]),
+            hasAnyPermission(perms, [workforcePermissions.crm.read]),
+          canCreateCustomer: hasManage,
+          canUpdateCustomer: hasManage,
+          canDeleteCustomer: hasManage,
         };
       } catch {
         return {

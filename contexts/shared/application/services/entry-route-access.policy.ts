@@ -1,8 +1,8 @@
-import { hasAnyPermission, hasReadRole } from "@/contexts/shared/application/internal/queryservices/access-context.helpers";
 import type {
   EntryRouteEstablishment,
   EntryRoutePath,
 } from "@/contexts/shared/application/model/entry-route.view-models";
+import { workforcePermissions } from "@/contexts/workforce/domain/model/enums/workforce-permission";
 
 export function resolveEmployeeEntryPath(
   establishments: ReadonlyArray<EntryRouteEstablishment>,
@@ -26,39 +26,42 @@ export function resolveEmployeeEntryPath(
 
 function hasSchedulingAccess(establishment: EntryRouteEstablishment) {
   return hasAnyPermission(establishment.effectivePermissions, [
-    "scheduling:appointments:manage",
-    "scheduling:appointments:read",
-  ]) || hasReadRole(establishment.roles);
+    workforcePermissions.scheduling.manage,
+    workforcePermissions.scheduling.read,
+  ]);
 }
 
 function hasCatalogAccess(establishment: EntryRouteEstablishment) {
   return hasAnyPermission(establishment.effectivePermissions, [
-    "catalog:manage",
-    "catalog:categories:read",
-    "catalog:services:read",
+    workforcePermissions.catalog.read,
+    workforcePermissions.catalog.manage,
   ]);
 }
 
 function hasCrmAccess(establishment: EntryRouteEstablishment) {
   return hasAnyPermission(establishment.effectivePermissions, [
-    "crm:customers:manage",
-    "crm:customers:read",
-  ]) || hasReadRole(establishment.roles);
+    workforcePermissions.crm.manage,
+    workforcePermissions.crm.read,
+  ]);
 }
 
 function hasTeamAccess(establishment: EntryRouteEstablishment) {
   return hasAnyPermission(establishment.effectivePermissions, [
-    "workforce:members:manage",
-    "workforce:members:read",
-    "workforce:invitations:manage",
-    "workforce:invitations:read",
-  ]) || hasReadRole(establishment.roles);
+    workforcePermissions.workforce.manage,
+    workforcePermissions.workforce.read,
+  ]);
 }
 
 function hasOrganizationAccess(establishment: EntryRouteEstablishment) {
   return hasAnyPermission(establishment.effectivePermissions, [
-    "business:organizations:manage",
-    "business:organizations:read",
-    "business:manage",
-  ]) || hasReadRole(establishment.roles);
+    workforcePermissions.business.manage,
+    workforcePermissions.business.read,
+  ]);
+}
+
+function hasAnyPermission(
+  permissions: ReadonlyArray<string>,
+  allowed: ReadonlyArray<string>,
+) {
+  return allowed.some((permission) => permissions.includes(permission));
 }

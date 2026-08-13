@@ -74,12 +74,12 @@ function roleRepository(): WorkforceRoleRepository {
       WorkforceRole.rehydrate({
         id: "11111111-1111-4111-8111-111111111111",
         name: "Admin",
-        permissions: ["catalog:manage", "business:organizations:read"],
+        permissions: ["catalog:manage", "business:read"],
         systemRole: false,
       }),
     ]),
     permissions: vi.fn(async () => [
-      "business:organizations:read",
+      "business:read",
       "catalog:manage",
     ] as const),
     save: vi.fn(async (role: WorkforceRole) =>
@@ -93,7 +93,7 @@ function roleRepository(): WorkforceRoleRepository {
       WorkforceRole.rehydrate({
         id: command.roleId,
         name: command.name ?? "Admin",
-        permissions: command.permissions ?? ["catalog:manage", "business:organizations:read"],
+        permissions: command.permissions ?? ["catalog:manage", "business:read"],
         systemRole: false,
       })),
     delete: vi.fn(async () => undefined),

@@ -144,6 +144,7 @@ function toHeaderEstablishment(
     id: establishment.id,
     name: establishment.name,
     photoUrl: establishment.photoUrl,
+    effectivePermissions: establishment.effectivePermissions,
     canRead: establishment.permissions.canRead,
     canUpdate: establishment.permissions.canUpdate,
     canDelete: establishment.permissions.canDelete,

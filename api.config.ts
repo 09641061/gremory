@@ -47,4 +47,3 @@ export const apiConfig = Object.freeze({
     useStreaming: process.env.NEXT_PUBLIC_ASSISTANT_STREAMING === "true",
   }),
 });
-

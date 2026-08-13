@@ -4,6 +4,8 @@ export interface TeamUserSummary {
   invitationId: string;
   memberId: string | null;
   userId: string | null;
+  name: string | null;
+  imageUrl: string | null;
   email: string;
   roleId: string;
   roleName: string;

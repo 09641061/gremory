@@ -1,46 +1,47 @@
-export const workforcePermissionCodes = [
-  "business:organizations:read",
-  "business:organizations:update",
-  "business:organizations:manage",
-  "business:establishments:read",
-  "business:establishments:update",
-  "business:establishments:manage",
-  "catalog:manage",
-  "catalog:categories:create",
-  "catalog:categories:read",
-  "catalog:categories:update",
-  "catalog:categories:delete",
-  "catalog:categories:manage",
-  "catalog:services:create",
-  "catalog:services:read",
-  "catalog:services:update",
-  "catalog:services:delete",
-  "catalog:services:manage",
-  "crm:customers:create",
-  "crm:customers:read",
-  "crm:customers:update",
-  "crm:customers:delete",
-  "crm:customers:manage",
-  "workforce:roles:create",
-  "workforce:roles:read",
-  "workforce:roles:update",
-  "workforce:roles:delete",
-  "workforce:roles:manage",
-  "workforce:invitations:create",
-  "workforce:invitations:read",
-  "workforce:invitations:delete",
-  "workforce:invitations:manage",
-  "workforce:members:read",
-  "workforce:members:delete",
-  "workforce:members:manage",
-  "scheduling:appointments:read",
-  "scheduling:appointments:create",
-  "scheduling:appointments:update",
-  "scheduling:appointments:delete",
-  "scheduling:appointments:manage",
-] as const;
+/**
+ * Stable permission contract exposed by the Workforce bounded context.
+ * UI components consume capabilities and never compare these codes directly.
+ */
+export const workforcePermissions = {
+  business: {
+    read: "business:read",
+    manage: "business:manage",
+  },
+  catalog: {
+    read: "catalog:read",
+    manage: "catalog:manage",
+  },
+  crm: {
+    read: "crm:read",
+    manage: "crm:manage",
+  },
+  workforce: {
+    read: "workforce:read",
+    manage: "workforce:manage",
+  },
+  scheduling: {
+    read: "scheduling:read",
+    manage: "scheduling:manage",
+  },
+} as const;
 
-export type WorkforcePermission = (typeof workforcePermissionCodes)[number];
+type DeepValue<T> = T extends string
+  ? T
+  : T extends Readonly<Record<string, unknown>>
+    ? DeepValue<T[keyof T]>
+    : never;
+
+export type WorkforcePermission = DeepValue<typeof workforcePermissions>;
+
+function collectPermissionCodes(value: unknown): WorkforcePermission[] {
+  if (typeof value === "string") return [value as WorkforcePermission];
+  if (!value || typeof value !== "object") return [];
+  return Object.values(value).flatMap(collectPermissionCodes);
+}
+
+export const workforcePermissionCodes = Object.freeze(
+  [...new Set(collectPermissionCodes(workforcePermissions))],
+) as readonly [WorkforcePermission, ...WorkforcePermission[]];
 
 export function isWorkforcePermission(value: string): value is WorkforcePermission {
   return workforcePermissionCodes.includes(value as WorkforcePermission);

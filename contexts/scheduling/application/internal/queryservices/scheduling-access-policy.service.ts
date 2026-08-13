@@ -3,8 +3,8 @@ import { createOrganizationQueryService } from "@/contexts/business/application/
 import { createEstablishmentQueryService } from "@/contexts/business/application/internal/queryservices/establishment-query.service";
 import {
   hasAnyPermission,
-  hasReadRole,
 } from "@/contexts/shared/application/internal/queryservices/access-context.helpers";
+import { workforcePermissions } from "@/contexts/workforce/domain/model/enums/workforce-permission";
 
 export interface SchedulingPermissions {
   canReadAppointments: boolean;
@@ -55,22 +55,17 @@ export class SchedulingAccessPolicyService {
         }
 
         const perms = estAccess.effectivePermissions;
-        const hasManage = hasAnyPermission(perms, ["scheduling:appointments:manage"]);
+        const hasManage = hasAnyPermission(perms, [
+          workforcePermissions.scheduling.manage,
+        ]);
 
         return {
           canReadAppointments:
             hasManage ||
-            hasReadRole(estAccess.roles) ||
-            hasAnyPermission(perms, ["scheduling:appointments:read"]),
-          canCreateAppointment:
-            hasManage ||
-            hasAnyPermission(perms, ["scheduling:appointments:create"]),
-          canUpdateAppointment:
-            hasManage ||
-            hasAnyPermission(perms, ["scheduling:appointments:update"]),
-          canDeleteAppointment:
-            hasManage ||
-            hasAnyPermission(perms, ["scheduling:appointments:delete"]),
+            hasAnyPermission(perms, [workforcePermissions.scheduling.read]),
+          canCreateAppointment: hasManage,
+          canUpdateAppointment: hasManage,
+          canDeleteAppointment: hasManage,
         };
       } catch {
         return {
