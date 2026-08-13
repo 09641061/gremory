@@ -9,21 +9,28 @@ export type EstablishmentListItem = {
   id: string;
   name: string;
   photoUrl: string | null;
+  timeZone: string | null;
 };
 
 export function EstablishmentsPage({
   establishments,
+  selectedEstablishment,
+  initialSelectedEstablishmentId,
   canUpdateMap = {},
   defaultCanUpdate = true,
   canCreate = true,
 }: {
   establishments: EstablishmentListItem[];
+  selectedEstablishment?: EstablishmentListItem | null;
+  initialSelectedEstablishmentId?: string;
   canUpdateMap?: Record<string, boolean>;
   defaultCanUpdate?: boolean;
   canCreate?: boolean;
 }) {
   const [filter, setFilter] = useState("");
-  const [selectedEstId, setSelectedEstId] = useState<string | null>(null);
+  const [selectedEstId, setSelectedEstId] = useState<string | null>(
+    initialSelectedEstablishmentId ?? null,
+  );
 
   const filteredEstablishments = useMemo(() => {
     const normalized = filter.trim().toLowerCase();
@@ -33,7 +40,10 @@ export function EstablishmentsPage({
     );
   }, [filter, establishments]);
 
-  const selectedEst = establishments.find((est) => est.id === selectedEstId) ?? null;
+  const selectedEst =
+    (selectedEstablishment?.id === selectedEstId ? selectedEstablishment : null) ??
+    establishments.find((est) => est.id === selectedEstId) ??
+    null;
   const canUpdateSelected = selectedEst ? (canUpdateMap[selectedEst.id] ?? defaultCanUpdate) : defaultCanUpdate;
 
   return (
@@ -61,6 +71,11 @@ export function EstablishmentsPage({
 
       {/* Columna derecha */}
       <EstablishmentDetailCard
+        key={
+          selectedEst
+            ? `${selectedEst.id}-${selectedEst.timeZone ?? ""}-${selectedEst.name}-${selectedEst.photoUrl ?? ""}`
+            : "empty"
+        }
         establishment={selectedEst}
         canUpdate={canUpdateSelected}
         onCancel={() => setSelectedEstId(null)}

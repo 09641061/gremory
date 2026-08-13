@@ -1,10 +1,7 @@
 import { createTeamQueryService } from "@/contexts/workforce/application/internal/queryservices/team-query.service";
 import { createOrganizationQueryService } from "@/contexts/business/application/internal/queryservices/organization-query.service";
 import { createEstablishmentQueryService } from "@/contexts/business/application/internal/queryservices/establishment-query.service";
-import {
-  hasAnyPermission,
-} from "@/contexts/shared/application/internal/queryservices/access-context.helpers";
-import { workforcePermissions } from "@/contexts/workforce/domain/model/enums/workforce-permission";
+import { hasAnyPermission } from "@/contexts/shared/application/internal/queryservices/access-context.helpers";
 
 export interface WorkforcePermissions {
   canReadTeam: boolean;
@@ -67,8 +64,10 @@ export class WorkforceAccessPolicyService {
         }
 
         const perms = estAccess.effectivePermissions;
-        const hasManage = hasAnyPermission(perms, [workforcePermissions.workforce.manage]);
-        const hasRead = hasManage || hasAnyPermission(perms, [workforcePermissions.workforce.read]);
+        const hasManage = hasAnyPermission(perms, ["workforce:manage"]);
+        const hasRead =
+          hasManage ||
+          hasAnyPermission(perms, ["workforce:read"]);
 
         return {
           canReadTeam: hasRead,
@@ -111,4 +110,8 @@ async function ownsEstablishment(establishmentId: string): Promise<boolean> {
 }
 export function createWorkforceAccessPolicyService() {
   return new WorkforceAccessPolicyService();
+}
+
+function hasReadRole(roles?: ReadonlyArray<{ name: string }>): boolean {
+  return roles?.some((role) => role.name.toLowerCase() === "read") ?? false;
 }

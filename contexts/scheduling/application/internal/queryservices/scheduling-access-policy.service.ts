@@ -4,7 +4,6 @@ import { createEstablishmentQueryService } from "@/contexts/business/application
 import {
   hasAnyPermission,
 } from "@/contexts/shared/application/internal/queryservices/access-context.helpers";
-import { workforcePermissions } from "@/contexts/workforce/domain/model/enums/workforce-permission";
 
 export interface SchedulingPermissions {
   canReadAppointments: boolean;
@@ -55,14 +54,13 @@ export class SchedulingAccessPolicyService {
         }
 
         const perms = estAccess.effectivePermissions;
-        const hasManage = hasAnyPermission(perms, [
-          workforcePermissions.scheduling.manage,
-        ]);
+        const hasManage = hasAnyPermission(perms, ["scheduling:manage"]);
 
         return {
           canReadAppointments:
             hasManage ||
-            hasAnyPermission(perms, [workforcePermissions.scheduling.read]),
+            hasReadRole(estAccess.roles) ||
+            hasAnyPermission(perms, ["scheduling:read"]),
           canCreateAppointment: hasManage,
           canUpdateAppointment: hasManage,
           canDeleteAppointment: hasManage,
@@ -94,4 +92,8 @@ async function ownsEstablishment(establishmentId: string): Promise<boolean> {
 }
 export function createSchedulingAccessPolicyService() {
   return new SchedulingAccessPolicyService();
+}
+
+function hasReadRole(roles?: ReadonlyArray<{ name: string }>): boolean {
+  return roles?.some((role) => role.name.toLowerCase() === "read") ?? false;
 }

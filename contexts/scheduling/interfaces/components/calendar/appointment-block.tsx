@@ -1,14 +1,13 @@
 "use client";
 
 import { Appointment } from "../../../domain/model/entities/appointment";
-import { formatClockRange } from "../scheduling-datetime";
 import { cn } from "@/lib/utils";
+import { formatTimeInTimeZone } from "../scheduling-timezone.utils";
 
 interface AppointmentBlockProps {
   appointment: Appointment;
-  /** Current time in ms, or `null` before mount. Owned by the calendar so every
-   *  block agrees on "now" and hydration stays deterministic. */
   now: number | null;
+  timeZone: string;
   onClick: () => void;
 }
 
@@ -33,14 +32,12 @@ function getStatusStyles(appointment: Appointment, now: number | null) {
   }
 }
 
-export function AppointmentBlock({ appointment, now, onClick }: AppointmentBlockProps) {
+export function AppointmentBlock({ appointment, now, timeZone, onClick }: AppointmentBlockProps) {
   const starts = new Date(appointment.startsAt);
   const ends = new Date(appointment.endsAt);
-  const timeRange = formatClockRange(starts, ends);
+  const timeRange = `${formatTimeInTimeZone(starts, timeZone)} - ${formatTimeInTimeZone(ends, timeZone)}`;
 
   return (
-    // A real button, so the block is reachable by Tab and activated by
-    // Enter/Space like every other control on the page.
     <button
       type="button"
       onClick={onClick}
@@ -52,9 +49,7 @@ export function AppointmentBlock({ appointment, now, onClick }: AppointmentBlock
         getStatusStyles(appointment, now)
       )}
     >
-      <span className="block truncate text-xs font-bold leading-snug">
-        {appointment.title}
-      </span>
+      <span className="block truncate text-xs font-bold leading-snug">{appointment.title}</span>
       <span className="mt-0.5 block text-[10px] font-medium opacity-80">{timeRange}</span>
     </button>
   );

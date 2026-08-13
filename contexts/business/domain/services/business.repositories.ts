@@ -30,6 +30,7 @@ export interface EstablishmentRepository {
     organizationId: OrganizationId,
     name: EstablishmentName,
     photoUrl: EstablishmentPhoto,
+    timeZone: string,
   ): Promise<Establishment>;
   findById(id: EstablishmentId): Promise<Establishment | null>;
   findByOrganization(

@@ -8,7 +8,13 @@ import { AppointmentDetailModal } from "../appointment-detail/appointment-detail
 import { WeeklyCalendarDaysHeader } from "./weekly-calendar-days-header";
 import { WeeklyCalendarGrid } from "./weekly-calendar-grid";
 import { WeeklyCalendarToolbar } from "./weekly-calendar-toolbar";
-import { getWeekRange, toDayKey, toLocalISOString } from "../scheduling-datetime";
+import {
+  addCalendarDays,
+  calendarDateToZonedIso,
+  getCalendarAnchorDate,
+  getCalendarWeekRange,
+  toTimeZoneDayKey,
+} from "../scheduling-timezone.utils";
 import { useNow } from "../use-now";
 import type {
   SchedulingCustomerViewModel,
@@ -18,8 +24,8 @@ import type {
 
 const FIRST_HOUR = 7;
 const HOUR_COUNT = 15;
-/** Below this the seven day columns stop being readable, so the grid scrolls. */
 const GRID_MIN_WIDTH = 700;
+const HOURS = Array.from({ length: HOUR_COUNT }, (_, index) => FIRST_HOUR + index);
 
 interface WeeklyCalendarProps {
   establishmentId: string;
@@ -29,9 +35,8 @@ interface WeeklyCalendarProps {
   canCreateAppointment: boolean;
   canUpdateAppointment: boolean;
   canDeleteAppointment: boolean;
+  timeZone: string;
 }
-
-const HOURS = Array.from({ length: HOUR_COUNT }, (_, index) => FIRST_HOUR + index);
 
 export function WeeklyCalendar({
   establishmentId,
@@ -41,30 +46,25 @@ export function WeeklyCalendar({
   canCreateAppointment,
   canUpdateAppointment,
   canDeleteAppointment,
+  timeZone,
 }: WeeklyCalendarProps) {
   const router = useRouter();
-  const [currentDate, setCurrentDate] = useState(() => new Date());
+  const [currentDate, setCurrentDate] = useState(() => getCalendarAnchorDate(timeZone));
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
   const [isPending, startTransition] = useTransition();
-
-  // Discards responses from superseded week requests.
   const requestIdRef = useRef(0);
   const now = useNow();
-  const todayKey = now === null ? null : toDayKey(new Date(now));
+  const todayKey = now === null ? null : toTimeZoneDayKey(new Date(now), timeZone);
 
-  const { start: weekStart, end: weekEnd } = useMemo(
-    () => getWeekRange(currentDate),
+  const { sunday: weekStart, saturday: weekEnd } = useMemo(
+    () => getCalendarWeekRange(currentDate),
     [currentDate]
   );
 
   const weekDays = useMemo(
     () =>
-      Array.from({ length: 7 }, (_, index) => {
-        const day = new Date(weekStart);
-        day.setDate(weekStart.getDate() + index);
-        return day;
-      }),
+      Array.from({ length: 7 }, (_, index) => addCalendarDays(weekStart, index)),
     [weekStart]
   );
 
@@ -73,26 +73,22 @@ export function WeeklyCalendar({
 
     startTransition(async () => {
       const result = await listAppointmentsAction(
-        toLocalISOString(weekStart),
-        toLocalISOString(weekEnd),
+        calendarDateToZonedIso(weekStart, timeZone, false),
+        calendarDateToZonedIso(weekEnd, timeZone, true),
         establishmentId
       );
       if (requestId === requestIdRef.current) {
         setAppointments(result.content);
       }
     });
-  }, [weekStart, weekEnd, establishmentId]);
+  }, [weekStart, weekEnd, establishmentId, timeZone, startTransition]);
 
   useEffect(() => {
     fetchAppointments();
   }, [fetchAppointments]);
 
   const shiftWeek = (direction: -1 | 1) => {
-    setCurrentDate((current) => {
-      const next = new Date(current);
-      next.setDate(next.getDate() + direction * 7);
-      return next;
-    });
+    setCurrentDate((current) => addCalendarDays(current, direction * 7));
   };
 
   const handleUpdate = (updated: Appointment) => {
@@ -109,15 +105,15 @@ export function WeeklyCalendar({
         onDateChange={setCurrentDate}
         onPreviousWeek={() => shiftWeek(-1)}
         onNextWeek={() => shiftWeek(1)}
-        onToday={() => setCurrentDate(new Date())}
+        onToday={() => setCurrentDate(getCalendarAnchorDate(timeZone))}
         onCreateAppointment={() => router.push("/schedule/new")}
         canCreateAppointment={canCreateAppointment}
+        timeZone={timeZone}
       />
 
       <div className="flex-1 overflow-auto rounded-xl border border-border bg-card shadow-sm">
-        {/* Header and grid share this track so they scroll horizontally together. */}
         <div style={{ minWidth: GRID_MIN_WIDTH }}>
-          <WeeklyCalendarDaysHeader weekDays={weekDays} todayKey={todayKey} />
+          <WeeklyCalendarDaysHeader weekDays={weekDays} todayKey={todayKey} timeZone={timeZone} />
           <WeeklyCalendarGrid
             appointments={appointments}
             weekDays={weekDays}
@@ -125,6 +121,7 @@ export function WeeklyCalendar({
             isPending={isPending}
             todayKey={todayKey}
             now={now}
+            timeZone={timeZone}
             onAppointmentClick={setSelectedAppointment}
           />
         </div>
@@ -147,6 +144,7 @@ export function WeeklyCalendar({
           }}
           canUpdateAppointment={canUpdateAppointment}
           canDeleteAppointment={canDeleteAppointment}
+          timeZone={timeZone}
         />
       )}
     </div>

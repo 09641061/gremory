@@ -32,6 +32,7 @@ export async function createEstablishmentAction(
     organizationId: formData.get("organizationId"),
     name: formData.get("name"),
     photoUrl: formData.get("photoUrl"),
+    timeZone: formData.get("timeZone") ?? "America/Lima",
   });
   if (!parsed.success) return actionError(parsed.error.issues[0]?.message);
 
@@ -59,10 +60,12 @@ export async function updateEstablishmentAction(
   _previous: BusinessActionResult,
   formData: FormData
 ): Promise<BusinessActionResult> {
+  const rawTimeZone = formData.get("timeZone");
   const parsed = updateEstablishmentSchema.safeParse({
     id: formData.get("id"),
     name: formData.get("name"),
     photoUrl: formData.get("photoUrl"),
+    timeZone: typeof rawTimeZone === "string" && rawTimeZone.trim() ? rawTimeZone : undefined,
   });
   if (!parsed.success) return actionError(parsed.error.issues[0]?.message);
 

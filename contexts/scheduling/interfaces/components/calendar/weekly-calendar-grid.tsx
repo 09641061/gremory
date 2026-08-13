@@ -4,8 +4,8 @@ import { useMemo } from "react";
 import { Appointment } from "../../../domain/model/entities/appointment";
 import { Skeleton } from "@/contexts/shared/interfaces/components/ui/skeleton";
 import { cn } from "@/lib/utils";
-import { toDayKey } from "../scheduling-datetime";
 import { AppointmentBlock } from "./appointment-block";
+import { toTimeZoneDayKey } from "../scheduling-timezone.utils";
 
 const ROW_MIN_HEIGHT = 80;
 const CARD_HEIGHT = 72;
@@ -16,10 +16,9 @@ interface WeeklyCalendarGridProps {
   weekDays: Date[];
   hours: number[];
   isPending: boolean;
-  /** Day key of today, or `null` before mount. */
   todayKey: string | null;
-  /** Current time in ms, or `null` before mount. */
   now: number | null;
+  timeZone: string;
   onAppointmentClick: (appointment: Appointment) => void;
 }
 
@@ -46,19 +45,21 @@ export function WeeklyCalendarGrid({
   isPending,
   todayKey,
   now,
+  timeZone,
   onAppointmentClick,
 }: WeeklyCalendarGridProps) {
   const appointmentsByCell = useMemo(() => {
     const map = new Map<string, Appointment[]>();
     for (const appointment of appointments) {
+      const dayKey = toTimeZoneDayKey(new Date(appointment.startsAt), timeZone);
       const starts = new Date(appointment.startsAt);
-      const key = `${toDayKey(starts)}-${starts.getHours()}`;
+      const key = `${dayKey}-${starts.getHours()}`;
       const bucket = map.get(key);
       if (bucket) bucket.push(appointment);
       else map.set(key, [appointment]);
     }
     return map;
-  }, [appointments]);
+  }, [appointments, timeZone]);
 
   if (isPending) {
     return <CalendarSkeleton />;
@@ -67,10 +68,9 @@ export function WeeklyCalendarGrid({
   return (
     <div className="select-none">
       {hours.map((hour) => {
-        // One row height for the whole hour, driven by its busiest day, so the
-        // seven cells always line up.
         const busiestDay = weekDays.reduce((max, day) => {
-          const count = appointmentsByCell.get(`${toDayKey(day)}-${hour}`)?.length ?? 0;
+          const dayKey = toTimeZoneDayKey(day, timeZone);
+          const count = appointmentsByCell.get(`${dayKey}-${hour}`)?.length ?? 0;
           return Math.max(max, count);
         }, 0);
         const rowHeight = Math.max(ROW_MIN_HEIGHT, busiestDay * CARD_HEIGHT + ROW_PADDING);
@@ -86,7 +86,7 @@ export function WeeklyCalendarGrid({
             </div>
 
             {weekDays.map((day) => {
-              const dayKey = toDayKey(day);
+              const dayKey = toTimeZoneDayKey(day, timeZone);
               const cellAppointments = appointmentsByCell.get(`${dayKey}-${hour}`) ?? [];
 
               return (
@@ -102,6 +102,7 @@ export function WeeklyCalendarGrid({
                       key={appointment.id}
                       appointment={appointment}
                       now={now}
+                      timeZone={timeZone}
                       onClick={() => onAppointmentClick(appointment)}
                     />
                   ))}

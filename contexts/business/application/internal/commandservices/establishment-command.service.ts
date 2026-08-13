@@ -21,6 +21,7 @@ export class EstablishmentCommandServiceImpl implements EstablishmentCommandServ
       createOrganizationId(command.organizationId),
       createEstablishmentName(command.name),
       createEstablishmentPhoto(command.photoUrl),
+      command.timeZone ?? "UTC",
     );
     return establishment.id;
   }
@@ -30,7 +31,7 @@ export class EstablishmentCommandServiceImpl implements EstablishmentCommandServ
       createEstablishmentId(command.id),
     );
     if (!establishment) throw new Error("Establishment not found");
-    establishment.update(command.name, command.photoUrl);
+    establishment.update(command.name, command.photoUrl, command.timeZone);
     const saved = await this.establishments.save(establishment);
     return saved.id;
   }

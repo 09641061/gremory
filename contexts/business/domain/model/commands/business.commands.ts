@@ -6,11 +6,13 @@ export type CreateEstablishmentCommand = Readonly<{
   organizationId: string;
   name: string;
   photoUrl?: string | null;
+  timeZone?: string | null;
 }>;
 export type UpdateEstablishmentCommand = Readonly<{
   id: string;
   name: string;
   photoUrl?: string | null;
+  timeZone?: string | null;
 }>;
 export type DeleteEstablishmentCommand = Readonly<{ id: string }>;
 
@@ -39,6 +41,7 @@ export function createEstablishmentCommand(
     organizationId: input.organizationId,
     name: input.name,
     photoUrl: input.photoUrl ?? null,
+    timeZone: input.timeZone ?? null,
   });
 }
 
@@ -49,6 +52,7 @@ export function updateEstablishmentCommand(
     id: input.id,
     name: input.name,
     photoUrl: input.photoUrl ?? null,
+    timeZone: input.timeZone ?? null,
   });
 }
 

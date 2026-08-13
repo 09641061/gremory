@@ -4,7 +4,6 @@ import { createEstablishmentQueryService } from "@/contexts/business/application
 import {
   hasAnyPermission,
 } from "@/contexts/shared/application/internal/queryservices/access-context.helpers";
-import { workforcePermissions } from "@/contexts/workforce/domain/model/enums/workforce-permission";
 
 export interface CrmPermissions {
   canReadCustomers: boolean;
@@ -51,12 +50,13 @@ export class CrmAccessPolicyService {
         }
 
         const perms = estAccess.effectivePermissions;
-        const hasManage = hasAnyPermission(perms, [workforcePermissions.crm.manage]);
+        const hasManage = hasAnyPermission(perms, ["crm:manage"]);
 
         return {
           canReadCustomers:
             hasManage ||
-            hasAnyPermission(perms, [workforcePermissions.crm.read]),
+            hasReadRole(estAccess.roles) ||
+            hasAnyPermission(perms, ["crm:read"]),
           canCreateCustomer: hasManage,
           canUpdateCustomer: hasManage,
           canDeleteCustomer: hasManage,
@@ -88,4 +88,8 @@ async function ownsEstablishment(establishmentId: string): Promise<boolean> {
 }
 export function createCrmAccessPolicyService() {
   return new CrmAccessPolicyService();
+}
+
+function hasReadRole(roles?: ReadonlyArray<{ name: string }>): boolean {
+  return roles?.some((role) => role.name.toLowerCase() === "read") ?? false;
 }

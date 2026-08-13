@@ -21,6 +21,7 @@ describe("EstablishmentDetailCard Component", () => {
     id: "est-123",
     name: "Test Establishment",
     photoUrl: "http://example.com/photo.jpg",
+    timeZone: "America/Lima",
   };
 
   it("renders detail card when establishment is selected (Happy Case - Edit allowed)", () => {

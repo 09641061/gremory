@@ -4,7 +4,6 @@ import { createEstablishmentQueryService } from "@/contexts/business/application
 import {
   hasAnyPermission,
 } from "@/contexts/shared/application/internal/queryservices/access-context.helpers";
-import { workforcePermissions } from "@/contexts/workforce/domain/model/enums/workforce-permission";
 
 export interface CatalogPermissions {
   canReadCatalog: boolean;
@@ -64,7 +63,7 @@ export class CatalogAccessPolicyService {
 
         const perms = estAccess.effectivePermissions ?? [];
         const hasReadCatalog = hasCatalogReadPermission(perms);
-        const hasManage = hasAnyPermission(perms, [workforcePermissions.catalog.manage]);
+        const hasManage = hasAnyPermission(perms, ["catalog:manage"]);
 
         return {
           canReadCatalog: hasReadCatalog,
@@ -108,8 +107,9 @@ export function createCatalogAccessPolicyService() {
 }
 
 function hasCatalogReadPermission(permissions: ReadonlyArray<string>): boolean {
-  return hasAnyPermission(permissions, [
-    workforcePermissions.catalog.read,
-    workforcePermissions.catalog.manage,
-  ]);
+  return permissions.some(
+    (permission) =>
+      permission === "catalog:manage" ||
+      permission === "catalog:read",
+  );
 }

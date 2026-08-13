@@ -1,4 +1,5 @@
 import { createSchedulingAccessPolicyService } from "@/contexts/scheduling/application/internal/queryservices/scheduling-access-policy.service";
+import { createEstablishmentQueryService } from "@/contexts/business/application/internal/queryservices/establishment-query.service";
 import { loadSchedulingPageData } from "@/contexts/scheduling/application/internal/queryservices/scheduling-page-data.query.service";
 import { CreateAppointmentForm } from "@/contexts/scheduling/interfaces/components/appointment-form/create-appointment-form";
 import { redirect } from "next/navigation";
@@ -22,6 +23,8 @@ export default async function NewAppointmentPage({ searchParams }: NewAppointmen
   }
 
   const { services, members, customers } = await loadSchedulingPageData(establishmentId);
+  const establishment = await createEstablishmentQueryService().getById({ id: establishmentId });
+  const timeZone = establishment?.timeZone ?? "UTC";
 
   return (
     <main className="mx-auto w-full max-w-[800px] px-4 py-8">
@@ -30,6 +33,7 @@ export default async function NewAppointmentPage({ searchParams }: NewAppointmen
         services={services}
         members={members}
         customers={customers}
+        timeZone={timeZone}
       />
     </main>
   );

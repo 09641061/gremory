@@ -1,21 +1,18 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { toDayKey } from "../scheduling-datetime";
+import { formatCalendarWeekday, toTimeZoneDayKey } from "../scheduling-timezone.utils";
 
 interface WeeklyCalendarDaysHeaderProps {
   weekDays: Date[];
-  /** Day key of today, or `null` before mount. */
   todayKey: string | null;
+  timeZone: string;
 }
 
-/**
- * Sticky day row. It lives inside the same min-width track as the grid so the
- * two stay aligned when the calendar scrolls horizontally on narrow screens.
- */
 export function WeeklyCalendarDaysHeader({
   weekDays,
   todayKey,
+  timeZone,
 }: WeeklyCalendarDaysHeaderProps) {
   return (
     <div className="sticky top-0 z-10 grid grid-cols-[64px_repeat(7,1fr)] border-b border-border bg-card">
@@ -26,11 +23,12 @@ export function WeeklyCalendarDaysHeader({
       </div>
 
       {weekDays.map((day) => {
-        const isToday = toDayKey(day) === todayKey;
+        const dayKey = toTimeZoneDayKey(day, timeZone);
+        const isToday = dayKey === todayKey;
 
         return (
           <div
-            key={toDayKey(day)}
+            key={dayKey}
             className={cn(
               "flex flex-col items-center justify-center border-r border-border p-3 last:border-r-0",
               isToday && "bg-primary/5"
@@ -42,7 +40,7 @@ export function WeeklyCalendarDaysHeader({
                 isToday ? "text-primary" : "text-muted-foreground"
               )}
             >
-              {day.toLocaleDateString("en-US", { weekday: "short" })}
+              {formatCalendarWeekday(day, timeZone)}
             </span>
             <span
               className={cn(
@@ -52,7 +50,7 @@ export function WeeklyCalendarDaysHeader({
                   : "text-foreground"
               )}
             >
-              {day.getDate()}
+              {day.getUTCDate()}
             </span>
           </div>
         );

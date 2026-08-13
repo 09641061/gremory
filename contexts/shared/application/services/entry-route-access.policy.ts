@@ -2,7 +2,6 @@ import type {
   EntryRouteEstablishment,
   EntryRoutePath,
 } from "@/contexts/shared/application/model/entry-route.view-models";
-import { workforcePermissions } from "@/contexts/workforce/domain/model/enums/workforce-permission";
 
 export function resolveEmployeeEntryPath(
   establishments: ReadonlyArray<EntryRouteEstablishment>,
@@ -26,37 +25,37 @@ export function resolveEmployeeEntryPath(
 
 function hasSchedulingAccess(establishment: EntryRouteEstablishment) {
   return hasAnyPermission(establishment.effectivePermissions, [
-    workforcePermissions.scheduling.manage,
-    workforcePermissions.scheduling.read,
-  ]);
+    "scheduling:manage",
+    "scheduling:read",
+  ]) || hasReadRole(establishment.roles);
 }
 
 function hasCatalogAccess(establishment: EntryRouteEstablishment) {
   return hasAnyPermission(establishment.effectivePermissions, [
-    workforcePermissions.catalog.read,
-    workforcePermissions.catalog.manage,
-  ]);
+    "catalog:manage",
+    "catalog:read",
+  ]) || hasReadRole(establishment.roles);
 }
 
 function hasCrmAccess(establishment: EntryRouteEstablishment) {
   return hasAnyPermission(establishment.effectivePermissions, [
-    workforcePermissions.crm.manage,
-    workforcePermissions.crm.read,
-  ]);
+    "crm:manage",
+    "crm:read",
+  ]) || hasReadRole(establishment.roles);
 }
 
 function hasTeamAccess(establishment: EntryRouteEstablishment) {
   return hasAnyPermission(establishment.effectivePermissions, [
-    workforcePermissions.workforce.manage,
-    workforcePermissions.workforce.read,
-  ]);
+    "workforce:manage",
+    "workforce:read",
+  ]) || hasReadRole(establishment.roles);
 }
 
 function hasOrganizationAccess(establishment: EntryRouteEstablishment) {
   return hasAnyPermission(establishment.effectivePermissions, [
-    workforcePermissions.business.manage,
-    workforcePermissions.business.read,
-  ]);
+    "business:manage",
+    "business:read",
+  ]) || hasReadRole(establishment.roles);
 }
 
 function hasAnyPermission(
@@ -64,4 +63,8 @@ function hasAnyPermission(
   allowed: ReadonlyArray<string>,
 ) {
   return allowed.some((permission) => permissions.includes(permission));
+}
+
+function hasReadRole(roles?: ReadonlyArray<{ name: string }>) {
+  return roles?.some((role) => role.name.toLowerCase() === "read") ?? false;
 }

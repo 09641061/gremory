@@ -1,4 +1,5 @@
 import { createSchedulingAccessPolicyService } from "@/contexts/scheduling/application/internal/queryservices/scheduling-access-policy.service";
+import { createEstablishmentQueryService } from "@/contexts/business/application/internal/queryservices/establishment-query.service";
 import { loadSchedulingPageData } from "@/contexts/scheduling/application/internal/queryservices/scheduling-page-data.query.service";
 import { WeeklyCalendar } from "@/contexts/scheduling/interfaces/components/calendar/weekly-calendar";
 import { redirect } from "next/navigation";
@@ -30,11 +31,14 @@ export default async function SchedulePage({ searchParams }: SchedulePageProps) 
     redirect("/access-denied");
   }
 
+  const establishment = await createEstablishmentQueryService().getById({ id: establishmentId });
+  const timeZone = establishment?.timeZone ?? "UTC";
   const { services, members, customers } = await loadSchedulingPageData(establishmentId);
 
   return (
     <main className="p-6">
       <WeeklyCalendar
+        key={`${establishmentId}-${timeZone}`}
         establishmentId={establishmentId}
         services={services}
         members={members}
@@ -42,6 +46,7 @@ export default async function SchedulePage({ searchParams }: SchedulePageProps) 
         canCreateAppointment={canCreateAppointment}
         canUpdateAppointment={canUpdateAppointment}
         canDeleteAppointment={canDeleteAppointment}
+        timeZone={timeZone}
       />
     </main>
   );

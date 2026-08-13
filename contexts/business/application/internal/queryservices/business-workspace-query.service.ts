@@ -140,11 +140,14 @@ function canCreateOrganization(
 function toHeaderEstablishment(
   establishment: Awaited<ReturnType<BusinessWorkspaceApiGateway["getWorkspace"]>>["organizations"][number]["establishments"][number],
 ): WorkspaceHeaderEstablishment {
+  const effectivePermissions = establishment.effectivePermissions ?? [];
+
   return {
     id: establishment.id,
     name: establishment.name,
     photoUrl: establishment.photoUrl,
-    effectivePermissions: establishment.effectivePermissions,
+    timeZone: establishment.timeZone ?? null,
+    ...(effectivePermissions.length > 0 ? { effectivePermissions } : {}),
     canRead: establishment.permissions.canRead,
     canUpdate: establishment.permissions.canUpdate,
     canDelete: establishment.permissions.canDelete,

@@ -10,11 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/contexts/shared/interfaces/components/ui/dialog";
-import {
-  Alert,
-  AlertDescription,
-  AlertTitle,
-} from "@/contexts/shared/interfaces/components/ui/alert";
+import { Alert, AlertDescription, AlertTitle } from "@/contexts/shared/interfaces/components/ui/alert";
 import type {
   SchedulingCustomerViewModel,
   SchedulingMemberViewModel,
@@ -30,8 +26,8 @@ import { RescheduleFormModal } from "../appointment-form/reschedule-form-modal";
 import { AppointmentDetailActions } from "./appointment-detail-actions";
 import { AppointmentDetailInfo } from "./appointment-detail-info";
 import { AppointmentDetailSummary } from "./appointment-detail-summary";
-import { formatClockTime } from "../scheduling-datetime";
 import { useNow } from "../use-now";
+import { formatTimeInTimeZone } from "../scheduling-timezone.utils";
 import {
   findAppointmentCustomer,
   findAppointmentEmployee,
@@ -56,6 +52,7 @@ interface AppointmentDetailModalProps {
   onDeleteSuccess: () => void;
   canUpdateAppointment: boolean;
   canDeleteAppointment: boolean;
+  timeZone: string;
 }
 
 export function AppointmentDetailModal({
@@ -69,6 +66,7 @@ export function AppointmentDetailModal({
   onDeleteSuccess,
   canUpdateAppointment,
   canDeleteAppointment,
+  timeZone,
 }: AppointmentDetailModalProps) {
   const [openFlow, setOpenFlow] = useState<OpenFlow>(null);
   const now = useNow();
@@ -79,13 +77,9 @@ export function AppointmentDetailModal({
   const customer = findAppointmentCustomer(customers, appointment);
   const employee = findAppointmentEmployee(members, appointment);
   const startsAt = new Date(appointment.startsAt);
-
   const isOverdue =
     appointment.status === "CONFIRMED" && now !== null && startsAt.getTime() < now;
-
   const closeFlow = () => setOpenFlow(null);
-
-  /** Status changes close the detail modal so the calendar shows the new state. */
   const handleTransitionSuccess = (updated: Appointment) => {
     onUpdate(updated);
     onOpenChange(false);
@@ -110,7 +104,7 @@ export function AppointmentDetailModal({
                   Appointment overdue
                 </AlertTitle>
                 <AlertDescription className="text-primary/90">
-                  This was scheduled to start at {formatClockTime(startsAt)} and the client
+                  This was scheduled to start at {formatTimeInTimeZone(startsAt, timeZone)} and the client
                   has not arrived yet.
                 </AlertDescription>
               </Alert>
@@ -124,8 +118,8 @@ export function AppointmentDetailModal({
             />
 
             <AppointmentDetailInfo
-              formattedTime={formatAppointmentTime(appointment.startsAt, appointment.endsAt)}
-              formattedDate={formatAppointmentDate(appointment.startsAt)}
+              formattedTime={formatAppointmentTime(appointment.startsAt, appointment.endsAt, timeZone)}
+              formattedDate={formatAppointmentDate(appointment.startsAt, timeZone)}
               customerName={customer?.name ?? "Unknown"}
               employeeName={employee?.name ?? "Unknown"}
               cancellationReason={appointment.cancellationReason}
@@ -161,6 +155,7 @@ export function AppointmentDetailModal({
             onDeleteSuccess();
             onOpenChange(false);
           }}
+          timeZone={timeZone}
         />
       )}
 

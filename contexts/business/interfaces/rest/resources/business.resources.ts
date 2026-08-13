@@ -10,6 +10,7 @@ export interface EstablishmentResource {
   organizationId: string;
   name: string;
   photoUrl: string | null;
+  timeZone: string | null;
 }
 
 export interface PageResource<T> {

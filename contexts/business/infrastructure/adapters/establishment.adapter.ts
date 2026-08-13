@@ -15,8 +15,9 @@ export class EstablishmentAdapter implements EstablishmentRepository {
     organizationId: OrganizationId,
     name: EstablishmentName,
     photoUrl: EstablishmentPhoto,
+    timeZone: string,
   ): Promise<Establishment> {
-    return this.gateway.create(organizationId, name, photoUrl);
+    return this.gateway.create(organizationId, name, photoUrl, timeZone);
   }
 
   findById(id: EstablishmentId): Promise<Establishment | null> {

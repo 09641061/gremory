@@ -16,7 +16,7 @@ import type {
 import { AppointmentFormFields } from "./appointment-form-fields";
 import { computeAppointmentTimes } from "./scheduling-form-utils";
 import { EMPTY_APPOINTMENT_FORM_VALUES, type AppointmentFormValues } from "./types";
-import { toDateInputValue } from "../scheduling-datetime";
+import { toTimeZoneDayKey } from "../scheduling-timezone.utils";
 import { useNow } from "../use-now";
 
 interface CreateAppointmentFormProps {
@@ -24,6 +24,7 @@ interface CreateAppointmentFormProps {
   services: SchedulingServiceViewModel[];
   members: SchedulingMemberViewModel[];
   customers: SchedulingCustomerViewModel[];
+  timeZone: string;
 }
 
 const initialActionState: ActionState<Appointment> = {
@@ -38,6 +39,7 @@ export function CreateAppointmentForm({
   services,
   members,
   customers,
+  timeZone,
 }: CreateAppointmentFormProps) {
   const router = useRouter();
   const [state, formAction, isSubmitting] = useActionState(
@@ -60,6 +62,7 @@ export function CreateAppointmentForm({
     startDate: values.startDate,
     startTime: values.startTime,
     durationMinutes: selectedService?.durationMinutes,
+    timeZone,
   });
 
   useEffect(() => {
@@ -104,7 +107,7 @@ export function CreateAppointmentForm({
             customers={customers}
             fieldErrors={state.status === "error" ? state.fieldErrors : null}
             formattedEnd={formattedEnd}
-            minDate={now === null ? undefined : toDateInputValue(new Date(now))}
+            minDate={now === null ? undefined : toTimeZoneDayKey(new Date(now), timeZone)}
           />
 
           <div className="flex justify-end gap-2 pt-2">

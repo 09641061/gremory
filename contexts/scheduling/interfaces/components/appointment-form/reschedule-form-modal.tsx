@@ -26,6 +26,7 @@ import { AppointmentFormFields } from "./appointment-form-fields";
 import { computeAppointmentTimes } from "./scheduling-form-utils";
 import type { AppointmentFormValues } from "./types";
 import { toDateInputValue, toTimeInputValue } from "../scheduling-datetime";
+import { getTimeZoneParts } from "../scheduling-timezone.utils";
 
 interface RescheduleFormModalProps {
   isOpen: boolean;
@@ -36,6 +37,7 @@ interface RescheduleFormModalProps {
   customers: SchedulingCustomerViewModel[];
   onSuccess: (updatedAppointment: Appointment) => void;
   onDeleteSuccess: () => void;
+  timeZone: string;
 }
 
 const initialActionState: ActionState<Appointment> = {
@@ -45,15 +47,17 @@ const initialActionState: ActionState<Appointment> = {
   fieldErrors: null,
 };
 
-function toFormValues(appointment: Appointment): AppointmentFormValues {
-  const start = new Date(appointment.startsAt);
+function toFormValues(appointment: Appointment, timeZone: string): AppointmentFormValues {
+  const parts = getTimeZoneParts(new Date(appointment.startsAt), timeZone);
+  const localStart = new Date(Date.UTC(parts.year, parts.month - 1, parts.day, parts.hour, parts.minute));
+
   return {
     title: appointment.title,
     serviceId: appointment.serviceId ?? "",
     customerId: appointment.customerId ?? "",
     employeeId: appointment.employeeId ?? "",
-    startDate: toDateInputValue(start),
-    startTime: toTimeInputValue(start),
+    startDate: toDateInputValue(localStart),
+    startTime: toTimeInputValue(localStart),
   };
 }
 
@@ -66,28 +70,29 @@ export function RescheduleFormModal({
   customers,
   onSuccess,
   onDeleteSuccess,
+  timeZone,
 }: RescheduleFormModalProps) {
-  // Keeps the submitted id current without re-creating the action identity.
   const appointmentIdRef = useRef(appointment.id);
+
   useEffect(() => {
     appointmentIdRef.current = appointment.id;
   }, [appointment.id]);
 
   const [state, formAction, isPending] = useActionState(
-    async (prevState: ActionState<Appointment>, formData: FormData) =>
-      updateAppointmentAction(appointmentIdRef.current, prevState, formData),
+    async (prevState: ActionState<Appointment>, formData: FormData) => {
+      return await updateAppointmentAction(appointmentIdRef.current, prevState, formData);
+    },
     initialActionState
   );
 
   const hasSucceeded = useRef(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
-  const [values, setValues] = useState(() => toFormValues(appointment));
+  const [values, setValues] = useState(() => toFormValues(appointment, timeZone));
 
-  // Re-seed the fields when the modal is pointed at a different appointment.
   const [prevAppointmentId, setPrevAppointmentId] = useState(appointment.id);
   if (appointment.id !== prevAppointmentId) {
     setPrevAppointmentId(appointment.id);
-    setValues(toFormValues(appointment));
+    setValues(toFormValues(appointment, timeZone));
   }
 
   const updateField = <K extends keyof AppointmentFormValues>(
@@ -108,6 +113,7 @@ export function RescheduleFormModal({
     startDate: values.startDate,
     startTime: values.startTime,
     durationMinutes: selectedService?.durationMinutes,
+    timeZone,
   });
 
   return (
