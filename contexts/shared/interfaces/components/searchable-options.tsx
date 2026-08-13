@@ -29,8 +29,8 @@ interface SearchableOptionsProps<T extends SearchableOption> {
   /** Contents of the trigger button. */
   children: ReactNode;
   triggerClassName?: string;
-  /** Extra entries rendered below the list, after the actions. */
-  footer?: ReactNode;
+  /** Context for the list, rendered above the search field. */
+  header?: ReactNode;
 }
 
 export function SearchableOptions<T extends SearchableOption>({
@@ -45,7 +45,7 @@ export function SearchableOptions<T extends SearchableOption>({
   onNew,
   children,
   triggerClassName,
-  footer,
+  header,
 }: SearchableOptionsProps<T>) {
   const [isOpen, setIsOpen] = useState(false);
   const selectedOption = options.find((option) => option.id === selectedId) ?? null;
@@ -78,6 +78,13 @@ export function SearchableOptions<T extends SearchableOption>({
       </ComboboxTrigger>
 
       <ComboboxContent className="w-64 min-w-64">
+        {header && (
+          <>
+            {header}
+            <ComboboxSeparator />
+          </>
+        )}
+
         <ComboboxInput placeholder={searchPlaceholder} showTrigger={false} />
         <ComboboxEmpty className="px-2 py-2 text-left">{emptyMessage}</ComboboxEmpty>
         <ComboboxList className="max-h-48">
@@ -88,7 +95,7 @@ export function SearchableOptions<T extends SearchableOption>({
           )}
         </ComboboxList>
 
-        {(onSelectAll || (newLabel && onNew) || footer) && <ComboboxSeparator />}
+        {(onSelectAll || (newLabel && onNew)) && <ComboboxSeparator />}
 
         {onSelectAll && (
           <Button
@@ -112,8 +119,6 @@ export function SearchableOptions<T extends SearchableOption>({
             {newLabel}
           </Button>
         )}
-
-        {footer}
       </ComboboxContent>
     </Combobox>
   );

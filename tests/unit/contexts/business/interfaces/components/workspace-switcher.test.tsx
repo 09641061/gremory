@@ -2,6 +2,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 
+import { OrganizationBadge } from "@/contexts/business/interfaces/components/workspace/organization-badge/organization-badge";
 import { WorkspaceSwitcher } from "@/contexts/business/interfaces/components/workspace/workspace-switcher/workspace-switcher";
 import type { WorkspaceHeaderViewModel } from "@/contexts/business/application/model/business-workspace.view-models";
 
@@ -13,10 +14,14 @@ vi.mock("next/navigation", () => ({
   useSearchParams: () => new URLSearchParams(),
 }));
 
+const organization = { id: "org-1", name: "Acme", imageUrl: "https://cdn.test/acme.png" };
+
 const baseWorkspace: WorkspaceHeaderViewModel = {
   accountType: "OWNER",
-  organization: { id: "org-1", name: "Acme", imageUrl: null },
-  establishments: [{ id: "est-1", name: "Main branch", photoUrl: null }],
+  organization,
+  establishments: [
+    { id: "est-1", name: "Main branch", photoUrl: "https://cdn.test/main.png" },
+  ],
   activeEstablishmentId: "est-1",
   canReadOrganization: true,
   canReadEstablishments: true,
@@ -31,31 +36,47 @@ function openMenu() {
   fireEvent.click(screen.getByRole("combobox", { name: /Main branch/ }));
 }
 
+describe("OrganizationBadge", () => {
+  it("links the organization to its settings instead of offering a switcher", () => {
+    render(<OrganizationBadge organization={organization} href="/organization" />);
+
+    // The organization is fixed for the account: there is nothing to switch to,
+    // but clicking it opens the screen where its name and logo are edited.
+    expect(screen.getByRole("link", { name: /Acme/ }).getAttribute("href")).toBe("/organization");
+    expect(screen.queryByRole("combobox")).toBeNull();
+  });
+
+  it("renders the organization as plain text when the account cannot read it", () => {
+    render(<OrganizationBadge organization={organization} />);
+
+    expect(screen.getByText("Acme")).toBeTruthy();
+    expect(screen.queryByRole("link")).toBeNull();
+  });
+});
+
 describe("WorkspaceSwitcher", () => {
-  it("shows the organization as the caption of the active establishment", () => {
+  it("names both the organization and the establishment on a single trigger", () => {
     renderSwitcher();
 
-    // One control, not two: the organization is fixed for the account, so it
-    // reads as context for the establishment rather than as a second selector.
     const trigger = screen.getByRole("combobox", { name: /Main branch/ });
     expect(trigger.textContent).toContain("Acme");
     expect(trigger.textContent).toContain("Main branch");
   });
 
-  it("offers the organization settings inside the menu when the account can read it", () => {
+  it("scopes the menu with the organization it lists establishments for", () => {
     renderSwitcher();
     openMenu();
 
     expect(
-      screen.getByRole("link", { name: /Organization settings/ }).getAttribute("href"),
+      screen.getByRole("link", { name: /Acme/ }).getAttribute("href"),
     ).toBe("/organization");
   });
 
-  it("hides the organization settings when the account cannot read it", () => {
+  it("keeps the organization out of the menu when the account cannot read it", () => {
     renderSwitcher({ canReadOrganization: false });
     openMenu();
 
-    expect(screen.queryByRole("link", { name: /Organization settings/ })).toBeNull();
+    expect(screen.queryByRole("link", { name: /Acme/ })).toBeNull();
   });
 
   it("hides the establishment entry points the account is not allowed to use", () => {
