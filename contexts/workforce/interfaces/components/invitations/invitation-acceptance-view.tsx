@@ -33,7 +33,7 @@ export function InvitationAcceptanceView({
   const [redirectError, setRedirectError] = useState<string | null>(null);
 
   const returnTo = `/invitations/accept?${new URLSearchParams({ token })}`;
-  const shouldResolveWorkspace = state.status === "success" || invitation.status === "ACCEPTED";
+  const shouldResolveWorkspace = state.status === "success";
 
   useEffect(() => {
     if (!shouldResolveWorkspace) {
@@ -63,6 +63,7 @@ export function InvitationAcceptanceView({
   if (shouldResolveWorkspace) {
     return (
       <InvitationAcceptedView
+        mode="redirecting"
         redirectError={redirectError}
         onRetry={() => {
           setRedirectError(null);
@@ -84,6 +85,15 @@ export function InvitationAcceptanceView({
           Your membership is no longer active. Ask the organization owner to send you a new invitation.
         </p>
       </InvitationShell>
+    );
+  }
+
+  if (invitation.status === "ACCEPTED") {
+    return (
+      <InvitationAcceptedView
+        mode="accepted"
+        returnTo={returnTo}
+      />
     );
   }
 
@@ -143,15 +153,17 @@ export function InvitationAcceptanceView({
 }
 
 function InvitationAcceptedView({
+  mode = "accepted",
   redirectError = null,
   onRetry,
   returnTo,
 }: {
+  mode?: "accepted" | "redirecting";
   redirectError?: string | null;
   onRetry?: () => void;
   returnTo: string;
 }) {
-  const redirecting = !redirectError;
+  const redirecting = mode === "redirecting" && !redirectError;
 
   return (
     <InvitationShell>
@@ -185,9 +197,9 @@ function InvitationAcceptedView({
         </div>
       ) : (
         <div className="mt-6">
-          <Button type="button" onClick={onRetry} className="h-10 w-full">
-            Prepare workspace
-          </Button>
+          <Link href="/chat" className={buttonVariants({ className: "h-10 w-full" })}>
+            Continue to Takodu
+          </Link>
         </div>
       )}
     </InvitationShell>
