@@ -1,4 +1,3 @@
-export type CreateOrganizationCommand = Readonly<{ name: string }>;
 export type UpdateOrganizationCommand = Readonly<{ id: string; name: string; imageUrl?: string | null }>;
 export type DeleteOrganizationCommand = Readonly<{ id: string }>;
 
@@ -15,12 +14,6 @@ export type UpdateEstablishmentCommand = Readonly<{
   timeZone?: string | null;
 }>;
 export type DeleteEstablishmentCommand = Readonly<{ id: string }>;
-
-export function createOrganizationCommand(
-  input: CreateOrganizationCommand,
-): CreateOrganizationCommand {
-  return Object.freeze({ name: input.name });
-}
 
 export function updateOrganizationCommand(
   input: UpdateOrganizationCommand,

@@ -13,5 +13,5 @@ export default async function HomePage() {
     ? await createAppShellQueryService().resolve({ subscription }).catch(() => null)
     : null;
 
-  redirect(shell?.homeHref ?? "/organizations");
+  redirect(shell?.homeHref ?? "/access-denied");
 }

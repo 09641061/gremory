@@ -9,6 +9,9 @@ vi.mock("@/contexts/iam/application/internal/queryservices/iam-session-query.ser
   createIamSessionQueryService: () => mocks,
 }));
 
+const organizationId = "11111111-1111-4111-8111-111111111111";
+const establishmentId = "22222222-2222-4222-8222-222222222222";
+
 function requestWithSession(
   accessToken: string | null = "access-token",
   refreshToken: string | null = "refresh-token",
@@ -24,6 +27,55 @@ function requestWithSession(
   });
 }
 
+function jsonResponse(body: unknown, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { "Content-Type": "application/json" },
+  });
+}
+
+function subscription(planId = 1) {
+  return jsonResponse({ active: true, status: "ACTIVE", planId });
+}
+
+function establishment(id: string, effectivePermissions: ReadonlyArray<string>) {
+  return {
+    id,
+    name: "Main",
+    photoUrl: null,
+    effectivePermissions,
+    permissions: { canRead: true, canUpdate: false, canDelete: false },
+  };
+}
+
+/**
+ * The single bootstrap call the proxy now makes. `accountType` is read, never
+ * inferred, so each scenario states it explicitly.
+ */
+function workspace(overrides: Record<string, unknown> = {}) {
+  return jsonResponse({
+    accountType: "OWNER",
+    organization: {
+      id: organizationId,
+      name: "Takodu",
+      imageUrl: null,
+      permissions: { canRead: true, canUpdate: true, canCreateEstablishment: true },
+    },
+    establishments: [establishment(establishmentId, [])],
+    activeEstablishmentId: establishmentId,
+    subscription: { active: true, planName: "Free", status: "ACTIVE", canManageBilling: true },
+    pendingInvitation: null,
+    ...overrides,
+  });
+}
+
+function stubFetch(...responses: ReadonlyArray<Response>) {
+  const fetchMock = vi.fn();
+  for (const response of responses) fetchMock.mockResolvedValueOnce(response);
+  vi.stubGlobal("fetch", fetchMock);
+  return fetchMock;
+}
+
 describe("IAM session proxy", () => {
   beforeEach(() => {
     mocks.resolveSession.mockReset();
@@ -32,32 +84,10 @@ describe("IAM session proxy", () => {
       accessToken: "access-token",
       rotatedSession: null,
     });
-    vi.stubGlobal("fetch", vi.fn()
-      .mockResolvedValueOnce(new Response(
-        JSON.stringify({ active: true, status: "ACTIVE", planId: 1 }),
-        { status: 200, headers: { "Content-Type": "application/json" } },
-      ))
-      .mockResolvedValueOnce(new Response(
-        JSON.stringify({
-          id: "org-1",
-          ownerId: "owner-1",
-          name: "Takodu",
-          imageUrl: null,
-        }),
-        { status: 200, headers: { "Content-Type": "application/json" } },
-      ))
-      .mockResolvedValueOnce(new Response(
-        JSON.stringify({ active: false, establishments: [] }),
-        { status: 200, headers: { "Content-Type": "application/json" } },
-      ))
-      .mockResolvedValueOnce(new Response(
-        JSON.stringify({ content: [{ id: "est-1" }] }),
-        { status: 200, headers: { "Content-Type": "application/json" } },
-      )));
+    stubFetch(subscription(), workspace());
   });
 
   it("should refresh the session and update cookies when verification rejects the token", async () => {
-    // Arrange
     mocks.resolveSession.mockResolvedValue({
       status: "authenticated",
       accessToken: "new-access-token",
@@ -67,12 +97,10 @@ describe("IAM session proxy", () => {
       },
     });
 
-    // Act
     const response = await proxy(
       requestWithSession("access-token", "refresh-token", "/chat"),
     );
 
-    // Assert
     expect(mocks.resolveSession).toHaveBeenCalledWith({
       accessToken: "access-token",
       refreshToken: "refresh-token",
@@ -85,32 +113,24 @@ describe("IAM session proxy", () => {
   });
 
   it("should redirect an active session from home to the dashboard", async () => {
-    // Arrange
-    const request = requestWithSession();
+    const response = await proxy(requestWithSession());
 
-    // Act
-    const response = await proxy(request);
-
-    // Assert
     expect(mocks.resolveSession).toHaveBeenCalledTimes(1);
     expect(response.status).toBe(307);
     expect(response.headers.get("location")).toBe("http://localhost/chat");
   });
 
   it("should clear the session and redirect to login when refresh is rejected", async () => {
-    // Arrange
     mocks.resolveSession.mockResolvedValue({ status: "unauthenticated" });
 
-    // Act
     const response = await proxy(requestWithSession());
 
-    // Assert
     expect(response.status).toBe(307);
     expect(response.headers.get("location")).toBe("http://localhost/login");
     expect(response.cookies.get("takodu.access_token")?.value).toBe("");
   });
 
-  it.each(["/organizations", "/establishments"])(
+  it.each(["/organization", "/establishments"])(
     "should protect the business route %s",
     async (pathname) => {
       mocks.resolveSession.mockResolvedValue({ status: "unauthenticated" });
@@ -143,49 +163,56 @@ describe("IAM session proxy", () => {
     expect(response.headers.get("location")).toBe("http://localhost/chat");
   });
 
-  it("should send free sessions without setup to organizations", async () => {
-    vi.stubGlobal("fetch", vi.fn()
-      .mockResolvedValueOnce(new Response(
-        JSON.stringify({ active: true, status: "ACTIVE", planId: 0 }),
-        { status: 200, headers: { "Content-Type": "application/json" } },
-      ))
-      .mockResolvedValueOnce(new Response(
-        JSON.stringify({ message: "Organization not found" }),
-        { status: 404, headers: { "Content-Type": "application/json" } },
-      ))
-      .mockResolvedValueOnce(new Response(
-        JSON.stringify({ message: "Workforce access not found" }),
-        { status: 404, headers: { "Content-Type": "application/json" } },
-      )));
+  it("should send an account that never accepted its invitation to the acceptance screen", async () => {
+    stubFetch(
+      subscription(0),
+      workspace({
+        accountType: "PENDING_INVITATION",
+        organization: null,
+        establishments: [],
+        activeEstablishmentId: null,
+        subscription: null,
+        pendingInvitation: {
+          organizationName: "Takodu",
+          establishmentName: "Main",
+          expiresAt: "2026-09-01T00:00:00Z",
+        },
+      }),
+    );
+
+    const response = await proxy(requestWithSession("access-token", "refresh-token", "/"));
+
+    expect(response.status).toBe(307);
+    expect(response.headers.get("location")).toBe("http://localhost/invitations/pending");
+  });
+
+  it("should keep the acceptance screen reachable while the invitation is pending", async () => {
+    stubFetch(
+      subscription(0),
+      workspace({
+        accountType: "PENDING_INVITATION",
+        organization: null,
+        establishments: [],
+        activeEstablishmentId: null,
+        subscription: null,
+      }),
+    );
 
     const response = await proxy(requestWithSession(
       "access-token",
       "refresh-token",
-      "/",
+      "/invitations/pending",
     ));
 
-    expect(response.status).toBe(307);
-    expect(response.headers.get("location")).toBe("http://localhost/organizations");
+    expect(response.status).toBe(200);
+    expect(response.headers.get("location")).toBeNull();
   });
 
   it("should send an owner with an empty organization to the first-establishment setup", async () => {
-    vi.stubGlobal("fetch", vi.fn()
-      .mockResolvedValueOnce(new Response(
-        JSON.stringify({ active: true, status: "ACTIVE", planId: 0 }),
-        { status: 200, headers: { "Content-Type": "application/json" } },
-      ))
-      .mockResolvedValueOnce(new Response(
-        JSON.stringify({ id: "org-1" }),
-        { status: 200, headers: { "Content-Type": "application/json" } },
-      ))
-      .mockResolvedValueOnce(new Response(
-        JSON.stringify({ active: false, establishments: [] }),
-        { status: 200, headers: { "Content-Type": "application/json" } },
-      ))
-      .mockResolvedValueOnce(new Response(
-        JSON.stringify({ content: [] }),
-        { status: 200, headers: { "Content-Type": "application/json" } },
-      )));
+    stubFetch(
+      subscription(0),
+      workspace({ establishments: [], activeEstablishmentId: null }),
+    );
 
     const response = await proxy(requestWithSession("access-token", "refresh-token", "/chat"));
 
@@ -200,31 +227,14 @@ describe("IAM session proxy", () => {
     expect(response.headers.get("location")).toBeNull();
   });
 
-  it("should allow an active workforce member without a personal subscription on schedule", async () => {
-    const fetchMock = vi.fn()
-      .mockResolvedValueOnce(new Response(
-        JSON.stringify({ message: "Subscription not found" }),
-        { status: 404, headers: { "Content-Type": "application/json" } },
-      ))
-      .mockResolvedValueOnce(new Response(
-        JSON.stringify({ message: "Organization not found" }),
-        { status: 404, headers: { "Content-Type": "application/json" } },
-      ))
-      .mockResolvedValueOnce(new Response(
-        JSON.stringify({
-          active: true,
-          establishments: [{
-            organizationId: "org-1",
-            organizationName: "Takodu",
-            establishmentId: "est-1",
-            establishmentName: "Main",
-            roles: [],
-            effectivePermissions: ["scheduling:read"],
-          }],
-        }),
-        { status: 200, headers: { "Content-Type": "application/json" } },
-      ));
-    vi.stubGlobal("fetch", fetchMock);
+  it("should resolve the workspace from a single call", async () => {
+    const fetchMock = stubFetch(
+      jsonResponse({ message: "Subscription not found" }, 404),
+      workspace({
+        accountType: "MEMBER",
+        establishments: [establishment(establishmentId, ["scheduling:read"])],
+      }),
+    );
 
     const response = await proxy(requestWithSession(
       "access-token",
@@ -235,131 +245,81 @@ describe("IAM session proxy", () => {
     expect(response.status).toBe(200);
     expect(response.headers.get("location")).toBeNull();
     expect(fetchMock).toHaveBeenNthCalledWith(
-      3,
-      "http://localhost:8080/api/workforce/access",
+      2,
+      "http://localhost:8080/api/business/workspace",
       expect.objectContaining({
         headers: { Authorization: "Bearer access-token" },
       }),
     );
   });
 
-  it("should redirect invited workforce members without their own organization to schedule", async () => {
-    vi.stubGlobal("fetch", vi.fn()
-      .mockResolvedValueOnce(new Response(
-        JSON.stringify({ active: true, status: "ACTIVE", planId: 0 }),
-        { status: 200, headers: { "Content-Type": "application/json" } },
-      ))
-      .mockResolvedValueOnce(new Response(
-        JSON.stringify({ message: "Organization not found" }),
-        { status: 404, headers: { "Content-Type": "application/json" } },
-      ))
-      .mockResolvedValueOnce(new Response(
-        JSON.stringify({
-          active: true,
-          establishments: [{
-            organizationId: "org-1",
-            organizationName: "Takodu",
-            establishmentId: "est-1",
-            establishmentName: "Main",
-            roles: [],
-            effectivePermissions: ["scheduling:read"],
-          }],
-        }),
-        { status: 200, headers: { "Content-Type": "application/json" } },
-      )));
+  it("should redirect a member to the module its permissions allow", async () => {
+    stubFetch(
+      subscription(0),
+      workspace({
+        accountType: "MEMBER",
+        establishments: [establishment(establishmentId, ["scheduling:read"])],
+      }),
+    );
 
-    const response = await proxy(requestWithSession(
-      "access-token",
-      "refresh-token",
-      "/",
-    ));
+    const response = await proxy(requestWithSession("access-token", "refresh-token", "/"));
 
     expect(response.status).toBe(307);
     expect(response.headers.get("location")).toBe("http://localhost/schedule");
   });
 
-  it("should redirect invited workforce members to the first accessible module when schedule is missing", async () => {
-    vi.stubGlobal("fetch", vi.fn()
-      .mockResolvedValueOnce(new Response(
-        JSON.stringify({ active: true, status: "ACTIVE", planId: 0 }),
-        { status: 200, headers: { "Content-Type": "application/json" } },
-      ))
-      .mockResolvedValueOnce(new Response(
-        JSON.stringify({ message: "Organization not found" }),
-        { status: 404, headers: { "Content-Type": "application/json" } },
-      ))
-      .mockResolvedValueOnce(new Response(
-        JSON.stringify({
-          active: true,
-          establishments: [{
-            organizationId: "org-1",
-            organizationName: "Takodu",
-            establishmentId: "est-1",
-            establishmentName: "Main",
-            roles: [],
-            effectivePermissions: ["catalog:read"],
-          }],
-        }),
-        { status: 200, headers: { "Content-Type": "application/json" } },
-      )));
+  it("should redirect a member to the first accessible module when scheduling is missing", async () => {
+    stubFetch(
+      subscription(0),
+      workspace({
+        accountType: "MEMBER",
+        establishments: [establishment(establishmentId, ["catalog:read"])],
+      }),
+    );
 
-    const response = await proxy(requestWithSession(
-      "access-token",
-      "refresh-token",
-      "/",
-    ));
+    const response = await proxy(requestWithSession("access-token", "refresh-token", "/"));
 
     expect(response.status).toBe(307);
     expect(response.headers.get("location")).toBe("http://localhost/catalog");
   });
 
-  it("should not redirect a removed workforce member to subscribe", async () => {
-    vi.stubGlobal("fetch", vi.fn()
-      .mockResolvedValueOnce(new Response(
-        JSON.stringify({ message: "Subscription not found" }),
-        { status: 404, headers: { "Content-Type": "application/json" } },
-      ))
-      .mockResolvedValueOnce(new Response(
-        JSON.stringify({ message: "Organization not found" }),
-        { status: 404, headers: { "Content-Type": "application/json" } },
-      ))
-      .mockResolvedValueOnce(new Response(
-        JSON.stringify({ active: false, establishments: [] }),
-        { status: 200, headers: { "Content-Type": "application/json" } },
-      )));
+  it("should not send a removed member to subscribe", async () => {
+    stubFetch(
+      jsonResponse({ message: "Subscription not found" }, 404),
+      workspace({
+        accountType: "PENDING_INVITATION",
+        organization: null,
+        establishments: [],
+        activeEstablishmentId: null,
+        subscription: null,
+      }),
+    );
 
-    const response = await proxy(requestWithSession(
-      "access-token",
-      "refresh-token",
-      "/chat",
-    ));
+    const response = await proxy(requestWithSession("access-token", "refresh-token", "/chat"));
 
     expect(response.status).toBe(307);
-    expect(response.headers.get("location")).toBe("http://localhost/organizations");
+    expect(response.headers.get("location")).toBe("http://localhost/invitations/pending");
   });
 
-  it("should redirect free sessions away from chat to organizations when setup is missing", async () => {
-    vi.stubGlobal("fetch", vi.fn()
-      .mockResolvedValueOnce(new Response(
-        JSON.stringify({ active: true, status: "ACTIVE", planId: 0 }),
-        { status: 200, headers: { "Content-Type": "application/json" } },
-      ))
-      .mockResolvedValueOnce(new Response(
-        JSON.stringify({ message: "Organization not found" }),
-        { status: 404, headers: { "Content-Type": "application/json" } },
-      ))
-      .mockResolvedValueOnce(new Response(
-        JSON.stringify({ message: "Workforce access not found" }),
-        { status: 404, headers: { "Content-Type": "application/json" } },
-      )));
+  it("should deny a member left without any readable establishment", async () => {
+    stubFetch(
+      subscription(0),
+      workspace({
+        accountType: "MEMBER",
+        organization: {
+          id: organizationId,
+          name: "Takodu",
+          imageUrl: null,
+          permissions: { canRead: false, canUpdate: false, canCreateEstablishment: false },
+        },
+        establishments: [],
+        activeEstablishmentId: null,
+      }),
+    );
 
-    const response = await proxy(requestWithSession(
-      "access-token",
-      "refresh-token",
-      "/chat",
-    ));
+    const response = await proxy(requestWithSession("access-token", "refresh-token", "/chat"));
 
     expect(response.status).toBe(307);
-    expect(response.headers.get("location")).toBe("http://localhost/organizations");
+    expect(response.headers.get("location")).toBe("http://localhost/access-denied");
   });
 });

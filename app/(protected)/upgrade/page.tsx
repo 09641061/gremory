@@ -1,4 +1,5 @@
 import { cookies, headers } from "next/headers";
+import { redirect } from "next/navigation";
 
 import { SubscribeView } from "@/contexts/billing/interfaces/components/subscribe/subscribe-view";
 import { createCurrentSubscriptionQueryService } from "@/contexts/billing/application/internal/queryservices/current-subscription-query.service";
@@ -22,16 +23,21 @@ export default async function UpgradePage() {
         .resolve({
           subscription,
           workspace: {
-            organizationId: requestHeaders.get("x-takodu-organization-id") ?? undefined,
             establishmentId: requestHeaders.get("x-takodu-establishment-id") ?? undefined,
           },
         })
         .catch(() => null)
     : null;
 
+  // Only the owner pays. A member reaching this route is sent back: the backend
+  // rejects billing calls from a member account, and prices are not its concern.
+  if (shell && shell.workspace.subscription?.canManageBilling === false) {
+    redirect(shell.homeHref);
+  }
+
   return (
     <SubscribeView
-      backHref={shell?.homeHref ?? "/organizations"}
+      backHref={shell?.homeHref ?? "/access-denied"}
       plansByCurrency={await listPlansByCurrencyQueryService()}
       currentSubscription={subscription}
     />

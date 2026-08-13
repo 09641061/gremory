@@ -15,206 +15,179 @@ vi.mock(
 
 import { createBusinessWorkspaceQueryService } from "@/contexts/business/application/internal/queryservices/business-workspace-query.service";
 
-const ownerOrganizationId = "11111111-1111-4111-8111-111111111111";
-const memberOrganizationId = "22222222-2222-4222-8222-222222222222";
-const memberEstablishmentId = "44444444-4444-4444-8444-444444444444";
+const organizationId = "11111111-1111-4111-8111-111111111111";
+const establishmentId = "44444444-4444-4444-8444-444444444444";
+const secondEstablishmentId = "55555555-5555-4555-8555-555555555555";
+
+function workspace(overrides: Record<string, unknown> = {}) {
+  return {
+    accountType: "OWNER",
+    organization: {
+      id: organizationId,
+      name: "Takodu Studio",
+      imageUrl: null,
+      permissions: { canRead: true, canUpdate: true, canCreateEstablishment: true },
+    },
+    establishments: [],
+    activeEstablishmentId: null,
+    subscription: { active: true, planName: "Free", status: "ACTIVE", canManageBilling: true },
+    pendingInvitation: null,
+    ...overrides,
+  };
+}
 
 describe("business workspace query service", () => {
   beforeEach(() => {
     vi.resetAllMocks();
   });
 
-  it("returns the owner and invited organizations in the same workspace", async () => {
-    mocks.getWorkspace.mockResolvedValue({
-      activeOrganizationId: memberOrganizationId,
-      activeEstablishmentId: memberEstablishmentId,
-      organizations: [
-        {
-          id: ownerOrganizationId,
-          name: "Personal Org",
-          imageUrl: null,
-          mode: "OWNER",
-          establishments: [],
-          permissions: { canRead: true, canUpdate: true, canCreateEstablishment: true },
-        },
-        {
-          id: memberOrganizationId,
-          name: "Partner Org",
-          imageUrl: null,
-          mode: "MEMBER",
-          establishments: [{
-            id: memberEstablishmentId,
-            name: "Main branch",
-            photoUrl: null,
-            permissions: { canRead: true, canUpdate: false, canDelete: false },
-          }],
-          permissions: { canRead: true, canUpdate: false, canCreateEstablishment: false },
-        },
-      ],
-    });
+  it("resolves the single organization of an owner with its own subscription", async () => {
+    mocks.getWorkspace.mockResolvedValue(workspace({
+      establishments: [{
+        id: establishmentId,
+        name: "Main branch",
+        photoUrl: null,
+        effectivePermissions: [],
+        permissions: { canRead: true, canUpdate: true, canDelete: true },
+      }],
+      activeEstablishmentId: establishmentId,
+    }));
 
     const result = await createBusinessWorkspaceQueryService().getHeaderViewModel();
 
-    expect(result.organization?.id).toBe(memberOrganizationId);
-    expect(result.organizations.map((organization) => organization.id)).toEqual([
-      ownerOrganizationId,
-      memberOrganizationId,
-    ]);
-    expect(result.establishments).toEqual([{
-      id: memberEstablishmentId,
-      name: "Main branch",
-      photoUrl: null,
-      timeZone: null,
-      canRead: true,
-      canUpdate: false,
-      canDelete: false,
-    }]);
+    expect(result.accountType).toBe("OWNER");
+    expect(result.organization?.id).toBe(organizationId);
+    expect(result.activeEstablishmentId).toBe(establishmentId);
+    expect(result.subscription?.canManageBilling).toBe(true);
+    expect(result.canCreateEstablishment).toBe(true);
   });
 
   it("keeps the owner creation entry point visible when Billing reports a plan limit", async () => {
-    mocks.getWorkspace.mockResolvedValue({
-      activeOrganizationId: ownerOrganizationId,
-      activeEstablishmentId: null,
-      organizations: [{
-        id: ownerOrganizationId,
-        name: "Personal Org",
+    mocks.getWorkspace.mockResolvedValue(workspace({
+      organization: {
+        id: organizationId,
+        name: "Takodu Studio",
         imageUrl: null,
-        mode: "OWNER",
-        establishments: [{
-          id: memberEstablishmentId,
-          name: "Existing location",
-          photoUrl: null,
-          permissions: { canRead: true, canUpdate: true, canDelete: true },
-        }],
         permissions: { canRead: true, canUpdate: true, canCreateEstablishment: false },
-      }],
-    });
+      },
+    }));
 
     const result = await createBusinessWorkspaceQueryService().getHeaderViewModel();
 
     expect(result.canCreateEstablishment).toBe(true);
-    expect(result.organization?.canCreateEstablishment).toBe(true);
   });
 
-  it("hides the establishment creation entry point for a member without permission", async () => {
-    mocks.getWorkspace.mockResolvedValue({
-      activeOrganizationId: memberOrganizationId,
-      activeEstablishmentId: memberEstablishmentId,
-      organizations: [{
-        id: memberOrganizationId,
-        name: "Partner Org",
+  it("reads a member against the owner's subscription and denies billing", async () => {
+    mocks.getWorkspace.mockResolvedValue(workspace({
+      accountType: "MEMBER",
+      organization: {
+        id: organizationId,
+        name: "Takodu Studio",
         imageUrl: null,
-        mode: "MEMBER",
-        establishments: [{
-          id: memberEstablishmentId,
-          name: "Main branch",
-          photoUrl: null,
-          permissions: { canRead: true, canUpdate: false, canDelete: false },
-        }],
         permissions: { canRead: true, canUpdate: false, canCreateEstablishment: false },
+      },
+      establishments: [{
+        id: establishmentId,
+        name: "Main branch",
+        photoUrl: null,
+        effectivePermissions: ["catalog:read"],
+        permissions: { canRead: true, canUpdate: false, canDelete: false },
       }],
-    });
+      activeEstablishmentId: establishmentId,
+      subscription: { active: false, planName: "Free", status: "PAST_DUE", canManageBilling: false },
+    }));
 
     const result = await createBusinessWorkspaceQueryService().getHeaderViewModel();
 
+    expect(result.accountType).toBe("MEMBER");
     expect(result.canCreateEstablishment).toBe(false);
-    expect(result.canReadEstablishments).toBe(true);
-    expect(result.canCreateOrganization).toBe(true);
+    expect(result.subscription?.active).toBe(false);
+    expect(result.subscription?.canManageBilling).toBe(false);
   });
 
-  it("hides the organization creation entry point once the user owns one", async () => {
-    mocks.getWorkspace.mockResolvedValue({
-      activeOrganizationId: ownerOrganizationId,
-      activeEstablishmentId: null,
-      organizations: [{
-        id: ownerOrganizationId,
-        name: "Personal Org",
-        imageUrl: null,
-        mode: "OWNER",
-        establishments: [],
-        permissions: { canRead: true, canUpdate: true, canCreateEstablishment: true },
-      }],
-    });
-
-    const service = createBusinessWorkspaceQueryService();
-
-    expect((await service.getHeaderViewModel()).canCreateOrganization).toBe(false);
-    expect(await service.getOrganizationCreationState()).toEqual({ status: "denied" });
-  });
-
-  it("allows organization creation for a member that does not own one yet", async () => {
-    mocks.getWorkspace.mockResolvedValue({
-      activeOrganizationId: memberOrganizationId,
-      activeEstablishmentId: null,
-      organizations: [{
-        id: memberOrganizationId,
-        name: "Partner Org",
-        imageUrl: null,
-        mode: "MEMBER",
-        establishments: [],
-        permissions: { canRead: true, canUpdate: false, canCreateEstablishment: false },
-      }],
-    });
-
-    const result = await createBusinessWorkspaceQueryService().getOrganizationCreationState();
-
-    expect(result).toEqual({ status: "allowed" });
-  });
-
-  it("keeps the organization creation route reachable when the workspace read is forbidden", async () => {
-    mocks.getWorkspace.mockRejectedValue({ status: 403 });
-
-    const result = await createBusinessWorkspaceQueryService().getOrganizationCreationState();
-
-    expect(result).toEqual({ status: "allowed" });
-  });
-
-  it("returns create state only when the backend reports no organizations", async () => {
-    mocks.getWorkspace.mockResolvedValue({
-      activeOrganizationId: null,
-      activeEstablishmentId: null,
-      organizations: [],
-    });
-
-    const result = await createBusinessWorkspaceQueryService().getOrganizationPageState();
-
-    expect(result).toEqual({ status: "create" });
-  });
-
-  it("keeps the organization form available when backend creation access is denied", async () => {
-    mocks.getWorkspace.mockRejectedValue({ status: 403 });
-
-    const result = await createBusinessWorkspaceQueryService().getOrganizationPageState();
-
-    expect(result).toEqual({ status: "create" });
-  });
-
-  it("denies the organizations page for an active organization without read permission", async () => {
-    mocks.getWorkspace.mockResolvedValue({
-      activeOrganizationId: memberOrganizationId,
-      activeEstablishmentId: memberEstablishmentId,
-      organizations: [
+  it("hides establishments the member cannot read", async () => {
+    mocks.getWorkspace.mockResolvedValue(workspace({
+      accountType: "MEMBER",
+      establishments: [
         {
-          id: ownerOrganizationId,
-          name: "Personal Org",
-          imageUrl: null,
-          mode: "OWNER",
-          establishments: [],
-          permissions: { canRead: true, canUpdate: true, canCreateEstablishment: true },
+          id: establishmentId,
+          name: "Main branch",
+          photoUrl: null,
+          effectivePermissions: [],
+          permissions: { canRead: false, canUpdate: false, canDelete: false },
         },
         {
-          id: memberOrganizationId,
-          name: "Restricted Org",
-          imageUrl: null,
-          mode: "MEMBER",
-          establishments: [],
-          permissions: { canRead: false, canUpdate: false, canCreateEstablishment: false },
+          id: secondEstablishmentId,
+          name: "Second branch",
+          photoUrl: null,
+          effectivePermissions: ["crm:read"],
+          permissions: { canRead: true, canUpdate: false, canDelete: false },
         },
       ],
+      activeEstablishmentId: establishmentId,
+    }));
+
+    const result = await createBusinessWorkspaceQueryService().getHeaderViewModel();
+
+    expect(result.establishments.map((establishment) => establishment.id)).toEqual([
+      secondEstablishmentId,
+    ]);
+    // The requested establishment is unreadable, so the first readable one wins.
+    expect(result.activeEstablishmentId).toBe(secondEstablishmentId);
+  });
+
+  it("surfaces the pending invitation of an account that has not accepted yet", async () => {
+    mocks.getWorkspace.mockResolvedValue(workspace({
+      accountType: "PENDING_INVITATION",
+      organization: null,
+      subscription: null,
+      pendingInvitation: {
+        organizationName: "Takodu Studio",
+        establishmentName: "Main branch",
+        expiresAt: "2026-09-01T00:00:00Z",
+      },
+    }));
+
+    const result = await createBusinessWorkspaceQueryService().getHeaderViewModel();
+
+    expect(result.accountType).toBe("PENDING_INVITATION");
+    expect(result.organization).toBeUndefined();
+    expect(result.pendingInvitation?.organizationName).toBe("Takodu Studio");
+  });
+
+  it("denies the organization page when the account cannot read its organization", async () => {
+    mocks.getWorkspace.mockResolvedValue(workspace({
+      accountType: "MEMBER",
+      organization: {
+        id: organizationId,
+        name: "Takodu Studio",
+        imageUrl: null,
+        permissions: { canRead: false, canUpdate: false, canCreateEstablishment: false },
+      },
+    }));
+
+    const state = await createBusinessWorkspaceQueryService().getOrganizationPageState();
+
+    expect(state.status).toBe("denied");
+  });
+
+  it("returns the organization settings state for the owner", async () => {
+    mocks.getWorkspace.mockResolvedValue(workspace({
+      establishments: [{
+        id: establishmentId,
+        name: "Main branch",
+        photoUrl: null,
+        effectivePermissions: [],
+        permissions: { canRead: true, canUpdate: true, canDelete: true },
+      }],
+    }));
+
+    const state = await createBusinessWorkspaceQueryService().getOrganizationPageState();
+
+    expect(state).toEqual({
+      status: "ready",
+      organization: expect.objectContaining({ id: organizationId }),
+      canUpdate: true,
     });
-
-    const result = await createBusinessWorkspaceQueryService().getOrganizationPageState();
-
-    expect(result).toEqual({ status: "denied" });
   });
 });

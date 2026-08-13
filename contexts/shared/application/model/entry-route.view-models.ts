@@ -6,7 +6,7 @@ export type EntryRoutePath =
   | "/catalog"
   | "/crm"
   | "/team"
-  | "/organizations"
+  | "/organization"
   | "/access-denied";
 
 // `setupHref` is where an unfinished workspace is sent. `allowedPaths` are the
@@ -15,8 +15,8 @@ export type EntryRoutePath =
 export type EntryRouteResolution =
   | { status: "ready"; homeHref: EntryRoutePath }
   | {
-      status: "organization-required";
-      setupHref: "/organizations";
+      status: "invitation-pending";
+      setupHref: "/invitations/pending";
       allowedPaths: ReadonlyArray<string>;
     }
   | {
@@ -32,9 +32,9 @@ export type EntryRouteInput = {
   subscription: SubscriptionAccessSnapshot | null | undefined;
 };
 
+// The organization is fixed for the account, so entry decisions only depend on
+// the establishment and the permissions held inside it.
 export type EntryRouteEstablishment = Readonly<{
-  organizationId: string;
-  organizationName: string;
   establishmentId: string;
   establishmentName: string;
   roles?: ReadonlyArray<{ name: string }>;

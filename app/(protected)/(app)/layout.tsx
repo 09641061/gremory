@@ -29,7 +29,6 @@ export default async function AppLayout({
     ? await createAppShellQueryService().resolve({
         subscription,
         workspace: {
-          organizationId: requestHeaders.get("x-takodu-organization-id") ?? undefined,
           establishmentId: requestHeaders.get("x-takodu-establishment-id") ?? undefined,
         },
       }).catch(() => null)

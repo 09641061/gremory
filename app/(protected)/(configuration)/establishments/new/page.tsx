@@ -3,14 +3,15 @@ import { createBusinessWorkspaceQueryService } from "@/contexts/business/applica
 import { redirect } from "next/navigation";
 
 interface NewEstablishmentPageProps {
-  searchParams: Promise<{ organizationId?: string; establishmentId?: string }>;
+  searchParams: Promise<{ establishmentId?: string }>;
 }
 
 export default async function NewEstablishmentPage({ searchParams }: NewEstablishmentPageProps) {
   const workspace = await createBusinessWorkspaceQueryService().getHeaderViewModel(await searchParams);
 
+  // An account without an organization has an invitation to accept first.
   if (!workspace.organization) {
-    redirect("/organizations");
+    redirect("/invitations/pending");
   }
 
   if (!workspace.canCreateEstablishment) {

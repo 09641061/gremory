@@ -8,17 +8,27 @@ interface HeaderProps {
   organizationSlot?: ReactNode;
   establishmentSlot?: ReactNode;
   homeHref?: string;
-  planId?: number;
+  subscription?: Readonly<{
+    active: boolean;
+    planName?: string | null;
+    canManageBilling: boolean;
+  }>;
 }
 
 export function Header({
   organizationSlot,
   establishmentSlot,
   homeHref = "/chat",
-  planId,
+  subscription,
 }: HeaderProps) {
   const pathname = usePathname();
   const isAllowedPath = ["/schedule", "/crm", "/catalog"].includes(pathname);
+  // Only the owner pays, so only the owner is offered the upgrade. A member sees
+  // nothing here: the backend rejects billing calls from a member account.
+  const showUpgrade =
+    subscription?.canManageBilling === true &&
+    subscription.planName?.toUpperCase() === "FREE" &&
+    isAllowedPath;
 
   return (
     <header className="fixed inset-x-0 top-0 z-30 flex h-14 items-center border-b border-border/60 bg-background px-6">
@@ -36,7 +46,7 @@ export function Header({
         </div>
       </div>
 
-      {planId === 0 && isAllowedPath && (
+      {showUpgrade && (
         <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center justify-center gap-1.5 rounded-full bg-card border border-border/50 py-1.5 px-3.5 text-xs font-medium text-muted-foreground shadow-xs">
           <span>Free plan</span>
           <span className="text-muted-foreground/30">•</span>

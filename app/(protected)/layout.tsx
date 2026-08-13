@@ -32,7 +32,6 @@ export default function ProtectedLayout({
 async function ProtectedHeader() {
   const accessToken = (await cookies()).get(iamSessionCookies.accessToken)?.value;
   const requestHeaders = await headers();
-  const organizationId = requestHeaders.get("x-takodu-organization-id") ?? undefined;
   const establishmentId = requestHeaders.get("x-takodu-establishment-id") ?? undefined;
   const subscription = accessToken
     ? await createCurrentSubscriptionQueryService().getCurrentSubscriptionSnapshot(accessToken)
@@ -40,27 +39,20 @@ async function ProtectedHeader() {
   const shell = accessToken
     ? await createAppShellQueryService().resolve({
         subscription,
-        workspace: { organizationId, establishmentId },
+        workspace: { establishmentId },
       }).catch(() => null)
     : null;
 
   return (
     <ProtectedHeaderClient
-      planId={subscription?.planId}
       workspace={shell?.workspace ?? {
-        organizations: [],
+        accountType: "PENDING_INVITATION",
         establishments: [],
-        activeOrganizationId: undefined,
-        canReadOrganizations: false,
+        canReadOrganization: false,
         canReadEstablishments: false,
         canCreateEstablishment: false,
-        canCreateOrganization: false,
       }}
-      navigation={shell?.headerNavigation ?? {
-        organizationListHref: null,
-        newOrganizationHref: null,
-      }}
-      homeHref={shell?.homeHref ?? "/organizations"}
+      homeHref={shell?.homeHref ?? "/access-denied"}
     />
   );
 }

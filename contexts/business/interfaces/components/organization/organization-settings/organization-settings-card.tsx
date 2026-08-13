@@ -21,13 +21,17 @@ import {
   AvatarImage,
 } from "@/contexts/shared/interfaces/components/ui/avatar";
 
-interface OrganizationDetailCardProps {
-  organization: OrganizationDetails | null;
+interface OrganizationSettingsCardProps {
+  organization: OrganizationDetails;
   canUpdate?: boolean;
   onCancel?: () => void;
 }
 
-export function OrganizationDetailCard({ organization, canUpdate = true, onCancel }: OrganizationDetailCardProps) {
+export function OrganizationSettingsCard({
+  organization,
+  canUpdate = true,
+  onCancel,
+}: OrganizationSettingsCardProps) {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -73,25 +77,9 @@ export function OrganizationDetailCard({ organization, canUpdate = true, onCance
     onCancel?.();
   };
 
-  if (!organization) {
-    return (
-      <div className="hidden flex-1 lg:block">
-        <div className="flex min-h-[calc(100vh-10rem)] items-center justify-center rounded-xl border border-border bg-card p-8 text-center shadow-sm lg:ml-3">
-          <div className="max-w-xs">
-            <Building2 className="mx-auto size-10 text-muted-foreground/50" />
-            <p className="mt-4 text-sm font-medium text-foreground">Select an organization</p>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Choose an organization to view its details.
-            </p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="hidden flex-1 lg:block">
-      <Card className="rounded-xl border-border bg-card shadow-sm lg:ml-3 lg:h-[calc(100vh-10rem)] flex flex-col overflow-hidden">
+    <div className="mx-auto w-full max-w-3xl">
+      <Card className="flex flex-col overflow-hidden rounded-xl border-border bg-card shadow-sm">
         <form action={formAction} className="flex flex-col min-h-0 flex-1">
           {/* Hidden inputs for form submit */}
           <input type="hidden" name="id" value={organization.id} />

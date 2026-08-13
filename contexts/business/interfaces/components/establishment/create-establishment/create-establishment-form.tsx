@@ -38,8 +38,9 @@ export function CreateEstablishmentForm({ organizationId }: { organizationId: st
     if (state.status === "success" && !hasRedirected.current) {
       hasRedirected.current = true;
       const establishmentId = state.data?.id;
+      // The organization is fixed for the account; only the establishment is context.
       const nextPath = establishmentId
-        ? `/?organizationId=${encodeURIComponent(organizationId)}&establishmentId=${encodeURIComponent(establishmentId)}`
+        ? `/?establishmentId=${encodeURIComponent(establishmentId)}`
         : "/";
       router.push(nextPath);
       router.refresh();
