@@ -2,9 +2,15 @@
 
 import { useEffect, useMemo, useState } from "react";
 import {
-  NativeSelect,
-  NativeSelectOption,
-} from "@/contexts/shared/interfaces/components/ui/native-select";
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@/contexts/shared/interfaces/components/ui/select";
+import { cn } from "@/lib/utils";
 
 const TIME_ZONE_OPTIONS = [
   { value: "America/Lima", label: "Lima, Peru" },
@@ -20,7 +26,7 @@ const TIME_ZONE_OPTIONS = [
   { value: "Europe/London", label: "London, UK" },
   { value: "Europe/Paris", label: "Paris, France" },
   { value: "UTC", label: "UTC" },
-];
+] as const;
 
 function formatTimeInZone(timeZone: string, timestamp: number) {
   try {
@@ -33,6 +39,12 @@ function formatTimeInZone(timeZone: string, timestamp: number) {
   } catch {
     return "Invalid zone";
   }
+}
+
+function getTimeZoneLabel(timeZone: string) {
+  return (
+    TIME_ZONE_OPTIONS.find((option) => option.value === timeZone)?.label ?? timeZone
+  );
 }
 
 export function TimeZoneField({
@@ -56,7 +68,7 @@ export function TimeZoneField({
     return () => window.clearInterval(timer);
   }, []);
 
-  const selectOptions = useMemo(() => {
+  const items = useMemo(() => {
     if (!value) {
       return TIME_ZONE_OPTIONS;
     }
@@ -69,22 +81,63 @@ export function TimeZoneField({
   }, [value]);
 
   return (
-    <NativeSelect
+    <Select
       name={name}
-      value={value}
-      onChange={(event) => onChange(event.target.value)}
+      items={items}
+      value={value || null}
+      onValueChange={(next) => onChange(typeof next === "string" ? next : "")}
       disabled={disabled}
       required
-      className="w-full"
-    >
-      <NativeSelectOption value="" disabled>
-        Select a time zone
-      </NativeSelectOption>
-      {selectOptions.map((timeZone) => (
-        <NativeSelectOption key={timeZone.value} value={timeZone.value}>
-          {timeZone.label} - {formatTimeInZone(timeZone.value, now)}
-        </NativeSelectOption>
-      ))}
-    </NativeSelect>
+      >
+      <SelectTrigger className="w-full">
+        <SelectValue placeholder="Select a time zone">
+          {(selectedValue: string | null) =>
+            selectedValue ? (
+              <span className="flex min-w-0 items-center justify-between gap-3">
+                <span className="min-w-0 truncate font-medium text-foreground">
+                  {getTimeZoneLabel(selectedValue)}
+                </span>
+                <span className="shrink-0 whitespace-nowrap text-sm font-semibold tabular-nums text-foreground">
+                  {formatTimeInZone(selectedValue, now)}
+                </span>
+              </span>
+            ) : (
+              "Select a time zone"
+            )
+          }
+        </SelectValue>
+      </SelectTrigger>
+
+      <SelectContent className="p-1">
+        <SelectGroup>
+          <SelectLabel className="px-2 py-2 text-[10px] font-semibold uppercase tracking-[0.24em] text-muted-foreground">
+            Common zones
+          </SelectLabel>
+          {items.map((timeZone) => (
+            <SelectItem
+              key={timeZone.value}
+              value={timeZone.value}
+              label={timeZone.label}
+              showIndicator={false}
+              className="rounded-lg px-2 py-2.5 data-selected:bg-emerald-50 data-selected:text-emerald-950 data-highlighted:bg-emerald-50 data-highlighted:text-emerald-950"
+            >
+              <span className="flex min-w-0 w-full items-center justify-between gap-4">
+                <span className="min-w-0 truncate text-sm font-medium text-foreground">
+                  {timeZone.label}
+                </span>
+                <span
+                  className={cn(
+                    "shrink-0 whitespace-nowrap text-sm font-semibold tabular-nums",
+                    timeZone.value === value ? "text-emerald-700" : "text-foreground"
+                  )}
+                >
+                  {formatTimeInZone(timeZone.value, now)}
+                </span>
+              </span>
+            </SelectItem>
+          ))}
+        </SelectGroup>
+      </SelectContent>
+    </Select>
   );
 }
