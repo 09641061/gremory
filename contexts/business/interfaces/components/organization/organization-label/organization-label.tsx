@@ -5,6 +5,7 @@ import {
   AvatarFallback,
   AvatarImage,
 } from "@/contexts/shared/interfaces/components/ui/avatar";
+import { buttonVariants } from "@/contexts/shared/interfaces/components/ui/button";
 
 export type OrganizationLabelOrganization = {
   name: string;
@@ -43,9 +44,11 @@ export function OrganizationLabel({
   }
 
   return (
+    // Ghost, like the establishment selector next to it: the two header items
+    // share one hover, one height and one radius.
     <Link
       href={href}
-      className="flex items-center gap-2 rounded-md px-2 py-1 font-medium transition-colors hover:bg-accent"
+      className={buttonVariants({ variant: "ghost", className: "gap-2 px-2 font-medium" })}
     >
       {content}
     </Link>

@@ -48,8 +48,13 @@ export function EstablishmentsPage({
 
   return (
     <section className="mx-auto flex w-full max-w-7xl flex-col gap-6 lg:flex-row">
-      {/* Columna izquierda */}
-      <div className="w-full space-y-6 lg:flex-1 lg:flex lg:flex-col lg:h-[calc(100vh-10rem)]">
+      {/* Columna izquierda. En móvil no hay sitio para las dos columnas, así que
+          la selección sustituye a la lista y "Cancel"/"Back" vuelve a ella. */}
+      <div
+        className={`w-full space-y-6 lg:flex lg:h-(--app-page-viewport-height) lg:flex-1 lg:flex-col ${
+          selectedEst ? "hidden lg:flex" : ""
+        }`}
+      >
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between shrink-0">
           <div>
             <h1 className="page-title">Establishments</h1>
@@ -79,6 +84,7 @@ export function EstablishmentsPage({
         establishment={selectedEst}
         canUpdate={canUpdateSelected}
         onCancel={() => setSelectedEstId(null)}
+        className={selectedEst ? "" : "hidden lg:block"}
       />
     </section>
   );

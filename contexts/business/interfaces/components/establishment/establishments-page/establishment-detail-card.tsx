@@ -16,14 +16,21 @@ import {
   AvatarImage,
 } from "@/contexts/shared/interfaces/components/ui/avatar";
 import { TimeZoneField } from "../time-zone-field";
+import { cn } from "@/lib/utils";
 
 interface EstablishmentDetailCardProps {
   establishment: EstablishmentListItem | null;
   canUpdate?: boolean;
   onCancel?: () => void;
+  className?: string;
 }
 
-export function EstablishmentDetailCard({ establishment, canUpdate = true, onCancel }: EstablishmentDetailCardProps) {
+export function EstablishmentDetailCard({
+  establishment,
+  canUpdate = true,
+  onCancel,
+  className,
+}: EstablishmentDetailCardProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [name, setName] = useState(establishment?.name ?? "");
@@ -59,8 +66,8 @@ export function EstablishmentDetailCard({ establishment, canUpdate = true, onCan
 
   if (!establishment) {
     return (
-      <div className="hidden flex-1 lg:block">
-        <div className="flex min-h-[calc(100vh-10rem)] items-center justify-center rounded-xl border border-border bg-card p-8 text-center shadow-sm lg:ml-3">
+      <div className={cn("flex-1", className)}>
+        <div className="flex min-h-(--app-page-viewport-height) items-center justify-center rounded-xl border border-border bg-card p-8 text-center shadow-sm lg:ml-3">
           <div className="max-w-xs">
             <Store className="mx-auto size-10 text-muted-foreground/50" />
             <p className="mt-4 text-sm font-medium text-foreground">Select an establishment</p>
@@ -74,7 +81,7 @@ export function EstablishmentDetailCard({ establishment, canUpdate = true, onCan
   }
 
   return (
-    <div className="hidden flex-1 lg:block">
+    <div className={cn("hidden flex-1 lg:block", className)}>
       <Card className="rounded-xl border-border bg-card shadow-sm lg:ml-3 lg:h-[calc(100vh-10rem)] flex flex-col overflow-hidden">
         <form action={formAction} className="flex flex-col min-h-0 flex-1">
           {/* Hidden inputs for form submit */}

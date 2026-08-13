@@ -50,6 +50,9 @@
   --app-sidebar-avatar-size: 2rem;
   --app-category-sidebar-width: 16.25rem;
   --app-category-sidebar-mobile-width: 17.5rem;
+  /* Height a full-bleed page column gets once the fixed header and the page
+     padding are discounted, so master-detail layouts scroll inside themselves. */
+  --app-page-viewport-height: calc(100vh - 10rem);
   --radius: 0.625rem;
 }
 
