@@ -3,6 +3,8 @@ export type SubscriptionAccessSnapshot = Readonly<{
   status?: string;
   planId?: number;
   billingCycle?: string;
+  cancelAtPeriodEnd?: boolean;
+  currentPeriodEnd?: string;
 }>;
 
 /**

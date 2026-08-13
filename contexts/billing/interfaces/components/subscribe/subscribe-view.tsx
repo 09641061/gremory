@@ -200,7 +200,7 @@ export function SubscribeView({ backHref, plansByCurrency, currentSubscription }
         </section>
 
         {/* Moviendo la sección de Suscripción Actual debajo de las tarjetas de los planes */}
-        {currentSubscription && currentSubscription.planId > 0 && (
+        {currentSubscription && (currentSubscription.planId ?? 0) > 0 && (
           <div className="rounded-xl border border-border bg-card p-6 shadow-sm mt-8">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div>
@@ -213,7 +213,7 @@ export function SubscribeView({ backHref, plansByCurrency, currentSubscription }
                     </span>
                   )}
                 </h2>
-                {currentSubscription.cancelAtPeriodEnd && (
+                {currentSubscription.cancelAtPeriodEnd && currentSubscription.currentPeriodEnd && (
                   <p className="text-sm text-muted-foreground mt-2 leading-relaxed">
                     Your subscription will end and downgrade to the Free plan on <span className="font-semibold text-foreground">{new Date(currentSubscription.currentPeriodEnd).toLocaleDateString()}</span>. You still have access to all premium features until then.
                   </p>

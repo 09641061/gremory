@@ -15,6 +15,7 @@ export interface SubscriptionResponse {
   currentPeriodEnd?: string;
   failedAttemptsCount?: number;
   active?: boolean;
+  cancelAtPeriodEnd?: boolean;
   clientSecret?: string | null;
   stripePublicKey?: string | null;
 }
