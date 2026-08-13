@@ -61,7 +61,7 @@ describe("CatalogAccessPolicyService", () => {
       establishments: [
         {
           establishmentId: "est-1",
-          effectivePermissions: ["catalog:services:read"],
+          effectivePermissions: ["catalog:read"],
           roles: [{ name: "read" }],
         },
       ],

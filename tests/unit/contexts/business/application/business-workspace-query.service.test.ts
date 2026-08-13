@@ -64,6 +64,7 @@ describe("business workspace query service", () => {
       id: memberEstablishmentId,
       name: "Main branch",
       photoUrl: null,
+      timeZone: null,
       canRead: true,
       canUpdate: false,
       canDelete: false,
