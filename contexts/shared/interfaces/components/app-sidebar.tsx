@@ -8,7 +8,6 @@ import {
   ContactRound,
   MessageCircle,
   Package,
-  ScrollText,
   Users,
 } from "lucide-react";
 
@@ -35,7 +34,6 @@ const navigation = [
   { label: "Catalog", href: "/catalog", icon: Package },
   { label: "Team", href: "/team", icon: Users },
   { label: "Analytics", href: "/analytics", icon: BarChart3 },
-  { label: "Audit Log", href: "/audit-log", icon: ScrollText },
 ];
 
 export function AppSidebar({

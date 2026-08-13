@@ -37,9 +37,6 @@ export const apiConfig = Object.freeze({
       roles: "/api/workforce/roles",
       rolePermissions: "/api/workforce/roles/permissions",
     }),
-    audit: Object.freeze({
-      events: "/api/audit/events",
-    }),
     scheduling: Object.freeze({
       appointments: "/api/scheduling/appointments",
     }),

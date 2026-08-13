@@ -84,7 +84,6 @@ function resolveVisibleSidebarRoutes(
     routes.push("/team");
   }
   routes.push("/analytics");
-  routes.push("/audit-log");
 
   return routes;
 }
@@ -101,7 +100,7 @@ function resolveHomeHref(
     return "/chat";
   }
 
-  const firstWorkRoute = visibleRoutes.find((route) => route !== "/analytics" && route !== "/audit-log");
+  const firstWorkRoute = visibleRoutes.find((route) => route !== "/analytics");
   if (firstWorkRoute) return firstWorkRoute;
 
   if (workspace.organization?.canRead) return "/organizations";
