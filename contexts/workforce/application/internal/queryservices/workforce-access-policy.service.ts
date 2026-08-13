@@ -31,55 +31,26 @@ export class WorkforceAccessPolicyService {
 
     try {
       if (await ownsEstablishment(establishmentId)) {
-      return {
-        canReadTeam: true,
-        canDeleteMember: true,
-        canCreateInvitation: true,
-        canDeleteInvitation: true,
-        canReadRoles: true,
-        canCreateRole: true,
-        canUpdateRole: true,
-        canDeleteRole: true,
-      };
+        return {
+          canReadTeam: true,
+          canDeleteMember: true,
+          canCreateInvitation: true,
+          canDeleteInvitation: true,
+          canReadRoles: true,
+          canCreateRole: true,
+          canUpdateRole: true,
+          canDeleteRole: true,
+        };
       }
     } catch {
       // Resolve member permissions below.
     }
     try {
-        const access = await createTeamQueryService().getAccessContext();
-        const estAccess = access.establishments.find(
-          (item) => item.establishmentId === establishmentId,
-        );
-        if (!estAccess) {
-          return {
-            canReadTeam: false,
-            canDeleteMember: false,
-            canCreateInvitation: false,
-            canDeleteInvitation: false,
-            canReadRoles: false,
-            canCreateRole: false,
-            canUpdateRole: false,
-            canDeleteRole: false,
-          };
-        }
-
-        const perms = estAccess.effectivePermissions;
-        const hasManage = hasAnyPermission(perms, ["workforce:manage"]);
-        const hasRead =
-          hasManage ||
-          hasAnyPermission(perms, ["workforce:read"]);
-
-        return {
-          canReadTeam: hasRead,
-          canDeleteMember: hasManage,
-          canCreateInvitation: hasManage,
-          canDeleteInvitation: hasManage,
-          canReadRoles: hasRead,
-          canCreateRole: hasManage,
-          canUpdateRole: hasManage,
-          canDeleteRole: hasManage,
-        };
-      } catch {
+      const access = await createTeamQueryService().getAccessContext();
+      const estAccess = access.establishments.find(
+        (item) => item.establishmentId === establishmentId,
+      );
+      if (!estAccess) {
         return {
           canReadTeam: false,
           canDeleteMember: false,
@@ -91,8 +62,34 @@ export class WorkforceAccessPolicyService {
           canDeleteRole: false,
         };
       }
-    }
 
+      const perms = estAccess.effectivePermissions;
+      const hasManage = hasAnyPermission(perms, ["workforce:manage"]);
+      const hasRead = hasManage || hasAnyPermission(perms, ["workforce:read"]);
+
+      return {
+        canReadTeam: hasRead,
+        canDeleteMember: hasManage,
+        canCreateInvitation: hasManage,
+        canDeleteInvitation: hasManage,
+        canReadRoles: hasRead,
+        canCreateRole: hasManage,
+        canUpdateRole: hasManage,
+        canDeleteRole: hasManage,
+      };
+    } catch {
+      return {
+        canReadTeam: false,
+        canDeleteMember: false,
+        canCreateInvitation: false,
+        canDeleteInvitation: false,
+        canReadRoles: false,
+        canCreateRole: false,
+        canUpdateRole: false,
+        canDeleteRole: false,
+      };
+    }
+  }
 }
 
 async function ownsEstablishment(establishmentId: string): Promise<boolean> {

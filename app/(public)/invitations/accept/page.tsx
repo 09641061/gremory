@@ -1,4 +1,5 @@
 import { createTeamQueryService } from "@/contexts/workforce/application/internal/queryservices/team-query.service";
+import { TeamApiError } from "@/contexts/workforce/infrastructure/gateways/team-api.gateway";
 import { getTeamAccessToken } from "@/contexts/workforce/infrastructure/session/team-session";
 import {
   InvitationAcceptanceView,
@@ -25,6 +26,9 @@ export default async function InvitationAcceptPage({
     if (isExpiredInvitationError(error)) {
       return <InvitationExpiredView />;
     }
+    if (isNotFoundInvitationError(error)) {
+      return <InvitationUnavailableView />;
+    }
     return <InvitationUnavailableView />;
   }
 
@@ -39,14 +43,9 @@ export default async function InvitationAcceptPage({
 }
 
 function isExpiredInvitationError(error: unknown): boolean {
-  if (!error || typeof error !== "object") {
-    return false;
-  }
+  return error instanceof TeamApiError && error.status === 410;
+}
 
-  const details = (error as { details?: unknown }).details;
-  if (!details || typeof details !== "object") {
-    return false;
-  }
-
-  return (details as Record<string, unknown>).code === "INVITATION_EXPIRED";
+function isNotFoundInvitationError(error: unknown): boolean {
+  return error instanceof TeamApiError && error.status === 404;
 }
