@@ -142,7 +142,15 @@ export function AppSidebar({
           settingsHref={
             establishmentId ? `/settings?establishmentId=${establishmentId}` : "/settings"
           }
-          active={pathname === "/settings" || pathname.startsWith("/settings/")}
+          invoiceHref={
+            establishmentId ? `/invoice?establishmentId=${establishmentId}` : "/invoice"
+          }
+          active={
+            pathname === "/settings" ||
+            pathname.startsWith("/settings/") ||
+            pathname === "/invoice" ||
+            pathname.startsWith("/invoice/")
+          }
         />
       </SidebarFooter>
     </ShadcnSidebar>
