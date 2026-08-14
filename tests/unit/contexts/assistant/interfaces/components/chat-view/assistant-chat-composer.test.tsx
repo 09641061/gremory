@@ -53,6 +53,21 @@ describe("AssistantChatComposer", () => {
     );
   });
 
+  it("should keep the textarea enabled while sending but disable the send action", () => {
+    render(
+      <AssistantChatComposer
+        value="Hello"
+        isSending={true}
+        onValueChange={vi.fn()}
+        onSubmit={vi.fn()}
+        onKeyDown={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByPlaceholderText("Ask what you need about Takodu")).toBeEnabled();
+    expect(screen.getByLabelText("Sending")).toBeDisabled();
+  });
+
   it("should expand into the multiline card when the text wraps", async () => {
     mockScrollHeight(128);
 

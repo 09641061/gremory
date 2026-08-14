@@ -93,7 +93,7 @@ export function AssistantChatComposer({
         onKeyDown={onKeyDown}
         rows={1}
         placeholder="Ask what you need about Takodu"
-        disabled={disabled || isSending}
+        disabled={disabled}
         className={cn(inputBaseClass, className)}
       />
     );
