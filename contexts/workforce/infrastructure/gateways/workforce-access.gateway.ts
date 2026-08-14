@@ -6,6 +6,14 @@ import { teamGet } from "../http/team-api.client";
 
 const workforceEntryAccessResourceSchema = z.object({
   active: z.boolean().optional(),
+  membershipCapabilities: z.object({
+    canReadTeam: z.boolean().optional(),
+    canReadAppointments: z.boolean().optional(),
+    canCreateAppointment: z.boolean().optional(),
+    canUpdateAppointment: z.boolean().optional(),
+    canDeleteAppointment: z.boolean().optional(),
+    canReadAnalytics: z.boolean().optional(),
+  }).optional(),
   establishments: z.array(z.object({
     organizationId: z.string(),
     organizationName: z.string(),

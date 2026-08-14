@@ -26,6 +26,9 @@ const mocks = vi.hoisted(() => ({
       ],
       activeOrganizationId: "org-1",
       activeEstablishmentId: "est-1",
+      capabilities: {
+        canReadAnalytics: true,
+      },
       canReadOrganizations: true,
       canReadEstablishments: true,
       canCreateEstablishment: true,
@@ -98,6 +101,9 @@ import { createAppShellQueryService } from "@/contexts/shared/application/intern
 describe("app shell query service", () => {
   beforeEach(() => {
     vi.resetAllMocks();
+    mocks.shell.workspace.capabilities = {
+      canReadAnalytics: true,
+    };
     mocks.subscription.resolve.mockReturnValue({
       isActive: true,
       hasAssistantAccess: true,
@@ -155,6 +161,39 @@ describe("app shell query service", () => {
       "/chat",
       "/crm",
       "/catalog",
+      "/analytics",
+    ]);
+  });
+
+  it("hides analytics when the workspace capability denies it", async () => {
+    mocks.shell.workspace.capabilities = { canReadAnalytics: false };
+
+    const shell = await createAppShellQueryService().resolve({
+      subscription: { active: true, status: "ACTIVE", planId: 1 },
+    });
+
+    expect(shell.visibleSidebarRoutes).toEqual([
+      "/chat",
+      "/schedule",
+      "/crm",
+      "/catalog",
+      "/team",
+    ]);
+  });
+
+  it("keeps owner routes visible when workspace capabilities are missing", async () => {
+    delete (mocks.shell.workspace as { capabilities?: { canReadAnalytics: boolean } }).capabilities;
+
+    const shell = await createAppShellQueryService().resolve({
+      subscription: { active: true, status: "ACTIVE", planId: 1 },
+    });
+
+    expect(shell.visibleSidebarRoutes).toEqual([
+      "/chat",
+      "/schedule",
+      "/crm",
+      "/catalog",
+      "/team",
       "/analytics",
     ]);
   });

@@ -2,6 +2,16 @@ import { z } from "zod";
 
 const uuidSchema = z.string().uuid();
 
+const workspaceCapabilitiesSchema = z
+  .object({
+    canReadAppointments: z.boolean().optional(),
+    canReadCatalog: z.boolean().optional(),
+    canReadCustomers: z.boolean().optional(),
+    canReadTeam: z.boolean().optional(),
+    canReadAnalytics: z.boolean().optional(),
+  })
+  .optional();
+
 const establishmentResourceSchema = z.object({
   id: uuidSchema,
   name: z.string().trim().min(1),
@@ -32,6 +42,7 @@ export const businessWorkspaceResourceSchema = z.object({
     .nullable(),
   establishments: z.array(establishmentResourceSchema).default([]),
   activeEstablishmentId: uuidSchema.nullable(),
+  capabilities: workspaceCapabilitiesSchema,
   // Always the owner's subscription, even when the caller is a member.
   subscription: z
     .object({

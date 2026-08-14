@@ -54,16 +54,24 @@ export class SchedulingAccessPolicyService {
         }
 
         const perms = estAccess.effectivePermissions;
-        const hasManage = hasAnyPermission(perms, ["scheduling:manage"]);
+        const capabilities = access.membershipCapabilities;
+        const canReadAppointments =
+          capabilities?.canReadAppointments ??
+          (hasAnyPermission(perms, ["scheduling:manage"]) ||
+            hasReadRole(estAccess.roles) ||
+            hasAnyPermission(perms, ["scheduling:read"]));
+        const canCreateAppointment =
+          capabilities?.canCreateAppointment ?? hasAnyPermission(perms, ["scheduling:manage"]);
+        const canUpdateAppointment =
+          capabilities?.canUpdateAppointment ?? hasAnyPermission(perms, ["scheduling:manage"]);
+        const canDeleteAppointment =
+          capabilities?.canDeleteAppointment ?? hasAnyPermission(perms, ["scheduling:manage"]);
 
         return {
-          canReadAppointments:
-            hasManage ||
-            hasReadRole(estAccess.roles) ||
-            hasAnyPermission(perms, ["scheduling:read"]),
-          canCreateAppointment: hasManage,
-          canUpdateAppointment: hasManage,
-          canDeleteAppointment: hasManage,
+          canReadAppointments,
+          canCreateAppointment,
+          canUpdateAppointment,
+          canDeleteAppointment,
         };
       } catch {
         return {

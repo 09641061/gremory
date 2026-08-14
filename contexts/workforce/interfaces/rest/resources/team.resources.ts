@@ -60,6 +60,14 @@ export interface InvitationAcceptanceResource {
 
 export interface WorkforceAccessResource {
   active: boolean;
+  membershipCapabilities?: {
+    canReadTeam?: boolean;
+    canReadAppointments?: boolean;
+    canCreateAppointment?: boolean;
+    canUpdateAppointment?: boolean;
+    canDeleteAppointment?: boolean;
+    canReadAnalytics?: boolean;
+  };
   establishments: Array<{
     organizationId: string;
     organizationName: string;

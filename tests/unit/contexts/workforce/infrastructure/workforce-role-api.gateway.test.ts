@@ -91,12 +91,13 @@ describe("WorkforceRoleApiGateway", () => {
     const fetchMock = vi.fn().mockResolvedValue(jsonResponse([
       "business:read",
       "catalog:manage",
+      "analytics:read",
     ]));
     vi.stubGlobal("fetch", fetchMock);
 
     const permissions = await new WorkforceRoleApiGateway("access-token").permissions();
 
-    expect(permissions).toEqual(["business:read", "catalog:manage"]);
+    expect(permissions).toEqual(["business:read", "catalog:manage", "analytics:read"]);
     expect(fetchMock).toHaveBeenCalledWith(
       "http://localhost:8080/api/workforce/roles/permissions",
       expect.objectContaining({
@@ -111,7 +112,7 @@ function roleResource() {
   return {
     id: "11111111-1111-4111-8111-111111111111",
     name: "Catalog manager",
-    permissions: ["catalog:manage", "business:read"],
+    permissions: ["catalog:manage", "business:read", "analytics:read"],
     systemRole: false,
   };
 }

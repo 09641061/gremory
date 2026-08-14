@@ -30,6 +30,7 @@ function workspace(overrides: Record<string, unknown> = {}) {
     },
     establishments: [],
     activeEstablishmentId: null,
+    capabilities: undefined,
     subscription: { active: true, planName: "Free", status: "ACTIVE", canManageBilling: true },
     pendingInvitation: null,
     ...overrides,
@@ -42,16 +43,23 @@ describe("business workspace query service", () => {
   });
 
   it("resolves the single organization of an owner with its own subscription", async () => {
-    mocks.getWorkspace.mockResolvedValue(workspace({
-      establishments: [{
-        id: establishmentId,
-        name: "Main branch",
-        photoUrl: null,
-        effectivePermissions: [],
-        permissions: { canRead: true, canUpdate: true, canDelete: true },
-      }],
-      activeEstablishmentId: establishmentId,
-    }));
+    mocks.getWorkspace.mockResolvedValue(
+      workspace({
+        capabilities: {
+          canReadAnalytics: true,
+        },
+        establishments: [
+          {
+            id: establishmentId,
+            name: "Main branch",
+            photoUrl: null,
+            effectivePermissions: [],
+            permissions: { canRead: true, canUpdate: true, canDelete: true },
+          },
+        ],
+        activeEstablishmentId: establishmentId,
+      }),
+    );
 
     const result = await createBusinessWorkspaceQueryService().getHeaderViewModel();
 
@@ -59,18 +67,27 @@ describe("business workspace query service", () => {
     expect(result.organization?.id).toBe(organizationId);
     expect(result.activeEstablishmentId).toBe(establishmentId);
     expect(result.subscription?.canManageBilling).toBe(true);
+    expect(result.capabilities).toEqual({
+      canReadAppointments: undefined,
+      canReadCatalog: undefined,
+      canReadCustomers: undefined,
+      canReadTeam: undefined,
+      canReadAnalytics: true,
+    });
     expect(result.canCreateEstablishment).toBe(true);
   });
 
   it("keeps the owner creation entry point visible when Billing reports a plan limit", async () => {
-    mocks.getWorkspace.mockResolvedValue(workspace({
-      organization: {
-        id: organizationId,
-        name: "Takodu Studio",
-        imageUrl: null,
-        permissions: { canRead: true, canUpdate: true, canCreateEstablishment: false },
-      },
-    }));
+    mocks.getWorkspace.mockResolvedValue(
+      workspace({
+        organization: {
+          id: organizationId,
+          name: "Takodu Studio",
+          imageUrl: null,
+          permissions: { canRead: true, canUpdate: true, canCreateEstablishment: false },
+        },
+      }),
+    );
 
     const result = await createBusinessWorkspaceQueryService().getHeaderViewModel();
 
@@ -78,24 +95,28 @@ describe("business workspace query service", () => {
   });
 
   it("reads a member against the owner's subscription and denies billing", async () => {
-    mocks.getWorkspace.mockResolvedValue(workspace({
-      accountType: "MEMBER",
-      organization: {
-        id: organizationId,
-        name: "Takodu Studio",
-        imageUrl: null,
-        permissions: { canRead: true, canUpdate: false, canCreateEstablishment: false },
-      },
-      establishments: [{
-        id: establishmentId,
-        name: "Main branch",
-        photoUrl: null,
-        effectivePermissions: ["catalog:read"],
-        permissions: { canRead: true, canUpdate: false, canDelete: false },
-      }],
-      activeEstablishmentId: establishmentId,
-      subscription: { active: false, planName: "Free", status: "PAST_DUE", canManageBilling: false },
-    }));
+    mocks.getWorkspace.mockResolvedValue(
+      workspace({
+        accountType: "MEMBER",
+        organization: {
+          id: organizationId,
+          name: "Takodu Studio",
+          imageUrl: null,
+          permissions: { canRead: true, canUpdate: false, canCreateEstablishment: false },
+        },
+        establishments: [
+          {
+            id: establishmentId,
+            name: "Main branch",
+            photoUrl: null,
+            effectivePermissions: ["catalog:read"],
+            permissions: { canRead: true, canUpdate: false, canDelete: false },
+          },
+        ],
+        activeEstablishmentId: establishmentId,
+        subscription: { active: false, planName: "Free", status: "PAST_DUE", canManageBilling: false },
+      }),
+    );
 
     const result = await createBusinessWorkspaceQueryService().getHeaderViewModel();
 
@@ -106,26 +127,28 @@ describe("business workspace query service", () => {
   });
 
   it("hides establishments the member cannot read", async () => {
-    mocks.getWorkspace.mockResolvedValue(workspace({
-      accountType: "MEMBER",
-      establishments: [
-        {
-          id: establishmentId,
-          name: "Main branch",
-          photoUrl: null,
-          effectivePermissions: [],
-          permissions: { canRead: false, canUpdate: false, canDelete: false },
-        },
-        {
-          id: secondEstablishmentId,
-          name: "Second branch",
-          photoUrl: null,
-          effectivePermissions: ["crm:read"],
-          permissions: { canRead: true, canUpdate: false, canDelete: false },
-        },
-      ],
-      activeEstablishmentId: establishmentId,
-    }));
+    mocks.getWorkspace.mockResolvedValue(
+      workspace({
+        accountType: "MEMBER",
+        establishments: [
+          {
+            id: establishmentId,
+            name: "Main branch",
+            photoUrl: null,
+            effectivePermissions: [],
+            permissions: { canRead: false, canUpdate: false, canDelete: false },
+          },
+          {
+            id: secondEstablishmentId,
+            name: "Second branch",
+            photoUrl: null,
+            effectivePermissions: ["crm:read"],
+            permissions: { canRead: true, canUpdate: false, canDelete: false },
+          },
+        ],
+        activeEstablishmentId: establishmentId,
+      }),
+    );
 
     const result = await createBusinessWorkspaceQueryService().getHeaderViewModel();
 
@@ -137,16 +160,18 @@ describe("business workspace query service", () => {
   });
 
   it("surfaces the pending invitation of an account that has not accepted yet", async () => {
-    mocks.getWorkspace.mockResolvedValue(workspace({
-      accountType: "PENDING_INVITATION",
-      organization: null,
-      subscription: null,
-      pendingInvitation: {
-        organizationName: "Takodu Studio",
-        establishmentName: "Main branch",
-        expiresAt: "2026-09-01T00:00:00Z",
-      },
-    }));
+    mocks.getWorkspace.mockResolvedValue(
+      workspace({
+        accountType: "PENDING_INVITATION",
+        organization: null,
+        subscription: null,
+        pendingInvitation: {
+          organizationName: "Takodu Studio",
+          establishmentName: "Main branch",
+          expiresAt: "2026-09-01T00:00:00Z",
+        },
+      }),
+    );
 
     const result = await createBusinessWorkspaceQueryService().getHeaderViewModel();
 
@@ -156,15 +181,17 @@ describe("business workspace query service", () => {
   });
 
   it("denies the organization page when the account cannot read its organization", async () => {
-    mocks.getWorkspace.mockResolvedValue(workspace({
-      accountType: "MEMBER",
-      organization: {
-        id: organizationId,
-        name: "Takodu Studio",
-        imageUrl: null,
-        permissions: { canRead: false, canUpdate: false, canCreateEstablishment: false },
-      },
-    }));
+    mocks.getWorkspace.mockResolvedValue(
+      workspace({
+        accountType: "MEMBER",
+        organization: {
+          id: organizationId,
+          name: "Takodu Studio",
+          imageUrl: null,
+          permissions: { canRead: false, canUpdate: false, canCreateEstablishment: false },
+        },
+      }),
+    );
 
     const state = await createBusinessWorkspaceQueryService().getOrganizationPageState();
 
@@ -172,15 +199,19 @@ describe("business workspace query service", () => {
   });
 
   it("returns the organization settings state for the owner", async () => {
-    mocks.getWorkspace.mockResolvedValue(workspace({
-      establishments: [{
-        id: establishmentId,
-        name: "Main branch",
-        photoUrl: null,
-        effectivePermissions: [],
-        permissions: { canRead: true, canUpdate: true, canDelete: true },
-      }],
-    }));
+    mocks.getWorkspace.mockResolvedValue(
+      workspace({
+        establishments: [
+          {
+            id: establishmentId,
+            name: "Main branch",
+            photoUrl: null,
+            effectivePermissions: [],
+            permissions: { canRead: true, canUpdate: true, canDelete: true },
+          },
+        ],
+      }),
+    );
 
     const state = await createBusinessWorkspaceQueryService().getOrganizationPageState();
 

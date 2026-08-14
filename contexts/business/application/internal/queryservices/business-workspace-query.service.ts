@@ -5,6 +5,7 @@ import type { BusinessWorkspaceSelection } from "@/contexts/business/infrastruct
 import type { BusinessWorkspaceResource } from "@/contexts/business/interfaces/rest/schemas/business-workspace.schemas";
 import type {
   OrganizationPageState,
+  WorkspaceCapabilities,
   WorkspaceHeaderEstablishment,
   WorkspaceHeaderOrganization,
   WorkspaceHeaderViewModel,
@@ -56,6 +57,7 @@ export function toHeaderViewModel(resource: BusinessWorkspaceResource): Workspac
     organization,
     establishments,
     activeEstablishmentId,
+    capabilities: toWorkspaceCapabilities(resource.capabilities),
     canReadOrganization: organization?.canRead === true,
     canReadEstablishments: organization?.canReadEstablishments === true,
     canCreateEstablishment: organization?.canCreateEstablishment === true,
@@ -107,5 +109,21 @@ function toHeaderEstablishment(
     canRead: establishment.permissions.canRead,
     canUpdate: establishment.permissions.canUpdate,
     canDelete: establishment.permissions.canDelete,
+  };
+}
+
+function toWorkspaceCapabilities(
+  capabilities: Awaited<ReturnType<BusinessWorkspaceApiGateway["getWorkspace"]>>["capabilities"],
+): WorkspaceCapabilities | undefined {
+  if (!capabilities) {
+    return undefined;
+  }
+
+  return {
+    canReadAppointments: capabilities.canReadAppointments,
+    canReadCatalog: capabilities.canReadCatalog,
+    canReadCustomers: capabilities.canReadCustomers,
+    canReadTeam: capabilities.canReadTeam,
+    canReadAnalytics: capabilities.canReadAnalytics,
   };
 }

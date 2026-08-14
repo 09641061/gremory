@@ -138,6 +138,7 @@ export class TeamApiGateway implements TeamRepository {
     const resource = workforceAccessResourceSchema.parse(response);
     return {
       active: resource.active,
+      membershipCapabilities: resource.membershipCapabilities,
       establishments: resource.establishments.map((establishment) => ({
         organizationId: createTeamOrganizationId(establishment.organizationId),
         organizationName: establishment.organizationName,

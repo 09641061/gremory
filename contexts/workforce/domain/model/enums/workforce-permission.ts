@@ -15,6 +15,9 @@ export const workforcePermissions = {
     read: "crm:read",
     manage: "crm:manage",
   },
+  analytics: {
+    read: "analytics:read",
+  },
   workforce: {
     read: "workforce:read",
     manage: "workforce:manage",

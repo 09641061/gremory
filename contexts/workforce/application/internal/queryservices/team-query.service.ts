@@ -56,6 +56,7 @@ export class TeamQueryServiceImpl implements TeamQueryService {
     const access = await this.team.getAccessContext();
     return {
       active: access.active,
+      membershipCapabilities: access.membershipCapabilities,
       establishments: access.establishments.map((establishment) => ({
         organizationId: establishment.organizationId.value,
         organizationName: establishment.organizationName,
