@@ -46,6 +46,7 @@ async function BackToHomeLink() {
       variant="ghost"
       size="icon"
       className="-ml-2"
+      nativeButton={false}
       aria-label="Back"
       title="Back"
       render={<Link href={href} />}

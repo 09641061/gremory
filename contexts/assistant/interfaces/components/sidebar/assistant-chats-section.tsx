@@ -6,7 +6,6 @@ import { SidebarMenuButton } from "@/contexts/shared/interfaces/components/ui/si
 import { cn } from "@/lib/utils";
 
 import type { AssistantConversationSummaryReadModel } from "@/contexts/assistant/application/internal/transforms/assistant.read-models";
-import { AssistantConversationActionsMenu } from "./assistant-conversation-actions-menu";
 import { AssistantConversationDeleteDialog } from "./assistant-conversation-delete-dialog";
 import { AssistantConversationList } from "./assistant-conversation-list";
 import { AssistantConversationRenameModal } from "./assistant-conversation-rename-modal";
@@ -29,21 +28,15 @@ export function AssistantChatsSection({
     isLoading,
     isOpen,
     isRenameSaving,
-    menuPosition,
-    menuRef,
     mutatingConversationId,
-    openConversation,
     openDeleteConversation,
     openRenameConversation,
-    openMenuId,
     renameError,
     renameModalConversation,
     renameTitle,
     sectionRef,
     setDeleteError,
     setDeleteModalConversation,
-    setMenuPosition,
-    setOpenMenuId,
     setRenameError,
     setRenameModalConversation,
     setRenameTitle,
@@ -77,36 +70,14 @@ export function AssistantChatsSection({
               activeConversationId={activeConversationId}
               isLoading={isLoading}
               error={error}
-              openMenuId={openMenuId}
               mutatingConversationId={mutatingConversationId}
               establishmentId={establishmentId}
-              onOpenMenu={(nextConversation, nextMenuPosition) => {
-                setMenuPosition((current) =>
-                  current && openMenuId === nextConversation.id ? null : nextMenuPosition,
-                );
-                setOpenMenuId((current) =>
-                  current === nextConversation.id ? null : nextConversation.id,
-                );
-              }}
+              onRename={openRenameConversation}
+              onDelete={openDeleteConversation}
             />
           </div>
         </div>
       ) : null}
-
-      <AssistantConversationActionsMenu
-        conversation={openConversation}
-        isMutating={openConversation ? mutatingConversationId === openConversation.id : false}
-        menuPosition={menuPosition}
-        menuRef={menuRef}
-        onRename={(conversation) => {
-          openRenameConversation(conversation);
-          setMenuPosition(null);
-        }}
-        onDelete={(conversation) => {
-          openDeleteConversation(conversation);
-          setMenuPosition(null);
-        }}
-      />
 
       <AssistantConversationRenameModal
         open={renameModalConversation !== null}
