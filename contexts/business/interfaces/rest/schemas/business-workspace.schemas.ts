@@ -23,6 +23,8 @@ const establishmentResourceSchema = z.object({
     canUpdate: z.boolean(),
     canDelete: z.boolean(),
   }),
+  organizationId: uuidSchema.optional(),
+  organizationName: z.string().trim().min(1).optional(),
 });
 
 // An account owns one organization or belongs to one; it is never a list.

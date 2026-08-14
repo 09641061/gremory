@@ -109,6 +109,8 @@ function toHeaderEstablishment(
     canRead: establishment.permissions.canRead,
     canUpdate: establishment.permissions.canUpdate,
     canDelete: establishment.permissions.canDelete,
+    organizationId: establishment.organizationId ?? undefined,
+    organizationName: establishment.organizationName ?? undefined,
   };
 }
 
