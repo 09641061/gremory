@@ -27,6 +27,7 @@ type ConversationMessageSource = {
 
 const DEFAULT_ASSISTANT_GREETING = "Hello. I am your assistant for business, customers, catalog, and scheduling.";
 const INTERNAL_CALL_TAG_PATTERN = /\[call:[^\]]*\]/gi;
+const UUID_PATTERN = /\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\b/gi;
 
 function hasInternalCallTag(content: string): boolean {
   return /\[call:[^\]]*\]/i.test(content);
@@ -35,7 +36,9 @@ function hasInternalCallTag(content: string): boolean {
 function stripInternalCallTags(content: string): string {
   return content
     .replace(INTERNAL_CALL_TAG_PATTERN, "")
+    .replace(UUID_PATTERN, "")
     .replace(/\n{3,}/g, "\n\n")
+    .replace(/\s{2,}/g, " ")
     .trim();
 }
 
