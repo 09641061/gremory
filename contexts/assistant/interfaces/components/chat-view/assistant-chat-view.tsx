@@ -12,11 +12,14 @@ import { AssistantChatComposer } from "./assistant-chat-composer";
 import { AssistantChatEmptyState } from "./assistant-chat-empty-state";
 import { AssistantChatThread } from "./assistant-chat-thread";
 
-function buildConversationUrl(conversationId?: string | null) {
+function buildConversationUrl(conversationId?: string | null, establishmentId?: string | null) {
   if (!conversationId) return "/chat";
 
   const params = new URLSearchParams();
   params.set("conversationId", conversationId);
+  if (establishmentId) {
+    params.set("establishmentId", establishmentId);
+  }
   return `/chat?${params.toString()}`;
 }
 
@@ -31,12 +34,14 @@ type AssistantChatViewProps = {
   conversationId: string | null;
   initialConversation: AssistantConversationViewModel | null;
   hasAssistantAccess: boolean;
+  establishmentId: string | null;
 };
 
 export function AssistantChatView({
   conversationId,
   initialConversation,
   hasAssistantAccess,
+  establishmentId,
 }: AssistantChatViewProps) {
   const router = useRouter();
   const bottomRef = useRef<HTMLDivElement | null>(null);
@@ -193,6 +198,7 @@ export function AssistantChatView({
         const result = await submitAssistantMessageAction({
           conversationId: null,
           message,
+          establishmentId,
         });
 
         if (result.status === "error") {
@@ -209,7 +215,7 @@ export function AssistantChatView({
         );
         setActiveConversation(result.data);
         setPendingConversation(null);
-        router.replace(buildConversationUrl(currentConvId), { scroll: false });
+        router.replace(buildConversationUrl(currentConvId, establishmentId), { scroll: false });
         setIsSendingMessage(false);
         return;
       }
@@ -250,7 +256,7 @@ export function AssistantChatView({
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ message }),
+          body: JSON.stringify({ message, establishmentId }),
         });
 
         if (!response.ok) {
@@ -333,6 +339,7 @@ export function AssistantChatView({
         const result = await submitAssistantMessageAction({
           conversationId: currentConvId,
           message,
+          establishmentId,
         });
 
         if (result.status === "error") {

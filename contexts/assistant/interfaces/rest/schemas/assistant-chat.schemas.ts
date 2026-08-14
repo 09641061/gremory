@@ -3,6 +3,7 @@ import { z } from "zod";
 export const submitAssistantMessageSchema = z.object({
   conversationId: z.string().min(1).optional().nullable(),
   message: z.string().trim().min(1).max(4000),
+  establishmentId: z.string().uuid().optional().nullable(),
 });
 
 export type SubmitAssistantMessageInput = z.infer<typeof submitAssistantMessageSchema>;
@@ -27,6 +28,7 @@ export type AssistantConversationIdParamInput = z.infer<
 
 export const assistantConversationCreateSchema = z.object({
   messageContent: z.string().trim().min(1).max(4000),
+  establishmentId: z.string().uuid().optional().nullable(),
 });
 
 export type AssistantConversationCreateInput = z.infer<
@@ -43,6 +45,7 @@ export type AssistantConversationRenameInput = z.infer<
 
 export const assistantConversationMessageSchema = z.object({
   message: z.string().trim().min(1).max(4000),
+  establishmentId: z.string().uuid().optional().nullable(),
 });
 
 export type AssistantConversationMessageInput = z.infer<

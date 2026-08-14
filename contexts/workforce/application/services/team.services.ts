@@ -21,6 +21,7 @@ export interface TeamCommandService {
   revokeInvitation(command: RevokeTeamInvitationCommand): Promise<void>;
   removeMember(command: RemoveTeamMemberCommand): Promise<void>;
   acceptInvitation(command: AcceptTeamInvitationCommand): Promise<MemberId>;
+  acceptPendingInvitation(): Promise<MemberId>;
 }
 
 export interface TeamQueryService {

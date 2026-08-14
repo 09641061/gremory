@@ -7,6 +7,7 @@ import type { AssistantConversationReadModel } from "../transforms/assistant.rea
 export interface SubmitAssistantMessageCommand {
   conversationId?: string | null;
   message: string;
+  establishmentId?: string | null;
 }
 
 export class SubmitAssistantMessageCommandService {
@@ -24,6 +25,7 @@ export class SubmitAssistantMessageCommandService {
         {
           conversationId: command.conversationId,
           message: command.message,
+          establishmentId: command.establishmentId,
         },
         token,
       );
@@ -32,6 +34,7 @@ export class SubmitAssistantMessageCommandService {
     return this.createConversationService.handle(
       {
         messageContent: command.message,
+        establishmentId: command.establishmentId,
       },
       token,
     );

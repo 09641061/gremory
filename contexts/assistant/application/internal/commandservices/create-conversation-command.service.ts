@@ -10,7 +10,7 @@ export class CreateConversationCommandService {
 
   async handle(command: CreateConversationCommand, token?: string): Promise<AssistantConversationReadModel> {
     const conversation = await this.repository.createConversation(
-      { messageContent: command.messageContent },
+      { messageContent: command.messageContent, establishmentId: command.establishmentId },
       token,
     );
     return toConversationReadModelFromEntity(conversation);

@@ -13,6 +13,7 @@ type AssistantConversationListItemProps = {
   active: boolean;
   isMutating: boolean;
   isMenuOpen: boolean;
+  establishmentId: string | null;
   onOpenMenu: (
     conversation: AssistantConversationSummaryReadModel,
     menuPosition: { top: number; left: number },
@@ -24,23 +25,23 @@ export function AssistantConversationListItem({
   active,
   isMutating,
   isMenuOpen,
+  establishmentId,
   onOpenMenu,
 }: AssistantConversationListItemProps) {
   const conversationTitle = conversation.title ?? "New conversation";
+  const href = establishmentId
+    ? `/chat?conversationId=${encodeURIComponent(conversation.id)}&establishmentId=${encodeURIComponent(establishmentId)}`
+    : `/chat?conversationId=${encodeURIComponent(conversation.id)}`;
 
   return (
     <li>
       <div className="relative flex items-center gap-1.5 rounded-2xl">
-        <Link
-          href={`/chat?conversationId=${encodeURIComponent(conversation.id)}`}
-          aria-current={active ? "page" : undefined}
-          className={cn(
+        <Link href={href} aria-current={active ? "page" : undefined} className={cn(
             buttonVariants({ variant: "ghost", size: "lg" }),
             "h-(--app-sidebar-control-height) min-w-0 flex-1 justify-start gap-(--app-sidebar-control-gap) rounded-(--app-sidebar-item-radius) border border-transparent px-(--app-sidebar-control-padding-x) py-0 text-left text-sm font-medium",
             active &&
               "!border-accent/40 !bg-accent !text-accent-foreground hover:!border-accent/40 hover:!bg-accent hover:!text-accent-foreground",
-          )}
-        >
+          )}>
           <span className="truncate">{conversationTitle}</span>
         </Link>
 

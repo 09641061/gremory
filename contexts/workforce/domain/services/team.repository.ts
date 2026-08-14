@@ -68,5 +68,8 @@ export interface TeamRepository {
   removeMember(memberId: MemberId): Promise<void>;
   previewInvitation(token: InvitationToken): Promise<TeamInvitationPreview>;
   acceptInvitation(token: InvitationToken): Promise<MemberId>;
+  // For an account that registered through an invitation and no longer holds
+  // the emailed link: the backend resolves it by the authenticated email.
+  acceptPendingInvitation(): Promise<MemberId>;
   getAccessContext(): Promise<TeamAccessContext>;
 }

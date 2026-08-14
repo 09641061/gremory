@@ -11,6 +11,7 @@ type AssistantConversationListProps = {
   error: string | null;
   openMenuId: string | null;
   mutatingConversationId: string | null;
+  establishmentId: string | null;
   onOpenMenu: (
     conversation: AssistantConversationSummaryReadModel,
     menuPosition: { top: number; left: number },
@@ -24,6 +25,7 @@ export function AssistantConversationList({
   error,
   openMenuId,
   mutatingConversationId,
+  establishmentId,
   onOpenMenu,
 }: AssistantConversationListProps) {
   if (isLoading) {
@@ -65,6 +67,7 @@ export function AssistantConversationList({
             active={active}
             isMutating={isMutating}
             isMenuOpen={openMenuId === conversation.id}
+            establishmentId={establishmentId}
             onOpenMenu={onOpenMenu}
           />
         );

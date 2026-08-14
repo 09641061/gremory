@@ -7,7 +7,7 @@ import { EditCustomerForm } from "@/contexts/crm/interfaces/components/customer-
 
 interface EditCustomerPageProps {
   params: Promise<{ customerId: string }>;
-  searchParams: Promise<{ organizationId?: string; establishmentId?: string }>;
+  searchParams: Promise<{ establishmentId?: string }>;
 }
 
 export default async function EditCustomerPage({ params, searchParams }: EditCustomerPageProps) {

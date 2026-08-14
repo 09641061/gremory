@@ -118,6 +118,17 @@ export class TeamApiGateway implements TeamRepository {
     return createMemberId(resource.membership.id);
   }
 
+  async acceptPendingInvitation(): Promise<MemberId> {
+    const accessToken = await requireTeamAccessToken(this.providedToken);
+    const response = await teamPost<unknown>(
+      `${apiConfig.routes.workforce.invitations}/accept-pending`,
+      {},
+      accessToken,
+    );
+    const resource = invitationAcceptanceResourceSchema.parse(response);
+    return createMemberId(resource.membership.id);
+  }
+
   async getAccessContext() {
     const accessToken = await requireTeamAccessToken(this.providedToken);
     const response = await teamGet<unknown>(

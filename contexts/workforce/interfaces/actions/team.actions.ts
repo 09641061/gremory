@@ -103,6 +103,28 @@ export async function acceptTeamInvitationAction(
   }
 }
 
+/**
+ * Accepts the invitation waiting for the authenticated account. Carries no token:
+ * an account that registered through an invitation no longer holds the emailed link.
+ */
+export async function acceptPendingInvitationAction(
+  previous: TeamActionResult,
+): Promise<TeamActionResult> {
+  void previous;
+  try {
+    const service = createTeamCommandService(await requireTeamAccessToken());
+    const memberId = await service.acceptPendingInvitation();
+    revalidateTeamView();
+    return {
+      status: "success",
+      data: { memberId: memberId.value },
+      error: null,
+    };
+  } catch (error) {
+    return teamActionError(error);
+  }
+}
+
 function revalidateTeamView() {
   revalidatePath("/team");
 }

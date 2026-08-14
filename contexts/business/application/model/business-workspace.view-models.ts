@@ -1,3 +1,5 @@
+export type WorkspaceAccountType = "OWNER" | "MEMBER" | "PENDING_INVITATION";
+
 export type WorkspaceHeaderEstablishment = Readonly<{
   id: string;
   name: string;
@@ -21,42 +23,50 @@ export type WorkspaceHeaderOrganization = Readonly<{
   id: string;
   name: string;
   imageUrl?: string | null;
-  defaultEstablishmentId?: string;
-  mode?: "OWNER" | "MEMBER";
   canRead?: boolean;
   canUpdate?: boolean;
   canReadEstablishments?: boolean;
   canCreateEstablishment?: boolean;
-  establishments: ReadonlyArray<WorkspaceHeaderEstablishment>;
 }>;
 
+/**
+ * The owner's subscription, which every account in the organization depends on.
+ * A member reads `active` to know it is suspended but can never manage it.
+ */
+export type WorkspaceSubscription = Readonly<{
+  active: boolean;
+  planName?: string | null;
+  status?: string | null;
+  canManageBilling: boolean;
+}>;
+
+export type WorkspacePendingInvitation = Readonly<{
+  organizationName: string;
+  establishmentName: string;
+  expiresAt: string;
+}>;
+
+/**
+ * The header renders from `accountType`, `effectivePermissions` and
+ * `subscription.active`. It never infers the role from the session token.
+ */
 export type WorkspaceHeaderViewModel = Readonly<{
+  accountType: WorkspaceAccountType;
   organization?: WorkspaceHeaderOrganization;
-  organizations: ReadonlyArray<WorkspaceHeaderOrganization>;
   establishments: ReadonlyArray<WorkspaceHeaderEstablishment>;
-  activeOrganizationId?: string;
   activeEstablishmentId?: string;
   capabilities?: WorkspaceCapabilities;
-  canReadOrganizations: boolean;
+  canReadOrganization: boolean;
   canReadEstablishments: boolean;
   canCreateEstablishment: boolean;
-  canCreateOrganization: boolean;
+  subscription?: WorkspaceSubscription;
+  pendingInvitation?: WorkspacePendingInvitation;
 }>;
 
 export type OrganizationPageState =
   | Readonly<{
-      status: "create";
-    }>
-  | Readonly<{
       status: "ready";
-      organizations: ReadonlyArray<WorkspaceHeaderOrganization>;
-      activeOrganizationId?: string;
-      canCreateOrganization: boolean;
+      organization: WorkspaceHeaderOrganization;
+      canUpdate: boolean;
     }>
-  | Readonly<{
-      status: "denied";
-    }>;
-
-export type OrganizationCreationState = Readonly<{
-  status: "allowed" | "denied";
-}>;
+  | Readonly<{ status: "denied" }>;

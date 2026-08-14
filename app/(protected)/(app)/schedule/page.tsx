@@ -1,12 +1,12 @@
 import { createSchedulingAccessPolicyService } from "@/contexts/scheduling/application/internal/queryservices/scheduling-access-policy.service";
 import { createEstablishmentQueryService } from "@/contexts/business/application/internal/queryservices/establishment-query.service";
 import { loadSchedulingPageData } from "@/contexts/scheduling/application/internal/queryservices/scheduling-page-data.query.service";
-import { WeeklyCalendar } from "@/contexts/scheduling/interfaces/components/calendar/weekly-calendar";
+import { DailyStaffCalendar } from "@/contexts/scheduling/interfaces/components/calendar/daily-staff-calendar";
 import { redirect } from "next/navigation";
 import { createBusinessWorkspaceQueryService } from "@/contexts/business/application/internal/queryservices/business-workspace-query.service";
 
 interface SchedulePageProps {
-  searchParams: Promise<{ organizationId?: string; establishmentId?: string }>;
+  searchParams: Promise<{ establishmentId?: string }>;
 }
 
 export default async function SchedulePage({ searchParams }: SchedulePageProps) {
@@ -37,7 +37,7 @@ export default async function SchedulePage({ searchParams }: SchedulePageProps) 
 
   return (
     <main className="p-6">
-      <WeeklyCalendar
+      <DailyStaffCalendar
         key={`${establishmentId}-${timeZone}`}
         establishmentId={establishmentId}
         services={services}

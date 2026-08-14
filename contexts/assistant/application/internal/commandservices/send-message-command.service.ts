@@ -13,7 +13,10 @@ export class SendMessageCommandService {
   async handle(command: SendMessageCommand, token?: string): Promise<AssistantConversationReadModel> {
     const conversationId = createAssistantConversationId(command.conversationId).value;
     const message = createAssistantMessageContent(command.message).value;
-    const conversation = await this.repository.sendMessage({ conversationId, message }, token);
+    const conversation = await this.repository.sendMessage(
+      { conversationId, message, establishmentId: command.establishmentId },
+      token,
+    );
     return toConversationReadModelFromEntity(conversation);
   }
 }

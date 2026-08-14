@@ -36,19 +36,12 @@ export function EstablishmentListCard({
             filteredEstablishments.map((est) => {
               const selected = est.id === selectedEstId;
               return (
-                <div
+                <button
                   key={est.id}
-                  role="button"
-                  tabIndex={0}
+                  type="button"
                   aria-pressed={selected}
                   onClick={() => onSelect(est.id)}
-                  onKeyDown={(event) => {
-                    if (event.key === "Enter" || event.key === " ") {
-                      event.preventDefault();
-                      onSelect(est.id);
-                    }
-                  }}
-                  className={`flex cursor-pointer items-center gap-3 border-b border-border px-5 py-4 transition-colors last:border-b-0 hover:bg-muted/40 ${
+                  className={`flex w-full cursor-pointer items-center gap-3 border-b border-border px-5 py-4 text-left transition-colors outline-none last:border-b-0 hover:bg-muted/40 focus-visible:bg-muted/40 ${
                     selected ? "bg-accent/60" : ""
                   }`}
                 >
@@ -61,10 +54,10 @@ export function EstablishmentListCard({
                       </AvatarFallback>
                     )}
                   </Avatar>
-                  <p className="truncate text-[15px] font-medium text-foreground">
+                  <p className="truncate text-sm font-medium text-foreground">
                     {est.name}
                   </p>
-                </div>
+                </button>
               );
             })
           )}

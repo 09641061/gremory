@@ -4,7 +4,7 @@ import { createEstablishmentQueryService } from "@/contexts/business/application
 import { redirect } from "next/navigation";
 
 interface EstablishmentsPageProps {
-  searchParams: Promise<{ organizationId?: string; establishmentId?: string }>;
+  searchParams: Promise<{ establishmentId?: string }>;
 }
 
 export default async function EstablishmentsRoutePage({ searchParams }: EstablishmentsPageProps) {
@@ -41,7 +41,7 @@ export default async function EstablishmentsRoutePage({ searchParams }: Establis
       canUpdateMap={Object.fromEntries(
         workspace.establishments.map((establishment) => [establishment.id, establishment.canUpdate === true]),
       )}
-      defaultCanUpdate={workspace.organization.mode === "OWNER"}
+      defaultCanUpdate={workspace.accountType === "OWNER"}
       canCreate={workspace.canCreateEstablishment}
     />
   );

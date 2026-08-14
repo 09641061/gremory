@@ -12,6 +12,7 @@ export type SchedulingMemberViewModel = Readonly<{
   email: string;
   role: string;
   status: string;
+  imageUrl: string | null;
 }>;
 
 export type SchedulingCustomerViewModel = Readonly<{

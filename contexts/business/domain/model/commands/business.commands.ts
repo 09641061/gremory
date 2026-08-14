@@ -1,37 +1,39 @@
-export type CreateOrganizationCommand = Readonly<{ name: string }>;
-export type UpdateOrganizationCommand = Readonly<{ id: string; name: string; imageUrl?: string | null }>;
-export type DeleteOrganizationCommand = Readonly<{ id: string }>;
+export type UpdateOrganizationCommand = Readonly<{
+  id: string;
+  name: string;
+  imageUrl?: string | null;
+  /** New logo picked by the account, stored before the write lands. */
+  imageFile?: File | null;
+}>;
 
 export type CreateEstablishmentCommand = Readonly<{
   organizationId: string;
   name: string;
   photoUrl?: string | null;
   timeZone?: string | null;
+  /** New photo picked by the account, stored before the write lands. */
+  photoFile?: File | null;
 }>;
 export type UpdateEstablishmentCommand = Readonly<{
   id: string;
   name: string;
   photoUrl?: string | null;
   timeZone?: string | null;
+  photoFile?: File | null;
+  /** Drops the stored photo when no replacement is provided. */
+  removePhoto?: boolean;
 }>;
 export type DeleteEstablishmentCommand = Readonly<{ id: string }>;
-
-export function createOrganizationCommand(
-  input: CreateOrganizationCommand,
-): CreateOrganizationCommand {
-  return Object.freeze({ name: input.name });
-}
 
 export function updateOrganizationCommand(
   input: UpdateOrganizationCommand,
 ): UpdateOrganizationCommand {
-  return Object.freeze({ id: input.id, name: input.name, imageUrl: input.imageUrl ?? null });
-}
-
-export function deleteOrganizationCommand(
-  input: DeleteOrganizationCommand,
-): DeleteOrganizationCommand {
-  return Object.freeze({ id: input.id });
+  return Object.freeze({
+    id: input.id,
+    name: input.name,
+    imageUrl: input.imageUrl ?? null,
+    imageFile: input.imageFile ?? null,
+  });
 }
 
 export function createEstablishmentCommand(
@@ -42,6 +44,7 @@ export function createEstablishmentCommand(
     name: input.name,
     photoUrl: input.photoUrl ?? null,
     timeZone: input.timeZone ?? null,
+    photoFile: input.photoFile ?? null,
   });
 }
 
@@ -53,6 +56,8 @@ export function updateEstablishmentCommand(
     name: input.name,
     photoUrl: input.photoUrl ?? null,
     timeZone: input.timeZone ?? null,
+    photoFile: input.photoFile ?? null,
+    removePhoto: input.removePhoto ?? false,
   });
 }
 

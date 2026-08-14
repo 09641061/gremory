@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ChevronsUpDown, Settings, Sparkles } from "lucide-react";
+import { ChevronsUpDown, CircleArrowUp, Settings } from "lucide-react";
 
 import {
   Avatar,
@@ -91,7 +91,7 @@ export function SidebarProfile({
         </DropdownMenuItem>
 
         <DropdownMenuItem render={<Link href={upgradeHref} />}>
-          <Sparkles aria-hidden="true" />
+          <CircleArrowUp aria-hidden="true" />
           Upgrade plan
         </DropdownMenuItem>
       </DropdownMenuContent>
