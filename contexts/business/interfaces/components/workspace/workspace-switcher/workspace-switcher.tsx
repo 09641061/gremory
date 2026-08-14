@@ -77,14 +77,17 @@ export function WorkspaceSwitcher({
           : undefined
       }
       header={
-        organization ? (
-          <OrganizationBadge
-            organization={organization}
-            // Clicking the organization opens its settings, where the name and
-            // the logo are changed.
-            href={workspace.canReadOrganization ? "/organization" : undefined}
-          />
-        ) : undefined
+        organization
+          ? (close) => (
+              <OrganizationBadge
+                organization={organization}
+                // Clicking the organization opens its settings, where the name and
+                // the logo are changed.
+                href={workspace.canReadOrganization ? "/organization" : undefined}
+                onNavigate={close}
+              />
+            )
+          : undefined
       }
       // The background stays put on hover and open: the organization logo is
       // punched out of it with a ring, so a shifting surface would leave a seam
