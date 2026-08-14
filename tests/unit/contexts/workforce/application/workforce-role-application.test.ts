@@ -51,6 +51,7 @@ describe("Workforce role application services", () => {
     expect(permissions).toHaveBeenCalledTimes(1);
     expect(roles[0]?.getName()).toBe("Admin");
     expect(supportedPermissions).toContain("catalog:manage");
+    expect(supportedPermissions).toContain("analytics:read");
   });
 
   it("should delete a role through the repository", async () => {
@@ -81,6 +82,7 @@ function roleRepository(): WorkforceRoleRepository {
     permissions: vi.fn(async () => [
       "business:read",
       "catalog:manage",
+      "analytics:read",
     ] as const),
     save: vi.fn(async (role: WorkforceRole) =>
       WorkforceRole.rehydrate({

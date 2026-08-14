@@ -32,9 +32,10 @@ describe("Workforce role domain", () => {
   });
 
   it("should expose the supported workforce permissions", () => {
-    expect(workforcePermissionCodes).toHaveLength(10);
-    expect(new Set(workforcePermissionCodes)).toHaveLength(10);
+    expect(workforcePermissionCodes).toHaveLength(11);
+    expect(new Set(workforcePermissionCodes)).toHaveLength(11);
     expect(workforcePermissionCodes).toContain("business:read");
+    expect(workforcePermissionCodes).toContain("analytics:read");
     expect(isWorkforcePermission("catalog:manage")).toBe(true);
     expect(isWorkforcePermission("not-supported")).toBe(false);
   });
