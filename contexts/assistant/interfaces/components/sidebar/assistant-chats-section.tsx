@@ -12,9 +12,11 @@ import { AssistantConversationRenameModal } from "./assistant-conversation-renam
 import { useAssistantConversationSidebar } from "./use-assistant-conversation-sidebar";
 
 export function AssistantChatsSection({
+  className,
   initialConversations,
   establishmentId,
 }: {
+  className?: string;
   initialConversations: AssistantConversationSummaryReadModel[];
   establishmentId: string | null;
 }) {
@@ -46,11 +48,14 @@ export function AssistantChatsSection({
   } = useAssistantConversationSidebar(initialConversations);
 
   return (
-    <section ref={sectionRef} className="mt-2">
+    <section
+      ref={sectionRef}
+      className={cn("mt-2 flex min-h-0 flex-1 flex-col", className)}
+    >
       <SidebarMenuButton
         type="button"
         onClick={toggleOpen}
-        className="h-(--app-sidebar-control-height) justify-between rounded-(--app-sidebar-item-radius) px-(--app-sidebar-control-padding-x) text-sm font-medium"
+        className="h-(--app-sidebar-control-height) shrink-0 justify-between rounded-(--app-sidebar-item-radius) px-(--app-sidebar-control-padding-x) text-sm font-medium"
         aria-expanded={isOpen}
       >
         <span>Chats</span>
@@ -63,8 +68,8 @@ export function AssistantChatsSection({
       </SidebarMenuButton>
 
       {isOpen ? (
-        <div className="mt-2 pl-2">
-          <div className="max-h-[18rem] space-y-2 overflow-y-auto pr-1">
+        <div className="min-h-0 pl-2">
+          <div className="[scrollbar-gutter:stable] min-h-0 h-full overflow-y-scroll pr-1">
             <AssistantConversationList
               conversations={conversations}
               activeConversationId={activeConversationId}

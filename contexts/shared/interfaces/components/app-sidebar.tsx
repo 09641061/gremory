@@ -88,9 +88,9 @@ export function AppSidebar({
         <WorkspaceSwitcher workspace={workspace} />
       </SidebarHeader>
 
-      <SidebarContent className="px-3 py-3">
+      <SidebarContent className="px-3 py-3 overflow-hidden">
         <SidebarGroup className="mt-2 p-0">
-          <SidebarGroupContent>
+          <SidebarGroupContent className="shrink-0">
             <SidebarMenu className="gap-(--app-sidebar-menu-gap)">
               {filteredNavigation.map(({ label, href, icon: Icon }) => {
                 const active =
