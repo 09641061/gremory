@@ -82,7 +82,7 @@ export function EstablishmentDetailCard({
 
   return (
     <div className={cn("hidden flex-1 lg:block", className)}>
-      <Card className="rounded-xl border-border bg-card shadow-sm lg:ml-3 lg:h-[calc(100vh-10rem)] flex flex-col overflow-hidden">
+      <Card className="rounded-xl border-border bg-card shadow-sm lg:ml-3 lg:h-(--app-page-viewport-height) flex flex-col overflow-hidden">
         <form action={formAction} className="flex flex-col min-h-0 flex-1">
           {/* Hidden inputs for form submit */}
           <input type="hidden" name="id" value={establishment.id} />
