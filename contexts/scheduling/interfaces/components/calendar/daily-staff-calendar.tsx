@@ -5,29 +5,23 @@ import { useRouter } from "next/navigation";
 import { Appointment } from "../../../domain/model/entities/appointment";
 import { listAppointmentsAction } from "../../actions/list-appointments.action";
 import { AppointmentDetailModal } from "../appointment-detail/appointment-detail-modal";
-import { WeeklyCalendarDaysHeader } from "./weekly-calendar-days-header";
-import { WeeklyCalendarGrid } from "./weekly-calendar-grid";
-import { WeeklyCalendarToolbar } from "./weekly-calendar-toolbar";
 import {
   addCalendarDays,
   calendarDateToZonedIso,
   getCalendarAnchorDate,
-  getCalendarWeekRange,
-  toTimeZoneDayKey,
 } from "../scheduling-timezone.utils";
-import { useNow } from "../use-now";
 import type {
   SchedulingCustomerViewModel,
   SchedulingMemberViewModel,
   SchedulingServiceViewModel,
 } from "../../../application/model/scheduling-page-data.view-model";
+import { CalendarToolbar } from "./calendar-toolbar";
+import { StaffColumnsHeader } from "./staff-columns-header";
+import { DailyStaffGrid } from "./daily-staff-grid";
+import { NoEmployeesEmptyState } from "./no-employees-empty-state";
+import { useNow } from "../use-now";
 
-const FIRST_HOUR = 7;
-const HOUR_COUNT = 15;
-const GRID_MIN_WIDTH = 700;
-const HOURS = Array.from({ length: HOUR_COUNT }, (_, index) => FIRST_HOUR + index);
-
-interface WeeklyCalendarProps {
+interface DailyStaffCalendarProps {
   establishmentId: string;
   services: SchedulingServiceViewModel[];
   members: SchedulingMemberViewModel[];
@@ -38,7 +32,7 @@ interface WeeklyCalendarProps {
   timeZone: string;
 }
 
-export function WeeklyCalendar({
+export function DailyStaffCalendar({
   establishmentId,
   services,
   members,
@@ -47,48 +41,38 @@ export function WeeklyCalendar({
   canUpdateAppointment,
   canDeleteAppointment,
   timeZone,
-}: WeeklyCalendarProps) {
+}: DailyStaffCalendarProps) {
   const router = useRouter();
   const [currentDate, setCurrentDate] = useState(() => getCalendarAnchorDate(timeZone));
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
-  const [isPending, startTransition] = useTransition();
+  const [, startTransition] = useTransition();
+  const [startIndex, setStartIndex] = useState(0);
+  const maxColumns = 6;
   const requestIdRef = useRef(0);
   const now = useNow();
-  const todayKey = now === null ? null : toTimeZoneDayKey(new Date(now), timeZone);
-
-  const { sunday: weekStart, saturday: weekEnd } = useMemo(
-    () => getCalendarWeekRange(currentDate),
-    [currentDate]
-  );
-
-  const weekDays = useMemo(
-    () =>
-      Array.from({ length: 7 }, (_, index) => addCalendarDays(weekStart, index)),
-    [weekStart]
-  );
 
   const fetchAppointments = useCallback(() => {
     const requestId = ++requestIdRef.current;
 
     startTransition(async () => {
       const result = await listAppointmentsAction(
-        calendarDateToZonedIso(weekStart, timeZone, false),
-        calendarDateToZonedIso(weekEnd, timeZone, true),
+        calendarDateToZonedIso(currentDate, timeZone, false),
+        calendarDateToZonedIso(currentDate, timeZone, true),
         establishmentId
       );
       if (requestId === requestIdRef.current) {
         setAppointments(result.content);
       }
     });
-  }, [weekStart, weekEnd, establishmentId, timeZone, startTransition]);
+  }, [currentDate, establishmentId, timeZone, startTransition]);
 
   useEffect(() => {
     fetchAppointments();
   }, [fetchAppointments]);
 
-  const shiftWeek = (direction: -1 | 1) => {
-    setCurrentDate((current) => addCalendarDays(current, direction * 7));
+  const shiftDay = (direction: -1 | 1) => {
+    setCurrentDate((current) => addCalendarDays(current, direction));
   };
 
   const handleUpdate = (updated: Appointment) => {
@@ -98,34 +82,52 @@ export function WeeklyCalendar({
     setSelectedAppointment(updated);
   };
 
+  const visibleEmployees = useMemo(() => {
+    return members.slice(startIndex, startIndex + maxColumns);
+  }, [members, startIndex]);
+
+  if (members.length === 0) {
+    return <NoEmployeesEmptyState />;
+  }
+
   return (
-    <div className="flex h-[calc(100vh-140px)] w-full flex-col bg-background text-foreground">
-      <WeeklyCalendarToolbar
-        currentDate={currentDate}
-        onDateChange={setCurrentDate}
-        onPreviousWeek={() => shiftWeek(-1)}
-        onNextWeek={() => shiftWeek(1)}
-        onToday={() => setCurrentDate(getCalendarAnchorDate(timeZone))}
-        onCreateAppointment={() => router.push("/schedule/new")}
-        canCreateAppointment={canCreateAppointment}
-        timeZone={timeZone}
+    <div className="flex h-[calc(100vh-140px)] w-full flex-col bg-background text-foreground rounded-xl border border-border shadow-sm overflow-hidden">
+      <div className="px-4 border-b">
+        <CalendarToolbar
+          currentDate={currentDate}
+          onPrevDay={() => shiftDay(-1)}
+          onNextDay={() => shiftDay(1)}
+          onToday={() => setCurrentDate(getCalendarAnchorDate(timeZone))}
+          onDateSelect={setCurrentDate}
+          timeZone={timeZone}
+          onScheduleAppointment={() => {
+            if (canCreateAppointment) router.push("/schedule/new");
+          }}
+        />
+      </div>
+
+      <StaffColumnsHeader
+        employees={members}
+        visibleEmployees={visibleEmployees}
+        startIndex={startIndex}
+        maxColumns={maxColumns}
+        onShiftLeft={() => setStartIndex(Math.max(0, startIndex - 1))}
+        onShiftRight={() => setStartIndex(Math.min(members.length - maxColumns, startIndex + 1))}
       />
 
-      <div className="flex-1 overflow-auto rounded-xl border border-border bg-card shadow-sm">
-        <div style={{ minWidth: GRID_MIN_WIDTH }}>
-          <WeeklyCalendarDaysHeader weekDays={weekDays} todayKey={todayKey} timeZone={timeZone} />
-          <WeeklyCalendarGrid
-            appointments={appointments}
-            weekDays={weekDays}
-            hours={HOURS}
-            isPending={isPending}
-            todayKey={todayKey}
-            now={now}
-            timeZone={timeZone}
-            onAppointmentClick={setSelectedAppointment}
-          />
-        </div>
-      </div>
+      <DailyStaffGrid
+        currentDate={currentDate}
+        visibleEmployees={visibleEmployees}
+        appointments={appointments}
+        timeZone={timeZone}
+        maxColumns={maxColumns}
+        now={now}
+        onAppointmentClick={setSelectedAppointment}
+        onTimeSlotClick={(employeeId) => {
+          if (!canCreateAppointment) return;
+          router.push(`/schedule/new?employeeId=${employeeId}`);
+        }}
+      />
 
       {selectedAppointment && (
         <AppointmentDetailModal

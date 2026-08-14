@@ -19,8 +19,8 @@ export function AppointmentDetailSummary({
     <div className="flex items-start justify-between gap-4">
       <div className="flex-1">
         <div className="flex items-center gap-2 mb-1">
-          <CalendarCheck className="text-primary size-5" />
-          <h3 className="text-lg font-semibold leading-tight text-foreground">{title}</h3>
+          <CalendarCheck className="text-primary size-5 shrink-0" />
+          <h3 className="text-lg font-semibold leading-tight text-foreground break-words break-all min-w-0 flex-1">{title}</h3>
         </div>
         <div className="text-sm text-muted-foreground flex items-center justify-between gap-1.5 mt-2 bg-muted/20 p-2 rounded-lg border border-border">
           <div className="flex items-center gap-1.5">
