@@ -9,8 +9,9 @@ interface DailyStaffGridProps {
   appointments: Appointment[];
   timeZone: string;
   maxColumns: number;
+  now: number | null;
   onAppointmentClick: (appointment: Appointment) => void;
-  onTimeSlotClick: (employeeId: string, time: string) => void;
+  onTimeSlotClick: (employeeId: string) => void;
 }
 
 export function DailyStaffGrid({
@@ -19,6 +20,7 @@ export function DailyStaffGrid({
   appointments,
   timeZone,
   maxColumns,
+  now,
   onAppointmentClick,
   onTimeSlotClick,
 }: DailyStaffGridProps) {
@@ -42,7 +44,9 @@ export function DailyStaffGrid({
     });
   };
 
-  const now = Date.now();
+  let maxWidthClass = "w-full";
+  if (visibleEmployees.length === 1) maxWidthClass = "max-w-[414px]";
+  else if (visibleEmployees.length === 2) maxWidthClass = "max-w-[764px]";
 
   const gridColsClass = 
     visibleEmployees.length === 1 
@@ -52,7 +56,7 @@ export function DailyStaffGrid({
         : "auto-cols-fr grid-flow-col";
 
   return (
-    <div className={cn("flex flex-1 overflow-y-scroll min-h-0 bg-background rounded-b-xl border border-t-0 [scrollbar-gutter:stable] w-full")}>
+    <div className={cn("flex flex-1 overflow-y-scroll min-h-0 bg-background rounded-b-xl border border-t-0 [scrollbar-gutter:stable]", maxWidthClass)}>
       <div className="flex w-full h-full flex-col min-w-0">
         {hours.map((hour) => (
           <div key={hour} className="flex border-b last:border-b-0 min-h-[80px]">
@@ -71,8 +75,7 @@ export function DailyStaffGrid({
                   className="relative p-1 min-w-0 transition-colors hover:bg-muted/10 cursor-pointer"
                   onClick={(e) => {
                     if (e.target === e.currentTarget) {
-                      const timeStr = `${hour.toString().padStart(2, '0')}:00:00`;
-                      onTimeSlotClick(employee.userId, timeStr);
+                      onTimeSlotClick(employee.userId);
                     }
                   }}
                 >

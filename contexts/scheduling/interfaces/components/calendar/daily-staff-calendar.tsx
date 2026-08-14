@@ -19,6 +19,7 @@ import { CalendarToolbar } from "./calendar-toolbar";
 import { StaffColumnsHeader } from "./staff-columns-header";
 import { DailyStaffGrid } from "./daily-staff-grid";
 import { NoEmployeesEmptyState } from "./no-employees-empty-state";
+import { useNow } from "../use-now";
 
 interface DailyStaffCalendarProps {
   establishmentId: string;
@@ -45,10 +46,11 @@ export function DailyStaffCalendar({
   const [currentDate, setCurrentDate] = useState(() => getCalendarAnchorDate(timeZone));
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
-  const [isPending, startTransition] = useTransition();
+  const [, startTransition] = useTransition();
   const [startIndex, setStartIndex] = useState(0);
   const maxColumns = 6;
   const requestIdRef = useRef(0);
+  const now = useNow();
 
   const fetchAppointments = useCallback(() => {
     const requestId = ++requestIdRef.current;
@@ -119,8 +121,9 @@ export function DailyStaffCalendar({
         appointments={appointments}
         timeZone={timeZone}
         maxColumns={maxColumns}
+        now={now}
         onAppointmentClick={setSelectedAppointment}
-        onTimeSlotClick={(employeeId, timeStr) => {
+        onTimeSlotClick={(employeeId) => {
           if (!canCreateAppointment) return;
           router.push(`/schedule/new?employeeId=${employeeId}`);
         }}
