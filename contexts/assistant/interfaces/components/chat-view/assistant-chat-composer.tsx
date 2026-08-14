@@ -26,7 +26,7 @@ const inputMultiLineClass = "min-h-[24px] max-h-[220px] overflow-y-auto scrollba
 const shellBaseClass =
   "w-full border border-border/30 bg-background/90 text-foreground shadow-lg backdrop-blur-md transition-all duration-200 ease-in-out";
 const shellSingleLineClass = "rounded-full px-4 py-3";
-const shellMultiLineClass = "rounded-[24px] px-4 py-4";
+const shellMultiLineClass = "rounded-2xl px-4 py-4";
 const sendActionClass =
   "rounded-full border border-border/30 bg-background text-foreground shadow-md transition-transform hover:scale-105 hover:bg-background/95 disabled:scale-100 disabled:bg-background/80 disabled:text-foreground/50";
 export function AssistantChatComposer({
@@ -40,8 +40,7 @@ export function AssistantChatComposer({
 }: AssistantChatComposerProps) {
   const isMinimal = variant === "minimal";
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
-  const shellRef = useRef<HTMLDivElement | null>(null);
-  const [isMultiline, setIsMultiline] = useState(false);
+  const [textareaHeight, setTextareaHeight] = useState(MIN_HEIGHT);
 
   useLayoutEffect(() => {
     const textarea = textareaRef.current;
@@ -55,31 +54,11 @@ export function AssistantChatComposer({
     textarea.style.overflowWrap = "anywhere";
     textarea.style.wordBreak = "break-word";
 
-    const wrappedIntoMultipleLines = value.includes("\n") || measuredHeight > SINGLE_LINE_THRESHOLD;
-    setIsMultiline(wrappedIntoMultipleLines);
-  }, [value]);
-
-  useLayoutEffect(() => {
-    const shell = shellRef.current;
-    if (!shell || typeof ResizeObserver === "undefined") return;
-
-    const observer = new ResizeObserver(() => {
-      const textarea = textareaRef.current;
-      if (!textarea) return;
-
-      textarea.style.height = "0px";
-      const measuredHeight = textarea.scrollHeight;
-      const nextHeight = Math.min(Math.max(measuredHeight, MIN_HEIGHT), MAX_HEIGHT);
-      textarea.style.height = `${nextHeight}px`;
-      textarea.style.overflowY = measuredHeight > MAX_HEIGHT ? "auto" : "hidden";
-      setIsMultiline(value.includes("\n") || measuredHeight > SINGLE_LINE_THRESHOLD);
-    });
-
-    observer.observe(shell);
-    return () => observer.disconnect();
+    setTextareaHeight(measuredHeight);
   }, [value]);
 
   const hasText = value.trim().length > 0;
+  const isMultiline = hasText && (value.includes("\n") || textareaHeight > SINGLE_LINE_THRESHOLD);
   const composerState = !hasText ? "empty" : isMultiline ? "multiline" : "single-line";
 
   function handlePrimaryAction() {
@@ -127,54 +106,48 @@ export function AssistantChatComposer({
     disabled || isSending ? "opacity-95" : "",
   );
 
+  const composerRowClasses = cn(
+    "min-h-0",
+    composerState === "multiline" ? "flex flex-col gap-3" : "flex items-center gap-3",
+  );
+  const textareaClasses = composerState === "multiline" ? inputMultiLineClass : inputSingleLineClass;
+  const actionWrapClasses = cn(
+    composerState === "multiline" ? "flex items-center justify-between gap-3 border-t border-border/60 pt-3" : "shrink-0",
+  );
+  const actionSpacer = composerState === "multiline" ? <div aria-hidden="true" className="flex-1" /> : null;
+
   return isMinimal ? (
     <div className="px-4 pb-10 pt-2 sm:px-6 sm:pb-12">
       <div className="mx-auto w-full max-w-3xl">
-        <div
-          ref={shellRef}
-          className={shellClasses}
-          data-composer-state={composerState}
-          data-testid="assistant-composer-shell"
-        >
+        <div className={shellClasses} data-composer-state={composerState} data-testid="assistant-composer-shell">
           <label htmlFor="assistant-chat-composer" className="sr-only">
             Ask what you need about Takodu
           </label>
 
-          <div className="flex items-center gap-3">
-            <div className="min-w-0 flex-1">{renderComposerInput(inputSingleLineClass)}</div>
-            {renderActionButton()}
+          <div className={composerRowClasses}>
+            <div className="min-w-0 flex-1">{renderComposerInput(textareaClasses)}</div>
+            <div className={actionWrapClasses}>
+              {actionSpacer}
+              {renderActionButton()}
+            </div>
           </div>
         </div>
       </div>
     </div>
   ) : (
     <div className="mx-auto w-full max-w-4xl">
-      <div
-        ref={shellRef}
-        className={shellClasses}
-        data-composer-state={composerState}
-        data-testid="assistant-composer-shell"
-      >
+      <div className={shellClasses} data-composer-state={composerState} data-testid="assistant-composer-shell">
         <label htmlFor="assistant-chat-composer" className="sr-only">
           Ask what you need about Takodu
         </label>
 
-        {composerState === "multiline" ? (
-          <div className="flex min-h-0 flex-col gap-3">
-            {renderComposerInput(inputMultiLineClass)}
-
-            <div className="flex items-center justify-between gap-3 border-t border-border/60 pt-3">
-              <div />
-              {renderActionButton()}
-            </div>
-          </div>
-        ) : (
-          <div className="flex items-center gap-3">
-            <div className="min-w-0 flex-1">{renderComposerInput(inputSingleLineClass)}</div>
-
+        <div className={composerRowClasses}>
+          <div className="min-w-0 flex-1">{renderComposerInput(textareaClasses)}</div>
+          <div className={actionWrapClasses}>
+            {actionSpacer}
             {renderActionButton()}
           </div>
-        )}
+        </div>
       </div>
     </div>
   );

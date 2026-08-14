@@ -83,4 +83,74 @@ describe("AssistantChatComposer", () => {
       );
     });
   });
+
+  it("should switch the minimal composer to the multiline layout when the text contains line breaks", async () => {
+    mockScrollHeight(128);
+
+    const { rerender } = render(
+      <AssistantChatComposer
+        value=""
+        isSending={false}
+        onValueChange={vi.fn()}
+        onSubmit={vi.fn()}
+        onKeyDown={vi.fn()}
+        variant="minimal"
+      />,
+    );
+
+    rerender(
+      <AssistantChatComposer
+        value={"Hola\n\nmundo"}
+        isSending={false}
+        onValueChange={vi.fn()}
+        onSubmit={vi.fn()}
+        onKeyDown={vi.fn()}
+        variant="minimal"
+      />,
+    );
+
+    await waitFor(() => {
+      const shell = screen.getByTestId("assistant-composer-shell");
+      expect(shell).toHaveAttribute("data-composer-state", "multiline");
+      expect(shell.children[1]).toHaveClass("flex", "min-h-0", "flex-col", "gap-3");
+    });
+  });
+
+  it("should keep the textarea focused when the composer switches from single-line to multiline", async () => {
+    mockScrollHeight(128);
+
+    const { rerender } = render(
+      <AssistantChatComposer
+        value="Hola"
+        isSending={false}
+        onValueChange={vi.fn()}
+        onSubmit={vi.fn()}
+        onKeyDown={vi.fn()}
+        variant="minimal"
+      />,
+    );
+
+    const textarea = screen.getByPlaceholderText("Ask what you need about Takodu") as HTMLTextAreaElement;
+    textarea.focus();
+    expect(textarea).toHaveFocus();
+
+    rerender(
+      <AssistantChatComposer
+        value={"Hola\n"}
+        isSending={false}
+        onValueChange={vi.fn()}
+        onSubmit={vi.fn()}
+        onKeyDown={vi.fn()}
+        variant="minimal"
+      />,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByPlaceholderText("Ask what you need about Takodu")).toHaveFocus();
+      expect(screen.getByTestId("assistant-composer-shell")).toHaveAttribute(
+        "data-composer-state",
+        "multiline",
+      );
+    });
+  });
 });
