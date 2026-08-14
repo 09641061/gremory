@@ -91,29 +91,31 @@ export function DailyStaffCalendar({
   }
 
   return (
-    <div className="flex h-[calc(100vh-140px)] w-full flex-col bg-background text-foreground rounded-xl border border-border shadow-sm overflow-hidden">
-      <div className="px-4 border-b">
-        <CalendarToolbar
-          currentDate={currentDate}
-          onPrevDay={() => shiftDay(-1)}
-          onNextDay={() => shiftDay(1)}
-          onToday={() => setCurrentDate(getCalendarAnchorDate(timeZone))}
-          onDateSelect={setCurrentDate}
-          timeZone={timeZone}
-          onScheduleAppointment={() => {
-            if (canCreateAppointment) router.push("/schedule/new");
-          }}
+    <div className="flex w-full flex-col bg-background text-foreground rounded-xl border border-border shadow-sm">
+      <div className="sticky top-0 z-20 bg-background rounded-t-xl">
+        <div className="px-4 border-b">
+          <CalendarToolbar
+            currentDate={currentDate}
+            onPrevDay={() => shiftDay(-1)}
+            onNextDay={() => shiftDay(1)}
+            onToday={() => setCurrentDate(getCalendarAnchorDate(timeZone))}
+            onDateSelect={setCurrentDate}
+            timeZone={timeZone}
+            onScheduleAppointment={() => {
+              if (canCreateAppointment) router.push("/schedule/new");
+            }}
+          />
+        </div>
+
+        <StaffColumnsHeader
+          employees={members}
+          visibleEmployees={visibleEmployees}
+          startIndex={startIndex}
+          maxColumns={maxColumns}
+          onShiftLeft={() => setStartIndex(Math.max(0, startIndex - 1))}
+          onShiftRight={() => setStartIndex(Math.min(members.length - maxColumns, startIndex + 1))}
         />
       </div>
-
-      <StaffColumnsHeader
-        employees={members}
-        visibleEmployees={visibleEmployees}
-        startIndex={startIndex}
-        maxColumns={maxColumns}
-        onShiftLeft={() => setStartIndex(Math.max(0, startIndex - 1))}
-        onShiftRight={() => setStartIndex(Math.min(members.length - maxColumns, startIndex + 1))}
-      />
 
       <DailyStaffGrid
         currentDate={currentDate}

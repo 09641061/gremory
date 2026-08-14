@@ -44,10 +44,6 @@ export function DailyStaffGrid({
     });
   };
 
-  let maxWidthClass = "w-full";
-  if (visibleEmployees.length === 1) maxWidthClass = "max-w-[414px]";
-  else if (visibleEmployees.length === 2) maxWidthClass = "max-w-[764px]";
-
   const gridColsClass = 
     visibleEmployees.length === 1 
       ? "grid-cols-[350px_1fr]" 
@@ -56,7 +52,7 @@ export function DailyStaffGrid({
         : "auto-cols-fr grid-flow-col";
 
   return (
-    <div className={cn("flex flex-1 overflow-y-scroll min-h-0 bg-background rounded-b-xl border border-t-0 [scrollbar-gutter:stable]", maxWidthClass)}>
+    <div className="flex flex-1 bg-background rounded-b-xl border border-t-0 w-full">
       <div className="flex w-full h-full flex-col min-w-0">
         {hours.map((hour) => (
           <div key={hour} className="flex border-b last:border-b-0 min-h-[80px]">
