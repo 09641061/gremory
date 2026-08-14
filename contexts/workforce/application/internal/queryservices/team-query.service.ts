@@ -104,5 +104,6 @@ function toTeamUserSummary(
     acceptedAt: user.acceptedAt?.toISOString() ?? null,
     joinedAt: user.joinedAt?.toISOString() ?? null,
     removedAt: user.removedAt?.toISOString() ?? null,
+    availableForScheduling: user.availableForScheduling,
   };
 }

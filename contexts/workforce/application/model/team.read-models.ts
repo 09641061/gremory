@@ -28,6 +28,7 @@ export interface TeamUserSummary {
   acceptedAt: string | null;
   joinedAt: string | null;
   removedAt: string | null;
+  availableForScheduling: boolean;
 }
 
 export interface TeamInvitationPreviewView {

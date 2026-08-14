@@ -96,6 +96,7 @@ describe("Team application services", () => {
       acceptedAt: null,
       joinedAt: null,
       removedAt: null,
+      availableForScheduling: true,
     });
   });
 
@@ -151,6 +152,7 @@ function teamRepository(): TeamRepository {
       active: true,
       establishments: [],
     })),
+    updateSchedulingAvailability: vi.fn(async () => undefined),
   };
 }
 
@@ -171,5 +173,6 @@ function pendingUser() {
     acceptedAt: null,
     joinedAt: null,
     removedAt: null,
+    availableForScheduling: true,
   });
 }

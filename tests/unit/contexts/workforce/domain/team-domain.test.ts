@@ -94,5 +94,6 @@ function baseProps() {
     acceptedAt: null,
     joinedAt: null,
     removedAt: null,
+    availableForScheduling: true,
   };
 }
