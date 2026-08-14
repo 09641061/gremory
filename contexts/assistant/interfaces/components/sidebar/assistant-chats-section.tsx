@@ -3,6 +3,7 @@
 import { ChevronDown } from "lucide-react";
 
 import { SidebarMenuButton } from "@/contexts/shared/interfaces/components/ui/sidebar";
+import { ScrollArea, ScrollBar } from "@/contexts/shared/interfaces/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 
 import type { AssistantConversationSummaryReadModel } from "@/contexts/assistant/application/internal/transforms/assistant.read-models";
@@ -68,8 +69,8 @@ export function AssistantChatsSection({
       </SidebarMenuButton>
 
       {isOpen ? (
-        <div className="min-h-0 pl-2">
-          <div className="[scrollbar-gutter:stable] min-h-0 h-full overflow-y-scroll pr-1">
+        <div className="min-h-0 flex-1 pl-2">
+          <ScrollArea className="h-full min-h-0 pr-1">
             <AssistantConversationList
               conversations={conversations}
               activeConversationId={activeConversationId}
@@ -80,7 +81,8 @@ export function AssistantChatsSection({
               onRename={openRenameConversation}
               onDelete={openDeleteConversation}
             />
-          </div>
+            <ScrollBar className="opacity-0" />
+          </ScrollArea>
         </div>
       ) : null}
 
