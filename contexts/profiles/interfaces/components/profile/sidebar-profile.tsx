@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ChevronsUpDown, CircleArrowUp, Settings } from "lucide-react";
+import { ChevronsUpDown, CircleArrowUp, Settings, Receipt } from "lucide-react";
 
 import {
   Avatar,
@@ -21,6 +21,7 @@ type SidebarProfileProps = {
   profile: Pick<ProfileViewModel, "username" | "imageUrl"> | null;
   settingsHref: string;
   upgradeHref?: string;
+  invoiceHref?: string;
   /** Highlights the trigger while the settings route is open. */
   active?: boolean;
 };
@@ -44,6 +45,7 @@ export function SidebarProfile({
   profile,
   settingsHref,
   upgradeHref = "/upgrade",
+  invoiceHref = "/invoice",
   active = false,
 }: SidebarProfileProps) {
   const username = profile?.username?.trim() || "Profile";
@@ -93,6 +95,11 @@ export function SidebarProfile({
         <DropdownMenuItem render={<Link href={upgradeHref} />}>
           <CircleArrowUp aria-hidden="true" />
           Upgrade plan
+        </DropdownMenuItem>
+
+        <DropdownMenuItem render={<Link href={invoiceHref} />}>
+          <Receipt aria-hidden="true" />
+          Invoices
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

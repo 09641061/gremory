@@ -47,7 +47,7 @@ describe("SidebarProfile", () => {
     );
   });
 
-  it("should list only Settings and Upgrade plan, without an account header", async () => {
+  it("should list only Settings, Upgrade plan and Invoices, without an account header", async () => {
     const user = userEvent.setup();
     render(<SidebarProfile profile={profile} settingsHref="/settings" />);
 
@@ -57,6 +57,7 @@ describe("SidebarProfile", () => {
     expect(screen.getAllByRole("menuitem").map((item) => item.textContent)).toEqual([
       "Settings",
       "Upgrade plan",
+      "Invoices",
     ]);
     // The username belongs to the trigger only; it must not repeat in the menu.
     expect(screen.getByRole("menu")).not.toHaveTextContent("mateo");

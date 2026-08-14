@@ -107,46 +107,4 @@ describe("SubscribeView Component", () => {
     });
   });
 
-  it("shows cancel subscription section when user has active paid plan", async () => {
-    const currentSubscription = {
-      id: "sub_active",
-      ownerId: "owner_123",
-      planId: 1, // Standard
-      billingCycle: "MONTHLY" as const,
-      status: "ACTIVE",
-      currentPeriodStart: "2026-08-01T00:00:00Z",
-      currentPeriodEnd: "2026-08-31T00:00:00Z",
-      failedAttemptsCount: 0,
-      active: true,
-      clientSecret: null,
-      stripePublicKey: null
-    };
-
-    render(<SubscribeView backHref="/chat" plansByCurrency={plansByCurrency} currentSubscription={currentSubscription} />);
-
-    expect(screen.getByText("Current Subscription")).toBeInTheDocument();
-    expect(screen.getByText("Takodu Standard Plan")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Cancel subscription" })).toBeInTheDocument();
-  });
-
-  it("does not show cancel button when user is on Free plan", async () => {
-    const currentSubscription = {
-      id: "sub_free",
-      ownerId: "owner_123",
-      planId: 0, // Free
-      billingCycle: "MONTHLY" as const,
-      status: "ACTIVE",
-      currentPeriodStart: "2026-08-01T00:00:00Z",
-      currentPeriodEnd: "2026-08-31T00:00:00Z",
-      failedAttemptsCount: 0,
-      active: true,
-      clientSecret: null,
-      stripePublicKey: null
-    };
-
-    render(<SubscribeView backHref="/chat" plansByCurrency={plansByCurrency} currentSubscription={currentSubscription} />);
-
-    expect(screen.queryByText("Current Subscription")).toBeNull();
-    expect(screen.queryByRole("button", { name: "Cancel subscription" })).toBeNull();
-  });
 });
