@@ -37,6 +37,7 @@ export function GeneralInfoSection({ defaultValues, disabled }: GeneralInfoSecti
           placeholder="Describe main service details..."
           defaultValue={defaultValues?.description ?? ""}
           required
+          className="min-h-[76px] max-h-[200px]"
           disabled={disabled}
         />
       </div>
