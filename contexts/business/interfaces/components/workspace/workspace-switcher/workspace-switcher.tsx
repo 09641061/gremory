@@ -40,9 +40,30 @@ export function WorkspaceSwitcher({
     (establishment) => establishment.id === selectedEstablishmentId,
   );
 
+  // Filter establishments to show only those of the active organization
+  const currentOrgEstablishments = establishments.filter(
+    (est) => !est.organizationId || est.organizationId === organization?.id,
+  );
+
+  // Group and list other organizations to allow switching
+  const otherOrganizations = Array.from(
+    new Map(
+      establishments
+        .filter((est) => est.organizationId && est.organizationId !== organization?.id)
+        .map((est) => [
+          est.organizationId,
+          {
+            id: est.organizationId!,
+            name: est.organizationName!,
+            firstEstablishment: est,
+          },
+        ]),
+    ).values(),
+  );
+
   return (
     <SearchableOptions
-      options={establishments}
+      options={currentOrgEstablishments}
       selectedId={selectedEstablishmentId}
       onSelect={(establishment) => {
         // A full load, not a client transition: switching establishment changes
@@ -79,13 +100,41 @@ export function WorkspaceSwitcher({
       header={
         organization
           ? (close) => (
-              <OrganizationBadge
-                organization={organization}
-                // Clicking the organization opens its settings, where the name and
-                // the logo are changed.
-                href={workspace.canReadOrganization ? "/organization" : undefined}
-                onNavigate={close}
-              />
+              <div className="flex flex-col w-full">
+                <OrganizationBadge
+                  organization={organization}
+                  // Clicking the organization opens its settings, where the name and
+                  // the logo are changed.
+                  href={workspace.canReadOrganization ? "/organization" : undefined}
+                  onNavigate={close}
+                />
+                {otherOrganizations.length > 0 && (
+                  <div className="flex flex-col gap-1 border-t border-border/60 mt-1 pt-1.5 px-2 pb-1">
+                    <span className="text-[0.65rem] font-semibold text-muted-foreground uppercase tracking-wider px-1">
+                      Switch Organization
+                    </span>
+                    {otherOrganizations.map((org) => (
+                      <button
+                        key={org.id}
+                        type="button"
+                        onClick={() => {
+                          close();
+                          globalThis.location.assign(
+                            buildWorkspacePath(
+                              resolveEstablishmentEntryPath(accountType, org.firstEstablishment, pathname),
+                              searchParams.toString(),
+                              org.firstEstablishment.id,
+                            ),
+                          );
+                        }}
+                        className="flex items-center gap-2 w-full rounded-sm px-1.5 py-1 text-xs text-left text-muted-foreground hover:bg-muted hover:text-foreground font-medium transition-colors"
+                      >
+                        <span className="truncate flex-1">{org.name}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
             )
           : undefined
       }

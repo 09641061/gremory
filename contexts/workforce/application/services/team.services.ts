@@ -22,6 +22,7 @@ export interface TeamCommandService {
   removeMember(command: RemoveTeamMemberCommand): Promise<void>;
   acceptInvitation(command: AcceptTeamInvitationCommand): Promise<MemberId>;
   acceptPendingInvitation(): Promise<MemberId>;
+  updateSchedulingAvailability(memberId: string, available: boolean): Promise<void>;
 }
 
 export interface TeamQueryService {

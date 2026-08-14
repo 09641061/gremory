@@ -9,6 +9,8 @@ export type WorkspaceHeaderEstablishment = Readonly<{
   canRead?: boolean;
   canUpdate?: boolean;
   canDelete?: boolean;
+  organizationId?: string;
+  organizationName?: string;
 }>;
 
 export type WorkspaceCapabilities = Readonly<{
