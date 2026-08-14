@@ -29,8 +29,13 @@ interface SearchableOptionsProps<T extends SearchableOption> {
   /** Contents of the trigger button. */
   children: ReactNode;
   triggerClassName?: string;
-  /** Context for the list, rendered above the search field. */
-  header?: ReactNode;
+  /**
+   * Context for the list, rendered above the search field. It receives `close`
+   * because a header that navigates has to close the menu itself: the sidebar
+   * lives in the layout, so a client transition leaves this component mounted
+   * and the menu would still be open on the way back.
+   */
+  header?: (close: () => void) => ReactNode;
 }
 
 export function SearchableOptions<T extends SearchableOption>({
@@ -80,7 +85,7 @@ export function SearchableOptions<T extends SearchableOption>({
       <ComboboxContent className="w-64 min-w-64">
         {header && (
           <>
-            {header}
+            {header(() => setIsOpen(false))}
             <ComboboxSeparator />
           </>
         )}

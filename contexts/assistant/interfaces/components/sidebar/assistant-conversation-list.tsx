@@ -9,13 +9,10 @@ type AssistantConversationListProps = {
   activeConversationId: string | null;
   isLoading: boolean;
   error: string | null;
-  openMenuId: string | null;
   mutatingConversationId: string | null;
   establishmentId: string | null;
-  onOpenMenu: (
-    conversation: AssistantConversationSummaryReadModel,
-    menuPosition: { top: number; left: number },
-  ) => void;
+  onRename: (conversation: AssistantConversationSummaryReadModel) => void;
+  onDelete: (conversation: AssistantConversationSummaryReadModel) => void;
 };
 
 export function AssistantConversationList({
@@ -23,10 +20,10 @@ export function AssistantConversationList({
   activeConversationId,
   isLoading,
   error,
-  openMenuId,
   mutatingConversationId,
   establishmentId,
-  onOpenMenu,
+  onRename,
+  onDelete,
 }: AssistantConversationListProps) {
   if (isLoading) {
     return (
@@ -66,9 +63,9 @@ export function AssistantConversationList({
             conversation={conversation}
             active={active}
             isMutating={isMutating}
-            isMenuOpen={openMenuId === conversation.id}
             establishmentId={establishmentId}
-            onOpenMenu={onOpenMenu}
+            onRename={onRename}
+            onDelete={onDelete}
           />
         );
       })}

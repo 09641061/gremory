@@ -1,5 +1,6 @@
 /** @vitest-environment jsdom */
 import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { describe, it, expect, vi } from "vitest";
 import { CategorySidebar } from "@/contexts/catalog/interfaces/components/catalog/category-sidebar";
 
@@ -62,7 +63,8 @@ describe("CategorySidebar uncategorized services", () => {
     expect(screen.getAllByText("No categories available").length).toBeGreaterThan(0);
   });
 
-  it("offers a category-less create service action", () => {
+  it("offers a category-less create service action", async () => {
+    const user = userEvent.setup();
     const onCreateService = vi.fn();
     render(
       <CategorySidebar
@@ -73,7 +75,10 @@ describe("CategorySidebar uncategorized services", () => {
       />
     );
 
-    screen.getAllByText("Create Service")[0].click();
+    // The header button creates a category; the service sits behind the chevron.
+    await user.click(screen.getAllByLabelText("More things to create")[0]);
+    await user.click(await screen.findByText("Create Service"));
+
     expect(onCreateService).toHaveBeenCalledWith(undefined);
   });
 });

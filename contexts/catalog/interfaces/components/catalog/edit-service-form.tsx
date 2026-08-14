@@ -8,6 +8,7 @@ import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import { Spinner } from "@/contexts/shared/interfaces/components/ui/spinner";
 import { Card, CardContent } from "@/contexts/shared/interfaces/components/ui/card";
 import { EntityActionsMenu } from "@/contexts/shared/interfaces/components/entity-actions-menu";
+import { Badge } from "@/contexts/shared/interfaces/components/ui/badge";
 import { GeneralInfoSection } from "../new/general-info-section";
 import { FinancialsAndLogisticsSection } from "../new/financials-and-logistics-section";
 import { InstructionsSection } from "../new/instructions-section";
@@ -19,11 +20,19 @@ import type { DetailedServiceDTO } from "./service-detail-view";
 interface EditServiceFormProps {
   service: DetailedServiceDTO;
   onCancel?: () => void;
+  /** Runs once the service is gone, so the list around it can forget it. */
+  onDeleted?: () => void;
   canUpdateService: boolean;
   canDeleteService: boolean;
 }
 
-export function EditServiceForm({ service, onCancel, canUpdateService, canDeleteService }: EditServiceFormProps) {
+export function EditServiceForm({
+  service,
+  onCancel,
+  onDeleted,
+  canUpdateService,
+  canDeleteService,
+}: EditServiceFormProps) {
   const router = useRouter();
   const [resetKey, setResetKey] = useState(0);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -70,21 +79,24 @@ export function EditServiceForm({ service, onCancel, canUpdateService, canDelete
             <Card className="rounded-lg border-border bg-card p-6">
               <CardContent className="p-0 space-y-6">
                 <div className="flex justify-between items-center border-b border-border pb-4">
+                  <h1 className="text-xl font-bold text-foreground">Service Settings</h1>
+
                   <div className="flex items-center gap-3">
-                    <h1 className="text-xl font-bold text-foreground">Service Settings</h1>
-                    <span
-                      className={`px-2.5 py-0.5 text-xs font-semibold rounded uppercase tracking-wide border ${
+                    <Badge
+                      variant="outline"
+                      className={
                         isActive
-                          ? "bg-primary/10 text-primary border-primary/20"
-                          : "bg-muted text-muted-foreground border-border"
-                      }`}
+                          ? "border-primary/20 bg-primary/10 text-primary"
+                          : "border-border bg-muted text-muted-foreground"
+                      }
                     >
-                      {service.status}
-                    </span>
-                  </div>
-                  
-                  {(canUpdateService || canDeleteService) && (
-                    <div className="flex items-center gap-3">
+                      <span
+                        className={`size-1.5 rounded-full ${isActive ? "bg-primary" : "bg-muted-foreground"}`}
+                      />
+                      {isActive ? "Active" : service.status === "DELETED" ? "Deleted" : "Inactive"}
+                    </Badge>
+
+                    {(canUpdateService || canDeleteService) && (
                       <EntityActionsMenu
                         label={`More actions for ${service.name}`}
                         size="icon-sm"
@@ -106,8 +118,8 @@ export function EditServiceForm({ service, onCancel, canUpdateService, canDelete
                           },
                         ]}
                       />
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
 
                 <input type="hidden" name="id" value={service.id} />
@@ -183,7 +195,7 @@ export function EditServiceForm({ service, onCancel, canUpdateService, canDelete
         serviceName={service.name}
         open={isDeleteDialogOpen}
         onOpenChange={setIsDeleteDialogOpen}
-        onSuccess={onCancel}
+        onSuccess={onDeleted ?? onCancel}
       />
     </>
   );

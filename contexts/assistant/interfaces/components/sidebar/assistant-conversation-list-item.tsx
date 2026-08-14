@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 
-import { MoreHorizontal } from "lucide-react";
+import { PencilLine, Trash2 } from "lucide-react";
 
-import { Button, buttonVariants } from "@/contexts/shared/interfaces/components/ui/button";
+import { buttonVariants } from "@/contexts/shared/interfaces/components/ui/button";
+import { EntityActionsMenu } from "@/contexts/shared/interfaces/components/entity-actions-menu";
 import type { AssistantConversationSummaryReadModel } from "@/contexts/assistant/application/internal/transforms/assistant.read-models";
 import { cn } from "@/lib/utils";
 
@@ -12,21 +13,18 @@ type AssistantConversationListItemProps = {
   conversation: AssistantConversationSummaryReadModel;
   active: boolean;
   isMutating: boolean;
-  isMenuOpen: boolean;
   establishmentId: string | null;
-  onOpenMenu: (
-    conversation: AssistantConversationSummaryReadModel,
-    menuPosition: { top: number; left: number },
-  ) => void;
+  onRename: (conversation: AssistantConversationSummaryReadModel) => void;
+  onDelete: (conversation: AssistantConversationSummaryReadModel) => void;
 };
 
 export function AssistantConversationListItem({
   conversation,
   active,
   isMutating,
-  isMenuOpen,
   establishmentId,
-  onOpenMenu,
+  onRename,
+  onDelete,
 }: AssistantConversationListItemProps) {
   const conversationTitle = conversation.title ?? "New conversation";
   const href = establishmentId
@@ -45,33 +43,27 @@ export function AssistantConversationListItem({
           <span className="truncate">{conversationTitle}</span>
         </Link>
 
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon-xs"
+        <EntityActionsMenu
+          label={`Options for ${conversationTitle}`}
+          size="icon-sm"
           disabled={isMutating}
-          aria-label={`Options for ${conversationTitle}`}
-          aria-expanded={isMenuOpen}
-          onClick={(event) => {
-            const currentTarget = event.currentTarget;
-            const rect = currentTarget.getBoundingClientRect();
-            const estimatedMenuHeight = 116;
-            const estimatedMenuWidth = 176;
-            const top = Math.max(4, rect.top - estimatedMenuHeight + 20);
-            const left = Math.max(
-              8,
-              Math.min(rect.right - estimatedMenuWidth, window.innerWidth - estimatedMenuWidth - 8),
-            );
-
-            onOpenMenu(conversation, { top, left });
-          }}
-          className={cn(
-            "shrink-0 rounded-full border border-transparent text-muted-foreground hover:bg-muted hover:text-foreground",
-            isMenuOpen && "bg-muted text-foreground",
-          )}
-        >
-          <MoreHorizontal className="size-4" />
-        </Button>
+          triggerClassName="shrink-0 rounded-full text-muted-foreground"
+          actions={[
+            {
+              label: "Edit name",
+              icon: PencilLine,
+              disabled: isMutating,
+              onSelect: () => onRename(conversation),
+            },
+            {
+              label: "Delete",
+              icon: Trash2,
+              variant: "destructive",
+              disabled: isMutating,
+              onSelect: () => onDelete(conversation),
+            },
+          ]}
+        />
       </div>
     </li>
   );

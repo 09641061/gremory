@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { EditIcon, ClockIcon, TimerIcon, SparklesIcon, CreditCardIcon, EyeIcon, EyeOffIcon } from "lucide-react";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
+import { Badge } from "@/contexts/shared/interfaces/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/contexts/shared/interfaces/components/ui/card";
 import { useChangeCatalogServiceStatus } from "../../hooks/use-change-catalog-service-status";
 import { Spinner } from "@/contexts/shared/interfaces/components/ui/spinner";
@@ -38,20 +39,22 @@ export function ServiceDetailView({ service }: ServiceDetailViewProps) {
       />
 
       {/* Header Actions */}
-      <div className="flex justify-between items-start">
-        <div>
-          <div className="flex items-center gap-3 mb-2">
-            <h1 className="text-3xl font-bold text-foreground">{service.name}</h1>
+      <div className="flex justify-between items-center">
+        <div className="flex items-center gap-3">
+          <h1 className="text-3xl font-bold text-foreground">{service.name}</h1>
+          <Badge
+            variant="outline"
+            className={
+              isActive
+                ? "border-primary/20 bg-primary/10 text-primary"
+                : "border-border bg-muted text-muted-foreground"
+            }
+          >
             <span
-              className={`px-2.5 py-0.5 text-xs font-semibold rounded uppercase tracking-wide border ${
-                isActive
-                  ? "bg-primary/10 text-primary border-primary/20"
-                  : "bg-muted text-muted-foreground border-border"
-              }`}
-            >
-              {service.status}
-            </span>
-          </div>
+              className={`size-1.5 rounded-full ${isActive ? "bg-primary" : "bg-muted-foreground"}`}
+            />
+            {isActive ? "Active" : service.status === "DELETED" ? "Deleted" : "Inactive"}
+          </Badge>
         </div>
 
         <div className="flex items-center gap-3">

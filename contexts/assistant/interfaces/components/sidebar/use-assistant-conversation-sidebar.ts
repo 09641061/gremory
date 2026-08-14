@@ -16,10 +16,6 @@ export function useAssistantConversationSidebar(
   );
   const mutations = useAssistantConversationSidebarMutations();
 
-  const openConversation = ui.openMenuId
-    ? conversationState.conversations.find((conversation) => conversation.id === ui.openMenuId) ?? null
-    : null;
-
   return {
     activeConversationId: ui.activeConversationId,
     conversations: conversationState.conversations,
@@ -31,11 +27,7 @@ export function useAssistantConversationSidebar(
     isOpen: ui.isOpen,
     isRenameSaving: mutations.isRenameSaving,
     manualOpen: ui.manualOpen,
-    menuPosition: ui.menuPosition,
-    menuRef: ui.menuRef,
     mutatingConversationId: mutations.mutatingConversationId,
-    openConversation,
-    openMenuId: ui.openMenuId,
     openDeleteConversation: mutations.openDeleteConversation,
     openRenameConversation: mutations.openRenameConversation,
     renameError: mutations.renameError,
@@ -44,8 +36,6 @@ export function useAssistantConversationSidebar(
     sectionRef: ui.sectionRef,
     setDeleteError: mutations.setDeleteError,
     setDeleteModalConversation: mutations.setDeleteModalConversation,
-    setMenuPosition: ui.setMenuPosition,
-    setOpenMenuId: ui.setOpenMenuId,
     setRenameError: mutations.setRenameError,
     setRenameModalConversation: mutations.setRenameModalConversation,
     setRenameTitle: mutations.setRenameTitle,

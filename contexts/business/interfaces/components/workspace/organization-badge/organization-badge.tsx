@@ -20,9 +20,12 @@ import type { WorkspaceHeaderOrganization } from "@/contexts/business/applicatio
 export function OrganizationBadge({
   organization,
   href,
+  onNavigate,
 }: {
   organization: WorkspaceHeaderOrganization;
   href?: string;
+  /** Called when the link is followed, so the menu around it can close. */
+  onNavigate?: () => void;
 }) {
   const content = (
     <>
@@ -45,6 +48,7 @@ export function OrganizationBadge({
   return (
     <Link
       href={href}
+      onClick={onNavigate}
       className={`${className} transition-colors hover:bg-muted hover:text-foreground`}
     >
       {content}
