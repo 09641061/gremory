@@ -40,6 +40,14 @@ export interface TeamInvitationPreview {
 
 export interface TeamAccessContext {
   active: boolean;
+  capabilities?: Readonly<{
+    canReadTeam?: boolean;
+    canReadAppointments?: boolean;
+    canCreateAppointment?: boolean;
+    canUpdateAppointment?: boolean;
+    canDeleteAppointment?: boolean;
+    canReadAnalytics?: boolean;
+  }>;
   establishments: Array<{
     organizationId: TeamOrganizationId;
     organizationName: string;

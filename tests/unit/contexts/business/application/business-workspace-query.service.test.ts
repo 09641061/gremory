@@ -28,6 +28,9 @@ describe("business workspace query service", () => {
     mocks.getWorkspace.mockResolvedValue({
       activeOrganizationId: memberOrganizationId,
       activeEstablishmentId: memberEstablishmentId,
+      capabilities: {
+        canReadAnalytics: true,
+      },
       organizations: [
         {
           id: ownerOrganizationId,
@@ -69,6 +72,13 @@ describe("business workspace query service", () => {
       canUpdate: false,
       canDelete: false,
     }]);
+    expect(result.capabilities).toEqual({
+      canReadAppointments: undefined,
+      canReadCatalog: undefined,
+      canReadCustomers: undefined,
+      canReadTeam: undefined,
+      canReadAnalytics: true,
+    });
   });
 
   it("keeps the owner creation entry point visible when Billing reports a plan limit", async () => {

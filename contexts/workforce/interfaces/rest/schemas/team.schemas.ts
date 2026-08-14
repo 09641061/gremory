@@ -78,6 +78,14 @@ export const invitationAcceptanceResourceSchema = z.object({
 
 export const workforceAccessResourceSchema = z.object({
   active: z.boolean(),
+  capabilities: z.object({
+    canReadTeam: z.boolean().optional(),
+    canReadAppointments: z.boolean().optional(),
+    canCreateAppointment: z.boolean().optional(),
+    canUpdateAppointment: z.boolean().optional(),
+    canDeleteAppointment: z.boolean().optional(),
+    canReadAnalytics: z.boolean().optional(),
+  }).optional(),
   establishments: z.array(z.object({
     organizationId: uuidSchema,
     organizationName: z.string().min(1),

@@ -25,6 +25,7 @@ export class AppShellQueryService {
     const subscriptionAccess = createSubscriptionAccessQueryService().resolve(subscription);
     const workspace = await createBusinessWorkspaceQueryService().getHeaderViewModel(workspaceSelection);
     const activeEstablishmentId = workspace.activeEstablishmentId;
+    const isOwnerWorkspace = workspace.organization?.mode === "OWNER";
     const [schedulingPermissions, catalogPermissions, crmPermissions, workforcePermissions] =
       activeEstablishmentId
         ? await Promise.all([
@@ -34,11 +35,22 @@ export class AppShellQueryService {
             createWorkforceAccessPolicyService().getPermissions(activeEstablishmentId),
           ])
         : [null, null, null, null];
+    const capabilities = workspace.capabilities;
+    const canReadScheduling =
+      capabilities?.canReadAppointments ?? schedulingPermissions?.canReadAppointments ?? isOwnerWorkspace;
+    const canReadCatalog =
+      capabilities?.canReadCatalog ?? catalogPermissions?.canReadCatalog ?? isOwnerWorkspace;
+    const canReadCrm =
+      capabilities?.canReadCustomers ?? crmPermissions?.canReadCustomers ?? isOwnerWorkspace;
+    const canReadTeam =
+      capabilities?.canReadTeam ?? workforcePermissions?.canReadTeam ?? isOwnerWorkspace;
+    const canReadAnalytics = capabilities?.canReadAnalytics ?? true;
     const visibleSidebarRoutes = resolveVisibleSidebarRoutes(
-      schedulingPermissions?.canReadAppointments ?? false,
-      catalogPermissions?.canReadCatalog ?? false,
-      crmPermissions?.canReadCustomers ?? false,
-      workforcePermissions?.canReadTeam ?? false,
+      canReadScheduling,
+      canReadCatalog,
+      canReadCrm,
+      canReadTeam,
+      canReadAnalytics,
       subscriptionAccess.hasAssistantAccess,
     );
 
@@ -64,6 +76,7 @@ function resolveVisibleSidebarRoutes(
   canReadCatalog: boolean,
   canReadCrm: boolean,
   canReadTeam: boolean,
+  canReadAnalytics: boolean,
   hasAssistantAccess: boolean,
 ): ReadonlyArray<SidebarRouteId> {
   const routes: SidebarRouteId[] = [];
@@ -83,7 +96,9 @@ function resolveVisibleSidebarRoutes(
   if (canReadTeam) {
     routes.push("/team");
   }
-  routes.push("/analytics");
+  if (canReadAnalytics) {
+    routes.push("/analytics");
+  }
 
   return routes;
 }

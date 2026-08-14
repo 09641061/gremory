@@ -9,6 +9,14 @@ export type WorkspaceHeaderEstablishment = Readonly<{
   canDelete?: boolean;
 }>;
 
+export type WorkspaceCapabilities = Readonly<{
+  canReadAppointments?: boolean;
+  canReadCatalog?: boolean;
+  canReadCustomers?: boolean;
+  canReadTeam?: boolean;
+  canReadAnalytics?: boolean;
+}>;
+
 export type WorkspaceHeaderOrganization = Readonly<{
   id: string;
   name: string;
@@ -28,6 +36,7 @@ export type WorkspaceHeaderViewModel = Readonly<{
   establishments: ReadonlyArray<WorkspaceHeaderEstablishment>;
   activeOrganizationId?: string;
   activeEstablishmentId?: string;
+  capabilities?: WorkspaceCapabilities;
   canReadOrganizations: boolean;
   canReadEstablishments: boolean;
   canCreateEstablishment: boolean;

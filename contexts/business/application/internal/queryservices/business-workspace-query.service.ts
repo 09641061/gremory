@@ -6,6 +6,7 @@ import type {
   OrganizationCreationState,
   OrganizationPageState,
   WorkspaceHeaderEstablishment,
+  WorkspaceCapabilities,
   WorkspaceHeaderOrganization,
   WorkspaceHeaderViewModel,
 } from "@/contexts/business/application/model/business-workspace.view-models";
@@ -34,6 +35,7 @@ export class BusinessWorkspaceQueryService {
       establishments,
       activeOrganizationId: resource.activeOrganizationId ?? undefined,
       activeEstablishmentId,
+      capabilities: toWorkspaceCapabilities(resource.capabilities),
       canReadOrganizations: organizations.some((organization) => organization.canRead),
       canReadEstablishments: activeOrganization?.canReadEstablishments === true,
       // The owner is authorized to attempt creation even when Billing rejects it
@@ -151,6 +153,22 @@ function toHeaderEstablishment(
     canRead: establishment.permissions.canRead,
     canUpdate: establishment.permissions.canUpdate,
     canDelete: establishment.permissions.canDelete,
+  };
+}
+
+function toWorkspaceCapabilities(
+  capabilities: Awaited<ReturnType<BusinessWorkspaceApiGateway["getWorkspace"]>>["capabilities"],
+): WorkspaceCapabilities | undefined {
+  if (!capabilities) {
+    return undefined;
+  }
+
+  return {
+    canReadAppointments: capabilities.canReadAppointments,
+    canReadCatalog: capabilities.canReadCatalog,
+    canReadCustomers: capabilities.canReadCustomers,
+    canReadTeam: capabilities.canReadTeam,
+    canReadAnalytics: capabilities.canReadAnalytics,
   };
 }
 

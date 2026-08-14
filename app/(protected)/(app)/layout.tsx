@@ -45,7 +45,7 @@ export default async function AppLayout({
       <AppSidebar
         initialAssistantConversations={assistantConversations.content}
         currentProfile={currentProfile}
-        visibleRoutes={shell?.visibleSidebarRoutes ?? ["/analytics"]}
+        visibleRoutes={shell?.visibleSidebarRoutes ?? []}
         showAssistantSection={hasAssistantAccess}
         showAssistantNavigation={hasAssistantAccess}
       />
