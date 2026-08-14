@@ -54,31 +54,31 @@ export function EditCustomerForm({ customer }: EditCustomerFormProps) {
   return (
     <>
       <ErrorAlert title="Error updating customer" message={errorMsg ?? undefined} />
-      <div className="bg-background text-foreground flex flex-col">
-        <main className="flex-1 max-w-[800px] w-full mx-auto px-4 py-8">
-          <div className="rounded-lg border border-border bg-card p-6">
-            <div className="border-b border-border pb-4">
-              <h1 className="text-xl font-bold text-foreground">Edit Customer</h1>
-              <p className="text-sm text-muted-foreground mt-1.5">
-                Update the customer profile in the administrative catalog.
-              </p>
-            </div>
-
-            <div className="pt-6">
-              <CustomerForm
-                key={customer.id}
-                initialData={initialData}
-                onSubmit={handleSubmit}
-                isSaving={isSaving || isPending}
-                submitLabel="Save Changes"
-                submitIcon={<Save className="size-4" />}
-                onCancel={() => router.back()}
-                establishmentId={customer.establishmentId}
-              />
-            </div>
+      {/* Same width as the create screen: the two are the same form, and a jump
+          between them would read as two different places. */}
+      <main className="mx-auto w-full max-w-4xl">
+        <div className="rounded-lg border border-border bg-card p-6">
+          <div className="border-b border-border pb-4">
+            <h1 className="text-xl font-bold text-foreground">Edit Customer</h1>
+            <p className="text-sm text-muted-foreground mt-1.5">
+              Update the customer profile in the administrative catalog.
+            </p>
           </div>
-        </main>
-      </div>
+
+          <div className="pt-6">
+            <CustomerForm
+              key={customer.id}
+              initialData={initialData}
+              onSubmit={handleSubmit}
+              isSaving={isSaving || isPending}
+              submitLabel="Save Changes"
+              submitIcon={<Save className="size-4" />}
+              onCancel={() => router.back()}
+              establishmentId={customer.establishmentId}
+            />
+          </div>
+        </div>
+      </main>
     </>
   );
 }

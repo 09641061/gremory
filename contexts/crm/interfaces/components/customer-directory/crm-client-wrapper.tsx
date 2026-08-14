@@ -109,7 +109,10 @@ export function CrmClientWrapper({
         message={loadError ? "Failed to load the customer list. Please try refreshing the page." : undefined}
       />
 
-      <main className="max-w-[1600px] mx-auto px-4 md:px-8 py-8 space-y-6">
+      {/* Capped where the other list screens are capped, so the table reads as
+          the same kind of page as team and establishments. No padding of its
+          own: the app layout already insets the page. */}
+      <main className="mx-auto w-full max-w-7xl space-y-6">
         {/* Page Header */}
         <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-4 border-b border-border">
           <div>
