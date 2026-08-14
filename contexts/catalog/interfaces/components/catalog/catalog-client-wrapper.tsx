@@ -32,7 +32,12 @@ export function CatalogClientWrapper({
 
   return (
     <CatalogLayout
-      key={`${activeEstablishmentId ?? "none"}:${initialSelectedServiceId ?? "none"}`} // Remounts layout when establishment or selected service changes
+      // Only the establishment belongs in the key. It is a different catalog,
+      // so every piece of local state below is stale and the remount is the
+      // point. The selected service is client state that the layout seeds from
+      // this prop; keying on it too meant selecting a service threw away the
+      // expanded categories and the pending edits along with it.
+      key={activeEstablishmentId ?? "none"}
       categories={initialCategories}
       services={initialServices}
       activeEstablishmentId={activeEstablishmentId}

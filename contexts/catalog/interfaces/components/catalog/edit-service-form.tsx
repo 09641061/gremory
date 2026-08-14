@@ -19,11 +19,19 @@ import type { DetailedServiceDTO } from "./service-detail-view";
 interface EditServiceFormProps {
   service: DetailedServiceDTO;
   onCancel?: () => void;
+  /** Runs once the service is gone, so the list around it can forget it. */
+  onDeleted?: () => void;
   canUpdateService: boolean;
   canDeleteService: boolean;
 }
 
-export function EditServiceForm({ service, onCancel, canUpdateService, canDeleteService }: EditServiceFormProps) {
+export function EditServiceForm({
+  service,
+  onCancel,
+  onDeleted,
+  canUpdateService,
+  canDeleteService,
+}: EditServiceFormProps) {
   const router = useRouter();
   const [resetKey, setResetKey] = useState(0);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -183,7 +191,7 @@ export function EditServiceForm({ service, onCancel, canUpdateService, canDelete
         serviceName={service.name}
         open={isDeleteDialogOpen}
         onOpenChange={setIsDeleteDialogOpen}
-        onSuccess={onCancel}
+        onSuccess={onDeleted ?? onCancel}
       />
     </>
   );

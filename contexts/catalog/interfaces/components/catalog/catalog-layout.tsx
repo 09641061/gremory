@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { CategorySidebar, type CategoryDTO, type ServiceSummaryDTO } from "./category-sidebar";
 import { type DetailedServiceDTO } from "./service-detail-view";
 import { EditServiceForm } from "./edit-service-form";
@@ -34,6 +35,7 @@ export function CatalogLayout({
   canUpdateService,
   canDeleteService,
 }: CatalogLayoutProps) {
+  const router = useRouter();
   const selectedCategoryIdFallback = categories[0]?.id;
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | undefined>(selectedCategoryIdFallback);
   const [selectedServiceId, setSelectedServiceId] = useState<string | undefined>(initialSelectedServiceId);
@@ -44,6 +46,11 @@ export function CatalogLayout({
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<CategoryDTO | null>(null);
 
+  // `createdService` is a bridge, not a second source of truth: it holds the new
+  // row on screen for the moment between the create action returning and the
+  // refreshed server list arriving. Whoever removes the service is the one that
+  // releases it — see `onDeleted` below — because from here an absence from the
+  // server list is indistinguishable from a refresh still in flight.
   const servicesList = useMemo(
     () => {
       const services = [...initialServices];
@@ -155,6 +162,10 @@ export function CatalogLayout({
                 setSelectedCategoryId(undefined);
                 setIsCreatingService(false);
                 setCreatingServiceCategoryId(undefined);
+                // Nothing else asks the server for the list again after a
+                // create, so without this the bridge above would be the only
+                // place the new service ever existed.
+                router.refresh();
               }}
               onCancel={() => {
                 setIsCreatingService(false);
@@ -166,6 +177,22 @@ export function CatalogLayout({
               service={selectedService}
               onCancel={() => {
                 setSelectedServiceId(undefined);
+              }}
+              onDeleted={() => {
+                setSelectedServiceId(undefined);
+                // The service just created is held here until the refreshed
+                // server list carries it. Deleting it makes that list right to
+                // omit it, so the hold has to be released or `servicesList`
+                // would read the absence as a refresh still in flight and put
+                // the deleted row back in the sidebar.
+                setCreatedService((created) =>
+                  created?.id === selectedService.id ? null : created,
+                );
+                setServiceOverrides((previous) => {
+                  const next = { ...previous };
+                  delete next[selectedService.id];
+                  return next;
+                });
               }}
               canUpdateService={canUpdateService}
               canDeleteService={canDeleteService}
