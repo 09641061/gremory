@@ -6,7 +6,7 @@ import { teamGet } from "../http/team-api.client";
 
 const workforceEntryAccessResourceSchema = z.object({
   active: z.boolean().optional(),
-  capabilities: z.object({
+  membershipCapabilities: z.object({
     canReadTeam: z.boolean().optional(),
     canReadAppointments: z.boolean().optional(),
     canCreateAppointment: z.boolean().optional(),

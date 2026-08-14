@@ -60,7 +60,7 @@ export interface InvitationAcceptanceResource {
 
 export interface WorkforceAccessResource {
   active: boolean;
-  capabilities?: {
+  membershipCapabilities?: {
     canReadTeam?: boolean;
     canReadAppointments?: boolean;
     canCreateAppointment?: boolean;

@@ -66,7 +66,7 @@ export class WorkforceAccessPolicyService {
       const perms = estAccess.effectivePermissions;
       const hasManage = hasAnyPermission(perms, ["workforce:manage"]);
       const hasRead =
-        access.capabilities?.canReadTeam ??
+        access.membershipCapabilities?.canReadTeam ??
         (hasManage || hasAnyPermission(perms, ["workforce:read"]));
 
       return {

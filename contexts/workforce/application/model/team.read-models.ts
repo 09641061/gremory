@@ -42,7 +42,7 @@ export interface TeamInvitationPreviewView {
 
 export interface TeamAccessView {
   active: boolean;
-  capabilities?: Readonly<{
+  membershipCapabilities?: Readonly<{
     canReadTeam?: boolean;
     canReadAppointments?: boolean;
     canCreateAppointment?: boolean;

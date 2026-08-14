@@ -54,7 +54,7 @@ export class SchedulingAccessPolicyService {
         }
 
         const perms = estAccess.effectivePermissions;
-        const capabilities = access.capabilities;
+        const capabilities = access.membershipCapabilities;
         const canReadAppointments =
           capabilities?.canReadAppointments ??
           (hasAnyPermission(perms, ["scheduling:manage"]) ||
