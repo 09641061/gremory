@@ -4,9 +4,18 @@ import { useState } from "react";
 import {
   PlusIcon,
   FolderXIcon,
+  PackagePlusIcon,
+  ChevronDownIcon,
   MenuIcon,
 } from "lucide-react";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
+import { ButtonGroup } from "@/contexts/shared/interfaces/components/ui/button-group";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/contexts/shared/interfaces/components/ui/dropdown-menu";
 import {
   Sheet,
   SheetContent,
@@ -135,33 +144,66 @@ export function CategorySidebar({
 
   const sidebarContent = (
     <aside className="flex h-full w-full shrink-0 flex-col border-r border-border/60 bg-background md:w-(--app-category-sidebar-width)">
-      <div className="p-4 flex flex-col gap-4 border-b border-border/60">
-        {canCreateCategory && (
-          <Button
-            onClick={() => {
-              setIsMobileOpen(false);
-              onOpenCreateCategoryModal();
-            }}
-            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-medium gap-2"
-          >
-            <PlusIcon className="size-4" />
-            <span>Create Category</span>
-          </Button>
-        )}
-        {canCreateService && (
-          <Button
-            variant="outline"
-            onClick={() => {
-              setIsMobileOpen(false);
-              onCreateService?.(undefined);
-            }}
-            className="w-full font-medium gap-2"
-          >
-            <PlusIcon className="size-4" />
-            <span>Create Service</span>
-          </Button>
-        )}
-      </div>
+      {(canCreateService || canCreateCategory) && (
+        <div className="p-4 border-b border-border/60">
+          {/* One button, not two. The category is what the catalog is built out
+              of, so it stays the visible action and the service sits behind the
+              chevron. Two equal blocks stacked here made the reader choose
+              between them on every visit. */}
+          <ButtonGroup className="w-full">
+            <Button
+              onClick={() => {
+                setIsMobileOpen(false);
+                if (canCreateCategory) {
+                  onOpenCreateCategoryModal();
+                } else {
+                  onCreateService?.(undefined);
+                }
+              }}
+              // `border-0` because the button paints with `bg-clip-padding`:
+              // its transparent border would leave a pale edge along the seam.
+              className="flex-1 gap-2 border-0 font-medium"
+            >
+              <PlusIcon className="size-4" />
+              <span>{canCreateCategory ? "Create Category" : "Create Service"}</span>
+            </Button>
+
+            {/* The chevron only earns its place when there is a second thing to
+                create; with one permission the button stands alone. */}
+            {canCreateCategory && canCreateService && (
+              <DropdownMenu>
+                <DropdownMenuTrigger
+                  render={
+                    <Button
+                      type="button"
+                      aria-label="More things to create"
+                      // Not `size="icon"`: that is 32px against the 36px of the
+                      // control beside it, and the group would step down at the
+                      // seam. The divider is an inset line inside the fill, so
+                      // nothing of the page shows between the two halves.
+                      className="w-9 shrink-0 border-0 px-0 shadow-[inset_1px_0_0_0_rgb(255_255_255/0.2)]"
+                    />
+                  }
+                >
+                  <ChevronDownIcon className="size-4" />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem
+                    onClick={() => {
+                      setIsMobileOpen(false);
+                      onCreateService?.(undefined);
+                    }}
+                    className="gap-2 whitespace-nowrap"
+                  >
+                    <PackagePlusIcon className="size-3.5" />
+                    <span>Create Service</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+          </ButtonGroup>
+        </div>
+      )}
 
       {/* Dropping on the sidebar's free space (outside any category) clears the service's category */}
       <nav
