@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { HelpCircle, ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import type { SubscriptionAccessSnapshot } from "../../../domain/services/subscription-access.policy";
 import type { InvoiceResponse, PageResponse } from "../../../infrastructure/gateways/billing-api.gateway";
 import { CancelSubscriptionModal } from "../cancel/cancel-subscription-modal";

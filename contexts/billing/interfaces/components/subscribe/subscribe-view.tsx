@@ -16,8 +16,7 @@ import { ErrorAlert } from "@/contexts/shared/interfaces/components/error";
 import { SubscribeHero } from "./subscribe-hero";
 import { PlanCard } from "./plan-card";
 import { PaymentModal } from "../checkout/payment-modal";
-import { CancelSubscriptionModal } from "../cancel/cancel-subscription-modal";
-import { useRouter } from "next/navigation";
+
 
 interface ActivePaymentState {
   clientSecret: string | null | undefined;
@@ -92,7 +91,6 @@ interface SubscribeViewProps {
 }
 
 export function SubscribeView({ backHref, plansByCurrency, currentSubscription }: SubscribeViewProps) {
-  const router = useRouter();
   const [billingCycle, setBillingCycle] = useState<BillingCycleType>("MONTHLY");
   const [currency, setCurrency] = useState<CurrencyCode>("USD");
   const [feedbackMessage, setFeedbackMessage] = useState<FeedbackState | null>(null);
