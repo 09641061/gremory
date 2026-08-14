@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { Building2, Check, Mail, Store, Users } from "lucide-react";
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useEffect } from "react";
 import type { TeamInvitationPreviewView } from "@/contexts/workforce/application/model/team.read-models";
 import { acceptTeamInvitationAction } from "@/contexts/workforce/interfaces/actions/team.actions";
 import { initialTeamActionResult } from "@/contexts/workforce/interfaces/actions/team-action-result";
@@ -29,49 +29,15 @@ export function InvitationAcceptanceView({
     acceptTeamInvitationAction,
     initialTeamActionResult,
   );
-  const [redirectAttempt, setRedirectAttempt] = useState(0);
-  const [redirectError, setRedirectError] = useState<string | null>(null);
-
-  const returnTo = `/invitations/accept?${new URLSearchParams({ token })}`;
-  const shouldResolveWorkspace = state.status === "success";
 
   useEffect(() => {
-    if (!shouldResolveWorkspace) {
-      return;
+    if (state.status === "success") {
+      window.location.assign("/");
     }
+  }, [state.status]);
 
-    void resolveWorkspaceEntryPath()
-      .then((target) => {
-        if (!target) {
-          setRedirectError(
-            "We could not prepare your workspace yet. Please try again in a moment.",
-          );
-          return;
-        }
-
-        window.location.assign(target);
-      })
-      .catch((error: unknown) => {
-        setRedirectError(
-          error instanceof Error
-            ? error.message
-            : "We could not prepare your workspace yet. Please try again.",
-        );
-      });
-  }, [redirectAttempt, shouldResolveWorkspace]);
-
-  if (shouldResolveWorkspace) {
-    return (
-      <InvitationAcceptedView
-        mode="redirecting"
-        redirectError={redirectError}
-        onRetry={() => {
-          setRedirectError(null);
-          setRedirectAttempt((value) => value + 1);
-        }}
-        returnTo={returnTo}
-      />
-    );
+  if (state.status === "success") {
+    return <InvitationAcceptedView redirecting />;
   }
 
   if (invitation.status === "REMOVED") {
@@ -89,14 +55,10 @@ export function InvitationAcceptanceView({
   }
 
   if (invitation.status === "ACCEPTED") {
-    return (
-      <InvitationAcceptedView
-        mode="accepted"
-        returnTo={returnTo}
-      />
-    );
+    return <InvitationAcceptedView />;
   }
 
+  const returnTo = `/invitations/accept?${new URLSearchParams({ token })}`;
   const signInPath = `/login?next=${encodeURIComponent(returnTo)}`;
 
   return (
@@ -132,7 +94,7 @@ export function InvitationAcceptanceView({
       {authenticated ? (
         <form action={formAction} className="mt-6">
           <input type="hidden" name="token" value={token} />
-          <Button type="submit" disabled={pending} className="h-10 w-full">
+          <Button type="submit" disabled={pending} className="w-full">
             {pending ? (
               <>
                 <Spinner data-icon="inline-start" />
@@ -144,7 +106,7 @@ export function InvitationAcceptanceView({
           </Button>
         </form>
       ) : (
-        <Link href={signInPath} className={buttonVariants({ className: "mt-6 h-10 w-full" })}>
+        <Link href={signInPath} className={buttonVariants({ className: "mt-6 w-full" })}>
           Sign in to accept
         </Link>
       )}
@@ -152,19 +114,7 @@ export function InvitationAcceptanceView({
   );
 }
 
-function InvitationAcceptedView({
-  mode = "accepted",
-  redirectError = null,
-  onRetry,
-  returnTo,
-}: {
-  mode?: "accepted" | "redirecting";
-  redirectError?: string | null;
-  onRetry?: () => void;
-  returnTo: string;
-}) {
-  const redirecting = mode === "redirecting" && !redirectError;
-
+function InvitationAcceptedView({ redirecting = false }: { redirecting?: boolean }) {
   return (
     <InvitationShell>
       <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-primary/15 text-primary">
@@ -174,34 +124,11 @@ function InvitationAcceptedView({
       <p className="mt-2 text-sm leading-6 text-muted-foreground">
         {redirecting
           ? "Redirecting you to Takodu..."
-          : redirectError
-            ? redirectError
-            : "You already have access to this workspace."}
+          : "You already have access to this workspace."}
       </p>
-      {redirecting ? (
-        <div className="mt-6 flex w-full items-center justify-center gap-3 rounded-md border border-dashed border-border px-4 py-3 text-sm text-muted-foreground">
-          <Spinner data-icon="inline-start" />
-          Preparing your workspace
-        </div>
-      ) : redirectError ? (
-        <div className="mt-6 space-y-3">
-          <Button type="button" onClick={onRetry} className="h-10 w-full">
-            Try again
-          </Button>
-          <Link
-            href={returnTo}
-            className={buttonVariants({ variant: "outline", className: "h-10 w-full" })}
-          >
-            Back to invitation
-          </Link>
-        </div>
-      ) : (
-        <div className="mt-6">
-          <Link href="/chat" className={buttonVariants({ className: "h-10 w-full" })}>
-            Continue to Takodu
-          </Link>
-        </div>
-      )}
+      <Link href="/" className={buttonVariants({ className: "mt-6 w-full" })}>
+        Continue to Takodu
+      </Link>
     </InvitationShell>
   );
 }
@@ -242,55 +169,4 @@ function InvitationShell({ children }: { children: React.ReactNode }) {
       </Card>
     </main>
   );
-}
-
-async function resolveWorkspaceEntryPath(): Promise<string | null> {
-  const maxAttempts = 3;
-
-  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
-    const response = await fetch("/api/business/workspace", {
-      method: "GET",
-      credentials: "include",
-      cache: "no-store",
-    });
-
-    if (response.ok) {
-      const workspace = (await response.json()) as {
-        activeOrganizationId?: string | null;
-        activeEstablishmentId?: string | null;
-        organizations?: Array<{
-          id: string;
-          establishments: Array<{ id: string }>;
-        }>;
-      };
-
-      const organizationId =
-        workspace.activeOrganizationId
-        ?? workspace.organizations?.[0]?.id
-        ?? undefined;
-      const establishmentId =
-        workspace.activeEstablishmentId
-        ?? workspace.organizations?.find((item) => item.id === organizationId)?.establishments[0]?.id
-        ?? undefined;
-
-      if (organizationId && establishmentId) {
-        const params = new URLSearchParams();
-        params.set("organizationId", organizationId);
-        params.set("establishmentId", establishmentId);
-        return `/?${params.toString()}`;
-      }
-    }
-
-    if (attempt < maxAttempts) {
-      await sleep(500);
-    }
-  }
-
-  return null;
-}
-
-function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => {
-    window.setTimeout(resolve, ms);
-  });
 }
