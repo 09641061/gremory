@@ -109,11 +109,9 @@ export function CrmClientWrapper({
         message={loadError ? "Failed to load the customer list. Please try refreshing the page." : undefined}
       />
 
-      {/* The same width as the customer form: the directory and the form are
-          two views of one record, so a change of column width between them
-          would read as a change of place. No padding of its own — the app
-          layout already insets the page. */}
-      <main className="mx-auto w-full max-w-4xl space-y-6">
+      {/* Same width as the Team page, for consistency across app sections.
+          No padding of its own — the app layout already insets the page. */}
+      <main className="mx-auto w-full max-w-7xl space-y-6">
         {/* Page Header */}
         <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-4 border-b border-border">
           <div>
