@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useState, useRef } from "react";
+import { useActionState, useEffect, useId, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Store, Plus } from "lucide-react";
@@ -21,6 +21,7 @@ import { TimeZoneField } from "../time-zone-field";
 export function CreateEstablishmentForm({ organizationId }: { organizationId: string }) {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const nameHeadingId = useId();
 
   const [name, setName] = useState("");
   const [photoPreviewUrl, setPhotoPreviewUrl] = useState<string | null>(null);
@@ -38,8 +39,9 @@ export function CreateEstablishmentForm({ organizationId }: { organizationId: st
     if (state.status === "success" && !hasRedirected.current) {
       hasRedirected.current = true;
       const establishmentId = state.data?.id;
+      // The organization is fixed for the account; only the establishment is context.
       const nextPath = establishmentId
-        ? `/?organizationId=${encodeURIComponent(organizationId)}&establishmentId=${encodeURIComponent(establishmentId)}`
+        ? `/?establishmentId=${encodeURIComponent(establishmentId)}`
         : "/";
       router.push(nextPath);
       router.refresh();
@@ -138,7 +140,10 @@ export function CreateEstablishmentForm({ organizationId }: { organizationId: st
               <div className="flex flex-col">
                 <div className="space-y-4 p-6">
                   <div className="space-y-1">
-                    <h3 className="text-base font-semibold text-foreground">Establishment Name</h3>
+                    {/* The section heading names the only field, so it labels it. */}
+                    <h3 id={nameHeadingId} className="text-base font-semibold text-foreground">
+                      Establishment Name
+                    </h3>
                     <p className="text-sm text-muted-foreground">
                       Please enter the official name for your establishment.
                     </p>
@@ -146,6 +151,7 @@ export function CreateEstablishmentForm({ organizationId }: { organizationId: st
                   <div className="max-w-xs">
                     <Input
                       name="name"
+                      aria-labelledby={nameHeadingId}
                       value={name}
                       onChange={(e) => setName(e.target.value)}
                       placeholder="Establishment name"

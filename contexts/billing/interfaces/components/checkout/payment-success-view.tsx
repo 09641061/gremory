@@ -17,6 +17,7 @@ export function PaymentSuccessView() {
   useEffect(() => {
     let cancelled = false;
     let attempts = 0;
+    let timeoutId: number | undefined;
 
     const checkSubscription = async () => {
       try {
@@ -32,7 +33,7 @@ export function PaymentSuccessView() {
 
         attempts += 1;
         if (attempts < 10) {
-          window.setTimeout(checkSubscription, 2000);
+          timeoutId = window.setTimeout(checkSubscription, 2000);
         } else {
           setActivationPending(false);
         }
@@ -47,6 +48,9 @@ export function PaymentSuccessView() {
 
     return () => {
       cancelled = true;
+      if (timeoutId !== undefined) {
+        window.clearTimeout(timeoutId);
+      }
     };
   }, []);
 

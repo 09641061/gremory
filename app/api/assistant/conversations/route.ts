@@ -51,6 +51,7 @@ export async function POST(request: Request) {
     const data = await new CreateConversationCommandService().handle(
       {
         messageContent: body.messageContent,
+        establishmentId: body.establishmentId,
       },
       accessToken,
     );
@@ -63,6 +64,5 @@ export async function POST(request: Request) {
     );
   }
 }
-
 
 

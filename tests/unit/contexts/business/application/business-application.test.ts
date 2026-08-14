@@ -15,6 +15,10 @@ import type {
   EstablishmentRepository,
   OrganizationRepository,
 } from "../../../../../contexts/business/domain/services/business.repositories";
+import type {
+  EstablishmentPhotoStorage,
+  OrganizationImageStorage,
+} from "../../../../../contexts/business/application/services/business.services";
 
 const organizationId = "11111111-1111-4111-8111-111111111111";
 const establishmentId = "22222222-2222-4222-8222-222222222222";
@@ -26,13 +30,71 @@ describe("Business command services", () => {
       .spyOn(repository, "save")
       .mockImplementation(async (value) => value);
 
-    const id = await new OrganizationCommandServiceImpl(repository).update({
+    const id = await new OrganizationCommandServiceImpl(
+      repository,
+      organizationImageStorage(),
+    ).update({
       id: organizationId,
       name: "Acme Group",
     });
 
     expect(save).toHaveBeenCalled();
     expect(id.value).toBe(organizationId);
+  });
+
+  it("still validates the name through the domain when a logo is uploaded", async () => {
+    const repository = organizationRepository();
+    const save = vi.spyOn(repository, "save");
+    const images = organizationImageStorage();
+    const upload = vi.spyOn(images, "upload");
+
+    await expect(
+      new OrganizationCommandServiceImpl(repository, images).update({
+        id: organizationId,
+        name: "   ",
+        imageFile: new File(["logo"], "logo.png", { type: "image/png" }),
+      }),
+    ).rejects.toThrow("Organization name is required");
+
+    expect(upload).not.toHaveBeenCalled();
+    expect(save).not.toHaveBeenCalled();
+  });
+
+  it("stores a new photo before the establishment records its reference", async () => {
+    const current = establishment("Old shop", null);
+    const repository = establishmentRepository();
+    vi.spyOn(repository, "findById").mockResolvedValue(current);
+    vi.spyOn(repository, "save").mockImplementation(async (value) => value);
+    const photos = establishmentPhotoStorage();
+    vi.spyOn(photos, "upload").mockResolvedValue(
+      createEstablishmentPhoto("https://cdn.example.com/stored.png"),
+    );
+
+    await new EstablishmentCommandServiceImpl(repository, photos).update({
+      id: establishmentId,
+      name: "New shop",
+      photoFile: new File(["photo"], "photo.png", { type: "image/png" }),
+    });
+
+    expect(current.photoUrl.value).toBe("https://cdn.example.com/stored.png");
+  });
+
+  it("drops the stored photo when the account removes it", async () => {
+    const current = establishment("Shop", "https://example.com/old.png");
+    const repository = establishmentRepository();
+    vi.spyOn(repository, "findById").mockResolvedValue(current);
+    vi.spyOn(repository, "save").mockImplementation(async (value) => value);
+    const photos = establishmentPhotoStorage();
+    const remove = vi.spyOn(photos, "remove");
+
+    await new EstablishmentCommandServiceImpl(repository, photos).update({
+      id: establishmentId,
+      name: "Shop",
+      removePhoto: true,
+    });
+
+    expect(remove).toHaveBeenCalled();
+    expect(current.photoUrl.value).toBeNull();
   });
 
   it("loads the establishment and applies domain behavior before saving", async () => {
@@ -43,7 +105,10 @@ describe("Business command services", () => {
       .spyOn(repository, "save")
       .mockImplementation(async (value) => value);
 
-    const id = await new EstablishmentCommandServiceImpl(repository).update({
+    const id = await new EstablishmentCommandServiceImpl(
+      repository,
+      establishmentPhotoStorage(),
+    ).update({
       id: establishmentId,
       name: "New shop",
       photoUrl: "https://example.com/shop.png",
@@ -126,11 +191,19 @@ function establishment(name: string, photoUrl: string | null, timeZone = "UTC") 
   });
 }
 
+function organizationImageStorage(): OrganizationImageStorage {
+  return { upload: vi.fn(async () => undefined) };
+}
+
+function establishmentPhotoStorage(): EstablishmentPhotoStorage {
+  return {
+    upload: vi.fn(async () => createEstablishmentPhoto(null)),
+    remove: vi.fn(async () => undefined),
+  };
+}
+
 function organizationRepository(): OrganizationRepository {
   return {
-    create: vi.fn(async (name) =>
-      organization(name.value),
-    ),
     findMine: vi.fn(async () => organization("Acme")),
     findById: vi.fn(async () => organization("Acme")),
     save: vi.fn(async (value) => value),

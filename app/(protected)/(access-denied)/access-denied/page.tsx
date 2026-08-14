@@ -2,7 +2,7 @@ import Link from "next/link";
 
 export default function AccessDeniedPage() {
   return (
-    <main className="flex min-h-screen flex-1 items-center justify-center px-6 text-foreground">
+    <div className="flex min-h-[60svh] flex-1 items-center justify-center px-6 text-foreground">
       <section className="max-w-lg space-y-4 text-center">
         <h1 className="text-2xl font-semibold">
           You do not have permission to access this section
@@ -17,6 +17,6 @@ export default function AccessDeniedPage() {
           Back to sign in
         </Link>
       </section>
-    </main>
+    </div>
   );
 }

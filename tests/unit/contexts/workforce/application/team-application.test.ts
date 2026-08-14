@@ -145,6 +145,7 @@ function teamRepository(): TeamRepository {
       status: "PENDING" as const,
       expiresAt: new Date("2026-08-01T10:00:00Z"),
     })),
+    acceptPendingInvitation: vi.fn(async () => createMemberId(memberId)),
     acceptInvitation: vi.fn(async () => createMemberId(memberId)),
     getAccessContext: vi.fn(async () => ({
       active: true,

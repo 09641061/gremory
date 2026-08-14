@@ -55,7 +55,7 @@ export async function proxy(request: NextRequest) {
     return continueWithWorkspaceContext(request, response);
   }
 
-  if (landing.status === "organization-required" || landing.status === "establishment-required") {
+  if (landing.status === "invitation-pending" || landing.status === "establishment-required") {
     if (!landing.allowedPaths.includes(pathname)) {
       return redirectWithCookies(request, landing.setupHref, response);
     }
@@ -84,7 +84,8 @@ function isPrivateRoute(pathname: string) {
     "/catalog",
     "/team",
     "/settings",
-    "/organizations",
+    "/organization",
+    "/invitations/pending",
     "/establishments",
     "/access-denied",
     // Lives under app/(protected): plans are shown to signed-in users only.
@@ -121,11 +122,9 @@ function redirectWithCookies(request: NextRequest, path: string, response: NextR
 
 function continueWithWorkspaceContext(request: NextRequest, response: NextResponse | null) {
   const forwardedHeaders = new Headers(request.headers);
-  const organizationId = request.nextUrl.searchParams.get("organizationId");
   const establishmentId = request.nextUrl.searchParams.get("establishmentId");
 
-  if (organizationId) forwardedHeaders.set("x-takodu-organization-id", organizationId);
-  else forwardedHeaders.delete("x-takodu-organization-id");
+  forwardedHeaders.delete("x-takodu-organization-id");
   if (establishmentId) forwardedHeaders.set("x-takodu-establishment-id", establishmentId);
   else forwardedHeaders.delete("x-takodu-establishment-id");
 
@@ -137,9 +136,7 @@ function continueWithWorkspaceContext(request: NextRequest, response: NextRespon
 }
 
 function copyWorkspaceSelection(request: NextRequest, url: URL) {
-  const organizationId = request.nextUrl.searchParams.get("organizationId");
   const establishmentId = request.nextUrl.searchParams.get("establishmentId");
-  if (organizationId) url.searchParams.set("organizationId", organizationId);
   if (establishmentId) url.searchParams.set("establishmentId", establishmentId);
 }
 
@@ -174,7 +171,8 @@ export const config = {
     "/catalog/:path*",
     "/team/:path*",
     "/settings/:path*",
-    "/organizations/:path*",
+    "/organization/:path*",
+    "/invitations/pending",
     "/establishments/:path*",
     "/access-denied/:path*",
   ],

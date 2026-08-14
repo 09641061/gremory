@@ -2,7 +2,6 @@
 
 import { revalidatePath } from "next/cache";
 import { createEstablishmentCommandService } from "../../application/internal/commandservices/establishment-command.service";
-import { createEstablishmentPhotoAdapter } from "@/contexts/business/infrastructure/adapters/establishment-photo.adapter";
 import {
   createEstablishmentCommand,
   deleteEstablishmentCommand,
@@ -11,6 +10,7 @@ import {
 import { requireBusinessAccessToken } from "../../infrastructure/session/business-session";
 import {
   createEstablishmentSchema,
+  deleteEstablishmentSchema,
   updateEstablishmentSchema,
 } from "../rest/schemas/establishment.schemas";
 import { actionError, type BusinessActionResult } from "./business-action-result";
@@ -22,6 +22,11 @@ function readPhotoFileFromFormData(formData: FormData) {
 
 function readBoolFromFormData(formData: FormData, key: string) {
   return formData.get(key) === "true";
+}
+
+/** The form posts the reference it already has under its own field name. */
+function readPhotoUrlFromFormData(formData: FormData) {
+  return formData.get("photoUrl") ?? formData.get("currentPhotoUrl");
 }
 
 export async function createEstablishmentAction(
@@ -37,16 +42,11 @@ export async function createEstablishmentAction(
   if (!parsed.success) return actionError(parsed.error.issues[0]?.message);
 
   try {
-    const token = await requireBusinessAccessToken();
-    const photoService = createEstablishmentPhotoAdapter();
-    const photoFile = readPhotoFileFromFormData(formData);
-    const photoUrl = photoFile
-      ? await photoService.upload(photoFile, token)
-      : parsed.data.photoUrl ?? null;
+    await requireBusinessAccessToken();
     const establishmentId = await createEstablishmentCommandService().create(
       createEstablishmentCommand({
         ...parsed.data,
-        photoUrl,
+        photoFile: readPhotoFileFromFormData(formData),
       }),
     );
     revalidateBusinessViews();
@@ -64,35 +64,21 @@ export async function updateEstablishmentAction(
   const parsed = updateEstablishmentSchema.safeParse({
     id: formData.get("id"),
     name: formData.get("name"),
-    photoUrl: formData.get("photoUrl"),
     timeZone: typeof rawTimeZone === "string" && rawTimeZone.trim() ? rawTimeZone : undefined,
+    photoUrl: readPhotoUrlFromFormData(formData),
   });
   if (!parsed.success) return actionError(parsed.error.issues[0]?.message);
 
   try {
-    const token = await requireBusinessAccessToken();
-    const photoService = createEstablishmentPhotoAdapter();
-    const removePhoto = readBoolFromFormData(formData, "removePhoto");
-    const currentPhotoUrl = formData.get("currentPhotoUrl");
-    const photoFile = readPhotoFileFromFormData(formData);
-    const photoUrl = photoFile
-      ? await photoService.upload(photoFile, token)
-      : removePhoto
-        ? null
-        : typeof currentPhotoUrl === "string" && currentPhotoUrl.trim()
-          ? currentPhotoUrl
-          : null;
-
-    if (removePhoto) {
-      await photoService.delete(parsed.data.id, token);
-    }
+    await requireBusinessAccessToken();
     const establishmentId = await createEstablishmentCommandService().update(
       updateEstablishmentCommand({
         ...parsed.data,
-        photoUrl,
+        photoFile: readPhotoFileFromFormData(formData),
+        removePhoto: readBoolFromFormData(formData, "removePhoto"),
       }),
     );
-    revalidateBusinessViews(establishmentId.value);
+    revalidateBusinessViews();
     return { status: "success", data: { id: establishmentId.value }, error: null };
   } catch (error) {
     return actionError(error);
@@ -103,14 +89,13 @@ export async function deleteEstablishmentAction(
   _previous: BusinessActionResult,
   formData: FormData
 ): Promise<BusinessActionResult> {
-  const id = formData.get("id");
-  const parsed = updateEstablishmentSchema.shape.id.safeParse(id);
+  const parsed = deleteEstablishmentSchema.safeParse({ id: formData.get("id") });
   if (!parsed.success) return actionError(parsed.error.issues[0]?.message);
 
   try {
     await requireBusinessAccessToken();
     await createEstablishmentCommandService().delete(
-      deleteEstablishmentCommand({ id: parsed.data }),
+      deleteEstablishmentCommand(parsed.data),
     );
     revalidateBusinessViews();
     return { status: "success", data: null, error: null };
@@ -119,10 +104,9 @@ export async function deleteEstablishmentAction(
   }
 }
 
-function revalidateBusinessViews(establishmentId?: string) {
+// Establishments are the workspace context every catalog read is scoped by, so
+// the catalog is stale too once this list changes.
+function revalidateBusinessViews() {
   revalidatePath("/catalog");
   revalidatePath("/establishments");
-  if (establishmentId) {
-    revalidatePath(`/establishments/${encodeURIComponent(establishmentId)}/edit`);
-  }
 }

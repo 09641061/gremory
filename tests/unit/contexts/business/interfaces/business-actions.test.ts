@@ -9,7 +9,6 @@ const mocks = vi.hoisted(() => ({
     delete: vi.fn(),
   },
   organizationService: {
-    create: vi.fn(),
     update: vi.fn(),
     delete: vi.fn(),
   },
@@ -36,10 +35,7 @@ import {
   createEstablishmentAction,
   deleteEstablishmentAction,
 } from "@/contexts/business/interfaces/actions/establishment.actions";
-import {
-  createOrganizationAction,
-  updateOrganizationAction,
-} from "@/contexts/business/interfaces/actions/organization.actions";
+import { updateOrganizationAction } from "@/contexts/business/interfaces/actions/organization.actions";
 import { createEstablishmentId } from "@/contexts/business/domain/model/valueobjects/establishment-id.vo";
 import { createOrganizationId } from "@/contexts/business/domain/model/valueobjects/organization-id.vo";
 import { initialBusinessActionResult } from "@/contexts/business/interfaces/actions/business-action-result";
@@ -57,9 +53,6 @@ describe("Business server actions", () => {
       createEstablishmentId(establishmentId),
     );
     mocks.establishmentService.delete.mockResolvedValue(undefined);
-    mocks.organizationService.create.mockResolvedValue(
-      createOrganizationId(organizationId),
-    );
     mocks.organizationService.update.mockResolvedValue(
       createOrganizationId(organizationId),
     );
@@ -92,6 +85,7 @@ describe("Business server actions", () => {
       name: "Main store",
       photoUrl: "https://example.com/store.png",
       timeZone: "America/Lima",
+      photoFile: null,
     });
     expect(result).toEqual({
       status: "success",
@@ -125,39 +119,20 @@ describe("Business server actions", () => {
       id: organizationId,
       name: "Acme Group",
       imageUrl: null,
+      imageFile: null,
     });
     expect(updated.status).toBe("success");
-    expect(mocks.revalidatePath).toHaveBeenCalledWith("/organizations");
+    expect(mocks.revalidatePath).toHaveBeenCalledWith("/organization");
   });
 
-  it("creates organizations and uploads a logo when a photo is provided", async () => {
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(
-      new Response(JSON.stringify({ id: organizationId }), {
-        status: 200,
-        headers: { "Content-Type": "application/json" },
-      }),
-    ));
-
-    const formData = new FormData();
-    formData.set("name", "Acme Group");
-    formData.set("photoFile", new File(["logo"], "logo.png", { type: "image/png" }));
-
-    const result = await createOrganizationAction(initialBusinessActionResult, formData);
-
-    expect(mocks.organizationService.create).toHaveBeenCalledWith({
-      name: "Acme Group",
-    });
-    expect(fetch).toHaveBeenCalledWith(
-      `http://localhost:8080/api/business/organizations/${organizationId}`,
-      expect.objectContaining({
-        method: "PUT",
-        headers: {
-          Authorization: "Bearer access-token",
-        },
-      }),
+  it("rejects an invalid organization id before reaching the application service", async () => {
+    const result = await updateOrganizationAction(
+      initialBusinessActionResult,
+      form({ id: "not-a-uuid", name: "Acme Group" }),
     );
-    expect(result.status).toBe("success");
-    expect(mocks.revalidatePath).toHaveBeenCalledWith("/organizations");
+
+    expect(result.status).toBe("error");
+    expect(mocks.organizationFactory).not.toHaveBeenCalled();
   });
 
   it("returns a stable error when authentication fails", async () => {

@@ -14,8 +14,10 @@ import { useAssistantConversationSidebar } from "./use-assistant-conversation-si
 
 export function AssistantChatsSection({
   initialConversations,
+  establishmentId,
 }: {
   initialConversations: AssistantConversationSummaryReadModel[];
+  establishmentId: string | null;
 }) {
   const {
     activeConversationId,
@@ -77,6 +79,7 @@ export function AssistantChatsSection({
               error={error}
               openMenuId={openMenuId}
               mutatingConversationId={mutatingConversationId}
+              establishmentId={establishmentId}
               onOpenMenu={(nextConversation, nextMenuPosition) => {
                 setMenuPosition((current) =>
                   current && openMenuId === nextConversation.id ? null : nextMenuPosition,

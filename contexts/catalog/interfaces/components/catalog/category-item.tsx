@@ -7,13 +7,13 @@ import {
   ChevronRight,
   FolderClosed,
   FolderOpen,
-  GripVertical,
   Pencil,
   Plus,
   Trash2,
 } from "lucide-react";
 import { EntityActionsMenu } from "@/contexts/shared/interfaces/components/entity-actions-menu";
 import type { CategoryDTO, ServiceSummaryDTO } from "./category-sidebar";
+import { ServiceRow } from "./service-row";
 
 interface CategoryItemProps {
   cat: CategoryDTO;
@@ -26,6 +26,7 @@ interface CategoryItemProps {
   onSelectService: (id: string) => void;
   onOpenEditCategoryModal: (category: CategoryDTO) => void;
   onDragStart: (e: React.DragEvent, serviceId: string) => void;
+  onDragEnd: () => void;
   onDragOver: (e: React.DragEvent, categoryId: string) => void;
   onDragLeave: (e: React.DragEvent) => void;
   onDrop: (e: React.DragEvent, categoryId: string) => void;
@@ -49,6 +50,7 @@ export function CategoryItem({
   onSelectService,
   onOpenEditCategoryModal,
   onDragStart,
+  onDragEnd,
   onDragOver,
   onDragLeave,
   onDrop,
@@ -150,29 +152,15 @@ export function CategoryItem({
       {isExpanded && (
         <div className="pl-0 space-y-1">
           {catServices.map((svc) => (
-            <div
+            <ServiceRow
               key={svc.id}
-              draggable
-              onDragStart={(e) => onDragStart(e, svc.id)}
-              className="group flex items-center cursor-grab active:cursor-grabbing w-full"
-            >
-              <button
-                onClick={() => {
-                  onSelectService(svc.id);
-                  setIsMobileOpen(false);
-                }}
-                className={`flex h-(--app-sidebar-control-height) w-full items-center gap-(--app-sidebar-control-gap) truncate rounded-(--app-sidebar-item-radius) px-(--app-sidebar-control-padding-x) text-left text-sm transition-colors ${
-                  selectedServiceId === svc.id
-                    ? "bg-accent text-accent-foreground font-semibold"
-                    : "text-foreground hover:bg-accent/70 hover:text-accent-foreground"
-                }`}
-              >
-                <GripVertical className={`size-4 shrink-0 cursor-grab ${
-                  selectedServiceId === svc.id ? "text-accent-foreground" : "text-muted-foreground/60"
-                }`} />
-                <span className="truncate">{svc.name}</span>
-              </button>
-            </div>
+              svc={svc}
+              isSelected={selectedServiceId === svc.id}
+              onSelectService={onSelectService}
+              onDragStart={onDragStart}
+              onDragEnd={onDragEnd}
+              setIsMobileOpen={setIsMobileOpen}
+            />
           ))}
         </div>
       )}

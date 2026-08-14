@@ -49,6 +49,59 @@ describe("assistant conversation transform", () => {
     expect(conversation.messages[1]?.content).toContain("Hello, how can I help you?");
   });
 
+  it("strips internal call tags from assistant messages before exposing them to the UI", () => {
+    const conversation = toConversationReadModel({
+      id: "conversation-1b",
+      title: "Test conversation",
+      createdAt: "2026-07-29T00:00:00.000Z",
+      updatedAt: "2026-07-29T00:00:00.000Z",
+      messages: [
+        {
+          id: "message-1",
+          role: "USER",
+          content: "Crea la categoría faciales",
+          createdAt: "2026-07-29T00:00:00.000Z",
+        },
+        {
+          id: "message-2",
+          role: "ASSISTANT",
+          content:
+            "[CALL: createCategory(1f3253fa-f29e-4540-b391-57719f804c2d, faciales)]\n\nLa categoría \"faciales\" ya está creada.",
+          createdAt: "2026-07-29T00:00:01.000Z",
+        },
+      ],
+    });
+
+    expect(conversation.messages).toHaveLength(2);
+    expect(conversation.messages[1]?.content).toBe('La categoría "faciales" ya está creada.');
+  });
+
+  it("drops assistant messages that only contain internal control tags", () => {
+    const conversation = toConversationReadModel({
+      id: "conversation-1c",
+      title: "Test conversation",
+      createdAt: "2026-07-29T00:00:00.000Z",
+      updatedAt: "2026-07-29T00:00:00.000Z",
+      messages: [
+        {
+          id: "message-1",
+          role: "USER",
+          content: "Crea la categoría faciales",
+          createdAt: "2026-07-29T00:00:00.000Z",
+        },
+        {
+          id: "message-2",
+          role: "ASSISTANT",
+          content: "[CALL: createCategory(1f3253fa-f29e-4540-b391-57719f804c2d, faciales)]",
+          createdAt: "2026-07-29T00:00:01.000Z",
+        },
+      ],
+    });
+
+    expect(conversation.messages).toHaveLength(1);
+    expect(conversation.messages[0]?.role).toBe("user");
+  });
+
   it("alternates roles for legacy conversations that arrive flattened", () => {
     const conversation = toConversationReadModel({
       id: "conversation-2",

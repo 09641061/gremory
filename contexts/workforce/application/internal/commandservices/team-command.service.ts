@@ -38,6 +38,10 @@ export class TeamCommandServiceImpl implements TeamCommandService {
   acceptInvitation(command: AcceptTeamInvitationCommand) {
     return this.team.acceptInvitation(createInvitationToken(command.token));
   }
+
+  acceptPendingInvitation() {
+    return this.team.acceptPendingInvitation();
+  }
 }
 
 export function createTeamCommandService(token?: string): TeamCommandService {

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
+import { createEstablishmentId } from "@/contexts/business/domain/model/valueobjects/establishment-id.vo";
 import { createEstablishmentPhotoAdapter } from "@/contexts/business/infrastructure/adapters/establishment-photo.adapter";
 import { requireBusinessAccessToken } from "@/contexts/business/infrastructure/session/business-session";
 
@@ -17,8 +18,8 @@ export async function DELETE(
       return validationErrorResponse(idParsed.error.issues[0]?.message);
     }
 
-    const token = await requireBusinessAccessToken();
-    await createEstablishmentPhotoAdapter().delete(idParsed.data, token);
+    await requireBusinessAccessToken();
+    await createEstablishmentPhotoAdapter().remove(createEstablishmentId(idParsed.data));
 
     return new Response(null, { status: 204 });
   } catch (error) {

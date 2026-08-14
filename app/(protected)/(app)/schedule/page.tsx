@@ -6,7 +6,7 @@ import { redirect } from "next/navigation";
 import { createBusinessWorkspaceQueryService } from "@/contexts/business/application/internal/queryservices/business-workspace-query.service";
 
 interface SchedulePageProps {
-  searchParams: Promise<{ organizationId?: string; establishmentId?: string }>;
+  searchParams: Promise<{ establishmentId?: string }>;
 }
 
 export default async function SchedulePage({ searchParams }: SchedulePageProps) {

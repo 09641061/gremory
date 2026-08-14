@@ -31,7 +31,7 @@ export async function POST(
       const gateway = new AssistantApiGateway();
       const backendResponse = await gateway.sendMessageStream(
         id,
-        { messageContent: body.message },
+        { messageContent: body.message, establishmentId: body.establishmentId },
         accessToken,
       );
 
@@ -52,6 +52,7 @@ export async function POST(
       {
         conversationId: id,
         message: body.message,
+        establishmentId: body.establishmentId,
       },
       accessToken,
     );
@@ -64,4 +65,3 @@ export async function POST(
     );
   }
 }
-

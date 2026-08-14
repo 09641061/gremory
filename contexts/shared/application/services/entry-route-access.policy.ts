@@ -17,7 +17,7 @@ export function resolveEmployeeEntryPath(
     { path: "/catalog", matches: hasCatalogAccess },
     { path: "/crm", matches: hasCrmAccess },
     { path: "/team", matches: hasTeamAccess },
-    { path: "/organizations", matches: hasOrganizationAccess },
+    { path: "/organization", matches: hasOrganizationAccess },
   ];
 
   return routeChecks.find((route) => establishments.some(route.matches))?.path ?? "/access-denied";

@@ -43,6 +43,7 @@ function AvatarImage({
   className,
   src,
   onError,
+  alt = "",
   ...props
 }: React.ComponentProps<"img">) {
   const [failedSrc, setFailedSrc] = React.useState<typeof src>(undefined)
@@ -60,8 +61,10 @@ function AvatarImage({
   }
 
   return (
+    // eslint-disable-next-line @next/next/no-img-element
     <img
       {...props}
+      alt={alt}
       data-slot="avatar-image"
       src={src}
       decoding="async"

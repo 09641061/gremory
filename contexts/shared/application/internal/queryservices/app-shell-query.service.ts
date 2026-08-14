@@ -8,6 +8,7 @@ import { createSchedulingAccessPolicyService } from "@/contexts/scheduling/appli
 import { createWorkforceAccessPolicyService } from "@/contexts/workforce/application/internal/queryservices/workforce-access-policy.service";
 import type { SubscriptionAccessSnapshot } from "@/contexts/billing/domain/services/subscription-access.policy";
 import type {
+  AppShellHomeHref,
   AppShellViewModel,
   SidebarRouteId,
 } from "@/contexts/shared/application/model/app-shell.view-models";
@@ -15,7 +16,6 @@ import type {
 export interface AppShellQueryInput {
   subscription: SubscriptionAccessSnapshot | null | undefined;
   workspace?: Readonly<{
-    organizationId?: string;
     establishmentId?: string;
   }>;
 }
@@ -47,10 +47,6 @@ export class AppShellQueryService {
       hasAssistantAccess: subscriptionAccess.hasAssistantAccess,
       homeHref: resolveHomeHref(subscriptionAccess.hasAssistantAccess, visibleSidebarRoutes, workspace),
       visibleSidebarRoutes,
-      headerNavigation: {
-        organizationListHref: workspace.canReadOrganizations ? "/organizations" : null,
-        newOrganizationHref: workspace.canCreateOrganization ? "/organizations/new" : null,
-      },
     };
   }
 }
@@ -92,7 +88,12 @@ function resolveHomeHref(
   hasAssistantAccess: boolean,
   visibleRoutes: ReadonlyArray<SidebarRouteId>,
   workspace: AppShellViewModel["workspace"],
-): "/chat" | "/schedule" | "/crm" | "/catalog" | "/team" | "/organizations" | "/establishments/new" | "/access-denied" {
+): AppShellHomeHref {
+  // An account that registered through an invitation belongs nowhere until it
+  // accepts, so it is sent to the acceptance screen instead of an empty shell.
+  if (workspace.accountType === "PENDING_INVITATION") {
+    return "/invitations/pending";
+  }
   if (workspace.organization && workspace.establishments.length === 0 && workspace.canCreateEstablishment) {
     return "/establishments/new";
   }
@@ -103,7 +104,6 @@ function resolveHomeHref(
   const firstWorkRoute = visibleRoutes.find((route) => route !== "/analytics");
   if (firstWorkRoute) return firstWorkRoute;
 
-  if (workspace.organization?.canRead) return "/organizations";
-  if (!workspace.organization && workspace.organizations.length === 0) return "/organizations";
+  if (workspace.canReadOrganization) return "/organization";
   return "/access-denied";
 }

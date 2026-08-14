@@ -1,6 +1,7 @@
 import { GetConversationQueryService } from "@/contexts/assistant/application/internal/queryservices/get-conversation-query.service";
 import { createCurrentSubscriptionQueryService } from "@/contexts/billing/application/internal/queryservices/current-subscription-query.service";
 import { createSubscriptionAccessQueryService } from "@/contexts/billing/application/internal/queryservices/subscription-access-query.service";
+import { createBusinessWorkspaceQueryService } from "@/contexts/business/application/internal/queryservices/business-workspace-query.service";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-session-cookie";
@@ -11,11 +12,12 @@ import { Alert, AlertTitle, AlertDescription } from "@/contexts/shared/interface
 export default async function ChatPage({
   searchParams,
 }: {
-  searchParams?: Promise<{ conversationId?: string; denied?: string }>;
+  searchParams?: Promise<{ conversationId?: string; denied?: string; establishmentId?: string }>;
 }) {
   const resolvedSearchParams = searchParams ? await searchParams : undefined;
   const conversationId = resolvedSearchParams?.conversationId;
   const denied = resolvedSearchParams?.denied;
+  const requestedEstablishmentId = resolvedSearchParams?.establishmentId;
   const accessToken = (await cookies()).get(iamSessionCookies.accessToken)?.value;
 
   const subscription = accessToken
@@ -27,6 +29,14 @@ export default async function ChatPage({
     redirect("/");
   }
 
+  const workspace = await createBusinessWorkspaceQueryService().getHeaderViewModel({
+    establishmentId: requestedEstablishmentId,
+  });
+  const establishmentId =
+    requestedEstablishmentId &&
+    workspace.establishments.some((item) => item.id === requestedEstablishmentId)
+      ? requestedEstablishmentId
+      : workspace.activeEstablishmentId ?? null;
   const initialConversation = hasAssistantAccess && conversationId
     ? await new GetConversationQueryService().handle(conversationId)
     : null;
@@ -47,10 +57,11 @@ export default async function ChatPage({
         </div>
       )}
       <AssistantChatView
-        key={conversationId ?? "new"}
+        key={`${conversationId ?? "new"}:${establishmentId ?? "all"}`}
         conversationId={conversationId ?? null}
         initialConversation={initialConversationViewModel}
         hasAssistantAccess={hasAssistantAccess}
+        establishmentId={establishmentId}
       />
     </div>
   );

@@ -1,7 +1,7 @@
 /** @vitest-environment jsdom */
 import { render, screen } from "@testing-library/react";
 import { describe, it, expect, vi } from "vitest";
-import { OrganizationDetailCard } from "@/contexts/business/interfaces/components/organization/organizations-page/organization-detail-card";
+import { OrganizationSettingsCard } from "@/contexts/business/interfaces/components/organization/organization-settings/organization-settings-card";
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({
@@ -16,54 +16,44 @@ vi.mock("@/contexts/business/interfaces/actions/organization.actions", () => ({
   }),
 }));
 
-describe("OrganizationDetailCard Component", () => {
-  const mockOrganization = {
+describe("OrganizationSettingsCard", () => {
+  const organization = {
     id: "org-123",
     name: "Test Organization",
     imageUrl: "http://example.com/logo.jpg",
-    ownerId: "owner-123",
   };
 
-  it("renders detail card when organization is selected (Happy Case - Edit allowed)", () => {
+  it("lets an account with update permission edit its organization", () => {
     render(
-      <OrganizationDetailCard
-        organization={mockOrganization}
+      <OrganizationSettingsCard
+        organization={organization}
         canUpdate={true}
-        onCancel={vi.fn()}
-      />
+      />,
     );
 
-    // Verify header and fields are shown
     expect(screen.getByText("Organization Name")).toBeDefined();
-    
-    // Verify inputs are enabled
+
     const input = screen.getByPlaceholderText("Organization name") as HTMLInputElement;
     expect(input.disabled).toBe(false);
     expect(input.value).toBe("Test Organization");
 
-    // Verify action buttons are visible
     expect(screen.getByRole("button", { name: "Save" })).toBeDefined();
     expect(screen.getByRole("button", { name: "Cancel" })).toBeDefined();
   });
 
-  it("renders detail card as read-only when user lacks update permission (Unhappy Case - Read only)", () => {
+  it("renders read-only when the account lacks update permission", () => {
     render(
-      <OrganizationDetailCard
-        organization={mockOrganization}
+      <OrganizationSettingsCard
+        organization={organization}
         canUpdate={false}
-        onCancel={vi.fn()}
-      />
+      />,
     );
 
-    // Verify fields are shown
-    expect(screen.getByText("Organization Name")).toBeDefined();
-
-    // Verify inputs are disabled
     const input = screen.getByPlaceholderText("Organization name") as HTMLInputElement;
     expect(input.disabled).toBe(true);
 
-    // Verify action buttons are not rendered
     expect(screen.queryByRole("button", { name: "Save" })).toBeNull();
     expect(screen.queryByRole("button", { name: "Cancel" })).toBeNull();
   });
+
 });
