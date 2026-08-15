@@ -29,7 +29,7 @@ import {
   teamPageResourceSchema,
   workforceAccessResourceSchema,
 } from "../../interfaces/rest/schemas/team.schemas";
-import { teamDelete, teamGet, teamPost, teamPut } from "../http/team-api.client";
+import { teamDelete, teamGet, teamPost } from "../http/team-api.client";
 import { requireTeamAccessToken } from "../session/team-session";
 export { TeamApiError } from "../http/team-api.client";
 
