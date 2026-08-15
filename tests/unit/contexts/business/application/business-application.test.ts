@@ -164,6 +164,7 @@ describe("Business query services", () => {
         name: "Main store",
         photoUrl: null,
         timeZone: "UTC",
+        ownerAvailableForScheduling: true,
       },
     ]);
     expect(result.content[0]).not.toBeInstanceOf(Establishment);
