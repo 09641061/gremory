@@ -29,9 +29,9 @@ export default async function UpgradePage() {
         .catch(() => null)
     : null;
 
-  // Only the owner pays. A member reaching this route is sent back: the backend
-  // rejects billing calls from a member account, and prices are not its concern.
-  if (shell && shell.workspace.subscription?.canManageBilling === false) {
+  // Billing is shown only when the workspace policy allows it; this route must
+  // not rely on role inference or on the subscription snapshot alone.
+  if (shell && shell.workspace.accessPolicy?.canManageBilling === false) {
     redirect(shell.homeHref);
   }
 

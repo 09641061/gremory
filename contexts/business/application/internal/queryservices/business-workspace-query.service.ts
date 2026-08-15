@@ -4,6 +4,7 @@ import { BusinessWorkspaceApiGateway } from "@/contexts/business/infrastructure/
 import type { BusinessWorkspaceSelection } from "@/contexts/business/infrastructure/gateways/business-workspace-api.gateway";
 import type { BusinessWorkspaceResource } from "@/contexts/business/interfaces/rest/schemas/business-workspace.schemas";
 import type {
+  WorkspaceAccessPolicy,
   OrganizationPageState,
   WorkspaceCapabilities,
   WorkspaceHeaderEstablishment,
@@ -61,6 +62,7 @@ export function toHeaderViewModel(resource: BusinessWorkspaceResource): Workspac
     establishments,
     activeEstablishmentId,
     capabilities: toWorkspaceCapabilities(resource.capabilities),
+    accessPolicy: toWorkspaceAccessPolicy(resource),
     canReadOrganization: organization?.canRead === true,
     canReadEstablishments: organization?.canReadEstablishments === true,
     canCreateEstablishment: organization?.canCreateEstablishment === true,
@@ -131,5 +133,22 @@ function toWorkspaceCapabilities(
     canReadCustomers: capabilities.canReadCustomers,
     canReadTeam: capabilities.canReadTeam,
     canReadAnalytics: capabilities.canReadAnalytics,
+  };
+}
+
+function toWorkspaceAccessPolicy(resource: BusinessWorkspaceResource): WorkspaceAccessPolicy {
+  const capabilities = resource.capabilities ?? {};
+  const accessPolicy = resource.accessPolicy ?? {};
+  const canCreateEstablishment =
+    accessPolicy.canCreateEstablishment ?? resource.organization?.permissions.canCreateEstablishment ?? false;
+
+  return {
+    canOpenAnalytics: accessPolicy.canOpenAnalytics ?? capabilities.canReadAnalytics ?? false,
+    canOpenScheduling: accessPolicy.canOpenScheduling ?? capabilities.canReadAppointments ?? false,
+    canOpenCrm: accessPolicy.canOpenCrm ?? capabilities.canReadCustomers ?? false,
+    canOpenCatalog: accessPolicy.canOpenCatalog ?? capabilities.canReadCatalog ?? false,
+    canOpenTeam: accessPolicy.canOpenTeam ?? capabilities.canReadTeam ?? false,
+    canCreateEstablishment,
+    canManageBilling: accessPolicy.canManageBilling ?? resource.subscription?.canManageBilling ?? false,
   };
 }

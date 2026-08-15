@@ -27,6 +27,16 @@ export type WorkspaceCapabilities = Readonly<{
   canReadAnalytics?: boolean;
 }>;
 
+export type WorkspaceAccessPolicy = Readonly<{
+  canOpenAnalytics: boolean;
+  canOpenScheduling: boolean;
+  canOpenCrm: boolean;
+  canOpenCatalog: boolean;
+  canOpenTeam: boolean;
+  canCreateEstablishment: boolean;
+  canManageBilling: boolean;
+}>;
+
 export type WorkspaceHeaderOrganization = Readonly<{
   id: string;
   name: string;
@@ -71,6 +81,7 @@ export type WorkspaceHeaderViewModel = Readonly<{
   establishments: ReadonlyArray<WorkspaceHeaderEstablishment>;
   activeEstablishmentId?: string;
   capabilities?: WorkspaceCapabilities;
+  accessPolicy?: WorkspaceAccessPolicy;
   canReadOrganization: boolean;
   canReadEstablishments: boolean;
   canCreateEstablishment: boolean;

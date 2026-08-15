@@ -71,6 +71,7 @@ export function AppSidebar({
     workspace.establishments.some((item) => item.id === requestedEstablishmentId)
       ? requestedEstablishmentId
       : workspace.activeEstablishmentId ?? null;
+  const canManageBilling = workspace.accessPolicy?.canManageBilling ?? workspace.subscription?.canManageBilling ?? false;
   const assistantChatsSectionKey = initialAssistantConversations
     .map((conversation) => `${conversation.id}:${conversation.updatedAt}:${conversation.title ?? ""}`)
     .join("|");
@@ -135,16 +136,15 @@ export function AppSidebar({
       </SidebarContent>
 
       <SidebarFooter className="gap-2 px-3 pb-3">
-        {canOfferUpgrade(workspace.subscription) ? <SidebarUpgradeCallout /> : null}
+        {canManageBilling && canOfferUpgrade(workspace.subscription) ? <SidebarUpgradeCallout /> : null}
 
         <SidebarProfile
           profile={currentProfile}
           settingsHref={
             establishmentId ? `/settings?establishmentId=${establishmentId}` : "/settings"
           }
-          invoiceHref={
-            establishmentId ? `/invoice?establishmentId=${establishmentId}` : "/invoice"
-          }
+          canManageBilling={canManageBilling}
+          invoiceHref={establishmentId ? `/invoice?establishmentId=${establishmentId}` : "/invoice"}
           active={
             pathname === "/settings" ||
             pathname.startsWith("/settings/") ||

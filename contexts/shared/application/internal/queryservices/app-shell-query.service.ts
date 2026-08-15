@@ -2,10 +2,6 @@ import "server-only";
 
 import { createBusinessWorkspaceQueryService } from "@/contexts/business/application/internal/queryservices/business-workspace-query.service";
 import { createSubscriptionAccessQueryService } from "@/contexts/billing/application/internal/queryservices/subscription-access-query.service";
-import { createCatalogAccessPolicyService } from "@/contexts/catalog/application/internal/queryservices/catalog-access-policy.service";
-import { createCrmAccessPolicyService } from "@/contexts/crm/application/internal/queryservices/crm-access-policy.service";
-import { createSchedulingAccessPolicyService } from "@/contexts/scheduling/application/internal/queryservices/scheduling-access-policy.service";
-import { createWorkforceAccessPolicyService } from "@/contexts/workforce/application/internal/queryservices/workforce-access-policy.service";
 import type { SubscriptionAccessSnapshot } from "@/contexts/billing/domain/services/subscription-access.policy";
 import type {
   AppShellHomeHref,
@@ -25,26 +21,17 @@ export class AppShellQueryService {
     const subscriptionAccess = createSubscriptionAccessQueryService().resolve(subscription);
     const workspace = await createBusinessWorkspaceQueryService().getHeaderViewModel(workspaceSelection);
     const activeEstablishmentId = workspace.activeEstablishmentId;
-    const isOwnerWorkspace = workspace.accountType === "OWNER";
-    const [schedulingPermissions, catalogPermissions, crmPermissions, workforcePermissions] =
-      activeEstablishmentId
-        ? await Promise.all([
-            createSchedulingAccessPolicyService().getPermissions(activeEstablishmentId),
-            createCatalogAccessPolicyService().getPermissions(activeEstablishmentId),
-            createCrmAccessPolicyService().getPermissions(activeEstablishmentId),
-            createWorkforceAccessPolicyService().getPermissions(activeEstablishmentId),
-          ])
-        : [null, null, null, null];
-    const capabilities = workspace.capabilities;
+    const accessPolicy = workspace.accessPolicy;
     const canReadScheduling =
-      capabilities?.canReadAppointments ?? schedulingPermissions?.canReadAppointments ?? isOwnerWorkspace;
+      accessPolicy?.canOpenScheduling ?? workspace.capabilities?.canReadAppointments ?? false;
     const canReadCatalog =
-      capabilities?.canReadCatalog ?? catalogPermissions?.canReadCatalog ?? isOwnerWorkspace;
+      accessPolicy?.canOpenCatalog ?? workspace.capabilities?.canReadCatalog ?? false;
     const canReadCrm =
-      capabilities?.canReadCustomers ?? crmPermissions?.canReadCustomers ?? isOwnerWorkspace;
+      accessPolicy?.canOpenCrm ?? workspace.capabilities?.canReadCustomers ?? false;
     const canReadTeam =
-      capabilities?.canReadTeam ?? workforcePermissions?.canReadTeam ?? isOwnerWorkspace;
-    const canReadAnalytics = capabilities?.canReadAnalytics ?? true;
+      accessPolicy?.canOpenTeam ?? workspace.capabilities?.canReadTeam ?? false;
+    const canReadAnalytics =
+      accessPolicy?.canOpenAnalytics ?? workspace.capabilities?.canReadAnalytics ?? false;
     const visibleSidebarRoutes = resolveVisibleSidebarRoutes(
       canReadScheduling,
       canReadCatalog,
@@ -109,7 +96,11 @@ function resolveHomeHref(
   if (workspace.accountType === "PENDING_INVITATION") {
     return "/invitations/pending";
   }
-  if (workspace.organization && workspace.establishments.length === 0 && workspace.canCreateEstablishment) {
+  if (
+    workspace.organization &&
+    workspace.establishments.length === 0 &&
+    (workspace.accessPolicy?.canCreateEstablishment ?? workspace.canCreateEstablishment)
+  ) {
     return "/establishments/new";
   }
   if (hasAssistantAccess) {

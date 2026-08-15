@@ -13,7 +13,7 @@ export default async function AnalyticsPage() {
   const accessToken = cookieStore.get(iamSessionCookies.accessToken)?.value ?? null;
   const workspace = await createBusinessWorkspaceQueryService().getHeaderViewModel();
 
-  if (workspace.capabilities?.canReadAnalytics === false) {
+  if ((workspace.accessPolicy?.canOpenAnalytics ?? workspace.capabilities?.canReadAnalytics ?? false) === false) {
     redirect("/access-denied");
   }
 

@@ -76,4 +76,18 @@ describe("SidebarProfile", () => {
       "/billing"
     );
   });
+
+  it("should hide billing links when the account cannot manage billing", async () => {
+    const user = userEvent.setup();
+    render(<SidebarProfile profile={profile} settingsHref="/settings" canManageBilling={false} />);
+
+    await user.click(screen.getByRole("button", { name: /mateo/i }));
+
+    expect(await screen.findByRole("menuitem", { name: "Settings" })).toHaveAttribute(
+      "href",
+      "/settings"
+    );
+    expect(screen.queryByRole("menuitem", { name: "Upgrade plan" })).toBeNull();
+    expect(screen.queryByRole("menuitem", { name: "Invoices" })).toBeNull();
+  });
 });

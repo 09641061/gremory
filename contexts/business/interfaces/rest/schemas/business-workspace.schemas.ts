@@ -12,6 +12,18 @@ const workspaceCapabilitiesSchema = z
   })
   .optional();
 
+const workspaceAccessPolicySchema = z
+  .object({
+    canOpenAnalytics: z.boolean().optional(),
+    canOpenScheduling: z.boolean().optional(),
+    canOpenCrm: z.boolean().optional(),
+    canOpenCatalog: z.boolean().optional(),
+    canOpenTeam: z.boolean().optional(),
+    canCreateEstablishment: z.boolean().optional(),
+    canManageBilling: z.boolean().optional(),
+  })
+  .optional();
+
 const establishmentResourceSchema = z.object({
   id: uuidSchema,
   name: z.string().trim().min(1),
@@ -50,11 +62,12 @@ export const businessWorkspaceResourceSchema = z.object({
         canUpdate: z.boolean(),
         canCreateEstablishment: z.boolean(),
       }),
-    })
+  })
     .nullable(),
   establishments: z.array(establishmentResourceSchema).default([]),
   activeEstablishmentId: uuidSchema.nullable(),
   capabilities: workspaceCapabilitiesSchema,
+  accessPolicy: workspaceAccessPolicySchema,
   // Always the owner's subscription, even when the caller is a member.
   subscription: z
     .object({

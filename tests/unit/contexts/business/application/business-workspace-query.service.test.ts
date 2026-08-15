@@ -31,6 +31,7 @@ function workspace(overrides: Record<string, unknown> = {}) {
     establishments: [],
     activeEstablishmentId: null,
     capabilities: undefined,
+    accessPolicy: undefined,
     subscription: { active: true, planName: "Free", status: "ACTIVE", canManageBilling: true },
     pendingInvitation: null,
     ...overrides,
@@ -73,6 +74,15 @@ describe("business workspace query service", () => {
       canReadCustomers: undefined,
       canReadTeam: undefined,
       canReadAnalytics: true,
+    });
+    expect(result.accessPolicy).toEqual({
+      canOpenAnalytics: true,
+      canOpenScheduling: false,
+      canOpenCrm: false,
+      canOpenCatalog: false,
+      canOpenTeam: false,
+      canCreateEstablishment: true,
+      canManageBilling: true,
     });
     expect(result.canCreateEstablishment).toBe(true);
   });
@@ -124,6 +134,15 @@ describe("business workspace query service", () => {
     expect(result.canCreateEstablishment).toBe(false);
     expect(result.subscription?.active).toBe(false);
     expect(result.subscription?.canManageBilling).toBe(false);
+    expect(result.accessPolicy).toEqual({
+      canOpenAnalytics: false,
+      canOpenScheduling: false,
+      canOpenCrm: false,
+      canOpenCatalog: false,
+      canOpenTeam: false,
+      canCreateEstablishment: false,
+      canManageBilling: false,
+    });
   });
 
   it("hides establishments the member cannot read", async () => {
