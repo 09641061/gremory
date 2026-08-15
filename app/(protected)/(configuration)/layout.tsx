@@ -6,6 +6,8 @@ import { ArrowLeft } from "lucide-react";
 
 import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-session-cookie";
 import { createPlanHomeRouteQueryService } from "@/contexts/shared/application/internal/queryservices/plan-home-route-query.service";
+import { createBusinessWorkspaceQueryService } from "@/contexts/business/application/internal/queryservices/business-workspace-query.service";
+import { hasSomewhereToCancelTo } from "@/contexts/business/domain/services/workspace-navigation.policy";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 
 /**
@@ -38,6 +40,20 @@ async function BackToHomeLink() {
   // Read outside any cached scope: the session is per-request.
   const accessToken = (await cookies()).get(iamSessionCookies.accessToken)?.value;
   const establishmentId = (await headers()).get("x-takodu-establishment-id") ?? undefined;
+
+  // Every other screen under this layout is only reachable once onboarding is
+  // complete (the guard restricts `/organizations/new` and `/establishments/new`
+  // to exactly that mandatory, nowhere-to-go-back-to state), so this same check
+  // naturally covers the whole group: it only ever hides the arrow on those two.
+  const workspace = await createBusinessWorkspaceQueryService()
+    .getHeaderViewModel({ establishmentId })
+    .catch(() => null);
+  if (
+    workspace &&
+    !hasSomewhereToCancelTo(workspace.establishments, workspace.organization?.id, workspace.onboardingCompleted)
+  ) {
+    return null;
+  }
 
   const href = await createPlanHomeRouteQueryService().handle({ accessToken, establishmentId });
 
