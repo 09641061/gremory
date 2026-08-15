@@ -4,6 +4,7 @@ import type { EstablishmentId } from "../model/valueobjects/establishment-id.vo"
 import type { EstablishmentName } from "../model/valueobjects/establishment-name.vo";
 import type { EstablishmentPhoto } from "../model/valueobjects/establishment-photo.vo";
 import type { OrganizationId } from "../model/valueobjects/organization-id.vo";
+import type { OrganizationName } from "../model/valueobjects/organization-name.vo";
 
 export interface PageResult<T> {
   content: T[];
@@ -17,9 +18,11 @@ export interface PageResult<T> {
   empty: boolean;
 }
 
-// The organization is created by the backend when the account registers.
-// No client may create one, so the contract exposes no create operation.
+// Onboarding step 1 (owner) and the member-starts-their-own-business path both
+// call `create`: the account authenticates the request, so no owner ID travels
+// through this contract.
 export interface OrganizationRepository {
+  create(name: OrganizationName, imageFile?: File | null): Promise<Organization>;
   findMine(): Promise<Organization>;
   findById(id: OrganizationId): Promise<Organization | null>;
   save(organization: Organization): Promise<Organization>;

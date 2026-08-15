@@ -30,6 +30,12 @@ const establishmentResourceSchema = z.object({
 // An account owns one organization or belongs to one; it is never a list.
 export const businessWorkspaceResourceSchema = z.object({
   accountType: z.enum(["OWNER", "MEMBER", "PENDING_INVITATION"]),
+  // Drives the mandatory setup steps for a freshly registered owner. A member
+  // who joined by invitation always reads COMPLETED, immediately.
+  onboardingStatus: z
+    .enum(["ORGANIZATION_PENDING", "ESTABLISHMENT_PENDING", "COMPLETED"])
+    .nullable(),
+  onboardingCompleted: z.boolean(),
   organization: z
     .object({
       id: uuidSchema,

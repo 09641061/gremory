@@ -54,6 +54,8 @@ export function toHeaderViewModel(resource: BusinessWorkspaceResource): Workspac
 
   return {
     accountType: resource.accountType,
+    onboardingStatus: resource.onboardingStatus,
+    onboardingCompleted: resource.onboardingCompleted,
     organization,
     establishments,
     activeEstablishmentId,

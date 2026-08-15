@@ -20,6 +20,11 @@ export type EntryRouteResolution =
       allowedPaths: ReadonlyArray<string>;
     }
   | {
+      status: "organization-required";
+      setupHref: "/organizations/new";
+      allowedPaths: ReadonlyArray<string>;
+    }
+  | {
       status: "establishment-required";
       setupHref: "/establishments/new";
       allowedPaths: ReadonlyArray<string>;

@@ -55,6 +55,8 @@ function establishment(id: string, effectivePermissions: ReadonlyArray<string>) 
 function workspace(overrides: Record<string, unknown> = {}) {
   return jsonResponse({
     accountType: "OWNER",
+    onboardingStatus: "COMPLETED",
+    onboardingCompleted: true,
     organization: {
       id: organizationId,
       name: "Takodu",

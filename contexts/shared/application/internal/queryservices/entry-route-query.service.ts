@@ -34,6 +34,17 @@ export class EntryRouteQueryService {
       };
     }
 
+    // Onboarding step 1: a freshly registered owner has no organization yet.
+    // A member is never ORGANIZATION_PENDING (backend hardcodes COMPLETED for
+    // it), so this branch is unreachable for an invited account.
+    if (workspace.onboardingStatus === "ORGANIZATION_PENDING") {
+      return {
+        status: "organization-required",
+        setupHref: "/organizations/new",
+        allowedPaths: ["/organizations/new"],
+      };
+    }
+
     if (workspace.establishments.length === 0) {
       return workspace.canCreateEstablishment
         ? {

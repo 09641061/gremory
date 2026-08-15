@@ -9,9 +9,12 @@ interface NewEstablishmentPageProps {
 export default async function NewEstablishmentPage({ searchParams }: NewEstablishmentPageProps) {
   const workspace = await createBusinessWorkspaceQueryService().getHeaderViewModel(await searchParams);
 
-  // An account without an organization has an invitation to accept first.
+  // An account without an organization is either mid-invitation or mid onboarding
+  // step 1 (owner hasn't created an organization yet).
   if (!workspace.organization) {
-    redirect("/invitations/pending");
+    redirect(
+      workspace.accountType === "PENDING_INVITATION" ? "/invitations/pending" : "/organizations/new",
+    );
   }
 
   if (!workspace.canCreateEstablishment) {

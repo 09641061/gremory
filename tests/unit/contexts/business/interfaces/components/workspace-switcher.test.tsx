@@ -18,6 +18,8 @@ const organization = { id: "org-1", name: "Acme", imageUrl: "https://cdn.test/ac
 
 const baseWorkspace: WorkspaceHeaderViewModel = {
   accountType: "OWNER",
+  onboardingStatus: "COMPLETED",
+  onboardingCompleted: true,
   organization,
   establishments: [
     { id: "est-1", name: "Main branch", photoUrl: "https://cdn.test/main.png" },

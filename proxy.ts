@@ -55,7 +55,11 @@ export async function proxy(request: NextRequest) {
     return continueWithWorkspaceContext(request, response);
   }
 
-  if (landing.status === "invitation-pending" || landing.status === "establishment-required") {
+  if (
+    landing.status === "invitation-pending" ||
+    landing.status === "organization-required" ||
+    landing.status === "establishment-required"
+  ) {
     if (!landing.allowedPaths.includes(pathname)) {
       return redirectWithCookies(request, landing.setupHref, response);
     }
@@ -86,6 +90,7 @@ function isPrivateRoute(pathname: string) {
     "/settings",
     "/organization",
     "/invitations/pending",
+    "/organizations",
     "/establishments",
     "/access-denied",
     // Lives under app/(protected): plans are shown to signed-in users only.
@@ -173,6 +178,7 @@ export const config = {
     "/settings/:path*",
     "/organization/:path*",
     "/invitations/pending",
+    "/organizations/:path*",
     "/establishments/:path*",
     "/access-denied/:path*",
   ],

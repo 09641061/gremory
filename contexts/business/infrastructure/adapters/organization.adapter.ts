@@ -4,9 +4,14 @@ import { OrganizationApiGateway } from "@/contexts/business/infrastructure/gatew
 import type { Organization } from "@/contexts/business/domain/model/entities/organization.entity";
 import type { OrganizationRepository } from "@/contexts/business/domain/services/business.repositories";
 import type { OrganizationId } from "@/contexts/business/domain/model/valueobjects/organization-id.vo";
+import type { OrganizationName } from "@/contexts/business/domain/model/valueobjects/organization-name.vo";
 
 export class OrganizationAdapter implements OrganizationRepository {
   constructor(private readonly gateway = new OrganizationApiGateway()) {}
+
+  create(name: OrganizationName, imageFile?: File | null): Promise<Organization> {
+    return this.gateway.create(name, imageFile);
+  }
 
   findMine(): Promise<Organization> {
     return this.gateway.findMine();

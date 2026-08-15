@@ -1,3 +1,9 @@
+export type CreateOrganizationCommand = Readonly<{
+  name: string;
+  /** New logo picked by the account, stored before the write lands. */
+  imageFile?: File | null;
+}>;
+
 export type UpdateOrganizationCommand = Readonly<{
   id: string;
   name: string;
@@ -24,6 +30,15 @@ export type UpdateEstablishmentCommand = Readonly<{
   removePhoto?: boolean;
 }>;
 export type DeleteEstablishmentCommand = Readonly<{ id: string }>;
+
+export function createOrganizationCommand(
+  input: CreateOrganizationCommand,
+): CreateOrganizationCommand {
+  return Object.freeze({
+    name: input.name,
+    imageFile: input.imageFile ?? null,
+  });
+}
 
 export function updateOrganizationCommand(
   input: UpdateOrganizationCommand,

@@ -1,5 +1,6 @@
 import type {
   CreateEstablishmentCommand,
+  CreateOrganizationCommand,
   DeleteEstablishmentCommand,
   UpdateEstablishmentCommand,
   UpdateOrganizationCommand,
@@ -36,6 +37,8 @@ export interface EstablishmentPhotoStorage {
 }
 
 export interface OrganizationCommandService {
+  /** Onboarding step 1, and the entry point for a member starting their own business. */
+  create(command: CreateOrganizationCommand): Promise<OrganizationId>;
   update(command: UpdateOrganizationCommand): Promise<OrganizationId>;
 }
 

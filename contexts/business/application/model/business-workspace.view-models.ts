@@ -1,5 +1,10 @@
 export type WorkspaceAccountType = "OWNER" | "MEMBER" | "PENDING_INVITATION";
 
+export type WorkspaceOnboardingStatus =
+  | "ORGANIZATION_PENDING"
+  | "ESTABLISHMENT_PENDING"
+  | "COMPLETED";
+
 export type WorkspaceHeaderEstablishment = Readonly<{
   id: string;
   name: string;
@@ -54,6 +59,8 @@ export type WorkspacePendingInvitation = Readonly<{
  */
 export type WorkspaceHeaderViewModel = Readonly<{
   accountType: WorkspaceAccountType;
+  onboardingStatus: WorkspaceOnboardingStatus | null;
+  onboardingCompleted: boolean;
   organization?: WorkspaceHeaderOrganization;
   establishments: ReadonlyArray<WorkspaceHeaderEstablishment>;
   activeEstablishmentId?: string;
