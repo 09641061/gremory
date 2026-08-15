@@ -78,7 +78,7 @@ describe("WorkspaceSwitcher", () => {
 
     expect(
       screen.getByRole("link", { name: /Acme/ }).getAttribute("href"),
-    ).toBe("/organization");
+    ).toBe("/organization?establishmentId=est-1");
   });
 
   it("keeps the organization out of the menu when the account cannot read it", () => {
@@ -113,7 +113,7 @@ describe("WorkspaceSwitcher", () => {
 
     expect(
       screen.getByRole("link", { name: /Acme/ }).getAttribute("href"),
-    ).toBe("/organization");
+    ).toBe("/organization?establishmentId=est-1");
   });
 
   it("hides the establishment entry points the account is not allowed to use", () => {
@@ -122,6 +122,27 @@ describe("WorkspaceSwitcher", () => {
 
     expect(screen.queryByRole("button", { name: "New establishment" })).toBeNull();
     expect(screen.queryByRole("button", { name: "All Establishments" })).toBeNull();
+  });
+
+  it("hides the search and the all-organizations entry with only one organization", () => {
+    renderSwitcher();
+    openMenu();
+
+    expect(screen.queryByPlaceholderText("Find organization...")).toBeNull();
+    expect(screen.queryByRole("button", { name: "All Organizations" })).toBeNull();
+  });
+
+  it("shows the search and the all-organizations entry once there is more than one organization", () => {
+    renderSwitcher({
+      establishments: [
+        ...baseWorkspace.establishments,
+        { id: "est-2", name: "Host branch", photoUrl: null, organizationId: "host-org-1", organizationName: "Host Org" },
+      ],
+    });
+    openMenu();
+
+    expect(screen.getByPlaceholderText("Find organization...")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "All Organizations" })).toBeTruthy();
   });
 
   it("navigates to the establishment creation screen", () => {

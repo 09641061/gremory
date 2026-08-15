@@ -16,6 +16,7 @@ export type WorkspaceHeaderEstablishment = Readonly<{
   canDelete?: boolean;
   organizationId?: string;
   organizationName?: string;
+  organizationImageUrl?: string | null;
 }>;
 
 export type WorkspaceCapabilities = Readonly<{

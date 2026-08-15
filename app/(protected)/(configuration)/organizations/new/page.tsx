@@ -1,5 +1,6 @@
 import { CreateOrganizationForm } from "@/contexts/business/interfaces/components/organization/create-organization/create-organization-form";
 import { createBusinessWorkspaceQueryService } from "@/contexts/business/application/internal/queryservices/business-workspace-query.service";
+import { hasSomewhereToCancelTo } from "@/contexts/business/domain/services/workspace-navigation.policy";
 import { redirect } from "next/navigation";
 
 export default async function NewOrganizationPage() {
@@ -17,5 +18,11 @@ export default async function NewOrganizationPage() {
     redirect("/");
   }
 
-  return <CreateOrganizationForm />;
+  const showCancel = hasSomewhereToCancelTo(
+    workspace.establishments,
+    workspace.organization?.id,
+    workspace.onboardingCompleted,
+  );
+
+  return <CreateOrganizationForm showCancel={showCancel} />;
 }

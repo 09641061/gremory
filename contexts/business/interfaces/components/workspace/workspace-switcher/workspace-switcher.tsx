@@ -191,6 +191,19 @@ export function WorkspaceSwitcher({
                         ))
                       )}
                     </div>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      onClick={() => {
+                        close();
+                        router.push(
+                          buildWorkspacePath("/organizations", searchParams.toString(), selectedEstablishmentId),
+                        );
+                      }}
+                      className="h-8 w-full justify-start px-2 text-sm font-normal text-muted-foreground"
+                    >
+                      All Organizations
+                    </Button>
                   </div>
                 )}
                 {/* Offered only while the account owns no organization yet - once

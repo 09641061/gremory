@@ -114,6 +114,7 @@ function toHeaderEstablishment(
     canDelete: establishment.permissions.canDelete,
     organizationId: establishment.organizationId ?? undefined,
     organizationName: establishment.organizationName ?? undefined,
+    organizationImageUrl: establishment.organizationImageUrl ?? null,
   };
 }
 

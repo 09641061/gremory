@@ -16,10 +16,12 @@ function requestWithSession(
   accessToken: string | null = "access-token",
   refreshToken: string | null = "refresh-token",
   pathname = "/",
+  extraCookies: Record<string, string> = {},
 ) {
   const cookie = [
     accessToken ? `takodu.access_token=${accessToken}` : null,
     refreshToken ? `takodu.refresh_token=${refreshToken}` : null,
+    ...Object.entries(extraCookies).map(([name, value]) => `${name}=${value}`),
   ].filter(Boolean).join("; ");
 
   return new NextRequest(`http://localhost${pathname}`, {
@@ -255,6 +257,32 @@ describe("IAM session proxy", () => {
     );
   });
 
+  it("should resolve landing against the persisted establishment, not the account's default identity", async () => {
+    const fetchMock = stubFetch(
+      subscription(0),
+      workspace({
+        accountType: "MEMBER",
+        establishments: [establishment(establishmentId, ["scheduling:read"])],
+      }),
+    );
+
+    // No establishmentId in the url: only the cookie carries the account's
+    // actual, persisted selection - it must still reach the landing call.
+    await proxy(
+      requestWithSession("access-token", "refresh-token", "/", {
+        "takodu.active_establishment_id": establishmentId,
+      }),
+    );
+
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      2,
+      `http://localhost:8080/api/business/workspace?establishmentId=${establishmentId}`,
+      expect.objectContaining({
+        headers: { Authorization: "Bearer access-token" },
+      }),
+    );
+  });
+
   it("should redirect a member to the module its permissions allow", async () => {
     stubFetch(
       subscription(0),
@@ -283,6 +311,64 @@ describe("IAM session proxy", () => {
 
     expect(response.status).toBe(307);
     expect(response.headers.get("location")).toBe("http://localhost/catalog");
+  });
+
+  it("should persist an explicit establishment selection into a cookie", async () => {
+    stubFetch(
+      subscription(0),
+      workspace({
+        accountType: "MEMBER",
+        establishments: [establishment(establishmentId, ["scheduling:read"])],
+      }),
+    );
+
+    const response = await proxy(
+      requestWithSession("access-token", "refresh-token", `/schedule?establishmentId=${establishmentId}`),
+    );
+
+    expect(response.cookies.get("takodu.active_establishment_id")?.value).toBe(establishmentId);
+  });
+
+  it("should fall back to the persisted establishment when the url carries no selection", async () => {
+    stubFetch(
+      subscription(0),
+      workspace({
+        accountType: "MEMBER",
+        establishments: [establishment(establishmentId, ["scheduling:read"])],
+      }),
+    );
+
+    const response = await proxy(
+      requestWithSession("access-token", "refresh-token", "/schedule", {
+        "takodu.active_establishment_id": establishmentId,
+      }),
+    );
+
+    // A cookie-only selection is rewritten into the URL the page resolves
+    // `searchParams` from, not just forwarded as a header - so the request
+    // reaching `/schedule` carries it as if it had been typed there.
+    expect(response.headers.get("x-middleware-rewrite")).toContain(`establishmentId=${establishmentId}`);
+  });
+
+  it("should not rewrite when the url already carries its own establishment selection", async () => {
+    stubFetch(
+      subscription(0),
+      workspace({
+        accountType: "MEMBER",
+        establishments: [establishment(establishmentId, ["scheduling:read"])],
+      }),
+    );
+    const otherEstablishmentId = "55555555-5555-4555-8555-555555555555";
+
+    const response = await proxy(
+      requestWithSession("access-token", "refresh-token", `/schedule?establishmentId=${establishmentId}`, {
+        "takodu.active_establishment_id": otherEstablishmentId,
+      }),
+    );
+
+    expect(response.headers.get("x-middleware-rewrite")).toBeNull();
+    // The explicit selection wins and becomes the new persisted value.
+    expect(response.cookies.get("takodu.active_establishment_id")?.value).toBe(establishmentId);
   });
 
   it("should send a new owner to create their establishment even while holding a membership establishment elsewhere", async () => {
