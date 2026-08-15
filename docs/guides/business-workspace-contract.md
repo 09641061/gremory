@@ -131,7 +131,8 @@ Campos:
 - `canOpenTeam`:
   - habilita la entrada al modulo team/workforce
 - `canUseAssistant`:
-  - habilita features del assistant sujetas al plan
+  - habilita assistant y su landing inicial
+  - si falta temporalmente, el frontend puede usar la suscripcion como respaldo
 - `canCreateEstablishment`:
   - habilita la accion de crear locales
 - `canManageBilling`:
@@ -156,6 +157,7 @@ Campos:
 - `accessPolicy`:
   - resolucion final para shell y navegacion
   - este es el contrato que debe usar el frontend para abrir o cerrar modulos
+  - incluye assistant, billing y creacion de establecimientos como flags ya normalizados
 
 ## Regla recomendada para analytics
 
@@ -172,6 +174,21 @@ La idea importante es:
 - `owner` no se infiere en la pagina
 - `owner` se resuelve en el shell o en `business/workspace`
 - la pagina solo consume el permiso ya resuelto
+
+## Regla recomendada para assistant
+
+Assistant debe resolverse asi:
+
+1. Si `accountType == PENDING_INVITATION`, no entra.
+2. Si `accessPolicy.canUseAssistant == true`, el frontend puede mostrar `/chat`.
+3. Si el backend aun no emite `canUseAssistant`, usar `subscription` como fallback transitorio.
+4. Si no viene nada, denegar.
+
+La idea importante es:
+
+- `assistant` no se infiere por plan ni por rol en cada pagina
+- `assistant` se resuelve en el shell o en `business/workspace`
+- el landing inicial y la pagina solo consumen el permiso ya resuelto
 
 ## Reglas de frontend
 

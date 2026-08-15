@@ -19,6 +19,7 @@ const workspaceAccessPolicySchema = z
     canOpenCrm: z.boolean().optional(),
     canOpenCatalog: z.boolean().optional(),
     canOpenTeam: z.boolean().optional(),
+    canUseAssistant: z.boolean().optional(),
     canCreateEstablishment: z.boolean().optional(),
     canManageBilling: z.boolean().optional(),
   })

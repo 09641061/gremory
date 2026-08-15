@@ -49,6 +49,9 @@ describe("business workspace query service", () => {
         capabilities: {
           canReadAnalytics: true,
         },
+        accessPolicy: {
+          canUseAssistant: true,
+        },
         establishments: [
           {
             id: establishmentId,
@@ -81,6 +84,7 @@ describe("business workspace query service", () => {
       canOpenCrm: false,
       canOpenCatalog: false,
       canOpenTeam: false,
+      canUseAssistant: true,
       canCreateEstablishment: true,
       canManageBilling: true,
     });

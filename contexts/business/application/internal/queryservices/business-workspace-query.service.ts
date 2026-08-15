@@ -148,6 +148,7 @@ function toWorkspaceAccessPolicy(resource: BusinessWorkspaceResource): Workspace
     canOpenCrm: accessPolicy.canOpenCrm ?? capabilities.canReadCustomers ?? false,
     canOpenCatalog: accessPolicy.canOpenCatalog ?? capabilities.canReadCatalog ?? false,
     canOpenTeam: accessPolicy.canOpenTeam ?? capabilities.canReadTeam ?? false,
+    canUseAssistant: accessPolicy.canUseAssistant,
     canCreateEstablishment,
     canManageBilling: accessPolicy.canManageBilling ?? resource.subscription?.canManageBilling ?? false,
   };

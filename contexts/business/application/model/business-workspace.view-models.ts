@@ -33,6 +33,7 @@ export type WorkspaceAccessPolicy = Readonly<{
   canOpenCrm: boolean;
   canOpenCatalog: boolean;
   canOpenTeam: boolean;
+  canUseAssistant?: boolean;
   canCreateEstablishment: boolean;
   canManageBilling: boolean;
 }>;

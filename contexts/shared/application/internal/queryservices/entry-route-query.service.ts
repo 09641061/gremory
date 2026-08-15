@@ -67,13 +67,14 @@ export class EntryRouteQueryService {
         : { status: "ready", homeHref: "/access-denied" };
     }
 
-    const hasAssistantAccess = createSubscriptionAccessQueryService().resolve(subscription)
-      .hasAssistantAccess;
+    const hasAssistantAccess =
+      workspace.accessPolicy?.canUseAssistant ??
+      createSubscriptionAccessQueryService().resolve(subscription).hasAssistantAccess;
 
     if (workspace.accountType === "OWNER") {
       return {
         status: "ready",
-        homeHref: createSubscriptionAccessQueryService().resolve(subscription).homeHref,
+        homeHref: hasAssistantAccess ? "/chat" : "/schedule",
       };
     }
 

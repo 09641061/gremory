@@ -22,6 +22,7 @@ export class AppShellQueryService {
     const workspace = await createBusinessWorkspaceQueryService().getHeaderViewModel(workspaceSelection);
     const activeEstablishmentId = workspace.activeEstablishmentId;
     const accessPolicy = workspace.accessPolicy;
+    const hasAssistantAccess = accessPolicy?.canUseAssistant ?? subscriptionAccess.hasAssistantAccess;
     const canReadScheduling =
       accessPolicy?.canOpenScheduling ?? workspace.capabilities?.canReadAppointments ?? false;
     const canReadCatalog =
@@ -38,13 +39,13 @@ export class AppShellQueryService {
       canReadCrm,
       canReadTeam,
       canReadAnalytics,
-      subscriptionAccess.hasAssistantAccess,
+      hasAssistantAccess,
     );
 
     return {
       workspace,
-      hasAssistantAccess: subscriptionAccess.hasAssistantAccess,
-      homeHref: resolveHomeHref(subscriptionAccess.hasAssistantAccess, visibleSidebarRoutes, workspace),
+      hasAssistantAccess,
+      homeHref: resolveHomeHref(hasAssistantAccess, visibleSidebarRoutes, workspace),
       visibleSidebarRoutes,
     };
   }

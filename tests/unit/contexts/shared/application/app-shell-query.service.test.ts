@@ -27,6 +27,7 @@ const mocks = vi.hoisted(() => ({
       activeOrganizationId: "org-1",
       activeEstablishmentId: "est-1",
       accessPolicy: {
+        canUseAssistant: true,
         canOpenAnalytics: true,
         canOpenScheduling: true,
         canOpenCrm: true,
@@ -111,6 +112,7 @@ describe("app shell query service", () => {
   beforeEach(() => {
     vi.resetAllMocks();
     mocks.shell.workspace.accessPolicy = {
+      canUseAssistant: true,
       canOpenAnalytics: true,
       canOpenScheduling: true,
       canOpenCrm: true,
@@ -149,6 +151,7 @@ describe("app shell query service", () => {
   });
 
   it("hides assistant navigation when the plan is free", async () => {
+    delete (mocks.shell.workspace.accessPolicy as { canUseAssistant?: boolean }).canUseAssistant;
     mocks.subscription.resolve.mockReturnValue({
       isActive: true,
       hasAssistantAccess: false,
@@ -165,6 +168,25 @@ describe("app shell query service", () => {
       "/team",
       "/analytics",
     ]);
+  });
+
+  it("uses the workspace assistant policy when it is present", async () => {
+    mocks.shell.workspace.accessPolicy = {
+      ...mocks.shell.workspace.accessPolicy,
+      canUseAssistant: false,
+    };
+    mocks.subscription.resolve.mockReturnValue({
+      isActive: true,
+      hasAssistantAccess: true,
+      homeHref: "/chat",
+    });
+
+    const shell = await createAppShellQueryService().resolve({
+      subscription: { active: true, status: "ACTIVE", planId: 1 },
+    });
+
+    expect(shell.hasAssistantAccess).toBe(false);
+    expect(shell.visibleSidebarRoutes).not.toContain("/chat");
   });
 
   it("hides schedule and team when their read capabilities are denied", async () => {

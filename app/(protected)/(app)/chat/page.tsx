@@ -23,15 +23,17 @@ export default async function ChatPage({
   const subscription = accessToken
     ? await createCurrentSubscriptionQueryService().getCurrentSubscriptionSnapshot(accessToken)
     : null;
-  const hasAssistantAccess = createSubscriptionAccessQueryService().resolve(subscription).hasAssistantAccess;
+  const workspace = await createBusinessWorkspaceQueryService().getHeaderViewModel({
+    establishmentId: requestedEstablishmentId,
+  });
+  const hasAssistantAccess =
+    workspace.accessPolicy?.canUseAssistant ??
+    createSubscriptionAccessQueryService().resolve(subscription).hasAssistantAccess;
 
   if (!hasAssistantAccess) {
     redirect("/");
   }
 
-  const workspace = await createBusinessWorkspaceQueryService().getHeaderViewModel({
-    establishmentId: requestedEstablishmentId,
-  });
   const establishmentId =
     requestedEstablishmentId &&
     workspace.establishments.some((item) => item.id === requestedEstablishmentId)

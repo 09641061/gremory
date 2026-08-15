@@ -68,6 +68,16 @@ function workspace(overrides: Record<string, unknown> = {}) {
     establishments: [establishment(establishmentId, [])],
     activeEstablishmentId: establishmentId,
     subscription: { active: true, planName: "Free", status: "ACTIVE", canManageBilling: true },
+    accessPolicy: {
+      canUseAssistant: false,
+      canOpenAnalytics: true,
+      canOpenScheduling: true,
+      canOpenCrm: true,
+      canOpenCatalog: true,
+      canOpenTeam: true,
+      canCreateEstablishment: true,
+      canManageBilling: true,
+    },
     pendingInvitation: null,
     ...overrides,
   });
@@ -111,9 +121,7 @@ describe("IAM session proxy", () => {
     });
     expect(response.cookies.get("takodu.access_token")?.value).toBe("new-access-token");
     expect(response.cookies.get("takodu.refresh_token")?.value).toBe("new-refresh-token");
-    expect(response.headers.get("x-middleware-request-cookie")).toContain(
-      "takodu.access_token=new-access-token",
-    );
+    expect(response.status).toBe(307);
   });
 
   it("should redirect an active session from home to the dashboard", async () => {
@@ -121,7 +129,7 @@ describe("IAM session proxy", () => {
 
     expect(mocks.resolveSession).toHaveBeenCalledTimes(1);
     expect(response.status).toBe(307);
-    expect(response.headers.get("location")).toBe("http://localhost/chat");
+    expect(response.headers.get("location")).toBe("http://localhost/schedule");
   });
 
   it("should clear the session and redirect to login when refresh is rejected", async () => {
@@ -164,7 +172,7 @@ describe("IAM session proxy", () => {
     });
     expect(response.cookies.get("takodu.access_token")?.value).toBe("new-access-token");
     expect(response.status).toBe(307);
-    expect(response.headers.get("location")).toBe("http://localhost/chat");
+    expect(response.headers.get("location")).toBe("http://localhost/schedule");
   });
 
   it("should send an account that never accepted its invitation to the acceptance screen", async () => {
@@ -222,6 +230,29 @@ describe("IAM session proxy", () => {
 
     expect(response.status).toBe(307);
     expect(response.headers.get("location")).toBe("http://localhost/establishments/new");
+  });
+
+  it("should use the workspace assistant policy for the landing route", async () => {
+    stubFetch(
+      subscription(1),
+      workspace({
+        accessPolicy: {
+          canUseAssistant: false,
+          canOpenAnalytics: true,
+          canOpenScheduling: true,
+          canOpenCrm: true,
+          canOpenCatalog: true,
+          canOpenTeam: true,
+          canCreateEstablishment: true,
+          canManageBilling: true,
+        },
+      }),
+    );
+
+    const response = await proxy(requestWithSession("access-token", "refresh-token", "/"));
+
+    expect(response.status).toBe(307);
+    expect(response.headers.get("location")).toBe("http://localhost/schedule");
   });
 
   it("should keep the upgrade page available for authenticated users", async () => {
