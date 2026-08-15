@@ -25,6 +25,25 @@ const workspaceAccessPolicySchema = z
   })
   .optional();
 
+const workspaceAuthorizationSchema = z
+  .object({
+    role: z.enum(["OWNER", "ADMIN", "MANAGER", "WORKER"]),
+    scope: z.object({
+      type: z.enum(["ORGANIZATION", "ESTABLISHMENT"]),
+      id: uuidSchema,
+      name: z.string().trim().min(1),
+    }),
+    capabilities: z.object({
+      canEditOrganizationProfile: z.boolean(),
+      canEditEstablishmentProfile: z.boolean(),
+      canManageMembers: z.boolean(),
+      canManageBilling: z.boolean(),
+      canOpenModules: z.boolean(),
+      canInviteUsers: z.boolean(),
+    }),
+  })
+  .optional();
+
 const establishmentResourceSchema = z.object({
   id: uuidSchema,
   name: z.string().trim().min(1),
@@ -68,6 +87,7 @@ export const businessWorkspaceResourceSchema = z.object({
   establishments: z.array(establishmentResourceSchema).default([]),
   activeEstablishmentId: uuidSchema.nullable(),
   capabilities: workspaceCapabilitiesSchema,
+  authorization: workspaceAuthorizationSchema,
   accessPolicy: workspaceAccessPolicySchema,
   // Always the owner's subscription, even when the caller is a member.
   subscription: z

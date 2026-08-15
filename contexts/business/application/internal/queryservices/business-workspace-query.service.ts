@@ -4,6 +4,7 @@ import { BusinessWorkspaceApiGateway } from "@/contexts/business/infrastructure/
 import type { BusinessWorkspaceSelection } from "@/contexts/business/infrastructure/gateways/business-workspace-api.gateway";
 import type { BusinessWorkspaceResource } from "@/contexts/business/interfaces/rest/schemas/business-workspace.schemas";
 import type {
+  WorkspaceAuthorization,
   WorkspaceAccessPolicy,
   OrganizationPageState,
   WorkspaceCapabilities,
@@ -62,6 +63,7 @@ export function toHeaderViewModel(resource: BusinessWorkspaceResource): Workspac
     establishments,
     activeEstablishmentId,
     capabilities: toWorkspaceCapabilities(resource.capabilities),
+    authorization: toWorkspaceAuthorization(resource.authorization),
     accessPolicy: toWorkspaceAccessPolicy(resource),
     canReadOrganization: organization?.canRead === true,
     canReadEstablishments: organization?.canReadEstablishments === true,
@@ -134,6 +136,16 @@ function toWorkspaceCapabilities(
     canReadTeam: capabilities.canReadTeam,
     canReadAnalytics: capabilities.canReadAnalytics,
   };
+}
+
+function toWorkspaceAuthorization(
+  authorization: BusinessWorkspaceResource["authorization"],
+): WorkspaceAuthorization | undefined {
+  if (!authorization) {
+    return undefined;
+  }
+
+  return authorization;
 }
 
 function toWorkspaceAccessPolicy(resource: BusinessWorkspaceResource): WorkspaceAccessPolicy {

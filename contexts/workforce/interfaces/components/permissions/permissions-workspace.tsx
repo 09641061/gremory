@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useMemo, useState } from "react";
+import { useActionState, useEffect, useMemo, useState, type Dispatch, type SetStateAction } from "react";
 import { useRouter } from "next/navigation";
 import { Plus, Save, Search, User } from "lucide-react";
 import type { WorkforcePermission } from "@/contexts/workforce/domain/model/enums/workforce-permission";
@@ -21,7 +21,11 @@ import { Spinner } from "@/contexts/shared/interfaces/components/ui/spinner";
 import { Switch } from "@/contexts/shared/interfaces/components/ui/switch";
 import { AddMembersDialog } from "./add-members-dialog";
 import { RoleMemberRow } from "./role-member-row";
-import { groupPermissions, permissionLabel } from "./permissions.utils";
+import {
+  groupPermissions,
+  permissionGroupPriority,
+  permissionLabel,
+} from "./permissions.utils";
 
 interface PermissionsWorkspaceProps {
   role: WorkforceRoleSummary | null;
@@ -51,7 +55,11 @@ export function PermissionsWorkspace({ role, permissions, members, onCancel, can
 
   const filteredGroupedPermissions = useMemo(() => {
     const normalizedFilter = permissionFilter.trim().toLowerCase();
-    const groupedPermissions = groupPermissions(permissions);
+    const groupedPermissions = [...groupPermissions(permissions)].sort((left, right) => {
+      const priorityDelta = permissionGroupPriority(left.context) - permissionGroupPriority(right.context);
+      if (priorityDelta !== 0) return priorityDelta;
+      return left.label.localeCompare(right.label);
+    });
 
     if (!normalizedFilter) return groupedPermissions;
 
@@ -68,6 +76,13 @@ export function PermissionsWorkspace({ role, permissions, members, onCancel, can
       }))
       .filter((group) => group.permissions.length > 0);
   }, [permissionFilter, permissions]);
+
+  const organizationGroup = filteredGroupedPermissions.find((group) => group.context === "business") ?? null;
+  const moduleGroups = filteredGroupedPermissions.filter((group) => group.context !== "business");
+  const hasOrganizationAccess =
+    selectedPermissions.has("business:read") || selectedPermissions.has("business:manage");
+  const visibleModuleGroups = organizationGroup ? (hasOrganizationAccess ? moduleGroups : []) : filteredGroupedPermissions;
+  const hasHiddenModulePermissions = Boolean(organizationGroup && moduleGroups.length > 0 && !hasOrganizationAccess);
 
   const roleMembers = useMemo(() => {
     if (!role) return [];
@@ -152,46 +167,82 @@ export function PermissionsWorkspace({ role, permissions, members, onCancel, can
                   No permissions found.
                 </div>
               ) : (
-                filteredGroupedPermissions.map((group) => (
-                  <section key={group.label} className="space-y-3">
-                    <h3 className="text-sm font-medium capitalize tracking-wide text-muted-foreground">
-                      {group.label}
-                    </h3>
-                    <div className="grid gap-3">
-                      {group.permissions.map((permission) => {
-                        const checked = selectedPermissions.has(permission);
-                        return (
-                          <label
-                            key={permission}
-                            className={`flex cursor-pointer items-center justify-between gap-4 rounded-lg border p-4 transition-colors ${checked ? "border-primary/40 bg-accent/50" : "border-border hover:bg-muted/40"}`}
-                          >
-                            <span className="min-w-0 space-y-1">
-                              <span className="block text-sm font-medium text-foreground">
-                                {permissionLabel(permission)}
-                              </span>
-                              <span className="block truncate text-xs text-muted-foreground">
-                                {permission}
-                              </span>
-                            </span>
-                            <Switch
-                              disabled={!editable}
-                              checked={checked}
-                              onCheckedChange={(nextChecked) => {
-                                setSelectedPermissions((current) => {
-                                  const next = new Set(current);
-                                  if (nextChecked) next.add(permission);
-                                  else next.delete(permission);
-                                  return next;
-                                });
-                              }}
-                              aria-label={permissionLabel(permission)}
+                <div className="space-y-6">
+                  {organizationGroup ? (
+                    <section className="rounded-xl border border-primary/20 bg-primary/5 p-4 shadow-sm">
+                      <div className="mb-3 flex items-start justify-between gap-4">
+                        <div className="space-y-1">
+                          <h3 className="text-sm font-semibold tracking-wide text-foreground">
+                            Organization
+                          </h3>
+                          <p className="text-xs text-muted-foreground">
+                            Gateway permissions for the organization and its establishments.
+                          </p>
+                        </div>
+                        <span className="rounded-full border border-primary/20 bg-background px-2.5 py-1 text-[11px] font-medium text-primary">
+                          Core access
+                        </span>
+                      </div>
+
+                      <div className="grid gap-3">
+                        {renderPermissionGroup(
+                          organizationGroup,
+                          editable,
+                          selectedPermissions,
+                          setSelectedPermissions,
+                        )}
+                      </div>
+                    </section>
+                  ) : null}
+
+                  {organizationGroup ? (
+                    <section className="space-y-3">
+                      <div className="flex items-center justify-between gap-3">
+                        <div>
+                          <h3 className="text-sm font-semibold tracking-wide text-foreground">
+                            Modules
+                          </h3>
+                          <p className="text-xs text-muted-foreground">
+                            Availability here depends on Organization access.
+                          </p>
+                        </div>
+                      </div>
+
+                      {hasHiddenModulePermissions ? (
+                        <div className="rounded-xl border border-dashed border-border px-4 py-6 text-sm text-muted-foreground">
+                          Enable <span className="font-medium text-foreground">Organization read</span> to
+                          reveal the module permissions below.
+                        </div>
+                      ) : null}
+
+                      {visibleModuleGroups.length > 0 ? (
+                        <div className="space-y-5">
+                          {visibleModuleGroups.map((group) => (
+                            <PermissionGroupSection
+                              key={group.context}
+                              group={group}
+                              editable={editable}
+                              selectedPermissions={selectedPermissions}
+                              setSelectedPermissions={setSelectedPermissions}
+                              headingClassName="text-sm font-medium tracking-wide text-muted-foreground"
                             />
-                          </label>
-                        );
-                      })}
-                    </div>
-                  </section>
-                ))
+                          ))}
+                        </div>
+                      ) : null}
+                    </section>
+                  ) : (
+                    filteredGroupedPermissions.map((group) => (
+                      <PermissionGroupSection
+                        key={group.context}
+                        group={group}
+                        editable={editable}
+                        selectedPermissions={selectedPermissions}
+                        setSelectedPermissions={setSelectedPermissions}
+                        headingClassName="text-sm font-medium capitalize tracking-wide text-muted-foreground"
+                      />
+                    ))
+                  )}
+                </div>
               )}
             </div>
           </div>
@@ -275,5 +326,81 @@ export function PermissionsWorkspace({ role, permissions, members, onCancel, can
         />
       )}
     </div>
+  );
+}
+
+function renderPermissionToggle(
+  permission: string,
+  editable: boolean,
+  selectedPermissions: ReadonlySet<string>,
+  setSelectedPermissions: Dispatch<SetStateAction<ReadonlySet<string>>>,
+) {
+  const checked = selectedPermissions.has(permission);
+
+  return (
+    <label
+      key={permission}
+      className={`flex cursor-pointer items-center justify-between gap-4 rounded-lg border p-4 transition-colors ${
+        checked ? "border-primary/40 bg-accent/50" : "border-border hover:bg-muted/40"
+      }`}
+    >
+      <span className="min-w-0 space-y-1">
+        <span className="block text-sm font-medium text-foreground">{permissionLabel(permission)}</span>
+        <span className="block truncate text-xs text-muted-foreground">{permission}</span>
+      </span>
+      <Switch
+        disabled={!editable}
+        checked={checked}
+        onCheckedChange={(nextChecked) => {
+          setSelectedPermissions((current) => {
+            const next = new Set(current);
+            if (nextChecked) next.add(permission);
+            else next.delete(permission);
+            return next;
+          });
+        }}
+        aria-label={permissionLabel(permission)}
+      />
+    </label>
+  );
+}
+
+function renderPermissionGroup(
+  group: {
+    permissions: ReadonlyArray<string>;
+  },
+  editable: boolean,
+  selectedPermissions: ReadonlySet<string>,
+  setSelectedPermissions: Dispatch<SetStateAction<ReadonlySet<string>>>,
+) {
+  return group.permissions.map((permission) =>
+    renderPermissionToggle(permission, editable, selectedPermissions, setSelectedPermissions),
+  );
+}
+
+function PermissionGroupSection({
+  group,
+  editable,
+  selectedPermissions,
+  setSelectedPermissions,
+  headingClassName,
+}: {
+  group: {
+    context: string;
+    label: string;
+    permissions: ReadonlyArray<string>;
+  };
+  editable: boolean;
+  selectedPermissions: ReadonlySet<string>;
+  setSelectedPermissions: Dispatch<SetStateAction<ReadonlySet<string>>>;
+  headingClassName: string;
+}) {
+  return (
+    <section className="space-y-3">
+      <h3 className={headingClassName}>{group.label}</h3>
+      <div className="grid gap-3">
+        {renderPermissionGroup(group, editable, selectedPermissions, setSelectedPermissions)}
+      </div>
+    </section>
   );
 }

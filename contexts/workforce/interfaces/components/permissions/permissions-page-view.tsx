@@ -15,11 +15,13 @@ import { DeleteRoleDialog } from "./delete-role-dialog";
 import { RoleRow } from "./role-row";
 import { PermissionsWorkspace } from "./permissions-workspace";
 import { patchWorkforceRoleAction } from "@/contexts/workforce/interfaces/actions/workforce-role.actions";
+import type { WorkspaceAuthorization } from "@/contexts/business/application/model/business-workspace.view-models";
 
 export function PermissionsPageView({
   roles,
   permissions,
   members,
+  authorization,
   canCreateRole = true,
   canUpdateRole = true,
   canDeleteRole = true,
@@ -27,6 +29,7 @@ export function PermissionsPageView({
   roles: ReadonlyArray<WorkforceRoleSummary>;
   permissions: ReadonlyArray<string>;
   members: ReadonlyArray<TeamUserSummary>;
+  authorization?: WorkspaceAuthorization;
   canCreateRole?: boolean;
   canUpdateRole?: boolean;
   canDeleteRole?: boolean;
@@ -117,6 +120,19 @@ export function PermissionsPageView({
             <p className="page-description mt-2">
               Search, create, and manage the team roles available in your account.
             </p>
+            {authorization ? (
+              <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                <span className="rounded-full border border-border bg-card px-2.5 py-1 font-medium text-foreground">
+                  {formatAuthorizationRole(authorization.role)}
+                </span>
+                <span className="rounded-full border border-border bg-card px-2.5 py-1">
+                  {formatAuthorizationScope(authorization.scope.type)} scope
+                </span>
+                <span className="rounded-full border border-border bg-card px-2.5 py-1">
+                  {authorization.scope.name}
+                </span>
+              </div>
+            ) : null}
           </div>
         </div>
 
@@ -243,4 +259,12 @@ export function PermissionsPageView({
 
     </section>
   );
+}
+
+function formatAuthorizationRole(role: string) {
+  return role.charAt(0) + role.slice(1).toLowerCase();
+}
+
+function formatAuthorizationScope(scopeType: string) {
+  return scopeType.charAt(0) + scopeType.slice(1).toLowerCase();
 }

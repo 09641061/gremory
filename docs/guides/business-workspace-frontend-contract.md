@@ -1,6 +1,6 @@
 # Business Workspace Frontend Contract
 
-Este documento define el contrato que el frontend debe consumir para resolver acceso, navegacion y contexto del workspace.
+Este documento resume el contrato que el frontend debe consumir para resolver acceso, navegacion y contexto del workspace.
 
 ## Fuente de verdad
 
@@ -25,7 +25,17 @@ El frontend no debe:
 - duplicar reglas distintas en sidebar, pagina y componentes
 - decidir autorizacion usando solo `accountType`
 
-La unica capa canonica de acceso para navegacion es `accessPolicy`.
+## Modelo de acceso
+
+El contrato expone dos capas complementarias:
+
+- `authorization`
+  - modelo semantico de rol, scope y capacidades
+- `accessPolicy`
+  - resolucion final para shell, navegacion y modulos
+
+La capa semantica describe el negocio.
+La capa de policy sigue siendo util para UI y entrada a modulos.
 
 ## Payload esperado
 
@@ -68,6 +78,22 @@ La unica capa canonica de acceso para navegacion es `accessPolicy`.
     "canManageBilling": true
   },
   "pendingInvitation": null,
+  "authorization": {
+    "role": "OWNER",
+    "scope": {
+      "type": "ORGANIZATION",
+      "id": "uuid",
+      "name": "Takodu Studio"
+    },
+    "capabilities": {
+      "canEditOrganizationProfile": true,
+      "canEditEstablishmentProfile": true,
+      "canManageMembers": true,
+      "canManageBilling": true,
+      "canOpenModules": true,
+      "canInviteUsers": true
+    }
+  },
   "accessPolicy": {
     "canOpenAnalytics": true,
     "canOpenScheduling": true,
@@ -82,78 +108,28 @@ La unica capa canonica de acceso para navegacion es `accessPolicy`.
 }
 ```
 
-## Significado de los campos
+## Uso recomendado
 
-- `accountType`
-  - contexto activo del workspace
-  - valores posibles: `OWNER`, `MEMBER`, `PENDING_INVITATION`
-- `onboardingStatus`
-  - estado de onboarding del workspace
-- `onboardingCompleted`
-  - indica si el onboarding minimo ya termino
-- `organization`
-  - organizacion activa del workspace
-- `establishments`
-  - locales accesibles dentro de ese workspace
-- `activeEstablishmentId`
-  - local que el backend resolvio como contexto activo
-- `subscription`
-  - estado de la suscripcion del owner
-- `pendingInvitation`
-  - informacion visible solo para invitaciones pendientes
+- `authorization.role`
+  - sirve para etiquetas humanas y decisiones de UX
+- `authorization.scope`
+  - sirve para saber si el rol aplica a la organizacion o al establecimiento
+- `authorization.capabilities`
+  - sirve para acciones de negocio que el frontend quiera mostrar o esconder
 - `accessPolicy`
-  - resolucion final de acceso para shell y navegacion
-- `ownedOrganizationId`
-  - organizacion que realmente pertenece a la cuenta, aunque este navegando como member en otro workspace
-
-## `accessPolicy`
-
-`accessPolicy` es el unico bloque que el frontend debe usar para decidir:
-
-- sidebar
-- tabs
-- rutas protegidas
-- empty states de navegacion
-- botones de primer nivel
-
-Campos:
-
-- `canOpenAnalytics`
-- `canOpenScheduling`
-- `canOpenCrm`
-- `canOpenCatalog`
-- `canOpenTeam`
-- `canUseAssistant`
-- `canCreateEstablishment`
-- `canManageBilling`
+  - sirve para sidebar, tabs, rutas y navegación de módulos
+- `subscription`
+  - sirve para billing y limites del plan
+- `accountType`
+  - sirve para UX general, no para autorizar
 
 ## Reglas duras
 
 - `PENDING_INVITATION` debe resolver todo en `false`
 - si un flag no viene, el frontend debe denegar por defecto
-- `OWNER` no significa acceso total automatico
+- `OWNER` no significa acceso total automatico en la UI
 - `subscription` no debe usarse para decidir navegacion general
-- `accountType` sirve para UX, no para autorizacion
 - `ownedOrganizationId` sirve para distinguir ownership real de contexto activo
-
-## Fallback temporal
-
-Solo por compatibilidad temporal:
-
-- el frontend puede usar un fallback acotado mientras el backend termina de emitir un flag correcto
-- ese fallback no debe convertirse en regla permanente
-- si `accessPolicy` ya existe, tiene prioridad sobre cualquier inferencia local
-
-## Uso por dominio
-
-- `accessPolicy`
-  - decide acceso global
-- `effectivePermissions`
-  - puede servir para detalle fino de una pantalla especifica
-- `subscription`
-  - sirve para billing y limites
-- `accountType`
-  - sirve para UX y layout
 
 ## Caso recomendado para analytics
 
@@ -163,12 +139,6 @@ Orden recomendado:
 2. Si `accessPolicy.canOpenAnalytics == true`, mostrar la ruta.
 3. Si la pantalla necesita detalle fino, usar `GET /api/workforce/access`.
 4. Si no viene ninguna senal valida, denegar.
-
-Idea central:
-
-- el owner no se infiere en la pagina
-- el owner se resuelve en el shell o en `business/workspace`
-- la pagina solo consume el permiso ya resuelto
 
 ## Integracion recomendada
 
@@ -182,4 +152,4 @@ El frontend deberia:
 
 ## En una frase
 
-El frontend debe tratar `GET /api/business/workspace` como la fuente unica de verdad para shell y navegacion, y `accessPolicy` como el contrato oficial de acceso.
+El frontend debe tratar `GET /api/business/workspace` como la fuente unica de verdad para shell y navegacion, usar `authorization` para entender el rol humano del usuario, y usar `accessPolicy` para la entrada real a modulos.

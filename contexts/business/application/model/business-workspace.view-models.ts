@@ -38,6 +38,29 @@ export type WorkspaceAccessPolicy = Readonly<{
   canManageBilling: boolean;
 }>;
 
+export type WorkspaceAuthorizationRole = "OWNER" | "ADMIN" | "MANAGER" | "WORKER";
+
+export type WorkspaceAuthorizationScope = Readonly<{
+  type: "ORGANIZATION" | "ESTABLISHMENT";
+  id: string;
+  name: string;
+}>;
+
+export type WorkspaceAuthorizationCapabilities = Readonly<{
+  canEditOrganizationProfile: boolean;
+  canEditEstablishmentProfile: boolean;
+  canManageMembers: boolean;
+  canManageBilling: boolean;
+  canOpenModules: boolean;
+  canInviteUsers: boolean;
+}>;
+
+export type WorkspaceAuthorization = Readonly<{
+  role: WorkspaceAuthorizationRole;
+  scope: WorkspaceAuthorizationScope;
+  capabilities: WorkspaceAuthorizationCapabilities;
+}>;
+
 export type WorkspaceHeaderOrganization = Readonly<{
   id: string;
   name: string;
@@ -82,6 +105,7 @@ export type WorkspaceHeaderViewModel = Readonly<{
   establishments: ReadonlyArray<WorkspaceHeaderEstablishment>;
   activeEstablishmentId?: string;
   capabilities?: WorkspaceCapabilities;
+  authorization?: WorkspaceAuthorization;
   accessPolicy?: WorkspaceAccessPolicy;
   canReadOrganization: boolean;
   canReadEstablishments: boolean;

@@ -49,6 +49,22 @@ describe("business workspace query service", () => {
         capabilities: {
           canReadAnalytics: true,
         },
+        authorization: {
+          role: "OWNER",
+          scope: {
+            type: "ORGANIZATION",
+            id: organizationId,
+            name: "Takodu Studio",
+          },
+          capabilities: {
+            canEditOrganizationProfile: true,
+            canEditEstablishmentProfile: true,
+            canManageMembers: true,
+            canManageBilling: true,
+            canOpenModules: true,
+            canInviteUsers: true,
+          },
+        },
         accessPolicy: {
           canUseAssistant: true,
         },
@@ -71,6 +87,22 @@ describe("business workspace query service", () => {
     expect(result.organization?.id).toBe(organizationId);
     expect(result.activeEstablishmentId).toBe(establishmentId);
     expect(result.subscription?.canManageBilling).toBe(true);
+    expect(result.authorization).toEqual({
+      role: "OWNER",
+      scope: {
+        type: "ORGANIZATION",
+        id: organizationId,
+        name: "Takodu Studio",
+      },
+      capabilities: {
+        canEditOrganizationProfile: true,
+        canEditEstablishmentProfile: true,
+        canManageMembers: true,
+        canManageBilling: true,
+        canOpenModules: true,
+        canInviteUsers: true,
+      },
+    });
     expect(result.capabilities).toEqual({
       canReadAppointments: undefined,
       canReadCatalog: undefined,
