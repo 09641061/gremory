@@ -7,7 +7,7 @@ import { type DetailedServiceDTO } from "./service-detail-view";
 import { EditServiceForm } from "./edit-service-form";
 import { CreateCategoryModal } from "./create-category-modal";
 import { EditCategoryModal } from "./edit-category-modal";
-import { CreateServiceForm } from "../new/create-service-form";
+import { CreateServiceForm } from "../create-service/create-service-form";
 import { updateCatalogServiceAction } from "../../actions/manage-catalog-service.actions";
 
 interface CatalogLayoutProps {

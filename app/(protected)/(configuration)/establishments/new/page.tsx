@@ -1,5 +1,6 @@
 import { CreateEstablishmentForm } from "@/contexts/business/interfaces/components/establishment/create-establishment/create-establishment-form";
 import { createBusinessWorkspaceQueryService } from "@/contexts/business/application/internal/queryservices/business-workspace-query.service";
+import { hasSomewhereToCancelTo } from "@/contexts/business/domain/services/workspace-navigation.policy";
 import { redirect } from "next/navigation";
 
 interface NewEstablishmentPageProps {
@@ -21,5 +22,16 @@ export default async function NewEstablishmentPage({ searchParams }: NewEstablis
     redirect("/access-denied");
   }
 
-  return <CreateEstablishmentForm organizationId={workspace.organization.id} />;
+  const showCancel = hasSomewhereToCancelTo(
+    workspace.establishments,
+    workspace.organization.id,
+    workspace.onboardingCompleted,
+  );
+
+  return (
+    <CreateEstablishmentForm
+      organizationId={workspace.organization.id}
+      showCancel={showCancel}
+    />
+  );
 }

@@ -9,8 +9,10 @@ import type { WorkspaceHeaderViewModel } from "@/contexts/business/application/m
  * model only, so routing never reaches into Business transport shapes.
  */
 export class BusinessWorkspaceOutboundService {
-  async getWorkspace(accessToken: string): Promise<WorkspaceHeaderViewModel> {
-    return toHeaderViewModel(await new BusinessWorkspaceApiGateway(accessToken).getWorkspace());
+  async getWorkspace(accessToken: string, establishmentId?: string): Promise<WorkspaceHeaderViewModel> {
+    return toHeaderViewModel(
+      await new BusinessWorkspaceApiGateway(accessToken).getWorkspace({ establishmentId }),
+    );
   }
 }
 

@@ -35,6 +35,13 @@ export type EntryRouteResolution =
 export type EntryRouteInput = {
   accessToken: string;
   subscription: SubscriptionAccessSnapshot | null | undefined;
+  /**
+   * The account's persisted establishment selection (URL or cookie fallback).
+   * Without it, landing resolution falls back to the account's default
+   * identity - its own organization if it owns one - which can silently
+   * override a member's active choice to work inside a host organization.
+   */
+  establishmentId?: string;
 };
 
 // The organization is fixed for the account, so entry decisions only depend on

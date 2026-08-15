@@ -91,7 +91,7 @@ export function DailyStaffCalendar({
   }
 
   return (
-    <div className="flex w-full flex-col bg-background text-foreground rounded-xl border border-border shadow-sm">
+    <div className="flex h-[calc(100dvh-6rem)] w-full flex-col overflow-y-auto rounded-xl border border-border bg-background text-foreground shadow-sm">
       <div className="sticky top-0 z-20 bg-background rounded-t-xl">
         <div className="px-4 border-b">
           <CalendarToolbar

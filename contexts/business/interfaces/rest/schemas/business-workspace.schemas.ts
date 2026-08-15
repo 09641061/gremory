@@ -25,6 +25,10 @@ const establishmentResourceSchema = z.object({
   }),
   organizationId: uuidSchema.optional(),
   organizationName: z.string().trim().min(1).optional(),
+  // Known even for a foreign organization the account only belongs to as a
+  // member - unlike `organization.imageUrl` below, which only ever describes
+  // whichever organization is currently active.
+  organizationImageUrl: z.string().nullable().optional(),
 });
 
 // An account owns one organization or belongs to one; it is never a list.
@@ -69,6 +73,9 @@ export const businessWorkspaceResourceSchema = z.object({
     })
     .nullable()
     .optional(),
+  // The organization this account owns, independent of which one is active.
+  // Null while browsing a foreign organization as a member that owns none.
+  ownedOrganizationId: uuidSchema.nullable().optional(),
 });
 
 export type BusinessWorkspaceResource = z.infer<typeof businessWorkspaceResourceSchema>;

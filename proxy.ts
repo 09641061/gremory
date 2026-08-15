@@ -4,6 +4,10 @@ import { BillingApiGateway } from "@/contexts/billing/infrastructure/gateways/bi
 import { createIamSessionQueryService } from "@/contexts/iam/application/internal/queryservices/iam-session-query.service";
 import { createEntryRouteQueryService } from "@/contexts/shared/application/internal/queryservices/entry-route-query.service";
 import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-session-cookie";
+import {
+  workspaceSelectionCookieOptions,
+  workspaceSelectionCookies,
+} from "@/contexts/business/infrastructure/session/workspace-selection-cookie";
 import { continueRequestWithSession } from "@/contexts/iam/interfaces/proxy/iam-session-request";
 import { ApiError } from "@/contexts/shared/infrastructure/http/api-client";
 
@@ -47,6 +51,10 @@ export async function proxy(request: NextRequest) {
   const landing = await createEntryRouteQueryService().resolveRoute({
     accessToken,
     subscription: subscriptionForLanding,
+    // Without this, landing always resolved the account's default identity -
+    // its own organization if it owns one - overriding a member's actual,
+    // persisted choice to work inside a host organization.
+    establishmentId: resolveEstablishmentSelection(request),
   });
   if (landing.status === "unauthenticated") {
     return redirectToLogin(request);
@@ -112,9 +120,21 @@ async function getSubscriptionSnapshot(accessToken: string): Promise<{
   }
 }
 
+/**
+ * The URL's own `establishmentId` always wins; the cookie only fills in when
+ * the current request carries none - a bare link, a browser back/forward
+ * step, or a redirect target that never had the chance to include it.
+ */
+function resolveEstablishmentSelection(request: NextRequest): string | undefined {
+  const fromUrl = request.nextUrl.searchParams.get("establishmentId");
+  if (fromUrl) return fromUrl;
+  return request.cookies.get(workspaceSelectionCookies.establishmentId)?.value || undefined;
+}
+
 function redirectWithCookies(request: NextRequest, path: string, response: NextResponse | null) {
   const redirectUrl = new URL(path, request.url);
-  copyWorkspaceSelection(request, redirectUrl);
+  const establishmentId = resolveEstablishmentSelection(request);
+  if (establishmentId) redirectUrl.searchParams.set("establishmentId", establishmentId);
 
   const redirectResponse = NextResponse.redirect(redirectUrl);
   if (response) {
@@ -122,27 +142,44 @@ function redirectWithCookies(request: NextRequest, path: string, response: NextR
       redirectResponse.cookies.set(cookie);
     }
   }
+  persistEstablishmentSelection(request, redirectResponse);
   return redirectResponse;
 }
 
 function continueWithWorkspaceContext(request: NextRequest, response: NextResponse | null) {
+  const urlEstablishmentId = request.nextUrl.searchParams.get("establishmentId");
+  const establishmentId = urlEstablishmentId || resolveEstablishmentSelection(request);
   const forwardedHeaders = new Headers(request.headers);
-  const establishmentId = request.nextUrl.searchParams.get("establishmentId");
 
   forwardedHeaders.delete("x-takodu-organization-id");
   if (establishmentId) forwardedHeaders.set("x-takodu-establishment-id", establishmentId);
   else forwardedHeaders.delete("x-takodu-establishment-id");
 
-  const nextResponse = NextResponse.next({
-    request: { headers: forwardedHeaders },
-  });
+  // The URL itself is what `searchParams` resolves from in every page and
+  // layout downstream, so a cookie-only selection has to be rewritten into it
+  // - a forwarded header alone would leave those reads empty. The browser's
+  // own address bar is untouched: this is an internal rewrite, not a redirect.
+  const nextResponse = !urlEstablishmentId && establishmentId
+    ? rewriteWithEstablishment(request, establishmentId, forwardedHeaders)
+    : NextResponse.next({ request: { headers: forwardedHeaders } });
+
   copyResponseCookies(response, nextResponse);
+  persistEstablishmentSelection(request, nextResponse);
   return nextResponse;
 }
 
-function copyWorkspaceSelection(request: NextRequest, url: URL) {
-  const establishmentId = request.nextUrl.searchParams.get("establishmentId");
-  if (establishmentId) url.searchParams.set("establishmentId", establishmentId);
+function rewriteWithEstablishment(request: NextRequest, establishmentId: string, headers: Headers) {
+  const rewrittenUrl = new URL(request.nextUrl);
+  rewrittenUrl.searchParams.set("establishmentId", establishmentId);
+  return NextResponse.rewrite(rewrittenUrl, { request: { headers } });
+}
+
+/** Only an explicit selection in the URL updates what gets remembered. */
+function persistEstablishmentSelection(request: NextRequest, target: NextResponse) {
+  const fromUrl = request.nextUrl.searchParams.get("establishmentId");
+  if (!fromUrl) return;
+  if (request.cookies.get(workspaceSelectionCookies.establishmentId)?.value === fromUrl) return;
+  target.cookies.set(workspaceSelectionCookies.establishmentId, fromUrl, workspaceSelectionCookieOptions);
 }
 
 function copyResponseCookies(source: NextResponse | null, target: NextResponse) {

@@ -1,10 +1,16 @@
 "use client";
 
+import { useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { Building2 } from "lucide-react";
+import { Building2, SearchIcon } from "lucide-react";
 
 import { SearchableOptions } from "@/contexts/shared/interfaces/components/searchable-options";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+} from "@/contexts/shared/interfaces/components/ui/input-group";
 import type { WorkspaceHeaderViewModel } from "@/contexts/business/application/model/business-workspace.view-models";
 import {
   buildWorkspacePath,
@@ -30,6 +36,7 @@ export function WorkspaceSwitcher({
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const [organizationQuery, setOrganizationQuery] = useState("");
 
   const { organization, establishments, accountType } = workspace;
   const requestedEstablishmentId = searchParams.get("establishmentId");
@@ -61,6 +68,14 @@ export function WorkspaceSwitcher({
           },
         ]),
     ).values(),
+  );
+
+  const filteredOtherOrganizations = useMemo(
+    () =>
+      otherOrganizations.filter((org) =>
+        org.name.toLowerCase().includes(organizationQuery.trim().toLowerCase()),
+      ),
+    [otherOrganizations, organizationQuery],
   );
 
   return (
@@ -105,40 +120,96 @@ export function WorkspaceSwitcher({
               <div className="flex flex-col w-full">
                 <OrganizationBadge
                   organization={organization}
-                  // Clicking the organization opens its settings, where the name and
-                  // the logo are changed.
-                  href={workspace.canReadOrganization ? "/organization" : undefined}
+                  // The gear icon reads as "edit this", so it must track real update
+                  // rights - `canUpdate` is already true for the owner and for a
+                  // member granted `business:manage` on this organization. Using
+                  // read access alone was the bug: a member browsing its host
+                  // organization commonly has read but that is not an invitation to
+                  // edit it. `canRead` still gates whether /organization is reachable
+                  // at all.
+                  //
+                  // The establishment id must travel with the link too: without it,
+                  // `/organization` resolves the workspace with no active context and
+                  // the server defaults an owner back to its own organization, so
+                  // editing the host organization would silently open this account's
+                  // own instead.
+                  href={
+                    organization.canRead && organization.canUpdate
+                      ? buildWorkspacePath("/organization", searchParams.toString(), selectedEstablishmentId)
+                      : undefined
+                  }
                   onNavigate={close}
                 />
                 {otherOrganizations.length > 0 && (
-                  <div className="flex flex-col gap-1 border-t border-border/60 mt-1 pt-1.5 px-2 pb-1">
-                    <span className="text-[0.65rem] font-semibold text-muted-foreground uppercase tracking-wider px-1">
-                      Switch Organization
-                    </span>
-                    {otherOrganizations.map((org) => (
-                      <button
-                        key={org.id}
-                        type="button"
-                        onClick={() => {
-                          close();
-                          globalThis.location.assign(
-                            buildWorkspacePath(
-                              resolveEstablishmentEntryPath(accountType, org.firstEstablishment, pathname),
-                              searchParams.toString(),
-                              org.firstEstablishment.id,
-                            ),
-                          );
-                        }}
-                        className="flex items-center gap-2 w-full rounded-sm px-1.5 py-1 text-xs text-left text-muted-foreground hover:bg-muted hover:text-foreground font-medium transition-colors"
-                      >
-                        <span className="truncate flex-1">{org.name}</span>
-                      </button>
-                    ))}
+                  <div className="flex flex-col border-t border-border/60 mt-1 pt-1.5">
+                    <InputGroup className="h-8 border-input/30 bg-input/30 shadow-none has-[[data-slot=input-group-control]:focus-visible]:border-input has-[[data-slot=input-group-control]:focus-visible]:ring-0 mb-2">
+                      <InputGroupAddon align="inline-start">
+                        <SearchIcon className="pointer-events-none" />
+                      </InputGroupAddon>
+                      <InputGroupInput
+                        placeholder="Find organization..."
+                        value={organizationQuery}
+                        onChange={(event) => setOrganizationQuery(event.target.value)}
+                      />
+                    </InputGroup>
+                    <div className="no-scrollbar max-h-48 space-y-1 overflow-y-auto overscroll-contain">
+                      {filteredOtherOrganizations.length === 0 ? (
+                        <p className="w-full py-2 text-center text-sm text-muted-foreground">
+                          No organizations found
+                        </p>
+                      ) : (
+                        filteredOtherOrganizations.map((org) => (
+                          <button
+                            key={org.id}
+                            type="button"
+                            onClick={() => {
+                              close();
+                              // "OWNER" only applies when switching back into the
+                              // organization this account actually owns - never to a
+                              // foreign one just because the account happens to hold
+                              // Owner status somewhere else right now. Everywhere
+                              // else, the target establishment's own permissions
+                              // decide where this lands.
+                              const targetAccountType =
+                                workspace.ownedOrganizationId === org.id ? "OWNER" : "MEMBER";
+                              globalThis.location.assign(
+                                buildWorkspacePath(
+                                  resolveEstablishmentEntryPath(
+                                    targetAccountType,
+                                    org.firstEstablishment,
+                                    pathname,
+                                  ),
+                                  searchParams.toString(),
+                                  org.firstEstablishment.id,
+                                ),
+                              );
+                            }}
+                            className="relative flex w-full cursor-default items-center gap-2 rounded-md px-2 py-2 text-sm text-left outline-hidden select-none hover:bg-muted hover:text-foreground transition-colors"
+                          >
+                            <span className="truncate flex-1">{org.name}</span>
+                          </button>
+                        ))
+                      )}
+                    </div>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      onClick={() => {
+                        close();
+                        router.push(
+                          buildWorkspacePath("/organizations", searchParams.toString(), selectedEstablishmentId),
+                        );
+                      }}
+                      className="h-8 w-full justify-start px-2 text-sm font-normal text-muted-foreground"
+                    >
+                      All Organizations
+                    </Button>
                   </div>
                 )}
-                {/* A member always sees the host organization here, never their own,
-                    so this is the only door into starting their own business. */}
-                {accountType === "MEMBER" && (
+                {/* Offered only while the account owns no organization yet - once
+                    it does, this same button would try to create a second one and
+                    the backend would reject it as a duplicate. */}
+                {accountType === "MEMBER" && !workspace.ownedOrganizationId && (
                   <Button
                     type="button"
                     variant="ghost"

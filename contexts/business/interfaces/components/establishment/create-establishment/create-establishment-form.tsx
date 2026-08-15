@@ -18,7 +18,20 @@ import {
 } from "@/contexts/shared/interfaces/components/ui/avatar";
 import { TimeZoneField } from "../time-zone-field";
 
-export function CreateEstablishmentForm({ organizationId }: { organizationId: string }) {
+/**
+ * `showCancel` must stay false during mandatory onboarding (`ESTABLISHMENT_PENDING`):
+ * with no establishment created yet, there is nowhere valid to cancel to -
+ * `/establishments` is not reachable and the guard would just bounce the
+ * account right back here. It is true once onboarding is already completed,
+ * e.g. an owner adding another establishment to an org that already has one.
+ */
+export function CreateEstablishmentForm({
+  organizationId,
+  showCancel = false,
+}: {
+  organizationId: string;
+  showCancel?: boolean;
+}) {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const nameHeadingId = useId();
@@ -182,12 +195,14 @@ export function CreateEstablishmentForm({ organizationId }: { organizationId: st
             </CardContent>
 
             <CardFooter className="justify-end gap-2 rounded-b-xl border-t border-border bg-card px-6 py-5">
-              <Link
-                href="/establishments"
-                className={buttonVariants({ variant: "ghost" })}
-              >
-                Cancel
-              </Link>
+              {showCancel && (
+                <Link
+                  href="/establishments"
+                  className={buttonVariants({ variant: "ghost" })}
+                >
+                  Cancel
+                </Link>
+              )}
               <Button type="submit" disabled={pending} className="gap-2">
                 {pending ? <Spinner className="size-4" /> : <Plus className="size-4" />}
                 {pending ? "Creating..." : "Create"}

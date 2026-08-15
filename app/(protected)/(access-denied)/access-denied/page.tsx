@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { AccessDeniedActions } from "@/contexts/shared/interfaces/components/access-denied-actions";
 
 export default function AccessDeniedPage() {
   return (
@@ -13,9 +13,7 @@ export default function AccessDeniedPage() {
         <p className="text-muted-foreground">
           Ask the organization administrator to assign you the required permissions.
         </p>
-        <Link className="text-primary underline underline-offset-4" href="/login">
-          Back to sign in
-        </Link>
+        <AccessDeniedActions />
       </section>
     </div>
   );

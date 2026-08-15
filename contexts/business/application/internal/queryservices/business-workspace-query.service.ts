@@ -56,6 +56,7 @@ export function toHeaderViewModel(resource: BusinessWorkspaceResource): Workspac
     accountType: resource.accountType,
     onboardingStatus: resource.onboardingStatus,
     onboardingCompleted: resource.onboardingCompleted,
+    ownedOrganizationId: resource.ownedOrganizationId ?? null,
     organization,
     establishments,
     activeEstablishmentId,
@@ -113,6 +114,7 @@ function toHeaderEstablishment(
     canDelete: establishment.permissions.canDelete,
     organizationId: establishment.organizationId ?? undefined,
     organizationName: establishment.organizationName ?? undefined,
+    organizationImageUrl: establishment.organizationImageUrl ?? null,
   };
 }
 
