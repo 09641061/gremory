@@ -125,24 +125,6 @@ export async function acceptPendingInvitationAction(
   }
 }
 
-export async function toggleSchedulingAvailabilityAction(
-  _previous: TeamActionResult,
-  formData: FormData,
-): Promise<TeamActionResult> {
-  const memberIdParsed = memberIdSchema.safeParse(formData.get("memberId"));
-  const availableParsed = formData.get("available") === "true";
-  if (!memberIdParsed.success) return teamActionError(memberIdParsed.error.issues[0]?.message);
-
-  try {
-    const service = createTeamCommandService(await requireTeamAccessToken());
-    await service.updateSchedulingAvailability(memberIdParsed.data, availableParsed);
-    revalidateTeamView();
-    return { status: "success", data: null, error: null };
-  } catch (error) {
-    return teamActionError(error);
-  }
-}
-
 function revalidateTeamView() {
   revalidatePath("/team");
 }

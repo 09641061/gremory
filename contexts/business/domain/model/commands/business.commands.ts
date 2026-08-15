@@ -28,6 +28,7 @@ export type UpdateEstablishmentCommand = Readonly<{
   photoFile?: File | null;
   /** Drops the stored photo when no replacement is provided. */
   removePhoto?: boolean;
+  ownerAvailableForScheduling?: boolean;
 }>;
 export type DeleteEstablishmentCommand = Readonly<{ id: string }>;
 
@@ -73,6 +74,7 @@ export function updateEstablishmentCommand(
     timeZone: input.timeZone ?? null,
     photoFile: input.photoFile ?? null,
     removePhoto: input.removePhoto ?? false,
+    ownerAvailableForScheduling: input.ownerAvailableForScheduling,
   });
 }
 

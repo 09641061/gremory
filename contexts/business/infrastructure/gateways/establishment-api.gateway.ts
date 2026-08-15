@@ -85,6 +85,7 @@ export class EstablishmentApiGateway implements EstablishmentRepository {
         name: establishment.name.value,
         photoUrl: establishment.photoUrl.value,
         timeZone: establishment.timeZone,
+        ownerAvailableForScheduling: establishment.ownerAvailableForScheduling,
       },
       authToken
     );
@@ -116,5 +117,6 @@ function toEstablishment(resource: EstablishmentResource): Establishment {
     photoUrl: createEstablishmentPhoto(resource.photoUrl),
     timeZone: resource.timeZone ?? "UTC",
     active: true,
+    ownerAvailableForScheduling: resource.ownerAvailableForScheduling,
   });
 }

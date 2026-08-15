@@ -41,7 +41,6 @@ export const workforceUserResourceSchema = z.object({
   acceptedAt: dateTimeSchema.nullable(),
   joinedAt: dateTimeSchema.nullable(),
   removedAt: dateTimeSchema.nullable(),
-  availableForScheduling: z.boolean().default(true),
 });
 
 export const teamPageResourceSchema = z.object({

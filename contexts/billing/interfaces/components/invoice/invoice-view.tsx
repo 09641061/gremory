@@ -68,7 +68,7 @@ export function InvoiceView({ currentSubscription, initialInvoices }: InvoiceVie
         <section className="rounded-xl border border-border bg-card p-6 shadow-sm">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <span className="text-xs font-semibold text-primary uppercase tracking-wider">Current Subscription</span>
+              <span className="text-xs font-semibold text-primary">Current Subscription</span>
               <h2 className="text-xl font-bold text-foreground mt-1 flex items-center gap-2">
                 Takodu {currentPlanName} Plan
                 {currentSubscription.cancelAtPeriodEnd && (
@@ -123,10 +123,10 @@ export function InvoiceView({ currentSubscription, initialInvoices }: InvoiceVie
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="font-semibold py-3 px-5 text-xs text-muted-foreground uppercase tracking-wider">Date</TableHead>
-                  <TableHead className="font-semibold py-3 px-5 text-xs text-muted-foreground uppercase tracking-wider">Total</TableHead>
-                  <TableHead className="font-semibold py-3 px-5 text-xs text-muted-foreground uppercase tracking-wider">Status</TableHead>
-                  <TableHead className="font-semibold py-3 px-5 text-xs text-muted-foreground uppercase tracking-wider text-right">Actions</TableHead>
+                  <TableHead className="font-semibold py-3 px-5 text-xs text-muted-foreground">Date</TableHead>
+                  <TableHead className="font-semibold py-3 px-5 text-xs text-muted-foreground">Total</TableHead>
+                  <TableHead className="font-semibold py-3 px-5 text-xs text-muted-foreground">Status</TableHead>
+                  <TableHead className="font-semibold py-3 px-5 text-xs text-muted-foreground text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody className="divide-y divide-border/40">

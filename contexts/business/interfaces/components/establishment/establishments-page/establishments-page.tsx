@@ -10,6 +10,7 @@ export type EstablishmentListItem = {
   name: string;
   photoUrl: string | null;
   timeZone: string | null;
+  ownerAvailableForScheduling?: boolean;
 };
 
 export function EstablishmentsPage({

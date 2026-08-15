@@ -57,5 +57,6 @@ function toEstablishmentSummary(
     name: establishment.name.value,
     photoUrl: establishment.photoUrl.value,
     timeZone: establishment.timeZone,
+    ownerAvailableForScheduling: establishment.ownerAvailableForScheduling,
   };
 }

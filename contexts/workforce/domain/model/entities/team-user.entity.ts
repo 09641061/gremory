@@ -28,7 +28,6 @@ export interface TeamUserProps {
   acceptedAt: Date | null;
   joinedAt: Date | null;
   removedAt: Date | null;
-  availableForScheduling: boolean;
 }
 
 export interface TeamRoleSummary {
@@ -59,7 +58,6 @@ export class TeamUser {
     public readonly acceptedAt: Date | null,
     public readonly joinedAt: Date | null,
     public readonly removedAt: Date | null,
-    public readonly availableForScheduling: boolean,
   ) {}
 
   static create(props: TeamUserProps): TeamUser {
@@ -100,7 +98,6 @@ export class TeamUser {
       props.acceptedAt,
       props.joinedAt,
       props.removedAt,
-      props.availableForScheduling,
     );
   }
 
