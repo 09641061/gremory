@@ -56,6 +56,7 @@ export function toHeaderViewModel(resource: BusinessWorkspaceResource): Workspac
     accountType: resource.accountType,
     onboardingStatus: resource.onboardingStatus,
     onboardingCompleted: resource.onboardingCompleted,
+    ownedOrganizationId: resource.ownedOrganizationId ?? null,
     organization,
     establishments,
     activeEstablishmentId,

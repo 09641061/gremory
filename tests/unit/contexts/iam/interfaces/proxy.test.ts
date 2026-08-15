@@ -285,6 +285,36 @@ describe("IAM session proxy", () => {
     expect(response.headers.get("location")).toBe("http://localhost/catalog");
   });
 
+  it("should send a new owner to create their establishment even while holding a membership establishment elsewhere", async () => {
+    const foreignEstablishmentId = "33333333-3333-4333-8333-333333333333";
+    const foreignOrganizationId = "44444444-4444-4444-8444-444444444444";
+
+    stubFetch(
+      subscription(0),
+      workspace({
+        accountType: "OWNER",
+        onboardingStatus: "ESTABLISHMENT_PENDING",
+        onboardingCompleted: false,
+        // `establishments` is combined across every organization the account
+        // touches, so it is not empty even though the owner's own new
+        // organization has no establishment of its own yet.
+        establishments: [
+          {
+            ...establishment(foreignEstablishmentId, ["scheduling:read"]),
+            organizationId: foreignOrganizationId,
+            organizationName: "Host Org",
+          },
+        ],
+        activeEstablishmentId: null,
+      }),
+    );
+
+    const response = await proxy(requestWithSession("access-token", "refresh-token", "/chat"));
+
+    expect(response.status).toBe(307);
+    expect(response.headers.get("location")).toBe("http://localhost/establishments/new");
+  });
+
   it("should not send a removed member to subscribe", async () => {
     stubFetch(
       jsonResponse({ message: "Subscription not found" }, 404),

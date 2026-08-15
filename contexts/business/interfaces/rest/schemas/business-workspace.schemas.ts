@@ -69,6 +69,9 @@ export const businessWorkspaceResourceSchema = z.object({
     })
     .nullable()
     .optional(),
+  // The organization this account owns, independent of which one is active.
+  // Null while browsing a foreign organization as a member that owns none.
+  ownedOrganizationId: uuidSchema.nullable().optional(),
 });
 
 export type BusinessWorkspaceResource = z.infer<typeof businessWorkspaceResourceSchema>;

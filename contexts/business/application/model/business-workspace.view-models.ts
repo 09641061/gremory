@@ -61,6 +61,11 @@ export type WorkspaceHeaderViewModel = Readonly<{
   accountType: WorkspaceAccountType;
   onboardingStatus: WorkspaceOnboardingStatus | null;
   onboardingCompleted: boolean;
+  // The organization this account owns, independent of which one is active.
+  // Null while it owns none - e.g. a member who has not started their own
+  // business yet. Compare against an establishment's/org's id to tell "mine"
+  // apart from "foreign" regardless of which context is currently active.
+  ownedOrganizationId: string | null;
   organization?: WorkspaceHeaderOrganization;
   establishments: ReadonlyArray<WorkspaceHeaderEstablishment>;
   activeEstablishmentId?: string;

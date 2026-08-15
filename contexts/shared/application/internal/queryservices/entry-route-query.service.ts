@@ -45,7 +45,19 @@ export class EntryRouteQueryService {
       };
     }
 
-    if (workspace.establishments.length === 0) {
+    // `workspace.establishments` is combined across every organization the
+    // account touches (its own plus any it is a member of), so counting it raw
+    // wrongly reports "has an establishment" for an owner whose own new
+    // organization has none yet, as long as they hold a membership elsewhere.
+    // Scope the count to the active organization before deciding.
+    const ownEstablishments = workspace.organization
+      ? workspace.establishments.filter(
+          (establishment) =>
+            !establishment.organizationId || establishment.organizationId === workspace.organization!.id,
+        )
+      : workspace.establishments;
+
+    if (ownEstablishments.length === 0) {
       return workspace.canCreateEstablishment
         ? {
             status: "establishment-required",
@@ -67,8 +79,11 @@ export class EntryRouteQueryService {
 
     return {
       status: "ready",
+      // Scoped to the active organization too: a permission from an
+      // establishment the account merely owns or belongs to elsewhere must
+      // never grant module access inside a different organization's context.
       homeHref: resolveEmployeeEntryPath(
-        workspace.establishments.map((establishment) => ({
+        ownEstablishments.map((establishment) => ({
           establishmentId: establishment.id,
           establishmentName: establishment.name,
           effectivePermissions: establishment.effectivePermissions ?? [],
