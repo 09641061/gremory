@@ -149,15 +149,6 @@ export class TeamApiGateway implements TeamRepository {
       })),
     };
   }
-
-  async updateSchedulingAvailability(memberId: MemberId, available: boolean): Promise<void> {
-    const token = await requireTeamAccessToken(this.providedToken);
-    await teamPut<void>(
-      `${apiConfig.routes.workforce.members}/${encodeURIComponent(memberId.value)}/scheduling-availability?available=${available}`,
-      {},
-      token,
-    );
-  }
 }
 
 function toTeamUser(resource: {
@@ -185,7 +176,6 @@ function toTeamUser(resource: {
   acceptedAt: string | null;
   joinedAt: string | null;
   removedAt: string | null;
-  availableForScheduling: boolean;
 }): TeamUser {
   const roles = resource.roles ?? (resource.roleId ? [{ id: resource.roleId, name: resource.roleName ?? "Everyone", position: 2_147_483_647, systemRole: true, permissions: [] }] : []);
   return TeamUser.create({
@@ -213,7 +203,6 @@ function toTeamUser(resource: {
     acceptedAt: toOptionalDate(resource.acceptedAt),
     joinedAt: toOptionalDate(resource.joinedAt),
     removedAt: toOptionalDate(resource.removedAt),
-    availableForScheduling: resource.availableForScheduling,
   });
 }
 

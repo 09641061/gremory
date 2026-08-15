@@ -72,5 +72,4 @@ export interface TeamRepository {
   // the emailed link: the backend resolves it by the authenticated email.
   acceptPendingInvitation(): Promise<MemberId>;
   getAccessContext(): Promise<TeamAccessContext>;
-  updateSchedulingAvailability(memberId: MemberId, available: boolean): Promise<void>;
 }

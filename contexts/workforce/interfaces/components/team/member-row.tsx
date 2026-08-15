@@ -10,11 +10,9 @@ import { DeleteConfirmDialog } from "@/contexts/shared/interfaces/components/del
 import {
   removeTeamMemberAction,
   revokeTeamInvitationAction,
-  toggleSchedulingAvailabilityAction,
 } from "@/contexts/workforce/interfaces/actions/team.actions";
 import type { TeamUserSummary } from "@/contexts/workforce/application/model/team.read-models";
 import { MemberRolesDropdown } from "./member-roles-dropdown";
-import { Switch } from "@/contexts/shared/interfaces/components/ui/switch";
 
 const initialActionState = { status: "idle", data: null, error: null } as const;
 
@@ -40,20 +38,19 @@ export function MemberRow({
 }) {
   const [removeState, removeAction, removePending] = useActionState(removeTeamMemberAction, initialActionState);
   const [revokeState, revokeAction, revokePending] = useActionState(revokeTeamInvitationAction, initialActionState);
-  const [toggleState, toggleAction, togglePending] = useActionState(toggleSchedulingAvailabilityAction, initialActionState);
   const router = useRouter();
   const [confirming, setConfirming] = useState<"remove" | "revoke" | null>(null);
 
   useEffect(() => {
-    if ([removeState.status, revokeState.status, toggleState.status].includes("success")) {
+    if ([removeState.status, revokeState.status].includes("success")) {
       router.refresh();
     }
-  }, [removeState.status, revokeState.status, toggleState.status, router]);
+  }, [removeState.status, revokeState.status, router]);
 
   const memberId = member.memberId;
   const canRemove = member.canRemoveMembership && memberId !== null && canRemoveMembers;
   const canCancel = member.canRevokeInvitation && canCancelInvitations;
-  const error = removeState.error ?? revokeState.error ?? toggleState.error;
+  const error = removeState.error ?? revokeState.error;
 
   return (
     <div className="grid min-h-[96px] grid-cols-[minmax(300px,1.4fr)_minmax(220px,1fr)_minmax(150px,.8fr)_minmax(150px,.55fr)_minmax(170px,.7fr)] items-center border-b border-border px-5 py-4 last:border-b-0">
@@ -70,24 +67,8 @@ export function MemberRow({
       <div>
         <MemberRolesDropdown roles={member.roles} />
       </div>
-      <div className="flex flex-col gap-1.5 justify-center">
+      <div>
         <span className="text-[15px] text-muted-foreground">{formatStatus(member.status)}</span>
-        {member.status === "ACTIVE" && (
-          <label className="flex items-center gap-2 cursor-pointer select-none">
-            <Switch
-              checked={member.availableForScheduling}
-              onCheckedChange={(checked) => {
-                const formData = new FormData();
-                formData.append("memberId", member.memberId || "");
-                formData.append("available", String(checked));
-                startTransition(() => toggleAction(formData));
-              }}
-              disabled={togglePending}
-              size="sm"
-            />
-            <span className="text-xs text-muted-foreground">For appointments</span>
-          </label>
-        )}
       </div>
       <div className="flex flex-col items-end gap-2">
         <EntityActionsMenu

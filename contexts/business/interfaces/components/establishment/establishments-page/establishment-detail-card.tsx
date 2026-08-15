@@ -16,6 +16,7 @@ import {
   AvatarImage,
 } from "@/contexts/shared/interfaces/components/ui/avatar";
 import { TimeZoneField } from "../time-zone-field";
+import { Switch } from "@/contexts/shared/interfaces/components/ui/switch";
 import { cn } from "@/lib/utils";
 
 interface EstablishmentDetailCardProps {
@@ -36,6 +37,7 @@ export function EstablishmentDetailCard({
   const [name, setName] = useState(establishment?.name ?? "");
   const [previewUrl, setPreviewUrl] = useState<string | null>(establishment?.photoUrl ?? null);
   const [timeZone, setTimeZone] = useState(establishment?.timeZone ?? "America/Lima");
+  const [ownerScheduling, setOwnerScheduling] = useState(establishment?.ownerAvailableForScheduling ?? true);
 
   const [state, formAction, pending] = useActionState(
     updateEstablishmentAction,
@@ -58,6 +60,7 @@ export function EstablishmentDetailCard({
     setName(establishment?.name ?? "");
     setPreviewUrl(establishment?.photoUrl ?? null);
     setTimeZone(establishment?.timeZone ?? "America/Lima");
+    setOwnerScheduling(establishment?.ownerAvailableForScheduling ?? true);
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
@@ -174,6 +177,34 @@ export function EstablishmentDetailCard({
                     disabled={!canUpdate}
                   />
                 </div>
+              </div>
+            </div>
+
+            {/* Owner Scheduling Section */}
+            <div className="flex flex-col border-t border-border">
+              <div className="space-y-4 p-6">
+                <div className="space-y-1">
+                  <h3 className="text-base font-semibold text-foreground">Owner Availability</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Show yourself as available for appointments in the calendar.
+                  </p>
+                </div>
+                <label className="flex items-center gap-3 cursor-pointer select-none">
+                  <Switch
+                    name="ownerAvailableForScheduling"
+                    checked={ownerScheduling}
+                    onCheckedChange={setOwnerScheduling}
+                    disabled={!canUpdate}
+                  />
+                  <span className="text-sm text-foreground">
+                    {ownerScheduling ? "Visible in calendar" : "Hidden from calendar"}
+                  </span>
+                  <input
+                    type="hidden"
+                    name="ownerAvailableForScheduling"
+                    value={String(ownerScheduling)}
+                  />
+                </label>
               </div>
             </div>
           </CardContent>
