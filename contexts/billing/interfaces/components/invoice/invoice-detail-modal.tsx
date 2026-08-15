@@ -133,6 +133,7 @@ export function InvoiceDetailModal({ isOpen, onClose, invoiceId }: InvoiceDetail
               {invoice.pdfUrl && (
                 <Button
                   render={<a href={invoice.pdfUrl} target="_blank" rel="noopener noreferrer" />}
+                  nativeButton={false}
                   variant="outline"
                   className="w-full flex items-center justify-center gap-2 text-xs"
                 >
