@@ -12,6 +12,7 @@ export const updateEstablishmentSchema = z.object({
   name: z.string().trim().min(1, "Establishment name is required").max(100),
   photoUrl: z.string().trim().max(500).optional().nullable(),
   timeZone: z.string().trim().min(1, "Time zone is required").max(100).optional().nullable(),
+  ownerAvailableForScheduling: z.boolean().optional(),
 });
 
 export const deleteEstablishmentSchema = z.object({
