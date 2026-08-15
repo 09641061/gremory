@@ -1,8 +1,10 @@
 "use client";
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { Building2 } from "lucide-react";
 
 import { SearchableOptions } from "@/contexts/shared/interfaces/components/searchable-options";
+import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import type { WorkspaceHeaderViewModel } from "@/contexts/business/application/model/business-workspace.view-models";
 import {
   buildWorkspacePath,
@@ -133,6 +135,22 @@ export function WorkspaceSwitcher({
                       </button>
                     ))}
                   </div>
+                )}
+                {/* A member always sees the host organization here, never their own,
+                    so this is the only door into starting their own business. */}
+                {accountType === "MEMBER" && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    onClick={() => {
+                      close();
+                      router.push("/organizations/new");
+                    }}
+                    className="h-8 w-full justify-start gap-2 px-2 text-sm font-normal text-muted-foreground"
+                  >
+                    <Building2 className="size-4" />
+                    Create your own business
+                  </Button>
                 )}
               </div>
             )

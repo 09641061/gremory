@@ -1,7 +1,11 @@
 import "server-only";
 
-import type { UpdateOrganizationCommand } from "../../../domain/model/commands/business.commands";
+import type {
+  CreateOrganizationCommand,
+  UpdateOrganizationCommand,
+} from "../../../domain/model/commands/business.commands";
 import { createOrganizationId } from "../../../domain/model/valueobjects/organization-id.vo";
+import { createOrganizationName } from "../../../domain/model/valueobjects/organization-name.vo";
 import type { OrganizationRepository } from "../../../domain/services/business.repositories";
 import type {
   OrganizationCommandService,
@@ -15,6 +19,14 @@ export class OrganizationCommandServiceImpl implements OrganizationCommandServic
     private readonly organizations: OrganizationRepository,
     private readonly images: OrganizationImageStorage,
   ) {}
+
+  async create(command: CreateOrganizationCommand) {
+    const organization = await this.organizations.create(
+      createOrganizationName(command.name),
+      command.imageFile,
+    );
+    return organization.id;
+  }
 
   async update(command: UpdateOrganizationCommand) {
     const organization = await this.organizations.findById(

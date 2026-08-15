@@ -204,6 +204,7 @@ function establishmentPhotoStorage(): EstablishmentPhotoStorage {
 
 function organizationRepository(): OrganizationRepository {
   return {
+    create: vi.fn(async () => organization("Acme")),
     findMine: vi.fn(async () => organization("Acme")),
     findById: vi.fn(async () => organization("Acme")),
     save: vi.fn(async (value) => value),

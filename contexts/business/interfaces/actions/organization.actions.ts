@@ -2,9 +2,12 @@
 
 import { revalidatePath } from "next/cache";
 import { createOrganizationCommandService } from "../../application/internal/commandservices/organization-command.service";
-import { updateOrganizationCommand } from "../../domain/model/commands/business.commands";
+import {
+  createOrganizationCommand,
+  updateOrganizationCommand,
+} from "../../domain/model/commands/business.commands";
 import { requireBusinessAccessToken } from "../../infrastructure/session/business-session";
-import { updateOrganizationSchema } from "../rest/schemas/organization.schemas";
+import { createOrganizationSchema, updateOrganizationSchema } from "../rest/schemas/organization.schemas";
 import {
   actionError,
   type BusinessActionResult,
@@ -13,6 +16,31 @@ import {
 function readPhotoFileFromFormData(formData: FormData) {
   const photoFile = formData.get("photoFile");
   return photoFile instanceof File && photoFile.size > 0 ? photoFile : null;
+}
+
+/** Onboarding step 1 (owner) and the member-starts-their-own-business path. */
+export async function createOrganizationAction(
+  _previous: BusinessActionResult,
+  formData: FormData
+): Promise<BusinessActionResult> {
+  const parsed = createOrganizationSchema.safeParse({
+    name: formData.get("name"),
+  });
+  if (!parsed.success) return actionError(parsed.error.issues[0]?.message);
+
+  try {
+    await requireBusinessAccessToken();
+    const organizationId = await createOrganizationCommandService().create(
+      createOrganizationCommand({
+        ...parsed.data,
+        imageFile: readPhotoFileFromFormData(formData),
+      }),
+    );
+    revalidateBusinessViews();
+    return { status: "success", data: { id: organizationId.value }, error: null };
+  } catch (error) {
+    return actionError(error);
+  }
 }
 
 export async function updateOrganizationAction(
