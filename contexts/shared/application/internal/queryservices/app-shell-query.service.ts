@@ -98,7 +98,7 @@ function resolveHomeHref(
     workspace.establishments.length === 0 &&
     (workspace.accessPolicy?.canCreateEstablishment ?? workspace.canCreateEstablishment)
   ) {
-    return "/establishments/new";
+    return "/establishments/setup";
   }
   if (hasAssistantAccess) {
     return "/chat";

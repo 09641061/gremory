@@ -13,9 +13,8 @@ import type { WorkspaceHeaderOrganization } from "@/contexts/business/applicatio
  *
  * It sits above the search field because it scopes the list underneath it: the
  * establishments the menu offers are the ones inside this organization. It is
- * never a selector — the organization is fixed for the account, so there is
- * nothing to switch to — it only opens the settings where its name and logo
- * are edited.
+ * never the selector itself; it only opens the organizations hub, where the
+ * user can switch organizations or manage the current one.
  */
 export function OrganizationBadge({
   organization,

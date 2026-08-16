@@ -1,12 +1,14 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { cookies } from "next/headers";
 import { createOrganizationCommandService } from "../../application/internal/commandservices/organization-command.service";
 import {
   createOrganizationCommand,
   updateOrganizationCommand,
 } from "../../domain/model/commands/business.commands";
 import { requireBusinessAccessToken } from "../../infrastructure/session/business-session";
+import { workspaceSelectionCookies } from "../../infrastructure/session/workspace-selection-cookie";
 import { createOrganizationSchema, updateOrganizationSchema } from "../rest/schemas/organization.schemas";
 import {
   actionError,
@@ -36,6 +38,7 @@ export async function createOrganizationAction(
         imageFile: readPhotoFileFromFormData(formData),
       }),
     );
+    await clearWorkspaceSelection();
     revalidateBusinessViews();
     return { status: "success", data: { id: organizationId.value }, error: null };
   } catch (error) {
@@ -75,4 +78,9 @@ function revalidateBusinessViews() {
   revalidatePath("/catalog");
   revalidatePath("/organization");
   revalidatePath("/establishments");
+}
+
+async function clearWorkspaceSelection() {
+  const cookieStore = await cookies();
+  cookieStore.delete(workspaceSelectionCookies.establishmentId);
 }

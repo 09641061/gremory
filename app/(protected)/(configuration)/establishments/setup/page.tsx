@@ -1,0 +1,42 @@
+import { redirect } from "next/navigation";
+import Link from "next/link";
+
+import { createBusinessWorkspaceQueryService } from "@/contexts/business/application/internal/queryservices/business-workspace-query.service";
+import { buttonVariants } from "@/contexts/shared/interfaces/components/ui/button";
+
+export default async function EstablishmentSetupPage() {
+  const workspace = await createBusinessWorkspaceQueryService().getHeaderViewModel();
+
+  if (workspace.accountType === "PENDING_INVITATION") {
+    redirect("/invitations/pending");
+  }
+
+  if (!workspace.organization || !workspace.canCreateEstablishment || workspace.establishments.length > 0) {
+    redirect("/organizations");
+  }
+
+  return (
+    <div className="flex min-h-[60svh] flex-1 items-center justify-center px-6 text-foreground">
+      <section className="max-w-xl space-y-6 text-center">
+        <div className="space-y-3">
+          <h1 className="text-2xl font-semibold">Set up your first establishment</h1>
+          <p className="text-muted-foreground">
+            {workspace.organization.name} is ready, but it still does not have any establishments.
+          </p>
+          <p className="text-muted-foreground">
+            Create one location to start using the app and invite your team.
+          </p>
+        </div>
+
+        <div className="flex flex-col items-center justify-center gap-2 sm:flex-row">
+          <Link href="/establishments/new" className={buttonVariants({ variant: "default" })}>
+            Create establishment
+          </Link>
+          <Link href="/organizations" className={buttonVariants({ variant: "outline" })}>
+            Manage organizations
+          </Link>
+        </div>
+      </section>
+    </div>
+  );
+}

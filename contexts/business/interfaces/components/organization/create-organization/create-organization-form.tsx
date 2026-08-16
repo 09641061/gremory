@@ -29,10 +29,8 @@ import {
  * return to (a member starting a second, separate business).
  */
 export function CreateOrganizationForm({
-  nextHref = "/establishments/new",
   showCancel = false,
 }: {
-  nextHref?: string;
   showCancel?: boolean;
 }) {
   const router = useRouter();
@@ -53,7 +51,11 @@ export function CreateOrganizationForm({
   useEffect(() => {
     if (state.status === "success" && !hasRedirected.current) {
       hasRedirected.current = true;
-      router.push(nextHref);
+      const organizationId = state.data?.id;
+      const nextPath = organizationId
+        ? `/establishments/new?organizationId=${encodeURIComponent(organizationId)}`
+        : "/establishments/new";
+      router.push(nextPath);
       router.refresh();
     } else if (state.status === "error") {
       setTimeout(() => {
@@ -64,7 +66,7 @@ export function CreateOrganizationForm({
         setFormResetKey((k) => k + 1);
       }, 0);
     }
-  }, [nextHref, router, state.status]);
+  }, [router, state.data?.id, state.status]);
 
   useEffect(() => {
     return () => {

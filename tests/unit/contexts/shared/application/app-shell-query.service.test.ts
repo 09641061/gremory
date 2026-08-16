@@ -202,4 +202,12 @@ describe("app shell query service", () => {
     expect(shell.visibleSidebarRoutes).toEqual([]);
     expect(shell.homeHref).toBe("/chat");
   });
+
+  it("routes an owner without establishments to the establishment setup page", async () => {
+    mocks.shell.workspace.establishments = [];
+
+    const shell = await createAppShellQueryService().resolve();
+
+    expect(shell.homeHref).toBe("/establishments/setup");
+  });
 });

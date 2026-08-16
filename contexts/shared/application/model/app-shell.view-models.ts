@@ -16,6 +16,7 @@ export type AppShellHomeHref =
   | "/team"
   | "/organization"
   | "/establishments/new"
+  | "/establishments/setup"
   | "/invitations/pending"
   | "/access-denied";
 

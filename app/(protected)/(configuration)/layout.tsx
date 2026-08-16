@@ -8,6 +8,7 @@ import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-ses
 import { createPlanHomeRouteQueryService } from "@/contexts/shared/application/internal/queryservices/plan-home-route-query.service";
 import { createBusinessWorkspaceQueryService } from "@/contexts/business/application/internal/queryservices/business-workspace-query.service";
 import { hasSomewhereToCancelTo } from "@/contexts/business/domain/services/workspace-navigation.policy";
+import { workspaceSelectionCookies } from "@/contexts/business/infrastructure/session/workspace-selection-cookie";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 
 /**
@@ -37,9 +38,32 @@ export default function ConfigurationLayout({ children }: { children: ReactNode 
 }
 
 async function BackToHomeLink() {
+  const href = await resolveConfigurationBackHref();
+  if (!href) return null;
+
+  return (
+    <Button
+      variant="ghost"
+      size="icon"
+      className="-ml-2"
+      nativeButton={false}
+      aria-label="Back to app"
+      title="Back to app"
+      render={<Link href={href} />}
+    >
+      <ArrowLeft />
+    </Button>
+  );
+}
+
+export async function resolveConfigurationBackHref() {
   // Read outside any cached scope: the session is per-request.
-  const accessToken = (await cookies()).get(iamSessionCookies.accessToken)?.value;
+  const cookieStore = await cookies();
+  const accessToken = cookieStore.get(iamSessionCookies.accessToken)?.value;
   const establishmentId = (await headers()).get("x-takodu-establishment-id") ?? undefined;
+  const organizationId = cookieStore.get(workspaceSelectionCookies.organizationId)?.value ?? undefined;
+  const previewOrganizationId =
+    cookieStore.get(workspaceSelectionCookies.previewOrganizationId)?.value ?? undefined;
 
   // Every other screen under this layout is only reachable once onboarding is
   // complete (the guard restricts `/organizations/new` and `/establishments/new`
@@ -55,19 +79,14 @@ async function BackToHomeLink() {
     return null;
   }
 
-  const href = await createPlanHomeRouteQueryService().handle({ accessToken, establishmentId });
+  if (organizationId && organizationId === workspace?.ownedOrganizationId) {
+    const href = new URL("/organizations", "http://localhost");
+    href.searchParams.set("organizationId", organizationId);
+    if (previewOrganizationId) {
+      href.searchParams.set("previewOrganizationId", previewOrganizationId);
+    }
+    return `${href.pathname}${href.search}`;
+  }
 
-  return (
-    <Button
-      variant="ghost"
-      size="icon"
-      className="-ml-2"
-      nativeButton={false}
-      aria-label="Back"
-      title="Back"
-      render={<Link href={href} />}
-    >
-      <ArrowLeft />
-    </Button>
-  );
+  return await createPlanHomeRouteQueryService().handle({ accessToken, establishmentId });
 }
