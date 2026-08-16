@@ -72,13 +72,18 @@ export class TeamUser {
     if (Number.isNaN(props.invitedAt.getTime()) || Number.isNaN(props.invitationExpiresAt.getTime())) {
       throw new Error("Team user invitation dates must be valid");
     }
-    const roles = [...(props.roles ?? (props.roleId && props.roleName ? [{
-      id: props.roleId,
-      name: props.roleName,
-      position: 2_147_483_647,
-      systemRole: true,
-      permissions: [],
-    }] : []))];
+    const roles =
+      props.roles && props.roles.length > 0
+        ? [...props.roles]
+        : props.roleId && props.roleName
+          ? [{
+              id: props.roleId,
+              name: props.roleName,
+              position: 2_147_483_647,
+              systemRole: true,
+              permissions: [],
+            }]
+          : [];
     const primaryRole = roles[0];
     if (!primaryRole) throw new Error("Team users require at least Everyone role");
     return new TeamUser(

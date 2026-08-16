@@ -1,6 +1,5 @@
 import { EstablishmentsPage } from "@/contexts/business/interfaces/components/establishment/establishments-page/establishments-page";
 import { createBusinessWorkspaceQueryService } from "@/contexts/business/application/internal/queryservices/business-workspace-query.service";
-import { createEstablishmentQueryService } from "@/contexts/business/application/internal/queryservices/establishment-query.service";
 import { redirect } from "next/navigation";
 
 interface EstablishmentsPageProps {
@@ -12,7 +11,7 @@ export default async function EstablishmentsRoutePage({ searchParams }: Establis
   const workspace = await createBusinessWorkspaceQueryService().getHeaderViewModel(query);
   const selectedEstablishmentId = query.establishmentId ?? workspace.activeEstablishmentId;
   const selectedEstablishment = selectedEstablishmentId
-    ? await createEstablishmentQueryService().getById({ id: selectedEstablishmentId })
+    ? workspace.establishments.find((establishment) => establishment.id === selectedEstablishmentId) ?? null
     : null;
 
   if (!workspace.organization || !workspace.canReadEstablishments) {
@@ -27,8 +26,8 @@ export default async function EstablishmentsRoutePage({ searchParams }: Establis
           ? {
               id: selectedEstablishment.id,
               name: selectedEstablishment.name,
-              photoUrl: selectedEstablishment.photoUrl,
-              timeZone: selectedEstablishment.timeZone,
+              photoUrl: selectedEstablishment.photoUrl ?? null,
+              timeZone: selectedEstablishment.timeZone ?? null,
             }
           : null
       }

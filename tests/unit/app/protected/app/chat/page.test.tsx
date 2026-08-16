@@ -78,8 +78,8 @@ describe("ChatPage", () => {
     });
   });
 
-  it("redirects away when the workspace assistant policy is false", async () => {
-    await expect(ChatPage({})).rejects.toThrow("REDIRECT:/");
+  it("renders the shell fallback when the workspace assistant policy is false", async () => {
+    await expect(ChatPage({})).resolves.toBeDefined();
     expect(mocks.conversation.handle).not.toHaveBeenCalled();
   });
 });

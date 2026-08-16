@@ -14,8 +14,10 @@ import {
   CardTitle,
 } from "@/contexts/shared/interfaces/components/ui/card";
 import { Spinner } from "@/contexts/shared/interfaces/components/ui/spinner";
+import { buildInvitationLandingHref } from "./invitation-navigation";
 
 export type PendingInvitationView = Readonly<{
+  establishmentId: string;
   organizationName: string;
   establishmentName: string;
   expiresAt: string;
@@ -35,9 +37,9 @@ export function PendingInvitationView({ invitation }: { invitation: PendingInvit
 
   useEffect(() => {
     if (state.status === "success") {
-      router.replace("/");
+      router.replace(buildInvitationLandingHref(invitation.establishmentId));
     }
-  }, [state.status, router]);
+  }, [invitation.establishmentId, router, state.status]);
 
   return (
     <main className="flex min-h-screen items-center justify-center px-4">

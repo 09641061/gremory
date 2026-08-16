@@ -221,6 +221,7 @@ describe("business workspace query service", () => {
         organization: null,
         subscription: null,
         pendingInvitation: {
+          establishmentId,
           organizationName: "Takodu Studio",
           establishmentName: "Main branch",
           expiresAt: "2026-09-01T00:00:00Z",

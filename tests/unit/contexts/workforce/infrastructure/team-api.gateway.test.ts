@@ -200,6 +200,22 @@ describe("TeamApiGateway", () => {
       size: 20,
     })).rejects.toThrow("ACTIVE team users require member and user IDs");
   });
+
+  it("should accept a pending user with no explicit roles from the API", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(jsonResponse(pageResource({
+      roleId: undefined,
+      roleName: undefined,
+      roles: [],
+    }))));
+
+    const result = await new TeamApiGateway("access-token").list({
+      page: 0,
+      size: 20,
+    });
+
+    expect(result.content[0]?.roles).toHaveLength(1);
+    expect(result.content[0]?.roleName).toBe("Everyone");
+  });
 });
 
 function pageResource(overrides: Record<string, unknown> = {}) {

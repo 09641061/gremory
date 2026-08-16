@@ -108,5 +108,6 @@ function resolveHomeHref(
   if (firstWorkRoute) return firstWorkRoute;
 
   if (workspace.canReadOrganization) return "/organization";
+  if (workspace.establishments.length > 0) return "/chat";
   return "/access-denied";
 }

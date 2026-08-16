@@ -187,7 +187,12 @@ function toTeamUser(resource: {
   removedAt: string | null;
   availableForScheduling: boolean;
 }): TeamUser {
-  const roles = resource.roles ?? (resource.roleId ? [{ id: resource.roleId, name: resource.roleName ?? "Everyone", position: 2_147_483_647, systemRole: true, permissions: [] }] : []);
+  const roles =
+    resource.roles && resource.roles.length > 0
+      ? resource.roles
+      : resource.roleId
+        ? [{ id: resource.roleId, name: resource.roleName ?? "Everyone", position: 2_147_483_647, systemRole: true, permissions: [] }]
+        : [];
   return TeamUser.create({
     invitationId: createInvitationId(resource.invitationId),
     memberId: resource.memberId ? createMemberId(resource.memberId) : null,

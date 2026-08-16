@@ -102,6 +102,7 @@ export const businessWorkspaceResourceSchema = z.object({
   // Present only for PENDING_INVITATION. Never carries the invitation token.
   pendingInvitation: z
     .object({
+      establishmentId: uuidSchema,
       organizationName: z.string().trim().min(1),
       establishmentName: z.string().trim().min(1),
       expiresAt: z.string(),

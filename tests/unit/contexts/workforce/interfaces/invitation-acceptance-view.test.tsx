@@ -81,9 +81,9 @@ describe("Invitation acceptance view", () => {
     expect(
       screen.getByText("You already have access to this workspace."),
     ).toBeVisible();
-    expect(screen.getByRole("link", { name: "Continue to Takodu" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "Continue to establishment" })).toHaveAttribute(
       "href",
-      "/",
+      "/establishments?establishmentId=55555555-5555-4555-8555-555555555555",
     );
     expect(screen.queryByRole("button", { name: "Accept invitation" })).not.toBeInTheDocument();
   });
@@ -116,6 +116,6 @@ describe("Invitation acceptance view", () => {
         "Your membership is no longer active. Ask the organization owner to send you a new invitation.",
       ),
     ).toBeVisible();
-    expect(screen.queryByRole("link", { name: "Continue to Takodu" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Continue to establishment" })).not.toBeInTheDocument();
   });
 });

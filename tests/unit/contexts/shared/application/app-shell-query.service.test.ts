@@ -200,5 +200,6 @@ describe("app shell query service", () => {
     const shell = await createAppShellQueryService().resolve();
 
     expect(shell.visibleSidebarRoutes).toEqual([]);
+    expect(shell.homeHref).toBe("/chat");
   });
 });

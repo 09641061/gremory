@@ -83,6 +83,7 @@ export type WorkspaceSubscription = Readonly<{
 }>;
 
 export type WorkspacePendingInvitation = Readonly<{
+  establishmentId: string;
   organizationName: string;
   establishmentName: string;
   expiresAt: string;

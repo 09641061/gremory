@@ -179,6 +179,7 @@ describe("IAM session proxy", () => {
       activeEstablishmentId: null,
       subscription: null,
       pendingInvitation: {
+        establishmentId,
         organizationName: "Takodu",
         establishmentName: "Main",
         expiresAt: "2026-09-01T00:00:00Z",
@@ -318,6 +319,18 @@ describe("IAM session proxy", () => {
 
     expect(response.status).toBe(307);
     expect(response.headers.get("location")).toBe("http://localhost/catalog");
+  });
+
+  it("should keep a member in the app shell when no module is readable", async () => {
+    stubFetch(workspace({
+      accountType: "MEMBER",
+      establishments: [establishment(establishmentId, [])],
+    }));
+
+    const response = await proxy(requestWithSession("access-token", "refresh-token", "/"));
+
+    expect(response.status).toBe(307);
+    expect(response.headers.get("location")).toBe("http://localhost/chat");
   });
 
   it("should persist an explicit establishment selection into a cookie", async () => {

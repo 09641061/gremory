@@ -1,6 +1,10 @@
+import { redirect } from "next/navigation";
 import { createTeamQueryService } from "@/contexts/workforce/application/internal/queryservices/team-query.service";
 import { TeamApiError } from "@/contexts/workforce/infrastructure/gateways/team-api.gateway";
 import { getTeamAccessToken } from "@/contexts/workforce/infrastructure/session/team-session";
+import { createTeamCommandService } from "@/contexts/workforce/application/internal/commandservices/team-command.service";
+import { acceptTeamInvitationCommand } from "@/contexts/workforce/domain/model/commands/team.commands";
+import { buildInvitationLandingHref } from "@/contexts/workforce/interfaces/components/invitations/invitation-navigation";
 import {
   InvitationAcceptanceView,
   InvitationExpiredView,
@@ -33,6 +37,19 @@ export default async function InvitationAcceptPage({
   }
 
   const authenticated = Boolean(accessToken);
+  if (authenticated && invitation.status === "PENDING") {
+    try {
+      await createTeamCommandService(accessToken).acceptInvitation(
+        acceptTeamInvitationCommand({ token }),
+      );
+    } catch (error) {
+      if (!isInvitationAlreadyHandledError(error)) {
+        throw error;
+      }
+    }
+    redirect(buildInvitationLandingHref(invitation.establishmentId));
+  }
+
   return (
     <InvitationAcceptanceView
       token={token}
@@ -48,4 +65,8 @@ function isExpiredInvitationError(error: unknown): boolean {
 
 function isNotFoundInvitationError(error: unknown): boolean {
   return error instanceof TeamApiError && error.status === 404;
+}
+
+function isInvitationAlreadyHandledError(error: unknown): boolean {
+  return error instanceof TeamApiError && [404, 410].includes(error.status);
 }

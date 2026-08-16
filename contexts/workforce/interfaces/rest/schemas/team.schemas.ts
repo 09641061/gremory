@@ -31,7 +31,7 @@ export const workforceUserResourceSchema = z.object({
     position: z.number().int().min(1),
     systemRole: z.boolean(),
     permissions: z.array(z.string()),
-  })).min(1).optional(),
+  })).optional(),
   organizationId: uuidSchema,
   establishmentId: uuidSchema,
   establishmentName: z.string().nullable(),
