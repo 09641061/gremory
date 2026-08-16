@@ -55,6 +55,14 @@ export class SchedulingAccessPolicyService {
 
         const perms = estAccess.effectivePermissions;
         const capabilities = access.membershipCapabilities;
+        if (capabilities?.canOpenModules === false) {
+          return {
+            canReadAppointments: false,
+            canCreateAppointment: false,
+            canUpdateAppointment: false,
+            canDeleteAppointment: false,
+          };
+        }
         const canReadAppointments =
           capabilities?.canReadAppointments ??
           (hasAnyPermission(perms, ["scheduling:manage"]) ||

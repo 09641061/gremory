@@ -1,6 +1,4 @@
 import { GetConversationQueryService } from "@/contexts/assistant/application/internal/queryservices/get-conversation-query.service";
-import { createCurrentSubscriptionQueryService } from "@/contexts/billing/application/internal/queryservices/current-subscription-query.service";
-import { createSubscriptionAccessQueryService } from "@/contexts/billing/application/internal/queryservices/subscription-access-query.service";
 import { createBusinessWorkspaceQueryService } from "@/contexts/business/application/internal/queryservices/business-workspace-query.service";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
@@ -20,15 +18,10 @@ export default async function ChatPage({
   const requestedEstablishmentId = resolvedSearchParams?.establishmentId;
   const accessToken = (await cookies()).get(iamSessionCookies.accessToken)?.value;
 
-  const subscription = accessToken
-    ? await createCurrentSubscriptionQueryService().getCurrentSubscriptionSnapshot(accessToken)
-    : null;
   const workspace = await createBusinessWorkspaceQueryService().getHeaderViewModel({
     establishmentId: requestedEstablishmentId,
   });
-  const hasAssistantAccess =
-    workspace.accessPolicy?.canUseAssistant ??
-    createSubscriptionAccessQueryService().resolve(subscription).hasAssistantAccess;
+  const hasAssistantAccess = workspace.accessPolicy?.canUseAssistant ?? false;
 
   if (!hasAssistantAccess) {
     redirect("/");

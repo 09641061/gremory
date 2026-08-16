@@ -44,9 +44,6 @@ const mocks = vi.hoisted(() => ({
       canCreateEstablishment: true,
     },
   },
-  subscription: {
-    resolve: vi.fn(),
-  },
   workspace: {
     getHeaderViewModel: vi.fn(),
   },
@@ -68,13 +65,6 @@ vi.mock(
   "@/contexts/business/application/internal/queryservices/business-workspace-query.service",
   () => ({
     createBusinessWorkspaceQueryService: () => mocks.workspace,
-  }),
-);
-
-vi.mock(
-  "@/contexts/billing/application/internal/queryservices/subscription-access-query.service",
-  () => ({
-    createSubscriptionAccessQueryService: () => mocks.subscription,
   }),
 );
 
@@ -124,11 +114,6 @@ describe("app shell query service", () => {
     mocks.shell.workspace.capabilities = {
       canReadAnalytics: true,
     };
-    mocks.subscription.resolve.mockReturnValue({
-      isActive: true,
-      hasAssistantAccess: true,
-      homeHref: "/chat",
-    });
     mocks.workspace.getHeaderViewModel.mockResolvedValue(mocks.shell.workspace);
     mocks.catalog.getPermissions.mockResolvedValue({ canReadCatalog: true });
     mocks.crm.getPermissions.mockResolvedValue({ canReadCustomers: true });
@@ -137,7 +122,7 @@ describe("app shell query service", () => {
   });
 
   it("resolves the sidebar routes from application policies instead of UI labels", async () => {
-    const shell = await createAppShellQueryService().resolve({ subscription: { active: true, status: "ACTIVE", planId: 1 } });
+    const shell = await createAppShellQueryService().resolve();
 
     expect(shell.hasAssistantAccess).toBe(true);
     expect(shell.visibleSidebarRoutes).toEqual([
@@ -152,13 +137,8 @@ describe("app shell query service", () => {
 
   it("hides assistant navigation when the plan is free", async () => {
     delete (mocks.shell.workspace.accessPolicy as { canUseAssistant?: boolean }).canUseAssistant;
-    mocks.subscription.resolve.mockReturnValue({
-      isActive: true,
-      hasAssistantAccess: false,
-      homeHref: "/schedule",
-    });
 
-    const shell = await createAppShellQueryService().resolve({ subscription: { active: true, status: "ACTIVE", planId: 0 } });
+    const shell = await createAppShellQueryService().resolve();
 
     expect(shell.hasAssistantAccess).toBe(false);
     expect(shell.visibleSidebarRoutes).toEqual([
@@ -175,15 +155,8 @@ describe("app shell query service", () => {
       ...mocks.shell.workspace.accessPolicy,
       canUseAssistant: false,
     };
-    mocks.subscription.resolve.mockReturnValue({
-      isActive: true,
-      hasAssistantAccess: true,
-      homeHref: "/chat",
-    });
 
-    const shell = await createAppShellQueryService().resolve({
-      subscription: { active: true, status: "ACTIVE", planId: 1 },
-    });
+    const shell = await createAppShellQueryService().resolve();
 
     expect(shell.hasAssistantAccess).toBe(false);
     expect(shell.visibleSidebarRoutes).not.toContain("/chat");
@@ -196,9 +169,7 @@ describe("app shell query service", () => {
       canOpenTeam: false,
     };
 
-    const shell = await createAppShellQueryService().resolve({
-      subscription: { active: true, status: "ACTIVE", planId: 1 },
-    });
+    const shell = await createAppShellQueryService().resolve();
 
     expect(shell.visibleSidebarRoutes).toEqual([
       "/chat",
@@ -211,9 +182,7 @@ describe("app shell query service", () => {
   it("hides analytics when the workspace capability denies it", async () => {
     mocks.shell.workspace.accessPolicy = { ...mocks.shell.workspace.accessPolicy, canOpenAnalytics: false };
 
-    const shell = await createAppShellQueryService().resolve({
-      subscription: { active: true, status: "ACTIVE", planId: 1 },
-    });
+    const shell = await createAppShellQueryService().resolve();
 
     expect(shell.visibleSidebarRoutes).toEqual([
       "/chat",
@@ -228,12 +197,8 @@ describe("app shell query service", () => {
     delete (mocks.shell.workspace as { capabilities?: { canReadAnalytics: boolean } }).capabilities;
     delete (mocks.shell.workspace as { accessPolicy?: { canOpenAnalytics: boolean } }).accessPolicy;
 
-    const shell = await createAppShellQueryService().resolve({
-      subscription: { active: true, status: "ACTIVE", planId: 1 },
-    });
+    const shell = await createAppShellQueryService().resolve();
 
-    expect(shell.visibleSidebarRoutes).toEqual([
-      "/chat",
-    ]);
+    expect(shell.visibleSidebarRoutes).toEqual([]);
   });
 });

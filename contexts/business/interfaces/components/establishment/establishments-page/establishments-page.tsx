@@ -70,6 +70,8 @@ export function EstablishmentsPage({
           establishments={establishments}
           filteredEstablishments={filteredEstablishments}
           selectedEstId={selectedEstId}
+          canUpdateMap={canUpdateMap}
+          defaultCanUpdate={defaultCanUpdate}
           onSelect={setSelectedEstId}
         />
       </div>

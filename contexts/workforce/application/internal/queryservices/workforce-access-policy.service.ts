@@ -12,6 +12,8 @@ export interface WorkforcePermissions {
   canCreateRole: boolean;
   canUpdateRole: boolean;
   canDeleteRole: boolean;
+  canEditEstablishmentProfile: boolean;
+  canOpenModules: boolean;
 }
 
 export class WorkforceAccessPolicyService {
@@ -26,6 +28,8 @@ export class WorkforceAccessPolicyService {
         canCreateRole: false,
         canUpdateRole: false,
         canDeleteRole: false,
+        canEditEstablishmentProfile: false,
+        canOpenModules: false,
       };
     }
 
@@ -40,6 +44,8 @@ export class WorkforceAccessPolicyService {
           canCreateRole: true,
           canUpdateRole: true,
           canDeleteRole: true,
+          canEditEstablishmentProfile: true,
+          canOpenModules: true,
         };
       }
     } catch {
@@ -60,24 +66,37 @@ export class WorkforceAccessPolicyService {
           canCreateRole: false,
           canUpdateRole: false,
           canDeleteRole: false,
+          canEditEstablishmentProfile: false,
+          canOpenModules: false,
         };
       }
 
       const perms = estAccess.effectivePermissions;
+      const capabilities = access.membershipCapabilities;
       const hasManage = hasAnyPermission(perms, ["workforce:manage"]);
-      const hasRead =
-        access.membershipCapabilities?.canReadTeam ??
-        (hasManage || hasAnyPermission(perms, ["workforce:read"]));
+      const canOpenModules = capabilities?.canOpenModules ?? (hasManage || hasAnyPermission(perms, ["workforce:read"]));
+      const canReadTeam =
+        canOpenModules &&
+        (capabilities?.canReadTeam ?? (hasManage || hasAnyPermission(perms, ["workforce:read"])));
+      const canCreateInvitation = canOpenModules && (capabilities?.canCreateInvitation ?? hasManage);
+      const canDeleteInvitation = canOpenModules && (capabilities?.canDeleteInvitation ?? hasManage);
+      const canUpdateRole = canOpenModules && (capabilities?.canUpdateRole ?? hasManage);
+      const canDeleteRole = canOpenModules && (capabilities?.canDeleteRole ?? hasManage);
+      const canCreateRole = canUpdateRole;
+      const canEditEstablishmentProfile = canOpenModules && (capabilities?.canEditEstablishmentProfile ?? hasManage);
+      const hasRead = canReadTeam;
 
       return {
         canReadTeam: hasRead,
-        canDeleteMember: hasManage,
-        canCreateInvitation: hasManage,
-        canDeleteInvitation: hasManage,
+        canDeleteMember: canOpenModules && (capabilities?.canDeleteInvitation ?? hasManage),
+        canCreateInvitation,
+        canDeleteInvitation,
         canReadRoles: hasRead,
-        canCreateRole: hasManage,
-        canUpdateRole: hasManage,
-        canDeleteRole: hasManage,
+        canCreateRole,
+        canUpdateRole,
+        canDeleteRole,
+        canEditEstablishmentProfile,
+        canOpenModules,
       };
     } catch {
       return {
@@ -89,6 +108,8 @@ export class WorkforceAccessPolicyService {
         canCreateRole: false,
         canUpdateRole: false,
         canDeleteRole: false,
+        canEditEstablishmentProfile: false,
+        canOpenModules: false,
       };
     }
   }

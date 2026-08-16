@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import {
+  Building2,
   BarChart3,
   CalendarDays,
   ContactRound,
@@ -71,7 +72,8 @@ export function AppSidebar({
     workspace.establishments.some((item) => item.id === requestedEstablishmentId)
       ? requestedEstablishmentId
       : workspace.activeEstablishmentId ?? null;
-  const canManageBilling = workspace.accessPolicy?.canManageBilling ?? workspace.subscription?.canManageBilling ?? false;
+  const canEditEstablishmentProfile = workspace.authorization?.capabilities.canEditEstablishmentProfile ?? false;
+  const canManageBilling = workspace.accessPolicy?.canManageBilling ?? false;
   const assistantChatsSectionKey = initialAssistantConversations
     .map((conversation) => `${conversation.id}:${conversation.updatedAt}:${conversation.title ?? ""}`)
     .join("|");
@@ -136,6 +138,16 @@ export function AppSidebar({
       </SidebarContent>
 
       <SidebarFooter className="gap-2 px-3 pb-3">
+        {canEditEstablishmentProfile && establishmentId ? (
+          <Link
+            href={`/establishments?establishmentId=${establishmentId}`}
+            className="flex h-9 w-full items-center gap-2 rounded-md border border-border/60 bg-card px-3 text-sm font-medium text-foreground transition-colors hover:border-ring/50 hover:bg-card"
+          >
+            <Building2 className="size-4 text-muted-foreground" />
+            <span>Edit establishment</span>
+          </Link>
+        ) : null}
+
         {canManageBilling && canOfferUpgrade(workspace.subscription) ? <SidebarUpgradeCallout /> : null}
 
         <SidebarProfile

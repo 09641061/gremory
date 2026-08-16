@@ -51,6 +51,14 @@ export class CrmAccessPolicyService {
 
         const perms = estAccess.effectivePermissions;
         const hasManage = hasAnyPermission(perms, ["crm:manage"]);
+        if (access.membershipCapabilities?.canOpenModules === false) {
+          return {
+            canReadCustomers: false,
+            canCreateCustomer: false,
+            canUpdateCustomer: false,
+            canDeleteCustomer: false,
+          };
+        }
 
         return {
           canReadCustomers:

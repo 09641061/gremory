@@ -44,5 +44,6 @@ describe("permissions utils", () => {
 
   it("keeps permission actions human-readable", () => {
     expect(permissionLabel("workforce:manage")).toBe("Manage");
+    expect(permissionLabel("workforce:manage_members")).toBe("Manage Members");
   });
 });

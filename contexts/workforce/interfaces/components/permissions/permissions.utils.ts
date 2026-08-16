@@ -21,7 +21,12 @@ export function groupPermissions(permissions: ReadonlyArray<string>) {
 
 export function permissionLabel(permission: string) {
   const action = permission.split(":").at(-1) ?? permission;
-  return action.charAt(0).toUpperCase() + action.slice(1);
+  return action
+    .replaceAll("_", " ")
+    .split(" ")
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
 }
 
 function formatPermissionGroupLabel(context: string) {

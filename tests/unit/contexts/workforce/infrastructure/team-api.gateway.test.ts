@@ -139,6 +139,11 @@ describe("TeamApiGateway", () => {
   it("should load member organization and establishment access", async () => {
     const fetchMock = vi.fn().mockResolvedValue(jsonResponse({
       active: true,
+      membershipCapabilities: {
+        canReadTeam: true,
+        canOpenModules: true,
+        canEditEstablishmentProfile: false,
+      },
       establishments: [{
         organizationId,
         organizationName: "Naari",
@@ -151,6 +156,7 @@ describe("TeamApiGateway", () => {
     const result = await new TeamApiGateway("access-token").getAccessContext();
 
     expect(result.active).toBe(true);
+    expect(result.membershipCapabilities?.canOpenModules).toBe(true);
     expect(result.establishments[0]?.organizationId.value).toBe(organizationId);
     expect(result.establishments[0]?.establishmentId.value).toBe(establishmentId);
     expect(fetchMock).toHaveBeenCalledWith(

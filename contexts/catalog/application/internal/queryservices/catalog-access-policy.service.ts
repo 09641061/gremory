@@ -64,6 +64,17 @@ export class CatalogAccessPolicyService {
         const perms = estAccess.effectivePermissions ?? [];
         const hasReadCatalog = hasCatalogReadPermission(perms);
         const hasManage = hasAnyPermission(perms, ["catalog:manage"]);
+        if (access.membershipCapabilities?.canOpenModules === false) {
+          return {
+            canReadCatalog: false,
+            canCreateCategory: false,
+            canUpdateCategory: false,
+            canDeleteCategory: false,
+            canCreateService: false,
+            canUpdateService: false,
+            canDeleteService: false,
+          };
+        }
 
         return {
           canReadCatalog: hasReadCatalog,

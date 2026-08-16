@@ -48,7 +48,6 @@ export function WorkspaceSwitcher({
   const activeEstablishment = establishments.find(
     (establishment) => establishment.id === selectedEstablishmentId,
   );
-
   // Filter establishments to show only those of the active organization
   const currentOrgEstablishments = establishments.filter(
     (est) => !est.organizationId || est.organizationId === organization?.id,

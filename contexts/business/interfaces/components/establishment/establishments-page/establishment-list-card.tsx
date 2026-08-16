@@ -1,4 +1,4 @@
-import { Store } from "lucide-react";
+import { PencilLine, Store } from "lucide-react";
 import type { EstablishmentListItem } from "./establishments-page";
 import { Card, CardContent } from "@/contexts/shared/interfaces/components/ui/card";
 import {
@@ -6,11 +6,14 @@ import {
   AvatarFallback,
   AvatarImage,
 } from "@/contexts/shared/interfaces/components/ui/avatar";
+import { StatusBadge } from "@/contexts/shared/interfaces/components/ui/status-badge";
 
 interface EstablishmentListCardProps {
   establishments: EstablishmentListItem[];
   filteredEstablishments: EstablishmentListItem[];
   selectedEstId: string | null;
+  canUpdateMap?: Record<string, boolean>;
+  defaultCanUpdate?: boolean;
   onSelect: (id: string) => void;
 }
 
@@ -18,6 +21,8 @@ export function EstablishmentListCard({
   establishments,
   filteredEstablishments,
   selectedEstId,
+  canUpdateMap = {},
+  defaultCanUpdate = true,
   onSelect,
 }: EstablishmentListCardProps) {
   return (
@@ -35,6 +40,7 @@ export function EstablishmentListCard({
           ) : (
             filteredEstablishments.map((est) => {
               const selected = est.id === selectedEstId;
+              const canUpdate = canUpdateMap[est.id] ?? defaultCanUpdate;
               return (
                 <button
                   key={est.id}
@@ -54,9 +60,17 @@ export function EstablishmentListCard({
                       </AvatarFallback>
                     )}
                   </Avatar>
-                  <p className="truncate text-sm font-medium text-foreground">
-                    {est.name}
-                  </p>
+                  <div className="flex min-w-0 flex-1 items-center gap-2">
+                    <p className="truncate text-sm font-medium text-foreground">
+                      {est.name}
+                    </p>
+                    {canUpdate ? (
+                      <StatusBadge tone="success">
+                        <PencilLine className="size-3" />
+                        Editable
+                      </StatusBadge>
+                    ) : null}
+                  </div>
                 </button>
               );
             })

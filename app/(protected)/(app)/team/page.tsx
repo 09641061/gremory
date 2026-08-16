@@ -21,6 +21,7 @@ export default async function TeamPage({ searchParams }: TeamPageProps) {
     canCreateInvitation,
     canDeleteInvitation,
     canReadRoles,
+    canEditEstablishmentProfile,
   } = await policyService.getPermissions(establishmentId);
 
   if (!canReadTeam) {
@@ -39,6 +40,10 @@ export default async function TeamPage({ searchParams }: TeamPageProps) {
       canInviteMembers={canCreateInvitation}
       canRemoveMembers={canDeleteMember}
       canCancelInvitations={canDeleteInvitation}
+      canEditEstablishmentProfile={canEditEstablishmentProfile}
+      establishmentEditHref={
+        establishmentId ? `/establishments?establishmentId=${establishmentId}` : "/establishments"
+      }
     />
   );
 }

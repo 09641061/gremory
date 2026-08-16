@@ -35,7 +35,6 @@ describe("EstablishmentDetailCard Component", () => {
 
     // Verify header and fields are shown
     expect(screen.getByText("Establishment Name")).toBeDefined();
-    
     // Verify inputs are enabled
     const input = screen.getByPlaceholderText("Establishment name") as HTMLInputElement;
     expect(input.disabled).toBe(false);
@@ -57,7 +56,6 @@ describe("EstablishmentDetailCard Component", () => {
 
     // Verify fields are shown
     expect(screen.getByText("Establishment Name")).toBeDefined();
-
     // Verify inputs are disabled
     const input = screen.getByPlaceholderText("Establishment name") as HTMLInputElement;
     expect(input.disabled).toBe(true);

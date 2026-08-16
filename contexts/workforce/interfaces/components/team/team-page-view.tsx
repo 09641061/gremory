@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Search, Settings2, UserPlus } from "lucide-react";
+import { Building2, Search, Settings2, UserPlus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import { Input } from "@/contexts/shared/interfaces/components/ui/input";
@@ -18,6 +18,8 @@ export function TeamPageView({
   canInviteMembers = true,
   canRemoveMembers = true,
   canCancelInvitations = true,
+  canEditEstablishmentProfile = false,
+  establishmentEditHref,
 }: {
   establishmentId: string | null;
   members: TeamUserSummary[];
@@ -25,6 +27,8 @@ export function TeamPageView({
   canInviteMembers?: boolean;
   canRemoveMembers?: boolean;
   canCancelInvitations?: boolean;
+  canEditEstablishmentProfile?: boolean;
+  establishmentEditHref?: string;
 }) {
 
   const [filter, setFilter] = useState("");
@@ -42,6 +46,17 @@ export function TeamPageView({
           <p className="page-description mt-2">Manage team members and pending invitations.</p>
         </div>
         <div className="flex items-center gap-3">
+          {canEditEstablishmentProfile && establishmentEditHref ? (
+            <Button
+              type="button"
+              variant="outline"
+              className="gap-2"
+              onClick={() => router.push(establishmentEditHref)}
+            >
+              <Building2 className="size-4" />
+              Edit establishment
+            </Button>
+          ) : null}
           {canManageRoles ? <Button type="button" variant="outline" className="gap-2" onClick={() => router.push("/permissions")}>
             <Settings2 className="size-4" />
             Manage permissions

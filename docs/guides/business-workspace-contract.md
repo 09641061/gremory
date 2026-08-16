@@ -132,11 +132,11 @@ Campos:
   - habilita la entrada al modulo team/workforce
 - `canUseAssistant`:
   - habilita assistant y su landing inicial
-  - si falta temporalmente, el frontend puede usar la suscripcion como respaldo
+  - si falta temporalmente, el frontend debe denegar por defecto
 - `canCreateEstablishment`:
   - habilita la accion de crear locales
 - `canManageBilling`:
-  - habilita pantallas de billing para el owner
+  - habilita acciones de billing en pantallas explicitamente de billing
 
 ## Reglas de resolucion
 
@@ -181,7 +181,7 @@ Assistant debe resolverse asi:
 
 1. Si `accountType == PENDING_INVITATION`, no entra.
 2. Si `accessPolicy.canUseAssistant == true`, el frontend puede mostrar `/chat`.
-3. Si el backend aun no emite `canUseAssistant`, usar `subscription` como fallback transitorio.
+3. Si el backend aun no emite `canUseAssistant`, denegar por defecto.
 4. Si no viene nada, denegar.
 
 La idea importante es:
@@ -197,6 +197,8 @@ La idea importante es:
 - `effectivePermissions` puede seguir existiendo para inspeccion o debugging, pero no debe ser la fuente primaria si `accessPolicy` ya esta disponible.
 - `accountType` sirve para layout y UX, no para autorizacion.
 - `subscription` sirve para billing y plan, no para decidir por si solo acceso a modulos.
+- `subscription` no debe influir en onboarding ni en la entrada general a la app.
+- las mutaciones de billing solo deben ejecutarse desde pantallas explicitas de billing y solo cuando el usuario sea owner.
 
 ## Casos de uso
 
@@ -217,6 +219,9 @@ La idea importante es:
 - `GET /api/analytics/free`
   - snapshot de datos del modulo analytics
   - no debe usarse para inventar permisos de UI
+- `GET /api/billing/subscriptions`
+  - datos complementarios del plan actual
+  - no debe usarse para decidir onboarding, shell o permisos generales
 
 ## Nota final
 

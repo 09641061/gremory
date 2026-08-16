@@ -9,6 +9,8 @@ import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import { Card, CardContent } from "@/contexts/shared/interfaces/components/ui/card";
 import { Input } from "@/contexts/shared/interfaces/components/ui/input";
 import { ErrorAlert } from "@/contexts/shared/interfaces/components/error";
+import { StatusBadge } from "@/contexts/shared/interfaces/components/ui/status-badge";
+import { InfoBadge } from "@/contexts/shared/interfaces/components/ui/info-badge";
 import { CreateRoleDialog } from "./create-role-dialog";
 import { EditRoleDialog } from "./edit-role-dialog";
 import { DeleteRoleDialog } from "./delete-role-dialog";
@@ -122,15 +124,17 @@ export function PermissionsPageView({
             </p>
             {authorization ? (
               <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                <span className="rounded-full border border-border bg-card px-2.5 py-1 font-medium text-foreground">
+                <InfoBadge>
                   {formatAuthorizationRole(authorization.role)}
-                </span>
-                <span className="rounded-full border border-border bg-card px-2.5 py-1">
-                  {formatAuthorizationScope(authorization.scope.type)} scope
-                </span>
-                <span className="rounded-full border border-border bg-card px-2.5 py-1">
-                  {authorization.scope.name}
-                </span>
+                </InfoBadge>
+                {authorization.scope ? (
+                  <>
+                    <InfoBadge>
+                      {formatAuthorizationScope(authorization.scope.type)} scope
+                    </InfoBadge>
+                    <InfoBadge>{authorization.scope.name}</InfoBadge>
+                  </>
+                ) : null}
               </div>
             ) : null}
           </div>

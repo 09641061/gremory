@@ -1,8 +1,6 @@
 import "server-only";
 
 import { createBusinessWorkspaceQueryService } from "@/contexts/business/application/internal/queryservices/business-workspace-query.service";
-import { createSubscriptionAccessQueryService } from "@/contexts/billing/application/internal/queryservices/subscription-access-query.service";
-import type { SubscriptionAccessSnapshot } from "@/contexts/billing/domain/services/subscription-access.policy";
 import type {
   AppShellHomeHref,
   AppShellViewModel,
@@ -10,19 +8,17 @@ import type {
 } from "@/contexts/shared/application/model/app-shell.view-models";
 
 export interface AppShellQueryInput {
-  subscription: SubscriptionAccessSnapshot | null | undefined;
   workspace?: Readonly<{
     establishmentId?: string;
   }>;
 }
 
 export class AppShellQueryService {
-  async resolve({ subscription, workspace: workspaceSelection }: AppShellQueryInput): Promise<AppShellViewModel> {
-    const subscriptionAccess = createSubscriptionAccessQueryService().resolve(subscription);
+  async resolve({ workspace: workspaceSelection }: AppShellQueryInput = {}): Promise<AppShellViewModel> {
     const workspace = await createBusinessWorkspaceQueryService().getHeaderViewModel(workspaceSelection);
     const activeEstablishmentId = workspace.activeEstablishmentId;
     const accessPolicy = workspace.accessPolicy;
-    const hasAssistantAccess = accessPolicy?.canUseAssistant ?? subscriptionAccess.hasAssistantAccess;
+    const hasAssistantAccess = accessPolicy?.canUseAssistant ?? false;
     const canReadScheduling =
       accessPolicy?.canOpenScheduling ?? workspace.capabilities?.canReadAppointments ?? false;
     const canReadCatalog =

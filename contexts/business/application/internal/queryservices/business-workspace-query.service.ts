@@ -141,11 +141,25 @@ function toWorkspaceCapabilities(
 function toWorkspaceAuthorization(
   authorization: BusinessWorkspaceResource["authorization"],
 ): WorkspaceAuthorization | undefined {
-  if (!authorization) {
+  if (
+    !authorization ||
+    !authorization.scope ||
+    !authorization.scope.type ||
+    !authorization.scope.id ||
+    !authorization.scope.name
+  ) {
     return undefined;
   }
 
-  return authorization;
+  return {
+    role: authorization.role,
+    scope: {
+      type: authorization.scope.type,
+      id: authorization.scope.id,
+      name: authorization.scope.name,
+    },
+    capabilities: authorization.capabilities,
+  };
 }
 
 function toWorkspaceAccessPolicy(resource: BusinessWorkspaceResource): WorkspaceAccessPolicy {

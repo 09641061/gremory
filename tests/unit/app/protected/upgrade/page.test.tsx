@@ -12,6 +12,9 @@ const mocks = vi.hoisted(() => ({
   workspace: {
     resolve: vi.fn(),
   },
+  businessWorkspace: {
+    getHeaderViewModel: vi.fn(),
+  },
   plans: vi.fn(),
 }));
 
@@ -30,6 +33,10 @@ vi.mock("@/contexts/billing/application/internal/queryservices/current-subscript
 
 vi.mock("@/contexts/shared/application/internal/queryservices/app-shell-query.service", () => ({
   createAppShellQueryService: () => mocks.workspace,
+}));
+
+vi.mock("@/contexts/business/application/internal/queryservices/business-workspace-query.service", () => ({
+  createBusinessWorkspaceQueryService: () => mocks.businessWorkspace,
 }));
 
 vi.mock("@/contexts/billing/application/internal/queryservices/list-plans-query.service", () => ({
@@ -58,6 +65,11 @@ describe("UpgradePage", () => {
         accessPolicy: {
           canManageBilling: false,
         },
+      },
+    });
+    mocks.businessWorkspace.getHeaderViewModel.mockResolvedValue({
+      accessPolicy: {
+        canManageBilling: false,
       },
     });
     mocks.plans.mockResolvedValue({});

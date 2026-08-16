@@ -36,10 +36,6 @@ function jsonResponse(body: unknown, status = 200) {
   });
 }
 
-function subscription(planId = 1) {
-  return jsonResponse({ active: true, status: "ACTIVE", planId });
-}
-
 function establishment(id: string, effectivePermissions: ReadonlyArray<string>) {
   return {
     id,
@@ -98,7 +94,7 @@ describe("IAM session proxy", () => {
       accessToken: "access-token",
       rotatedSession: null,
     });
-    stubFetch(subscription(), workspace());
+    stubFetch(workspace());
   });
 
   it("should refresh the session and update cookies when verification rejects the token", async () => {
@@ -176,21 +172,18 @@ describe("IAM session proxy", () => {
   });
 
   it("should send an account that never accepted its invitation to the acceptance screen", async () => {
-    stubFetch(
-      subscription(0),
-      workspace({
-        accountType: "PENDING_INVITATION",
-        organization: null,
-        establishments: [],
-        activeEstablishmentId: null,
-        subscription: null,
-        pendingInvitation: {
-          organizationName: "Takodu",
-          establishmentName: "Main",
-          expiresAt: "2026-09-01T00:00:00Z",
-        },
-      }),
-    );
+    stubFetch(workspace({
+      accountType: "PENDING_INVITATION",
+      organization: null,
+      establishments: [],
+      activeEstablishmentId: null,
+      subscription: null,
+      pendingInvitation: {
+        organizationName: "Takodu",
+        establishmentName: "Main",
+        expiresAt: "2026-09-01T00:00:00Z",
+      },
+    }));
 
     const response = await proxy(requestWithSession("access-token", "refresh-token", "/"));
 
@@ -199,16 +192,13 @@ describe("IAM session proxy", () => {
   });
 
   it("should keep the acceptance screen reachable while the invitation is pending", async () => {
-    stubFetch(
-      subscription(0),
-      workspace({
-        accountType: "PENDING_INVITATION",
-        organization: null,
-        establishments: [],
-        activeEstablishmentId: null,
-        subscription: null,
-      }),
-    );
+    stubFetch(workspace({
+      accountType: "PENDING_INVITATION",
+      organization: null,
+      establishments: [],
+      activeEstablishmentId: null,
+      subscription: null,
+    }));
 
     const response = await proxy(requestWithSession(
       "access-token",
@@ -221,10 +211,7 @@ describe("IAM session proxy", () => {
   });
 
   it("should send an owner with an empty organization to the first-establishment setup", async () => {
-    stubFetch(
-      subscription(0),
-      workspace({ establishments: [], activeEstablishmentId: null }),
-    );
+    stubFetch(workspace({ establishments: [], activeEstablishmentId: null }));
 
     const response = await proxy(requestWithSession("access-token", "refresh-token", "/chat"));
 
@@ -233,21 +220,18 @@ describe("IAM session proxy", () => {
   });
 
   it("should use the workspace assistant policy for the landing route", async () => {
-    stubFetch(
-      subscription(1),
-      workspace({
-        accessPolicy: {
-          canUseAssistant: false,
-          canOpenAnalytics: true,
-          canOpenScheduling: true,
-          canOpenCrm: true,
-          canOpenCatalog: true,
-          canOpenTeam: true,
-          canCreateEstablishment: true,
-          canManageBilling: true,
-        },
-      }),
-    );
+    stubFetch(workspace({
+      accessPolicy: {
+        canUseAssistant: false,
+        canOpenAnalytics: true,
+        canOpenScheduling: true,
+        canOpenCrm: true,
+        canOpenCatalog: true,
+        canOpenTeam: true,
+        canCreateEstablishment: true,
+        canManageBilling: true,
+      },
+    }));
 
     const response = await proxy(requestWithSession("access-token", "refresh-token", "/"));
 
@@ -264,7 +248,6 @@ describe("IAM session proxy", () => {
 
   it("should resolve the workspace from a single call", async () => {
     const fetchMock = stubFetch(
-      jsonResponse({ message: "Subscription not found" }, 404),
       workspace({
         accountType: "MEMBER",
         establishments: [establishment(establishmentId, ["scheduling:read"])],
@@ -280,7 +263,7 @@ describe("IAM session proxy", () => {
     expect(response.status).toBe(200);
     expect(response.headers.get("location")).toBeNull();
     expect(fetchMock).toHaveBeenNthCalledWith(
-      2,
+      1,
       "http://localhost:8080/api/business/workspace",
       expect.objectContaining({
         headers: { Authorization: "Bearer access-token" },
@@ -290,7 +273,6 @@ describe("IAM session proxy", () => {
 
   it("should resolve landing against the persisted establishment, not the account's default identity", async () => {
     const fetchMock = stubFetch(
-      subscription(0),
       workspace({
         accountType: "MEMBER",
         establishments: [establishment(establishmentId, ["scheduling:read"])],
@@ -306,7 +288,7 @@ describe("IAM session proxy", () => {
     );
 
     expect(fetchMock).toHaveBeenNthCalledWith(
-      2,
+      1,
       `http://localhost:8080/api/business/workspace?establishmentId=${establishmentId}`,
       expect.objectContaining({
         headers: { Authorization: "Bearer access-token" },
@@ -315,13 +297,10 @@ describe("IAM session proxy", () => {
   });
 
   it("should redirect a member to the module its permissions allow", async () => {
-    stubFetch(
-      subscription(0),
-      workspace({
-        accountType: "MEMBER",
-        establishments: [establishment(establishmentId, ["scheduling:read"])],
-      }),
-    );
+    stubFetch(workspace({
+      accountType: "MEMBER",
+      establishments: [establishment(establishmentId, ["scheduling:read"])],
+    }));
 
     const response = await proxy(requestWithSession("access-token", "refresh-token", "/"));
 
@@ -330,13 +309,10 @@ describe("IAM session proxy", () => {
   });
 
   it("should redirect a member to the first accessible module when scheduling is missing", async () => {
-    stubFetch(
-      subscription(0),
-      workspace({
-        accountType: "MEMBER",
-        establishments: [establishment(establishmentId, ["catalog:read"])],
-      }),
-    );
+    stubFetch(workspace({
+      accountType: "MEMBER",
+      establishments: [establishment(establishmentId, ["catalog:read"])],
+    }));
 
     const response = await proxy(requestWithSession("access-token", "refresh-token", "/"));
 
@@ -345,13 +321,10 @@ describe("IAM session proxy", () => {
   });
 
   it("should persist an explicit establishment selection into a cookie", async () => {
-    stubFetch(
-      subscription(0),
-      workspace({
-        accountType: "MEMBER",
-        establishments: [establishment(establishmentId, ["scheduling:read"])],
-      }),
-    );
+    stubFetch(workspace({
+      accountType: "MEMBER",
+      establishments: [establishment(establishmentId, ["scheduling:read"])],
+    }));
 
     const response = await proxy(
       requestWithSession("access-token", "refresh-token", `/schedule?establishmentId=${establishmentId}`),
@@ -361,13 +334,10 @@ describe("IAM session proxy", () => {
   });
 
   it("should fall back to the persisted establishment when the url carries no selection", async () => {
-    stubFetch(
-      subscription(0),
-      workspace({
-        accountType: "MEMBER",
-        establishments: [establishment(establishmentId, ["scheduling:read"])],
-      }),
-    );
+    stubFetch(workspace({
+      accountType: "MEMBER",
+      establishments: [establishment(establishmentId, ["scheduling:read"])],
+    }));
 
     const response = await proxy(
       requestWithSession("access-token", "refresh-token", "/schedule", {
@@ -382,13 +352,10 @@ describe("IAM session proxy", () => {
   });
 
   it("should not rewrite when the url already carries its own establishment selection", async () => {
-    stubFetch(
-      subscription(0),
-      workspace({
-        accountType: "MEMBER",
-        establishments: [establishment(establishmentId, ["scheduling:read"])],
-      }),
-    );
+    stubFetch(workspace({
+      accountType: "MEMBER",
+      establishments: [establishment(establishmentId, ["scheduling:read"])],
+    }));
     const otherEstablishmentId = "55555555-5555-4555-8555-555555555555";
 
     const response = await proxy(
@@ -406,25 +373,22 @@ describe("IAM session proxy", () => {
     const foreignEstablishmentId = "33333333-3333-4333-8333-333333333333";
     const foreignOrganizationId = "44444444-4444-4444-8444-444444444444";
 
-    stubFetch(
-      subscription(0),
-      workspace({
-        accountType: "OWNER",
-        onboardingStatus: "ESTABLISHMENT_PENDING",
-        onboardingCompleted: false,
-        // `establishments` is combined across every organization the account
-        // touches, so it is not empty even though the owner's own new
-        // organization has no establishment of its own yet.
-        establishments: [
-          {
-            ...establishment(foreignEstablishmentId, ["scheduling:read"]),
-            organizationId: foreignOrganizationId,
-            organizationName: "Host Org",
-          },
-        ],
-        activeEstablishmentId: null,
-      }),
-    );
+    stubFetch(workspace({
+      accountType: "OWNER",
+      onboardingStatus: "ESTABLISHMENT_PENDING",
+      onboardingCompleted: false,
+      // `establishments` is combined across every organization the account
+      // touches, so it is not empty even though the owner's own new
+      // organization has no establishment of its own yet.
+      establishments: [
+        {
+          ...establishment(foreignEstablishmentId, ["scheduling:read"]),
+          organizationId: foreignOrganizationId,
+          organizationName: "Host Org",
+        },
+      ],
+      activeEstablishmentId: null,
+    }));
 
     const response = await proxy(requestWithSession("access-token", "refresh-token", "/chat"));
 
@@ -433,16 +397,13 @@ describe("IAM session proxy", () => {
   });
 
   it("should not send a removed member to subscribe", async () => {
-    stubFetch(
-      jsonResponse({ message: "Subscription not found" }, 404),
-      workspace({
-        accountType: "PENDING_INVITATION",
-        organization: null,
-        establishments: [],
-        activeEstablishmentId: null,
-        subscription: null,
-      }),
-    );
+    stubFetch(workspace({
+      accountType: "PENDING_INVITATION",
+      organization: null,
+      establishments: [],
+      activeEstablishmentId: null,
+      subscription: null,
+    }));
 
     const response = await proxy(requestWithSession("access-token", "refresh-token", "/chat"));
 
@@ -451,20 +412,17 @@ describe("IAM session proxy", () => {
   });
 
   it("should deny a member left without any readable establishment", async () => {
-    stubFetch(
-      subscription(0),
-      workspace({
-        accountType: "MEMBER",
-        organization: {
-          id: organizationId,
-          name: "Takodu",
-          imageUrl: null,
-          permissions: { canRead: false, canUpdate: false, canCreateEstablishment: false },
-        },
-        establishments: [],
-        activeEstablishmentId: null,
-      }),
-    );
+    stubFetch(workspace({
+      accountType: "MEMBER",
+      organization: {
+        id: organizationId,
+        name: "Takodu",
+        imageUrl: null,
+        permissions: { canRead: false, canUpdate: false, canCreateEstablishment: false },
+      },
+      establishments: [],
+      activeEstablishmentId: null,
+    }));
 
     const response = await proxy(requestWithSession("access-token", "refresh-token", "/chat"));
 

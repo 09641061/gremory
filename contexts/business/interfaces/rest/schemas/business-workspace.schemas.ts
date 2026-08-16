@@ -29,10 +29,10 @@ const workspaceAuthorizationSchema = z
   .object({
     role: z.enum(["OWNER", "ADMIN", "MANAGER", "WORKER"]),
     scope: z.object({
-      type: z.enum(["ORGANIZATION", "ESTABLISHMENT"]),
-      id: uuidSchema,
-      name: z.string().trim().min(1),
-    }),
+      type: z.enum(["ORGANIZATION", "ESTABLISHMENT"]).nullish(),
+      id: uuidSchema.nullish(),
+      name: z.string().trim().min(1).nullish(),
+    }).nullish(),
     capabilities: z.object({
       canEditOrganizationProfile: z.boolean(),
       canEditEstablishmentProfile: z.boolean(),
@@ -42,6 +42,7 @@ const workspaceAuthorizationSchema = z
       canInviteUsers: z.boolean(),
     }),
   })
+  .nullable()
   .optional();
 
 const establishmentResourceSchema = z.object({

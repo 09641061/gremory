@@ -1,5 +1,3 @@
-import type { SubscriptionAccessSnapshot } from "@/contexts/billing/domain/services/subscription-access.policy";
-
 export type EntryRoutePath =
   | "/chat"
   | "/schedule"
@@ -34,7 +32,6 @@ export type EntryRouteResolution =
 
 export type EntryRouteInput = {
   accessToken: string;
-  subscription: SubscriptionAccessSnapshot | null | undefined;
   /**
    * The account's persisted establishment selection (URL or cookie fallback).
    * Without it, landing resolution falls back to the account's default

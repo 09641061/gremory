@@ -5,7 +5,6 @@ import { headers } from "next/headers";
 
 import { ListConversationsQueryService } from "@/contexts/assistant/application/internal/queryservices/list-conversations-query.service";
 import type { AssistantConversationSummaryReadModel } from "@/contexts/assistant/application/internal/transforms/assistant.read-models";
-import { createCurrentSubscriptionQueryService } from "@/contexts/billing/application/internal/queryservices/current-subscription-query.service";
 import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-session-cookie";
 import { getMyProfileServerQuery } from "@/contexts/profiles/interfaces/queries/get-my-profile.query-handler";
 import { createAppShellQueryService } from "@/contexts/shared/application/internal/queryservices/app-shell-query.service";
@@ -51,12 +50,9 @@ async function AppShellSidebar() {
   const accessToken = (await cookies()).get(iamSessionCookies.accessToken)?.value;
   const requestHeaders = await headers();
   const establishmentId = requestHeaders.get("x-takodu-establishment-id") ?? undefined;
-  const subscription = accessToken
-    ? await createCurrentSubscriptionQueryService().getCurrentSubscriptionSnapshot(accessToken)
-    : null;
   const shell = accessToken
     ? await createAppShellQueryService()
-        .resolve({ subscription, workspace: { establishmentId } })
+        .resolve({ workspace: { establishmentId } })
         .catch(() => null)
     : null;
 

@@ -235,6 +235,49 @@ describe("business workspace query service", () => {
     expect(result.pendingInvitation?.organizationName).toBe("Takodu Studio");
   });
 
+  it("accepts a null authorization block during onboarding", async () => {
+    mocks.getWorkspace.mockResolvedValue(
+      workspace({
+        accountType: "OWNER",
+        organization: null,
+        authorization: null,
+      }),
+    );
+
+    const result = await createBusinessWorkspaceQueryService().getHeaderViewModel();
+
+    expect(result.authorization).toBeUndefined();
+  });
+
+  it("drops an incomplete authorization block during onboarding", async () => {
+    mocks.getWorkspace.mockResolvedValue(
+      workspace({
+        accountType: "OWNER",
+        organization: null,
+        authorization: {
+          role: "OWNER",
+          scope: {
+            type: null,
+            id: null,
+            name: null,
+          },
+          capabilities: {
+            canEditOrganizationProfile: true,
+            canEditEstablishmentProfile: true,
+            canManageMembers: true,
+            canManageBilling: true,
+            canOpenModules: true,
+            canInviteUsers: true,
+          },
+        },
+      }),
+    );
+
+    const result = await createBusinessWorkspaceQueryService().getHeaderViewModel();
+
+    expect(result.authorization).toBeUndefined();
+  });
+
   it("denies the organization page when the account cannot read its organization", async () => {
     mocks.getWorkspace.mockResolvedValue(
       workspace({

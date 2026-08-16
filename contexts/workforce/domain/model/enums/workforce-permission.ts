@@ -20,6 +20,9 @@ export const workforcePermissions = {
   },
   workforce: {
     read: "workforce:read",
+    invite: "workforce:invite",
+    manageMembers: "workforce:manage_members",
+    manageRoles: "workforce:manage_roles",
     manage: "workforce:manage",
   },
   scheduling: {
