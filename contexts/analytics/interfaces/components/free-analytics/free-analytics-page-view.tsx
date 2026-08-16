@@ -116,13 +116,13 @@ export function FreeAnalyticsPageView({ analytics, errorMessage }: FreeAnalytics
               </CardHeader>
 
               <CardContent className="space-y-4 p-5">
-                <StatusBar label="Completed" value={analytics.completedAppointmentsLastSevenDays} total={statusTotal} tone="bg-emerald-500" />
-                <StatusBar label="Cancelled" value={analytics.cancelledAppointmentsLastSevenDays} total={statusTotal} tone="bg-rose-500" />
+                <StatusBar label="Completed" value={analytics.completedAppointmentsLastSevenDays} total={statusTotal} tone="bg-success" />
+                <StatusBar label="Cancelled" value={analytics.cancelledAppointmentsLastSevenDays} total={statusTotal} tone="bg-destructive" />
                 <StatusBar
                   label="No show"
                   value={analytics.noShowAppointmentsLastSevenDays}
                   total={statusTotal}
-                  tone="bg-amber-500"
+                  tone="bg-warning"
                   inactiveTone="bg-muted"
                 />
                 <p className="text-xs text-muted-foreground">
@@ -160,7 +160,7 @@ export function FreeAnalyticsPageView({ analytics, errorMessage }: FreeAnalytics
                   label="Recurring"
                   value={analytics.newVsRecurringCustomers.recurrentCustomers}
                   total={analytics.newVsRecurringCustomers.totalCustomers}
-                  tone="bg-sky-500"
+                  tone="bg-info"
                 />
                 <p className="text-xs text-muted-foreground">
                   New is treated as one appointment in the selected period. It is a low-cost operational proxy, not a lifetime customer classification.
@@ -208,7 +208,7 @@ export function FreeAnalyticsPageView({ analytics, errorMessage }: FreeAnalytics
                       {formatMoney(averageTicket.currentValue)}
                     </p>
                     <p className="text-sm text-muted-foreground">vs previous period</p>
-                    <p className={`pt-2 text-sm font-semibold ${averageTicket.delta >= 0 ? "text-emerald-600" : "text-rose-600"}`}>
+                    <p className={`pt-2 text-sm font-semibold ${averageTicket.delta >= 0 ? "text-success" : "text-destructive"}`}>
                       {averageTicket.delta >= 0 ? "+" : "-"}
                       {formatMoney(Math.abs(averageTicket.delta))}
                     </p>
@@ -229,14 +229,14 @@ export function FreeAnalyticsPageView({ analytics, errorMessage }: FreeAnalytics
                     label="Cancelled"
                     value={lostRevenue.cancelledRevenue}
                     total={lostRevenue.totalLostRevenue}
-                    tone="bg-rose-500"
+                    tone="bg-destructive"
                     valueFormatter={formatMoney}
                   />
                   <SplitMetricRow
                     label="No-show"
                     value={lostRevenue.noShowRevenue}
                     total={lostRevenue.totalLostRevenue}
-                    tone="bg-amber-500"
+                    tone="bg-warning"
                     inactiveTone="bg-muted"
                     valueFormatter={formatMoney}
                   />

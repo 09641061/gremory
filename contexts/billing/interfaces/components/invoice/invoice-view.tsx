@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronLeft, ChevronRight, FileDown } from "lucide-react";
+import { ChevronLeft, ChevronRight, FileDown, FileText } from "lucide-react";
 
 import type { SubscriptionAccessSnapshot } from "../../../domain/services/subscription-access.policy";
 import type { InvoiceResponse, PageResponse } from "../../../infrastructure/gateways/billing-api.gateway";
@@ -111,7 +111,9 @@ export function InvoiceView({ currentSubscription, initialInvoices }: InvoiceVie
           {invoicesData.content.length === 0 ? (
             <Empty className="rounded-none border-0 py-16">
               <EmptyHeader>
-                <EmptyMedia variant="icon" />
+                <EmptyMedia variant="icon">
+                  <FileText />
+                </EmptyMedia>
                 <EmptyContent>
                   <EmptyTitle>No invoices yet</EmptyTitle>
                   <EmptyDescription>Invoices will appear here once billing starts.</EmptyDescription>

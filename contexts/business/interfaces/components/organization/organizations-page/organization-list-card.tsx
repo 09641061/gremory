@@ -30,8 +30,9 @@ export function OrganizationListCard({
 
         <div className="scrollbar-hide lg:min-h-0 lg:flex-1 lg:overflow-y-auto">
           {filteredOrganizations.length === 0 ? (
-            <div className="px-5 py-12 text-sm text-muted-foreground">
-              No organizations found.
+            <div className="flex flex-col items-center gap-3 px-5 py-12 text-center text-sm text-muted-foreground">
+              <Building2 className="size-8" aria-hidden="true" />
+              <span>No organizations found.</span>
             </div>
           ) : (
             filteredOrganizations.map((org) => {

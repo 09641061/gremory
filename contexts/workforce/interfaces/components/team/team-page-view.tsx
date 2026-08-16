@@ -2,9 +2,17 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Search, Settings2, UserPlus } from "lucide-react";
+import { Search, Settings2, UserPlus, UsersRound } from "lucide-react";
 
 import { PageHeader, PageShell } from "@/contexts/shared/interfaces/components/page-shell";
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/contexts/shared/interfaces/components/ui/empty";
 import { Card, CardContent } from "@/contexts/shared/interfaces/components/ui/card";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import { Input } from "@/contexts/shared/interfaces/components/ui/input";
@@ -105,7 +113,19 @@ export function TeamPageView({
                 />
               ))
             ) : (
-              <div className="px-5 py-12 text-sm text-muted-foreground">No members found.</div>
+              <Empty className="rounded-none border-0 py-12">
+                <EmptyHeader>
+                  <EmptyMedia variant="icon">
+                    <UsersRound aria-hidden="true" />
+                  </EmptyMedia>
+                  <EmptyContent>
+                    <EmptyTitle>No team members found</EmptyTitle>
+                    <EmptyDescription>
+                      Invite a team member to start managing appointments and access.
+                    </EmptyDescription>
+                  </EmptyContent>
+                </EmptyHeader>
+              </Empty>
             )}
           </div>
         </CardContent>

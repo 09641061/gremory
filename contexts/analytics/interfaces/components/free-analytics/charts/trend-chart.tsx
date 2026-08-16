@@ -28,7 +28,7 @@ export function TrendChart({
   const points = buildTrendPoints(data.map((item) => item.value));
   const path = buildPolyline(points);
   const area = buildArea(points);
-  const colorClass = tone === "primary" ? "text-primary" : tone === "secondary" ? "text-sky-600" : "text-emerald-600";
+  const colorClass = tone === "primary" ? "text-primary" : tone === "secondary" ? "text-info" : "text-success";
   const currentValue = data.at(-1)?.value ?? 0;
   const maxValue = Math.max(...data.map((item) => item.value), 1);
   const yAxisTicks = buildYAxisTicks(maxValue);
