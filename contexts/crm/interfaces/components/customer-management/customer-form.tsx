@@ -6,7 +6,6 @@ import { Loader2 } from "lucide-react";
 import { resolveDocumentAction } from "@/contexts/crm/interfaces/actions/resolve-document.action";
 import { Alert, AlertDescription, AlertTitle } from "@/contexts/shared/interfaces/components/ui/alert";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/contexts/shared/interfaces/components/ui/card";
 import { Input } from "@/contexts/shared/interfaces/components/ui/input";
 import { Label } from "@/contexts/shared/interfaces/components/ui/label";
 import { NativeSelect, NativeSelectOption } from "@/contexts/shared/interfaces/components/ui/native-select";
@@ -119,61 +118,63 @@ export function CustomerForm({
         </Alert>
       ) : null}
 
-      <Card>
-        <CardHeader className="border-b border-border/70 pb-4">
-          <CardTitle className="text-base">Customer identity</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4 p-6">
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-            <div className="space-y-1.5">
-              <Label htmlFor="doc_type">Document type</Label>
-              <NativeSelect
-                id="doc_type"
-                className="w-full"
-                value={docType}
-                onChange={(e) => {
-                  const newType = e.target.value;
-                  setDocType(newType);
-                  setName("");
-                  setDocNumber("");
-                  setError(null);
-                }}
-              >
-                <NativeSelectOption value="dni">DNI (National ID)</NativeSelectOption>
-                <NativeSelectOption value="ruc">RUC (Corporate Tax ID)</NativeSelectOption>
-                <NativeSelectOption value="foreign_resident_card">Foreign Resident Card</NativeSelectOption>
-                <NativeSelectOption value="passport">Passport</NativeSelectOption>
-              </NativeSelect>
-            </div>
+      <section className="space-y-4">
+        <div className="flex items-center justify-between gap-3 border-b border-border/70 pb-3">
+          <div>
+            <h2 className="text-sm font-semibold text-foreground">Customer identity</h2>
+            <p className="text-xs text-muted-foreground">Document and name.</p>
+          </div>
+        </div>
 
-            <div className="space-y-1.5 md:col-span-2">
-              <Label htmlFor="doc_number">Document number</Label>
-              <div className="flex gap-2">
-                <Input
-                  id="doc_number"
-                  value={docNumber}
-                  onChange={(e) => {
-                    const val = e.target.value;
-                    setError(null);
-                    const pattern = docType === "passport" ? /^[A-Za-z0-9]*$/ : /^\d*$/;
-                    if (pattern.test(val)) {
-                      setDocNumber(docType === "passport" ? val.toUpperCase() : val);
-                    }
-                  }}
-                  maxLength={docType === "dni" ? 8 : docType === "ruc" || docType === "foreign_resident_card" ? 11 : 15}
-                  placeholder="Enter number"
-                  required
-                />
-                {isDniOrRuc ? (
-                  <Button type="button" variant="outline" onClick={handleResolve} disabled={isResolving || !docNumber}>
-                    {isResolving ? <Loader2 className="size-4 animate-spin" /> : "Verify"}
-                  </Button>
-                ) : null}
-              </div>
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+          <div className="space-y-1.5">
+            <Label htmlFor="doc_type">Document type</Label>
+            <NativeSelect
+              id="doc_type"
+              className="w-full"
+              value={docType}
+              onChange={(e) => {
+                const newType = e.target.value;
+                setDocType(newType);
+                setName("");
+                setDocNumber("");
+                setError(null);
+              }}
+            >
+              <NativeSelectOption value="dni">DNI (National ID)</NativeSelectOption>
+              <NativeSelectOption value="ruc">RUC (Corporate Tax ID)</NativeSelectOption>
+              <NativeSelectOption value="foreign_resident_card">Foreign Resident Card</NativeSelectOption>
+              <NativeSelectOption value="passport">Passport</NativeSelectOption>
+            </NativeSelect>
+          </div>
+
+          <div className="space-y-1.5 md:col-span-2">
+            <Label htmlFor="doc_number">Document number</Label>
+            <div className="flex gap-2">
+              <Input
+                id="doc_number"
+                value={docNumber}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setError(null);
+                  const pattern = docType === "passport" ? /^[A-Za-z0-9]*$/ : /^\d*$/;
+                  if (pattern.test(val)) {
+                    setDocNumber(docType === "passport" ? val.toUpperCase() : val);
+                  }
+                }}
+                maxLength={docType === "dni" ? 8 : docType === "ruc" || docType === "foreign_resident_card" ? 11 : 15}
+                placeholder="Enter number"
+                required
+              />
+              {isDniOrRuc ? (
+                <Button type="button" variant="outline" onClick={handleResolve} disabled={isResolving || !docNumber}>
+                  {isResolving ? <Loader2 className="size-4 animate-spin" /> : "Verify"}
+                </Button>
+              ) : null}
             </div>
           </div>
 
-          <div className="space-y-1.5">
+          <div className="space-y-1.5 md:col-span-3">
             <Label htmlFor="full_name">Full name / business name</Label>
             <Input
               id="full_name"
@@ -183,38 +184,40 @@ export function CustomerForm({
               required
             />
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </section>
 
-      <Card>
-        <CardHeader className="border-b border-border/70 pb-4">
-          <CardTitle className="text-base">Contact details</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4 p-6">
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <div className="space-y-1.5">
-              <Label htmlFor="email">Email address</Label>
-              <Input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="customer@example.com"
-                required
-              />
-            </div>
+      <section className="space-y-4 border-t border-border/70 pt-6">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <h2 className="text-sm font-semibold text-foreground">Contact details</h2>
+            <p className="text-xs text-muted-foreground">Email and phone.</p>
+          </div>
+        </div>
 
-            <PhoneInput
-              id="phone"
-              value={phoneNumber}
-              countryCode={phoneCountryCode}
-              onChange={setPhoneNumber}
-              onCountryCodeChange={setPhoneCountryCode}
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <div className="space-y-1.5">
+            <Label htmlFor="email">Email address</Label>
+            <Input
+              id="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="customer@example.com"
               required
             />
           </div>
-        </CardContent>
-      </Card>
+
+          <PhoneInput
+            id="phone"
+            value={phoneNumber}
+            countryCode={phoneCountryCode}
+            onChange={setPhoneNumber}
+            onCountryCodeChange={setPhoneCountryCode}
+            required
+          />
+        </div>
+      </section>
 
       <div className="flex justify-end gap-3 border-t border-border/70 pt-4">
         {onCancel ? (

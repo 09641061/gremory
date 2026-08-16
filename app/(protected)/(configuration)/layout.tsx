@@ -1,14 +1,12 @@
 import type { CSSProperties, ReactNode } from "react";
 import { Suspense } from "react";
-import Link from "next/link";
 import { cookies, headers } from "next/headers";
-import { ArrowLeft } from "lucide-react";
 
 import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-session-cookie";
 import { createPlanHomeRouteQueryService } from "@/contexts/shared/application/internal/queryservices/plan-home-route-query.service";
 import { createBusinessWorkspaceQueryService } from "@/contexts/business/application/internal/queryservices/business-workspace-query.service";
 import { hasSomewhereToCancelTo } from "@/contexts/business/domain/services/workspace-navigation.policy";
-import { Button } from "@/contexts/shared/interfaces/components/ui/button";
+import { BackNavigationButton } from "@/contexts/shared/interfaces/components/back-navigation-button";
 
 /**
  * Establishments, organization and permissions.
@@ -57,17 +55,5 @@ async function BackToHomeLink() {
 
   const href = await createPlanHomeRouteQueryService().handle({ accessToken, establishmentId });
 
-  return (
-    <Button
-      variant="ghost"
-      size="icon"
-      className="-ml-2"
-      nativeButton={false}
-      aria-label="Back"
-      title="Back"
-      render={<Link href={href} />}
-    >
-      <ArrowLeft />
-    </Button>
-  );
+  return <BackNavigationButton fallbackHref={href} />;
 }

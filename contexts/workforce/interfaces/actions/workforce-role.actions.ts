@@ -35,7 +35,11 @@ export async function createWorkforceRoleAction(
     revalidateWorkforceRoleView();
     return {
       status: "success",
-      data: { roleId: role.id ?? undefined },
+      data: {
+        roleId: role.id ?? undefined,
+        name: role.getName(),
+        position: role.position,
+      },
       error: null,
     };
   } catch (error) {
