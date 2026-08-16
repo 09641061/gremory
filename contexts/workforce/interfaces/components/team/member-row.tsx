@@ -4,6 +4,7 @@ import { startTransition, useActionState, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { User, UserMinus, UserX } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/contexts/shared/interfaces/components/ui/avatar";
+import { Badge } from "@/contexts/shared/interfaces/components/ui/badge";
 import { ErrorAlert } from "@/contexts/shared/interfaces/components/error";
 import { EntityActionsMenu } from "@/contexts/shared/interfaces/components/entity-actions-menu";
 import { DeleteConfirmDialog } from "@/contexts/shared/interfaces/components/delete-confirm-dialog";
@@ -53,22 +54,24 @@ export function MemberRow({
   const error = removeState.error ?? revokeState.error;
 
   return (
-    <div className="grid min-h-[96px] grid-cols-[minmax(300px,1.4fr)_minmax(220px,1fr)_minmax(150px,.8fr)_minmax(150px,.55fr)_minmax(170px,.7fr)] items-center border-b border-border px-5 py-4 last:border-b-0">
+    <div className="grid min-h-[92px] grid-cols-[minmax(300px,1.4fr)_minmax(220px,1fr)_minmax(150px,.8fr)_minmax(150px,.55fr)_minmax(170px,.7fr)] items-center border-b border-border/70 px-5 py-4 transition-colors last:border-b-0 hover:bg-muted/20">
       <div className="flex items-center gap-4">
-        <Avatar className="size-12 shrink-0 border border-border">
+        <Avatar className="size-11 shrink-0 border border-border/70">
           <AvatarImage src={member.imageUrl ?? undefined} alt={member.name ?? member.email} />
           <AvatarFallback className="bg-muted/40 text-muted-foreground">
             {member.name ? initials(member.name) : <User className="size-5" />}
           </AvatarFallback>
         </Avatar>
-        <span className="truncate text-[15px] text-foreground">{member.name ?? "—"}</span>
+        <p className="truncate text-sm font-medium text-foreground">{member.name ?? "—"}</p>
       </div>
-      <span className="truncate text-[15px] text-muted-foreground">{member.email}</span>
+      <span className="truncate text-sm text-muted-foreground">{member.email}</span>
       <div>
         <MemberRolesDropdown roles={member.roles} />
       </div>
       <div>
-        <span className="text-[15px] text-muted-foreground">{formatStatus(member.status)}</span>
+        <Badge variant="outline" className="rounded-full px-2.5 text-[0.7rem] font-medium uppercase tracking-wide">
+          {formatStatus(member.status)}
+        </Badge>
       </div>
       <div className="flex flex-col items-end gap-2">
         <EntityActionsMenu

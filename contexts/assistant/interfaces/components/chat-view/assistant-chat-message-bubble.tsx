@@ -3,8 +3,8 @@
 import { memo } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { cn } from "@/lib/utils";
 
+import { cn } from "@/lib/utils";
 import type { AssistantMessageViewModel } from "@/contexts/assistant/interfaces/view-models/assistant-chat.view-model";
 import { AssistantAvatar } from "@/contexts/shared/interfaces/components/kodu/kodu-avatar";
 
@@ -79,7 +79,7 @@ function AssistantChatMessageBubbleComponent({ message }: AssistantChatMessageBu
         <div
           className={cn(
             "max-w-[min(22rem,calc(100vw-6rem))] whitespace-pre-wrap break-words text-[15px] leading-7 text-foreground sm:max-w-[26rem]",
-            "rounded-2xl border border-border bg-muted/40 px-4 py-3 shadow-none",
+            "rounded-2xl border border-border/70 bg-muted/50 px-4 py-3 shadow-none",
           )}
         >
           {message.content}
