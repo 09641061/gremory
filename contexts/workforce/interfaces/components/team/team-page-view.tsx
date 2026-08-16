@@ -77,7 +77,9 @@ export function TeamPageView({
           />
         </label>
         <span className="shrink-0 text-sm text-muted-foreground">
-          {filteredMembers.length} of {members.length} {members.length === 1 ? "member" : "members"}
+          {filter.trim()
+            ? `${filteredMembers.length} of ${members.length} ${members.length === 1 ? "member" : "members"}`
+            : `${members.length} ${members.length === 1 ? "member" : "members"}`}
         </span>
       </div>
 
