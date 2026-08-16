@@ -12,7 +12,7 @@ vi.mock("@/contexts/business/application/internal/queryservices/business-workspa
   createBusinessWorkspaceQueryService: () => mocks.workspace,
 }));
 
-import EstablishmentSetupPage from "@/app/(protected)/(configuration)/establishments/setup/page";
+import EstablishmentSetupPage from "@/app/(protected)/(app)/establishments/setup/page";
 
 describe("EstablishmentSetupPage", () => {
   beforeEach(() => {
@@ -35,6 +35,9 @@ describe("EstablishmentSetupPage", () => {
     render(element);
 
     expect(screen.getByText("Set up your first establishment")).toBeTruthy();
-    expect(screen.getByRole("link", { name: "Create establishment" })).toBeTruthy();
+    expect(screen.getByRole("link", { name: "Create establishment" })).toHaveAttribute(
+      "href",
+      "/establishments/new?organizationId=org-1",
+    );
   });
 });

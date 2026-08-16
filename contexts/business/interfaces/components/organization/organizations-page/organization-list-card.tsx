@@ -104,7 +104,7 @@ export function OrganizationListCard({
               onClick={() => onConfirm(previewOrganization.organizationId)}
               className={buttonVariants({ variant: "default" })}
             >
-              Continue with {previewOrganization.organizationName}
+              Work in {previewOrganization.organizationName}
             </button>
           </div>
         ) : null}

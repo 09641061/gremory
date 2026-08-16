@@ -53,7 +53,7 @@ describe("OrganizationListCard", () => {
       />,
     );
 
-    fireEvent.click(screen.getByRole("button", { name: /continue with acme/i }));
+    fireEvent.click(screen.getByRole("button", { name: /work in acme/i }));
 
     expect(onConfirm).toHaveBeenCalledWith("org-1");
   });
@@ -73,7 +73,7 @@ describe("OrganizationListCard", () => {
       />,
     );
 
-    fireEvent.click(screen.getByRole("button", { name: /continue with studio/i }));
+    fireEvent.click(screen.getByRole("button", { name: /work in studio/i }));
 
     expect(onConfirm).toHaveBeenCalledWith("org-2");
   });

@@ -29,7 +29,10 @@ export default async function EstablishmentSetupPage() {
         </div>
 
         <div className="flex flex-col items-center justify-center gap-2 sm:flex-row">
-          <Link href="/establishments/new" className={buttonVariants({ variant: "default" })}>
+          <Link
+            href={`/establishments/new?organizationId=${encodeURIComponent(workspace.organization.id)}`}
+            className={buttonVariants({ variant: "default" })}
+          >
             Create establishment
           </Link>
           <Link href="/organizations" className={buttonVariants({ variant: "outline" })}>
