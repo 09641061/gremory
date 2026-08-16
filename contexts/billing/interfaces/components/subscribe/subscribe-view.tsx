@@ -1,8 +1,6 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
-import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
 
 import type { BillingCycleType } from "../../../domain/model/value-objects/billing-cycle";
 import { getCurrencySymbol, type CurrencyCode } from "../../../domain/model/value-objects/currency";
@@ -13,6 +11,7 @@ import type {
 } from "../../../application/internal/queryservices/list-plans-query.service";
 import type { SubscriptionAccessSnapshot } from "../../../domain/services/subscription-access.policy";
 import { ErrorAlert } from "@/contexts/shared/interfaces/components/error";
+import { BackNavigationButton } from "@/contexts/shared/interfaces/components/back-navigation-button";
 import { SubscribeHero } from "./subscribe-hero";
 import { PlanCard } from "./plan-card";
 import { PaymentModal } from "../checkout/payment-modal";
@@ -130,14 +129,7 @@ export function SubscribeView({ backHref, plansByCurrency, currentSubscription }
   return (
     <main className="relative flex min-h-screen w-full flex-1 flex-col items-center justify-center gap-10 overflow-hidden bg-background px-4 py-12 text-foreground">
       <div className="absolute top-6 left-6 z-20 sm:left-8">
-        <Link
-          href={backHref}
-          aria-label="Back"
-          title="Back"
-          className="inline-flex items-center justify-center text-muted-foreground transition-colors hover:text-foreground"
-        >
-          <ArrowLeft className="size-4 transition-transform group-hover:-translate-x-1" />
-        </Link>
+        <BackNavigationButton fallbackHref={backHref} />
       </div>
 
       {feedbackMessage ? (

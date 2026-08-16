@@ -43,11 +43,11 @@ export default async function ChatPage({
   const initialConversationViewModel = toConversationViewModel(initialConversation);
 
   return (
-    <div className="flex flex-col flex-1 w-full gap-4">
-      {denied && (
-        <div className="px-6 pt-4">
+    <div className="flex min-h-0 flex-1 flex-col gap-4">
+      {denied ? (
+        <div className="px-4 pt-4 md:px-6 lg:px-8">
           <Alert variant="destructive">
-            <AlertTitle>Access Denied</AlertTitle>
+            <AlertTitle>Access denied</AlertTitle>
             <AlertDescription>
               {denied === "crm" && "You do not have permission to access the CRM module."}
               {denied === "catalog" && "You do not have permission to access the Catalog module."}
@@ -55,7 +55,7 @@ export default async function ChatPage({
             </AlertDescription>
           </Alert>
         </div>
-      )}
+      ) : null}
       <AssistantChatView
         key={`${conversationId ?? "new"}:${establishmentId ?? "all"}`}
         conversationId={conversationId ?? null}

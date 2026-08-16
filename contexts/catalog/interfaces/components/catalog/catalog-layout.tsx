@@ -116,8 +116,8 @@ export function CatalogLayout({
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-10rem)] w-full overflow-hidden bg-background">
-      <div className="flex flex-col md:flex-row flex-1 overflow-hidden h-full">
+    <div className="flex h-full min-h-0 flex-1 w-full flex-col bg-background">
+      <div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden md:flex-row">
         <CategorySidebar
           categories={categories}
           services={serviceSummaries}
@@ -150,7 +150,7 @@ export function CatalogLayout({
           canCreateService={canCreateService}
         />
 
-        <main className="flex-1 overflow-y-auto bg-background p-4 md:p-6">
+        <main className="min-h-0 flex-1 overflow-y-auto bg-background p-4 md:p-6">
           {isCreatingService ? (
             <CreateServiceForm
               key={`create-service-${creatingServiceCategoryId ?? "uncategorized"}`}

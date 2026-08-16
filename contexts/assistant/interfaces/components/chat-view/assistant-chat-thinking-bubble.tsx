@@ -12,7 +12,7 @@ export function AssistantChatThinkingBubble() {
       />
 
       <div className="py-1 text-sm leading-6 text-foreground">
-        <span className="mt-1 inline-flex items-center gap-2 text-muted-foreground">
+        <span className="mt-1 inline-flex items-center gap-2 rounded-full border border-border/60 bg-card px-3 py-1.5 text-muted-foreground shadow-sm">
           <span>Kodu is thinking</span>
           <span className="flex items-center gap-1" aria-hidden="true">
             <span className="size-1.5 animate-bounce rounded-full bg-muted-foreground/70 [animation-delay:-0.2s]" />

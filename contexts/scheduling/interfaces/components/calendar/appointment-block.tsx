@@ -11,6 +11,16 @@ interface AppointmentBlockProps {
   onClick: () => void;
 }
 
+function getStatusLabel(status: Appointment["status"]): string {
+  return {
+    CANCELLED: "Cancelled",
+    NO_SHOW: "No show",
+    COMPLETED: "Completed",
+    IN_PROGRESS: "In progress",
+    CONFIRMED: "Confirmed",
+  }[status] ?? status;
+}
+
 function getStatusStyles(appointment: Appointment, now: number | null) {
   switch (appointment.status) {
     case "CANCELLED":
@@ -41,7 +51,7 @@ export function AppointmentBlock({ appointment, now, timeZone, onClick }: Appoin
     <button
       type="button"
       onClick={onClick}
-      aria-label={`${appointment.title}, ${timeRange}`}
+      aria-label={`${getStatusLabel(appointment.status)}: ${appointment.title}, ${timeRange}`}
       className={cn(
         "w-full rounded-lg border p-2 text-left transition-all min-w-0 overflow-hidden",
         "hover:-translate-y-0.5 hover:shadow-md",

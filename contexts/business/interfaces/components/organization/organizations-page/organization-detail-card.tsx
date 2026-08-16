@@ -1,11 +1,14 @@
 "use client";
 
 import { Building2 } from "lucide-react";
-import type { OrganizationListItem } from "./organizations-page";
-import { EntityProfileCard } from "@/contexts/business/interfaces/components/entity-profile-card/entity-profile-card";
-import { updateOrganizationAction } from "@/contexts/business/interfaces/actions/organization.actions";
+
 import { canManageOrganization } from "@/contexts/business/domain/services/workspace-navigation.policy";
+import { updateOrganizationAction } from "@/contexts/business/interfaces/actions/organization.actions";
+import { EntityProfileCard } from "@/contexts/business/interfaces/components/entity-profile-card/entity-profile-card";
+import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/contexts/shared/interfaces/components/ui/empty";
 import { cn } from "@/lib/utils";
+
+import type { OrganizationListItem } from "./organizations-page";
 
 interface OrganizationDetailCardProps {
   organization: OrganizationListItem | null;
@@ -28,15 +31,15 @@ export function OrganizationDetailCard({
   if (!organization) {
     return (
       <div className={cn("flex-1", className)}>
-        <div className="flex min-h-(--app-page-viewport-height) items-center justify-center rounded-xl border border-border bg-card p-8 text-center shadow-sm lg:ml-3">
-          <div className="max-w-xs">
-            <Building2 className="mx-auto size-10 text-muted-foreground/50" />
-            <p className="mt-4 text-sm font-medium text-foreground">Select an organization</p>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Choose an organization to view or edit it.
-            </p>
-          </div>
-        </div>
+        <Empty className="min-h-(--app-page-viewport-height) lg:ml-3">
+          <EmptyHeader>
+            <EmptyMedia variant="icon">
+              <Building2 className="size-4" />
+            </EmptyMedia>
+            <EmptyTitle>Select an organization</EmptyTitle>
+            <EmptyDescription>Choose an organization to view or edit it.</EmptyDescription>
+          </EmptyHeader>
+        </Empty>
       </div>
     );
   }

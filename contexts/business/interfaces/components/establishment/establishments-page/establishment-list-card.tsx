@@ -29,8 +29,9 @@ export function EstablishmentListCard({
 
         <div className="scrollbar-hide lg:flex-1 lg:overflow-y-auto lg:min-h-0">
           {filteredEstablishments.length === 0 ? (
-            <div className="px-5 py-10 text-sm text-muted-foreground">
-              No establishments found.
+            <div className="flex flex-col items-center gap-3 px-5 py-10 text-center text-sm text-muted-foreground">
+              <Store className="size-8" aria-hidden="true" />
+              <span>No establishments found.</span>
             </div>
           ) : (
             filteredEstablishments.map((est) => {

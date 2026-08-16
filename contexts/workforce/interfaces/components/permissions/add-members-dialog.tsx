@@ -8,14 +8,13 @@ import { Input } from "@/contexts/shared/interfaces/components/ui/input";
 import { ErrorAlert } from "@/contexts/shared/interfaces/components/error";
 import { Spinner } from "@/contexts/shared/interfaces/components/ui/spinner";
 import {
-  AlertDialog,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/contexts/shared/interfaces/components/ui/alert-dialog";
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/contexts/shared/interfaces/components/ui/dialog";
 import type { TeamUserSummary } from "@/contexts/workforce/application/model/team.read-models";
 import { assignWorkforceRoleAction } from "@/contexts/workforce/interfaces/actions/workforce-role.actions";
 
@@ -79,19 +78,19 @@ export function AddMembersDialog({ roleId, availableMembers, onClose }: AddMembe
   };
 
   return (
-    <AlertDialog open onOpenChange={(open) => { if (!open) onClose(); }}>
-      <AlertDialogContent
+    <Dialog open onOpenChange={(open) => { if (!open) onClose(); }}>
+      <DialogContent
         ref={contentRef}
         className="w-full max-w-[480px] p-6 bg-card border border-border rounded-xl shadow-xl flex flex-col gap-5"
       >
-        <AlertDialogHeader className="relative">
+        <DialogHeader className="relative">
           <div className="flex items-center justify-between">
-            <AlertDialogTitle className="text-xl font-semibold text-foreground">Add members to role</AlertDialogTitle>
+            <DialogTitle className="text-xl font-semibold text-foreground">Add members to role</DialogTitle>
           </div>
-          <AlertDialogDescription className="text-sm text-muted-foreground mt-1">
+          <DialogDescription className="text-sm text-muted-foreground mt-1">
             Select members from the workspace to assign them to this role.
-          </AlertDialogDescription>
-        </AlertDialogHeader>
+          </DialogDescription>
+        </DialogHeader>
 
         <div className="flex flex-col gap-4 flex-1 min-h-0">
           <label className="relative block">
@@ -159,14 +158,16 @@ export function AddMembersDialog({ roleId, availableMembers, onClose }: AddMembe
           </div>
         </div>
 
-        <AlertDialogFooter className="flex items-center justify-end gap-3 shrink-0">
-          <AlertDialogCancel
+        <DialogFooter className="flex items-center justify-end gap-3 shrink-0">
+          <Button
+            type="button"
+            variant="outline"
             onClick={onClose}
             disabled={isPending}
             className="px-5 h-10 border border-border bg-transparent hover:bg-muted/40 text-foreground transition-colors"
           >
             Cancel
-          </AlertDialogCancel>
+          </Button>
           <Button
             type="button"
             onClick={handleAdd}
@@ -175,8 +176,8 @@ export function AddMembersDialog({ roleId, availableMembers, onClose }: AddMembe
           >
             {isPending ? <Spinner className="size-4" /> : "Add"}
           </Button>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

@@ -1,19 +1,17 @@
 "use client";
 
 import { useActionState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import { Plus } from "lucide-react";
 import { createWorkforceRoleAction } from "@/contexts/workforce/interfaces/actions/workforce-role.actions";
 import { initialWorkforceRoleActionResult } from "@/contexts/workforce/interfaces/actions/workforce-role-action-result";
 import {
-  AlertDialog,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/contexts/shared/interfaces/components/ui/alert-dialog";
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/contexts/shared/interfaces/components/ui/dialog";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import { ErrorAlert } from "@/contexts/shared/interfaces/components/error";
 import { Input } from "@/contexts/shared/interfaces/components/ui/input";
@@ -22,10 +20,10 @@ import { Spinner } from "@/contexts/shared/interfaces/components/ui/spinner";
 interface CreateRoleDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onCreated?: (role: { roleId?: string; name?: string; position?: number }) => void;
 }
 
-export function CreateRoleDialog({ open, onOpenChange }: CreateRoleDialogProps) {
-  const router = useRouter();
+export function CreateRoleDialog({ open, onOpenChange, onCreated }: CreateRoleDialogProps) {
   const [state, formAction, pending] = useActionState(
     createWorkforceRoleAction,
     initialWorkforceRoleActionResult,
@@ -33,10 +31,10 @@ export function CreateRoleDialog({ open, onOpenChange }: CreateRoleDialogProps) 
 
   useEffect(() => {
     if (state.status === "success") {
+      if (state.data) onCreated?.(state.data);
       onOpenChange(false);
-      router.refresh();
     }
-  }, [onOpenChange, router, state.status]);
+  }, [onCreated, onOpenChange, state.data, state.status]);
 
   return (
     <>
@@ -44,15 +42,15 @@ export function CreateRoleDialog({ open, onOpenChange }: CreateRoleDialogProps) 
         title="Unable to create role"
         message={state.status === "error" ? state.error : undefined}
       />
-      <AlertDialog open={open && state.status !== "success"} onOpenChange={onOpenChange}>
-        <AlertDialogContent>
+      <Dialog open={open && state.status !== "success"} onOpenChange={onOpenChange}>
+        <DialogContent>
           <form action={formAction} className="space-y-5">
-            <AlertDialogHeader>
-              <AlertDialogTitle>Create role</AlertDialogTitle>
-              <AlertDialogDescription>
+            <DialogHeader>
+              <DialogTitle>Create role</DialogTitle>
+              <DialogDescription>
                 Create a role. Its permissions will start disabled and can be configured next.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
+              </DialogDescription>
+            </DialogHeader>
 
             <div className="space-y-2">
               <label htmlFor="create-role-name" className="text-sm font-medium text-foreground">
@@ -68,16 +66,16 @@ export function CreateRoleDialog({ open, onOpenChange }: CreateRoleDialogProps) 
               />
             </div>
 
-            <AlertDialogFooter>
-              <AlertDialogCancel disabled={pending}>Cancel</AlertDialogCancel>
+            <DialogFooter>
+              <Button type="button" variant="outline" disabled={pending} onClick={() => onOpenChange(false)}>Cancel</Button>
               <Button type="submit" disabled={pending} className="gap-2">
                 {pending ? <Spinner className="size-4" /> : <Plus className="size-4" />}
                 {pending ? "Creating..." : "Create role"}
               </Button>
-            </AlertDialogFooter>
+            </DialogFooter>
           </form>
-        </AlertDialogContent>
-      </AlertDialog>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

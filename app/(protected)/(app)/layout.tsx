@@ -37,11 +37,11 @@ export default function AppLayout({
         <AppShellSidebar />
       </Suspense>
 
-      <main className="flex min-w-0 flex-1 flex-col p-6">
+      <main className="flex min-w-0 flex-1 flex-col px-4 py-4 md:px-6 lg:px-8 lg:py-6">
         {/* The only way to reach the navigation on a phone, where the sidebar
             is a sheet instead of a column. */}
-        <SidebarTrigger className="mb-4 md:hidden" />
-        {children}
+        <SidebarTrigger className="mb-3 md:hidden" />
+        <div className="min-w-0 flex-1">{children}</div>
       </main>
     </SidebarProvider>
   );

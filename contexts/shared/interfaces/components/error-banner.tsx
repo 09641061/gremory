@@ -32,7 +32,7 @@ function ErrorBannerContent() {
 
   return (
     <div className="fixed top-4 right-4 z-50 max-w-md animate-in fade-in slide-in-from-top-5">
-      <Alert variant="destructive" className="relative pr-10 shadow-lg bg-card">
+      <Alert variant="destructive" className="relative rounded-lg border-destructive/20 bg-card pr-10 shadow-lg">
         <ShieldAlert className="size-4" />
         <AlertTitle>Access Denied</AlertTitle>
         <AlertDescription>{errorMsg}</AlertDescription>
@@ -41,7 +41,7 @@ function ErrorBannerContent() {
           variant="ghost"
           size="icon-xs"
           onClick={() => setErrorMsg(null)}
-          className="absolute top-2.5 right-2.5 text-muted-foreground hover:text-foreground"
+          className="absolute top-2.5 right-2.5 text-muted-foreground hover:bg-muted/70 hover:text-foreground"
           aria-label="Dismiss alert"
         >
           <X className="size-4" />

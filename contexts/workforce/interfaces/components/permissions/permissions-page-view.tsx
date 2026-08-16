@@ -34,6 +34,7 @@ export function PermissionsPageView({
   const [filter, setFilter] = useState("");
   const [createOpen, setCreateOpen] = useState(false);
   const [createSession, setCreateSession] = useState(0);
+  const [createdRoles, setCreatedRoles] = useState<ReadonlyArray<WorkforceRoleSummary>>([]);
   const [editingRole, setEditingRole] = useState<WorkforceRoleSummary | null>(null);
   const [deletingRole, setDeletingRole] = useState<WorkforceRoleSummary | null>(null);
   const [selectedRoleId, setSelectedRoleId] = useState<string | null>(null);
@@ -44,9 +45,11 @@ export function PermissionsPageView({
   const [reorderInProgress, setReorderInProgress] = useState(false);
   const router = useRouter();
 
+  const visibleRoles = useMemo(() => {
+    const existingIds = new Set(roles.map((role) => role.id).filter((id): id is string => id !== null));
+    const merged = [...roles, ...createdRoles.filter((role) => !role.id || !existingIds.has(role.id))];
 
-  const orderedRoles = useMemo(() => {
-    return [...roles].sort((left, right) => {
+    return merged.sort((left, right) => {
       if (left.systemRole !== right.systemRole) {
         return left.systemRole ? 1 : -1;
       }
@@ -57,15 +60,15 @@ export function PermissionsPageView({
 
       return left.name.localeCompare(right.name);
     });
-  }, [roles]);
+  }, [createdRoles, roles]);
 
   const filteredRoles = useMemo(() => {
     const normalizedFilter = filter.trim().toLowerCase();
-    if (!normalizedFilter) return orderedRoles;
-    return orderedRoles.filter((role) => role.name.toLowerCase().includes(normalizedFilter));
-  }, [filter, orderedRoles]);
+    if (!normalizedFilter) return visibleRoles;
+    return visibleRoles.filter((role) => role.name.toLowerCase().includes(normalizedFilter));
+  }, [filter, visibleRoles]);
 
-  const selectedRole = orderedRoles.find((role) => role.id === selectedRoleId) ?? null;
+  const selectedRole = visibleRoles.find((role) => role.id === selectedRoleId) ?? null;
 
   const clearDragState = () => {
     setDraggedRoleId(null);
@@ -83,7 +86,7 @@ export function PermissionsPageView({
     if (!draggedRoleId || !targetRole.id) return;
     if (draggedRoleId === targetRole.id) return;
 
-    const draggedRole = orderedRoles.find((role) => role.id === draggedRoleId);
+    const draggedRole = visibleRoles.find((role) => role.id === draggedRoleId);
     if (!draggedRole || draggedRole.systemRole || !draggedRole.id) return;
 
     const newPosition = placement === "after" ? targetRole.position + 1 : targetRole.position;
@@ -153,6 +156,18 @@ export function PermissionsPageView({
             setCreateOpen(open);
             if (!open) setCreateSession((session) => session + 1);
           }}
+          onCreated={(createdRole) => {
+            if (!createdRole?.roleId) return;
+            const nextRole: WorkforceRoleSummary = {
+              id: createdRole.roleId ?? null,
+              name: createdRole.name ?? "New role",
+              permissions: [],
+              systemRole: false,
+              position: createdRole.position ?? 1,
+            };
+            setCreatedRoles((current) => [...current.filter((role) => role.id !== nextRole.id), nextRole]);
+            setSelectedRoleId(createdRole.roleId);
+          }}
         />
 
         {editingRole ? (
@@ -182,7 +197,7 @@ export function PermissionsPageView({
         <Card className="overflow-hidden rounded-xl border-border bg-card shadow-sm lg:flex lg:min-h-0 lg:flex-1 lg:flex-col">
           <CardContent className="p-0 lg:flex lg:min-h-0 lg:flex-1 lg:flex-col">
             <div className="grid grid-cols-[minmax(0,1fr)_auto] border-b border-border px-5 py-4 text-sm font-medium text-muted-foreground shrink-0">
-              <span>Roles - {roles.length}</span>
+              <span>Roles - {visibleRoles.length}</span>
               <span className="pr-1">Actions</span>
             </div>
 

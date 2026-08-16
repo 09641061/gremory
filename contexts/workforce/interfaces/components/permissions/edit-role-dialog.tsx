@@ -8,13 +8,12 @@ import { initialWorkforceRoleActionResult } from "@/contexts/workforce/interface
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import { Input } from "@/contexts/shared/interfaces/components/ui/input";
 import {
-  AlertDialog,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/contexts/shared/interfaces/components/ui/alert-dialog";
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/contexts/shared/interfaces/components/ui/dialog";
 import { ErrorAlert } from "@/contexts/shared/interfaces/components/error";
 import { Spinner } from "@/contexts/shared/interfaces/components/ui/spinner";
 
@@ -46,16 +45,16 @@ export function EditRoleDialog({ role, open, onOpenChange }: EditRoleDialogProps
         title="Unable to update role"
         message={state.status === "error" ? state.error : undefined}
       />
-      <AlertDialog open={open && state.status !== "success"} onOpenChange={onOpenChange}>
-        <AlertDialogContent>
+      <Dialog open={open && state.status !== "success"} onOpenChange={onOpenChange}>
+        <DialogContent>
           <form
             action={formAction}
             onSubmit={() => setSubmitCount((count) => count + 1)}
             className="space-y-4"
           >
-            <AlertDialogHeader>
-              <AlertDialogTitle>Edit role</AlertDialogTitle>
-            </AlertDialogHeader>
+            <DialogHeader>
+              <DialogTitle>Edit role</DialogTitle>
+            </DialogHeader>
 
             <div className="space-y-2">
               <label htmlFor="edit-role-name" className="text-sm font-medium text-foreground">
@@ -72,16 +71,16 @@ export function EditRoleDialog({ role, open, onOpenChange }: EditRoleDialogProps
 
             <input type="hidden" name="roleId" value={role.id || ""} />
 
-            <AlertDialogFooter>
-              <AlertDialogCancel disabled={pending}>Cancel</AlertDialogCancel>
+            <DialogFooter>
+              <Button type="button" variant="outline" disabled={pending} onClick={() => onOpenChange(false)}>Cancel</Button>
               <Button type="submit" disabled={pending} className="gap-2">
                 {pending ? <Spinner className="size-4" /> : null}
                 {pending ? "Saving..." : "Save changes"}
               </Button>
-            </AlertDialogFooter>
+            </DialogFooter>
           </form>
-        </AlertDialogContent>
-      </AlertDialog>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
