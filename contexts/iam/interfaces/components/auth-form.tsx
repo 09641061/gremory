@@ -59,11 +59,7 @@ export function AuthForm({ returnTo = null }: { returnTo?: string | null }) {
                 <GoogleSubmitButton />
               </form>
 
-              <div className="flex items-center gap-3 text-xs font-medium text-muted-foreground">
-                <Separator />
-                <span className="shrink-0">OR</span>
-                <Separator />
-              </div>
+              <Separator className="my-4" />
 
               <form action={formAction} className="space-y-4 text-left">
                 {returnTo ? <input type="hidden" name="returnTo" value={returnTo} /> : null}
