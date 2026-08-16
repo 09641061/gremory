@@ -4,14 +4,13 @@ import { useState, type ReactNode } from "react";
 import { Trash2 } from "lucide-react";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import {
-  AlertDialog,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/contexts/shared/interfaces/components/ui/alert-dialog";
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/contexts/shared/interfaces/components/ui/dialog";
 import { ErrorAlert } from "@/contexts/shared/interfaces/components/error";
 import { Spinner } from "@/contexts/shared/interfaces/components/ui/spinner";
 
@@ -76,24 +75,26 @@ export function DeleteConfirmDialog({
         title={`Unable to ${confirmLabel.toLowerCase()} ${entityLabel}`}
         message={error ?? undefined}
       />
-      <AlertDialog open={open} onOpenChange={onOpenChange}>
-        <AlertDialogContent>
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent>
           <form action={formAction} onSubmit={handleSubmit}>
-            <AlertDialogHeader>
-              <AlertDialogTitle>{confirmLabel} {entityLabel}?</AlertDialogTitle>
-              <AlertDialogDescription>
+            <DialogHeader>
+              <DialogTitle>{confirmLabel} {entityLabel}?</DialogTitle>
+              <DialogDescription>
                 {description ?? (
                   <>
                     This will permanently {confirmLabel.toLowerCase()}{" "}
                     <span className="font-medium text-foreground">{entityName}</span>.
                   </>
                 )}
-              </AlertDialogDescription>
-            </AlertDialogHeader>
+              </DialogDescription>
+            </DialogHeader>
 
-            <AlertDialogFooter>
+            <DialogFooter>
               {children}
-              <AlertDialogCancel disabled={pending}>Cancel</AlertDialogCancel>
+              <Button type="button" variant="outline" disabled={pending} onClick={() => onOpenChange(false)}>
+                Cancel
+              </Button>
               <Button
                 type="submit"
                 variant="destructive"
@@ -103,10 +104,10 @@ export function DeleteConfirmDialog({
                 {pending ? <Spinner className="size-4" /> : <Trash2 className="size-4" />}
                 {pending ? pendingLabel : confirmLabel}
               </Button>
-            </AlertDialogFooter>
+            </DialogFooter>
           </form>
-        </AlertDialogContent>
-      </AlertDialog>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
