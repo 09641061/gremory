@@ -11,6 +11,7 @@ import {
   Plus,
   Search,
   Trash2,
+  UsersRound,
 } from "lucide-react";
 
 import { deleteCustomerAction } from "@/contexts/crm/interfaces/actions/delete-customer.action";
@@ -141,7 +142,9 @@ export function CrmClientWrapper({
             {customers.length === 0 ? (
               <Empty className="rounded-none border-0 py-16">
                 <EmptyHeader>
-                  <EmptyMedia variant="icon" />
+                  <EmptyMedia variant="icon">
+                    <UsersRound />
+                  </EmptyMedia>
                   <EmptyContent>
                     <EmptyTitle>No customers found</EmptyTitle>
                     <EmptyDescription>
