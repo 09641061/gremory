@@ -1,24 +1,21 @@
 import "server-only";
 
-import { createSubscriptionAccessQueryService } from "@/contexts/billing/application/internal/queryservices/subscription-access-query.service";
 import { ApiError } from "@/contexts/shared/infrastructure/http/api-client";
 import { createBusinessWorkspaceOutboundService } from "../outboundservices/business-workspace.outbound.service";
-import { resolveEmployeeEntryPath } from "../../services/entry-route-access.policy";
-import type {
-  EntryRouteInput,
-  EntryRouteResolution,
-} from "../../model/entry-route.view-models";
+import type { BusinessWorkspaceOutboundService } from "../outboundservices/business-workspace.outbound.service";
+import type { EntryRouteInput, EntryRouteResolution } from "../../model/entry-route.view-models";
 
 /**
- * Resolves where an authenticated account lands, from the single workspace call.
- * The account type is read, never inferred: OWNER, MEMBER or an invitation that
- * was never accepted.
+ * Resolves where an authenticated account lands from the business workspace
+ * alone. Billing is optional enrichment, never the bootstrap gate.
  */
 export class EntryRouteQueryService {
   constructor(private readonly workspace = createBusinessWorkspaceOutboundService()) {}
 
-  async resolveRoute({ accessToken, subscription, establishmentId }: EntryRouteInput): Promise<EntryRouteResolution> {
-    const resolved = await this.tryGet(() => this.workspace.getWorkspace(accessToken, establishmentId));
+  async resolveRoute({ accessToken, organizationId, establishmentId }: EntryRouteInput): Promise<EntryRouteResolution> {
+    const resolved = await this.tryGet(() =>
+      this.workspace.getWorkspace(accessToken, { organizationId, establishmentId }),
+    );
 
     if (resolved.status !== "ready") {
       return resolved.status === "not-found" ? { status: "unavailable" } : resolved;
@@ -34,9 +31,6 @@ export class EntryRouteQueryService {
       };
     }
 
-    // Onboarding step 1: a freshly registered owner has no organization yet.
-    // A member is never ORGANIZATION_PENDING (backend hardcodes COMPLETED for
-    // it), so this branch is unreachable for an invited account.
     if (workspace.onboardingStatus === "ORGANIZATION_PENDING") {
       return {
         status: "organization-required",
@@ -45,11 +39,14 @@ export class EntryRouteQueryService {
       };
     }
 
-    // `workspace.establishments` is combined across every organization the
-    // account touches (its own plus any it is a member of), so counting it raw
-    // wrongly reports "has an establishment" for an owner whose own new
-    // organization has none yet, as long as they hold a membership elsewhere.
-    // Scope the count to the active organization before deciding.
+    if (workspace.onboardingStatus === "ESTABLISHMENT_PENDING") {
+      return {
+        status: "establishment-required",
+        setupHref: "/establishments/new",
+        allowedPaths: ["/establishments/new"],
+      };
+    }
+
     const ownEstablishments = workspace.organization
       ? workspace.establishments.filter(
           (establishment) =>
@@ -67,29 +64,9 @@ export class EntryRouteQueryService {
         : { status: "ready", homeHref: "/access-denied" };
     }
 
-    const hasAssistantAccess = createSubscriptionAccessQueryService().resolve(subscription)
-      .hasAssistantAccess;
-
-    if (workspace.accountType === "OWNER") {
-      return {
-        status: "ready",
-        homeHref: createSubscriptionAccessQueryService().resolve(subscription).homeHref,
-      };
-    }
-
     return {
       status: "ready",
-      // Scoped to the active organization too: a permission from an
-      // establishment the account merely owns or belongs to elsewhere must
-      // never grant module access inside a different organization's context.
-      homeHref: resolveEmployeeEntryPath(
-        ownEstablishments.map((establishment) => ({
-          establishmentId: establishment.id,
-          establishmentName: establishment.name,
-          effectivePermissions: establishment.effectivePermissions ?? [],
-        })),
-        hasAssistantAccess,
-      ),
+      homeHref: resolveAccessPolicyEntryPath(workspace),
     };
   }
 
@@ -105,6 +82,20 @@ export class EntryRouteQueryService {
       return classifyApiError(error);
     }
   }
+}
+
+function resolveAccessPolicyEntryPath(
+  workspace: Awaited<ReturnType<BusinessWorkspaceOutboundService["getWorkspace"]>>,
+) {
+  const accessPolicy = workspace.accessPolicy;
+  if (!accessPolicy) return "/access-denied" as const;
+  if (accessPolicy.canUseAssistant) return "/chat" as const;
+  if (accessPolicy.canOpenScheduling) return "/schedule" as const;
+  if (accessPolicy.canOpenCatalog) return "/catalog" as const;
+  if (accessPolicy.canOpenCrm) return "/crm" as const;
+  if (accessPolicy.canOpenTeam) return "/team" as const;
+  if (workspace.organization?.canRead) return "/organization" as const;
+  return "/access-denied" as const;
 }
 
 function classifyApiError(error: unknown):

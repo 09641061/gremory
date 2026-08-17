@@ -34,8 +34,17 @@ describe("CatalogAccessPolicyService", () => {
     mocks.teamService.getAccessContext.mockReset();
   });
 
-  it("should grant full catalog permissions to organization owners", async () => {
-    mocks.organizationService.getMyOrganization.mockResolvedValue({ id: "org-1" });
+  it("should grant catalog management from establishment permissions", async () => {
+    mocks.teamService.getAccessContext.mockResolvedValue({
+      active: true,
+      establishments: [
+        {
+          establishmentId: "est-1",
+          effectivePermissions: ["catalog:read", "catalog:manage"],
+          roles: [],
+        },
+      ],
+    });
 
     const { createCatalogAccessPolicyService } = await import(
       "@/contexts/catalog/application/internal/queryservices/catalog-access-policy.service"
@@ -51,7 +60,7 @@ describe("CatalogAccessPolicyService", () => {
       canUpdateService: true,
       canDeleteService: true,
     });
-    expect(mocks.teamService.getAccessContext).not.toHaveBeenCalled();
+    expect(mocks.teamService.getAccessContext).toHaveBeenCalled();
   });
 
   it("should allow catalog access when effective permissions include catalog reads", async () => {

@@ -26,6 +26,9 @@ protected resource has only two actions:
 ### Workforce
 
 - `workforce:read`
+- `workforce:invite`
+- `workforce:manage_members`
+- `workforce:manage_roles`
 - `workforce:manage`
 
 ### Scheduling

@@ -11,8 +11,10 @@ import { PageShell } from "@/contexts/shared/interfaces/components/page-shell";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/contexts/shared/interfaces/components/ui/card";
 import { Spinner } from "@/contexts/shared/interfaces/components/ui/spinner";
+import { buildInvitationLandingHref } from "./invitation-navigation";
 
 export type PendingInvitationView = Readonly<{
+  establishmentId: string;
   organizationName: string;
   establishmentName: string;
   expiresAt: string;
@@ -29,9 +31,9 @@ export function PendingInvitationView({ invitation }: { invitation: PendingInvit
 
   useEffect(() => {
     if (state.status === "success") {
-      router.replace("/");
+      router.replace(buildInvitationLandingHref(invitation.establishmentId));
     }
-  }, [state.status, router]);
+  }, [invitation.establishmentId, router, state.status]);
 
   return (
     <PageShell className="min-h-svh max-w-none justify-center">

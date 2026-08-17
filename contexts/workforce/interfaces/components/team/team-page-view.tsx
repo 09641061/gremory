@@ -2,17 +2,9 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Search, Settings2, UserPlus, UsersRound } from "lucide-react";
+import { Search, Settings2, UserPlus } from "lucide-react";
 
 import { PageHeader, PageShell } from "@/contexts/shared/interfaces/components/page-shell";
-import {
-  Empty,
-  EmptyContent,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from "@/contexts/shared/interfaces/components/ui/empty";
 import { Card, CardContent } from "@/contexts/shared/interfaces/components/ui/card";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import { Input } from "@/contexts/shared/interfaces/components/ui/input";
@@ -28,6 +20,9 @@ export function TeamPageView({
   canInviteMembers = true,
   canRemoveMembers = true,
   canCancelInvitations = true,
+  currentUserId = null,
+  currentUserIsOwner = false,
+  canManageScheduling = false,
 }: {
   establishmentId: string | null;
   members: TeamUserSummary[];
@@ -35,6 +30,9 @@ export function TeamPageView({
   canInviteMembers?: boolean;
   canRemoveMembers?: boolean;
   canCancelInvitations?: boolean;
+  currentUserId?: string | null;
+  currentUserIsOwner?: boolean;
+  canManageScheduling?: boolean;
 }) {
   const [filter, setFilter] = useState("");
   const [inviteOpen, setInviteOpen] = useState(false);
@@ -103,30 +101,18 @@ export function TeamPageView({
                 <span className="min-w-[116px] text-left" aria-hidden="true" />
               </div>
             </div>
-            {filteredMembers.length > 0 ? (
-              filteredMembers.map((member) => (
-                <MemberRow
-                  key={member.memberId ?? member.invitationId}
-                  member={member}
-                  canRemoveMembers={canRemoveMembers}
-                  canCancelInvitations={canCancelInvitations}
-                />
-              ))
-            ) : (
-              <Empty className="rounded-none border-0 py-12">
-                <EmptyHeader>
-                  <EmptyMedia variant="icon">
-                    <UsersRound aria-hidden="true" />
-                  </EmptyMedia>
-                  <EmptyContent>
-                    <EmptyTitle>No team members found</EmptyTitle>
-                    <EmptyDescription>
-                      Invite a team member to start managing appointments and access.
-                    </EmptyDescription>
-                  </EmptyContent>
-                </EmptyHeader>
-              </Empty>
-            )}
+            {filteredMembers.map((member) => (
+              <MemberRow
+                key={member.memberId ?? member.userId ?? member.invitationId ?? member.email}
+                member={member}
+                canRemoveMembers={canRemoveMembers}
+                canCancelInvitations={canCancelInvitations}
+                isOwner={member.isOwner || (currentUserIsOwner && member.userId !== null && member.userId === currentUserId)}
+                canManageScheduling={canManageScheduling}
+                canEditAvailability={currentUserIsOwner && member.isOwner === true}
+              />
+            ))}
+            {filteredMembers.length === 0 && <div className="px-5 py-10 text-sm text-muted-foreground">No members found.</div>}
           </div>
         </CardContent>
       </Card>

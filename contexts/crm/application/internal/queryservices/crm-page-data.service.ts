@@ -24,12 +24,13 @@ export async function getCrmPageData(
   requestedEstablishmentId: string | undefined,
   search: string,
   page: number,
-  size: number
+  size: number,
+  providedPermissions?: CrmPermissions,
 ): Promise<CrmPageData> {
   const policyService = createCrmAccessPolicyService();
   const establishmentId = requestedEstablishmentId;
 
-  const permissions = await policyService.getPermissions(establishmentId);
+  const permissions = providedPermissions ?? await policyService.getPermissions(establishmentId);
 
   if (!establishmentId || !permissions.canReadCustomers) {
     return { establishmentId, permissions, customersPage: EMPTY_PAGE, searchFailed: false };

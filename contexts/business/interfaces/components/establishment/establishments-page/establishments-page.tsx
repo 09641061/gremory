@@ -18,6 +18,7 @@ export function EstablishmentsPage({
   selectedEstablishment,
   initialSelectedEstablishmentId,
   canUpdateMap = {},
+  canDeleteMap = {},
   defaultCanUpdate = true,
   canCreate = true,
 }: {
@@ -25,6 +26,7 @@ export function EstablishmentsPage({
   selectedEstablishment?: EstablishmentListItem | null;
   initialSelectedEstablishmentId?: string;
   canUpdateMap?: Record<string, boolean>;
+  canDeleteMap?: Record<string, boolean>;
   defaultCanUpdate?: boolean;
   canCreate?: boolean;
 }) {
@@ -46,6 +48,7 @@ export function EstablishmentsPage({
     establishments.find((est) => est.id === selectedEstId) ??
     null;
   const canUpdateSelected = selectedEst ? (canUpdateMap[selectedEst.id] ?? defaultCanUpdate) : defaultCanUpdate;
+  const canDeleteSelected = selectedEst ? (canDeleteMap[selectedEst.id] ?? false) : false;
 
   return (
     <section className="mx-auto flex w-full max-w-7xl flex-col gap-6 lg:flex-row">
@@ -71,6 +74,8 @@ export function EstablishmentsPage({
           establishments={establishments}
           filteredEstablishments={filteredEstablishments}
           selectedEstId={selectedEstId}
+          canUpdateMap={canUpdateMap}
+          defaultCanUpdate={defaultCanUpdate}
           onSelect={setSelectedEstId}
         />
       </div>
@@ -84,6 +89,7 @@ export function EstablishmentsPage({
         }
         establishment={selectedEst}
         canUpdate={canUpdateSelected}
+        canDelete={canDeleteSelected}
         onCancel={() => setSelectedEstId(null)}
         className={selectedEst ? "" : "hidden lg:block"}
       />

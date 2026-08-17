@@ -8,8 +8,8 @@ import type { WorkforceRoleQueryService } from "../../services/workforce-role.se
 export class WorkforceRoleQueryServiceImpl implements WorkforceRoleQueryService {
   constructor(private readonly roles: WorkforceRoleRepository) {}
 
-  list() {
-    return this.roles.list();
+  list(organizationId?: string) {
+    return this.roles.list(organizationId);
   }
 
   permissions(): Promise<ReadonlyArray<WorkforcePermission>> {

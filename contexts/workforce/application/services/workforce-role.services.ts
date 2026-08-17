@@ -17,6 +17,6 @@ export interface WorkforceRoleCommandService {
 }
 
 export interface WorkforceRoleQueryService {
-  list(): Promise<ReadonlyArray<WorkforceRole>>;
+  list(organizationId?: string): Promise<ReadonlyArray<WorkforceRole>>;
   permissions(): Promise<ReadonlyArray<WorkforcePermission>>;
 }

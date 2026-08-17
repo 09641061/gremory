@@ -24,9 +24,10 @@ import {
 export class WorkforceRoleApiGateway implements WorkforceRoleRepository {
   constructor(private readonly providedToken?: string) {}
 
-  async list() {
+  async list(organizationId?: string) {
     const token = await requireTeamAccessToken(this.providedToken);
-    const response = await teamGet<unknown>(apiConfig.routes.workforce.roles, token);
+    const query = organizationId ? `?organizationId=${encodeURIComponent(organizationId)}` : "";
+    const response = await teamGet<unknown>(`${apiConfig.routes.workforce.roles}${query}`, token);
     const page = workforceRolePageResourceSchema.parse(response);
     return workforceRoleResourcesSchema.parse(page.content).map(toRole);
   }

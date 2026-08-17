@@ -62,6 +62,12 @@ export interface WorkforceAccessResource {
   active: boolean;
   membershipCapabilities?: {
     canReadTeam?: boolean;
+    canCreateInvitation?: boolean;
+    canDeleteInvitation?: boolean;
+    canUpdateRole?: boolean;
+    canDeleteRole?: boolean;
+    canEditEstablishmentProfile?: boolean;
+    canOpenModules?: boolean;
     canReadAppointments?: boolean;
     canCreateAppointment?: boolean;
     canUpdateAppointment?: boolean;

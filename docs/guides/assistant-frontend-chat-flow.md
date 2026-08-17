@@ -2,87 +2,83 @@
 
 Reference date: 2026-07-25
 
-This document summarizes how it currently works la vista de chat del frontend de Takodu, which requests it makes, what it sends with each one y cuál es el authentication point que el backend debe esperar.
+This document summarizes how the frontend chat view works, which requests it makes, and which backend signal is the real access gate.
 
-## Objetivo de la vista
+## Objective
 
-The chat screen is designed como una experiencia tipo ChatGPT:
+The chat screen is designed like a ChatGPT-style experience:
 
-- left sidebar con previous conversations
-- right main panel con la active conversation
+- left sidebar with previous conversations
+- right main panel with the active conversation
 - bottom composer for writing and sending messages
 - starts in "New chat", without automatically opening an old conversation
 
 ## Startup flow
 
-Cuando el usuario entra a `/chat`, la vista hace este orden:
+When the user enters `/chat`, the view should follow this order:
 
-1. Checks whether access is active using subscription status.
-2. Si el acceso está activo, loads the sidebar list de conversaciones.
-3. La pantalla starts empty, con initial assistant greeting.
-4. El usuario puede empezar a escribir de inmediato.
-5. If the user sends a message without having created a conversation, el frontend crea una nueva y luego envía el mensaje.
+1. Read `GET /api/business/workspace` as the primary shell source.
+2. Use `accessPolicy.canUseAssistant` to decide whether `/chat` is available.
+3. If assistant access is allowed, load the conversation sidebar list.
+4. Render the main panel empty, with the initial assistant greeting.
+5. Let the user start writing immediately.
+6. If the user sends a message before creating a conversation, create one first and then send the message.
 
 ## Important authentication point
 
-El backend must not asumir que la cookie del navegador autentica por sí sola la request.
+The backend must not assume that the browser cookie alone authenticates the request.
 
-La regla real es:
+The real rule is:
 
 ```http
 Authorization: Bearer <access_token>
 ```
 
-El frontend Next usa rutas locales `/api/...` como capa intermedia.  
-Esas rutas leen la cookie de sesión y reenvían el `access_token` al backend en el header `Authorization`.
+The frontend Next app uses local `/api/...` routes as an intermediate layer.
+Those routes read the session cookie and forward the `access_token` to the backend in the `Authorization` header.
 
-## Endpoints que toca la vista de chat
+## Endpoints touched by the chat view
 
-Base local usada por la UI:
+Base local route used by the UI:
 
 ```text
 /api/assistant/conversations
 ```
 
-### 1. Subscription verification
+### 1. Workspace access
 
 ```http
-GET /api/billing/subscriptions
+GET /api/business/workspace
 ```
 
-Qué envía:
+What it is for:
 
-- sin body
-- solo request GET
+- resolve the shell and onboarding state
+- decide whether the user can enter chat at all
+- provide `accessPolicy.canUseAssistant`
 
-Para qué sirve:
+If assistant access is blocked:
 
-- confirm that the user has active access before loading el módulo `assistant`
-- en el frontend esta ruta local de Next funciona como proxy del endpoint real del backend
-- el backend real expone `GET /api/billing/subscriptions`
+- the UI does not call the assistant module
+- the chat screen should not open
 
-Si el acceso no está activo:
-
-- the UI does not make requests al módulo `assistant`
-- se evita caer en errores como `403 Forbidden`
-
-### 2. Sidebar list de conversaciones
+### 2. Conversation list
 
 ```http
 GET /api/assistant/conversations?page=0&size=20
 ```
 
-Qué envía:
+What it sends:
 
 - query params:
   - `page`
   - `size`
-  - `search` opcional si el usuario escribe en la barra lateral
-- sin body
+  - `search` optional if the user types in the sidebar
+- no body
 
-Para qué sirve:
+What it is for:
 
-- cargar la lista resumida de conversaciones antiguas
+- load the list of previous conversations
 
 ### 3. Conversation details
 
@@ -90,14 +86,14 @@ Para qué sirve:
 GET /api/assistant/conversations/{id}
 ```
 
-Qué envía:
+What it sends:
 
-- `id` en la URL
-- sin body
+- `id` in the URL
+- no body
 
-Para qué sirve:
+What it is for:
 
-- load the full conversation con todos sus mensajes
+- load the full conversation with all messages
 
 ### 4. Create a new conversation
 
@@ -105,7 +101,7 @@ Para qué sirve:
 POST /api/assistant/conversations
 ```
 
-Qué envía:
+What it sends:
 
 ```json
 {
@@ -113,10 +109,10 @@ Qué envía:
 }
 ```
 
-Para qué sirve:
+What it is for:
 
 - create the initial conversation
-- it is also used automatically cuando el usuario envía el primer mensaje sin haber seleccionado una conversación
+- also used automatically when the user sends the first message with no selected conversation
 
 ### 5. Send a message
 
@@ -124,18 +120,18 @@ Para qué sirve:
 POST /api/assistant/conversations/{id}/messages
 ```
 
-Qué envía:
+What it sends:
 
 ```json
 {
-  "message": "Hola"
+  "message": "Hello"
 }
 ```
 
-Para qué sirve:
+What it is for:
 
-- save the user's message
-- receive the updated conversation con la assistant response
+- save the user message
+- receive the updated conversation with the assistant response
 
 ### 6. Archive a conversation
 
@@ -143,71 +139,85 @@ Para qué sirve:
 PATCH /api/assistant/conversations/{id}/archive
 ```
 
-Qué envía:
+What it sends:
 
-- `id` en la URL
-- sin body
+- `id` in the URL
+- no body
 
-Para qué sirve:
+What it is for:
 
 - remove a conversation from the active list
 
-## Headers esperados por el backend
+## Billing usage
 
-Toda request protegida debe salir con:
+Billing is not part of the chat bootstrap.
+
+If the chat UI wants to show plan-related details, it may read billing as a secondary enrichment source, but it must not use billing to decide chat access.
+
+Rules:
+
+- `GET /api/billing/subscriptions` is optional
+- billing failures must not block the chat shell
+- no billing mutation should be triggered from chat
+- no chat access check should depend on `subscription.active`
+
+## Expected headers
+
+Every protected request must include:
 
 ```http
 Authorization: Bearer <access_token>
 Content-Type: application/json
 ```
 
-No basta con que exista la cookie en el navegador.  
-The token must be explicitly forwarded desde la capa Next al backend.
+The browser cookie is not enough by itself.
+The token must be explicitly forwarded from the Next layer to the backend.
 
 ## What happens in the frontend before calling the backend
 
-La vista de chat usa esta secuencia:
+The chat view should follow this sequence:
 
-1. Comprueba acceso activo con `/api/billing/subscriptions`.
-2. If access is blocked, no llama al módulo `assistant`.
-3. Si el acceso está activo, loads the sidebar list.
-4. If the user selects una conversación, carga el detalle.
-5. Si el usuario escribe y envía, crea conversación if needed y luego manda el mensaje.
+1. Check access with `GET /api/business/workspace`.
+2. If `accessPolicy.canUseAssistant` is `false`, do not call the assistant module.
+3. If access is allowed, load the sidebar list.
+4. If the user selects a conversation, load its details.
+5. If the user types and sends, create a conversation if needed and then send the message.
 
-## Razones comunes de `403 Forbidden`
+## Common reasons for `403 Forbidden`
 
-### Falta `Authorization`
+### Missing `Authorization`
 
-La request llega al backend, pero no lleva:
+The request reaches the backend, but it does not carry:
 
 ```http
 Authorization: Bearer ...
 ```
 
-### Token inválido o vencido
+### Invalid or expired token
 
-Aunque el header exista, el backend puede rechazarlo si el token expiró o no pasa validación.
+Even if the header exists, the backend can reject it if the token is expired or fails validation.
 
-### Inactive subscription
+### No assistant access in workspace policy
 
-The backend may block el acceso al módulo `assistant` si la suscripción del owner no está activa.
+The workspace policy can block the chat module if `canUseAssistant` is `false`.
 
-## Estructura esperada de datos
+## Expected data shape
 
-### Respuesta de suscripción
+### Workspace response
 
-The verification route returns la suscripción actual y el frontend evaluates access con la policy de billing.
+The workspace response is the primary gate for chat.
 
-Campos relevantes:
+Relevant fields:
 
-- `active`
-- `status`
+- `accessPolicy.canUseAssistant`
+- `accountType`
+- `onboardingStatus`
 
 ### Conversation summary
 
-Usada en la barra lateral.
+Used in the sidebar.
 
-Campos esperados:
+Expected fields:
 
 - `id`
 - `title`
@@ -219,9 +229,9 @@ Campos esperados:
 
 ### Full conversation
 
-Usada en el panel principal.
+Used in the main panel.
 
-Campos esperados:
+Expected fields:
 
 - `id`
 - `title`
@@ -231,7 +241,7 @@ Campos esperados:
 - `lastMessageAt`
 - `messages`
 
-### Mensaje
+### Message
 
 Each message includes:
 
@@ -241,11 +251,12 @@ Each message includes:
 - `intent`
 - `createdAt`
 
-## Resumen corto para backend
+## Short summary for backend
 
-- La UI arranca en modo nuevo chat.
-- La barra lateral usa el listado resumido.
-- El panel principal usa el detalle completo.
-- El frontend must not automatically open la última conversación.
-- Cada request protegida debe reenviar `Authorization: Bearer <access_token>`.
-- If there is no active access, el frontend evita llamar al módulo `assistant`.
+- The UI starts from `GET /api/business/workspace`.
+- `accessPolicy.canUseAssistant` decides whether chat is reachable.
+- The sidebar uses the summary list.
+- The main panel uses the conversation detail.
+- The frontend must not automatically open the last conversation.
+- Every protected request must forward `Authorization: Bearer <access_token>`.
+- If there is no assistant access, the frontend does not call the assistant module.

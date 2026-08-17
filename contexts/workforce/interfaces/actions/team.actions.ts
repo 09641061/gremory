@@ -9,6 +9,7 @@ import {
   revokeTeamInvitationCommand,
 } from "../../domain/model/commands/team.commands";
 import { requireTeamAccessToken } from "../../infrastructure/session/team-session";
+import { TeamApiError } from "../../infrastructure/gateways/team-api.gateway";
 import {
   invitationIdSchema,
   invitationTokenSchema,
@@ -121,10 +122,21 @@ export async function acceptPendingInvitationAction(
       error: null,
     };
   } catch (error) {
+    if (isInvitationAlreadyHandledError(error)) {
+      return {
+        status: "success",
+        data: null,
+        error: null,
+      };
+    }
     return teamActionError(error);
   }
 }
 
 function revalidateTeamView() {
   revalidatePath("/team");
+}
+
+function isInvitationAlreadyHandledError(error: unknown): boolean {
+  return error instanceof TeamApiError && [404, 410].includes(error.status);
 }

@@ -8,7 +8,7 @@ import type {
 } from "../model/commands/workforce-role.commands";
 
 export interface WorkforceRoleRepository {
-  list(): Promise<WorkforceRole[]>;
+  list(organizationId?: string): Promise<WorkforceRole[]>;
   permissions(): Promise<readonly WorkforcePermission[]>;
   save(role: WorkforceRole): Promise<WorkforceRole>;
   patch(command: PatchWorkforceRoleCommand): Promise<WorkforceRole>;

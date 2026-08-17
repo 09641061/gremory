@@ -1,33 +1,67 @@
 import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 import { OrganizationsPage } from "@/contexts/business/interfaces/components/organization/organizations-page/organizations-page";
 import { createBusinessWorkspaceQueryService } from "@/contexts/business/application/internal/queryservices/business-workspace-query.service";
-import { groupEstablishmentsByOrganization } from "@/contexts/business/domain/services/workspace-navigation.policy";
+import { OrganizationApiGateway } from "@/contexts/business/infrastructure/gateways/organization-api.gateway";
+import type { WorkspaceNavigationOrganizationGroup } from "@/contexts/business/domain/services/workspace-navigation.policy";
+import { workspaceSelectionCookies } from "@/contexts/business/infrastructure/session/workspace-selection-cookie";
 
 interface OrganizationsRoutePageProps {
-  searchParams: Promise<{ establishmentId?: string }>;
+  searchParams: Promise<{ establishmentId?: string; organizationId?: string; previewOrganizationId?: string }>;
 }
 
 export default async function OrganizationsRoutePage({ searchParams }: OrganizationsRoutePageProps) {
-  const workspace = await createBusinessWorkspaceQueryService().getHeaderViewModel(await searchParams);
+  const query = await searchParams;
+  const cookieStore = await cookies();
+  // The organizations index must load the complete accessible workspace. The
+  // query organization only selects the preview; sending it to `/workspace`
+  // would scope the response to one organization and hide foreign memberships.
+  const [workspace, accessibleOrganizations] = await Promise.all([
+    createBusinessWorkspaceQueryService().getHeaderViewModel({ establishmentId: query.establishmentId }),
+    new OrganizationApiGateway().findAccessible(),
+  ]);
+  const requestedOrganizationId = query.organizationId;
+  const requestedPreviewOrganizationId = query.previewOrganizationId;
+  const rememberedPreviewOrganizationId =
+    cookieStore.get(workspaceSelectionCookies.previewOrganizationId)?.value ?? null;
+  const activeOrganizationId = cookieStore.get(workspaceSelectionCookies.organizationId)?.value ?? workspace.organization?.id ?? null;
+  const ownedOrganizationId =
+    accessibleOrganizations.find((organization) => organization.isOwned)?.id ??
+    workspace.ownedOrganizationId;
 
   // An account without an organization has an invitation to accept first.
   if (workspace.accountType === "PENDING_INVITATION") {
     redirect("/invitations/pending");
   }
 
-  // Already scoped by the workforce ACL: every establishment here is one the
-  // account genuinely has access to, grouped by the organization it belongs to.
-  const organizations = groupEstablishmentsByOrganization(
-    workspace.establishments,
-    workspace.organization?.id,
-    workspace.organization?.name,
-    workspace.organization?.imageUrl,
+  const organizations: ReadonlyArray<WorkspaceNavigationOrganizationGroup> = accessibleOrganizations.map(
+    (organization) => ({
+      organizationId: organization.id,
+      organizationName: organization.name,
+      organizationImageUrl: organization.imageUrl,
+      canUpdate: organization.permissions.canUpdate,
+      canCreateEstablishment: organization.permissions.canCreateEstablishment,
+      establishments: organization.establishments.map((establishment) => ({
+        id: establishment.id,
+        name: establishment.name,
+        photoUrl: establishment.photoUrl ?? null,
+        timeZone: establishment.timeZone ?? null,
+        effectivePermissions: establishment.effectivePermissions,
+        organizationId: organization.id,
+        organizationName: organization.name,
+        organizationImageUrl: organization.imageUrl,
+      })),
+    }),
   );
 
   return (
     <OrganizationsPage
       organizations={organizations}
-      ownedOrganizationId={workspace.ownedOrganizationId}
+      ownedOrganizationId={ownedOrganizationId ?? null}
+      initialPreviewOrganizationId={
+        requestedPreviewOrganizationId ?? requestedOrganizationId ?? rememberedPreviewOrganizationId ?? activeOrganizationId
+      }
+      activeOrganizationId={activeOrganizationId}
     />
   );
 }

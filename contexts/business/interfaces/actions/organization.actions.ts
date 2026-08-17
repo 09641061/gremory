@@ -1,12 +1,15 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 import { createOrganizationCommandService } from "../../application/internal/commandservices/organization-command.service";
 import {
   createOrganizationCommand,
   updateOrganizationCommand,
 } from "../../domain/model/commands/business.commands";
 import { requireBusinessAccessToken } from "../../infrastructure/session/business-session";
+import { workspaceSelectionCookies } from "../../infrastructure/session/workspace-selection-cookie";
 import { createOrganizationSchema, updateOrganizationSchema } from "../rest/schemas/organization.schemas";
 import {
   actionError,
@@ -28,19 +31,24 @@ export async function createOrganizationAction(
   });
   if (!parsed.success) return actionError(parsed.error.issues[0]?.message);
 
+  let organizationId = "";
+
   try {
     await requireBusinessAccessToken();
-    const organizationId = await createOrganizationCommandService().create(
+    const created = await createOrganizationCommandService().create(
       createOrganizationCommand({
         ...parsed.data,
         imageFile: readPhotoFileFromFormData(formData),
       }),
     );
+    organizationId = created.value;
+    await clearWorkspaceSelection();
     revalidateBusinessViews();
-    return { status: "success", data: { id: organizationId.value }, error: null };
   } catch (error) {
     return actionError(error);
   }
+
+  redirect(`/establishments/new?organizationId=${encodeURIComponent(organizationId)}`);
 }
 
 export async function updateOrganizationAction(
@@ -75,4 +83,9 @@ function revalidateBusinessViews() {
   revalidatePath("/catalog");
   revalidatePath("/organization");
   revalidatePath("/establishments");
+}
+
+async function clearWorkspaceSelection() {
+  const cookieStore = await cookies();
+  cookieStore.delete(workspaceSelectionCookies.establishmentId);
 }

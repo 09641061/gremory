@@ -1,7 +1,6 @@
 "use client";
 
 import { useActionState, useEffect, useId, useState, useRef } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Store, Plus } from "lucide-react";
 import { createEstablishmentAction } from "../../../actions/establishment.actions";
@@ -32,7 +31,6 @@ export function CreateEstablishmentForm({
   organizationId: string;
   showCancel?: boolean;
 }) {
-  const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const nameHeadingId = useId();
 
@@ -46,19 +44,9 @@ export function CreateEstablishmentForm({
   );
 
   const [formResetKey, setFormResetKey] = useState(0);
-  const hasRedirected = useRef(false);
 
   useEffect(() => {
-    if (state.status === "success" && !hasRedirected.current) {
-      hasRedirected.current = true;
-      const establishmentId = state.data?.id;
-      // The organization is fixed for the account; only the establishment is context.
-      const nextPath = establishmentId
-        ? `/?establishmentId=${encodeURIComponent(establishmentId)}`
-        : "/";
-      router.push(nextPath);
-      router.refresh();
-    } else if (state.status === "error") {
+    if (state.status === "error") {
       setTimeout(() => {
         setName("");
         setPhotoPreviewUrl((current) => {
@@ -68,7 +56,7 @@ export function CreateEstablishmentForm({
         setFormResetKey((k) => k + 1);
       }, 0);
     }
-  }, [organizationId, router, state.data?.id, state.error, state.status]);
+  }, [state.error, state.status]);
 
   useEffect(() => {
     return () => {

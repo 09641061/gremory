@@ -2,7 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { createCrmCommandService } from "../../application/internal/commandservices/crm-command.service";
-import { createCrmAccessPolicyService } from "../../application/internal/queryservices/crm-access-policy.service";
+import { createBusinessWorkspaceQueryService } from "@/contexts/business/application/internal/queryservices/business-workspace-query.service";
+import { getWorkspaceEstablishment, hasEstablishmentPermission } from "@/contexts/shared/application/services/workspace-establishment-permissions";
 import { UpdateCustomerCommand } from "../../domain/model/commands/update-customer.command";
 import { ApiError } from "@/contexts/shared/infrastructure/http/api-client";
 import { ActionState } from "./register-customer.action";
@@ -13,8 +14,8 @@ export async function updateCustomerAction(
   command: Omit<UpdateCustomerCommand, "establishmentId">,
   establishmentId: string
 ): Promise<ActionState<CustomerResponse>> {
-  const permissions = await createCrmAccessPolicyService().getPermissions(establishmentId);
-  if (!permissions.canUpdateCustomer) {
+  const workspace = await createBusinessWorkspaceQueryService().getHeaderViewModel({ establishmentId });
+  if (!hasEstablishmentPermission(getWorkspaceEstablishment(workspace, establishmentId), "crm:manage")) {
     return { status: "error", data: null, error: "You are not authorized to update customers." };
   }
 

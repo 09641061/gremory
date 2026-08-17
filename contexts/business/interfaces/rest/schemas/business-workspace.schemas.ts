@@ -12,6 +12,39 @@ const workspaceCapabilitiesSchema = z
   })
   .optional();
 
+const workspaceAccessPolicySchema = z
+  .object({
+    canOpenAnalytics: z.boolean().optional(),
+    canOpenScheduling: z.boolean().optional(),
+    canOpenCrm: z.boolean().optional(),
+    canOpenCatalog: z.boolean().optional(),
+    canOpenTeam: z.boolean().optional(),
+    canUseAssistant: z.boolean().optional(),
+    canCreateEstablishment: z.boolean().optional(),
+    canManageBilling: z.boolean().optional(),
+  })
+  .optional();
+
+const workspaceAuthorizationSchema = z
+  .object({
+    role: z.enum(["OWNER", "ADMIN", "MANAGER", "WORKER"]),
+    scope: z.object({
+      type: z.enum(["ORGANIZATION", "ESTABLISHMENT"]).nullish(),
+      id: uuidSchema.nullish(),
+      name: z.string().trim().min(1).nullish(),
+    }).nullish(),
+    capabilities: z.object({
+      canEditOrganizationProfile: z.boolean(),
+      canEditEstablishmentProfile: z.boolean(),
+      canManageMembers: z.boolean(),
+      canManageBilling: z.boolean(),
+      canOpenModules: z.boolean(),
+      canInviteUsers: z.boolean(),
+    }),
+  })
+  .nullable()
+  .optional();
+
 const establishmentResourceSchema = z.object({
   id: uuidSchema,
   name: z.string().trim().min(1),
@@ -50,11 +83,13 @@ export const businessWorkspaceResourceSchema = z.object({
         canUpdate: z.boolean(),
         canCreateEstablishment: z.boolean(),
       }),
-    })
+  })
     .nullable(),
   establishments: z.array(establishmentResourceSchema).default([]),
   activeEstablishmentId: uuidSchema.nullable(),
   capabilities: workspaceCapabilitiesSchema,
+  authorization: workspaceAuthorizationSchema,
+  accessPolicy: workspaceAccessPolicySchema,
   // Always the owner's subscription, even when the caller is a member.
   subscription: z
     .object({
@@ -67,6 +102,7 @@ export const businessWorkspaceResourceSchema = z.object({
   // Present only for PENDING_INVITATION. Never carries the invitation token.
   pendingInvitation: z
     .object({
+      establishmentId: uuidSchema,
       organizationName: z.string().trim().min(1),
       establishmentName: z.string().trim().min(1),
       expiresAt: z.string(),

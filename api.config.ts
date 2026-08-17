@@ -20,6 +20,7 @@ export const apiConfig = Object.freeze({
       preferences: "/api/v1/profiles/preferences",
     }),
     organizations: "/api/business/organizations",
+    accessibleOrganizations: "/api/business/organizations/accessible",
     workspace: "/api/business/workspace",
     organizationImages: "/api/business/organizations/images",
     establishments: "/api/business/establishments",

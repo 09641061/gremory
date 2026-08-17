@@ -8,6 +8,12 @@ const workforceEntryAccessResourceSchema = z.object({
   active: z.boolean().optional(),
   membershipCapabilities: z.object({
     canReadTeam: z.boolean().optional(),
+    canCreateInvitation: z.boolean().optional(),
+    canDeleteInvitation: z.boolean().optional(),
+    canUpdateRole: z.boolean().optional(),
+    canDeleteRole: z.boolean().optional(),
+    canEditEstablishmentProfile: z.boolean().optional(),
+    canOpenModules: z.boolean().optional(),
     canReadAppointments: z.boolean().optional(),
     canCreateAppointment: z.boolean().optional(),
     canUpdateAppointment: z.boolean().optional(),

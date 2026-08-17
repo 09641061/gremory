@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { BillingApiGateway } from "@/contexts/billing/infrastructure/gateways/billing-api.gateway";
 import { createIamSessionQueryService } from "@/contexts/iam/application/internal/queryservices/iam-session-query.service";
 import { createEntryRouteQueryService } from "@/contexts/shared/application/internal/queryservices/entry-route-query.service";
 import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-session-cookie";
@@ -9,7 +8,6 @@ import {
   workspaceSelectionCookies,
 } from "@/contexts/business/infrastructure/session/workspace-selection-cookie";
 import { continueRequestWithSession } from "@/contexts/iam/interfaces/proxy/iam-session-request";
-import { ApiError } from "@/contexts/shared/infrastructure/http/api-client";
 
 export async function proxy(request: NextRequest) {
   let accessToken = request.cookies.get(iamSessionCookies.accessToken)?.value;
@@ -46,14 +44,9 @@ export async function proxy(request: NextRequest) {
     return continueWithWorkspaceContext(request, response);
   }
 
-  const subscriptionForLanding = await getSubscriptionSnapshot(accessToken);
-
   const landing = await createEntryRouteQueryService().resolveRoute({
     accessToken,
-    subscription: subscriptionForLanding,
-    // Without this, landing always resolved the account's default identity -
-    // its own organization if it owns one - overriding a member's actual,
-    // persisted choice to work inside a host organization.
+    organizationId: resolveOrganizationSelection(request),
     establishmentId: resolveEstablishmentSelection(request),
   });
   if (landing.status === "unauthenticated") {
@@ -80,6 +73,10 @@ export async function proxy(request: NextRequest) {
     return redirectWithCookies(request, homePath, response);
   }
 
+  if (pathname === "/welcome" && homePath !== "/welcome") {
+    return redirectWithCookies(request, homePath, response);
+  }
+
   if (homePath !== "/chat" && (pathname === "/chat" || pathname.startsWith("/chat/"))) {
     return redirectWithCookies(request, homePath, response);
   }
@@ -95,6 +92,7 @@ function isPrivateRoute(pathname: string) {
     "/crm",
     "/catalog",
     "/team",
+    "/welcome",
     "/settings",
     "/organization",
     "/invitations/pending",
@@ -104,20 +102,6 @@ function isPrivateRoute(pathname: string) {
     // Lives under app/(protected): plans are shown to signed-in users only.
     "/upgrade",
   ].some((route) => pathname === route || pathname.startsWith(`${route}/`));
-}
-
-async function getSubscriptionSnapshot(accessToken: string): Promise<{
-  active?: boolean;
-  status?: string;
-  planId?: number;
-} | null> {
-  try {
-    return await new BillingApiGateway().getCurrentSubscription(accessToken);
-  } catch (error) {
-    if (error instanceof ApiError && error.status === 401) return null;
-    // A missing or temporarily unavailable subscription must not block onboarding.
-    return null;
-  }
 }
 
 /**
@@ -131,9 +115,17 @@ function resolveEstablishmentSelection(request: NextRequest): string | undefined
   return request.cookies.get(workspaceSelectionCookies.establishmentId)?.value || undefined;
 }
 
+function resolveOrganizationSelection(request: NextRequest): string | undefined {
+  const fromUrl = request.nextUrl.searchParams.get("organizationId");
+  if (fromUrl) return fromUrl;
+  return request.cookies.get(workspaceSelectionCookies.organizationId)?.value || undefined;
+}
+
 function redirectWithCookies(request: NextRequest, path: string, response: NextResponse | null) {
   const redirectUrl = new URL(path, request.url);
+  const organizationId = resolveOrganizationSelection(request);
   const establishmentId = resolveEstablishmentSelection(request);
+  if (organizationId) redirectUrl.searchParams.set("organizationId", organizationId);
   if (establishmentId) redirectUrl.searchParams.set("establishmentId", establishmentId);
 
   const redirectResponse = NextResponse.redirect(redirectUrl);
@@ -212,6 +204,7 @@ export const config = {
     "/crm/:path*",
     "/catalog/:path*",
     "/team/:path*",
+    "/welcome",
     "/settings/:path*",
     "/organization/:path*",
     "/invitations/pending",

@@ -6,6 +6,7 @@ import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-ses
 import { createPlanHomeRouteQueryService } from "@/contexts/shared/application/internal/queryservices/plan-home-route-query.service";
 import { createBusinessWorkspaceQueryService } from "@/contexts/business/application/internal/queryservices/business-workspace-query.service";
 import { hasSomewhereToCancelTo } from "@/contexts/business/domain/services/workspace-navigation.policy";
+import { workspaceSelectionCookies } from "@/contexts/business/infrastructure/session/workspace-selection-cookie";
 import { BackNavigationButton } from "@/contexts/shared/interfaces/components/back-navigation-button";
 
 /**
@@ -35,9 +36,20 @@ export default function ConfigurationLayout({ children }: { children: ReactNode 
 }
 
 async function BackToHomeLink() {
+  const href = await resolveConfigurationBackHref();
+  if (!href) return null;
+
+  return <BackNavigationButton fallbackHref={href} />;
+}
+
+export async function resolveConfigurationBackHref() {
   // Read outside any cached scope: the session is per-request.
-  const accessToken = (await cookies()).get(iamSessionCookies.accessToken)?.value;
+  const cookieStore = await cookies();
+  const accessToken = cookieStore.get(iamSessionCookies.accessToken)?.value;
   const establishmentId = (await headers()).get("x-takodu-establishment-id") ?? undefined;
+  const organizationId = cookieStore.get(workspaceSelectionCookies.organizationId)?.value ?? undefined;
+  const previewOrganizationId =
+    cookieStore.get(workspaceSelectionCookies.previewOrganizationId)?.value ?? undefined;
 
   // Every other screen under this layout is only reachable once onboarding is
   // complete (the guard restricts `/organizations/new` and `/establishments/new`
@@ -53,7 +65,16 @@ async function BackToHomeLink() {
     return null;
   }
 
-  const href = await createPlanHomeRouteQueryService().handle({ accessToken, establishmentId });
+  if (organizationId) {
+    const href = new URL("/", "http://localhost");
+    href.searchParams.set("organizationId", organizationId);
+    if (establishmentId) {
+      href.searchParams.set("establishmentId", establishmentId);
+    } else if (previewOrganizationId && previewOrganizationId !== organizationId) {
+      href.searchParams.set("previewOrganizationId", previewOrganizationId);
+    }
+    return `${href.pathname}${href.search}`;
+  }
 
-  return <BackNavigationButton fallbackHref={href} />;
+  return await createPlanHomeRouteQueryService().handle({ accessToken, establishmentId });
 }

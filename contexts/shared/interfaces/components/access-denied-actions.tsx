@@ -1,9 +1,10 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTransition } from "react";
 
-import { Button } from "@/contexts/shared/interfaces/components/ui/button";
+import { Button, buttonVariants } from "@/contexts/shared/interfaces/components/ui/button";
 import { Spinner } from "@/contexts/shared/interfaces/components/ui/spinner";
 
 /**
@@ -23,19 +24,24 @@ export function AccessDeniedActions() {
   const [isPending, startTransition] = useTransition();
 
   return (
-    <Button
-      type="button"
-      onClick={() =>
-        startTransition(() => {
-          router.push("/");
-          router.refresh();
-        })
-      }
-      disabled={isPending}
-      className="gap-2"
-    >
-      {isPending ? <Spinner className="size-4" /> : null}
-      {isPending ? "Retrying..." : "Try again"}
-    </Button>
+    <div className="flex flex-col items-center justify-center gap-2 sm:flex-row">
+      <Link href="/organizations" className={buttonVariants({ variant: "outline" })}>
+        Manage organizations
+      </Link>
+      <Button
+        type="button"
+        onClick={() =>
+          startTransition(() => {
+            router.push("/");
+            router.refresh();
+          })
+        }
+        disabled={isPending}
+        className="gap-2"
+      >
+        {isPending ? <Spinner className="size-4" /> : null}
+        {isPending ? "Retrying..." : "Try again"}
+      </Button>
+    </div>
   );
 }

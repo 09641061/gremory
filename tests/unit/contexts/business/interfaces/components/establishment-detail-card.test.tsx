@@ -14,6 +14,10 @@ vi.mock("@/contexts/business/interfaces/actions/establishment.actions", () => ({
     status: "success",
     error: null,
   }),
+  deleteEstablishmentAction: vi.fn().mockResolvedValue({
+    status: "success",
+    error: null,
+  }),
 }));
 
 describe("EstablishmentDetailCard Component", () => {
@@ -35,7 +39,6 @@ describe("EstablishmentDetailCard Component", () => {
 
     // Verify header and fields are shown
     expect(screen.getByText("Establishment Name")).toBeDefined();
-    
     // Verify inputs are enabled
     const input = screen.getByPlaceholderText("Establishment name") as HTMLInputElement;
     expect(input.disabled).toBe(false);
@@ -57,7 +60,6 @@ describe("EstablishmentDetailCard Component", () => {
 
     // Verify fields are shown
     expect(screen.getByText("Establishment Name")).toBeDefined();
-
     // Verify inputs are disabled
     const input = screen.getByPlaceholderText("Establishment name") as HTMLInputElement;
     expect(input.disabled).toBe(true);

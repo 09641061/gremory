@@ -1,7 +1,6 @@
 "use client";
 
 import { useActionState, useEffect, useId, useState, useRef } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Building2, Plus } from "lucide-react";
 import { createOrganizationAction } from "../../../actions/organization.actions";
@@ -29,13 +28,10 @@ import {
  * return to (a member starting a second, separate business).
  */
 export function CreateOrganizationForm({
-  nextHref = "/establishments/new",
   showCancel = false,
 }: {
-  nextHref?: string;
   showCancel?: boolean;
 }) {
-  const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const nameHeadingId = useId();
 
@@ -48,14 +44,9 @@ export function CreateOrganizationForm({
   );
 
   const [formResetKey, setFormResetKey] = useState(0);
-  const hasRedirected = useRef(false);
 
   useEffect(() => {
-    if (state.status === "success" && !hasRedirected.current) {
-      hasRedirected.current = true;
-      router.push(nextHref);
-      router.refresh();
-    } else if (state.status === "error") {
+    if (state.status === "error") {
       setTimeout(() => {
         setPhotoPreviewUrl((current) => {
           if (current) URL.revokeObjectURL(current);
@@ -64,7 +55,7 @@ export function CreateOrganizationForm({
         setFormResetKey((k) => k + 1);
       }, 0);
     }
-  }, [nextHref, router, state.status]);
+  }, [state.status]);
 
   useEffect(() => {
     return () => {

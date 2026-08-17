@@ -22,6 +22,7 @@ type SidebarProfileProps = {
   settingsHref: string;
   upgradeHref?: string;
   invoiceHref?: string;
+  canManageBilling?: boolean;
   /** Highlights the trigger while the settings route is open. */
   active?: boolean;
 };
@@ -46,6 +47,7 @@ export function SidebarProfile({
   settingsHref,
   upgradeHref = "/upgrade",
   invoiceHref = "/invoice",
+  canManageBilling = true,
   active = false,
 }: SidebarProfileProps) {
   const username = profile?.username?.trim() || "Profile";
@@ -92,15 +94,19 @@ export function SidebarProfile({
           Settings
         </DropdownMenuItem>
 
-        <DropdownMenuItem render={<Link href={upgradeHref} />}>
-          <CircleArrowUp aria-hidden="true" />
-          Upgrade plan
-        </DropdownMenuItem>
+        {canManageBilling ? (
+          <>
+            <DropdownMenuItem render={<Link href={upgradeHref} />}>
+              <CircleArrowUp aria-hidden="true" />
+              Upgrade plan
+            </DropdownMenuItem>
 
-        <DropdownMenuItem render={<Link href={invoiceHref} />}>
-          <Receipt aria-hidden="true" />
-          Invoices
-        </DropdownMenuItem>
+            <DropdownMenuItem render={<Link href={invoiceHref} />}>
+              <Receipt aria-hidden="true" />
+              Invoices
+            </DropdownMenuItem>
+          </>
+        ) : null}
       </DropdownMenuContent>
     </DropdownMenu>
   );

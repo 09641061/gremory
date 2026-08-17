@@ -5,6 +5,7 @@ import { createBusinessWorkspaceQueryService } from "@/contexts/business/applica
 import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-session-cookie";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { resolveModuleAccessFallback } from "@/contexts/shared/application/services/module-access.policy";
 
 export default async function AnalyticsPage() {
   let analytics: FreeAnalyticsDashboard | null = null;
@@ -13,8 +14,8 @@ export default async function AnalyticsPage() {
   const accessToken = cookieStore.get(iamSessionCookies.accessToken)?.value ?? null;
   const workspace = await createBusinessWorkspaceQueryService().getHeaderViewModel();
 
-  if (workspace.capabilities?.canReadAnalytics === false) {
-    redirect("/access-denied");
+  if (workspace.accessPolicy?.canOpenAnalytics !== true) {
+    redirect(resolveModuleAccessFallback(workspace));
   }
 
   try {

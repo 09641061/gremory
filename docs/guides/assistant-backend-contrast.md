@@ -2,7 +2,7 @@
 
 Reference date: 2026-07-26
 
-This short document clarifies el actual contract entre el frontend y el backend para el modulo `assistant`, with a focus on autenticacion, paginacion y flujo de suscripcion.
+This short document clarifies el actual contract entre el frontend y el backend para el modulo `assistant`, with a focus on autenticacion, paginacion y acceso por workspace.
 
 ## 1. Authentication
 
@@ -157,19 +157,17 @@ La respuesta real del backend incluye, entre otros:
 - `currentPeriodEnd`
 - `failedAttemptsCount`
 
-La UI puede considerar acceso valido cuando:
-
-- `active === true`
-- `status === "ACTIVE"`
+La UI puede usar esta respuesta para billing o para mostrar el estado del plan, pero no para decidir el acceso al chat.
 
 ## 4. Recommended flow de la UI
 
 1. Obtener el `access_token` de la sesion actual.
-2. Llamar `GET /api/billing/subscriptions` para decidir si el usuario puede entrar al chat.
-3. Si el acceso esta activo, llamar `GET /api/assistant/conversations?page=0&size=20`.
+2. Llamar `GET /api/business/workspace` para decidir si el usuario puede entrar al chat.
+3. Si `accessPolicy.canUseAssistant === true`, llamar `GET /api/assistant/conversations?page=0&size=20`.
 4. Al abrir una conversacion, llamar `GET /api/assistant/conversations/{id}`.
 5. Al enviar un mensaje, llamar `POST /api/assistant/conversations/{id}/messages`.
 6. If the user wants to start another chat, crear una nueva conversacion con `POST /api/assistant/conversations`.
+7. Si una pantalla explicita de billing necesita mostrar el plan, usar `GET /api/billing/subscriptions` como complemento.
 
 ## 5. Causas comunes de `403 Forbidden`
 
@@ -181,9 +179,9 @@ El request llega al backend pero no lleva el header bearer.
 
 El backend no puede autenticar la request.
 
-### Suscripcion no activa
+### No assistant access in workspace
 
-El `SubscriptionAccessFilter` bloquea el acceso si la suscripcion del owner no esta activa.
+El workspace puede bloquear el acceso al chat si `accessPolicy.canUseAssistant` es `false`.
 
 ### Next no reenvia el token
 
@@ -208,7 +206,8 @@ Content-Type: application/json
 
 Y la UI debe usar:
 
-- `GET /api/billing/subscriptions` para acceso
+- `GET /api/business/workspace` para decidir acceso al chat
+- `GET /api/billing/subscriptions` solo para enriquecer pantallas de billing o plan
 - `GET /api/assistant/conversations` para sidebar
 - `GET /api/assistant/conversations/{id}` para chat completo
 - `POST /api/assistant/conversations/{id}/messages` para enviar mensajes
@@ -216,7 +215,8 @@ Y la UI debe usar:
 ## 8. Resumen corto para frontend
 
 - Usa el header `Authorization` siempre.
-- Usa `GET /api/billing/subscriptions` para validar acceso.
+- Usa `GET /api/business/workspace` para validar acceso al chat.
+- Usa `GET /api/billing/subscriptions` solo si necesitas mostrar el plan.
 - Usa `Page.content` para la barra lateral.
 - Usa `GET /api/assistant/conversations/{id}` para el panel principal.
 - No dependas de cookies para autenticar el API.
@@ -225,9 +225,9 @@ Y la UI debe usar:
 ## 9. Cambios a implementar en frontend
 
 1. When a new conversation is created una conversacion nueva, assume it may return con un mensaje inicial del asistente y no con `messages` vacio.
-2. En la validacion de acceso, usar principalmente `active` y `status === "ACTIVE"` de `GET /api/billing/subscriptions`.
+2. En la validacion de acceso, usar principalmente `accessPolicy.canUseAssistant` de `GET /api/business/workspace`.
 3. Tratar el listado lateral como una respuesta paginada Spring `Page`, no como un array plano.
 4. Mantener `Authorization: Bearer <access_token>` en todas las requests protegidas, incluso si ya existen cookies de sesion.
 5. Al abrir una conversacion, cargar el detalle completo con `GET /api/assistant/conversations/{id}` instead of reusing el resumen lateral.
 6. Al enviar un mensaje, refresh the state de la conversacion con la respuesta devuelta por el backend para keep synchronized `messages`, `updatedAt` y `lastMessageAt`.
-7. Si el backend responde `403`, first interpret a missing header, token vencido o suscripcion inactiva before assuming a UI failure.
+7. Si el backend responde `403`, first interpret a missing header, token vencido o falta de `canUseAssistant` before assuming a UI failure.

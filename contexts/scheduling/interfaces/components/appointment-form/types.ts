@@ -2,6 +2,7 @@ export type DropdownOption = Readonly<{
   value: string;
   label: string;
   description?: string;
+  disabled?: boolean;
 }>;
 
 /** Everything the create and reschedule forms collect, before transformation. */

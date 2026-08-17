@@ -1,6 +1,5 @@
 import "server-only";
 
-import { createCurrentSubscriptionQueryService } from "@/contexts/billing/application/internal/queryservices/current-subscription-query.service";
 import { createAppShellQueryService } from "@/contexts/shared/application/internal/queryservices/app-shell-query.service";
 import type { AppShellHomeHref } from "@/contexts/shared/application/model/app-shell.view-models";
 
@@ -25,11 +24,8 @@ export class PlanHomeRouteQueryService {
   async handle({ accessToken, establishmentId }: PlanHomeRouteQuery): Promise<PlanHomeRoute> {
     if (!accessToken) return "/login";
 
-    const subscription =
-      await createCurrentSubscriptionQueryService().getCurrentSubscriptionSnapshot(accessToken);
-
     const shell = await createAppShellQueryService()
-      .resolve({ subscription, workspace: { establishmentId } })
+      .resolve({ workspace: { establishmentId } })
       .catch(() => null);
 
     return shell?.homeHref ?? "/";

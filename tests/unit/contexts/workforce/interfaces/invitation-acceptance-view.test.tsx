@@ -83,7 +83,7 @@ describe("Invitation acceptance view", () => {
     ).toBeVisible();
     expect(screen.getByRole("link", { name: "Continue to Takodu" })).toHaveAttribute(
       "href",
-      "/",
+      "/?establishmentId=55555555-5555-4555-8555-555555555555",
     );
     expect(screen.queryByRole("button", { name: "Accept invitation" })).not.toBeInTheDocument();
   });
@@ -116,6 +116,6 @@ describe("Invitation acceptance view", () => {
         "Your membership is no longer active. Ask the organization owner to send you a new invitation.",
       ),
     ).toBeVisible();
-    expect(screen.queryByRole("link", { name: "Continue to Takodu" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Continue to establishment" })).not.toBeInTheDocument();
   });
 });

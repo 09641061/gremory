@@ -38,7 +38,7 @@ export function DropdownField({
 }: DropdownFieldProps) {
   // Lets `SelectValue` resolve the trigger label without re-rendering option rows.
   const items = useMemo(
-    () => options.map((option) => ({ value: option.value, label: option.label })),
+    () => options.map((option) => ({ value: option.value, label: option.label, disabled: option.disabled })),
     [options]
   );
 
@@ -57,7 +57,7 @@ export function DropdownField({
           <div className="px-2 py-3 text-sm text-muted-foreground">{emptyMessage}</div>
         ) : (
           options.map((option) => (
-            <SelectItem key={option.value} value={option.value} label={option.label}>
+            <SelectItem key={option.value} value={option.value} label={option.label} disabled={option.disabled}>
               <span className="flex min-w-0 flex-col">
                 <span className="truncate">{option.label}</span>
                 {option.description && (

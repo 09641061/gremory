@@ -13,6 +13,8 @@ export type SchedulingMemberViewModel = Readonly<{
   role: string;
   status: string;
   imageUrl: string | null;
+  isOwner: boolean;
+  availableForScheduling: boolean;
 }>;
 
 export type SchedulingCustomerViewModel = Readonly<{
