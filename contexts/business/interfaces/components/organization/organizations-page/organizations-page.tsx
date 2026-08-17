@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { startTransition, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Building2 } from "lucide-react";
@@ -31,11 +31,11 @@ export function OrganizationsPage({
   const [activeOrgId, setActiveOrgId] = useState<string | null>(activeOrganizationId);
 
   useEffect(() => {
-    setPreviewOrgId(initialPreviewOrganizationId);
+    startTransition(() => setPreviewOrgId(initialPreviewOrganizationId));
   }, [initialPreviewOrganizationId]);
 
   useEffect(() => {
-    setActiveOrgId(activeOrganizationId);
+    startTransition(() => setActiveOrgId(activeOrganizationId));
   }, [activeOrganizationId]);
 
   const filteredOrganizations = useMemo(() => {

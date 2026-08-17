@@ -1,7 +1,5 @@
 import { GetConversationQueryService } from "@/contexts/assistant/application/internal/queryservices/get-conversation-query.service";
 import { createBusinessWorkspaceQueryService } from "@/contexts/business/application/internal/queryservices/business-workspace-query.service";
-import { cookies } from "next/headers";
-import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-session-cookie";
 import { AssistantChatView } from "@/contexts/assistant/interfaces/components/chat-view/assistant-chat-view";
 import { toConversationViewModel } from "@/contexts/assistant/interfaces/presenters/assistant-chat.presenter.server";
 import { Alert, AlertTitle, AlertDescription } from "@/contexts/shared/interfaces/components/ui/alert";
@@ -15,7 +13,6 @@ export default async function ChatPage({
   const conversationId = resolvedSearchParams?.conversationId;
   const denied = resolvedSearchParams?.denied;
   const requestedEstablishmentId = resolvedSearchParams?.establishmentId;
-  const accessToken = (await cookies()).get(iamSessionCookies.accessToken)?.value;
 
   const workspace = await createBusinessWorkspaceQueryService().getHeaderViewModel({
     establishmentId: requestedEstablishmentId,

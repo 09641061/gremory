@@ -9,7 +9,6 @@ import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import { Card, CardContent } from "@/contexts/shared/interfaces/components/ui/card";
 import { Input } from "@/contexts/shared/interfaces/components/ui/input";
 import { ErrorAlert } from "@/contexts/shared/interfaces/components/error";
-import { StatusBadge } from "@/contexts/shared/interfaces/components/ui/status-badge";
 import { InfoBadge } from "@/contexts/shared/interfaces/components/ui/info-badge";
 import { CreateRoleDialog } from "./create-role-dialog";
 import { EditRoleDialog } from "./edit-role-dialog";

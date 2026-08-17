@@ -313,6 +313,16 @@ describe("IAM session proxy", () => {
     stubFetch(workspace({
       accountType: "MEMBER",
       establishments: [establishment(establishmentId, ["catalog:read"])],
+      accessPolicy: {
+        canOpenScheduling: false,
+        canOpenCatalog: true,
+        canOpenCrm: false,
+        canOpenTeam: false,
+        canOpenAnalytics: false,
+        canUseAssistant: false,
+        canCreateEstablishment: false,
+        canManageBilling: false,
+      },
     }));
 
     const response = await proxy(requestWithSession("access-token", "refresh-token", "/"));
@@ -325,6 +335,22 @@ describe("IAM session proxy", () => {
     stubFetch(workspace({
       accountType: "MEMBER",
       establishments: [establishment(establishmentId, [])],
+      organization: {
+        id: organizationId,
+        name: "Takodu",
+        imageUrl: null,
+        permissions: { canRead: false, canUpdate: false, canCreateEstablishment: false },
+      },
+      accessPolicy: {
+        canOpenScheduling: false,
+        canOpenCatalog: false,
+        canOpenCrm: false,
+        canOpenTeam: false,
+        canOpenAnalytics: false,
+        canUseAssistant: false,
+        canCreateEstablishment: false,
+        canManageBilling: false,
+      },
     }));
 
     const response = await proxy(requestWithSession("access-token", "refresh-token", "/"));

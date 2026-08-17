@@ -174,10 +174,10 @@ export function PermissionsWorkspace({ role, permissions, members, onCancel, can
                       <div className="mb-3 flex items-start justify-between gap-4">
                         <div className="space-y-1">
                           <h3 className="text-sm font-semibold tracking-wide text-foreground">
-                            Business and establishments
+                            Establishment access
                           </h3>
                           <p className="text-xs text-muted-foreground">
-                            Permissions for business data and assigned establishments. Organization profile permissions are managed separately.
+                            These permissions apply only to this establishment.
                           </p>
                         </div>
                         <span className="rounded-full border border-primary/20 bg-background px-2.5 py-1 text-[11px] font-medium text-primary">

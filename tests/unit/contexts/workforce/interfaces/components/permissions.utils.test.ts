@@ -27,8 +27,9 @@ describe("permissions utils", () => {
     ]);
   });
 
-  it("keeps Organization first in the permission hierarchy", () => {
-    expect(permissionGroupPriority("business")).toBeLessThan(permissionGroupPriority("workforce"));
+  it("keeps Organization and Establishments first in the permission hierarchy", () => {
+    expect(permissionGroupPriority("organization")).toBeLessThan(permissionGroupPriority("workforce"));
+    expect(permissionGroupPriority("establishment")).toBeLessThan(permissionGroupPriority("workforce"));
     expect(permissionGroupPriority("workforce")).toBeLessThan(permissionGroupPriority("scheduling"));
   });
 

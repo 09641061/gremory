@@ -41,14 +41,17 @@ export default async function PermissionsPage({ searchParams }: PermissionsPageP
     queryService.list(organizationId),
     queryService.permissions(),
   ]);
-  const permissions = supportedPermissions.filter((permission) => !permission.startsWith("organization:"));
+  const permissions = supportedPermissions.filter(
+    (permission) =>
+      !permission.startsWith("organization:") && permission !== "establishment:delete",
+  );
 
   const roles = roleEntities
     .filter((role) => role.getName().trim().toLowerCase() !== "everyone")
     .map((role): WorkforceRoleSummary => ({
       id: role.id,
       name: role.getName(),
-      permissions: role.getPermissions(),
+       permissions: role.getPermissions().filter((permission) => permission !== "establishment:delete"),
       systemRole: role.isSystemRole(),
       position: role.position,
     }));

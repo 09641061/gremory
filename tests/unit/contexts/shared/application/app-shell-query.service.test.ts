@@ -208,7 +208,7 @@ describe("app shell query service", () => {
   it("routes a member without visible modules to access denied", async () => {
     mocks.shell.workspace.accountType = "MEMBER";
     mocks.shell.workspace.accessPolicy = { canUseAssistant: false } as never;
-    mocks.shell.workspace.capabilities = undefined;
+    (mocks.shell.workspace as { capabilities?: unknown }).capabilities = undefined;
 
     const shell = await createAppShellQueryService().resolve();
 

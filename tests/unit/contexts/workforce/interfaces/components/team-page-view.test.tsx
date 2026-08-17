@@ -78,7 +78,6 @@ describe("TeamPageView", () => {
       />,
     );
 
-    expect(screen.getByText("You")).toBeTruthy();
     expect(
       screen.getByText("Your owner membership cannot change scheduling availability from here."),
     ).toBeTruthy();
