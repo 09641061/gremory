@@ -42,13 +42,15 @@ export default async function PermissionsPage({ searchParams }: PermissionsPageP
     queryService.permissions(),
   ]);
 
-  const roles = roleEntities.map((role): WorkforceRoleSummary => ({
-    id: role.id,
-    name: role.getName(),
-    permissions: role.getPermissions(),
-    systemRole: role.isSystemRole(),
-    position: role.position,
-  }));
+  const roles = roleEntities
+    .filter((role) => role.getName().trim().toLowerCase() !== "everyone")
+    .map((role): WorkforceRoleSummary => ({
+      id: role.id,
+      name: role.getName(),
+      permissions: role.getPermissions(),
+      systemRole: role.isSystemRole(),
+      position: role.position,
+    }));
 
   return (
     <PermissionsPageView
