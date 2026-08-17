@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Building2, Search, Settings2, UserPlus } from "lucide-react";
+import { Search, Settings2, UserPlus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import { Input } from "@/contexts/shared/interfaces/components/ui/input";
@@ -18,8 +18,7 @@ export function TeamPageView({
   canInviteMembers = true,
   canRemoveMembers = true,
   canCancelInvitations = true,
-  canEditEstablishmentProfile = false,
-  establishmentEditHref,
+  currentUserId = null,
 }: {
   establishmentId: string | null;
   members: TeamUserSummary[];
@@ -27,10 +26,8 @@ export function TeamPageView({
   canInviteMembers?: boolean;
   canRemoveMembers?: boolean;
   canCancelInvitations?: boolean;
-  canEditEstablishmentProfile?: boolean;
-  establishmentEditHref?: string;
+  currentUserId?: string | null;
 }) {
-
   const [filter, setFilter] = useState("");
   const [inviteOpen, setInviteOpen] = useState(false);
   const router = useRouter();
@@ -46,17 +43,6 @@ export function TeamPageView({
           <p className="page-description mt-2">Manage team members and pending invitations.</p>
         </div>
         <div className="flex items-center gap-3">
-          {canEditEstablishmentProfile && establishmentEditHref ? (
-            <Button
-              type="button"
-              variant="outline"
-              className="gap-2"
-              onClick={() => router.push(establishmentEditHref)}
-            >
-              <Building2 className="size-4" />
-              Edit establishment
-            </Button>
-          ) : null}
           {canManageRoles ? <Button type="button" variant="outline" className="gap-2" onClick={() => router.push("/permissions")}>
             <Settings2 className="size-4" />
             Manage permissions
@@ -92,10 +78,11 @@ export function TeamPageView({
             </div>
             {filteredMembers.map((member) => (
               <MemberRow
-                key={member.memberId ?? member.invitationId}
+                key={member.memberId ?? member.userId ?? member.invitationId ?? member.email}
                 member={member}
                 canRemoveMembers={canRemoveMembers}
                 canCancelInvitations={canCancelInvitations}
+                isCurrentUser={member.userId !== null && member.userId === currentUserId}
               />
             ))}
             {filteredMembers.length === 0 && <div className="px-5 py-10 text-sm text-muted-foreground">No members found.</div>}

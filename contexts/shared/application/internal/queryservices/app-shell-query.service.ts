@@ -9,6 +9,7 @@ import type {
 
 export interface AppShellQueryInput {
   workspace?: Readonly<{
+    organizationId?: string;
     establishmentId?: string;
   }>;
 }
@@ -16,7 +17,6 @@ export interface AppShellQueryInput {
 export class AppShellQueryService {
   async resolve({ workspace: workspaceSelection }: AppShellQueryInput = {}): Promise<AppShellViewModel> {
     const workspace = await createBusinessWorkspaceQueryService().getHeaderViewModel(workspaceSelection);
-    const activeEstablishmentId = workspace.activeEstablishmentId;
     const accessPolicy = workspace.accessPolicy;
     const hasAssistantAccess = accessPolicy?.canUseAssistant ?? false;
     const canReadScheduling =
@@ -107,7 +107,6 @@ function resolveHomeHref(
   const firstWorkRoute = visibleRoutes.find((route) => route !== "/analytics");
   if (firstWorkRoute) return firstWorkRoute;
 
-  if (workspace.canReadOrganization) return "/organization";
-  if (workspace.establishments.length > 0) return "/chat";
+  if (workspace.accountType === "OWNER") return "/welcome";
   return "/access-denied";
 }

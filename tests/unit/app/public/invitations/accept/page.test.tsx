@@ -47,7 +47,7 @@ describe("InvitationAcceptPage", () => {
     vi.resetAllMocks();
   });
 
-  it("accepts a pending invitation immediately after sign-in and redirects to the establishment", async () => {
+  it("accepts a pending invitation immediately after sign-in and redirects to the main view", async () => {
     mocks.getTeamAccessToken.mockResolvedValue("access-token");
     mocks.previewInvitation.mockResolvedValue({
       organizationId: "org-1",
@@ -64,14 +64,14 @@ describe("InvitationAcceptPage", () => {
       InvitationAcceptPage({
         searchParams: Promise.resolve({ token: "raw-token" }),
       }),
-    ).rejects.toThrow("REDIRECT:/establishments?establishmentId=est-1");
+    ).rejects.toThrow("REDIRECT:/?establishmentId=est-1");
 
     expect(mocks.acceptInvitation).toHaveBeenCalledWith({
       token: "raw-token",
     });
   });
 
-  it("redirects to the establishment when the invitation was already handled by the backend", async () => {
+  it("redirects to the main view when the invitation was already handled by the backend", async () => {
     mocks.getTeamAccessToken.mockResolvedValue("access-token");
     mocks.previewInvitation.mockResolvedValue({
       organizationId: "org-1",
@@ -90,6 +90,6 @@ describe("InvitationAcceptPage", () => {
       InvitationAcceptPage({
         searchParams: Promise.resolve({ token: "raw-token" }),
       }),
-    ).rejects.toThrow("REDIRECT:/establishments?establishmentId=est-1");
+    ).rejects.toThrow("REDIRECT:/?establishmentId=est-1");
   });
 });

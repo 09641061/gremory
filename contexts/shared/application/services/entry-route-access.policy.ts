@@ -23,7 +23,7 @@ export function resolveEmployeeEntryPath(
   const matchedRoute = routeChecks.find((route) => establishments.some(route.matches))?.path;
   if (matchedRoute) return matchedRoute;
 
-  return establishments.length > 0 ? "/chat" : "/access-denied";
+  return "/access-denied";
 }
 
 function hasSchedulingAccess(establishment: EntryRouteEstablishment) {

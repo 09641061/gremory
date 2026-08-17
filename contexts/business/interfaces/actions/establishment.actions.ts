@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { createEstablishmentCommandService } from "../../application/internal/commandservices/establishment-command.service";
 import {
   createEstablishmentCommand,
@@ -41,19 +42,23 @@ export async function createEstablishmentAction(
   });
   if (!parsed.success) return actionError(parsed.error.issues[0]?.message);
 
+  let establishmentId = "";
+
   try {
     await requireBusinessAccessToken();
-    const establishmentId = await createEstablishmentCommandService().create(
+    const created = await createEstablishmentCommandService().create(
       createEstablishmentCommand({
         ...parsed.data,
         photoFile: readPhotoFileFromFormData(formData),
       }),
     );
+    establishmentId = created.value;
     revalidateBusinessViews();
-    return { status: "success", data: { id: establishmentId.value }, error: null };
   } catch (error) {
     return actionError(error);
   }
+
+  redirect(`/welcome?establishmentId=${encodeURIComponent(establishmentId)}`);
 }
 
 export async function updateEstablishmentAction(
@@ -107,6 +112,8 @@ export async function deleteEstablishmentAction(
 // Establishments are the workspace context every catalog read is scoped by, so
 // the catalog is stale too once this list changes.
 function revalidateBusinessViews() {
+  revalidatePath("/");
+  revalidatePath("/organizations");
   revalidatePath("/catalog");
   revalidatePath("/establishments");
 }

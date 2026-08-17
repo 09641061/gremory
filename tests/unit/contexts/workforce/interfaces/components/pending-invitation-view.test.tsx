@@ -36,7 +36,7 @@ describe("PendingInvitationView", () => {
     );
 
     expect(replace).toHaveBeenCalledWith(
-      "/establishments?establishmentId=55555555-5555-4555-8555-555555555555",
+      "/?establishmentId=55555555-5555-4555-8555-555555555555",
     );
     expect(screen.getByText("You have been invited")).toBeVisible();
   });

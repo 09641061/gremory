@@ -52,6 +52,45 @@ export class TeamQueryServiceImpl implements TeamQueryService {
     };
   }
 
+  async getMyMembership(establishmentId?: string): Promise<TeamUserSummary | null> {
+    const membership = await this.team.getMyMembership(
+      establishmentId ? createTeamEstablishmentId(establishmentId) : undefined,
+    );
+    if (!membership) return null;
+    const roles = membership.roles.map((role) => ({
+      id: role.id.value,
+      name: role.name,
+      position: role.position,
+      systemRole: role.systemRole,
+      permissions: role.permissions,
+    }));
+    return {
+      invitationId: null,
+      memberId: membership.memberId?.value ?? null,
+      userId: membership.userId?.value ?? null,
+      name: membership.username,
+      imageUrl: membership.imageUrl,
+      email: membership.email.value,
+      roleId: roles[0]?.id ?? "00000000-0000-4000-8000-000000000000",
+      roleName: roles[0]?.name ?? "Everyone",
+      roles,
+      organizationId: membership.organizationId.value,
+      establishmentId: membership.establishmentId.value,
+      establishmentName: membership.establishmentName,
+      status: membership.status,
+      hasAcceptedInvitation: membership.status === "ACTIVE" || membership.status === "REMOVED",
+      canRevokeInvitation: false,
+      canRemoveMembership: false,
+      invitedAt: null,
+      invitationExpiresAt: null,
+      acceptedAt: null,
+      joinedAt: null,
+      removedAt: null,
+      availableForScheduling: membership.availableForScheduling,
+      canUpdateSchedulingAvailability: membership.canUpdateSchedulingAvailability,
+    };
+  }
+
   async getAccessContext(): Promise<TeamAccessView> {
     const access = await this.team.getAccessContext();
     return {
@@ -105,5 +144,6 @@ function toTeamUserSummary(
     joinedAt: user.joinedAt?.toISOString() ?? null,
     removedAt: user.removedAt?.toISOString() ?? null,
     availableForScheduling: user.availableForScheduling,
+    canUpdateSchedulingAvailability: user.canUpdateSchedulingAvailability,
   };
 }

@@ -55,7 +55,7 @@ describe("OrganizationsPage", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Work in" }));
 
-    expect(mocks.router.push).toHaveBeenCalledWith("/establishments/setup");
+    expect(mocks.router.push).toHaveBeenCalledWith("/establishments/setup?organizationId=org-1");
   });
 
   it("returns to the app home when the confirmed organization already has establishments", () => {

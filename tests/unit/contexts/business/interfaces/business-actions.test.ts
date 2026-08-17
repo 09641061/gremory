@@ -1,5 +1,8 @@
 const mocks = vi.hoisted(() => ({
   revalidatePath: vi.fn(),
+  redirect: vi.fn((href: string) => {
+    throw new Error(`REDIRECT:${href}`);
+  }),
   cookies: vi.fn(),
   requireToken: vi.fn(),
   establishmentFactory: vi.fn(),
@@ -17,6 +20,7 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock("next/cache", () => ({ revalidatePath: mocks.revalidatePath }));
+vi.mock("next/navigation", () => ({ redirect: mocks.redirect }));
 vi.mock("next/headers", () => ({
   cookies: mocks.cookies,
 }));
@@ -82,14 +86,14 @@ describe("Business server actions", () => {
   });
 
   it("creates an establishment with an authenticated command service", async () => {
-    const result = await createEstablishmentAction(
+    await expect(createEstablishmentAction(
       initialBusinessActionResult,
       form({
         organizationId,
         name: "  Main store  ",
         photoUrl: "https://example.com/store.png",
       }),
-    );
+    )).rejects.toThrow(`REDIRECT:/welcome?establishmentId=${establishmentId}`);
 
     expect(mocks.requireToken).toHaveBeenCalledTimes(1);
     expect(mocks.establishmentFactory).toHaveBeenCalledWith();
@@ -99,11 +103,6 @@ describe("Business server actions", () => {
       photoUrl: "https://example.com/store.png",
       timeZone: "America/Lima",
       photoFile: null,
-    });
-    expect(result).toEqual({
-      status: "success",
-      data: { id: establishmentId },
-      error: null,
     });
     expect(mocks.revalidatePath).toHaveBeenCalledWith("/establishments");
   });
@@ -142,12 +141,11 @@ describe("Business server actions", () => {
     const deleteCookie = vi.fn();
     mocks.cookies.mockResolvedValue({ delete: deleteCookie });
 
-    const result = await createOrganizationAction(
+    await expect(createOrganizationAction(
       initialBusinessActionResult,
       form({ name: "Acme Group" }),
-    );
+    )).rejects.toThrow("REDIRECT:/establishments/new?organizationId=11111111-1111-4111-8111-111111111111");
 
-    expect(result.status).toBe("success");
     expect(mocks.organizationService.create).toHaveBeenCalledWith({
       name: "Acme Group",
       imageFile: null,

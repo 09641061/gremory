@@ -29,6 +29,7 @@ export interface TeamUserProps {
   joinedAt: Date | null;
   removedAt: Date | null;
   availableForScheduling: boolean;
+  canUpdateSchedulingAvailability: boolean;
 }
 
 export interface TeamRoleSummary {
@@ -60,6 +61,7 @@ export class TeamUser {
     public readonly joinedAt: Date | null,
     public readonly removedAt: Date | null,
     public readonly availableForScheduling: boolean,
+    public readonly canUpdateSchedulingAvailability: boolean,
   ) {}
 
   static create(props: TeamUserProps): TeamUser {
@@ -106,6 +108,7 @@ export class TeamUser {
       props.joinedAt,
       props.removedAt,
       props.availableForScheduling,
+      props.canUpdateSchedulingAvailability,
     );
   }
 

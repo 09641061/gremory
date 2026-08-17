@@ -4,23 +4,30 @@ import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-ses
 import { createEntryRouteQueryService } from "@/contexts/shared/application/internal/queryservices/entry-route-query.service";
 import { createAppShellQueryService } from "@/contexts/shared/application/internal/queryservices/app-shell-query.service";
 
-export default async function HomePage() {
+interface HomePageProps {
+  searchParams: Promise<{ organizationId?: string; establishmentId?: string }>;
+}
+
+export default async function HomePage({ searchParams }: HomePageProps) {
+  const query = await searchParams;
   const accessToken = (await cookies()).get(iamSessionCookies.accessToken)?.value;
   if (!accessToken) {
     redirect("/access-denied");
   }
 
-  const shell = await createAppShellQueryService().resolve().catch(() => null);
+  const shell = await createAppShellQueryService()
+    .resolve({ workspace: query })
+    .catch(() => null);
   if (shell) {
-    redirect(shell.homeHref);
+    redirect(appendWorkspaceSelection(shell.homeHref, query));
   }
 
   const landing = await createEntryRouteQueryService()
-    .resolveRoute({ accessToken })
+    .resolveRoute({ accessToken, organizationId: query.organizationId, establishmentId: query.establishmentId })
     .catch(() => null);
 
   if (landing?.status === "ready") {
-    redirect(landing.homeHref);
+    redirect(appendWorkspaceSelection(landing.homeHref, query));
   }
 
   if (
@@ -32,4 +39,15 @@ export default async function HomePage() {
   }
 
   redirect("/organizations/new");
+}
+
+function appendWorkspaceSelection(
+  path: string,
+  query: Readonly<{ organizationId?: string; establishmentId?: string }>,
+) {
+  const params = new URLSearchParams();
+  if (query.organizationId) params.set("organizationId", query.organizationId);
+  if (query.establishmentId) params.set("establishmentId", query.establishmentId);
+  const queryString = params.toString();
+  return queryString ? `${path}?${queryString}` : path;
 }

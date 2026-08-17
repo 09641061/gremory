@@ -5,6 +5,7 @@ export type EntryRoutePath =
   | "/crm"
   | "/team"
   | "/organization"
+  | "/welcome"
   | "/access-denied";
 
 // `setupHref` is where an unfinished workspace is sent. `allowedPaths` are the
@@ -33,11 +34,11 @@ export type EntryRouteResolution =
 export type EntryRouteInput = {
   accessToken: string;
   /**
-   * The account's persisted establishment selection (URL or cookie fallback).
+   * The account's persisted workspace selection (URL or cookie fallback).
    * Without it, landing resolution falls back to the account's default
-   * identity - its own organization if it owns one - which can silently
-   * override a member's active choice to work inside a host organization.
+   * identity, which can silently override the active organization.
    */
+  organizationId?: string;
   establishmentId?: string;
 };
 

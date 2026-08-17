@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 import { createOrganizationCommandService } from "../../application/internal/commandservices/organization-command.service";
 import {
   createOrganizationCommand,
@@ -30,20 +31,24 @@ export async function createOrganizationAction(
   });
   if (!parsed.success) return actionError(parsed.error.issues[0]?.message);
 
+  let organizationId = "";
+
   try {
     await requireBusinessAccessToken();
-    const organizationId = await createOrganizationCommandService().create(
+    const created = await createOrganizationCommandService().create(
       createOrganizationCommand({
         ...parsed.data,
         imageFile: readPhotoFileFromFormData(formData),
       }),
     );
+    organizationId = created.value;
     await clearWorkspaceSelection();
     revalidateBusinessViews();
-    return { status: "success", data: { id: organizationId.value }, error: null };
   } catch (error) {
     return actionError(error);
   }
+
+  redirect(`/establishments/new?organizationId=${encodeURIComponent(organizationId)}`);
 }
 
 export async function updateOrganizationAction(

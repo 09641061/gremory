@@ -1,7 +1,7 @@
 import type { WorkforceUserStatus } from "../../domain/model/enums/workforce-user-status";
 
 export interface TeamUserSummary {
-  invitationId: string;
+  invitationId: string | null;
   memberId: string | null;
   userId: string | null;
   name: string | null;
@@ -23,12 +23,13 @@ export interface TeamUserSummary {
   hasAcceptedInvitation: boolean;
   canRevokeInvitation: boolean;
   canRemoveMembership: boolean;
-  invitedAt: string;
-  invitationExpiresAt: string;
+  invitedAt: string | null;
+  invitationExpiresAt: string | null;
   acceptedAt: string | null;
   joinedAt: string | null;
   removedAt: string | null;
   availableForScheduling: boolean;
+  canUpdateSchedulingAvailability: boolean;
 }
 
 export interface TeamInvitationPreviewView {

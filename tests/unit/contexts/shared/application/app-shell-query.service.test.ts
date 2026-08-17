@@ -42,6 +42,7 @@ const mocks = vi.hoisted(() => ({
       canReadOrganizations: true,
       canReadEstablishments: true,
       canCreateEstablishment: true,
+      accountType: "OWNER",
     },
   },
   workspace: {
@@ -114,6 +115,7 @@ describe("app shell query service", () => {
     mocks.shell.workspace.capabilities = {
       canReadAnalytics: true,
     };
+    mocks.shell.workspace.accountType = "OWNER";
     mocks.workspace.getHeaderViewModel.mockResolvedValue(mocks.shell.workspace);
     mocks.catalog.getPermissions.mockResolvedValue({ canReadCatalog: true });
     mocks.crm.getPermissions.mockResolvedValue({ canReadCustomers: true });
@@ -200,7 +202,18 @@ describe("app shell query service", () => {
     const shell = await createAppShellQueryService().resolve();
 
     expect(shell.visibleSidebarRoutes).toEqual([]);
-    expect(shell.homeHref).toBe("/chat");
+    expect(shell.homeHref).toBe("/welcome");
+  });
+
+  it("routes a member without visible modules to access denied", async () => {
+    mocks.shell.workspace.accountType = "MEMBER";
+    mocks.shell.workspace.accessPolicy = { canUseAssistant: false } as never;
+    mocks.shell.workspace.capabilities = undefined;
+
+    const shell = await createAppShellQueryService().resolve();
+
+    expect(shell.visibleSidebarRoutes).toEqual([]);
+    expect(shell.homeHref).toBe("/access-denied");
   });
 
   it("routes an owner without establishments to the establishment setup page", async () => {

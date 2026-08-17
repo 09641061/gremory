@@ -12,8 +12,10 @@ import type { EntryRouteInput, EntryRouteResolution } from "../../model/entry-ro
 export class EntryRouteQueryService {
   constructor(private readonly workspace = createBusinessWorkspaceOutboundService()) {}
 
-  async resolveRoute({ accessToken, establishmentId }: EntryRouteInput): Promise<EntryRouteResolution> {
-    const resolved = await this.tryGet(() => this.workspace.getWorkspace(accessToken, establishmentId));
+  async resolveRoute({ accessToken, organizationId, establishmentId }: EntryRouteInput): Promise<EntryRouteResolution> {
+    const resolved = await this.tryGet(() =>
+      this.workspace.getWorkspace(accessToken, { organizationId, establishmentId }),
+    );
 
     if (resolved.status !== "ready") {
       return resolved.status === "not-found" ? { status: "unavailable" } : resolved;

@@ -7,6 +7,8 @@ import type {
   MemberId,
   TeamEstablishmentId,
   TeamOrganizationId,
+  TeamUserId,
+  TeamRoleId,
 } from "../model/valueobjects/team-identifiers.vo";
 
 export interface TeamPageResult<T> {
@@ -64,8 +66,31 @@ export interface TeamAccessContext {
   }>;
 }
 
+export interface TeamMembershipContext {
+  memberId: MemberId | null;
+  userId: TeamUserId | null;
+  organizationId: TeamOrganizationId;
+  organizationName: string;
+  establishmentId: TeamEstablishmentId;
+  establishmentName: string;
+  status: WorkforceUserStatus;
+  roles: Array<{
+    id: TeamRoleId;
+    name: string;
+    position: number;
+    systemRole: boolean;
+    permissions: string[];
+  }>;
+  availableForScheduling: boolean;
+  canUpdateSchedulingAvailability: boolean;
+  username: string | null;
+  imageUrl: string | null;
+  email: InvitedEmail;
+}
+
 export interface TeamRepository {
   list(criteria: TeamUserCriteria): Promise<TeamPageResult<TeamUser>>;
+  getMyMembership(establishmentId?: TeamEstablishmentId): Promise<TeamMembershipContext | null>;
   invite(
     establishmentId: TeamEstablishmentId,
     email: InvitedEmail,

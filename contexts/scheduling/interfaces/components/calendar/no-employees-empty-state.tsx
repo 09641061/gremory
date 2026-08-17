@@ -7,10 +7,10 @@ export function NoEmployeesEmptyState() {
         <UsersIcon className="h-8 w-8 text-primary" />
       </div>
       <h3 className="text-xl font-semibold tracking-tight mb-2 text-foreground">
-        No team members yet
+        No employees available
       </h3>
       <p className="text-sm text-muted-foreground max-w-sm">
-        Invite employees to your establishment to start scheduling appointments.
+        No one is currently marked as available for appointments in this establishment.
       </p>
     </div>
   );

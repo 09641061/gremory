@@ -123,7 +123,7 @@ describe("business workspace query service", () => {
     expect(result.canCreateEstablishment).toBe(true);
   });
 
-  it("keeps the owner creation entry point visible when Billing reports a plan limit", async () => {
+  it("hides the owner creation entry point when Billing reports a plan limit", async () => {
     mocks.getWorkspace.mockResolvedValue(
       workspace({
         organization: {
@@ -137,7 +137,7 @@ describe("business workspace query service", () => {
 
     const result = await createBusinessWorkspaceQueryService().getHeaderViewModel();
 
-    expect(result.canCreateEstablishment).toBe(true);
+    expect(result.canCreateEstablishment).toBe(false);
   });
 
   it("reads a member against the owner's subscription and denies billing", async () => {
@@ -212,6 +212,73 @@ describe("business workspace query service", () => {
     ]);
     // The requested establishment is unreadable, so the first readable one wins.
     expect(result.activeEstablishmentId).toBe(secondEstablishmentId);
+  });
+
+  it("keeps an explicitly requested unreadable establishment so the sidebar can show context", async () => {
+    mocks.getWorkspace.mockResolvedValue(
+      workspace({
+        accountType: "MEMBER",
+        establishments: [
+          {
+            id: establishmentId,
+            name: "Main branch",
+            photoUrl: null,
+            effectivePermissions: [],
+            permissions: { canRead: false, canUpdate: false, canDelete: false },
+          },
+          {
+            id: secondEstablishmentId,
+            name: "Second branch",
+            photoUrl: null,
+            effectivePermissions: ["crm:read"],
+            permissions: { canRead: true, canUpdate: false, canDelete: false },
+          },
+        ],
+        activeEstablishmentId: secondEstablishmentId,
+      }),
+    );
+
+    const result = await createBusinessWorkspaceQueryService().getHeaderViewModel({
+      establishmentId,
+    });
+
+    expect(result.establishments.map((establishment) => establishment.id)).toEqual([
+      establishmentId,
+      secondEstablishmentId,
+    ]);
+    expect(result.activeEstablishmentId).toBe(establishmentId);
+  });
+
+  it("keeps the owner's own establishment visible even if the backend marks it unreadable", async () => {
+    mocks.getWorkspace.mockResolvedValue(
+      workspace({
+        accountType: "OWNER",
+        organization: {
+          id: organizationId,
+          name: "Takodu Studio",
+          imageUrl: null,
+          permissions: { canRead: true, canUpdate: true, canCreateEstablishment: true },
+        },
+        establishments: [
+          {
+            id: establishmentId,
+            name: "Main branch",
+            photoUrl: null,
+            organizationId,
+            organizationName: "Takodu Studio",
+            effectivePermissions: [],
+            permissions: { canRead: false, canUpdate: false, canDelete: false },
+          },
+        ],
+        activeEstablishmentId: establishmentId,
+      }),
+    );
+
+    const result = await createBusinessWorkspaceQueryService().getHeaderViewModel();
+
+    expect(result.establishments.map((establishment) => establishment.id)).toEqual([establishmentId]);
+    expect(result.activeEstablishmentId).toBe(establishmentId);
+    expect(result.canReadEstablishments).toBe(true);
   });
 
   it("surfaces the pending invitation of an account that has not accepted yet", async () => {

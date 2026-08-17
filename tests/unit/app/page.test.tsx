@@ -47,7 +47,9 @@ describe("HomePage", () => {
       allowedPaths: ["/organizations/new"],
     });
 
-    await expect(HomePage()).rejects.toThrow("REDIRECT:/organizations/new");
+    await expect(
+      HomePage({ searchParams: Promise.resolve({}) }),
+    ).rejects.toThrow("REDIRECT:/organizations/new");
   });
 
   it("uses the shell home when the workspace is ready", async () => {
@@ -55,6 +57,8 @@ describe("HomePage", () => {
       homeHref: "/chat",
     });
 
-    await expect(HomePage()).rejects.toThrow("REDIRECT:/chat");
+    await expect(
+      HomePage({ searchParams: Promise.resolve({}) }),
+    ).rejects.toThrow("REDIRECT:/chat");
   });
 });

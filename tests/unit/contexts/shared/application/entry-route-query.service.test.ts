@@ -89,7 +89,7 @@ describe("entry route query service", () => {
 
     expect(result).toEqual({
       status: "ready",
-      homeHref: "/chat",
+      homeHref: "/access-denied",
     });
   });
 });

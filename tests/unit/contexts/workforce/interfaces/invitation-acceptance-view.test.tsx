@@ -83,7 +83,7 @@ describe("Invitation acceptance view", () => {
     ).toBeVisible();
     expect(screen.getByRole("link", { name: "Continue to establishment" })).toHaveAttribute(
       "href",
-      "/establishments?establishmentId=55555555-5555-4555-8555-555555555555",
+      "/?establishmentId=55555555-5555-4555-8555-555555555555",
     );
     expect(screen.queryByRole("button", { name: "Accept invitation" })).not.toBeInTheDocument();
   });

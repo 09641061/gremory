@@ -4,14 +4,24 @@ import Link from "next/link";
 import { createBusinessWorkspaceQueryService } from "@/contexts/business/application/internal/queryservices/business-workspace-query.service";
 import { buttonVariants } from "@/contexts/shared/interfaces/components/ui/button";
 
-export default async function EstablishmentSetupPage() {
-  const workspace = await createBusinessWorkspaceQueryService().getHeaderViewModel();
+export default async function EstablishmentSetupPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ organizationId?: string; establishmentId?: string }>;
+}) {
+  const workspace = await createBusinessWorkspaceQueryService().getHeaderViewModel(await searchParams);
 
   if (workspace.accountType === "PENDING_INVITATION") {
     redirect("/invitations/pending");
   }
 
-  if (!workspace.organization || !workspace.canCreateEstablishment || workspace.establishments.length > 0) {
+  const organizationEstablishments = workspace.organization
+    ? workspace.establishments.filter(
+        (establishment) => establishment.organizationId === workspace.organization?.id,
+      )
+    : [];
+
+  if (!workspace.organization || organizationEstablishments.length > 0) {
     redirect("/organizations");
   }
 

@@ -19,7 +19,7 @@ export class BusinessWorkspaceQueryService {
   constructor(private readonly workspace = new BusinessWorkspaceApiGateway()) {}
 
   async getHeaderViewModel(query: BusinessWorkspaceQuery = {}): Promise<WorkspaceHeaderViewModel> {
-    return toHeaderViewModel(await this.workspace.getWorkspace(query));
+    return toHeaderViewModel(await this.workspace.getWorkspace(query), query.establishmentId);
   }
 
   async getOrganizationPageState(query: BusinessWorkspaceQuery = {}): Promise<OrganizationPageState> {
@@ -41,18 +41,30 @@ export function createBusinessWorkspaceQueryService() {
   return new BusinessWorkspaceQueryService();
 }
 
-export function toHeaderViewModel(resource: BusinessWorkspaceResource): WorkspaceHeaderViewModel {
-  const establishments = resource.establishments
-    .filter((establishment) => establishment.permissions.canRead)
-    .map(toHeaderEstablishment);
+export function toHeaderViewModel(
+  resource: BusinessWorkspaceResource,
+  requestedEstablishmentId?: string,
+): WorkspaceHeaderViewModel {
+  const allEstablishments = resource.establishments.map(toHeaderEstablishment);
+  const establishments = allEstablishments.filter(
+    (establishment) =>
+      establishment.canRead ||
+      establishment.id === requestedEstablishmentId ||
+      (resource.accountType === "OWNER" &&
+        resource.organization?.id &&
+        establishment.organizationId === resource.organization.id),
+  );
   const organization = resource.organization
     ? toHeaderOrganization(resource.organization, resource.accountType, establishments.length)
     : undefined;
-  const activeEstablishmentId = establishments.some(
-    (establishment) => establishment.id === resource.activeEstablishmentId,
-  )
-    ? resource.activeEstablishmentId ?? undefined
-    : establishments[0]?.id;
+  const activeEstablishmentId =
+    (requestedEstablishmentId &&
+    allEstablishments.some((establishment) => establishment.id === requestedEstablishmentId)
+      ? requestedEstablishmentId
+      : undefined) ??
+    (establishments.some((establishment) => establishment.id === resource.activeEstablishmentId)
+      ? resource.activeEstablishmentId ?? undefined
+      : establishments[0]?.id);
 
   return {
     accountType: resource.accountType,
@@ -85,11 +97,10 @@ function toHeaderOrganization(
   accountType: BusinessWorkspaceResource["accountType"],
   readableEstablishmentCount: number,
 ): WorkspaceHeaderOrganization {
-  // The owner is authorized to attempt creation even when Billing rejects it
-  // because the plan limit was reached. The command remains the authoritative
-  // business validation boundary and will expose that error.
-  const canCreateEstablishment =
-    accountType === "OWNER" || organization.permissions.canCreateEstablishment;
+  // Creation rights come from the workspace response itself. The frontend
+  // should not keep an owner-only override when Billing or the backend has
+  // already denied more establishments.
+  const canCreateEstablishment = organization.permissions.canCreateEstablishment;
 
   return {
     id: organization.id,

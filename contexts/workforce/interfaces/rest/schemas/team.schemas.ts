@@ -6,6 +6,13 @@ const dateTimeSchema = z.string().refine(
   (value) => !Number.isNaN(Date.parse(value)),
   "Invalid date-time",
 );
+const workforceRoleResourceSchema = z.object({
+  id: uuidSchema,
+  name: z.string().trim().min(1),
+  position: z.number().int().min(1),
+  systemRole: z.boolean(),
+  permissions: z.array(z.string()),
+});
 
 export const inviteTeamUserSchema = z.object({
   establishmentId: uuidSchema,
@@ -25,13 +32,7 @@ export const workforceUserResourceSchema = z.object({
   email: z.string().email(),
   roleId: uuidSchema.optional(),
   roleName: z.string().trim().min(1).optional(),
-  roles: z.array(z.object({
-    id: uuidSchema,
-    name: z.string().trim().min(1),
-    position: z.number().int().min(1),
-    systemRole: z.boolean(),
-    permissions: z.array(z.string()),
-  })).optional(),
+  roles: z.array(workforceRoleResourceSchema).optional(),
   organizationId: uuidSchema,
   establishmentId: uuidSchema,
   establishmentName: z.string().nullable(),
@@ -42,6 +43,23 @@ export const workforceUserResourceSchema = z.object({
   joinedAt: dateTimeSchema.nullable(),
   removedAt: dateTimeSchema.nullable(),
   availableForScheduling: z.boolean().default(true),
+  canUpdateSchedulingAvailability: z.boolean().default(false),
+});
+
+export const workforceCurrentMemberResourceSchema = z.object({
+  memberId: uuidSchema.nullable(),
+  userId: uuidSchema.nullable(),
+  username: z.string().trim().min(1).nullable().optional(),
+  imageUrl: z.string().url().nullable().optional(),
+  email: z.string().email(),
+  roles: z.array(workforceRoleResourceSchema).optional(),
+  organizationId: uuidSchema,
+  organizationName: z.string().trim().min(1),
+  establishmentId: uuidSchema,
+  establishmentName: z.string().trim().min(1),
+  status: z.enum(workforceUserStatuses),
+  availableForScheduling: z.boolean().default(false),
+  canUpdateSchedulingAvailability: z.boolean().default(false),
 });
 
 export const teamPageResourceSchema = z.object({

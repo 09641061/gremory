@@ -14,10 +14,12 @@ import {
   createTeamUserId,
   type InvitationId,
   type MemberId,
+  type TeamRoleId,
   type TeamEstablishmentId,
 } from "../../domain/model/valueobjects/team-identifiers.vo";
 import type {
   TeamInvitationPreview,
+  TeamMembershipContext,
   TeamPageResult,
   TeamRepository,
   TeamUserCriteria,
@@ -26,6 +28,7 @@ import {
   invitationAcceptanceResourceSchema,
   invitationCreatedResourceSchema,
   invitationPreviewResourceSchema,
+  workforceCurrentMemberResourceSchema,
   teamPageResourceSchema,
   workforceAccessResourceSchema,
 } from "../../interfaces/rest/schemas/team.schemas";
@@ -55,6 +58,33 @@ export class TeamApiGateway implements TeamRepository {
     return {
       ...resource,
       content: resource.content.map(toTeamUser),
+    };
+  }
+
+  async getMyMembership(establishmentId?: TeamEstablishmentId): Promise<TeamMembershipContext | null> {
+    const token = await requireTeamAccessToken(this.providedToken);
+    const params = establishmentId ? new URLSearchParams({ establishmentId: establishmentId.value }) : null;
+    const response = await teamGet<unknown>(
+      params
+        ? `${apiConfig.routes.workforce.members}/me?${params}`
+        : `${apiConfig.routes.workforce.members}/me`,
+      token,
+    );
+    const resource = workforceCurrentMemberResourceSchema.parse(response);
+    return {
+      memberId: resource.memberId ? createMemberId(resource.memberId) : null,
+      userId: resource.userId ? createTeamUserId(resource.userId) : null,
+      organizationId: createTeamOrganizationId(resource.organizationId),
+      organizationName: resource.organizationName,
+      establishmentId: createTeamEstablishmentId(resource.establishmentId),
+      establishmentName: resource.establishmentName,
+      status: resource.status,
+      roles: (resource.roles ?? []).map(toTeamRoleSummary),
+      availableForScheduling: resource.availableForScheduling,
+      canUpdateSchedulingAvailability: resource.canUpdateSchedulingAvailability,
+      username: resource.username ?? null,
+      imageUrl: resource.imageUrl ?? null,
+      email: createInvitedEmail(resource.email),
     };
   }
 
@@ -160,6 +190,22 @@ export class TeamApiGateway implements TeamRepository {
   }
 }
 
+function toTeamRoleSummary(role: {
+  id: string;
+  name: string;
+  position: number;
+  systemRole: boolean;
+  permissions: string[];
+}): TeamMembershipContext["roles"][number] {
+  return {
+    id: createTeamRoleId(role.id),
+    name: role.name,
+    position: role.position,
+    systemRole: role.systemRole,
+    permissions: role.permissions,
+  };
+}
+
 function toTeamUser(resource: {
   invitationId: string;
   memberId: string | null;
@@ -186,6 +232,7 @@ function toTeamUser(resource: {
   joinedAt: string | null;
   removedAt: string | null;
   availableForScheduling: boolean;
+  canUpdateSchedulingAvailability: boolean;
 }): TeamUser {
   const roles =
     resource.roles && resource.roles.length > 0
@@ -219,6 +266,7 @@ function toTeamUser(resource: {
     joinedAt: toOptionalDate(resource.joinedAt),
     removedAt: toOptionalDate(resource.removedAt),
     availableForScheduling: resource.availableForScheduling,
+    canUpdateSchedulingAvailability: resource.canUpdateSchedulingAvailability,
   });
 }
 

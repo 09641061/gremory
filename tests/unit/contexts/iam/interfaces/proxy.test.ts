@@ -330,7 +330,7 @@ describe("IAM session proxy", () => {
     const response = await proxy(requestWithSession("access-token", "refresh-token", "/"));
 
     expect(response.status).toBe(307);
-    expect(response.headers.get("location")).toBe("http://localhost/chat");
+    expect(response.headers.get("location")).toBe("http://localhost/access-denied");
   });
 
   it("should persist an explicit establishment selection into a cookie", async () => {

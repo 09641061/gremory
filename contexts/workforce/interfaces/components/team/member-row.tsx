@@ -33,10 +33,12 @@ export function MemberRow({
   member,
   canRemoveMembers = true,
   canCancelInvitations = true,
+  isCurrentUser = false,
 }: {
   member: TeamUserSummary;
   canRemoveMembers?: boolean;
   canCancelInvitations?: boolean;
+  isCurrentUser?: boolean;
 }) {
   const [removeState, removeAction, removePending] = useActionState(removeTeamMemberAction, initialActionState);
   const [revokeState, revokeAction, revokePending] = useActionState(revokeTeamInvitationAction, initialActionState);
@@ -54,6 +56,13 @@ export function MemberRow({
   const canRemove = member.canRemoveMembership && memberId !== null && canRemoveMembers;
   const canCancel = member.canRevokeInvitation && canCancelInvitations;
   const error = removeState.error ?? revokeState.error ?? toggleState.error;
+  const schedulingAvailabilityHint = !member.canUpdateSchedulingAvailability
+    ? isCurrentUser
+      ? member.roleName === "Owner"
+        ? "Your owner membership cannot change scheduling availability from here."
+        : "Your scheduling availability is read-only in this workspace."
+      : "This member's scheduling availability is read-only."
+    : null;
 
   return (
     <div className="grid min-h-[96px] grid-cols-[minmax(300px,1.4fr)_minmax(220px,1fr)_minmax(150px,.8fr)_minmax(150px,.55fr)_minmax(170px,.7fr)] items-center border-b border-border px-5 py-4 last:border-b-0">
@@ -64,7 +73,21 @@ export function MemberRow({
             {member.name ? initials(member.name) : <User className="size-5" />}
           </AvatarFallback>
         </Avatar>
-        <span className="truncate text-[15px] text-foreground">{member.name ?? "—"}</span>
+        <div className="min-w-0">
+          <div className="flex min-w-0 items-center gap-2">
+            <span className="truncate text-[15px] text-foreground">{member.name ?? "—"}</span>
+            {isCurrentUser ? (
+              <span className="rounded-full border border-border/60 bg-muted px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                You
+              </span>
+            ) : null}
+          </div>
+          {member.roleName === "Owner" ? (
+            <span className="mt-1 inline-flex rounded-full border border-amber-500/20 bg-amber-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-700">
+              Owner
+            </span>
+          ) : null}
+        </div>
       </div>
       <span className="truncate text-[15px] text-muted-foreground">{member.email}</span>
       <div>
@@ -77,17 +100,21 @@ export function MemberRow({
             <Switch
               checked={member.availableForScheduling}
               onCheckedChange={(checked) => {
+                if (!member.memberId) return;
                 const formData = new FormData();
-                formData.append("memberId", member.memberId || "");
+                formData.append("memberId", member.memberId);
                 formData.append("available", String(checked));
                 startTransition(() => toggleAction(formData));
               }}
-              disabled={togglePending}
+              disabled={togglePending || !member.canUpdateSchedulingAvailability || member.memberId === null}
               size="sm"
             />
             <span className="text-xs text-muted-foreground">For appointments</span>
           </label>
         )}
+        {schedulingAvailabilityHint ? (
+          <span className="text-xs text-muted-foreground">{schedulingAvailabilityHint}</span>
+        ) : null}
       </div>
       <div className="flex flex-col items-end gap-2">
         <EntityActionsMenu
@@ -111,7 +138,7 @@ export function MemberRow({
               onSelect: () => setConfirming("remove"),
             },
           ]}
-        />
+          />
         {error && confirming === null ? (
           <ErrorAlert title="Action failed" message={error} />
         ) : null}
@@ -133,7 +160,10 @@ export function MemberRow({
               workspace.
             </>
           }
-          onConfirm={() => submitField(removeAction, "memberId", memberId ?? "")}
+          onConfirm={() => {
+            if (!memberId) return;
+            submitField(removeAction, "memberId", memberId);
+          }}
         />
 
         <DeleteConfirmDialog
@@ -153,7 +183,10 @@ export function MemberRow({
               <span className="font-medium text-foreground">{member.email}</span> will no longer be valid.
             </>
           }
-          onConfirm={() => submitField(revokeAction, "invitationId", member.invitationId)}
+          onConfirm={() => {
+            if (!member.invitationId) return;
+            submitField(revokeAction, "invitationId", member.invitationId);
+          }}
         />
       </div>
     </div>

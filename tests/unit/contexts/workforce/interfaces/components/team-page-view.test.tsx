@@ -36,39 +36,51 @@ describe("TeamPageView", () => {
     joinedAt: "2026-08-02T10:00:00Z",
     removedAt: null,
     availableForScheduling: true,
+    canUpdateSchedulingAvailability: true,
   } satisfies TeamUserSummary;
 
-  it("shows the edit establishment action when the backend allows it", () => {
+  const currentUser = {
+    ...member,
+    invitationId: null,
+    memberId: "88888888-8888-4888-8888-888888888888",
+    userId: "77777777-7777-4777-8777-777777777777",
+    name: "Takodu",
+    email: "takoduindustries@gmail.com",
+    roleName: "Owner",
+    roles: [
+      {
+        id: "owner",
+        name: "Owner",
+        position: 1,
+        systemRole: true,
+        permissions: [],
+      },
+    ],
+    invitedAt: null,
+    invitationExpiresAt: null,
+    acceptedAt: null,
+    joinedAt: null,
+    removedAt: null,
+    availableForScheduling: false,
+    canUpdateSchedulingAvailability: false,
+  } satisfies TeamUserSummary;
+
+  it("marks the current user and disables scheduling when the backend denies it", () => {
     render(
       <TeamPageView
         establishmentId="66666666-6666-4666-8666-666666666666"
-        members={[member]}
+        members={[currentUser, member]}
         canManageRoles={true}
         canInviteMembers={true}
         canRemoveMembers={true}
         canCancelInvitations={true}
-        canEditEstablishmentProfile={true}
-        establishmentEditHref="/establishments?establishmentId=66666666-6666-4666-8666-666666666666"
+        currentUserId={currentUser.userId}
       />,
     );
 
-    expect(screen.getByRole("button", { name: "Edit establishment" })).toBeDefined();
-  });
-
-  it("hides the edit establishment action when the backend denies it", () => {
-    render(
-      <TeamPageView
-        establishmentId="66666666-6666-4666-8666-666666666666"
-        members={[member]}
-        canManageRoles={true}
-        canInviteMembers={true}
-        canRemoveMembers={true}
-        canCancelInvitations={true}
-        canEditEstablishmentProfile={false}
-        establishmentEditHref="/establishments?establishmentId=66666666-6666-4666-8666-666666666666"
-      />,
-    );
-
-    expect(screen.queryByRole("button", { name: "Edit establishment" })).toBeNull();
+    expect(screen.getByText("You")).toBeTruthy();
+    expect(
+      screen.getByText("Your owner membership cannot change scheduling availability from here."),
+    ).toBeTruthy();
   });
 });

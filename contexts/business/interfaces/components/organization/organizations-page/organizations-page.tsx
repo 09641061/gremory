@@ -68,7 +68,7 @@ export function OrganizationsPage({
         document.cookie = "takodu.active_establishment_id=; path=/; max-age=0; sameSite=lax";
       }
       if (organizationId === ownedOrganizationId && confirmed.establishments.length === 0) {
-        router.push("/establishments/setup");
+        router.push(`/establishments/setup?organizationId=${encodeURIComponent(organizationId)}`);
       } else {
         router.push("/");
       }

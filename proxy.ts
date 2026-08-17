@@ -46,9 +46,7 @@ export async function proxy(request: NextRequest) {
 
   const landing = await createEntryRouteQueryService().resolveRoute({
     accessToken,
-    // Without this, landing always resolved the account's default identity -
-    // its own organization if it owns one - overriding a member's actual,
-    // persisted choice to work inside a host organization.
+    organizationId: resolveOrganizationSelection(request),
     establishmentId: resolveEstablishmentSelection(request),
   });
   if (landing.status === "unauthenticated") {
@@ -75,6 +73,10 @@ export async function proxy(request: NextRequest) {
     return redirectWithCookies(request, homePath, response);
   }
 
+  if (pathname === "/welcome" && homePath !== "/welcome") {
+    return redirectWithCookies(request, homePath, response);
+  }
+
   if (homePath !== "/chat" && (pathname === "/chat" || pathname.startsWith("/chat/"))) {
     return redirectWithCookies(request, homePath, response);
   }
@@ -90,6 +92,7 @@ function isPrivateRoute(pathname: string) {
     "/crm",
     "/catalog",
     "/team",
+    "/welcome",
     "/settings",
     "/organization",
     "/invitations/pending",
@@ -112,9 +115,17 @@ function resolveEstablishmentSelection(request: NextRequest): string | undefined
   return request.cookies.get(workspaceSelectionCookies.establishmentId)?.value || undefined;
 }
 
+function resolveOrganizationSelection(request: NextRequest): string | undefined {
+  const fromUrl = request.nextUrl.searchParams.get("organizationId");
+  if (fromUrl) return fromUrl;
+  return request.cookies.get(workspaceSelectionCookies.organizationId)?.value || undefined;
+}
+
 function redirectWithCookies(request: NextRequest, path: string, response: NextResponse | null) {
   const redirectUrl = new URL(path, request.url);
+  const organizationId = resolveOrganizationSelection(request);
   const establishmentId = resolveEstablishmentSelection(request);
+  if (organizationId) redirectUrl.searchParams.set("organizationId", organizationId);
   if (establishmentId) redirectUrl.searchParams.set("establishmentId", establishmentId);
 
   const redirectResponse = NextResponse.redirect(redirectUrl);
@@ -193,6 +204,7 @@ export const config = {
     "/crm/:path*",
     "/catalog/:path*",
     "/team/:path*",
+    "/welcome",
     "/settings/:path*",
     "/organization/:path*",
     "/invitations/pending",

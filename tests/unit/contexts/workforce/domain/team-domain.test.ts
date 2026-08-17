@@ -95,5 +95,6 @@ function baseProps() {
     joinedAt: null,
     removedAt: null,
     availableForScheduling: true,
+    canUpdateSchedulingAvailability: true,
   };
 }
