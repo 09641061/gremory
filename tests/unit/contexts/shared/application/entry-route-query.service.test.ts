@@ -57,6 +57,7 @@ describe("entry route query service", () => {
       activeEstablishmentId: "est-1",
       accessPolicy: {
         canUseAssistant: false,
+        canOpenScheduling: true,
         canCreateEstablishment: true,
       },
       canCreateEstablishment: true,

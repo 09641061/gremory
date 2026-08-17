@@ -1,31 +1,22 @@
 import "server-only";
 
-import { createTeamQueryService } from "@/contexts/workforce/application/internal/queryservices/team-query.service";
+import { SchedulingApiGateway } from "@/contexts/scheduling/infrastructure/gateways/scheduling-api.gateway";
 import type { SchedulingMemberViewModel } from "../../model/scheduling-page-data.view-model";
 
 export async function loadSchedulingMembers(
   establishmentId: string
 ): Promise<SchedulingMemberViewModel[]> {
   try {
-    const team = createTeamQueryService();
-    const roster = await team.list({
-      establishmentId,
+    const employees = await new SchedulingApiGateway().getSchedulingEmployees(establishmentId);
+    return employees.map((employee) => ({
+      id: employee.userId,
+      userId: employee.userId,
+      name: employee.name,
+      email: "",
+      role: "",
       status: "ACTIVE",
-      page: 0,
-      size: 100,
-    });
-
-    return roster.content
-      .filter((member) => member.availableForScheduling && member.userId !== null)
-      .map((member) => ({
-        id: member.userId ?? member.memberId ?? member.email,
-        userId: member.userId ?? member.memberId ?? member.email,
-        name: member.name || member.email,
-        email: member.email,
-        role: member.roleName,
-        status: member.status,
-        imageUrl: member.imageUrl,
-      }));
+      imageUrl: employee.imageUrl,
+    }));
   } catch (error) {
     console.error("Failed to load scheduling employees:", error);
     return [];

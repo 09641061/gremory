@@ -1,8 +1,9 @@
 import { createTeamQueryService } from "@/contexts/workforce/application/internal/queryservices/team-query.service";
 import { TeamPageView } from "@/contexts/workforce/interfaces/components/team/team-page-view";
-import { createWorkforceAccessPolicyService } from "@/contexts/workforce/application/internal/queryservices/workforce-access-policy.service";
 import { redirect } from "next/navigation";
 import { createBusinessWorkspaceQueryService } from "@/contexts/business/application/internal/queryservices/business-workspace-query.service";
+import { resolveModuleAccessFallback } from "@/contexts/shared/application/services/module-access.policy";
+import { getWorkspaceEstablishment, hasEstablishmentPermission } from "@/contexts/shared/application/services/workspace-establishment-permissions";
 
 interface TeamPageProps {
   searchParams: Promise<{ organizationId?: string; establishmentId?: string }>;
@@ -13,26 +14,24 @@ export default async function TeamPage({ searchParams }: TeamPageProps) {
   const workspace = await createBusinessWorkspaceQueryService().getHeaderViewModel(query);
   const establishmentId = resolveTeamEstablishmentId(query, workspace);
 
-  const policyService = createWorkforceAccessPolicyService();
-
-  const {
-    canReadTeam,
-    canDeleteMember,
-    canCreateInvitation,
-    canDeleteInvitation,
-    canReadRoles,
-  } = await policyService.getPermissions(establishmentId ?? undefined);
-
-  if (!canReadTeam) {
-    redirect("/access-denied");
+  if (workspace.accessPolicy?.canOpenTeam !== true) {
+    redirect(resolveModuleAccessFallback(workspace));
   }
+
+  const establishment = getWorkspaceEstablishment(workspace, establishmentId ?? undefined);
+  const canManageTeam = hasEstablishmentPermission(establishment, "workforce:manage") ||
+    hasEstablishmentPermission(establishment, "workforce:manage_members");
+  const canCreateInvitation = hasEstablishmentPermission(establishment, "workforce:invite") || canManageTeam;
+  const canDeleteMember = canManageTeam;
+  const canDeleteInvitation = canManageTeam;
+  const canReadRoles = hasEstablishmentPermission(establishment, "workforce:manage_roles") || canManageTeam;
 
   const teamService = createTeamQueryService();
   const [membersPage, currentMembership] = await Promise.all([
     establishmentId
-      ? teamService.list({ establishmentId, size: 100 })
+      ? teamService.list({ establishmentId, size: 100 }).catch(() => null)
       : Promise.resolve(null),
-    teamService.getMyMembership(establishmentId ?? undefined),
+    teamService.getMyMembership(establishmentId ?? undefined).catch(() => null),
   ]);
   const members = mergeCurrentMembership(membersPage?.content ?? [], currentMembership);
 
@@ -82,7 +81,7 @@ function mergeCurrentMembership(
   });
 
   if (existingIndex < 0) {
-    return members;
+    return currentMembership.status === "ACTIVE" ? [...members, currentMembership] : members;
   }
 
   const next = [...members];

@@ -64,18 +64,9 @@ export class EntryRouteQueryService {
         : { status: "ready", homeHref: "/access-denied" };
     }
 
-    const canUseAssistant = workspace.accessPolicy?.canUseAssistant ?? false;
-
-    if (workspace.accountType === "OWNER") {
-      return {
-        status: "ready",
-        homeHref: canUseAssistant ? "/chat" : "/schedule",
-      };
-    }
-
     return {
       status: "ready",
-      homeHref: resolveMemberEntryPath(workspace),
+      homeHref: resolveAccessPolicyEntryPath(workspace),
     };
   }
 
@@ -93,7 +84,9 @@ export class EntryRouteQueryService {
   }
 }
 
-function resolveMemberEntryPath(workspace: Awaited<ReturnType<BusinessWorkspaceOutboundService["getWorkspace"]>>) {
+function resolveAccessPolicyEntryPath(
+  workspace: Awaited<ReturnType<BusinessWorkspaceOutboundService["getWorkspace"]>>,
+) {
   const accessPolicy = workspace.accessPolicy;
   if (!accessPolicy) return "/access-denied" as const;
   if (accessPolicy.canUseAssistant) return "/chat" as const;

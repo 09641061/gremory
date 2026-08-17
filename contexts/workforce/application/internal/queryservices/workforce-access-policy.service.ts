@@ -1,6 +1,4 @@
 import { createTeamQueryService } from "@/contexts/workforce/application/internal/queryservices/team-query.service";
-import { createOrganizationQueryService } from "@/contexts/business/application/internal/queryservices/organization-query.service";
-import { createEstablishmentQueryService } from "@/contexts/business/application/internal/queryservices/establishment-query.service";
 import { hasAnyPermission } from "@/contexts/shared/application/internal/queryservices/access-context.helpers";
 
 export interface WorkforcePermissions {
@@ -34,24 +32,6 @@ export class WorkforceAccessPolicyService {
     }
 
     try {
-      if (await ownsEstablishment(establishmentId)) {
-        return {
-          canReadTeam: true,
-          canDeleteMember: true,
-          canCreateInvitation: true,
-          canDeleteInvitation: true,
-          canReadRoles: true,
-          canCreateRole: true,
-          canUpdateRole: true,
-          canDeleteRole: true,
-          canEditEstablishmentProfile: true,
-          canOpenModules: true,
-        };
-      }
-    } catch {
-      // Resolve member permissions below.
-    }
-    try {
       const access = await createTeamQueryService().getAccessContext();
       const estAccess = access.establishments.find(
         (item) => item.establishmentId === establishmentId,
@@ -84,14 +64,12 @@ export class WorkforceAccessPolicyService {
       const canDeleteRole = canOpenModules && (capabilities?.canDeleteRole ?? hasManage);
       const canCreateRole = canUpdateRole;
       const canEditEstablishmentProfile = canOpenModules && (capabilities?.canEditEstablishmentProfile ?? hasManage);
-      const hasRead = canReadTeam;
-
-      return {
-        canReadTeam: hasRead,
-        canDeleteMember: canOpenModules && (capabilities?.canDeleteInvitation ?? hasManage),
+       return {
+         canReadTeam,
+         canDeleteMember: canOpenModules && (capabilities?.canDeleteInvitation ?? hasManage),
         canCreateInvitation,
         canDeleteInvitation,
-        canReadRoles: hasRead,
+         canReadRoles: canCreateRole || canUpdateRole || canDeleteRole,
         canCreateRole,
         canUpdateRole,
         canDeleteRole,
@@ -115,19 +93,6 @@ export class WorkforceAccessPolicyService {
   }
 }
 
-async function ownsEstablishment(establishmentId: string): Promise<boolean> {
-  try {
-    const organization = await createOrganizationQueryService().getMyOrganization();
-    const page = await createEstablishmentQueryService().getByOrganization({
-      organizationId: organization.id,
-      page: 0,
-      size: 100,
-    });
-    return page ? page.content.some((establishment) => establishment.id === establishmentId) : true;
-  } catch {
-    return false;
-  }
-}
 export function createWorkforceAccessPolicyService() {
   return new WorkforceAccessPolicyService();
 }

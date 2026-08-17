@@ -96,7 +96,6 @@ export class BusinessAccessPolicyService {
 
         // 2. Determine if the user has permission to read establishments in the active organization
         const canRead =
-          hasReadRole(activeEst.roles) ||
           access.establishments.some(
             (item) =>
               item.organizationId === activeOrgId &&
@@ -199,7 +198,6 @@ export class BusinessAccessPolicyService {
         if (activeEst) {
           const activeOrgId = activeEst.organizationId;
           canRead =
-            hasReadRole(activeEst.roles) ||
             access.establishments.some(
               (item) =>
                 item.organizationId === activeOrgId &&
@@ -246,6 +244,3 @@ export function createBusinessAccessPolicyService() {
   return new BusinessAccessPolicyService();
 }
 
-function hasReadRole(roles?: ReadonlyArray<{ name: string }>): boolean {
-  return roles?.some((role) => role.name.toLowerCase() === "read") ?? false;
-}
