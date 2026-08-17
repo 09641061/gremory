@@ -37,10 +37,11 @@ export default async function PermissionsPage({ searchParams }: PermissionsPageP
     members = (await createTeamQueryService().list({ establishmentId, size: 100 })).content;
   }
 
-  const [roleEntities, permissions] = await Promise.all([
+  const [roleEntities, supportedPermissions] = await Promise.all([
     queryService.list(organizationId),
     queryService.permissions(),
   ]);
+  const permissions = supportedPermissions.filter((permission) => !permission.startsWith("organization:"));
 
   const roles = roleEntities
     .filter((role) => role.getName().trim().toLowerCase() !== "everyone")

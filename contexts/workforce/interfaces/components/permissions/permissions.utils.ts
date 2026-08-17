@@ -31,8 +31,9 @@ export function permissionLabel(permission: string) {
 
 export function permissionDescription(permission: string) {
   const descriptions: Record<string, string> = {
-    "business:read": "Can view the organization and its establishments.",
-    "business:manage": "Can edit organization and establishment settings.",
+    "establishment:read": "Can view assigned establishments and business data.",
+    "establishment:update": "Can edit assigned establishment settings and business data.",
+    "establishment:delete": "Can delete assigned establishments.",
     "workforce:read": "Can view team members.",
     "workforce:invite": "Can invite users to the team.",
     "workforce:manage_members": "Can manage team memberships.",
@@ -51,19 +52,20 @@ export function permissionDescription(permission: string) {
 }
 
 function formatPermissionGroupLabel(context: string) {
-  if (context === "business") return "Organization";
+  if (context === "establishment") return "Establishments";
   if (context === "workforce") return "Team";
   return context.charAt(0).toUpperCase() + context.slice(1);
 }
 
 export function permissionGroupPriority(context: string) {
   const order: Record<string, number> = {
-    business: 0,
-    workforce: 1,
-    scheduling: 2,
-    crm: 3,
-    catalog: 4,
-    analytics: 5,
+    organization: 0,
+    establishment: 1,
+    workforce: 2,
+    scheduling: 3,
+    crm: 4,
+    catalog: 5,
+    analytics: 6,
   };
 
   return order[context] ?? 100;

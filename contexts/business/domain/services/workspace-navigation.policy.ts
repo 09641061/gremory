@@ -118,7 +118,7 @@ export function groupEstablishmentsByOrganization(
 /**
  * Whether the account can edit this organization's name and logo: always
  * true for the one it owns, and for a foreign one only when some membership
- * inside it was granted `business:manage` - the same permission the backend
+  * inside it was granted `establishment:update` - the same permission the backend
  * itself checks (`BusinessAccessPolicy.requireOrganizationPermission`), read
  * here from the same `effectivePermissions` set the workspace already scoped.
  */
@@ -129,11 +129,11 @@ export function canManageOrganization(
   if (organization.canUpdate !== undefined) return organization.canUpdate;
   if (organization.organizationId === ownedOrganizationId) {
     return organization.establishments.some((establishment) =>
-      establishment.effectivePermissions?.includes("business:manage"),
+      establishment.effectivePermissions?.includes("establishment:update"),
     );
   }
   return organization.establishments.some((establishment) =>
-    establishment.effectivePermissions?.includes("business:manage"),
+    establishment.effectivePermissions?.includes("establishment:update"),
   );
 }
 

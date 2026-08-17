@@ -56,8 +56,8 @@ function hasTeamAccess(establishment: EntryRouteEstablishment) {
 
 function hasOrganizationAccess(establishment: EntryRouteEstablishment) {
   return hasAnyPermission(establishment.effectivePermissions, [
-    "business:manage",
-    "business:read",
+    "establishment:update",
+    "establishment:read",
   ]) || hasReadRole(establishment.roles);
 }
 

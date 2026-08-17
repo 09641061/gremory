@@ -170,10 +170,10 @@ describe("canManageOrganization", () => {
     ).toBe(false);
   });
 
-  it("allows editing a foreign organization when a membership was granted business:manage", () => {
+  it("allows editing a foreign organization when a membership was granted establishment:update", () => {
     expect(
       canManageOrganization(
-        { organizationId: "org-2", establishments: [{ id: "est-1", name: "Main", effectivePermissions: ["business:manage"] }] },
+         { organizationId: "org-2", establishments: [{ id: "est-1", name: "Main", effectivePermissions: ["establishment:update"] }] },
         "org-1",
       ),
     ).toBe(true);

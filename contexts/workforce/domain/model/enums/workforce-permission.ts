@@ -3,9 +3,16 @@
  * UI components consume capabilities and never compare these codes directly.
  */
 export const workforcePermissions = {
-  business: {
-    read: "business:read",
-    manage: "business:manage",
+  organization: {
+    read: "organization:read",
+    update: "organization:update",
+    createEstablishment: "organization:create_establishment",
+    manageBilling: "organization:manage_billing",
+  },
+  establishment: {
+    read: "establishment:read",
+    update: "establishment:update",
+    delete: "establishment:delete",
   },
   catalog: {
     read: "catalog:read",

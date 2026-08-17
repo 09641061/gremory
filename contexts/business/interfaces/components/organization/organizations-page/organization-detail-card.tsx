@@ -25,7 +25,7 @@ interface OrganizationDetailCardProps {
 /**
  * Editing in place, exactly like an establishment: this is the same
  * name-and-logo editor `/organization` already uses, permission-gated with
- * the workforce's real `business:manage` grant - not a redirect elsewhere.
+ * the organization's explicit permissions - not a role inferred from the roster.
  */
 export function OrganizationDetailCard({
   organization,

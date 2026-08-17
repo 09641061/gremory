@@ -78,12 +78,12 @@ export function PermissionsWorkspace({ role, permissions, members, onCancel, can
       .filter((group) => group.permissions.length > 0);
   }, [permissionFilter, permissions]);
 
-  const organizationGroup = filteredGroupedPermissions.find((group) => group.context === "business") ?? null;
-  const moduleGroups = filteredGroupedPermissions.filter((group) => group.context !== "business");
-  const hasOrganizationAccess =
-    selectedPermissions.has("business:read") || selectedPermissions.has("business:manage");
-  const visibleModuleGroups = organizationGroup ? (hasOrganizationAccess ? moduleGroups : []) : filteredGroupedPermissions;
-  const hasHiddenModulePermissions = Boolean(organizationGroup && moduleGroups.length > 0 && !hasOrganizationAccess);
+  const establishmentGroup = filteredGroupedPermissions.find((group) => group.context === "establishment") ?? null;
+  const moduleGroups = filteredGroupedPermissions.filter((group) => group.context !== "establishment");
+  const hasEstablishmentAccess =
+    selectedPermissions.has("establishment:read") || selectedPermissions.has("establishment:update");
+  const visibleModuleGroups = establishmentGroup ? (hasEstablishmentAccess ? moduleGroups : []) : filteredGroupedPermissions;
+  const hasHiddenModulePermissions = Boolean(establishmentGroup && moduleGroups.length > 0 && !hasEstablishmentAccess);
 
   const roleMembers = useMemo(() => {
     if (!role) return [];
@@ -169,15 +169,15 @@ export function PermissionsWorkspace({ role, permissions, members, onCancel, can
                 </div>
               ) : (
                 <div className="space-y-6">
-                  {organizationGroup ? (
+                   {establishmentGroup ? (
                     <section className="rounded-xl border border-primary/20 bg-primary/5 p-4 shadow-sm">
                       <div className="mb-3 flex items-start justify-between gap-4">
                         <div className="space-y-1">
                           <h3 className="text-sm font-semibold tracking-wide text-foreground">
-                            Organization
+                            Business and establishments
                           </h3>
                           <p className="text-xs text-muted-foreground">
-                            Gateway permissions for the organization and its establishments.
+                            Permissions for business data and assigned establishments. Organization profile permissions are managed separately.
                           </p>
                         </div>
                         <span className="rounded-full border border-primary/20 bg-background px-2.5 py-1 text-[11px] font-medium text-primary">
@@ -187,7 +187,7 @@ export function PermissionsWorkspace({ role, permissions, members, onCancel, can
 
                       <div className="grid gap-3">
                         {renderPermissionGroup(
-                          organizationGroup,
+                           establishmentGroup,
                           editable,
                           selectedPermissions,
                           setSelectedPermissions,
@@ -196,7 +196,7 @@ export function PermissionsWorkspace({ role, permissions, members, onCancel, can
                     </section>
                   ) : null}
 
-                  {organizationGroup ? (
+                   {establishmentGroup ? (
                     <section className="space-y-3">
                       <div className="flex items-center justify-between gap-3">
                         <div>
@@ -211,7 +211,7 @@ export function PermissionsWorkspace({ role, permissions, members, onCancel, can
 
                       {hasHiddenModulePermissions ? (
                         <div className="rounded-xl border border-dashed border-border px-4 py-6 text-sm text-muted-foreground">
-                          Enable <span className="font-medium text-foreground">Organization read</span> to
+                           Enable <span className="font-medium text-foreground">Business read</span> to
                           reveal the module permissions below.
                         </div>
                       ) : null}

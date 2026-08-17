@@ -17,12 +17,12 @@ describe("permissions utils", () => {
     ]);
   });
 
-  it("renders business as Organization for the UI", () => {
-    expect(groupPermissions(["business:read", "business:manage"])).toEqual([
+  it("renders establishments as Establishments for the UI", () => {
+    expect(groupPermissions(["establishment:read", "establishment:update"])).toEqual([
       {
-        context: "business",
-        label: "Organization",
-        permissions: ["business:read", "business:manage"],
+        context: "establishment",
+        label: "Establishments",
+        permissions: ["establishment:read", "establishment:update"],
       },
     ]);
   });
