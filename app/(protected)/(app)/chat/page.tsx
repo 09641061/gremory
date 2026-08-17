@@ -1,4 +1,5 @@
 import { GetConversationQueryService } from "@/contexts/assistant/application/internal/queryservices/get-conversation-query.service";
+import { createAssistantConversationsAdapter } from "@/contexts/assistant/infrastructure/adapters/assistant-conversations.adapter";
 import { createCurrentSubscriptionQueryService } from "@/contexts/billing/application/internal/queryservices/current-subscription-query.service";
 import { createSubscriptionAccessQueryService } from "@/contexts/billing/application/internal/queryservices/subscription-access-query.service";
 import { createBusinessWorkspaceQueryService } from "@/contexts/business/application/internal/queryservices/business-workspace-query.service";
@@ -38,7 +39,9 @@ export default async function ChatPage({
       ? requestedEstablishmentId
       : workspace.activeEstablishmentId ?? null;
   const initialConversation = hasAssistantAccess && conversationId
-    ? await new GetConversationQueryService().handle(conversationId)
+    ? await new GetConversationQueryService(
+        createAssistantConversationsAdapter(workspace.organization?.id),
+      ).handle(conversationId)
     : null;
   const initialConversationViewModel = toConversationViewModel(initialConversation);
 

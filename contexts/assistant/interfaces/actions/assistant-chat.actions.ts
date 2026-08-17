@@ -6,6 +6,9 @@ import { revalidatePath } from "next/cache";
 
 import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-session-cookie";
 import { SubmitAssistantMessageCommandService } from "@/contexts/assistant/application/internal/commandservices/submit-assistant-message-command.service";
+import { CreateConversationCommandService } from "@/contexts/assistant/application/internal/commandservices/create-conversation-command.service";
+import { SendMessageCommandService } from "@/contexts/assistant/application/internal/commandservices/send-message-command.service";
+import { createAssistantConversationRepository } from "./assistant-action-context";
 import { toConversationViewModel } from "@/contexts/assistant/interfaces/presenters/assistant-chat.presenter.server";
 import type { AssistantConversationViewModel } from "@/contexts/assistant/interfaces/view-models/assistant-chat.view-model";
 
@@ -34,7 +37,11 @@ export async function submitAssistantMessageAction(
       };
     }
 
-    const conversation = await new SubmitAssistantMessageCommandService().handle(
+    const repository = await createAssistantConversationRepository(parsed.establishmentId);
+    const conversation = await new SubmitAssistantMessageCommandService(
+      new CreateConversationCommandService(repository),
+      new SendMessageCommandService(repository),
+    ).handle(
       {
         conversationId: parsed.conversationId,
         message: parsed.message,

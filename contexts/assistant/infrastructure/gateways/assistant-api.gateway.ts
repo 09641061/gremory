@@ -71,6 +71,12 @@ async function resolveAccessToken(providedToken?: string): Promise<string | unde
 }
 
 export class AssistantApiGateway {
+  constructor(private readonly organizationId?: string) {}
+
+  private tenantHeaders() {
+    return this.organizationId ? { "X-Organization-Id": this.organizationId } : undefined;
+  }
+
   async listConversations(
     params: ListConversationsParams = {},
     token?: string,
@@ -86,6 +92,7 @@ export class AssistantApiGateway {
       `${apiConfig.routes.assistantConversations}?${query.toString()}`,
       {
         token: authToken,
+        headers: this.tenantHeaders(),
         errorMessage: "Failed to fetch assistant conversations",
       },
     );
@@ -101,6 +108,7 @@ export class AssistantApiGateway {
       `${apiConfig.routes.assistantConversations}/${encodeURIComponent(id)}`,
       {
         token: authToken,
+        headers: this.tenantHeaders(),
         errorMessage: "Failed to fetch assistant conversation",
       },
     );
@@ -117,6 +125,7 @@ export class AssistantApiGateway {
       command,
       {
         token: authToken,
+        headers: this.tenantHeaders(),
         errorMessage: "Failed to create assistant conversation",
       },
     );
@@ -134,6 +143,7 @@ export class AssistantApiGateway {
       command,
       {
         token: authToken,
+        headers: this.tenantHeaders(),
         errorMessage: "Failed to send assistant message",
       },
     );
@@ -154,6 +164,7 @@ export class AssistantApiGateway {
           "Content-Type": "application/json",
           "Accept": "text/event-stream",
           "Authorization": authToken ? `Bearer ${authToken}` : "",
+          ...(this.tenantHeaders() ?? {}),
         },
         body: JSON.stringify(command),
       },
@@ -172,6 +183,7 @@ export class AssistantApiGateway {
       command,
       {
         token: authToken,
+        headers: this.tenantHeaders(),
         errorMessage: "Failed to rename assistant conversation",
       },
     );
@@ -184,6 +196,7 @@ export class AssistantApiGateway {
       `${apiConfig.routes.assistantConversations}/${encodeURIComponent(id)}`,
       {
         token: authToken,
+        headers: this.tenantHeaders(),
         errorMessage: "Failed to delete assistant conversation",
       },
     );

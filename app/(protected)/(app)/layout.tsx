@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import { headers } from "next/headers";
 
 import { ListConversationsQueryService } from "@/contexts/assistant/application/internal/queryservices/list-conversations-query.service";
+import { createAssistantConversationsAdapter } from "@/contexts/assistant/infrastructure/adapters/assistant-conversations.adapter";
 import type { AssistantConversationSummaryReadModel } from "@/contexts/assistant/application/internal/transforms/assistant.read-models";
 import { createCurrentSubscriptionQueryService } from "@/contexts/billing/application/internal/queryservices/current-subscription-query.service";
 import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-session-cookie";
@@ -69,7 +70,9 @@ async function AppShellSidebar() {
   const [currentProfile, assistantConversations] = await Promise.all([
     getMyProfileServerQuery(),
     shell.hasAssistantAccess
-      ? new ListConversationsQueryService().handle({ page: 0, size: 20 })
+      ? new ListConversationsQueryService(
+          createAssistantConversationsAdapter(shell.workspace.organization?.id),
+        ).handle({ page: 0, size: 20 })
       : Promise.resolve({ content: [] as AssistantConversationSummaryReadModel[] }),
   ]);
 
