@@ -47,10 +47,10 @@ function openMenu(name = /Main branch/) {
 
 describe("OrganizationBadge", () => {
   it("opens the organizations hub instead of the old organization editor", () => {
-    render(<OrganizationBadge organization={organization} href="/organizations?organizationId=org-1" />);
+    render(<OrganizationBadge organization={organization} href="/organizations" />);
 
     expect(screen.getByRole("link", { name: /Acme/ }).getAttribute("href")).toBe(
-      "/organizations?organizationId=org-1",
+      "/organizations",
     );
     expect(screen.queryByRole("combobox")).toBeNull();
   });
@@ -78,7 +78,7 @@ describe("WorkspaceSwitcher", () => {
 
     expect(
       screen.getByRole("link", { name: /Acme/ }).getAttribute("href"),
-    ).toBe("/organizations?organizationId=org-1");
+    ).toBe("/organizations");
   });
 
   it("still opens the organizations hub when the account cannot read the organization", () => {
@@ -87,7 +87,7 @@ describe("WorkspaceSwitcher", () => {
 
     expect(
       screen.getByRole("link", { name: /Acme/ }).getAttribute("href"),
-    ).toBe("/organizations?organizationId=org-1");
+    ).toBe("/organizations");
   });
 
   it("keeps the establishment entry points the account is not allowed to use hidden", () => {
@@ -125,6 +125,6 @@ describe("WorkspaceSwitcher", () => {
     fireEvent.click(screen.getByText("Second branch"));
 
     expect(assign).toHaveBeenCalledWith(expect.stringContaining("establishmentId=est-2"));
-    expect(assign).toHaveBeenCalledWith(expect.stringMatching(/^\/chat\?/));
+    expect(assign).toHaveBeenCalledWith(expect.stringMatching(/^\/schedule\?/));
   });
 });

@@ -8,9 +8,7 @@ const mocks = vi.hoisted(() => ({
   workspace: {
     getHeaderViewModel: vi.fn(),
   },
-  organization: {
-    getById: vi.fn(),
-  },
+  accessibleOrganizations: vi.fn(),
   organizationsPage: vi.fn(),
 }));
 
@@ -26,8 +24,10 @@ vi.mock("@/contexts/business/application/internal/queryservices/business-workspa
   createBusinessWorkspaceQueryService: () => mocks.workspace,
 }));
 
-vi.mock("@/contexts/business/application/internal/queryservices/organization-query.service", () => ({
-  createOrganizationQueryService: () => mocks.organization,
+vi.mock("@/contexts/business/infrastructure/gateways/organization-api.gateway", () => ({
+  OrganizationApiGateway: class {
+    findAccessible = mocks.accessibleOrganizations;
+  },
 }));
 
 vi.mock("@/contexts/business/interfaces/components/organization/organizations-page/organizations-page", () => ({
@@ -70,15 +70,38 @@ describe("OrganizationsRoutePage", () => {
       ],
       ownedOrganizationId: "own-org",
     });
-    mocks.organization.getById.mockResolvedValue({
-      id: "own-org",
-      ownerId: "user-1",
-      name: "My Studio",
-      imageUrl: null,
-    });
+    mocks.accessibleOrganizations.mockResolvedValue([
+      {
+        id: "host-org",
+        name: "Host Org",
+        imageUrl: null,
+        isOwned: false,
+        permissions: { canRead: true, canUpdate: false, canCreateEstablishment: false },
+        establishments: [{
+          id: "host-est-1",
+          name: "Host branch",
+          photoUrl: null,
+          timeZone: null,
+          permissions: { canRead: true, canUpdate: false, canDelete: false },
+          effectivePermissions: [],
+        }],
+      },
+      {
+        id: "own-org",
+        name: "My Studio",
+        imageUrl: null,
+        isOwned: true,
+        permissions: { canRead: true, canUpdate: true, canCreateEstablishment: true },
+        establishments: [],
+      },
+    ]);
 
     const element = await OrganizationsRoutePage({
       searchParams: Promise.resolve({ organizationId: "own-org" }),
+    });
+
+    expect(mocks.workspace.getHeaderViewModel).toHaveBeenCalledWith({
+      establishmentId: undefined,
     });
 
     expect(element).toMatchObject({
@@ -115,12 +138,24 @@ describe("OrganizationsRoutePage", () => {
       establishments: [],
       ownedOrganizationId: "own-org",
     });
-    mocks.organization.getById.mockResolvedValue({
-      id: "own-org",
-      ownerId: "user-1",
-      name: "My Studio",
-      imageUrl: null,
-    });
+    mocks.accessibleOrganizations.mockResolvedValue([
+      {
+        id: "host-org",
+        name: "Host Org",
+        imageUrl: null,
+        isOwned: false,
+        permissions: { canRead: true, canUpdate: false, canCreateEstablishment: false },
+        establishments: [],
+      },
+      {
+        id: "own-org",
+        name: "My Studio",
+        imageUrl: null,
+        isOwned: true,
+        permissions: { canRead: true, canUpdate: true, canCreateEstablishment: true },
+        establishments: [],
+      },
+    ]);
 
     const element = await OrganizationsRoutePage({
       searchParams: Promise.resolve({

@@ -86,7 +86,7 @@ export function WorkspaceSwitcher({
               <div className="flex w-full flex-col">
                 <OrganizationBadge
                   organization={organization}
-                  href={`/organizations?organizationId=${encodeURIComponent(organization.id)}`}
+                  href="/organizations"
                   onNavigate={close}
                 />
               </div>

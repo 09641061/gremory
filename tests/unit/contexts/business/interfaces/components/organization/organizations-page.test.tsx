@@ -76,6 +76,6 @@ describe("OrganizationsPage", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Work in" }));
 
-    expect(mocks.router.push).toHaveBeenCalledWith("/");
+    expect(mocks.router.push).toHaveBeenCalledWith("/?organizationId=org-1&establishmentId=est-1");
   });
 });

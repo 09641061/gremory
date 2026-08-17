@@ -70,7 +70,10 @@ export function OrganizationsPage({
       if (organizationId === ownedOrganizationId && confirmed.establishments.length === 0) {
         router.push(`/establishments/setup?organizationId=${encodeURIComponent(organizationId)}`);
       } else {
-        router.push("/");
+        const params = new URLSearchParams({ organizationId });
+        const establishmentId = confirmed.establishments[0]?.id;
+        if (establishmentId) params.set("establishmentId", establishmentId);
+        router.push(`/?${params.toString()}`);
       }
     }
   };

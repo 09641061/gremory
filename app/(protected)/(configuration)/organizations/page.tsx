@@ -2,9 +2,8 @@ import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { OrganizationsPage } from "@/contexts/business/interfaces/components/organization/organizations-page/organizations-page";
 import { createBusinessWorkspaceQueryService } from "@/contexts/business/application/internal/queryservices/business-workspace-query.service";
-import { createOrganizationQueryService } from "@/contexts/business/application/internal/queryservices/organization-query.service";
+import { OrganizationApiGateway } from "@/contexts/business/infrastructure/gateways/organization-api.gateway";
 import type { WorkspaceNavigationOrganizationGroup } from "@/contexts/business/domain/services/workspace-navigation.policy";
-import { groupEstablishmentsByOrganization } from "@/contexts/business/domain/services/workspace-navigation.policy";
 import { workspaceSelectionCookies } from "@/contexts/business/infrastructure/session/workspace-selection-cookie";
 
 interface OrganizationsRoutePageProps {
@@ -14,81 +13,54 @@ interface OrganizationsRoutePageProps {
 export default async function OrganizationsRoutePage({ searchParams }: OrganizationsRoutePageProps) {
   const query = await searchParams;
   const cookieStore = await cookies();
-  const workspace = await createBusinessWorkspaceQueryService().getHeaderViewModel(query);
+  // The organizations index must load the complete accessible workspace. The
+  // query organization only selects the preview; sending it to `/workspace`
+  // would scope the response to one organization and hide foreign memberships.
+  const [workspace, accessibleOrganizations] = await Promise.all([
+    createBusinessWorkspaceQueryService().getHeaderViewModel({ establishmentId: query.establishmentId }),
+    new OrganizationApiGateway().findAccessible(),
+  ]);
   const requestedOrganizationId = query.organizationId;
   const requestedPreviewOrganizationId = query.previewOrganizationId;
   const rememberedPreviewOrganizationId =
     cookieStore.get(workspaceSelectionCookies.previewOrganizationId)?.value ?? null;
   const activeOrganizationId = cookieStore.get(workspaceSelectionCookies.organizationId)?.value ?? workspace.organization?.id ?? null;
-  const ownedOrganization = workspace.ownedOrganizationId
-    ? await createOrganizationQueryService().getById({ id: workspace.ownedOrganizationId }).catch(() => null)
-    : null;
+  const ownedOrganizationId =
+    accessibleOrganizations.find((organization) => organization.isOwned)?.id ??
+    workspace.ownedOrganizationId;
 
   // An account without an organization has an invitation to accept first.
   if (workspace.accountType === "PENDING_INVITATION") {
     redirect("/invitations/pending");
   }
 
-  // Already scoped by the workforce ACL: every establishment here is one the
-  // account genuinely has access to, grouped by the organization it belongs to.
-  const organizations = groupEstablishmentsByOrganization(
-    workspace.establishments,
-    workspace.organization?.id,
-    workspace.organization?.name,
-    workspace.organization?.imageUrl,
-  ).map((organization) =>
-    organization.organizationId === workspace.organization?.id
-      ? { ...organization, canUpdate: workspace.organization.canUpdate === true }
-      : organization,
-  );
-
-  const organizationsWithOwnedOrganization = appendOrganizationGroup(
-    appendOrganizationGroup(
-      organizations,
-      workspace.organization
-        ? {
-            organizationId: workspace.organization.id,
-            organizationName: workspace.organization.name,
-            organizationImageUrl: workspace.organization.imageUrl ?? null,
-            establishments: [],
-            canUpdate: workspace.organization.canUpdate === true,
-          }
-        : null,
-    ),
-    ownedOrganization
-      ? {
-          organizationId: ownedOrganization.id,
-          organizationName: ownedOrganization.name,
-          organizationImageUrl: ownedOrganization.imageUrl,
-          establishments: [],
-          canUpdate: workspace.ownedOrganizationId === ownedOrganization.id
-            ? workspace.organization?.id === ownedOrganization.id
-              ? workspace.organization.canUpdate === true
-              : undefined
-            : undefined,
-        }
-      : null,
+  const organizations: ReadonlyArray<WorkspaceNavigationOrganizationGroup> = accessibleOrganizations.map(
+    (organization) => ({
+      organizationId: organization.id,
+      organizationName: organization.name,
+      organizationImageUrl: organization.imageUrl,
+      canUpdate: organization.permissions.canUpdate,
+      establishments: organization.establishments.map((establishment) => ({
+        id: establishment.id,
+        name: establishment.name,
+        photoUrl: establishment.photoUrl ?? null,
+        timeZone: establishment.timeZone ?? null,
+        effectivePermissions: establishment.effectivePermissions,
+        organizationId: organization.id,
+        organizationName: organization.name,
+        organizationImageUrl: organization.imageUrl,
+      })),
+    }),
   );
 
   return (
     <OrganizationsPage
-      organizations={organizationsWithOwnedOrganization}
-      ownedOrganizationId={workspace.ownedOrganizationId}
+      organizations={organizations}
+      ownedOrganizationId={ownedOrganizationId ?? null}
       initialPreviewOrganizationId={
         requestedPreviewOrganizationId ?? requestedOrganizationId ?? rememberedPreviewOrganizationId ?? activeOrganizationId
       }
       activeOrganizationId={activeOrganizationId}
     />
   );
-}
-
-function appendOrganizationGroup(
-  organizations: ReadonlyArray<WorkspaceNavigationOrganizationGroup>,
-  organization: WorkspaceNavigationOrganizationGroup | null,
-) {
-  if (!organization) return organizations;
-  if (organizations.some((item) => item.organizationId === organization.organizationId)) {
-    return organizations;
-  }
-  return [...organizations, organization];
 }
