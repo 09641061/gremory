@@ -14,7 +14,6 @@ import {
   createTeamUserId,
   type InvitationId,
   type MemberId,
-  type TeamRoleId,
   type TeamEstablishmentId,
 } from "../../domain/model/valueobjects/team-identifiers.vo";
 import type {
@@ -80,6 +79,7 @@ export class TeamApiGateway implements TeamRepository {
       establishmentName: resource.establishmentName,
       status: resource.status,
       roles: (resource.roles ?? []).map(toTeamRoleSummary),
+      isOwner: resource.isOwner,
       availableForScheduling: resource.availableForScheduling,
       canUpdateSchedulingAvailability: resource.canUpdateSchedulingAvailability,
       username: resource.username ?? null,
@@ -215,6 +215,7 @@ function toTeamUser(resource: {
   email: string;
   roleId?: string;
   roleName?: string;
+  isOwner: boolean;
   roles?: Array<{
     id: string;
     name: string;
@@ -249,6 +250,7 @@ function toTeamUser(resource: {
     email: createInvitedEmail(resource.email),
     roleId: createTeamRoleId(roles[0]?.id ?? resource.roleId ?? "00000000-0000-4000-8000-000000000000"),
     roleName: roles[0]?.name ?? resource.roleName ?? "Everyone",
+    isOwner: resource.isOwner,
     roles: roles.map((role) => ({
       id: createTeamRoleId(role.id),
       name: role.name,

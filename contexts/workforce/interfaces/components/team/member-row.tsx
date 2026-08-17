@@ -34,11 +34,13 @@ export function MemberRow({
   canRemoveMembers = true,
   canCancelInvitations = true,
   isCurrentUser = false,
+  isOwner: ownerFromWorkspace = false,
 }: {
   member: TeamUserSummary;
   canRemoveMembers?: boolean;
   canCancelInvitations?: boolean;
   isCurrentUser?: boolean;
+  isOwner?: boolean;
 }) {
   const [removeState, removeAction, removePending] = useActionState(removeTeamMemberAction, initialActionState);
   const [revokeState, revokeAction, revokePending] = useActionState(revokeTeamInvitationAction, initialActionState);
@@ -56,6 +58,7 @@ export function MemberRow({
   const canRemove = member.canRemoveMembership && memberId !== null && canRemoveMembers;
   const canCancel = member.canRevokeInvitation && canCancelInvitations;
   const error = removeState.error ?? revokeState.error ?? toggleState.error;
+  const isOwner = ownerFromWorkspace || member.roleName.trim().toLowerCase() === "owner";
   const schedulingAvailabilityHint = !member.canUpdateSchedulingAvailability
     ? isCurrentUser
       ? member.roleName === "Owner"
@@ -82,16 +85,22 @@ export function MemberRow({
               </span>
             ) : null}
           </div>
-          {member.roleName === "Owner" ? (
+          {isOwner ? (
             <span className="mt-1 inline-flex rounded-full border border-amber-500/20 bg-amber-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-700">
-              Owner
+              OWNER
             </span>
           ) : null}
         </div>
       </div>
       <span className="truncate text-[15px] text-muted-foreground">{member.email}</span>
       <div>
-        <MemberRolesDropdown roles={member.roles} />
+        {isOwner ? (
+          <span className="inline-flex rounded-full border border-amber-500/20 bg-amber-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-amber-700">
+            OWNER
+          </span>
+        ) : (
+          <MemberRolesDropdown roles={member.roles} />
+        )}
       </div>
       <div className="flex flex-col gap-1.5 justify-center">
         <span className="text-[15px] text-muted-foreground">{formatStatus(member.status)}</span>

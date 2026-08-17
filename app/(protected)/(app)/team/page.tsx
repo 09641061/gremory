@@ -44,6 +44,7 @@ export default async function TeamPage({ searchParams }: TeamPageProps) {
       canRemoveMembers={canDeleteMember}
       canCancelInvitations={canDeleteInvitation}
       currentUserId={currentMembership?.userId ?? null}
+      currentUserIsOwner={workspace.authorization?.role === "OWNER"}
     />
   );
 }

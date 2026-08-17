@@ -19,6 +19,7 @@ export function TeamPageView({
   canRemoveMembers = true,
   canCancelInvitations = true,
   currentUserId = null,
+  currentUserIsOwner = false,
 }: {
   establishmentId: string | null;
   members: TeamUserSummary[];
@@ -27,6 +28,7 @@ export function TeamPageView({
   canRemoveMembers?: boolean;
   canCancelInvitations?: boolean;
   currentUserId?: string | null;
+  currentUserIsOwner?: boolean;
 }) {
   const [filter, setFilter] = useState("");
   const [inviteOpen, setInviteOpen] = useState(false);
@@ -83,6 +85,7 @@ export function TeamPageView({
                 canRemoveMembers={canRemoveMembers}
                 canCancelInvitations={canCancelInvitations}
                 isCurrentUser={member.userId !== null && member.userId === currentUserId}
+                isOwner={member.isOwner || (currentUserIsOwner && member.userId !== null && member.userId === currentUserId)}
               />
             ))}
             {filteredMembers.length === 0 && <div className="px-5 py-10 text-sm text-muted-foreground">No members found.</div>}

@@ -18,6 +18,7 @@ export interface TeamUserProps {
   email: InvitedEmail;
   roleId?: TeamRoleId;
   roleName?: string;
+  isOwner?: boolean;
   roles?: ReadonlyArray<TeamRoleSummary>;
   organizationId: TeamOrganizationId;
   establishmentId: TeamEstablishmentId;
@@ -50,6 +51,7 @@ export class TeamUser {
     public readonly email: InvitedEmail,
     public readonly roleId: TeamRoleId,
     public readonly roleName: string,
+    public readonly isOwner: boolean,
     public readonly roles: ReadonlyArray<TeamRoleSummary>,
     public readonly organizationId: TeamOrganizationId,
     public readonly establishmentId: TeamEstablishmentId,
@@ -97,6 +99,7 @@ export class TeamUser {
       props.email,
       primaryRole.id,
       primaryRole.name.trim(),
+      props.isOwner ?? false,
       Object.freeze(roles),
       props.organizationId,
       props.establishmentId,

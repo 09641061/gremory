@@ -9,6 +9,7 @@ export interface TeamUserSummary {
   email: string;
   roleId: string;
   roleName: string;
+  isOwner?: boolean;
   roles: ReadonlyArray<{
     id: string;
     name: string;

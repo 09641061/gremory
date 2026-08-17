@@ -81,6 +81,7 @@ export interface TeamMembershipContext {
     systemRole: boolean;
     permissions: string[];
   }>;
+  isOwner: boolean;
   availableForScheduling: boolean;
   canUpdateSchedulingAvailability: boolean;
   username: string | null;

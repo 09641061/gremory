@@ -73,6 +73,7 @@ export class TeamQueryServiceImpl implements TeamQueryService {
       email: membership.email.value,
       roleId: roles[0]?.id ?? "00000000-0000-4000-8000-000000000000",
       roleName: roles[0]?.name ?? "Everyone",
+      ...(membership.isOwner ? { isOwner: true } : {}),
       roles,
       organizationId: membership.organizationId.value,
       establishmentId: membership.establishmentId.value,
@@ -124,6 +125,7 @@ function toTeamUserSummary(
     email: user.email.value,
     roleId: user.roleId.value,
     roleName: user.roleName,
+    ...(user.isOwner ? { isOwner: true } : {}),
     roles: user.roles.map((role) => ({
       id: role.id.value,
       name: role.name,
