@@ -109,6 +109,7 @@ export function TeamPageView({
                 canCancelInvitations={canCancelInvitations}
                 isOwner={member.isOwner || (currentUserIsOwner && member.userId !== null && member.userId === currentUserId)}
                 canManageScheduling={canManageScheduling}
+                canEditAvailability={currentUserIsOwner && member.isOwner === true}
               />
             ))}
             {filteredMembers.length === 0 && <div className="px-5 py-10 text-sm text-muted-foreground">No members found.</div>}

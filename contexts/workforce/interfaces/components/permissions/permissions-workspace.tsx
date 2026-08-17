@@ -92,7 +92,11 @@ export function PermissionsWorkspace({ role, permissions, members, onCancel, can
 
   const availableMembers = useMemo(() => {
     if (!role) return [];
-    return members.filter((member) => !member.roles.some((r) => r.id === role.id));
+    return members.filter(
+      (member) =>
+        !member.isOwner &&
+        !member.roles.some((r) => r.id === role.id),
+    );
   }, [members, role]);
 
   const filteredRoleMembers = useMemo(() => {
