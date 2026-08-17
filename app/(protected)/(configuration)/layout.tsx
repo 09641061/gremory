@@ -79,10 +79,12 @@ export async function resolveConfigurationBackHref() {
     return null;
   }
 
-  if (organizationId && organizationId === workspace?.ownedOrganizationId) {
-    const href = new URL("/organizations", "http://localhost");
+  if (organizationId) {
+    const href = new URL("/", "http://localhost");
     href.searchParams.set("organizationId", organizationId);
-    if (previewOrganizationId) {
+    if (establishmentId) {
+      href.searchParams.set("establishmentId", establishmentId);
+    } else if (previewOrganizationId && previewOrganizationId !== organizationId) {
       href.searchParams.set("previewOrganizationId", previewOrganizationId);
     }
     return `${href.pathname}${href.search}`;

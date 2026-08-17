@@ -45,7 +45,7 @@ describe("resolveConfigurationBackHref", () => {
     mocks.planHome.handle.mockResolvedValue("/chat");
   });
 
-  it("prefers the active organization hub when it is the user's own organization", async () => {
+  it("returns to the active organization context in the app", async () => {
     mocks.cookies.mockResolvedValue({
       get: vi.fn((name: string) => {
         if (name === "takodu.access_token") return { value: "token" };
@@ -54,10 +54,10 @@ describe("resolveConfigurationBackHref", () => {
       }),
     });
 
-    await expect(resolveConfigurationBackHref()).resolves.toBe("/organizations?organizationId=org-2");
+    await expect(resolveConfigurationBackHref()).resolves.toBe("/?organizationId=org-2&establishmentId=est-1");
   });
 
-  it("includes the remembered preview organization when returning to the hub", async () => {
+  it("returns to the active organization context instead of the hub", async () => {
     mocks.cookies.mockResolvedValue({
       get: vi.fn((name: string) => {
         if (name === "takodu.access_token") return { value: "token" };
@@ -67,12 +67,10 @@ describe("resolveConfigurationBackHref", () => {
       }),
     });
 
-    await expect(resolveConfigurationBackHref()).resolves.toBe(
-      "/organizations?organizationId=org-2&previewOrganizationId=org-3",
-    );
+    await expect(resolveConfigurationBackHref()).resolves.toBe("/?organizationId=org-2&establishmentId=est-1");
   });
 
-  it("falls back to the app home when the active organization is invited", async () => {
+  it("returns to the invited organization's active context", async () => {
     mocks.cookies.mockResolvedValue({
       get: vi.fn((name: string) => {
         if (name === "takodu.access_token") return { value: "token" };
@@ -80,9 +78,7 @@ describe("resolveConfigurationBackHref", () => {
         return null;
       }),
     });
-    mocks.planHome.handle.mockResolvedValue("/access-denied");
-
-    await expect(resolveConfigurationBackHref()).resolves.toBe("/access-denied");
+    await expect(resolveConfigurationBackHref()).resolves.toBe("/?organizationId=org-1&establishmentId=est-1");
   });
 
   it("falls back to the plan home route when there is no active organization", async () => {
