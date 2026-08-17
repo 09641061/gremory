@@ -79,17 +79,7 @@ export function MemberRow({
         <div className="min-w-0">
           <div className="flex min-w-0 items-center gap-2">
             <span className="truncate text-[15px] text-foreground">{member.name ?? "—"}</span>
-            {isCurrentUser ? (
-              <span className="rounded-full border border-border/60 bg-muted px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
-                You
-              </span>
-            ) : null}
           </div>
-          {isOwner ? (
-            <span className="mt-1 inline-flex rounded-full border border-amber-500/20 bg-amber-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-700">
-              OWNER
-            </span>
-          ) : null}
         </div>
       </div>
       <span className="truncate text-[15px] text-muted-foreground">{member.email}</span>
