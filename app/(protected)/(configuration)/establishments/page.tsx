@@ -37,9 +37,15 @@ export default async function EstablishmentsRoutePage({ searchParams }: Establis
         photoUrl: establishment.photoUrl ?? null,
         timeZone: establishment.timeZone ?? null,
       }))}
-      canUpdateMap={Object.fromEntries(
-        workspace.establishments.map((establishment) => [establishment.id, establishment.canUpdate === true]),
-      )}
+       canUpdateMap={Object.fromEntries(
+         workspace.establishments.map((establishment) => [establishment.id, establishment.canUpdate === true]),
+       )}
+       canDeleteMap={Object.fromEntries(
+         workspace.establishments.map((establishment) => [
+           establishment.id,
+           workspace.organization?.id === workspace.ownedOrganizationId && establishment.canDelete === true,
+         ]),
+       )}
       defaultCanUpdate={false}
       canCreate={workspace.canCreateEstablishment}
     />
