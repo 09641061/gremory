@@ -10,6 +10,12 @@ vi.mock("@/contexts/scheduling/infrastructure/gateways/scheduling-api.gateway", 
   },
 }));
 
+vi.mock("@/contexts/workforce/application/internal/queryservices/team-query.service", () => ({
+  createTeamQueryService: () => ({
+    list: vi.fn().mockRejectedValue(new Error("roster unavailable")),
+  }),
+}));
+
 import { loadSchedulingMembers } from "@/contexts/scheduling/application/internal/queryservices/scheduling-members.query.service";
 
 describe("loadSchedulingMembers", () => {

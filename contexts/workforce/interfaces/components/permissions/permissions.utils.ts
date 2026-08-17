@@ -29,6 +29,27 @@ export function permissionLabel(permission: string) {
     .join(" ");
 }
 
+export function permissionDescription(permission: string) {
+  const descriptions: Record<string, string> = {
+    "business:read": "Can view the organization and its establishments.",
+    "business:manage": "Can edit organization and establishment settings.",
+    "workforce:read": "Can view team members.",
+    "workforce:invite": "Can invite users to the team.",
+    "workforce:manage_members": "Can manage team memberships.",
+    "workforce:manage_roles": "Can create, edit, and assign roles.",
+    "workforce:manage": "Can manage team members and roles.",
+    "scheduling:read": "Can open the scheduling page and view appointments.",
+    "scheduling:manage": "Can create and manage appointments.",
+    "catalog:read": "Can open and view the catalog.",
+    "catalog:manage": "Can create and manage catalog items.",
+    "crm:read": "Can open and view customers.",
+    "crm:manage": "Can create and manage customers.",
+    "analytics:read": "Can open and view analytics.",
+  };
+
+  return descriptions[permission] ?? "Allows this capability in the workspace.";
+}
+
 function formatPermissionGroupLabel(context: string) {
   if (context === "business") return "Organization";
   if (context === "workforce") return "Team";

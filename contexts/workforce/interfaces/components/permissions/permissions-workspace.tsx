@@ -25,6 +25,7 @@ import {
   groupPermissions,
   permissionGroupPriority,
   permissionLabel,
+  permissionDescription,
 } from "./permissions.utils";
 
 interface PermissionsWorkspaceProps {
@@ -344,10 +345,11 @@ function renderPermissionToggle(
         checked ? "border-primary/40 bg-accent/50" : "border-border hover:bg-muted/40"
       }`}
     >
-      <span className="min-w-0 space-y-1">
-        <span className="block text-sm font-medium text-foreground">{permissionLabel(permission)}</span>
-        <span className="block truncate text-xs text-muted-foreground">{permission}</span>
-      </span>
+        <span className="min-w-0 space-y-1">
+          <span className="block text-sm font-medium text-foreground">{permissionLabel(permission)}</span>
+          <span className="block truncate text-xs text-muted-foreground">{permission}</span>
+          <span className="block text-xs text-muted-foreground">{permissionDescription(permission)}</span>
+        </span>
       <Switch
         disabled={!editable}
         checked={checked}
