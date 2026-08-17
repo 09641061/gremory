@@ -14,6 +14,10 @@ vi.mock("@/contexts/business/interfaces/actions/establishment.actions", () => ({
     status: "success",
     error: null,
   }),
+  deleteEstablishmentAction: vi.fn().mockResolvedValue({
+    status: "success",
+    error: null,
+  }),
 }));
 
 describe("EstablishmentDetailCard Component", () => {
