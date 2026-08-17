@@ -68,24 +68,34 @@ export function OrganizationDetailCard({
       <div className="ml-3 mt-3 rounded-2xl border border-border bg-card shadow-sm">
         <div className="flex items-center justify-between border-b border-border px-4 py-3">
           <div>
-            <p className="text-sm font-semibold text-foreground">Establishments</p>
+            <p className="text-sm font-semibold text-foreground">Accessible establishments</p>
             <p className="text-xs text-muted-foreground">
-              {selectedEstablishments.length} in this organization
+              {selectedEstablishments.length === 0
+                ? "No establishments assigned"
+                : `You have access to ${selectedEstablishments.length} establishment${
+                    selectedEstablishments.length === 1 ? "" : "s"
+                  }`}
             </p>
           </div>
           <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
-            {organization.organizationId === ownedOrganizationId ? "Yours" : "Shared"}
+            {organization.organizationId === ownedOrganizationId ? "Yours" : "Member"}
           </span>
         </div>
 
         {selectedEstablishments.length === 0 ? (
           <div className="p-5">
             <div className="rounded-xl border border-dashed border-border bg-muted/30 p-5">
-              <p className="text-sm font-medium text-foreground">No establishments yet</p>
-              <p className="mt-1 text-sm text-muted-foreground">
-                This organization is ready, but it still does not have any locations.
-              </p>
-              {organization.organizationId === ownedOrganizationId ? (
+                <p className="text-sm font-medium text-foreground">
+                  {organization.organizationId === ownedOrganizationId
+                    ? "No establishments yet"
+                    : "No establishments assigned"}
+                </p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {organization.organizationId === ownedOrganizationId
+                    ? "Create an establishment to start using this organization."
+                    : "You currently do not have access to any establishment in this organization."}
+                </p>
+                {organization.canCreateEstablishment ? (
                 <div className="mt-4 flex justify-end">
                   <Link
                     href={`/establishments/new?organizationId=${encodeURIComponent(
@@ -104,7 +114,9 @@ export function OrganizationDetailCard({
             {selectedEstablishments.map((establishment) => (
               <Link
                 key={establishment.id}
-                href={`/establishments?establishmentId=${encodeURIComponent(establishment.id)}`}
+                href={`/establishments?organizationId=${encodeURIComponent(
+                  organization.organizationId,
+                )}&establishmentId=${encodeURIComponent(establishment.id)}`}
                 className="flex items-center gap-3 border-b border-border px-4 py-3 transition-colors last:border-b-0 hover:bg-muted/40"
               >
                 <Avatar className="size-9">
@@ -118,9 +130,7 @@ export function OrganizationDetailCard({
                 </Avatar>
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium text-foreground">{establishment.name}</p>
-                  <p className="truncate text-xs text-muted-foreground">
-                    Open this location in the app
-                  </p>
+                    <p className="truncate text-xs text-muted-foreground">Open accessible establishment</p>
                 </div>
               </Link>
             ))}

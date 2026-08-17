@@ -73,7 +73,7 @@ export function OrganizationListCard({
                     </p>
                     <p className="truncate text-xs text-muted-foreground">
                       {org.establishments.length === 0
-                        ? "No establishments yet"
+                        ? "No accessible establishments"
                         : `${org.establishments.length} establishment${
                             org.establishments.length === 1 ? "" : "s"
                           }`}

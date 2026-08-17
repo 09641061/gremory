@@ -40,6 +40,7 @@ export default async function OrganizationsRoutePage({ searchParams }: Organizat
       organizationName: organization.name,
       organizationImageUrl: organization.imageUrl,
       canUpdate: organization.permissions.canUpdate,
+      canCreateEstablishment: organization.permissions.canCreateEstablishment,
       establishments: organization.establishments.map((establishment) => ({
         id: establishment.id,
         name: establishment.name,

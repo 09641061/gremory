@@ -55,6 +55,7 @@ export type WorkspaceNavigationOrganizationGroup = Readonly<{
   organizationImageUrl: string | null;
   establishments: ReadonlyArray<WorkspaceNavigationGroupedEstablishment>;
   canUpdate?: boolean;
+  canCreateEstablishment?: boolean;
 }>;
 
 /**
