@@ -22,18 +22,25 @@ import {
 } from "../../interfaces/rest/schemas/workforce-role.schemas";
 
 export class WorkforceRoleApiGateway implements WorkforceRoleRepository {
-  constructor(private readonly providedToken?: string) {}
+  constructor(
+    private readonly providedToken?: string,
+    private readonly organizationId?: string,
+  ) {}
+
+  private tenantHeaders() {
+    return this.organizationId ? { "X-Organization-Id": this.organizationId } : undefined;
+  }
 
   async list() {
     const token = await requireTeamAccessToken(this.providedToken);
-    const response = await teamGet<unknown>(apiConfig.routes.workforce.roles, token);
+    const response = await teamGet<unknown>(apiConfig.routes.workforce.roles, token, this.tenantHeaders());
     const page = workforceRolePageResourceSchema.parse(response);
     return workforceRoleResourcesSchema.parse(page.content).map(toRole);
   }
 
   async permissions() {
     const token = await requireTeamAccessToken(this.providedToken);
-    const response = await teamGet<unknown>(apiConfig.routes.workforce.rolePermissions, token);
+    const response = await teamGet<unknown>(apiConfig.routes.workforce.rolePermissions, token, this.tenantHeaders());
     return workforceRolePermissionsSchema.parse(response);
   }
 
@@ -43,7 +50,12 @@ export class WorkforceRoleApiGateway implements WorkforceRoleRepository {
       name: role.getName(),
       position: role.id === null || role.position === 2_147_483_647 ? undefined : role.position,
     });
-    const response = await teamPost<unknown>(apiConfig.routes.workforce.roles, body, token);
+    const response = await teamPost<unknown>(
+      apiConfig.routes.workforce.roles,
+      body,
+      token,
+      this.tenantHeaders(),
+    );
     return toRole(workforceRoleResourceSchema.parse(response));
   }
 
@@ -58,6 +70,7 @@ export class WorkforceRoleApiGateway implements WorkforceRoleRepository {
       `${apiConfig.routes.workforce.roles}/${encodeURIComponent(command.roleId)}`,
       body,
       token,
+      this.tenantHeaders(),
     );
     return toRole(workforceRoleResourceSchema.parse(response));
   }
@@ -67,6 +80,7 @@ export class WorkforceRoleApiGateway implements WorkforceRoleRepository {
     await teamDelete(
       `${apiConfig.routes.workforce.roles}/${encodeURIComponent(command.roleId)}`,
       token,
+      this.tenantHeaders(),
     );
   }
 
@@ -76,6 +90,7 @@ export class WorkforceRoleApiGateway implements WorkforceRoleRepository {
       `${apiConfig.routes.workforce.roles}/members/${encodeURIComponent(command.memberId)}`,
       { roleId: command.roleId },
       token,
+      this.tenantHeaders(),
     );
   }
 
@@ -84,6 +99,7 @@ export class WorkforceRoleApiGateway implements WorkforceRoleRepository {
     await teamDelete(
       `${apiConfig.routes.workforce.roles}/members/${encodeURIComponent(command.memberId)}/${encodeURIComponent(command.roleId)}`,
       token,
+      this.tenantHeaders(),
     );
   }
 }

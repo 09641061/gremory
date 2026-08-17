@@ -224,6 +224,36 @@ describe("IAM session proxy", () => {
     expect(response.headers.get("location")).toBe("http://localhost/establishments/new");
   });
 
+  it("should ignore and clear a stale establishment cookie during organization onboarding", async () => {
+    const fetchMock = stubFetch(
+      subscription(0),
+      workspace({
+        onboardingStatus: "ORGANIZATION_PENDING",
+        onboardingCompleted: false,
+        organization: null,
+        establishments: [],
+        activeEstablishmentId: null,
+        subscription: null,
+      }),
+    );
+
+    const response = await proxy(
+      requestWithSession("access-token", "refresh-token", "/organizations/new", {
+        "takodu.active_establishment_id": establishmentId,
+      }),
+    );
+
+    expect(response.status).toBe(200);
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      2,
+      "http://localhost:8080/api/business/workspace",
+      expect.objectContaining({
+        headers: { Authorization: "Bearer access-token" },
+      }),
+    );
+    expect(response.cookies.get("takodu.active_establishment_id")?.value).toBe("");
+  });
+
   it("should keep the upgrade page available for authenticated users", async () => {
     const response = await proxy(requestWithSession("access-token", "refresh-token", "/upgrade"));
 

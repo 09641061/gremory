@@ -28,7 +28,7 @@ export default async function CatalogPage({ searchParams }: CatalogPageProps) {
     canDeleteService,
   } = await policyService.getPermissions(establishmentId);
 
-  if (!canReadCatalog) {
+  if (!canReadCatalog || !workspace.organization) {
     redirect("/access-denied");
   }
 
@@ -36,8 +36,8 @@ export default async function CatalogPage({ searchParams }: CatalogPageProps) {
   let services: DetailedServiceDTO[] = [];
 
   if (establishmentId) {
-    const categoryQueryService = createServiceCategoryQueryService();
-    const serviceQueryService = createCatalogServiceQueryService();
+    const categoryQueryService = createServiceCategoryQueryService(workspace.organization.id);
+    const serviceQueryService = createCatalogServiceQueryService(workspace.organization.id);
     const [categoriesPage, servicesPage] = await Promise.all([
       categoryQueryService.list(establishmentId, 0, 100),
       serviceQueryService.search({ establishmentId, page: 0, size: 100 }),

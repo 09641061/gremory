@@ -26,34 +26,41 @@ export function teamRequest<T>(
   });
 }
 
-export function teamGet<T>(path: string, token?: string): Promise<T> {
-  return teamRequest<T>(path, { method: "GET", token });
+export function teamGet<T>(
+  path: string,
+  token?: string,
+  headers?: HeadersInit,
+): Promise<T> {
+  return teamRequest<T>(path, { method: "GET", token, headers });
 }
 
 export function teamPost<T>(
   path: string,
   body: unknown,
   token?: string,
+  headers?: HeadersInit,
 ): Promise<T> {
-  return teamRequest<T>(path, { method: "POST", body, token });
+  return teamRequest<T>(path, { method: "POST", body, token, headers });
 }
 
 export function teamPut<T>(
   path: string,
   body: unknown,
   token?: string,
+  headers?: HeadersInit,
 ): Promise<T> {
-  return teamRequest<T>(path, { method: "PUT", body, token });
+  return teamRequest<T>(path, { method: "PUT", body, token, headers });
 }
 
 export function teamPatch<T>(
   path: string,
   body: unknown,
   token?: string,
+  headers?: HeadersInit,
 ): Promise<T> {
-  return teamRequest<T>(path, { method: "PATCH", body, token });
+  return teamRequest<T>(path, { method: "PATCH", body, token, headers });
 }
 
-export function teamDelete(path: string, token: string): Promise<void> {
-  return teamRequest<void>(path, { method: "DELETE", token });
+export function teamDelete(path: string, token: string, headers?: HeadersInit): Promise<void> {
+  return teamRequest<void>(path, { method: "DELETE", token, headers });
 }

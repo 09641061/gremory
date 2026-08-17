@@ -22,6 +22,7 @@ export default async function CrmPage({ searchParams }: CrmPageProps) {
 
   const { establishmentId, permissions, customersPage, searchFailed } = await getCrmPageData(
     params.establishmentId ?? workspace.activeEstablishmentId,
+    workspace.organization?.id,
     search,
     page,
     size

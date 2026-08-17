@@ -66,7 +66,7 @@ describe("Business command services", () => {
     vi.spyOn(repository, "findById").mockResolvedValue(current);
     vi.spyOn(repository, "save").mockImplementation(async (value) => value);
     const photos = establishmentPhotoStorage();
-    vi.spyOn(photos, "upload").mockResolvedValue(
+    const upload = vi.spyOn(photos, "upload").mockResolvedValue(
       createEstablishmentPhoto("https://cdn.example.com/stored.png"),
     );
 
@@ -76,6 +76,10 @@ describe("Business command services", () => {
       photoFile: new File(["photo"], "photo.png", { type: "image/png" }),
     });
 
+    expect(upload).toHaveBeenCalledWith(
+      expect.any(File),
+      expect.objectContaining({ value: organizationId }),
+    );
     expect(current.photoUrl.value).toBe("https://cdn.example.com/stored.png");
   });
 

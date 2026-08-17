@@ -33,6 +33,12 @@ async function resolveAccessToken(providedToken?: string): Promise<string | unde
 export class SchedulingApiGateway
   implements SchedulingCommandService, SchedulingQueryService
 {
+  constructor(private readonly organizationId?: string) {}
+
+  private tenantHeaders() {
+    return this.organizationId ? { "X-Organization-Id": this.organizationId } : undefined;
+  }
+
   async createAppointment(
     command: CreateAppointmentCommand,
     token?: string
@@ -211,6 +217,7 @@ export class SchedulingApiGateway
       `${apiConfig.routes.scheduling.appointments}/employees?establishmentId=${encodeURIComponent(establishmentId)}`,
       {
         token: authToken,
+        headers: this.tenantHeaders(),
         errorMessage: "Failed to fetch scheduling employees",
         errorType: SchedulingApiError,
       }

@@ -50,6 +50,17 @@ vi.mock(
   }),
 );
 
+vi.mock(
+  "@/contexts/business/application/internal/queryservices/business-workspace-query.service",
+  () => ({
+    createBusinessWorkspaceQueryService: () => ({
+      getHeaderViewModel: vi.fn().mockResolvedValue({
+        organization: { id: "44444444-4444-4444-8444-444444444444" },
+      }),
+    }),
+  }),
+);
+
 describe("workforce routes", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -77,6 +88,7 @@ describe("workforce routes", () => {
     expect(await response.json()).toEqual(page);
     expect(mocks.requireToken).toHaveBeenCalledTimes(1);
     expect(mocks.queryService.list).toHaveBeenCalledWith({
+      organizationId: "44444444-4444-4444-8444-444444444444",
       establishmentId: ESTABLISHMENT_ID,
       status: "PENDING",
       page: 0,

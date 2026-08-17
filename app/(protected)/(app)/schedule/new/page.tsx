@@ -18,11 +18,14 @@ export default async function NewAppointmentPage({ searchParams }: NewAppointmen
 
   const { canCreateAppointment } = await policyService.getPermissions(establishmentId);
 
-  if (!canCreateAppointment || !establishmentId) {
+  if (!canCreateAppointment || !establishmentId || !workspace.organization) {
     redirect("/access-denied");
   }
 
-  const { services, members, customers } = await loadSchedulingPageData(establishmentId);
+  const { services, members, customers } = await loadSchedulingPageData(
+    establishmentId,
+    workspace.organization.id,
+  );
   const establishment = await createEstablishmentQueryService().getById({ id: establishmentId });
   const timeZone = establishment?.timeZone ?? "UTC";
 

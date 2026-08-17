@@ -22,6 +22,7 @@ export class TeamQueryServiceImpl implements TeamQueryService {
   async list(query: ListTeamUsersQuery = {}) {
     const validated = listTeamUsersQuery(query);
     const page = await this.team.list({
+      organizationId: validated.organizationId,
       establishmentId: validated.establishmentId
         ? createTeamEstablishmentId(validated.establishmentId)
         : undefined,

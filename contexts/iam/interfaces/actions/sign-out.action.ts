@@ -4,6 +4,7 @@ import "server-only";
 import { cookies } from "next/headers";
 import { createIamAuthenticationCommandService } from "../../application/internal/commandservices/iam-authentication-command.service";
 import { iamSessionCookies } from "../../infrastructure/session/iam-session-cookie";
+import { workspaceSelectionCookies } from "@/contexts/business/infrastructure/session/workspace-selection-cookie";
 import { signOutSchema } from "../rest/schemas/sign-out.schema";
 
 export type SignOutActionResult =
@@ -25,6 +26,7 @@ export async function signOutAction(): Promise<SignOutActionResult> {
     await createIamAuthenticationCommandService().signOut(input.data);
     cookieStore.delete(iamSessionCookies.accessToken);
     cookieStore.delete(iamSessionCookies.refreshToken);
+    cookieStore.delete(workspaceSelectionCookies.establishmentId);
     return { status: "success", error: null };
   } catch (error) {
     console.error("Sign out failed", error);

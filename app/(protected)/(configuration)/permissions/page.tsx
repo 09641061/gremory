@@ -15,7 +15,10 @@ export default async function PermissionsPage({ searchParams }: PermissionsPageP
   const query = await searchParams;
   const workspace = await createBusinessWorkspaceQueryService().getHeaderViewModel(query);
   const { establishmentId: paramEstId } = query;
-  const queryService = createWorkforceRoleQueryService();
+  const queryService = createWorkforceRoleQueryService(
+    undefined,
+    workspace.organization?.id,
+  );
 
   const policyService = createWorkforceAccessPolicyService();
   const establishmentId = paramEstId ?? workspace.activeEstablishmentId;
@@ -29,7 +32,13 @@ export default async function PermissionsPage({ searchParams }: PermissionsPageP
   let members: Awaited<ReturnType<ReturnType<typeof createTeamQueryService>["list"]>>["content"] = [];
 
   if (establishmentId) {
-    members = (await createTeamQueryService().list({ establishmentId, size: 100 })).content;
+    members = (
+      await createTeamQueryService().list({
+        organizationId: workspace.organization?.id,
+        establishmentId,
+        size: 100,
+      })
+    ).content;
   }
 
   const [roleEntities, permissions] = await Promise.all([

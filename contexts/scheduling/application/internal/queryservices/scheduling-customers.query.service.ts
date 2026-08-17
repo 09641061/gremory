@@ -4,10 +4,11 @@ import { CrmApiGateway } from "@/contexts/crm/infrastructure/gateways/crm-api.ga
 import type { SchedulingCustomerViewModel } from "../../model/scheduling-page-data.view-model";
 
 export async function loadSchedulingCustomers(
-  establishmentId: string
+  establishmentId: string,
+  organizationId: string,
 ): Promise<SchedulingCustomerViewModel[]> {
   try {
-    const crmApiGateway = new CrmApiGateway();
+    const crmApiGateway = new CrmApiGateway(organizationId);
     const customersPage = await crmApiGateway.search(establishmentId, undefined, 0, 100);
 
     return customersPage.content.map((customer) => ({

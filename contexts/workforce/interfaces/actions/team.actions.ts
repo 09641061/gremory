@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { createBusinessWorkspaceQueryService } from "@/contexts/business/application/internal/queryservices/business-workspace-query.service";
 import { createTeamCommandService } from "../../application/internal/commandservices/team-command.service";
 import {
   acceptTeamInvitationCommand,
@@ -31,7 +32,8 @@ export async function inviteTeamUserAction(
   if (!parsed.success) return teamActionError(parsed.error.issues[0]?.message);
 
   try {
-    const service = createTeamCommandService(await requireTeamAccessToken());
+    const organizationId = await resolveOrganizationId(parsed.data.establishmentId);
+    const service = createTeamCommandService(await requireTeamAccessToken(), organizationId);
     const invitationId = await service.invite(inviteTeamUserCommand(parsed.data));
     revalidateTeamView();
     return {
@@ -52,7 +54,10 @@ export async function revokeTeamInvitationAction(
   if (!parsed.success) return teamActionError(parsed.error.issues[0]?.message);
 
   try {
-    const service = createTeamCommandService(await requireTeamAccessToken());
+    const service = createTeamCommandService(
+      await requireTeamAccessToken(),
+      await resolveOrganizationId(),
+    );
     await service.revokeInvitation(
       revokeTeamInvitationCommand({ invitationId: parsed.data }),
     );
@@ -71,7 +76,10 @@ export async function removeTeamMemberAction(
   if (!parsed.success) return teamActionError(parsed.error.issues[0]?.message);
 
   try {
-    const service = createTeamCommandService(await requireTeamAccessToken());
+    const service = createTeamCommandService(
+      await requireTeamAccessToken(),
+      await resolveOrganizationId(),
+    );
     await service.removeMember(removeTeamMemberCommand({ memberId: parsed.data }));
     revalidateTeamView();
     return { status: "success", data: null, error: null };
@@ -88,7 +96,10 @@ export async function acceptTeamInvitationAction(
   if (!parsed.success) return teamActionError(parsed.error.issues[0]?.message);
 
   try {
-    const service = createTeamCommandService(await requireTeamAccessToken());
+    const service = createTeamCommandService(
+      await requireTeamAccessToken(),
+      await resolveOrganizationId(),
+    );
     const memberId = await service.acceptInvitation(
       acceptTeamInvitationCommand({ token: parsed.data }),
     );
@@ -112,7 +123,10 @@ export async function acceptPendingInvitationAction(
 ): Promise<TeamActionResult> {
   void previous;
   try {
-    const service = createTeamCommandService(await requireTeamAccessToken());
+    const service = createTeamCommandService(
+      await requireTeamAccessToken(),
+      await resolveOrganizationId(),
+    );
     const memberId = await service.acceptPendingInvitation();
     revalidateTeamView();
     return {
@@ -123,6 +137,13 @@ export async function acceptPendingInvitationAction(
   } catch (error) {
     return teamActionError(error);
   }
+}
+
+async function resolveOrganizationId(establishmentId?: string): Promise<string | undefined> {
+  const workspace = await createBusinessWorkspaceQueryService().getHeaderViewModel(
+    establishmentId ? { establishmentId } : {},
+  );
+  return workspace.organization?.id;
 }
 
 function revalidateTeamView() {

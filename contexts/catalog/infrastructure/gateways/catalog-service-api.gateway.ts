@@ -64,6 +64,12 @@ async function resolveAccessToken(providedToken?: string): Promise<string | unde
 export class CatalogServiceApiGateway
   implements CatalogServiceCommandService
 {
+  constructor(private readonly organizationId?: string) {}
+
+  private tenantHeaders() {
+    return this.organizationId ? { "X-Organization-Id": this.organizationId } : undefined;
+  }
+
   async search(
     params: CatalogServiceSearchParams,
     token?: string
@@ -85,6 +91,7 @@ export class CatalogServiceApiGateway
       `${apiConfig.routes.catalogServices}?${query}`,
       {
         token: authToken,
+        headers: this.tenantHeaders(),
         errorMessage: "Failed to fetch catalog services",
       },
     );

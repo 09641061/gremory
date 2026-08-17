@@ -19,6 +19,9 @@ export default async function SchedulePage({ searchParams }: SchedulePageProps) 
   if (!establishmentId) {
     redirect("/establishments/new");
   }
+  if (!workspace.organization) {
+    redirect("/access-denied");
+  }
 
   const {
     canReadAppointments,
@@ -33,7 +36,10 @@ export default async function SchedulePage({ searchParams }: SchedulePageProps) 
 
   const establishment = await createEstablishmentQueryService().getById({ id: establishmentId });
   const timeZone = establishment?.timeZone ?? "UTC";
-  const { services, members, customers } = await loadSchedulingPageData(establishmentId);
+  const { services, members, customers } = await loadSchedulingPageData(
+    establishmentId,
+    workspace.organization.id,
+  );
 
   return (
     <main className="flex min-h-0 flex-1 flex-col px-4 py-4 md:px-6 lg:px-8 lg:py-6">

@@ -4,10 +4,11 @@ import { createCatalogServiceQueryService } from "@/contexts/catalog/application
 import type { SchedulingServiceViewModel } from "../../model/scheduling-page-data.view-model";
 
 export async function loadSchedulingServices(
-  establishmentId: string
+  establishmentId: string,
+  organizationId: string,
 ): Promise<SchedulingServiceViewModel[]> {
   try {
-    const serviceQueryService = createCatalogServiceQueryService();
+    const serviceQueryService = createCatalogServiceQueryService(organizationId);
     const servicesPage = await serviceQueryService.search({ establishmentId, page: 0, size: 100 });
 
     return servicesPage.content.map((service) => ({

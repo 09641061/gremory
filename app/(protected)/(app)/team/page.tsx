@@ -29,7 +29,13 @@ export default async function TeamPage({ searchParams }: TeamPageProps) {
 
   let members: Awaited<ReturnType<ReturnType<typeof createTeamQueryService>["list"]>>["content"] = [];
   if (establishmentId) {
-    members = (await createTeamQueryService().list({ establishmentId, size: 100 })).content;
+    members = (
+      await createTeamQueryService().list({
+        organizationId: workspace.organization?.id,
+        establishmentId,
+        size: 100,
+      })
+    ).content;
   }
   return (
     <TeamPageView

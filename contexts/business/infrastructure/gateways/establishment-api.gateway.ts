@@ -39,6 +39,7 @@ export class EstablishmentApiGateway implements EstablishmentRepository {
         timeZone,
       },
       authToken,
+      { "X-Organization-Id": organizationId.value },
     );
     return toEstablishment(resource);
   }
@@ -69,7 +70,8 @@ export class EstablishmentApiGateway implements EstablishmentRepository {
     });
     const resource = await businessGet<PageResource<EstablishmentResource>>(
       `${apiConfig.routes.establishments}/organization/${encodeURIComponent(organizationId.value)}?${params}`,
-      authToken
+      authToken,
+      { "X-Organization-Id": organizationId.value },
     );
     return {
       ...resource,
@@ -87,7 +89,8 @@ export class EstablishmentApiGateway implements EstablishmentRepository {
         timeZone: establishment.timeZone,
         ownerAvailableForScheduling: establishment.ownerAvailableForScheduling,
       },
-      authToken
+      authToken,
+      { "X-Organization-Id": establishment.organizationId.value },
     );
     return toEstablishment(resource);
   }

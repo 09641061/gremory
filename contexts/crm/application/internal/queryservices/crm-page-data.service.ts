@@ -22,6 +22,7 @@ export interface CrmPageData {
 
 export async function getCrmPageData(
   requestedEstablishmentId: string | undefined,
+  organizationId: string | undefined,
   search: string,
   page: number,
   size: number
@@ -36,7 +37,7 @@ export async function getCrmPageData(
   }
 
   try {
-    const queryService = createCrmQueryService();
+    const queryService = createCrmQueryService(organizationId);
     const customersPage = await queryService.search(establishmentId, search, page, size);
     return { establishmentId, permissions, customersPage, searchFailed: false };
   } catch (error) {

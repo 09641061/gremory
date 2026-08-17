@@ -43,6 +43,12 @@ async function resolveAccessToken(providedToken?: string): Promise<string | unde
 export class ServiceCategoryApiGateway
   implements ServiceCategoryCommandService
 {
+  constructor(private readonly organizationId?: string) {}
+
+  private tenantHeaders() {
+    return this.organizationId ? { "X-Organization-Id": this.organizationId } : undefined;
+  }
+
   async list(
     establishmentId: string,
     page = 0,
@@ -59,6 +65,7 @@ export class ServiceCategoryApiGateway
       `${apiConfig.routes.catalogCategories}?${query}`,
       {
         token: authToken,
+        headers: this.tenantHeaders(),
         errorMessage: "Failed to list categories",
       },
     );

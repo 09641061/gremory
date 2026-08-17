@@ -3,6 +3,7 @@ import "server-only";
 import type { EstablishmentPhotoStorage } from "@/contexts/business/application/services/business.services";
 import { EstablishmentApiGateway } from "@/contexts/business/infrastructure/gateways/establishment-api.gateway";
 import type { EstablishmentId } from "@/contexts/business/domain/model/valueobjects/establishment-id.vo";
+import type { OrganizationId } from "@/contexts/business/domain/model/valueobjects/organization-id.vo";
 import {
   createEstablishmentPhoto,
   type EstablishmentPhoto,
@@ -19,7 +20,7 @@ type EstablishmentPhotoUploadResponse = {
 export class EstablishmentPhotoAdapter implements EstablishmentPhotoStorage {
   constructor(private readonly providedToken?: string) {}
 
-  async upload(photo: File): Promise<EstablishmentPhoto> {
+  async upload(photo: File, organizationId: OrganizationId): Promise<EstablishmentPhoto> {
     const authToken = await requireBusinessAccessToken(this.providedToken);
     const formData = new FormData();
     formData.set("file", photo);
@@ -28,6 +29,7 @@ export class EstablishmentPhotoAdapter implements EstablishmentPhotoStorage {
       method: "POST",
       headers: {
         Authorization: `Bearer ${authToken}`,
+        "X-Organization-Id": organizationId.value,
       },
       body: formData,
     });

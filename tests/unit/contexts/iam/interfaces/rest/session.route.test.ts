@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import { createSessionRoute, clearSessionRoute } from "@/contexts/iam/interfaces/rest/routes/session.route";
 import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-session-cookie";
+import { workspaceSelectionCookies } from "@/contexts/business/infrastructure/session/workspace-selection-cookie";
 
 vi.mock("next/headers", () => ({ cookies: vi.fn() }));
 
@@ -26,7 +27,8 @@ describe("IAM session route", () => {
     await clearSessionRoute();
     expect(cookieStore.delete).toHaveBeenCalledWith(iamSessionCookies.pendingEmail);
     expect(cookieStore.delete).toHaveBeenCalledWith(iamSessionCookies.returnTo);
-    expect(cookieStore.delete).toHaveBeenCalledTimes(4);
+    expect(cookieStore.delete).toHaveBeenCalledWith(workspaceSelectionCookies.establishmentId);
+    expect(cookieStore.delete).toHaveBeenCalledTimes(5);
   });
 
   it("should only create access and refresh cookies", async () => {

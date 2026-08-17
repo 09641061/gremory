@@ -23,18 +23,18 @@ export async function businessRequest<T>(path: string, options: BusinessRequestO
   });
 }
 
-export function businessGet<T>(path: string, token?: string): Promise<T> {
-  return businessRequest<T>(path, { method: "GET", token });
+export function businessGet<T>(path: string, token?: string, headers?: HeadersInit): Promise<T> {
+  return businessRequest<T>(path, { method: "GET", token, headers });
 }
 
-export function businessPost<T>(path: string, body: unknown, token?: string): Promise<T> {
-  return businessRequest<T>(path, { method: "POST", body, token });
+export function businessPost<T>(path: string, body: unknown, token?: string, headers?: HeadersInit): Promise<T> {
+  return businessRequest<T>(path, { method: "POST", body, token, headers });
 }
 
-export function businessPut<T>(path: string, body: unknown, token?: string): Promise<T> {
-  return businessRequest<T>(path, { method: "PUT", body, token });
+export function businessPut<T>(path: string, body: unknown, token?: string, headers?: HeadersInit): Promise<T> {
+  return businessRequest<T>(path, { method: "PUT", body, token, headers });
 }
 
-export function businessDelete(path: string, token?: string): Promise<void> {
-  return businessRequest<void>(path, { method: "DELETE", token });
+export function businessDelete(path: string, token?: string, headers?: HeadersInit): Promise<void> {
+  return businessRequest<void>(path, { method: "DELETE", token, headers });
 }

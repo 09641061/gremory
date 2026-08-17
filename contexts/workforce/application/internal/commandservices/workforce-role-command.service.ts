@@ -46,6 +46,7 @@ export class WorkforceRoleCommandServiceImpl implements WorkforceRoleCommandServ
 
 export function createWorkforceRoleCommandService(
   token?: string,
+  organizationId?: string,
 ): WorkforceRoleCommandService {
-  return new WorkforceRoleCommandServiceImpl(new WorkforceRoleApiGateway(token));
+  return new WorkforceRoleCommandServiceImpl(new WorkforceRoleApiGateway(token, organizationId));
 }

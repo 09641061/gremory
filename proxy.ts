@@ -54,7 +54,7 @@ export async function proxy(request: NextRequest) {
     // Without this, landing always resolved the account's default identity -
     // its own organization if it owns one - overriding a member's actual,
     // persisted choice to work inside a host organization.
-    establishmentId: resolveEstablishmentSelection(request),
+    establishmentId: resolveEstablishmentSelection(request, !isOnboardingPath(pathname)),
   });
   if (landing.status === "unauthenticated") {
     return redirectToLogin(request);
@@ -125,15 +125,20 @@ async function getSubscriptionSnapshot(accessToken: string): Promise<{
  * the current request carries none - a bare link, a browser back/forward
  * step, or a redirect target that never had the chance to include it.
  */
-function resolveEstablishmentSelection(request: NextRequest): string | undefined {
+function resolveEstablishmentSelection(request: NextRequest, useCookie = true): string | undefined {
   const fromUrl = request.nextUrl.searchParams.get("establishmentId");
   if (fromUrl) return fromUrl;
+  if (!useCookie) return undefined;
   return request.cookies.get(workspaceSelectionCookies.establishmentId)?.value || undefined;
+}
+
+function isOnboardingPath(pathname: string) {
+  return pathname === "/organizations/new" || pathname === "/establishments/new";
 }
 
 function redirectWithCookies(request: NextRequest, path: string, response: NextResponse | null) {
   const redirectUrl = new URL(path, request.url);
-  const establishmentId = resolveEstablishmentSelection(request);
+  const establishmentId = resolveEstablishmentSelection(request, !isOnboardingPath(request.nextUrl.pathname));
   if (establishmentId) redirectUrl.searchParams.set("establishmentId", establishmentId);
 
   const redirectResponse = NextResponse.redirect(redirectUrl);
@@ -142,13 +147,19 @@ function redirectWithCookies(request: NextRequest, path: string, response: NextR
       redirectResponse.cookies.set(cookie);
     }
   }
+  if (isOnboardingPath(request.nextUrl.pathname) && !request.nextUrl.searchParams.has("establishmentId")) {
+    redirectResponse.cookies.delete(workspaceSelectionCookies.establishmentId);
+  }
   persistEstablishmentSelection(request, redirectResponse);
   return redirectResponse;
 }
 
 function continueWithWorkspaceContext(request: NextRequest, response: NextResponse | null) {
   const urlEstablishmentId = request.nextUrl.searchParams.get("establishmentId");
-  const establishmentId = urlEstablishmentId || resolveEstablishmentSelection(request);
+  const establishmentId = urlEstablishmentId || resolveEstablishmentSelection(
+    request,
+    !isOnboardingPath(request.nextUrl.pathname),
+  );
   const forwardedHeaders = new Headers(request.headers);
 
   forwardedHeaders.delete("x-takodu-organization-id");
@@ -164,6 +175,9 @@ function continueWithWorkspaceContext(request: NextRequest, response: NextRespon
     : NextResponse.next({ request: { headers: forwardedHeaders } });
 
   copyResponseCookies(response, nextResponse);
+  if (isOnboardingPath(request.nextUrl.pathname) && !urlEstablishmentId) {
+    nextResponse.cookies.delete(workspaceSelectionCookies.establishmentId);
+  }
   persistEstablishmentSelection(request, nextResponse);
   return nextResponse;
 }

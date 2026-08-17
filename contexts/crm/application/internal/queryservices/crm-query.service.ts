@@ -21,6 +21,6 @@ export class CrmQueryServiceImpl implements CrmQueryService {
   }
 }
 
-export function createCrmQueryService(): CrmQueryService {
-  return new CrmQueryServiceImpl(new CrmApiGateway());
+export function createCrmQueryService(organizationId?: string): CrmQueryService {
+  return new CrmQueryServiceImpl(new CrmApiGateway(organizationId));
 }

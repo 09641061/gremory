@@ -21,6 +21,12 @@ async function resolveAccessToken(providedToken?: string): Promise<string | unde
 }
 
 export class CrmApiGateway implements CrmCommandService, CrmQueryService {
+  constructor(private readonly organizationId?: string) {}
+
+  private tenantHeaders() {
+    return this.organizationId ? { "X-Organization-Id": this.organizationId } : undefined;
+  }
+
   async registerCustomer(command: RegisterCustomerCommand, token?: string): Promise<CustomerResponse> {
     const authToken = await resolveAccessToken(token);
     return apiClient.post<CustomerResponse>(
@@ -90,6 +96,7 @@ export class CrmApiGateway implements CrmCommandService, CrmQueryService {
       `/api/crm/customers?${query.toString()}`,
       {
         token: authToken,
+        headers: this.tenantHeaders(),
         errorMessage: "Failed to search customers",
       }
     );

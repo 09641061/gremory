@@ -18,6 +18,14 @@ vi.mock(
   "@/contexts/workforce/application/internal/commandservices/team-command.service",
   () => ({ createTeamCommandService: mocks.serviceFactory }),
 );
+vi.mock(
+  "@/contexts/business/application/internal/queryservices/business-workspace-query.service",
+  () => ({
+    createBusinessWorkspaceQueryService: () => ({
+      getHeaderViewModel: vi.fn().mockResolvedValue({ organization: { id: "44444444-4444-4444-8444-444444444444" } }),
+    }),
+  }),
+);
 
 import {
   acceptTeamInvitationAction,
@@ -65,7 +73,10 @@ describe("Team server actions", () => {
       }),
     );
 
-    expect(mocks.serviceFactory).toHaveBeenCalledWith("access-token");
+    expect(mocks.serviceFactory).toHaveBeenCalledWith(
+      "access-token",
+      "44444444-4444-4444-8444-444444444444",
+    );
     expect(mocks.service.invite).toHaveBeenCalledWith({
       establishmentId,
       email: "Employee@Example.com",

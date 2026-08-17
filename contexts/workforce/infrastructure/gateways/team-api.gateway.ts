@@ -34,7 +34,14 @@ import { requireTeamAccessToken } from "../session/team-session";
 export { TeamApiError } from "../http/team-api.client";
 
 export class TeamApiGateway implements TeamRepository {
-  constructor(private readonly providedToken?: string) {}
+  constructor(
+    private readonly providedToken?: string,
+    private readonly organizationId?: string,
+  ) {}
+
+  private tenantHeaders() {
+    return this.organizationId ? { "X-Organization-Id": this.organizationId } : undefined;
+  }
 
   async list(criteria: TeamUserCriteria): Promise<TeamPageResult<TeamUser>> {
     const token = await requireTeamAccessToken(this.providedToken);
@@ -46,10 +53,14 @@ export class TeamApiGateway implements TeamRepository {
       params.set("establishmentId", criteria.establishmentId.value);
     }
     if (criteria.status) params.set("status", criteria.status);
+    const headers = criteria.organizationId
+      ? { "X-Organization-Id": criteria.organizationId }
+      : undefined;
 
     const response = await teamGet<unknown>(
       `${apiConfig.routes.workforce.members}?${params}`,
       token,
+      headers,
     );
     const resource = teamPageResourceSchema.parse(response);
     return {
@@ -67,6 +78,7 @@ export class TeamApiGateway implements TeamRepository {
       apiConfig.routes.workforce.invitations,
       { establishmentId: establishmentId.value, email: email.value },
       token,
+      this.tenantHeaders(),
     );
     return createInvitationId(invitationCreatedResourceSchema.parse(response).id);
   }
@@ -76,6 +88,7 @@ export class TeamApiGateway implements TeamRepository {
     await teamDelete(
       `${apiConfig.routes.workforce.invitations}/${encodeURIComponent(invitationId.value)}`,
       token,
+      this.tenantHeaders(),
     );
   }
 
@@ -84,6 +97,7 @@ export class TeamApiGateway implements TeamRepository {
     await teamDelete(
       `${apiConfig.routes.workforce.members}/${encodeURIComponent(memberId.value)}`,
       token,
+      this.tenantHeaders(),
     );
   }
 

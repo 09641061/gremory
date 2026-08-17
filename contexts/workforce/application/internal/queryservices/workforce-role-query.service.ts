@@ -19,6 +19,7 @@ export class WorkforceRoleQueryServiceImpl implements WorkforceRoleQueryService 
 
 export function createWorkforceRoleQueryService(
   token?: string,
+  organizationId?: string,
 ): WorkforceRoleQueryService {
-  return new WorkforceRoleQueryServiceImpl(new WorkforceRoleApiGateway(token));
+  return new WorkforceRoleQueryServiceImpl(new WorkforceRoleApiGateway(token, organizationId));
 }

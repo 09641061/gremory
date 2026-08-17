@@ -22,6 +22,8 @@ export interface TeamPageResult<T> {
 }
 
 export interface TeamUserCriteria {
+  /** Tenant context required by the backend workforce ACL. */
+  organizationId?: string;
   establishmentId?: TeamEstablishmentId;
   status?: WorkforceUserStatus;
   page: number;
