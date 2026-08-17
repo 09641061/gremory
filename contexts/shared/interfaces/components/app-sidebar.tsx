@@ -21,6 +21,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarSeparator,
 } from "@/contexts/shared/interfaces/components/ui/sidebar";
 import { AssistantChatsSection } from "@/contexts/assistant/interfaces/components/sidebar/assistant-chats-section";
 import type { AssistantConversationSummaryReadModel } from "@/contexts/assistant/application/internal/transforms/assistant.read-models";
@@ -89,7 +90,7 @@ export function AppSidebar({
         <WorkspaceSwitcher workspace={workspace} />
       </SidebarHeader>
 
-      <SidebarContent className="px-3 py-3 overflow-hidden">
+      <SidebarContent className="overflow-hidden px-3 py-3">
         <SidebarGroup className="mt-2 p-0">
           <SidebarGroupContent className="shrink-0">
             <SidebarMenu className="gap-(--app-sidebar-menu-gap)">
@@ -127,11 +128,14 @@ export function AppSidebar({
         </SidebarGroup>
 
         {showAssistantSection ? (
-          <AssistantChatsSection
-            key={assistantChatsSectionKey}
-            initialConversations={initialAssistantConversations}
-            establishmentId={establishmentId}
-          />
+          <>
+            <SidebarSeparator className="mx-0 my-2" />
+            <AssistantChatsSection
+              key={assistantChatsSectionKey}
+              initialConversations={initialAssistantConversations}
+              establishmentId={establishmentId}
+            />
+          </>
         ) : null}
       </SidebarContent>
 

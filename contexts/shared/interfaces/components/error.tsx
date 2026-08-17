@@ -120,7 +120,7 @@ function ErrorToast({
       variant="destructive"
       className={cn(
         "!fixed !right-4 !top-4 !z-[9999] w-[calc(100%-2rem)] max-w-sm overflow-hidden",
-        "flex flex-col gap-1 rounded-xl border border-destructive/20 bg-background/95 p-4 shadow-xl backdrop-blur-md",
+        "flex flex-col gap-1 rounded-lg border border-destructive/20 bg-card/95 p-4 shadow-lg backdrop-blur-md",
         "animate-in fade-in slide-in-from-top-2 duration-300 md:slide-in-from-right-2",
         "pr-10",
       )}
@@ -143,7 +143,7 @@ function ErrorToast({
         variant="ghost"
         size="icon-xs"
         onClick={onDismiss}
-        className="absolute top-3 right-3 rounded-lg p-1.5 text-muted-foreground/60 transition-colors hover:bg-muted/50 hover:text-foreground"
+        className="absolute top-3 right-3 rounded-lg p-1.5 text-muted-foreground/60 transition-colors hover:bg-muted/70 hover:text-foreground"
         aria-label="Dismiss alert"
       >
         <X className="size-3.5" />

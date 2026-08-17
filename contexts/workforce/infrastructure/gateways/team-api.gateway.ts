@@ -31,7 +31,7 @@ import {
   teamPageResourceSchema,
   workforceAccessResourceSchema,
 } from "../../interfaces/rest/schemas/team.schemas";
-import { teamDelete, teamGet, teamPost, teamPut } from "../http/team-api.client";
+import { teamDelete, teamGet, teamPost } from "../http/team-api.client";
 import { requireTeamAccessToken } from "../session/team-session";
 export { TeamApiError } from "../http/team-api.client";
 
@@ -178,15 +178,6 @@ export class TeamApiGateway implements TeamRepository {
         effectivePermissions: establishment.effectivePermissions ?? [],
       })),
     };
-  }
-
-  async updateSchedulingAvailability(memberId: MemberId, available: boolean): Promise<void> {
-    const token = await requireTeamAccessToken(this.providedToken);
-    await teamPut<void>(
-      `${apiConfig.routes.workforce.members}/${encodeURIComponent(memberId.value)}/scheduling-availability?available=${available}`,
-      {},
-      token,
-    );
   }
 }
 

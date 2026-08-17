@@ -2,10 +2,10 @@
 
 import Link from "next/link";
 import { Building2 } from "lucide-react";
-import type { OrganizationListItem } from "./organizations-page";
-import { EntityProfileCard } from "@/contexts/business/interfaces/components/entity-profile-card/entity-profile-card";
-import { updateOrganizationAction } from "@/contexts/business/interfaces/actions/organization.actions";
+
 import { canManageOrganization } from "@/contexts/business/domain/services/workspace-navigation.policy";
+import { updateOrganizationAction } from "@/contexts/business/interfaces/actions/organization.actions";
+import { EntityProfileCard } from "@/contexts/business/interfaces/components/entity-profile-card/entity-profile-card";
 import { cn } from "@/lib/utils";
 import {
   Avatar,
@@ -13,6 +13,8 @@ import {
   AvatarImage,
 } from "@/contexts/shared/interfaces/components/ui/avatar";
 import { Store } from "lucide-react";
+
+import type { OrganizationListItem } from "./organizations-page";
 
 interface OrganizationDetailCardProps {
   organization: OrganizationListItem | null;

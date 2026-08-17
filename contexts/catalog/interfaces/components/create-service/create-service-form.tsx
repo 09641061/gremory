@@ -40,9 +40,8 @@ export function CreateServiceForm({ establishmentId, categoryId, onSuccess, onCa
         message={state.status === "error" && !pending ? (state.error ?? undefined) : undefined}
       />
 
-      <div className="bg-background text-foreground flex flex-col">
-        {/* Form Main Canvas */}
-        <main className="flex-1 max-w-[800px] w-full mx-auto px-4 py-8">
+      <div className="w-full bg-background text-foreground">
+        <div className="mx-auto w-full max-w-[800px] px-4 py-8">
           <form action={formAction} id="create-service-form">
             <Card className="rounded-lg border-border bg-card p-6">
               <CardContent className="p-0 space-y-6">
@@ -89,7 +88,7 @@ export function CreateServiceForm({ establishmentId, categoryId, onSuccess, onCa
               </CardContent>
             </Card>
           </form>
-        </main>
+        </div>
       </div>
     </>
   );

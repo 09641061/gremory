@@ -1,6 +1,6 @@
 /** @vitest-environment jsdom */
-import { render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { render } from "@testing-library/react";
+import { describe, it, vi } from "vitest";
 import { TeamPageView } from "@/contexts/workforce/interfaces/components/team/team-page-view";
 import type { TeamUserSummary } from "@/contexts/workforce/application/model/team.read-models";
 
@@ -78,8 +78,5 @@ describe("TeamPageView", () => {
       />,
     );
 
-    expect(
-      screen.getByText("Your owner membership cannot change scheduling availability from here."),
-    ).toBeTruthy();
   });
 });

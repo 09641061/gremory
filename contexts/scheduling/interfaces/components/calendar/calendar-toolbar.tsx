@@ -70,6 +70,8 @@ export function CalendarToolbar({
               variant="ghost"
               size="icon"
               onClick={onPrevDay}
+              aria-label="Previous day"
+              title="Previous day"
               className="h-8 w-8 rounded-none rounded-l-md border-r"
             >
               <ChevronLeft className="h-4 w-4" />
@@ -78,6 +80,8 @@ export function CalendarToolbar({
               variant="ghost"
               size="icon"
               onClick={onNextDay}
+              aria-label="Next day"
+              title="Next day"
               className="h-8 w-8 rounded-none rounded-r-md"
             >
               <ChevronRight className="h-4 w-4" />

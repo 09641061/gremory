@@ -41,6 +41,8 @@ export function StaffColumnsHeader({
               size="icon"
               className="h-6 w-6"
               onClick={onShiftLeft}
+              aria-label="Previous staff members"
+              title="Previous staff members"
               disabled={!canShiftLeft}
             >
               <ChevronLeft className="h-4 w-4" />
@@ -50,6 +52,8 @@ export function StaffColumnsHeader({
               size="icon"
               className="h-6 w-6"
               onClick={onShiftRight}
+              aria-label="Next staff members"
+              title="Next staff members"
               disabled={!canShiftRight}
             >
               <ChevronRight className="h-4 w-4" />

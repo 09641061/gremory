@@ -374,7 +374,7 @@ export function AssistantChatView({
   }
 
   return (
-    <div className="flex min-h-[calc(100vh-6rem)] flex-col">
+    <div className="flex min-h-[calc(100svh-6rem)] flex-col">
       {isThreadVisible ? (
         <div className="relative flex min-h-0 flex-1 flex-col">
           <AssistantChatThread
@@ -400,7 +400,7 @@ export function AssistantChatView({
           </div>
         </div>
       ) : (
-        <div className="flex min-h-[calc(100vh-6rem)] flex-1 flex-col justify-center">
+        <div className="flex min-h-[calc(100svh-6rem)] flex-1 flex-col justify-center">
           <AssistantChatEmptyState />
           <div className="h-8 sm:h-10" />
           <AssistantChatComposer

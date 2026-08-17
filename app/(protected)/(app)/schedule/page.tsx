@@ -37,7 +37,7 @@ export default async function SchedulePage({ searchParams }: SchedulePageProps) 
   const { services, members, customers } = await loadSchedulingPageData(establishmentId);
 
   return (
-    <main className="p-6">
+    <main className="flex min-h-0 flex-1 flex-col px-4 py-4 md:px-6 lg:px-8 lg:py-6">
       <DailyStaffCalendar
         key={`${establishmentId}-${timeZone}`}
         establishmentId={establishmentId}

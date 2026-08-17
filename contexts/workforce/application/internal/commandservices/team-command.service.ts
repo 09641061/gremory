@@ -42,10 +42,6 @@ export class TeamCommandServiceImpl implements TeamCommandService {
   acceptPendingInvitation() {
     return this.team.acceptPendingInvitation();
   }
-
-  updateSchedulingAvailability(memberId: string, available: boolean) {
-    return this.team.updateSchedulingAvailability(createMemberId(memberId), available);
-  }
 }
 
 export function createTeamCommandService(token?: string): TeamCommandService {

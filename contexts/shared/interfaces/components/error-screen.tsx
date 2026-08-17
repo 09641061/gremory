@@ -27,14 +27,14 @@ export function ErrorScreen({
 
   return (
     <main className={mainClassName}>
-      <div className="flex flex-col items-center gap-4 text-center">
+      <div className="flex max-w-sm flex-col items-center gap-4 text-center">
         <ErrorAlert title={title} message={message} />
         <Button
           type="button"
           variant="outline"
           onClick={() => startTransition(() => reset())}
           disabled={isPending}
-          className="gap-2 border-border bg-card text-foreground shadow-sm disabled:opacity-60"
+          className="gap-2"
         >
           {isPending ? <Spinner className="size-4" /> : null}
           {isPending ? retryingLabel : retryLabel}

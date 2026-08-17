@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { createBusinessWorkspaceQueryService } from "@/contexts/business/application/internal/queryservices/business-workspace-query.service";
 import { resolveModuleAccessFallback } from "@/contexts/shared/application/services/module-access.policy";
 import { getWorkspaceEstablishment, hasEstablishmentPermission } from "@/contexts/shared/application/services/workspace-establishment-permissions";
+import { loadSchedulingMembers } from "@/contexts/scheduling/application/internal/queryservices/scheduling-members.query.service";
 
 interface TeamPageProps {
   searchParams: Promise<{ organizationId?: string; establishmentId?: string }>;
@@ -34,17 +35,30 @@ export default async function TeamPage({ searchParams }: TeamPageProps) {
     teamService.getMyMembership(establishmentId ?? undefined).catch(() => null),
   ]);
   const members = mergeCurrentMembership(membersPage?.content ?? [], currentMembership);
+  const schedulingEmployees = establishmentId ? await loadSchedulingMembers(establishmentId) : [];
+  const availabilityByUserId = new Map(
+    schedulingEmployees.map((employee) => [employee.userId, employee.availableForScheduling]),
+  );
+  const membersWithAvailability = members.map((member) =>
+    member.userId && availabilityByUserId.has(member.userId)
+      ? { ...member, availableForScheduling: availabilityByUserId.get(member.userId) === true }
+      : member,
+  );
 
   return (
     <TeamPageView
       establishmentId={establishmentId ?? null}
-      members={members}
+      members={membersWithAvailability}
       canManageRoles={canReadRoles}
       canInviteMembers={canCreateInvitation}
       canRemoveMembers={canDeleteMember}
       canCancelInvitations={canDeleteInvitation}
       currentUserId={currentMembership?.userId ?? null}
       currentUserIsOwner={workspace.authorization?.role === "OWNER"}
+      canManageScheduling={hasEstablishmentPermission(
+        getWorkspaceEstablishment(workspace, establishmentId ?? undefined),
+        "scheduling:manage",
+      )}
     />
   );
 }

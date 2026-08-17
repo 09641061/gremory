@@ -11,6 +11,7 @@ export interface EstablishmentSummary {
   name: string;
   photoUrl: string | null;
   timeZone: string | null;
+  ownerAvailableForScheduling: boolean;
 }
 
 export interface PageView<T> {

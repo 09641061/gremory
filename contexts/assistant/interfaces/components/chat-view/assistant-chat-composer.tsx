@@ -24,11 +24,11 @@ const inputBaseClass =
 const inputSingleLineClass = "min-h-[24px] max-h-[220px] overflow-hidden";
 const inputMultiLineClass = "min-h-[24px] max-h-[220px] overflow-y-auto scrollbar-hide overscroll-contain";
 const shellBaseClass =
-  "w-full border border-border/30 bg-background/90 text-foreground shadow-lg backdrop-blur-md transition-all duration-200 ease-in-out";
-const shellSingleLineClass = "rounded-full px-4 py-3";
+  "w-full border border-border/70 bg-card text-card-foreground shadow-sm transition-all duration-200 ease-in-out";
+const shellSingleLineClass = "rounded-2xl px-4 py-3";
 const shellMultiLineClass = "rounded-2xl px-4 py-4";
 const sendActionClass =
-  "rounded-full border border-border/30 bg-background text-foreground shadow-md transition-transform hover:scale-105 hover:bg-background/95 disabled:scale-100 disabled:bg-background/80 disabled:text-foreground/50";
+  "rounded-full border border-border/70 bg-background text-foreground shadow-none transition-colors hover:bg-muted/70 disabled:bg-muted/40 disabled:text-muted-foreground/50";
 export function AssistantChatComposer({
   value,
   isSending,

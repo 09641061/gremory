@@ -58,7 +58,7 @@ function AssistantChatThreadComponent({
       <div
         ref={scrollContainerRef}
         onScroll={handleScroll}
-        className="absolute inset-0 z-0 overflow-y-auto px-4 py-10 pb-48 sm:px-6 sm:py-12 sm:pb-56"
+        className="absolute inset-0 z-0 overflow-y-auto px-4 py-8 pb-48 sm:px-6 sm:py-10 sm:pb-56"
       >
         {isLoading ? (
           <AssistantChatLoadingState />

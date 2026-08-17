@@ -10,6 +10,7 @@ import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuSkeleton,
+  SidebarSeparator,
 } from "@/contexts/shared/interfaces/components/ui/sidebar";
 import { Skeleton } from "@/contexts/shared/interfaces/components/ui/skeleton";
 
@@ -40,6 +41,7 @@ export function AppSidebarFallback() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+        <SidebarSeparator className="mx-0 my-2" />
       </SidebarContent>
 
       <SidebarFooter className="gap-2 px-3 pb-3">

@@ -192,6 +192,7 @@ export function EstablishmentDetailCard({
                 </div>
               </div>
             </div>
+
           </CardContent>
 
           {(canUpdate || canDelete) && (

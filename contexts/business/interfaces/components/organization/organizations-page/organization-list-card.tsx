@@ -2,14 +2,10 @@
 
 import { Building2 } from "lucide-react";
 
-import type { OrganizationListItem } from "./organizations-page";
 import { buttonVariants } from "@/contexts/shared/interfaces/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/contexts/shared/interfaces/components/ui/avatar";
 import { Card, CardContent } from "@/contexts/shared/interfaces/components/ui/card";
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@/contexts/shared/interfaces/components/ui/avatar";
+import type { OrganizationListItem } from "./organizations-page";
 
 interface OrganizationListCardProps {
   organizations: ReadonlyArray<OrganizationListItem>;
@@ -33,16 +29,18 @@ export function OrganizationListCard({
   onConfirm,
 }: OrganizationListCardProps) {
   return (
-    <Card className="overflow-hidden rounded-xl border-border bg-card shadow-sm lg:flex lg:min-h-0 lg:flex-1 lg:flex-col">
+    <Card className="lg:flex lg:min-h-0 lg:flex-1 lg:flex-col">
       <CardContent className="p-0 lg:flex lg:min-h-0 lg:flex-1 lg:flex-col">
-        <div className="grid grid-cols-[minmax(0,1fr)_auto] border-b border-border px-5 py-4 text-sm font-medium text-muted-foreground shrink-0">
-          <span>Organizations — {organizations.length}</span>
+        <div className="flex items-center justify-between border-b border-border/70 bg-muted/30 px-5 py-3 text-xs font-medium uppercase tracking-wide text-muted-foreground shrink-0">
+          <span>Organizations</span>
+          <span>{organizations.length}</span>
         </div>
 
-        <div className="scrollbar-hide lg:flex-1 lg:overflow-y-auto lg:min-h-0">
+        <div className="scrollbar-hide lg:min-h-0 lg:flex-1 lg:overflow-y-auto">
           {filteredOrganizations.length === 0 ? (
-            <div className="px-5 py-10 text-sm text-muted-foreground">
-              No organizations found.
+            <div className="flex flex-col items-center gap-3 px-5 py-12 text-center text-sm text-muted-foreground">
+              <Building2 className="size-8" aria-hidden="true" />
+              <span>No organizations found.</span>
             </div>
           ) : (
             filteredOrganizations.map((org) => {
@@ -58,7 +56,7 @@ export function OrganizationListCard({
                     previewing ? "bg-accent/60 ring-1 ring-inset ring-ring/20" : ""
                   }`}
                 >
-                  <Avatar>
+                  <Avatar className="size-10 shrink-0">
                     {org.organizationImageUrl ? (
                       <AvatarImage src={org.organizationImageUrl} alt={org.organizationName} />
                     ) : (

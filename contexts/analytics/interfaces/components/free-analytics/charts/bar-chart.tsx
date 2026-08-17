@@ -11,7 +11,7 @@ export function BarChart({
   valueFormatter?: (value: number) => string;
 }) {
   const maxValue = Math.max(...data.map((item) => item.value), 1);
-  const barClass = tone === "primary" ? "bg-primary" : tone === "secondary" ? "bg-sky-500" : "bg-emerald-500";
+  const barClass = tone === "primary" ? "bg-primary" : tone === "secondary" ? "bg-info" : "bg-success";
 
   return (
     <div className="overflow-x-auto rounded-xl border border-border/60 bg-background/60 p-4">

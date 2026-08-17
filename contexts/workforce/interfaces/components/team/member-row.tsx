@@ -3,6 +3,7 @@
 import { startTransition, useActionState, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { User, UserMinus, UserX } from "lucide-react";
+import { Switch } from "@/contexts/shared/interfaces/components/ui/switch";
 import { Avatar, AvatarFallback, AvatarImage } from "@/contexts/shared/interfaces/components/ui/avatar";
 import { ErrorAlert } from "@/contexts/shared/interfaces/components/error";
 import { EntityActionsMenu } from "@/contexts/shared/interfaces/components/entity-actions-menu";
@@ -10,11 +11,11 @@ import { DeleteConfirmDialog } from "@/contexts/shared/interfaces/components/del
 import {
   removeTeamMemberAction,
   revokeTeamInvitationAction,
-  toggleSchedulingAvailabilityAction,
 } from "@/contexts/workforce/interfaces/actions/team.actions";
+import { updateEmployeeAvailabilityAction } from "@/contexts/scheduling/interfaces/actions/update-employee-availability.action";
+import type { UpdateEmployeeAvailabilityState } from "@/contexts/scheduling/interfaces/actions/update-employee-availability.action";
 import type { TeamUserSummary } from "@/contexts/workforce/application/model/team.read-models";
 import { MemberRolesDropdown } from "./member-roles-dropdown";
-import { Switch } from "@/contexts/shared/interfaces/components/ui/switch";
 
 const initialActionState = { status: "idle", data: null, error: null } as const;
 
@@ -33,44 +34,40 @@ export function MemberRow({
   member,
   canRemoveMembers = true,
   canCancelInvitations = true,
-  isCurrentUser = false,
   isOwner: ownerFromWorkspace = false,
+  canManageScheduling = false,
 }: {
   member: TeamUserSummary;
   canRemoveMembers?: boolean;
   canCancelInvitations?: boolean;
-  isCurrentUser?: boolean;
   isOwner?: boolean;
+  canManageScheduling?: boolean;
 }) {
   const [removeState, removeAction, removePending] = useActionState(removeTeamMemberAction, initialActionState);
   const [revokeState, revokeAction, revokePending] = useActionState(revokeTeamInvitationAction, initialActionState);
-  const [toggleState, toggleAction, togglePending] = useActionState(toggleSchedulingAvailabilityAction, initialActionState);
+  const [availabilityState, availabilityAction, availabilityPending] = useActionState(
+    updateEmployeeAvailabilityAction,
+    { status: "error", error: "" } satisfies UpdateEmployeeAvailabilityState,
+  );
   const router = useRouter();
   const [confirming, setConfirming] = useState<"remove" | "revoke" | null>(null);
 
   useEffect(() => {
-    if ([removeState.status, revokeState.status, toggleState.status].includes("success")) {
+    if ([removeState.status, revokeState.status, availabilityState.status].includes("success")) {
       router.refresh();
     }
-  }, [removeState.status, revokeState.status, toggleState.status, router]);
+  }, [removeState.status, revokeState.status, availabilityState.status, router]);
 
   const memberId = member.memberId;
   const canRemove = member.canRemoveMembership && memberId !== null && canRemoveMembers;
   const canCancel = member.canRevokeInvitation && canCancelInvitations;
-  const error = removeState.error ?? revokeState.error ?? toggleState.error;
+  const error = removeState.error ?? revokeState.error ?? availabilityState.error;
   const isOwner = ownerFromWorkspace || member.roleName.trim().toLowerCase() === "owner";
-  const schedulingAvailabilityHint = !member.canUpdateSchedulingAvailability
-    ? isCurrentUser
-      ? member.roleName === "Owner"
-        ? "Your owner membership cannot change scheduling availability from here."
-        : "Your scheduling availability is read-only in this workspace."
-      : "This member's scheduling availability is read-only."
-    : null;
 
   return (
-    <div className="grid min-h-[96px] grid-cols-[minmax(300px,1.4fr)_minmax(220px,1fr)_minmax(150px,.8fr)_minmax(150px,.55fr)_minmax(170px,.7fr)] items-center border-b border-border px-5 py-4 last:border-b-0">
+    <div className="grid min-h-[92px] grid-cols-[minmax(300px,1.4fr)_minmax(220px,1fr)_minmax(150px,.8fr)_minmax(150px,.55fr)_minmax(170px,.7fr)] items-center border-b border-border/70 px-5 py-4 transition-colors last:border-b-0 hover:bg-muted/20">
       <div className="flex items-center gap-4">
-        <Avatar className="size-12 shrink-0 border border-border">
+        <Avatar className="size-11 shrink-0 border border-border/70">
           <AvatarImage src={member.imageUrl ?? undefined} alt={member.name ?? member.email} />
           <AvatarFallback className="bg-muted/40 text-muted-foreground">
             {member.name ? initials(member.name) : <User className="size-5" />}
@@ -82,7 +79,7 @@ export function MemberRow({
           </div>
         </div>
       </div>
-      <span className="truncate text-[15px] text-muted-foreground">{member.email}</span>
+      <span className="truncate text-sm text-muted-foreground">{member.email}</span>
       <div>
         {isOwner ? (
           <span className="inline-flex rounded-full border border-amber-500/20 bg-amber-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-amber-700">
@@ -94,25 +91,22 @@ export function MemberRow({
       </div>
       <div className="flex flex-col gap-1.5 justify-center">
         <span className="text-[15px] text-muted-foreground">{formatStatus(member.status)}</span>
-        {member.status === "ACTIVE" && (
-          <label className="flex items-center gap-2 cursor-pointer select-none">
+        {member.userId && member.status === "ACTIVE" ? (
+          <label className="flex items-center gap-2 text-xs text-muted-foreground">
             <Switch
               checked={member.availableForScheduling}
-              onCheckedChange={(checked) => {
-                if (!member.memberId) return;
+              disabled={!canManageScheduling || availabilityPending}
+              onCheckedChange={(available) => {
                 const formData = new FormData();
-                formData.append("memberId", member.memberId);
-                formData.append("available", String(checked));
-                startTransition(() => toggleAction(formData));
+                formData.append("userId", member.userId!);
+                formData.append("establishmentId", member.establishmentId);
+                formData.append("available", String(available));
+                startTransition(() => availabilityAction(formData));
               }}
-              disabled={togglePending || !member.canUpdateSchedulingAvailability || member.memberId === null}
               size="sm"
             />
-            <span className="text-xs text-muted-foreground">For appointments</span>
+            {member.availableForScheduling ? "Available for appointments" : "Unavailable for appointments"}
           </label>
-        )}
-        {schedulingAvailabilityHint ? (
-          <span className="text-xs text-muted-foreground">{schedulingAvailabilityHint}</span>
         ) : null}
       </div>
       <div className="flex flex-col items-end gap-2">

@@ -12,6 +12,7 @@ import { OrganizationListCard } from "./organization-list-card";
 import { OrganizationDetailCard } from "./organization-detail-card";
 import type { WorkspaceNavigationOrganizationGroup } from "@/contexts/business/domain/services/workspace-navigation.policy";
 
+
 export type OrganizationListItem = WorkspaceNavigationOrganizationGroup;
 
 export function OrganizationsPage({

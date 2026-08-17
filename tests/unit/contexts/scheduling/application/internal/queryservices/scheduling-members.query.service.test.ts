@@ -26,6 +26,8 @@ describe("loadSchedulingMembers", () => {
           memberId: "22222222-2222-4222-8222-222222222222",
           name: "Available Person",
           imageUrl: "https://example.com/a.png",
+          isOwner: false,
+          availableForScheduling: true,
         },
       ]);
 
@@ -36,7 +38,9 @@ describe("loadSchedulingMembers", () => {
         name: "Available Person",
         email: "",
         role: "",
-        status: "ACTIVE",
+        status: "AVAILABLE",
+        isOwner: false,
+        availableForScheduling: true,
         imageUrl: "https://example.com/a.png",
       },
     ]);

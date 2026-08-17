@@ -43,7 +43,7 @@ export class EstablishmentCommandServiceImpl implements EstablishmentCommandServ
     if (!establishment) throw new Error("Establishment not found");
 
     const photo = await this.resolvePhoto(id, command);
-    establishment.update(command.name, photo.value, command.timeZone);
+    establishment.update(command.name, photo.value, command.timeZone, command.ownerAvailableForScheduling);
     const saved = await this.establishments.save(establishment);
     return saved.id;
   }

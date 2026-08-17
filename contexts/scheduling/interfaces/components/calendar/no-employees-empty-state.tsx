@@ -1,17 +1,28 @@
-import { UsersIcon } from "lucide-react";
+import { UsersRound } from "lucide-react";
+
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/contexts/shared/interfaces/components/ui/empty";
 
 export function NoEmployeesEmptyState() {
   return (
-    <div className="flex flex-col items-center justify-center p-12 text-center h-full min-h-[400px] bg-muted/10 rounded-xl border border-dashed">
-      <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 mb-4">
-        <UsersIcon className="h-8 w-8 text-primary" />
-      </div>
-      <h3 className="text-xl font-semibold tracking-tight mb-2 text-foreground">
-        No employees available for Scheduling
-      </h3>
-      <p className="text-sm text-muted-foreground max-w-sm">
-         No active employee with Scheduling access is available for appointments in this establishment.
-      </p>
-    </div>
+    <Empty className="min-h-[400px] rounded-xl border-border/70 bg-muted/10 p-12">
+      <EmptyHeader>
+        <EmptyMedia variant="icon">
+          <UsersRound aria-hidden="true" />
+        </EmptyMedia>
+        <EmptyContent>
+          <EmptyTitle>No team members yet</EmptyTitle>
+          <EmptyDescription>
+            Invite employees to your establishment to start scheduling appointments.
+          </EmptyDescription>
+        </EmptyContent>
+      </EmptyHeader>
+    </Empty>
   );
 }

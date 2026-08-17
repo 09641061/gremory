@@ -98,11 +98,11 @@ export interface TeamRepository {
   ): Promise<InvitationId>;
   revokeInvitation(invitationId: InvitationId): Promise<void>;
   removeMember(memberId: MemberId): Promise<void>;
+  updateSchedulingAvailability?(memberId: MemberId, available: boolean): Promise<void>;
   previewInvitation(token: InvitationToken): Promise<TeamInvitationPreview>;
   acceptInvitation(token: InvitationToken): Promise<MemberId>;
   // For an account that registered through an invitation and no longer holds
   // the emailed link: the backend resolves it by the authenticated email.
   acceptPendingInvitation(): Promise<MemberId>;
   getAccessContext(): Promise<TeamAccessContext>;
-  updateSchedulingAvailability(memberId: MemberId, available: boolean): Promise<void>;
 }

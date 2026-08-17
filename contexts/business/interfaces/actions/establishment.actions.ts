@@ -71,6 +71,7 @@ export async function updateEstablishmentAction(
     name: formData.get("name"),
     timeZone: typeof rawTimeZone === "string" && rawTimeZone.trim() ? rawTimeZone : undefined,
     photoUrl: readPhotoUrlFromFormData(formData),
+    ownerAvailableForScheduling: formData.has("ownerAvailableForScheduling") ? readBoolFromFormData(formData, "ownerAvailableForScheduling") : undefined,
   });
   if (!parsed.success) return actionError(parsed.error.issues[0]?.message);
 

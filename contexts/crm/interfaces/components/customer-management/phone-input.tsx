@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+
 import { Input } from "@/contexts/shared/interfaces/components/ui/input";
 import { Label } from "@/contexts/shared/interfaces/components/ui/label";
 
@@ -27,7 +28,7 @@ export function PhoneInput({
 
   return (
     <div className="space-y-1.5">
-      <Label htmlFor={id}>Phone Number</Label>
+      <Label htmlFor={id}>Phone number</Label>
       <div className="flex items-center gap-2">
         <Input
           aria-label="Country code"
@@ -37,16 +38,13 @@ export function PhoneInput({
           className="w-24"
           required={required}
         />
-        <div className="relative flex-1">
-          <Input
-            id={id}
-            value={value}
-            onChange={handlePhoneChange}
-            placeholder="Phone number"
-            required={required}
-            className="pr-4"
-          />
-        </div>
+        <Input
+          id={id}
+          value={value}
+          onChange={handlePhoneChange}
+          placeholder="Phone number"
+          required={required}
+        />
       </div>
     </div>
   );
