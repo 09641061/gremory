@@ -3,7 +3,7 @@
 import { updateTag } from "next/cache";
 import { createServiceCategorySchema, updateServiceCategorySchema } from "../rest/schemas/service-category.schemas";
 import { createServiceCategoryCommandService } from "../../application/internal/commandservices/service-category-command.service";
-import { requireCatalogAccessToken } from "./catalog-action-auth";
+import { requireCatalogAccessToken, requireCatalogOrganizationId } from "./catalog-action-auth";
 import { createServiceCategoryCreateCommand, createServiceCategoryUpdateCommand } from "../../domain/model/commands/service-category.commands";
 
 export type CategoryActionResult = {
@@ -28,8 +28,11 @@ export async function createServiceCategoryAction(
   }
 
   try {
-    const token = await requireCatalogAccessToken();
-    const service = createServiceCategoryCommandService();
+    const [token, organizationId] = await Promise.all([
+      requireCatalogAccessToken(),
+      requireCatalogOrganizationId(parsed.data.establishmentId),
+    ]);
+    const service = createServiceCategoryCommandService(organizationId);
     const command = createServiceCategoryCreateCommand(parsed.data);
     await service.create(command, token);
     updateTag("catalog-categories");
@@ -59,8 +62,11 @@ export async function updateServiceCategoryAction(
   }
 
   try {
-    const token = await requireCatalogAccessToken();
-    const service = createServiceCategoryCommandService();
+    const [token, organizationId] = await Promise.all([
+      requireCatalogAccessToken(),
+      requireCatalogOrganizationId(),
+    ]);
+    const service = createServiceCategoryCommandService(organizationId);
     const command = createServiceCategoryUpdateCommand(parsed.data);
     await service.update(command, token);
     updateTag("catalog-categories");
@@ -75,8 +81,11 @@ export async function updateServiceCategoryAction(
 
 export async function deleteServiceCategoryAction(id: string): Promise<CategoryActionResult> {
   try {
-    const token = await requireCatalogAccessToken();
-    const service = createServiceCategoryCommandService();
+    const [token, organizationId] = await Promise.all([
+      requireCatalogAccessToken(),
+      requireCatalogOrganizationId(),
+    ]);
+    const service = createServiceCategoryCommandService(organizationId);
     await service.delete({ id }, token);
     updateTag("catalog-categories");
     return { status: "success", error: null };

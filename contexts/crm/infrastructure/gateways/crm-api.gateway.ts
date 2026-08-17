@@ -34,6 +34,7 @@ export class CrmApiGateway implements CrmCommandService, CrmQueryService {
       command,
       {
         token: authToken,
+        headers: this.tenantHeaders(),
         errorMessage: "Failed to register customer",
       }
     );
@@ -46,6 +47,7 @@ export class CrmApiGateway implements CrmCommandService, CrmQueryService {
       command,
       {
         token: authToken,
+        headers: this.tenantHeaders(),
         errorMessage: "Failed to update customer",
       }
     );
@@ -57,6 +59,7 @@ export class CrmApiGateway implements CrmCommandService, CrmQueryService {
       `/api/crm/customers/${command.id}?establishmentId=${command.establishmentId}`,
       {
         token: authToken,
+        headers: this.tenantHeaders(),
         errorMessage: "Failed to delete customer",
       }
     );
@@ -73,6 +76,7 @@ export class CrmApiGateway implements CrmCommandService, CrmQueryService {
       undefined,
       {
         token: authToken,
+        headers: this.tenantHeaders(),
         errorMessage: "Failed to resolve identity document",
       }
     );
@@ -108,6 +112,7 @@ export class CrmApiGateway implements CrmCommandService, CrmQueryService {
       `/api/crm/customers/${id}?establishmentId=${establishmentId}`,
       {
         token: authToken,
+        headers: this.tenantHeaders(),
         errorMessage: "Failed to fetch customer",
       }
     );

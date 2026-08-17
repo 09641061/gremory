@@ -109,6 +109,7 @@ export class CatalogServiceApiGateway
       `${apiConfig.routes.catalogServices}/${encodeURIComponent(id)}?${query}`,
       {
         token: authToken,
+        headers: this.tenantHeaders(),
         errorMessage: "Service not found",
       },
     );
@@ -122,6 +123,7 @@ export class CatalogServiceApiGateway
       command,
       {
         token: authToken,
+        headers: this.tenantHeaders(),
         errorMessage: "Failed to create catalog service",
       },
     );
@@ -136,6 +138,7 @@ export class CatalogServiceApiGateway
       payload,
       {
         token: authToken,
+        headers: this.tenantHeaders(),
         errorMessage: "Failed to update service",
       },
     );
@@ -150,6 +153,7 @@ export class CatalogServiceApiGateway
       undefined,
       {
         token: authToken,
+        headers: this.tenantHeaders(),
         errorMessage: "Failed to change service status",
       },
     );
@@ -161,6 +165,7 @@ export class CatalogServiceApiGateway
       `${apiConfig.routes.catalogServices}/${encodeURIComponent(command.id)}`,
       {
         token: authToken,
+        headers: this.tenantHeaders(),
         errorMessage: "Failed to delete service",
       },
     );

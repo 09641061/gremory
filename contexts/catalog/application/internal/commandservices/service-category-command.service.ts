@@ -27,6 +27,6 @@ export class ServiceCategoryCommandServiceImpl implements ServiceCategoryCommand
   }
 }
 
-export function createServiceCategoryCommandService() {
-  return new ServiceCategoryCommandServiceImpl(new ServiceCategoryApiGateway());
+export function createServiceCategoryCommandService(organizationId?: string) {
+  return new ServiceCategoryCommandServiceImpl(new ServiceCategoryApiGateway(organizationId));
 }

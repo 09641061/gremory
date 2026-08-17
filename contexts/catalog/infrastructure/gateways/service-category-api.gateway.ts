@@ -83,6 +83,7 @@ export class ServiceCategoryApiGateway
       command,
       {
         token: authToken,
+        headers: this.tenantHeaders(),
         errorMessage: "Failed to create category",
       },
     );
@@ -96,6 +97,7 @@ export class ServiceCategoryApiGateway
       { name: command.name },
       {
         token: authToken,
+        headers: this.tenantHeaders(),
         errorMessage: "Failed to update category",
       },
     );
@@ -108,6 +110,7 @@ export class ServiceCategoryApiGateway
       `${apiConfig.routes.catalogCategories}/${encodeURIComponent(command.id)}`,
       {
         token: authToken,
+        headers: this.tenantHeaders(),
         errorMessage: "Failed to delete category",
       },
     );

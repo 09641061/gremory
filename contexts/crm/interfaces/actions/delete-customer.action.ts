@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createCrmCommandService } from "../../application/internal/commandservices/crm-command.service";
 import { createCrmAccessPolicyService } from "../../application/internal/queryservices/crm-access-policy.service";
 import { ActionState } from "./register-customer.action";
+import { createBusinessWorkspaceQueryService } from "@/contexts/business/application/internal/queryservices/business-workspace-query.service";
 
 export async function deleteCustomerAction(
   id: string,
@@ -15,7 +16,8 @@ export async function deleteCustomerAction(
   }
 
   try {
-    const service = createCrmCommandService();
+    const workspace = await createBusinessWorkspaceQueryService().getHeaderViewModel({ establishmentId });
+    const service = createCrmCommandService(workspace.organization?.id);
     await service.deleteCustomer({ id, establishmentId });
 
     revalidatePath("/crm");

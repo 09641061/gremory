@@ -7,6 +7,7 @@ import { RegisterCustomerCommand } from "../../domain/model/commands/register-cu
 import { ApiError } from "@/contexts/shared/infrastructure/http/api-client";
 import { CustomerResponse } from "../../domain/model/entities/customer";
 import { registerCustomerSchema } from "../schemas/register-customer.schema";
+import { createBusinessWorkspaceQueryService } from "@/contexts/business/application/internal/queryservices/business-workspace-query.service";
 
 export type ActionState<T> =
   | { status: "idle"; data: null; error: null }
@@ -28,7 +29,8 @@ export async function registerCustomerAction(
   }
 
   try {
-    const service = createCrmCommandService();
+    const workspace = await createBusinessWorkspaceQueryService().getHeaderViewModel({ establishmentId });
+    const service = createCrmCommandService(workspace.organization?.id);
     const result = await service.registerCustomer({
       ...parsed.data,
       establishmentId,

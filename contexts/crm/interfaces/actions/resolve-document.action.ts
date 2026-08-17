@@ -4,6 +4,7 @@ import { createCrmCommandService } from "../../application/internal/commandservi
 import { createCrmAccessPolicyService } from "../../application/internal/queryservices/crm-access-policy.service";
 import { ResolvedCustomerData } from "../../domain/model/entities/customer";
 import { ActionState } from "./register-customer.action";
+import { createBusinessWorkspaceQueryService } from "@/contexts/business/application/internal/queryservices/business-workspace-query.service";
 
 export async function resolveDocumentAction(
   type: "dni" | "ruc",
@@ -16,7 +17,8 @@ export async function resolveDocumentAction(
   }
 
   try {
-    const service = createCrmCommandService();
+    const workspace = await createBusinessWorkspaceQueryService().getHeaderViewModel({ establishmentId });
+    const service = createCrmCommandService(workspace.organization?.id);
     const result = await service.resolveDocument(
       type === "dni" ? number : undefined,
       type === "ruc" ? number : undefined
