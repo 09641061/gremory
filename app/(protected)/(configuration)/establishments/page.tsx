@@ -40,7 +40,7 @@ export default async function EstablishmentsRoutePage({ searchParams }: Establis
       canUpdateMap={Object.fromEntries(
         workspace.establishments.map((establishment) => [establishment.id, establishment.canUpdate === true]),
       )}
-      defaultCanUpdate={workspace.accountType === "OWNER"}
+      defaultCanUpdate={false}
       canCreate={workspace.canCreateEstablishment}
     />
   );

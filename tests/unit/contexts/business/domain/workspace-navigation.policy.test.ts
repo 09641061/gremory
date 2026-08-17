@@ -41,8 +41,8 @@ describe("resolveEstablishmentEntryPath", () => {
     expect(resolveEstablishmentEntryPath("OWNER", establishment, "/analytics")).toBe("/analytics");
   });
 
-  it("sends a member to the first module its role can open", () => {
-    expect(resolveEstablishmentEntryPath("MEMBER", establishment, "/analytics")).toBe("/crm");
+  it("lets the workspace policy resolve a member's destination", () => {
+    expect(resolveEstablishmentEntryPath("MEMBER", establishment, "/analytics")).toBe("/analytics");
   });
 
   it("falls back to the current screen when there is no establishment to enter", () => {
@@ -155,9 +155,9 @@ describe("groupEstablishmentsByOrganization", () => {
 });
 
 describe("canManageOrganization", () => {
-  it("always allows editing the organization the account owns", () => {
+  it("uses the workspace organization permission for the owned organization", () => {
     expect(
-      canManageOrganization({ organizationId: "org-1", establishments: [] }, "org-1"),
+      canManageOrganization({ organizationId: "org-1", establishments: [], canUpdate: true }, "org-1"),
     ).toBe(true);
   });
 

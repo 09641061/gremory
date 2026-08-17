@@ -221,6 +221,6 @@ describe("app shell query service", () => {
 
     const shell = await createAppShellQueryService().resolve();
 
-    expect(shell.homeHref).toBe("/establishments/setup");
+    expect(shell.homeHref).toBe("/establishments/new");
   });
 });

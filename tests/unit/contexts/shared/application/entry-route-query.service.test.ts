@@ -17,6 +17,23 @@ describe("entry route query service", () => {
     vi.resetAllMocks();
   });
 
+  it("keeps an owner in establishment onboarding when the workspace reports it", async () => {
+    mocks.getWorkspace.mockResolvedValue({
+      accountType: "OWNER",
+      onboardingStatus: "ESTABLISHMENT_PENDING",
+    });
+
+    const result = await createEntryRouteQueryService().resolveRoute({
+      accessToken: "access-token",
+    });
+
+    expect(result).toEqual({
+      status: "establishment-required",
+      setupHref: "/establishments/new",
+      allowedPaths: ["/establishments/new"],
+    });
+  });
+
   it("uses the workspace assistant policy before any billing fallback", async () => {
     mocks.getWorkspace.mockResolvedValue({
       accountType: "OWNER",

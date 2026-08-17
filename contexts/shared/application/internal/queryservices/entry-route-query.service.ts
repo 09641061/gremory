@@ -2,7 +2,7 @@ import "server-only";
 
 import { ApiError } from "@/contexts/shared/infrastructure/http/api-client";
 import { createBusinessWorkspaceOutboundService } from "../outboundservices/business-workspace.outbound.service";
-import { resolveEmployeeEntryPath } from "../../services/entry-route-access.policy";
+import type { BusinessWorkspaceOutboundService } from "../outboundservices/business-workspace.outbound.service";
 import type { EntryRouteInput, EntryRouteResolution } from "../../model/entry-route.view-models";
 
 /**
@@ -39,6 +39,14 @@ export class EntryRouteQueryService {
       };
     }
 
+    if (workspace.onboardingStatus === "ESTABLISHMENT_PENDING") {
+      return {
+        status: "establishment-required",
+        setupHref: "/establishments/new",
+        allowedPaths: ["/establishments/new"],
+      };
+    }
+
     const ownEstablishments = workspace.organization
       ? workspace.establishments.filter(
           (establishment) =>
@@ -67,14 +75,7 @@ export class EntryRouteQueryService {
 
     return {
       status: "ready",
-      homeHref: resolveEmployeeEntryPath(
-        ownEstablishments.map((establishment) => ({
-          establishmentId: establishment.id,
-          establishmentName: establishment.name,
-          effectivePermissions: establishment.effectivePermissions ?? [],
-        })),
-        canUseAssistant,
-      ),
+      homeHref: resolveMemberEntryPath(workspace),
     };
   }
 
@@ -90,6 +91,18 @@ export class EntryRouteQueryService {
       return classifyApiError(error);
     }
   }
+}
+
+function resolveMemberEntryPath(workspace: Awaited<ReturnType<BusinessWorkspaceOutboundService["getWorkspace"]>>) {
+  const accessPolicy = workspace.accessPolicy;
+  if (!accessPolicy) return "/access-denied" as const;
+  if (accessPolicy.canUseAssistant) return "/chat" as const;
+  if (accessPolicy.canOpenScheduling) return "/schedule" as const;
+  if (accessPolicy.canOpenCatalog) return "/catalog" as const;
+  if (accessPolicy.canOpenCrm) return "/crm" as const;
+  if (accessPolicy.canOpenTeam) return "/team" as const;
+  if (workspace.organization?.canRead) return "/organization" as const;
+  return "/access-denied" as const;
 }
 
 function classifyApiError(error: unknown):

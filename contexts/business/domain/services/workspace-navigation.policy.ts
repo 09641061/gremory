@@ -1,5 +1,3 @@
-import { resolveEmployeeEntryPath } from "@/contexts/shared/application/services/entry-route-access.policy";
-
 export type WorkspaceNavigationAccountType = "OWNER" | "MEMBER" | "PENDING_INVITATION";
 
 export type WorkspaceNavigationEstablishment = Readonly<{
@@ -34,22 +32,13 @@ export function buildWorkspacePath(
  * is sent to the first module its role can actually open.
  */
 export function resolveEstablishmentEntryPath(
-  accountType: WorkspaceNavigationAccountType,
-  establishment: WorkspaceNavigationEstablishment | undefined,
+  _accountType: WorkspaceNavigationAccountType,
+  _establishment: WorkspaceNavigationEstablishment | undefined,
   fallbackPath: string,
 ): string {
-  if (accountType === "OWNER" || !establishment) return fallbackPath;
-
-  return resolveEmployeeEntryPath(
-    [
-      {
-        establishmentId: establishment.id,
-        establishmentName: establishment.name,
-        effectivePermissions: establishment.effectivePermissions ?? [],
-      },
-    ],
-    false,
-  );
+  // The next request is resolved by the workspace access policy. Do not infer
+  // a module route from establishment effective permissions in the browser.
+  return fallbackPath;
 }
 
 export type WorkspaceNavigationGroupedEstablishment = WorkspaceNavigationEstablishment &
@@ -65,6 +54,7 @@ export type WorkspaceNavigationOrganizationGroup = Readonly<{
   organizationName: string;
   organizationImageUrl: string | null;
   establishments: ReadonlyArray<WorkspaceNavigationGroupedEstablishment>;
+  canUpdate?: boolean;
 }>;
 
 /**
@@ -132,10 +122,15 @@ export function groupEstablishmentsByOrganization(
  * here from the same `effectivePermissions` set the workspace already scoped.
  */
 export function canManageOrganization(
-  organization: Pick<WorkspaceNavigationOrganizationGroup, "organizationId" | "establishments">,
+  organization: Pick<WorkspaceNavigationOrganizationGroup, "organizationId" | "establishments" | "canUpdate">,
   ownedOrganizationId: string | null,
 ): boolean {
-  if (organization.organizationId === ownedOrganizationId) return true;
+  if (organization.canUpdate !== undefined) return organization.canUpdate;
+  if (organization.organizationId === ownedOrganizationId) {
+    return organization.establishments.some((establishment) =>
+      establishment.effectivePermissions?.includes("business:manage"),
+    );
+  }
   return organization.establishments.some((establishment) =>
     establishment.effectivePermissions?.includes("business:manage"),
   );

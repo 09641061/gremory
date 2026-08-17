@@ -80,4 +80,41 @@ describe("EstablishmentsRoutePage", () => {
     });
     expect(mocks.establishmentsPage).not.toHaveBeenCalled();
   });
+
+  it("passes the owner's establishment update permission to the editor", async () => {
+    mocks.getHeaderViewModel.mockResolvedValue({
+      organization: {
+        id: "org-1",
+        name: "Takodu Studio",
+        imageUrl: null,
+        canRead: true,
+        canUpdate: true,
+        canReadEstablishments: true,
+        canCreateEstablishment: true,
+      },
+      canReadEstablishments: true,
+      canCreateEstablishment: true,
+      accountType: "OWNER",
+      activeEstablishmentId: "est-1",
+      establishments: [
+        {
+          id: "est-1",
+          name: "Miraflores",
+          photoUrl: null,
+          timeZone: "America/Lima",
+          canRead: true,
+          canUpdate: true,
+          canDelete: true,
+        },
+      ],
+    });
+
+    const element = await EstablishmentsRoutePage({
+      searchParams: Promise.resolve({ establishmentId: "est-1" }),
+    });
+
+    expect(element).toMatchObject({
+      props: expect.objectContaining({ canUpdateMap: { "est-1": true } }),
+    });
+  });
 });

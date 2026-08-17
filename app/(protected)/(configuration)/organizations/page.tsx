@@ -36,6 +36,10 @@ export default async function OrganizationsRoutePage({ searchParams }: Organizat
     workspace.organization?.id,
     workspace.organization?.name,
     workspace.organization?.imageUrl,
+  ).map((organization) =>
+    organization.organizationId === workspace.organization?.id
+      ? { ...organization, canUpdate: workspace.organization.canUpdate === true }
+      : organization,
   );
 
   const organizationsWithOwnedOrganization = appendOrganizationGroup(
@@ -47,6 +51,7 @@ export default async function OrganizationsRoutePage({ searchParams }: Organizat
             organizationName: workspace.organization.name,
             organizationImageUrl: workspace.organization.imageUrl ?? null,
             establishments: [],
+            canUpdate: workspace.organization.canUpdate === true,
           }
         : null,
     ),
@@ -56,6 +61,11 @@ export default async function OrganizationsRoutePage({ searchParams }: Organizat
           organizationName: ownedOrganization.name,
           organizationImageUrl: ownedOrganization.imageUrl,
           establishments: [],
+          canUpdate: workspace.ownedOrganizationId === ownedOrganization.id
+            ? workspace.organization?.id === ownedOrganization.id
+              ? workspace.organization.canUpdate === true
+              : undefined
+            : undefined,
         }
       : null,
   );

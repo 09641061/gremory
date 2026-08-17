@@ -88,17 +88,30 @@ function resolveHomeHref(
   visibleRoutes: ReadonlyArray<SidebarRouteId>,
   workspace: AppShellViewModel["workspace"],
 ): AppShellHomeHref {
-  // An account that registered through an invitation belongs nowhere until it
-  // accepts, so it is sent to the acceptance screen instead of an empty shell.
-  if (workspace.accountType === "PENDING_INVITATION") {
-    return "/invitations/pending";
+  if (workspace.accountType === "PENDING_INVITATION" || workspace.onboardingStatus === "ORGANIZATION_PENDING") {
+    // An account that registered through an invitation belongs nowhere until it
+    // accepts. A new owner needs to create its organization before entering the
+    // application shell.
+    if (workspace.accountType === "PENDING_INVITATION") return "/invitations/pending";
+    return "/organizations/new";
   }
+  if (workspace.onboardingStatus === "ESTABLISHMENT_PENDING") {
+    return "/establishments/new";
+  }
+  // Keep the legacy fallback only for workspace responses that predate the
+  // onboarding status contract. Once the backend sends a status, that status
+  // is the source of truth.
   if (
+    workspace.onboardingStatus == null &&
+    workspace.accountType === "OWNER" &&
     workspace.organization &&
     workspace.establishments.length === 0 &&
-    (workspace.accessPolicy?.canCreateEstablishment ?? workspace.canCreateEstablishment)
+    workspace.canCreateEstablishment
   ) {
-    return "/establishments/setup";
+    return "/establishments/new";
+  }
+  if (!workspace.organization) {
+    return "/access-denied";
   }
   if (hasAssistantAccess) {
     return "/chat";

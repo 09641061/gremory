@@ -55,7 +55,7 @@ export function toHeaderViewModel(
         establishment.organizationId === resource.organization.id),
   );
   const organization = resource.organization
-    ? toHeaderOrganization(resource.organization, resource.accountType, establishments.length)
+    ? toHeaderOrganization(resource.organization, establishments.length)
     : undefined;
   const activeEstablishmentId =
     (requestedEstablishmentId &&
@@ -94,7 +94,6 @@ export function toHeaderViewModel(
 
 function toHeaderOrganization(
   organization: NonNullable<BusinessWorkspaceResource["organization"]>,
-  accountType: BusinessWorkspaceResource["accountType"],
   readableEstablishmentCount: number,
 ): WorkspaceHeaderOrganization {
   // Creation rights come from the workspace response itself. The frontend
@@ -106,8 +105,8 @@ function toHeaderOrganization(
     id: organization.id,
     name: organization.name,
     imageUrl: organization.imageUrl,
-    canRead: accountType === "OWNER" || organization.permissions.canRead,
-    canUpdate: accountType === "OWNER" || organization.permissions.canUpdate,
+    canRead: organization.permissions.canRead,
+    canUpdate: organization.permissions.canUpdate,
     canReadEstablishments: canCreateEstablishment || readableEstablishmentCount > 0,
     canCreateEstablishment,
   };
