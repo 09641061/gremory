@@ -20,4 +20,7 @@ export async function createSessionAction(input: {
   // leak into onboarding or the next user's tenant resolution.
   cookieStore.delete(workspaceSelectionCookies.establishmentId);
   cookieStore.delete(iamSessionCookies.returnTo);
+  cookieStore.delete(workspaceSelectionCookies.organizationId);
+  cookieStore.delete(workspaceSelectionCookies.establishmentId);
+  cookieStore.delete(workspaceSelectionCookies.previewOrganizationId);
 }

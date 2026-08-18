@@ -102,7 +102,9 @@ export function DailyStaffCalendar({
             onDateSelect={setCurrentDate}
             timeZone={timeZone}
             onScheduleAppointment={() => {
-              if (canCreateAppointment) router.push("/schedule/new");
+              if (canCreateAppointment) {
+                router.push(`/schedule/new?establishmentId=${encodeURIComponent(establishmentId)}`);
+              }
             }}
           />
         </div>
@@ -127,7 +129,9 @@ export function DailyStaffCalendar({
         onAppointmentClick={setSelectedAppointment}
         onTimeSlotClick={(employeeId) => {
           if (!canCreateAppointment) return;
-          router.push(`/schedule/new?employeeId=${employeeId}`);
+          router.push(
+            `/schedule/new?establishmentId=${encodeURIComponent(establishmentId)}&employeeId=${encodeURIComponent(employeeId)}`,
+          );
         }}
       />
 

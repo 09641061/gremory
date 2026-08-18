@@ -8,6 +8,10 @@ import type { OrganizationRepository } from "../../domain/services/business.repo
 import type { OrganizationId } from "../../domain/model/valueobjects/organization-id.vo";
 import type { OrganizationResource } from "../../interfaces/rest/resources/business.resources";
 import {
+  accessibleOrganizationsSchema,
+  type AccessibleOrganizationResource,
+} from "../../interfaces/rest/schemas/accessible-organization.schemas";
+import {
   BusinessApiError,
   businessGet,
   businessPut,
@@ -51,6 +55,12 @@ export class OrganizationApiGateway implements OrganizationRepository {
     const authToken = await requireBusinessAccessToken(this.providedToken);
     const resource = await businessGet<OrganizationResource>(apiConfig.routes.organizations, authToken);
     return toOrganization(resource);
+  }
+
+  async findAccessible(): Promise<AccessibleOrganizationResource[]> {
+    const authToken = await requireBusinessAccessToken(this.providedToken);
+    const resource = await businessGet<unknown>(apiConfig.routes.accessibleOrganizations, authToken);
+    return accessibleOrganizationsSchema.parse(resource);
   }
 
   async findById(id: OrganizationId): Promise<Organization | null> {

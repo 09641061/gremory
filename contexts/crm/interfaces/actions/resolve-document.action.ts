@@ -1,7 +1,8 @@
 "use server";
 
 import { createCrmCommandService } from "../../application/internal/commandservices/crm-command.service";
-import { createCrmAccessPolicyService } from "../../application/internal/queryservices/crm-access-policy.service";
+import { createBusinessWorkspaceQueryService } from "@/contexts/business/application/internal/queryservices/business-workspace-query.service";
+import { getWorkspaceEstablishment } from "@/contexts/shared/application/services/workspace-establishment-permissions";
 import { ResolvedCustomerData } from "../../domain/model/entities/customer";
 import { ActionState } from "./register-customer.action";
 import { createBusinessWorkspaceQueryService } from "@/contexts/business/application/internal/queryservices/business-workspace-query.service";
@@ -11,8 +12,8 @@ export async function resolveDocumentAction(
   number: string,
   establishmentId: string
 ): Promise<ActionState<ResolvedCustomerData>> {
-  const permissions = await createCrmAccessPolicyService().getPermissions(establishmentId);
-  if (!permissions.canReadCustomers) {
+  const workspace = await createBusinessWorkspaceQueryService().getHeaderViewModel({ establishmentId });
+  if (!getWorkspaceEstablishment(workspace, establishmentId)?.canRead) {
     return { status: "error", data: null, error: "You are not authorized to verify documents." };
   }
 

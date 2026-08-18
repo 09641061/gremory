@@ -3,8 +3,9 @@ import { createCatalogServiceQueryService } from "@/contexts/catalog/application
 import { createServiceCategoryQueryService } from "@/contexts/catalog/application/internal/queryservices/service-category-query.service";
 import type { CategoryDTO, DetailedServiceDTO } from "@/contexts/catalog/application/model/catalog-view.models";
 import { CatalogClientWrapper } from "@/contexts/catalog/interfaces/components/catalog/catalog-client-wrapper";
-import { createCatalogAccessPolicyService } from "@/contexts/catalog/application/internal/queryservices/catalog-access-policy.service";
 import { createBusinessWorkspaceQueryService } from "@/contexts/business/application/internal/queryservices/business-workspace-query.service";
+import { resolveModuleAccessFallback } from "@/contexts/shared/application/services/module-access.policy";
+import { getWorkspaceEstablishment, hasEstablishmentPermission } from "@/contexts/shared/application/services/workspace-establishment-permissions";
 
 interface CatalogPageProps {
   searchParams: Promise<{ organizationId?: string; establishmentId?: string; serviceId?: string }>;
@@ -14,23 +15,19 @@ export default async function CatalogPage({ searchParams }: CatalogPageProps) {
   const query = await searchParams;
   const { establishmentId: paramEstId, serviceId: paramServiceId } = query;
   const workspace = await createBusinessWorkspaceQueryService().getHeaderViewModel(query);
-
-  const policyService = createCatalogAccessPolicyService();
-  const establishmentId = paramEstId ?? workspace.activeEstablishmentId;
-
-  const {
-    canReadCatalog,
-    canCreateCategory,
-    canUpdateCategory,
-    canDeleteCategory,
-    canCreateService,
-    canUpdateService,
-    canDeleteService,
-  } = await policyService.getPermissions(establishmentId);
-
-  if (!canReadCatalog || !workspace.organization) {
-    redirect("/access-denied");
+  if (workspace.accessPolicy?.canOpenCatalog !== true || !workspace.organization) {
+    redirect(resolveModuleAccessFallback(workspace));
   }
+
+  const establishmentId = paramEstId ?? workspace.activeEstablishmentId;
+  const establishment = getWorkspaceEstablishment(workspace, establishmentId);
+  const canManageCatalog = hasEstablishmentPermission(establishment, "catalog:manage");
+  const canCreateCategory = canManageCatalog;
+  const canUpdateCategory = canManageCatalog;
+  const canDeleteCategory = canManageCatalog;
+  const canCreateService = canManageCatalog;
+  const canUpdateService = canManageCatalog;
+  const canDeleteService = canManageCatalog;
 
   let categories: CategoryDTO[] = [];
   let services: DetailedServiceDTO[] = [];

@@ -12,6 +12,7 @@ import { PageShell } from "@/contexts/shared/interfaces/components/page-shell";
 import { Button, buttonVariants } from "@/contexts/shared/interfaces/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/contexts/shared/interfaces/components/ui/card";
 import { Spinner } from "@/contexts/shared/interfaces/components/ui/spinner";
+import { buildInvitationLandingHref } from "./invitation-navigation";
 
 export function InvitationAcceptanceView({
   token,
@@ -26,12 +27,17 @@ export function InvitationAcceptanceView({
 
   useEffect(() => {
     if (state.status === "success") {
-      window.location.assign("/");
+      window.location.assign(buildInvitationLandingHref(invitation.establishmentId));
     }
-  }, [state.status]);
+  }, [invitation.establishmentId, state.status]);
 
   if (state.status === "success") {
-    return <InvitationAcceptedView redirecting />;
+    return (
+      <InvitationAcceptedView
+        redirecting
+        href={buildInvitationLandingHref(invitation.establishmentId)}
+      />
+    );
   }
 
   if (invitation.status === "REMOVED") {
@@ -45,7 +51,7 @@ export function InvitationAcceptanceView({
   }
 
   if (invitation.status === "ACCEPTED") {
-    return <InvitationAcceptedView />;
+    return <InvitationAcceptedView href={buildInvitationLandingHref(invitation.establishmentId)} />;
   }
 
   const returnTo = `/invitations/accept?${new URLSearchParams({ token })}`;
@@ -95,14 +101,20 @@ export function InvitationAcceptanceView({
   );
 }
 
-function InvitationAcceptedView({ redirecting = false }: { redirecting?: boolean }) {
+function InvitationAcceptedView({
+  redirecting = false,
+  href,
+}: {
+  redirecting?: boolean;
+  href: string;
+}) {
   return (
     <InvitationShell
       title="Invitation accepted"
       subtitle={redirecting ? "Redirecting you to Takodu..." : "You already have access to this workspace."}
       icon={<Check className="size-6" />}
     >
-      <Link href="/" className={buttonVariants({ className: "mt-6 w-full" })}>
+      <Link href={href} className={buttonVariants({ className: "mt-6 w-full" })}>
         Continue to Takodu
       </Link>
     </InvitationShell>

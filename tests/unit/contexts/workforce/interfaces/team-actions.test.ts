@@ -7,6 +7,7 @@ const mocks = vi.hoisted(() => ({
     revokeInvitation: vi.fn(),
     removeMember: vi.fn(),
     acceptInvitation: vi.fn(),
+    acceptPendingInvitation: vi.fn(),
   },
 }));
 
@@ -29,6 +30,7 @@ vi.mock(
 
 import {
   acceptTeamInvitationAction,
+  acceptPendingInvitationAction,
   inviteTeamUserAction,
   removeTeamMemberAction,
   revokeTeamInvitationAction,
@@ -38,6 +40,7 @@ import {
   createInvitationId,
   createMemberId,
 } from "@/contexts/workforce/domain/model/valueobjects/team-identifiers.vo";
+import { TeamApiError } from "@/contexts/workforce/infrastructure/gateways/team-api.gateway";
 
 const invitationId = "11111111-1111-4111-8111-111111111111";
 const memberId = "22222222-2222-4222-8222-222222222222";
@@ -52,6 +55,7 @@ describe("Team server actions", () => {
     mocks.service.revokeInvitation.mockResolvedValue(undefined);
     mocks.service.removeMember.mockResolvedValue(undefined);
     mocks.service.acceptInvitation.mockResolvedValue(createMemberId(memberId));
+    mocks.service.acceptPendingInvitation.mockResolvedValue(createMemberId(memberId));
   });
 
   it("should not invoke service when invitation form is invalid", async () => {
@@ -121,6 +125,20 @@ describe("Team server actions", () => {
     expect(result).toEqual({
       status: "success",
       data: { memberId },
+      error: null,
+    });
+  });
+
+  it("should tolerate an already-handled pending invitation and still succeed", async () => {
+    mocks.service.acceptPendingInvitation.mockRejectedValue(
+      new TeamApiError("Invitation is no longer available", 410),
+    );
+
+    const result = await acceptPendingInvitationAction(initialTeamActionResult);
+
+    expect(result).toEqual({
+      status: "success",
+      data: null,
       error: null,
     });
   });

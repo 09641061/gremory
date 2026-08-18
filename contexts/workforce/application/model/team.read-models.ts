@@ -1,7 +1,7 @@
 import type { WorkforceUserStatus } from "../../domain/model/enums/workforce-user-status";
 
 export interface TeamUserSummary {
-  invitationId: string;
+  invitationId: string | null;
   memberId: string | null;
   userId: string | null;
   name: string | null;
@@ -9,6 +9,7 @@ export interface TeamUserSummary {
   email: string;
   roleId: string;
   roleName: string;
+  isOwner?: boolean;
   roles: ReadonlyArray<{
     id: string;
     name: string;
@@ -23,11 +24,13 @@ export interface TeamUserSummary {
   hasAcceptedInvitation: boolean;
   canRevokeInvitation: boolean;
   canRemoveMembership: boolean;
-  invitedAt: string;
-  invitationExpiresAt: string;
+  invitedAt: string | null;
+  invitationExpiresAt: string | null;
   acceptedAt: string | null;
   joinedAt: string | null;
   removedAt: string | null;
+  availableForScheduling: boolean;
+  canUpdateSchedulingAvailability: boolean;
 }
 
 export interface TeamInvitationPreviewView {
@@ -44,6 +47,12 @@ export interface TeamAccessView {
   active: boolean;
   membershipCapabilities?: Readonly<{
     canReadTeam?: boolean;
+    canCreateInvitation?: boolean;
+    canDeleteInvitation?: boolean;
+    canUpdateRole?: boolean;
+    canDeleteRole?: boolean;
+    canEditEstablishmentProfile?: boolean;
+    canOpenModules?: boolean;
     canReadAppointments?: boolean;
     canCreateAppointment?: boolean;
     canUpdateAppointment?: boolean;

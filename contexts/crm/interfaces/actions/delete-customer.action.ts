@@ -2,7 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { createCrmCommandService } from "../../application/internal/commandservices/crm-command.service";
-import { createCrmAccessPolicyService } from "../../application/internal/queryservices/crm-access-policy.service";
+import { createBusinessWorkspaceQueryService } from "@/contexts/business/application/internal/queryservices/business-workspace-query.service";
+import { getWorkspaceEstablishment, hasEstablishmentPermission } from "@/contexts/shared/application/services/workspace-establishment-permissions";
 import { ActionState } from "./register-customer.action";
 import { createBusinessWorkspaceQueryService } from "@/contexts/business/application/internal/queryservices/business-workspace-query.service";
 
@@ -10,8 +11,8 @@ export async function deleteCustomerAction(
   id: string,
   establishmentId: string
 ): Promise<ActionState<void>> {
-  const permissions = await createCrmAccessPolicyService().getPermissions(establishmentId);
-  if (!permissions.canDeleteCustomer) {
+  const workspace = await createBusinessWorkspaceQueryService().getHeaderViewModel({ establishmentId });
+  if (!hasEstablishmentPermission(getWorkspaceEstablishment(workspace, establishmentId), "crm:manage")) {
     return { status: "error", data: null, error: "You are not authorized to delete customers." };
   }
 

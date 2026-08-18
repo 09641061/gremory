@@ -1,6 +1,6 @@
 import "server-only";
 
-import { SchedulingApiGateway } from "../../../infrastructure/gateways/scheduling-api.gateway";
+import { SchedulingApiGateway } from "@/contexts/scheduling/infrastructure/gateways/scheduling-api.gateway";
 import type { SchedulingMemberViewModel } from "../../model/scheduling-page-data.view-model";
 
 export async function loadSchedulingMembers(
@@ -10,14 +10,16 @@ export async function loadSchedulingMembers(
   try {
     const gateway = new SchedulingApiGateway(organizationId);
     const employees = await gateway.getSchedulingEmployees(establishmentId);
-    return employees.map((emp) => ({
-      id: emp.userId,
-      userId: emp.userId,
-      name: emp.name || "Employee",
-      email: "", 
+    return employees.map((employee) => ({
+      id: employee.userId,
+      userId: employee.userId,
+      name: employee.name,
+      email: "",
       role: "",
-      status: "ACTIVE",
-      imageUrl: emp.imageUrl,
+      status: employee.availableForScheduling ? "AVAILABLE" : "UNAVAILABLE",
+      imageUrl: employee.imageUrl,
+      isOwner: employee.isOwner,
+      availableForScheduling: employee.availableForScheduling,
     }));
   } catch (error) {
     console.error("Failed to load scheduling employees:", error);

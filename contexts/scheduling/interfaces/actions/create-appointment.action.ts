@@ -7,6 +7,8 @@ import { Appointment } from "../../domain/model/entities/appointment";
 import { createSchedulingCommandService } from "../../application/internal/commandservices/scheduling-command.service.impl";
 import { createBusinessWorkspaceQueryService } from "@/contexts/business/application/internal/queryservices/business-workspace-query.service";
 import { ActionState } from "./action-state";
+import { createBusinessWorkspaceQueryService } from "@/contexts/business/application/internal/queryservices/business-workspace-query.service";
+import { getWorkspaceEstablishment, hasEstablishmentPermission } from "@/contexts/shared/application/services/workspace-establishment-permissions";
 
 export { type ActionState };
 
@@ -33,6 +35,23 @@ export async function createAppointmentAction(
       error: "Please fix the validation errors below.",
       errorId: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
       fieldErrors: parsed.error.flatten().fieldErrors,
+    };
+  }
+
+  const workspace = await createBusinessWorkspaceQueryService().getHeaderViewModel({
+    establishmentId: parsed.data.establishmentId,
+  });
+  const establishment = getWorkspaceEstablishment(workspace, parsed.data.establishmentId);
+  if (
+    !establishment?.canRead ||
+    !hasEstablishmentPermission(establishment, "scheduling:manage")
+  ) {
+    return {
+      status: "error",
+      data: null,
+      error: "You are not authorized to create appointments.",
+      errorId: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+      fieldErrors: null,
     };
   }
 

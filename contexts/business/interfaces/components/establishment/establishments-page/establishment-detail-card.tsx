@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useRef, useActionState } from "react";
+import { useState, useRef, useActionState, useEffect } from "react";
 import { Save, Store } from "lucide-react";
+import { useRouter } from "next/navigation";
 import type { EstablishmentListItem } from "./establishments-page";
-import { updateEstablishmentAction } from "@/contexts/business/interfaces/actions/establishment.actions";
+import { deleteEstablishmentAction, updateEstablishmentAction } from "@/contexts/business/interfaces/actions/establishment.actions";
 import { initialBusinessActionResult } from "@/contexts/business/interfaces/actions/business-action-result";
 import { Card, CardContent, CardFooter } from "@/contexts/shared/interfaces/components/ui/card";
 import { Input } from "@/contexts/shared/interfaces/components/ui/input";
@@ -16,12 +17,13 @@ import {
   AvatarImage,
 } from "@/contexts/shared/interfaces/components/ui/avatar";
 import { TimeZoneField } from "../time-zone-field";
-import { Switch } from "@/contexts/shared/interfaces/components/ui/switch";
 import { cn } from "@/lib/utils";
+import { DeleteConfirmDialog } from "@/contexts/shared/interfaces/components/delete-confirm-dialog";
 
 interface EstablishmentDetailCardProps {
   establishment: EstablishmentListItem | null;
   canUpdate?: boolean;
+  canDelete?: boolean;
   onCancel?: () => void;
   className?: string;
 }
@@ -29,20 +31,32 @@ interface EstablishmentDetailCardProps {
 export function EstablishmentDetailCard({
   establishment,
   canUpdate = true,
+  canDelete = false,
   onCancel,
   className,
 }: EstablishmentDetailCardProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const router = useRouter();
+  const [deleteOpen, setDeleteOpen] = useState(false);
 
   const [name, setName] = useState(establishment?.name ?? "");
   const [previewUrl, setPreviewUrl] = useState<string | null>(establishment?.photoUrl ?? null);
   const [timeZone, setTimeZone] = useState(establishment?.timeZone ?? "America/Lima");
-  const [ownerScheduling, setOwnerScheduling] = useState(establishment?.ownerAvailableForScheduling ?? true);
 
   const [state, formAction, pending] = useActionState(
     updateEstablishmentAction,
     initialBusinessActionResult,
   );
+  const [deleteState, deleteAction, deletePending] = useActionState(
+    deleteEstablishmentAction,
+    initialBusinessActionResult,
+  );
+
+  useEffect(() => {
+    if (deleteState.status === "success") {
+      router.refresh();
+    }
+  }, [deleteState.status, router]);
 
   const handleAvatarClick = () => {
     fileInputRef.current?.click();
@@ -60,7 +74,6 @@ export function EstablishmentDetailCard({
     setName(establishment?.name ?? "");
     setPreviewUrl(establishment?.photoUrl ?? null);
     setTimeZone(establishment?.timeZone ?? "America/Lima");
-    setOwnerScheduling(establishment?.ownerAvailableForScheduling ?? true);
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
@@ -180,37 +193,23 @@ export function EstablishmentDetailCard({
               </div>
             </div>
 
-            {/* Owner Scheduling Section */}
-            <div className="flex flex-col border-t border-border">
-              <div className="space-y-4 p-6">
-                <div className="space-y-1">
-                  <h3 className="text-base font-semibold text-foreground">Owner Availability</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Show yourself as available for appointments in the calendar.
-                  </p>
-                </div>
-                <label className="flex items-center gap-3 cursor-pointer select-none">
-                  <Switch
-                    name="ownerAvailableForScheduling"
-                    checked={ownerScheduling}
-                    onCheckedChange={setOwnerScheduling}
-                    disabled={!canUpdate}
-                  />
-                  <span className="text-sm text-foreground">
-                    {ownerScheduling ? "Visible in calendar" : "Hidden from calendar"}
-                  </span>
-                  <input
-                    type="hidden"
-                    name="ownerAvailableForScheduling"
-                    value={String(ownerScheduling)}
-                  />
-                </label>
-              </div>
-            </div>
           </CardContent>
 
-          {canUpdate && (
+          {(canUpdate || canDelete) && (
             <CardFooter className="shrink-0 justify-end gap-2 rounded-b-xl border-t border-border bg-card px-6 py-5">
+              {canDelete && (
+                <Button
+                  type="button"
+                  variant="destructive"
+                  onClick={() => setDeleteOpen(true)}
+                  disabled={pending || deletePending}
+                  className="mr-auto"
+                >
+                  Delete establishment
+                </Button>
+              )}
+              {canUpdate && (
+                <>
               <Button
                 type="button"
                 variant="ghost"
@@ -223,9 +222,24 @@ export function EstablishmentDetailCard({
                 {pending ? <Spinner className="size-4" /> : <Save className="size-4" />}
                 {pending ? "Saving..." : "Save"}
               </Button>
+                </>
+              )}
             </CardFooter>
           )}
         </form>
+        {canDelete && establishment ? (
+          <DeleteConfirmDialog
+            open={deleteOpen}
+            onOpenChange={setDeleteOpen}
+            entityLabel="establishment"
+            entityName={establishment.name}
+            pending={deletePending}
+            error={deleteState.status === "error" ? deleteState.error : undefined}
+            formAction={deleteAction}
+          >
+            <input type="hidden" name="id" value={establishment.id} />
+          </DeleteConfirmDialog>
+        ) : null}
       </Card>
     </div>
   );

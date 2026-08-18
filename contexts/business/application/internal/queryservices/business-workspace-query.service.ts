@@ -4,6 +4,8 @@ import { BusinessWorkspaceApiGateway } from "@/contexts/business/infrastructure/
 import type { BusinessWorkspaceSelection } from "@/contexts/business/infrastructure/gateways/business-workspace-api.gateway";
 import type { BusinessWorkspaceResource } from "@/contexts/business/interfaces/rest/schemas/business-workspace.schemas";
 import type {
+  WorkspaceAuthorization,
+  WorkspaceAccessPolicy,
   OrganizationPageState,
   WorkspaceCapabilities,
   WorkspaceHeaderEstablishment,
@@ -17,7 +19,7 @@ export class BusinessWorkspaceQueryService {
   constructor(private readonly workspace = new BusinessWorkspaceApiGateway()) {}
 
   async getHeaderViewModel(query: BusinessWorkspaceQuery = {}): Promise<WorkspaceHeaderViewModel> {
-    return toHeaderViewModel(await this.workspace.getWorkspace(query));
+    return toHeaderViewModel(await this.workspace.getWorkspace(query), query.establishmentId);
   }
 
   async getOrganizationPageState(query: BusinessWorkspaceQuery = {}): Promise<OrganizationPageState> {
@@ -39,18 +41,30 @@ export function createBusinessWorkspaceQueryService() {
   return new BusinessWorkspaceQueryService();
 }
 
-export function toHeaderViewModel(resource: BusinessWorkspaceResource): WorkspaceHeaderViewModel {
-  const establishments = resource.establishments
-    .filter((establishment) => establishment.permissions.canRead)
-    .map(toHeaderEstablishment);
+export function toHeaderViewModel(
+  resource: BusinessWorkspaceResource,
+  requestedEstablishmentId?: string,
+): WorkspaceHeaderViewModel {
+  const allEstablishments = resource.establishments.map(toHeaderEstablishment);
+  const establishments = allEstablishments.filter(
+    (establishment) =>
+      establishment.canRead ||
+      establishment.id === requestedEstablishmentId ||
+      (resource.accountType === "OWNER" &&
+        resource.organization?.id &&
+        establishment.organizationId === resource.organization.id),
+  );
   const organization = resource.organization
-    ? toHeaderOrganization(resource.organization, resource.accountType, establishments.length)
+    ? toHeaderOrganization(resource.organization, establishments.length)
     : undefined;
-  const activeEstablishmentId = establishments.some(
-    (establishment) => establishment.id === resource.activeEstablishmentId,
-  )
-    ? resource.activeEstablishmentId ?? undefined
-    : establishments[0]?.id;
+  const activeEstablishmentId =
+    (requestedEstablishmentId &&
+    allEstablishments.some((establishment) => establishment.id === requestedEstablishmentId)
+      ? requestedEstablishmentId
+      : undefined) ??
+    (establishments.some((establishment) => establishment.id === resource.activeEstablishmentId)
+      ? resource.activeEstablishmentId ?? undefined
+      : establishments[0]?.id);
 
   return {
     accountType: resource.accountType,
@@ -61,6 +75,8 @@ export function toHeaderViewModel(resource: BusinessWorkspaceResource): Workspac
     establishments,
     activeEstablishmentId,
     capabilities: toWorkspaceCapabilities(resource.capabilities),
+    authorization: toWorkspaceAuthorization(resource.authorization),
+    accessPolicy: toWorkspaceAccessPolicy(resource),
     canReadOrganization: organization?.canRead === true,
     canReadEstablishments: organization?.canReadEstablishments === true,
     canCreateEstablishment: organization?.canCreateEstablishment === true,
@@ -78,21 +94,19 @@ export function toHeaderViewModel(resource: BusinessWorkspaceResource): Workspac
 
 function toHeaderOrganization(
   organization: NonNullable<BusinessWorkspaceResource["organization"]>,
-  accountType: BusinessWorkspaceResource["accountType"],
   readableEstablishmentCount: number,
 ): WorkspaceHeaderOrganization {
-  // The owner is authorized to attempt creation even when Billing rejects it
-  // because the plan limit was reached. The command remains the authoritative
-  // business validation boundary and will expose that error.
-  const canCreateEstablishment =
-    accountType === "OWNER" || organization.permissions.canCreateEstablishment;
+  // Creation rights come from the workspace response itself. The frontend
+  // should not keep an owner-only override when Billing or the backend has
+  // already denied more establishments.
+  const canCreateEstablishment = organization.permissions.canCreateEstablishment;
 
   return {
     id: organization.id,
     name: organization.name,
     imageUrl: organization.imageUrl,
-    canRead: accountType === "OWNER" || organization.permissions.canRead,
-    canUpdate: accountType === "OWNER" || organization.permissions.canUpdate,
+    canRead: organization.permissions.canRead,
+    canUpdate: organization.permissions.canUpdate,
     canReadEstablishments: canCreateEstablishment || readableEstablishmentCount > 0,
     canCreateEstablishment,
   };
@@ -131,5 +145,47 @@ function toWorkspaceCapabilities(
     canReadCustomers: capabilities.canReadCustomers,
     canReadTeam: capabilities.canReadTeam,
     canReadAnalytics: capabilities.canReadAnalytics,
+  };
+}
+
+function toWorkspaceAuthorization(
+  authorization: BusinessWorkspaceResource["authorization"],
+): WorkspaceAuthorization | undefined {
+  if (
+    !authorization ||
+    !authorization.scope ||
+    !authorization.scope.type ||
+    !authorization.scope.id ||
+    !authorization.scope.name
+  ) {
+    return undefined;
+  }
+
+  return {
+    role: authorization.role,
+    scope: {
+      type: authorization.scope.type,
+      id: authorization.scope.id,
+      name: authorization.scope.name,
+    },
+    capabilities: authorization.capabilities,
+  };
+}
+
+function toWorkspaceAccessPolicy(resource: BusinessWorkspaceResource): WorkspaceAccessPolicy {
+  const capabilities = resource.capabilities ?? {};
+  const accessPolicy = resource.accessPolicy ?? {};
+  const canCreateEstablishment =
+    accessPolicy.canCreateEstablishment ?? resource.organization?.permissions.canCreateEstablishment ?? false;
+
+  return {
+    canOpenAnalytics: accessPolicy.canOpenAnalytics ?? capabilities.canReadAnalytics ?? false,
+    canOpenScheduling: accessPolicy.canOpenScheduling ?? capabilities.canReadAppointments ?? false,
+    canOpenCrm: accessPolicy.canOpenCrm ?? capabilities.canReadCustomers ?? false,
+    canOpenCatalog: accessPolicy.canOpenCatalog ?? capabilities.canReadCatalog ?? false,
+    canOpenTeam: accessPolicy.canOpenTeam ?? capabilities.canReadTeam ?? false,
+    canUseAssistant: accessPolicy.canUseAssistant,
+    canCreateEstablishment,
+    canManageBilling: accessPolicy.canManageBilling ?? resource.subscription?.canManageBilling ?? false,
   };
 }

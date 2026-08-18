@@ -96,13 +96,12 @@ export class BusinessAccessPolicyService {
 
         // 2. Determine if the user has permission to read establishments in the active organization
         const canRead =
-          hasReadRole(activeEst.roles) ||
           access.establishments.some(
             (item) =>
               item.organizationId === activeOrgId &&
               hasAnyPermission(item.effectivePermissions, [
-                "business:read",
-                "business:manage",
+                "establishment:read",
+                "establishment:update",
               ]),
           );
 
@@ -111,7 +110,7 @@ export class BusinessAccessPolicyService {
           (item) =>
             item.organizationId === activeOrgId &&
             hasAnyPermission(item.effectivePermissions, [
-              "business:manage",
+                "establishment:update",
             ]),
         );
 
@@ -122,7 +121,7 @@ export class BusinessAccessPolicyService {
 
         const allowedEstablishments = filteredEsts.map((item) => {
           const canUpdate = hasAnyPermission(item.effectivePermissions, [
-            "business:manage",
+            "establishment:update",
           ]);
           canUpdateMap[item.establishmentId] = canUpdate;
 
@@ -199,13 +198,12 @@ export class BusinessAccessPolicyService {
         if (activeEst) {
           const activeOrgId = activeEst.organizationId;
           canRead =
-            hasReadRole(activeEst.roles) ||
             access.establishments.some(
               (item) =>
                 item.organizationId === activeOrgId &&
                 hasAnyPermission(item.effectivePermissions, [
-                  "business:read",
-                  "business:manage",
+                  "establishment:read",
+                  "establishment:update",
                 ]),
             );
 
@@ -218,7 +216,7 @@ export class BusinessAccessPolicyService {
               (item) =>
                 item.organizationId === activeOrgId &&
                 hasAnyPermission(item.effectivePermissions, [
-                  "business:manage",
+                  "establishment:update",
                 ]),
             );
           }
@@ -246,6 +244,3 @@ export function createBusinessAccessPolicyService() {
   return new BusinessAccessPolicyService();
 }
 
-function hasReadRole(roles?: ReadonlyArray<{ name: string }>): boolean {
-  return roles?.some((role) => role.name.toLowerCase() === "read") ?? false;
-}

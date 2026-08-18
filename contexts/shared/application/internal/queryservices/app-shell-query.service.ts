@@ -1,12 +1,6 @@
 import "server-only";
 
 import { createBusinessWorkspaceQueryService } from "@/contexts/business/application/internal/queryservices/business-workspace-query.service";
-import { createSubscriptionAccessQueryService } from "@/contexts/billing/application/internal/queryservices/subscription-access-query.service";
-import { createCatalogAccessPolicyService } from "@/contexts/catalog/application/internal/queryservices/catalog-access-policy.service";
-import { createCrmAccessPolicyService } from "@/contexts/crm/application/internal/queryservices/crm-access-policy.service";
-import { createSchedulingAccessPolicyService } from "@/contexts/scheduling/application/internal/queryservices/scheduling-access-policy.service";
-import { createWorkforceAccessPolicyService } from "@/contexts/workforce/application/internal/queryservices/workforce-access-policy.service";
-import type { SubscriptionAccessSnapshot } from "@/contexts/billing/domain/services/subscription-access.policy";
 import type {
   AppShellHomeHref,
   AppShellViewModel,
@@ -14,50 +8,40 @@ import type {
 } from "@/contexts/shared/application/model/app-shell.view-models";
 
 export interface AppShellQueryInput {
-  subscription: SubscriptionAccessSnapshot | null | undefined;
   workspace?: Readonly<{
+    organizationId?: string;
     establishmentId?: string;
   }>;
 }
 
 export class AppShellQueryService {
-  async resolve({ subscription, workspace: workspaceSelection }: AppShellQueryInput): Promise<AppShellViewModel> {
-    const subscriptionAccess = createSubscriptionAccessQueryService().resolve(subscription);
+  async resolve({ workspace: workspaceSelection }: AppShellQueryInput = {}): Promise<AppShellViewModel> {
     const workspace = await createBusinessWorkspaceQueryService().getHeaderViewModel(workspaceSelection);
-    const activeEstablishmentId = workspace.activeEstablishmentId;
-    const isOwnerWorkspace = workspace.accountType === "OWNER";
-    const [schedulingPermissions, catalogPermissions, crmPermissions, workforcePermissions] =
-      activeEstablishmentId
-        ? await Promise.all([
-            createSchedulingAccessPolicyService().getPermissions(activeEstablishmentId),
-            createCatalogAccessPolicyService().getPermissions(activeEstablishmentId),
-            createCrmAccessPolicyService().getPermissions(activeEstablishmentId),
-            createWorkforceAccessPolicyService().getPermissions(activeEstablishmentId),
-          ])
-        : [null, null, null, null];
-    const capabilities = workspace.capabilities;
+    const accessPolicy = workspace.accessPolicy;
+    const hasAssistantAccess = accessPolicy?.canUseAssistant ?? false;
     const canReadScheduling =
-      capabilities?.canReadAppointments ?? schedulingPermissions?.canReadAppointments ?? isOwnerWorkspace;
+      accessPolicy?.canOpenScheduling ?? workspace.capabilities?.canReadAppointments ?? false;
     const canReadCatalog =
-      capabilities?.canReadCatalog ?? catalogPermissions?.canReadCatalog ?? isOwnerWorkspace;
+      accessPolicy?.canOpenCatalog ?? workspace.capabilities?.canReadCatalog ?? false;
     const canReadCrm =
-      capabilities?.canReadCustomers ?? crmPermissions?.canReadCustomers ?? isOwnerWorkspace;
+      accessPolicy?.canOpenCrm ?? workspace.capabilities?.canReadCustomers ?? false;
     const canReadTeam =
-      capabilities?.canReadTeam ?? workforcePermissions?.canReadTeam ?? isOwnerWorkspace;
-    const canReadAnalytics = capabilities?.canReadAnalytics ?? true;
+      accessPolicy?.canOpenTeam ?? workspace.capabilities?.canReadTeam ?? false;
+    const canReadAnalytics =
+      accessPolicy?.canOpenAnalytics ?? workspace.capabilities?.canReadAnalytics ?? false;
     const visibleSidebarRoutes = resolveVisibleSidebarRoutes(
       canReadScheduling,
       canReadCatalog,
       canReadCrm,
       canReadTeam,
       canReadAnalytics,
-      subscriptionAccess.hasAssistantAccess,
+      hasAssistantAccess,
     );
 
     return {
       workspace,
-      hasAssistantAccess: subscriptionAccess.hasAssistantAccess,
-      homeHref: resolveHomeHref(subscriptionAccess.hasAssistantAccess, visibleSidebarRoutes, workspace),
+      hasAssistantAccess,
+      homeHref: resolveHomeHref(hasAssistantAccess, visibleSidebarRoutes, workspace),
       visibleSidebarRoutes,
     };
   }
@@ -104,13 +88,30 @@ function resolveHomeHref(
   visibleRoutes: ReadonlyArray<SidebarRouteId>,
   workspace: AppShellViewModel["workspace"],
 ): AppShellHomeHref {
-  // An account that registered through an invitation belongs nowhere until it
-  // accepts, so it is sent to the acceptance screen instead of an empty shell.
-  if (workspace.accountType === "PENDING_INVITATION") {
-    return "/invitations/pending";
+  if (workspace.accountType === "PENDING_INVITATION" || workspace.onboardingStatus === "ORGANIZATION_PENDING") {
+    // An account that registered through an invitation belongs nowhere until it
+    // accepts. A new owner needs to create its organization before entering the
+    // application shell.
+    if (workspace.accountType === "PENDING_INVITATION") return "/invitations/pending";
+    return "/organizations/new";
   }
-  if (workspace.organization && workspace.establishments.length === 0 && workspace.canCreateEstablishment) {
+  if (workspace.onboardingStatus === "ESTABLISHMENT_PENDING") {
     return "/establishments/new";
+  }
+  // Keep the legacy fallback only for workspace responses that predate the
+  // onboarding status contract. Once the backend sends a status, that status
+  // is the source of truth.
+  if (
+    workspace.onboardingStatus == null &&
+    workspace.accountType === "OWNER" &&
+    workspace.organization &&
+    workspace.establishments.length === 0 &&
+    workspace.canCreateEstablishment
+  ) {
+    return "/establishments/new";
+  }
+  if (!workspace.organization) {
+    return "/access-denied";
   }
   if (hasAssistantAccess) {
     return "/chat";
@@ -119,6 +120,6 @@ function resolveHomeHref(
   const firstWorkRoute = visibleRoutes.find((route) => route !== "/analytics");
   if (firstWorkRoute) return firstWorkRoute;
 
-  if (workspace.canReadOrganization) return "/organization";
+  if (workspace.accountType === "OWNER") return "/welcome";
   return "/access-denied";
 }

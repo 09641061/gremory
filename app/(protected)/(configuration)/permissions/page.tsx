@@ -3,9 +3,9 @@ import { createWorkforceRoleQueryService } from "@/contexts/workforce/applicatio
 import type { WorkforceRoleSummary } from "@/contexts/workforce/application/model/workforce-role.read-models";
 import { PermissionsPageView } from "@/contexts/workforce/interfaces/components/permissions/permissions-page-view";
 
-import { createWorkforceAccessPolicyService } from "@/contexts/workforce/application/internal/queryservices/workforce-access-policy.service";
 import { redirect } from "next/navigation";
 import { createBusinessWorkspaceQueryService } from "@/contexts/business/application/internal/queryservices/business-workspace-query.service";
+import { getWorkspaceEstablishment, hasEstablishmentPermission } from "@/contexts/shared/application/services/workspace-establishment-permissions";
 
 interface PermissionsPageProps {
   searchParams: Promise<{ establishmentId?: string }>;
@@ -20,10 +20,15 @@ export default async function PermissionsPage({ searchParams }: PermissionsPageP
     workspace.organization?.id,
   );
 
-  const policyService = createWorkforceAccessPolicyService();
   const establishmentId = paramEstId ?? workspace.activeEstablishmentId;
-
-  const { canReadRoles, canCreateRole, canUpdateRole, canDeleteRole } = await policyService.getPermissions(establishmentId);
+  const establishment = getWorkspaceEstablishment(workspace, establishmentId);
+  const organizationId = establishment?.organizationId ?? workspace.organization?.id;
+  const canManageRoles = hasEstablishmentPermission(establishment, "workforce:manage_roles") ||
+    hasEstablishmentPermission(establishment, "workforce:manage");
+  const canReadRoles = canManageRoles;
+  const canCreateRole = canManageRoles;
+  const canUpdateRole = canManageRoles;
+  const canDeleteRole = canManageRoles;
 
   if (!canReadRoles) {
     redirect("/access-denied");
@@ -41,24 +46,31 @@ export default async function PermissionsPage({ searchParams }: PermissionsPageP
     ).content;
   }
 
-  const [roleEntities, permissions] = await Promise.all([
-    queryService.list(),
+  const [roleEntities, supportedPermissions] = await Promise.all([
+    queryService.list(organizationId),
     queryService.permissions(),
   ]);
+  const permissions = supportedPermissions.filter(
+    (permission) =>
+      !permission.startsWith("organization:") && permission !== "establishment:delete",
+  );
 
-  const roles = roleEntities.map((role): WorkforceRoleSummary => ({
-    id: role.id,
-    name: role.getName(),
-    permissions: role.getPermissions(),
-    systemRole: role.isSystemRole(),
-    position: role.position,
-  }));
+  const roles = roleEntities
+    .filter((role) => role.getName().trim().toLowerCase() !== "everyone")
+    .map((role): WorkforceRoleSummary => ({
+      id: role.id,
+      name: role.getName(),
+       permissions: role.getPermissions().filter((permission) => permission !== "establishment:delete"),
+      systemRole: role.isSystemRole(),
+      position: role.position,
+    }));
 
   return (
     <PermissionsPageView
       roles={roles}
       permissions={permissions}
       members={members}
+      authorization={workspace.authorization}
       canCreateRole={canCreateRole}
       canUpdateRole={canUpdateRole}
       canDeleteRole={canDeleteRole}

@@ -26,16 +26,24 @@ const mocks = vi.hoisted(() => ({
       ],
       activeOrganizationId: "org-1",
       activeEstablishmentId: "est-1",
+      accessPolicy: {
+        canUseAssistant: true,
+        canOpenAnalytics: true,
+        canOpenScheduling: true,
+        canOpenCrm: true,
+        canOpenCatalog: true,
+        canOpenTeam: true,
+        canCreateEstablishment: true,
+        canManageBilling: true,
+      },
       capabilities: {
         canReadAnalytics: true,
       },
       canReadOrganizations: true,
       canReadEstablishments: true,
       canCreateEstablishment: true,
+      accountType: "OWNER",
     },
-  },
-  subscription: {
-    resolve: vi.fn(),
   },
   workspace: {
     getHeaderViewModel: vi.fn(),
@@ -58,13 +66,6 @@ vi.mock(
   "@/contexts/business/application/internal/queryservices/business-workspace-query.service",
   () => ({
     createBusinessWorkspaceQueryService: () => mocks.workspace,
-  }),
-);
-
-vi.mock(
-  "@/contexts/billing/application/internal/queryservices/subscription-access-query.service",
-  () => ({
-    createSubscriptionAccessQueryService: () => mocks.subscription,
   }),
 );
 
@@ -101,14 +102,20 @@ import { createAppShellQueryService } from "@/contexts/shared/application/intern
 describe("app shell query service", () => {
   beforeEach(() => {
     vi.resetAllMocks();
+    mocks.shell.workspace.accessPolicy = {
+      canUseAssistant: true,
+      canOpenAnalytics: true,
+      canOpenScheduling: true,
+      canOpenCrm: true,
+      canOpenCatalog: true,
+      canOpenTeam: true,
+      canCreateEstablishment: true,
+      canManageBilling: true,
+    };
     mocks.shell.workspace.capabilities = {
       canReadAnalytics: true,
     };
-    mocks.subscription.resolve.mockReturnValue({
-      isActive: true,
-      hasAssistantAccess: true,
-      homeHref: "/chat",
-    });
+    mocks.shell.workspace.accountType = "OWNER";
     mocks.workspace.getHeaderViewModel.mockResolvedValue(mocks.shell.workspace);
     mocks.catalog.getPermissions.mockResolvedValue({ canReadCatalog: true });
     mocks.crm.getPermissions.mockResolvedValue({ canReadCustomers: true });
@@ -117,7 +124,7 @@ describe("app shell query service", () => {
   });
 
   it("resolves the sidebar routes from application policies instead of UI labels", async () => {
-    const shell = await createAppShellQueryService().resolve({ subscription: { active: true, status: "ACTIVE", planId: 1 } });
+    const shell = await createAppShellQueryService().resolve();
 
     expect(shell.hasAssistantAccess).toBe(true);
     expect(shell.visibleSidebarRoutes).toEqual([
@@ -131,13 +138,9 @@ describe("app shell query service", () => {
   });
 
   it("hides assistant navigation when the plan is free", async () => {
-    mocks.subscription.resolve.mockReturnValue({
-      isActive: true,
-      hasAssistantAccess: false,
-      homeHref: "/schedule",
-    });
+    delete (mocks.shell.workspace.accessPolicy as { canUseAssistant?: boolean }).canUseAssistant;
 
-    const shell = await createAppShellQueryService().resolve({ subscription: { active: true, status: "ACTIVE", planId: 0 } });
+    const shell = await createAppShellQueryService().resolve();
 
     expect(shell.hasAssistantAccess).toBe(false);
     expect(shell.visibleSidebarRoutes).toEqual([
@@ -149,13 +152,26 @@ describe("app shell query service", () => {
     ]);
   });
 
-  it("hides schedule and team when their read capabilities are denied", async () => {
-    mocks.scheduling.getPermissions.mockResolvedValue({ canReadAppointments: false });
-    mocks.workforce.getPermissions.mockResolvedValue({ canReadTeam: false });
+  it("uses the workspace assistant policy when it is present", async () => {
+    mocks.shell.workspace.accessPolicy = {
+      ...mocks.shell.workspace.accessPolicy,
+      canUseAssistant: false,
+    };
 
-    const shell = await createAppShellQueryService().resolve({
-      subscription: { active: true, status: "ACTIVE", planId: 1 },
-    });
+    const shell = await createAppShellQueryService().resolve();
+
+    expect(shell.hasAssistantAccess).toBe(false);
+    expect(shell.visibleSidebarRoutes).not.toContain("/chat");
+  });
+
+  it("hides schedule and team when their read capabilities are denied", async () => {
+    mocks.shell.workspace.accessPolicy = {
+      ...mocks.shell.workspace.accessPolicy,
+      canOpenScheduling: false,
+      canOpenTeam: false,
+    };
+
+    const shell = await createAppShellQueryService().resolve();
 
     expect(shell.visibleSidebarRoutes).toEqual([
       "/chat",
@@ -166,11 +182,9 @@ describe("app shell query service", () => {
   });
 
   it("hides analytics when the workspace capability denies it", async () => {
-    mocks.shell.workspace.capabilities = { canReadAnalytics: false };
+    mocks.shell.workspace.accessPolicy = { ...mocks.shell.workspace.accessPolicy, canOpenAnalytics: false };
 
-    const shell = await createAppShellQueryService().resolve({
-      subscription: { active: true, status: "ACTIVE", planId: 1 },
-    });
+    const shell = await createAppShellQueryService().resolve();
 
     expect(shell.visibleSidebarRoutes).toEqual([
       "/chat",
@@ -181,20 +195,32 @@ describe("app shell query service", () => {
     ]);
   });
 
-  it("keeps owner routes visible when workspace capabilities are missing", async () => {
+  it("hides analytics when the workspace capability is missing", async () => {
     delete (mocks.shell.workspace as { capabilities?: { canReadAnalytics: boolean } }).capabilities;
+    delete (mocks.shell.workspace as { accessPolicy?: { canOpenAnalytics: boolean } }).accessPolicy;
 
-    const shell = await createAppShellQueryService().resolve({
-      subscription: { active: true, status: "ACTIVE", planId: 1 },
-    });
+    const shell = await createAppShellQueryService().resolve();
 
-    expect(shell.visibleSidebarRoutes).toEqual([
-      "/chat",
-      "/schedule",
-      "/crm",
-      "/catalog",
-      "/team",
-      "/analytics",
-    ]);
+    expect(shell.visibleSidebarRoutes).toEqual([]);
+    expect(shell.homeHref).toBe("/welcome");
+  });
+
+  it("routes a member without visible modules to access denied", async () => {
+    mocks.shell.workspace.accountType = "MEMBER";
+    mocks.shell.workspace.accessPolicy = { canUseAssistant: false } as never;
+    (mocks.shell.workspace as { capabilities?: unknown }).capabilities = undefined;
+
+    const shell = await createAppShellQueryService().resolve();
+
+    expect(shell.visibleSidebarRoutes).toEqual([]);
+    expect(shell.homeHref).toBe("/access-denied");
+  });
+
+  it("routes an owner without establishments to the establishment setup page", async () => {
+    mocks.shell.workspace.establishments = [];
+
+    const shell = await createAppShellQueryService().resolve();
+
+    expect(shell.homeHref).toBe("/establishments/new");
   });
 });

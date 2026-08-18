@@ -2,7 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { createCrmCommandService } from "../../application/internal/commandservices/crm-command.service";
-import { createCrmAccessPolicyService } from "../../application/internal/queryservices/crm-access-policy.service";
+import { createBusinessWorkspaceQueryService } from "@/contexts/business/application/internal/queryservices/business-workspace-query.service";
+import { getWorkspaceEstablishment, hasEstablishmentPermission } from "@/contexts/shared/application/services/workspace-establishment-permissions";
 import { RegisterCustomerCommand } from "../../domain/model/commands/register-customer.command";
 import { ApiError } from "@/contexts/shared/infrastructure/http/api-client";
 import { CustomerResponse } from "../../domain/model/entities/customer";
@@ -18,8 +19,8 @@ export async function registerCustomerAction(
   command: Omit<RegisterCustomerCommand, "establishmentId">,
   establishmentId: string
 ): Promise<ActionState<CustomerResponse>> {
-  const permissions = await createCrmAccessPolicyService().getPermissions(establishmentId);
-  if (!permissions.canCreateCustomer) {
+  const workspace = await createBusinessWorkspaceQueryService().getHeaderViewModel({ establishmentId });
+  if (!hasEstablishmentPermission(getWorkspaceEstablishment(workspace, establishmentId), "crm:manage")) {
     return { status: "error", data: null, error: "You are not authorized to register customers." };
   }
 

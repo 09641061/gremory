@@ -26,6 +26,7 @@ export interface TeamCommandService {
 
 export interface TeamQueryService {
   list(query?: ListTeamUsersQuery): Promise<TeamPageView<TeamUserSummary>>;
+  getMyMembership(establishmentId?: string): Promise<TeamUserSummary | null>;
   getAccessContext(): Promise<TeamAccessView>;
   previewInvitation(
     query: PreviewTeamInvitationQuery,

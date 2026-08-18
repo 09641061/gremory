@@ -1,5 +1,3 @@
-import "server-only";
-
 /**
  * Remembers which establishment the account was last working in. The
  * `establishmentId` query string is the source of truth for a single
@@ -10,6 +8,8 @@ import "server-only";
  */
 export const workspaceSelectionCookies = {
   establishmentId: "takodu.active_establishment_id",
+  organizationId: "takodu.active_organization_id",
+  previewOrganizationId: "takodu.preview_organization_id",
 } as const;
 
 export const workspaceSelectionCookieOptions = {

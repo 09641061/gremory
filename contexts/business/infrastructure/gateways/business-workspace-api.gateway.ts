@@ -8,9 +8,8 @@ import {
   type BusinessWorkspaceResource,
 } from "../../interfaces/rest/schemas/business-workspace.schemas";
 
-// The organization is fixed for the account, so the establishment is the only
-// selectable context.
 export type BusinessWorkspaceSelection = Readonly<{
+  organizationId?: string;
   establishmentId?: string;
 }>;
 
@@ -23,6 +22,7 @@ export class BusinessWorkspaceApiGateway {
     const token = this.providedToken ?? (await requireBusinessAccessToken());
     const params = new URLSearchParams();
 
+    if (selection.organizationId) params.set("organizationId", selection.organizationId);
     if (selection.establishmentId) params.set("establishmentId", selection.establishmentId);
 
     const path = params.size

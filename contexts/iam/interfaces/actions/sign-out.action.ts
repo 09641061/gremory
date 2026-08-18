@@ -26,7 +26,9 @@ export async function signOutAction(): Promise<SignOutActionResult> {
     await createIamAuthenticationCommandService().signOut(input.data);
     cookieStore.delete(iamSessionCookies.accessToken);
     cookieStore.delete(iamSessionCookies.refreshToken);
+    cookieStore.delete(workspaceSelectionCookies.organizationId);
     cookieStore.delete(workspaceSelectionCookies.establishmentId);
+    cookieStore.delete(workspaceSelectionCookies.previewOrganizationId);
     return { status: "success", error: null };
   } catch (error) {
     console.error("Sign out failed", error);

@@ -1,6 +1,4 @@
 import { createTeamQueryService } from "@/contexts/workforce/application/internal/queryservices/team-query.service";
-import { createOrganizationQueryService } from "@/contexts/business/application/internal/queryservices/organization-query.service";
-import { createEstablishmentQueryService } from "@/contexts/business/application/internal/queryservices/establishment-query.service";
 import {
   hasAnyPermission,
 } from "@/contexts/shared/application/internal/queryservices/access-context.helpers";
@@ -30,21 +28,6 @@ export class CatalogAccessPolicyService {
     }
 
     try {
-      if (await ownsEstablishment(establishmentId)) {
-      return {
-        canReadCatalog: true,
-        canCreateCategory: true,
-        canUpdateCategory: true,
-        canDeleteCategory: true,
-        canCreateService: true,
-        canUpdateService: true,
-        canDeleteService: true,
-      };
-      }
-    } catch {
-      // Resolve member permissions below.
-    }
-    try {
         const access = await createTeamQueryService().getAccessContext();
         const estAccess = access.establishments.find(
           (item) => item.establishmentId === establishmentId,
@@ -64,6 +47,17 @@ export class CatalogAccessPolicyService {
         const perms = estAccess.effectivePermissions ?? [];
         const hasReadCatalog = hasCatalogReadPermission(perms);
         const hasManage = hasAnyPermission(perms, ["catalog:manage"]);
+        if (access.membershipCapabilities?.canOpenModules === false) {
+          return {
+            canReadCatalog: false,
+            canCreateCategory: false,
+            canUpdateCategory: false,
+            canDeleteCategory: false,
+            canCreateService: false,
+            canUpdateService: false,
+            canDeleteService: false,
+          };
+        }
 
         return {
           canReadCatalog: hasReadCatalog,
@@ -89,19 +83,6 @@ export class CatalogAccessPolicyService {
 
 }
 
-async function ownsEstablishment(establishmentId: string): Promise<boolean> {
-  try {
-    const organization = await createOrganizationQueryService().getMyOrganization();
-    const page = await createEstablishmentQueryService().getByOrganization({
-      organizationId: organization.id,
-      page: 0,
-      size: 100,
-    });
-    return page ? page.content.some((establishment) => establishment.id === establishmentId) : true;
-  } catch {
-    return false;
-  }
-}
 export function createCatalogAccessPolicyService() {
   return new CatalogAccessPolicyService();
 }

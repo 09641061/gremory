@@ -32,7 +32,8 @@ export function createEmployeeOptions(members: SchedulingMemberViewModel[]): Dro
   return members.map((member) => ({
     value: member.userId,
     label: member.name,
-    description: member.role,
+    description: member.availableForScheduling ? "Available for appointments" : "Unavailable for appointments",
+    disabled: !member.availableForScheduling,
   }));
 }
 

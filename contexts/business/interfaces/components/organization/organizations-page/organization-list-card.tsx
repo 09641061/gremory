@@ -1,24 +1,32 @@
+"use client";
+
 import { Building2 } from "lucide-react";
 
+import { buttonVariants } from "@/contexts/shared/interfaces/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/contexts/shared/interfaces/components/ui/avatar";
-import { Badge } from "@/contexts/shared/interfaces/components/ui/badge";
 import { Card, CardContent } from "@/contexts/shared/interfaces/components/ui/card";
 import type { OrganizationListItem } from "./organizations-page";
 
 interface OrganizationListCardProps {
   organizations: ReadonlyArray<OrganizationListItem>;
   filteredOrganizations: ReadonlyArray<OrganizationListItem>;
-  selectedOrgId: string | null;
+  previewOrgId: string | null;
+  previewOrganization: OrganizationListItem | null;
+  activeOrganizationId: string | null;
   ownedOrganizationId: string | null;
-  onSelect: (id: string) => void;
+  onPreview: (id: string) => void;
+  onConfirm: (id: string) => void;
 }
 
 export function OrganizationListCard({
   organizations,
   filteredOrganizations,
-  selectedOrgId,
+  previewOrgId,
+  previewOrganization,
+  activeOrganizationId,
   ownedOrganizationId,
-  onSelect,
+  onPreview,
+  onConfirm,
 }: OrganizationListCardProps) {
   return (
     <Card className="lg:flex lg:min-h-0 lg:flex-1 lg:flex-col">
@@ -36,15 +44,16 @@ export function OrganizationListCard({
             </div>
           ) : (
             filteredOrganizations.map((org) => {
-              const selected = org.organizationId === selectedOrgId;
+              const previewing = org.organizationId === previewOrgId;
+              const active = org.organizationId === activeOrganizationId;
               return (
                 <button
                   key={org.organizationId}
                   type="button"
-                  aria-pressed={selected}
-                  onClick={() => onSelect(org.organizationId)}
-                  className={`flex w-full cursor-pointer items-center gap-3 border-b border-border/70 px-5 py-4 text-left transition-colors outline-none last:border-b-0 hover:bg-muted/20 focus-visible:bg-muted/20 ${
-                    selected ? "bg-accent/30" : ""
+                  aria-pressed={previewing}
+                  onClick={() => onPreview(org.organizationId)}
+                  className={`flex w-full cursor-pointer items-center gap-3 border-b border-border px-5 py-4 text-left transition-colors outline-none last:border-b-0 hover:bg-muted/40 focus-visible:bg-muted/40 ${
+                    previewing ? "bg-accent/60 ring-1 ring-inset ring-ring/20" : ""
                   }`}
                 >
                   <Avatar className="size-10 shrink-0">
@@ -61,19 +70,42 @@ export function OrganizationListCard({
                       {org.organizationName}
                     </p>
                     <p className="truncate text-xs text-muted-foreground">
-                      {org.establishments.length} {org.establishments.length === 1 ? "establishment" : "establishments"}
+                      {org.establishments.length === 0
+                        ? "No accessible establishments"
+                        : `${org.establishments.length} establishment${
+                            org.establishments.length === 1 ? "" : "s"
+                          }`}
                     </p>
                   </div>
-                  {org.organizationId === ownedOrganizationId ? (
-                    <Badge variant="outline" className="rounded-full px-2.5 text-[0.7rem] font-medium uppercase tracking-wide">
-                      Yours
-                    </Badge>
-                  ) : null}
+                  <div className="ml-auto flex shrink-0 flex-col items-end gap-1">
+                    {org.organizationId === ownedOrganizationId && (
+                      <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
+                        Yours
+                      </span>
+                    )}
+                    {active && (
+                      <span className="rounded-full border border-ring/20 bg-background px-2 py-0.5 text-xs text-foreground">
+                        Selected
+                      </span>
+                    )}
+                  </div>
                 </button>
               );
             })
           )}
         </div>
+
+        {previewOrganization ? (
+          <div className="border-t border-border p-3">
+            <button
+              type="button"
+              onClick={() => onConfirm(previewOrganization.organizationId)}
+              className={buttonVariants({ variant: "default" })}
+            >
+              Work in {previewOrganization.organizationName}
+            </button>
+          </div>
+        ) : null}
       </CardContent>
     </Card>
   );
