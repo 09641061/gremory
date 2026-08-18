@@ -60,12 +60,12 @@ function formatPermissionGroupLabel(context: string) {
 export function permissionGroupPriority(context: string) {
   const order: Record<string, number> = {
     organization: 0,
-    establishment: 1,
-    workforce: 2,
-    scheduling: 3,
-    crm: 4,
-    catalog: 5,
-    analytics: 6,
+    scheduling: 1,
+    catalog: 2,
+    crm: 3,
+    workforce: 4,
+    analytics: 5,
+    establishment: 6,
   };
 
   return order[context] ?? 100;

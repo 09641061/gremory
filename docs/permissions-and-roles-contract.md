@@ -102,20 +102,16 @@ The workspace response contains the active context and its permissions:
         "canDelete": true
       },
       "effectivePermissions": [
-        "establishment:read",
-        "establishment:update",
-        "establishment:delete",
         "scheduling:read",
         "scheduling:manage",
         "catalog:read",
         "catalog:manage",
         "crm:read",
         "crm:manage",
-        "analytics:read",
         "workforce:read",
-        "workforce:invite",
-        "workforce:manage_members",
-        "workforce:manage_roles"
+        "workforce:manage",
+        "analytics:read",
+        "establishment:update"
       ]
     }
   ],
@@ -205,6 +201,12 @@ establishment:update
 establishment:delete
 ```
 
+Of these, only `establishment:update` is assignable from the Workforce role
+editor. It enables nothing beyond editing the establishment profile (name,
+photo, time zone) through the edit-profile form. It must not grant creating or
+deleting establishments, editing the organization profile, opening modules, or
+any administrative access.
+
 The delete permission remains part of the backend contract, but it is not
 assignable from the Workforce role editor. The frontend exposes delete only for
 an establishment belonging to the owner's organization and only when the
@@ -231,26 +233,29 @@ blocked modules should send the owner to `/upgrade`, not directly to
 
 ## Detailed Permissions
 
-The following permissions are assigned to Workforce roles at establishment
-scope:
+`GET /api/workforce/roles/permissions` returns exactly this assignable list, in
+this order. `scheduling:manage`, `catalog:manage`, `crm:manage` and
+`workforce:manage` imply their read permission. Read permissions only control
+navigation; `analytics:read` only controls the analytics page.
+`establishment:update` is shown in its own section, separate from the modules.
 
 ```text
-establishment:read
-establishment:update
-establishment:delete
 scheduling:read
 scheduling:manage
 catalog:read
 catalog:manage
 crm:read
 crm:manage
-analytics:read
 workforce:read
-workforce:invite
-workforce:manage_members
-workforce:manage_roles
 workforce:manage
+analytics:read
+establishment:update
 ```
+
+Legacy codes (`establishment:read`, `establishment:delete`,
+`workforce:invite`, `workforce:manage_members`, `workforce:manage_roles`) may
+still appear in seeded roles and are recognized for display, but they are not
+assignable and must not gate authorization.
 
 Organization permissions are returned by the workspace and are not assignable
 through the establishment role editor:
@@ -267,12 +272,11 @@ Typical role expectations:
 ### Worker
 
 ```text
-establishment:read
 scheduling:read
 catalog:read
 crm:read
-analytics:read
 workforce:read
+analytics:read
 ```
 
 Worker cannot edit establishments, manage catalog or CRM, create appointments,
@@ -281,7 +285,6 @@ invite users, manage members, or modify roles.
 ### Manager
 
 ```text
-establishment:read
 establishment:update
 scheduling:read
 scheduling:manage
@@ -289,11 +292,9 @@ catalog:read
 catalog:manage
 crm:read
 crm:manage
-analytics:read
 workforce:read
-workforce:invite
-workforce:manage_members
-workforce:manage_roles
+workforce:manage
+analytics:read
 ```
 
 ### Owner

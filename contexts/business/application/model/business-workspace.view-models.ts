@@ -38,7 +38,7 @@ export type WorkspaceAccessPolicy = Readonly<{
   canManageBilling: boolean;
 }>;
 
-export type WorkspaceAuthorizationRole = "OWNER" | "ADMIN" | "MANAGER" | "WORKER";
+export type WorkspaceAuthorizationRole = "OWNER" | "MANAGER" | "WORKER";
 
 export type WorkspaceAuthorizationScope = Readonly<{
   type: "ORGANIZATION" | "ESTABLISHMENT";

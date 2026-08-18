@@ -85,7 +85,21 @@ describe("workforce role routes", () => {
     const response = await listWorkforceRolePermissionsRoute();
 
     expect(response.status).toBe(200);
-    expect(await response.json()).toContain("establishment:read");
+    const body = await response.json();
+    expect(body).toEqual([
+      "scheduling:read",
+      "scheduling:manage",
+      "catalog:read",
+      "catalog:manage",
+      "crm:read",
+      "crm:manage",
+      "workforce:read",
+      "workforce:manage",
+      "analytics:read",
+      "establishment:update",
+    ]);
+    expect(body).not.toContain("establishment:read");
+    expect(body).toContain("analytics:read");
   });
 
   it("should create a role", async () => {

@@ -121,5 +121,13 @@ function resolveHomeHref(
   if (firstWorkRoute) return firstWorkRoute;
 
   if (workspace.accountType === "OWNER") return "/welcome";
+  // No module is openable, but the account may still manage an establishment
+  // profile (`establishment:update`), which lives on the establishments page.
+  if (
+    workspace.canReadEstablishments &&
+    workspace.establishments.some((establishment) => establishment.canUpdate === true)
+  ) {
+    return "/establishments";
+  }
   return "/access-denied";
 }

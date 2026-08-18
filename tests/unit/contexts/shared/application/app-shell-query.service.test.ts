@@ -22,6 +22,7 @@ const mocks = vi.hoisted(() => ({
           id: "est-1",
           name: "Main",
           photoUrl: null,
+          canUpdate: true,
         },
       ],
       activeOrganizationId: "org-1",
@@ -205,10 +206,22 @@ describe("app shell query service", () => {
     expect(shell.homeHref).toBe("/welcome");
   });
 
-  it("routes a member without visible modules to access denied", async () => {
+  it("routes a member without visible modules but readable establishments to the establishments page", async () => {
     mocks.shell.workspace.accountType = "MEMBER";
     mocks.shell.workspace.accessPolicy = { canUseAssistant: false } as never;
     (mocks.shell.workspace as { capabilities?: unknown }).capabilities = undefined;
+
+    const shell = await createAppShellQueryService().resolve();
+
+    expect(shell.visibleSidebarRoutes).toEqual([]);
+    expect(shell.homeHref).toBe("/establishments");
+  });
+
+  it("routes a member without visible modules or readable establishments to access denied", async () => {
+    mocks.shell.workspace.accountType = "MEMBER";
+    mocks.shell.workspace.accessPolicy = { canUseAssistant: false } as never;
+    (mocks.shell.workspace as { capabilities?: unknown }).capabilities = undefined;
+    mocks.shell.workspace.canReadEstablishments = false;
 
     const shell = await createAppShellQueryService().resolve();
 

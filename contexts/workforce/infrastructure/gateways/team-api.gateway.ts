@@ -79,6 +79,7 @@ export class TeamApiGateway implements TeamRepository {
         ? `${apiConfig.routes.workforce.members}/me?${params}`
         : `${apiConfig.routes.workforce.members}/me`,
       token,
+      this.tenantHeaders(),
     );
     const resource = workforceCurrentMemberResourceSchema.parse(response);
     return {

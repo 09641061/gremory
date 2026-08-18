@@ -4,6 +4,8 @@ export type EntryRoutePath =
   | "/catalog"
   | "/crm"
   | "/team"
+  | "/analytics"
+  | "/establishments"
   | "/organization"
   | "/welcome"
   | "/access-denied";

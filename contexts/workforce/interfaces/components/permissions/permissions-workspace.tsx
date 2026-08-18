@@ -4,6 +4,7 @@ import { useActionState, useEffect, useMemo, useState, type Dispatch, type SetSt
 import { useRouter } from "next/navigation";
 import { Plus, Save, Search, User } from "lucide-react";
 import type { WorkforcePermission } from "@/contexts/workforce/domain/model/enums/workforce-permission";
+import { isWorkforceAssignablePermission } from "@/contexts/workforce/domain/model/enums/workforce-permission";
 import type { WorkforceRoleSummary } from "@/contexts/workforce/application/model/workforce-role.read-models";
 import type { TeamUserSummary } from "@/contexts/workforce/application/model/team.read-models";
 import { patchWorkforceRoleAction } from "@/contexts/workforce/interfaces/actions/workforce-role.actions";
@@ -40,7 +41,7 @@ export function PermissionsWorkspace({ role, permissions, members, onCancel, can
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<"permissions" | "members">("permissions");
   const [selectedPermissions, setSelectedPermissions] = useState<ReadonlySet<string>>(
-    new Set(role?.permissions ?? []),
+    new Set((role?.permissions ?? []).filter((permission) => isWorkforceAssignablePermission(permission))),
   );
   const [permissionFilter, setPermissionFilter] = useState("");
   const [memberFilter, setMemberFilter] = useState("");
@@ -77,13 +78,6 @@ export function PermissionsWorkspace({ role, permissions, members, onCancel, can
       }))
       .filter((group) => group.permissions.length > 0);
   }, [permissionFilter, permissions]);
-
-  const establishmentGroup = filteredGroupedPermissions.find((group) => group.context === "establishment") ?? null;
-  const moduleGroups = filteredGroupedPermissions.filter((group) => group.context !== "establishment");
-  const hasEstablishmentAccess =
-    selectedPermissions.has("establishment:read") || selectedPermissions.has("establishment:update");
-  const visibleModuleGroups = establishmentGroup ? (hasEstablishmentAccess ? moduleGroups : []) : filteredGroupedPermissions;
-  const hasHiddenModulePermissions = Boolean(establishmentGroup && moduleGroups.length > 0 && !hasEstablishmentAccess);
 
   const roleMembers = useMemo(() => {
     if (!role) return [];
@@ -122,7 +116,9 @@ export function PermissionsWorkspace({ role, permissions, members, onCancel, can
   const editable = !role.systemRole && canUpdateRole;
 
   function cancelChanges() {
-    setSelectedPermissions(new Set(role?.permissions ?? []));
+    setSelectedPermissions(
+      new Set((role?.permissions ?? []).filter((permission) => isWorkforceAssignablePermission(permission))),
+    );
     onCancel?.();
   }
 
@@ -172,81 +168,17 @@ export function PermissionsWorkspace({ role, permissions, members, onCancel, can
                   No permissions found.
                 </div>
               ) : (
-                <div className="space-y-6">
-                   {establishmentGroup ? (
-                    <section className="rounded-xl border border-primary/20 bg-primary/5 p-4 shadow-sm">
-                      <div className="mb-3 flex items-start justify-between gap-4">
-                        <div className="space-y-1">
-                          <h3 className="text-sm font-semibold tracking-wide text-foreground">
-                            Establishment access
-                          </h3>
-                          <p className="text-xs text-muted-foreground">
-                            These permissions apply only to this establishment.
-                          </p>
-                        </div>
-                        <span className="rounded-full border border-primary/20 bg-background px-2.5 py-1 text-[11px] font-medium text-primary">
-                          Core access
-                        </span>
-                      </div>
-
-                      <div className="grid gap-3">
-                        {renderPermissionGroup(
-                           establishmentGroup,
-                          editable,
-                          selectedPermissions,
-                          setSelectedPermissions,
-                        )}
-                      </div>
-                    </section>
-                  ) : null}
-
-                   {establishmentGroup ? (
-                    <section className="space-y-3">
-                      <div className="flex items-center justify-between gap-3">
-                        <div>
-                          <h3 className="text-sm font-semibold tracking-wide text-foreground">
-                            Modules
-                          </h3>
-                          <p className="text-xs text-muted-foreground">
-                            Availability here depends on Organization access.
-                          </p>
-                        </div>
-                      </div>
-
-                      {hasHiddenModulePermissions ? (
-                        <div className="rounded-xl border border-dashed border-border px-4 py-6 text-sm text-muted-foreground">
-                           Enable <span className="font-medium text-foreground">Business read</span> to
-                          reveal the module permissions below.
-                        </div>
-                      ) : null}
-
-                      {visibleModuleGroups.length > 0 ? (
-                        <div className="space-y-5">
-                          {visibleModuleGroups.map((group) => (
-                            <PermissionGroupSection
-                              key={group.context}
-                              group={group}
-                              editable={editable}
-                              selectedPermissions={selectedPermissions}
-                              setSelectedPermissions={setSelectedPermissions}
-                              headingClassName="text-sm font-medium tracking-wide text-muted-foreground"
-                            />
-                          ))}
-                        </div>
-                      ) : null}
-                    </section>
-                  ) : (
-                    filteredGroupedPermissions.map((group) => (
-                      <PermissionGroupSection
-                        key={group.context}
-                        group={group}
-                        editable={editable}
-                        selectedPermissions={selectedPermissions}
-                        setSelectedPermissions={setSelectedPermissions}
-                        headingClassName="text-sm font-medium capitalize tracking-wide text-muted-foreground"
-                      />
-                    ))
-                  )}
+                <div className="space-y-5">
+                  {filteredGroupedPermissions.map((group) => (
+                    <PermissionGroupSection
+                      key={group.context}
+                      group={group}
+                      editable={editable}
+                      selectedPermissions={selectedPermissions}
+                      setSelectedPermissions={setSelectedPermissions}
+                      headingClassName="text-sm font-medium capitalize tracking-wide text-muted-foreground"
+                    />
+                  ))}
                 </div>
               )}
             </div>

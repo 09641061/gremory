@@ -1,6 +1,33 @@
 /**
- * Stable permission contract exposed by the Workforce bounded context.
- * UI components consume capabilities and never compare these codes directly.
+ * Permissions the backend allows to be granted to a role. `GET
+ * /api/workforce/roles/permissions` returns exactly this list and any other
+ * code is rejected with 400. The editor must only offer these codes.
+ */
+export const workforceAssignablePermissions = [
+  "scheduling:read",
+  "scheduling:manage",
+  "catalog:read",
+  "catalog:manage",
+  "crm:read",
+  "crm:manage",
+  "workforce:read",
+  "workforce:manage",
+  "analytics:read",
+  "establishment:update",
+] as const;
+
+export type WorkforceAssignablePermission = (typeof workforceAssignablePermissions)[number];
+
+export function isWorkforceAssignablePermission(
+  value: string,
+): value is WorkforceAssignablePermission {
+  return workforceAssignablePermissions.includes(value as WorkforceAssignablePermission);
+}
+
+/**
+ * Full legacy permission contract exposed by the Workforce bounded context.
+ * Includes non-assignable codes that may still appear in seeded roles; they
+ * are recognized for display but never sent back to the backend.
  */
 export const workforcePermissions = {
   organization: {
