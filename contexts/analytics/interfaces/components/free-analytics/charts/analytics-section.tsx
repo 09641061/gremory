@@ -1,5 +1,7 @@
 import type { ReactNode } from "react";
 
+import { ChartNoAxesCombined } from "lucide-react";
+
 import { Card, CardContent } from "@/contexts/shared/interfaces/components/ui/card";
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/contexts/shared/interfaces/components/ui/empty";
 
@@ -24,7 +26,9 @@ export function FreeAnalyticsErrorState({ message }: { message: string }) {
         <CardContent className="space-y-4 p-6">
           <Empty className="border-border/70 bg-background/70">
             <EmptyHeader>
-              <EmptyMedia variant="icon" />
+              <EmptyMedia variant="icon">
+                <ChartNoAxesCombined />
+              </EmptyMedia>
               <EmptyContent>
                 <EmptyTitle>Analytics unavailable</EmptyTitle>
                 <EmptyDescription>{message}</EmptyDescription>
