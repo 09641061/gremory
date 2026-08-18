@@ -1,13 +1,12 @@
 "use client";
 
-import { useActionState, useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useMemo, useState } from "react";
 import { EstablishmentsSearchBar } from "./establishments-search-bar";
 import { EstablishmentListCard } from "./establishment-list-card";
 import { EstablishmentDetailCard } from "./establishment-detail-card";
 import { deleteEstablishmentAction } from "@/contexts/business/interfaces/actions/establishment.actions";
-import { initialBusinessActionResult } from "@/contexts/business/interfaces/actions/business-action-result";
 import { DeleteConfirmDialog } from "@/contexts/shared/interfaces/components/delete-confirm-dialog";
+import { useEntityDelete } from "@/contexts/shared/interfaces/components/hooks/use-entity-delete";
 
 export type EstablishmentListItem = {
   id: string;
@@ -34,22 +33,13 @@ export function EstablishmentsPage({
   defaultCanUpdate?: boolean;
   canCreate?: boolean;
 }) {
-  const router = useRouter();
   const [filter, setFilter] = useState("");
   const [selectedEstId, setSelectedEstId] = useState<string | null>(
     initialSelectedEstablishmentId ?? null,
   );
-  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
-  const [deleteState, deleteAction, deletePending] = useActionState(
+  const { targetId: deleteTargetId, requestDelete, dialogProps } = useEntityDelete(
     deleteEstablishmentAction,
-    initialBusinessActionResult,
   );
-
-  useEffect(() => {
-    if (deleteState.status === "success") {
-      router.refresh();
-    }
-  }, [deleteState.status, router]);
 
   const filteredEstablishments = useMemo(() => {
     const normalized = filter.trim().toLowerCase();
@@ -96,21 +86,15 @@ export function EstablishmentsPage({
           canDeleteMap={canDeleteMap}
           defaultCanUpdate={defaultCanUpdate}
           onSelect={setSelectedEstId}
-          onDelete={setDeleteTargetId}
+          onDelete={requestDelete}
         />
       </div>
 
       {deleteTarget ? (
         <DeleteConfirmDialog
-          open={deleteTargetId !== null && deleteState.status !== "success"}
-          onOpenChange={(open) => {
-            if (!open) setDeleteTargetId(null);
-          }}
+          {...dialogProps}
           entityLabel="establishment"
           entityName={deleteTarget.name}
-          pending={deletePending}
-          error={deleteState.status === "error" ? deleteState.error : undefined}
-          formAction={deleteAction}
         >
           <input type="hidden" name="id" value={deleteTarget.id} />
         </DeleteConfirmDialog>

@@ -11,10 +11,10 @@ export default async function NewOrganizationPage() {
     redirect("/invitations/pending");
   }
 
-  // An owner who already finished onboarding has nothing left to set up here.
-  // A member reaches this page voluntarily to start their own business, at
-  // any onboarding state, so only the owner branch redirects away.
-  if (workspace.accountType === "OWNER" && workspace.onboardingStatus !== "ORGANIZATION_PENDING") {
+  // An account that already owns an organization has nothing left to set up
+  // here, regardless of account type or onboarding state - it creates
+  // establishments inside that organization instead of a second one.
+  if (!workspace.canCreateOrganization) {
     redirect("/");
   }
 

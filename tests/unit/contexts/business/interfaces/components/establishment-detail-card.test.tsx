@@ -47,6 +47,11 @@ describe("EstablishmentDetailCard Component", () => {
     // Verify action buttons are visible
     expect(screen.getByRole("button", { name: "Save" })).toBeDefined();
     expect(screen.getByRole("button", { name: "Cancel" })).toBeDefined();
+
+    // Verify the time zone field is rendered with the establishment's current value
+    expect(screen.getByText("Time zone")).toBeDefined();
+    const timeZoneTrigger = screen.getByRole("combobox");
+    expect(timeZoneTrigger.textContent).toContain("Lima, Peru");
   });
 
   it("renders detail card as read-only when user lacks update permission (Unhappy Case - Read only)", () => {

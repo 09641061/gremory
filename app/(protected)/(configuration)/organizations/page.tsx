@@ -3,7 +3,10 @@ import { cookies } from "next/headers";
 import { OrganizationsPage } from "@/contexts/business/interfaces/components/organization/organizations-page/organizations-page";
 import { createBusinessWorkspaceQueryService } from "@/contexts/business/application/internal/queryservices/business-workspace-query.service";
 import { OrganizationApiGateway } from "@/contexts/business/infrastructure/gateways/organization-api.gateway";
-import type { WorkspaceNavigationOrganizationGroup } from "@/contexts/business/domain/services/workspace-navigation.policy";
+import {
+  canCreateOrganization,
+  type WorkspaceNavigationOrganizationGroup,
+} from "@/contexts/business/domain/services/workspace-navigation.policy";
 import { workspaceSelectionCookies } from "@/contexts/business/infrastructure/session/workspace-selection-cookie";
 
 interface OrganizationsRoutePageProps {
@@ -58,6 +61,7 @@ export default async function OrganizationsRoutePage({ searchParams }: Organizat
     <OrganizationsPage
       organizations={organizations}
       ownedOrganizationId={ownedOrganizationId ?? null}
+      canCreateOrganization={canCreateOrganization(ownedOrganizationId ?? null)}
       initialPreviewOrganizationId={
         requestedPreviewOrganizationId ?? requestedOrganizationId ?? rememberedPreviewOrganizationId ?? activeOrganizationId
       }

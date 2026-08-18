@@ -2,11 +2,22 @@ import { describe, expect, it } from "vitest";
 
 import {
   buildWorkspacePath,
+  canCreateOrganization,
   canManageOrganization,
   groupEstablishmentsByOrganization,
   hasSomewhereToCancelTo,
   resolveEstablishmentEntryPath,
 } from "@/contexts/business/domain/services/workspace-navigation.policy";
+
+describe("canCreateOrganization", () => {
+  it("allows creating an organization when the account owns none yet", () => {
+    expect(canCreateOrganization(null)).toBe(true);
+  });
+
+  it("hides New organization link when the account already owns an organization", () => {
+    expect(canCreateOrganization("org-1")).toBe(false);
+  });
+});
 
 describe("buildWorkspacePath", () => {
   it("keeps the selected establishment in the query string", () => {

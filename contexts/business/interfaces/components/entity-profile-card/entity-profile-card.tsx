@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useId, useActionState } from "react";
+import type { ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { Save } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
@@ -34,6 +35,8 @@ interface EntityProfileCardProps {
   canUpdate?: boolean;
   onCancel?: () => void;
   className?: string;
+  /** Extra form fields rendered between the name field and the footer. */
+  extraFields?: ReactNode;
 }
 
 /**
@@ -52,6 +55,7 @@ export function EntityProfileCard({
   canUpdate = true,
   onCancel,
   className,
+  extraFields,
 }: EntityProfileCardProps) {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -189,6 +193,8 @@ export function EntityProfileCard({
               </div>
             </div>
           </div>
+
+          {extraFields}
         </CardContent>
 
         {canUpdate ? (

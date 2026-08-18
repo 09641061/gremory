@@ -35,6 +35,7 @@ const baseWorkspace: WorkspaceHeaderViewModel = {
   canReadOrganization: true,
   canReadEstablishments: true,
   canCreateEstablishment: true,
+  canCreateOrganization: false,
 };
 
 function renderSwitcher(workspace: Partial<WorkspaceHeaderViewModel> = {}) {
