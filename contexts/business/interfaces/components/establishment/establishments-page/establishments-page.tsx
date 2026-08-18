@@ -1,9 +1,13 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useActionState, useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { EstablishmentsSearchBar } from "./establishments-search-bar";
 import { EstablishmentListCard } from "./establishment-list-card";
 import { EstablishmentDetailCard } from "./establishment-detail-card";
+import { deleteEstablishmentAction } from "@/contexts/business/interfaces/actions/establishment.actions";
+import { initialBusinessActionResult } from "@/contexts/business/interfaces/actions/business-action-result";
+import { DeleteConfirmDialog } from "@/contexts/shared/interfaces/components/delete-confirm-dialog";
 
 export type EstablishmentListItem = {
   id: string;
@@ -30,10 +34,22 @@ export function EstablishmentsPage({
   defaultCanUpdate?: boolean;
   canCreate?: boolean;
 }) {
+  const router = useRouter();
   const [filter, setFilter] = useState("");
   const [selectedEstId, setSelectedEstId] = useState<string | null>(
     initialSelectedEstablishmentId ?? null,
   );
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+  const [deleteState, deleteAction, deletePending] = useActionState(
+    deleteEstablishmentAction,
+    initialBusinessActionResult,
+  );
+
+  useEffect(() => {
+    if (deleteState.status === "success") {
+      router.refresh();
+    }
+  }, [deleteState.status, router]);
 
   const filteredEstablishments = useMemo(() => {
     const normalized = filter.trim().toLowerCase();
@@ -48,7 +64,9 @@ export function EstablishmentsPage({
     establishments.find((est) => est.id === selectedEstId) ??
     null;
   const canUpdateSelected = selectedEst ? (canUpdateMap[selectedEst.id] ?? defaultCanUpdate) : defaultCanUpdate;
-  const canDeleteSelected = selectedEst ? (canDeleteMap[selectedEst.id] ?? false) : false;
+  const deleteTarget = deleteTargetId
+    ? establishments.find((est) => est.id === deleteTargetId)
+    : null;
 
   return (
     <section className="mx-auto flex w-full max-w-7xl flex-col gap-6 lg:flex-row">
@@ -75,10 +93,28 @@ export function EstablishmentsPage({
           filteredEstablishments={filteredEstablishments}
           selectedEstId={selectedEstId}
           canUpdateMap={canUpdateMap}
+          canDeleteMap={canDeleteMap}
           defaultCanUpdate={defaultCanUpdate}
           onSelect={setSelectedEstId}
+          onDelete={setDeleteTargetId}
         />
       </div>
+
+      {deleteTarget ? (
+        <DeleteConfirmDialog
+          open={deleteTargetId !== null && deleteState.status !== "success"}
+          onOpenChange={(open) => {
+            if (!open) setDeleteTargetId(null);
+          }}
+          entityLabel="establishment"
+          entityName={deleteTarget.name}
+          pending={deletePending}
+          error={deleteState.status === "error" ? deleteState.error : undefined}
+          formAction={deleteAction}
+        >
+          <input type="hidden" name="id" value={deleteTarget.id} />
+        </DeleteConfirmDialog>
+      ) : null}
 
       {/* Columna derecha */}
       <EstablishmentDetailCard
@@ -89,7 +125,6 @@ export function EstablishmentsPage({
         }
         establishment={selectedEst}
         canUpdate={canUpdateSelected}
-        canDelete={canDeleteSelected}
         onCancel={() => setSelectedEstId(null)}
         className={selectedEst ? "" : "hidden lg:block"}
       />

@@ -1,4 +1,4 @@
-import { PencilLine, Store } from "lucide-react";
+import { PencilLine, Store, Trash2 } from "lucide-react";
 import type { EstablishmentListItem } from "./establishments-page";
 import { Card, CardContent } from "@/contexts/shared/interfaces/components/ui/card";
 import {
@@ -7,14 +7,17 @@ import {
   AvatarImage,
 } from "@/contexts/shared/interfaces/components/ui/avatar";
 import { StatusBadge } from "@/contexts/shared/interfaces/components/ui/status-badge";
+import { EntityActionsMenu } from "@/contexts/shared/interfaces/components/entity-actions-menu";
 
 interface EstablishmentListCardProps {
   establishments: EstablishmentListItem[];
   filteredEstablishments: EstablishmentListItem[];
   selectedEstId: string | null;
   canUpdateMap?: Record<string, boolean>;
+  canDeleteMap?: Record<string, boolean>;
   defaultCanUpdate?: boolean;
   onSelect: (id: string) => void;
+  onDelete?: (id: string) => void;
 }
 
 export function EstablishmentListCard({
@@ -22,8 +25,10 @@ export function EstablishmentListCard({
   filteredEstablishments,
   selectedEstId,
   canUpdateMap = {},
+  canDeleteMap = {},
   defaultCanUpdate = true,
   onSelect,
+  onDelete,
 }: EstablishmentListCardProps) {
   return (
     <Card className="overflow-hidden rounded-xl border-border bg-card shadow-sm lg:flex lg:min-h-0 lg:flex-1 lg:flex-col">
@@ -42,37 +47,55 @@ export function EstablishmentListCard({
             filteredEstablishments.map((est) => {
               const selected = est.id === selectedEstId;
               const canUpdate = canUpdateMap[est.id] ?? defaultCanUpdate;
+              const canDelete = canDeleteMap[est.id] ?? false;
               return (
-                <button
+                <div
                   key={est.id}
-                  type="button"
-                  aria-pressed={selected}
-                  onClick={() => onSelect(est.id)}
-                  className={`flex w-full cursor-pointer items-center gap-3 border-b border-border px-5 py-4 text-left transition-colors outline-none last:border-b-0 hover:bg-muted/40 focus-visible:bg-muted/40 ${
+                  className={`flex w-full items-center gap-3 border-b border-border px-5 py-4 transition-colors last:border-b-0 hover:bg-muted/40 ${
                     selected ? "bg-accent/60" : ""
                   }`}
                 >
-                  <Avatar>
-                    {est.photoUrl ? (
-                      <AvatarImage src={est.photoUrl} alt={est.name} />
-                    ) : (
-                      <AvatarFallback>
-                        <Store className="size-4" />
-                      </AvatarFallback>
-                    )}
-                  </Avatar>
-                  <div className="flex min-w-0 flex-1 items-center gap-2">
-                    <p className="truncate text-sm font-medium text-foreground">
-                      {est.name}
-                    </p>
-                    {canUpdate ? (
-                      <StatusBadge tone="success">
-                        <PencilLine className="size-3" />
-                        Editable
-                      </StatusBadge>
-                    ) : null}
-                  </div>
-                </button>
+                  <button
+                    type="button"
+                    aria-pressed={selected}
+                    onClick={() => onSelect(est.id)}
+                    className="flex min-w-0 flex-1 cursor-pointer items-center gap-3 text-left outline-none focus-visible:bg-muted/40"
+                  >
+                    <Avatar>
+                      {est.photoUrl ? (
+                        <AvatarImage src={est.photoUrl} alt={est.name} />
+                      ) : (
+                        <AvatarFallback>
+                          <Store className="size-4" />
+                        </AvatarFallback>
+                      )}
+                    </Avatar>
+                    <div className="flex min-w-0 flex-1 items-center gap-2">
+                      <p className="truncate text-sm font-medium text-foreground">
+                        {est.name}
+                      </p>
+                      {canUpdate ? (
+                        <StatusBadge tone="success">
+                          <PencilLine className="size-3" />
+                          Editable
+                        </StatusBadge>
+                      ) : null}
+                    </div>
+                  </button>
+                  <EntityActionsMenu
+                    label={`Actions for ${est.name}`}
+                    size="icon-sm"
+                    actions={[
+                      {
+                        label: "Delete",
+                        icon: Trash2,
+                        variant: "destructive",
+                        hidden: !canDelete,
+                        onSelect: () => onDelete?.(est.id),
+                      },
+                    ]}
+                  />
+                </div>
               );
             })
           )}

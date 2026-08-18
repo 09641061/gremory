@@ -40,8 +40,8 @@ export class EstablishmentAdapter implements EstablishmentRepository {
     return this.gateway.deletePhoto(id);
   }
 
-  delete(id: EstablishmentId): Promise<void> {
-    return this.gateway.delete(id);
+  delete(id: EstablishmentId, organizationId: OrganizationId): Promise<void> {
+    return this.gateway.delete(id, organizationId);
   }
 }
 

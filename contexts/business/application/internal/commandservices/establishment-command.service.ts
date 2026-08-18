@@ -49,8 +49,12 @@ export class EstablishmentCommandServiceImpl implements EstablishmentCommandServ
     return saved.id;
   }
 
-  delete(command: DeleteEstablishmentCommand) {
-    return this.establishments.delete(createEstablishmentId(command.id));
+  async delete(command: DeleteEstablishmentCommand) {
+    const id = createEstablishmentId(command.id);
+    const establishment = await this.establishments.findById(id);
+    if (!establishment) throw new Error("Establishment not found");
+
+    return this.establishments.delete(id, establishment.organizationId);
   }
 
   /** A replacement wins over a removal: both together is a contradictory intent. */
