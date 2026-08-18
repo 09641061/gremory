@@ -5,7 +5,6 @@ import { createCrmCommandService } from "../../application/internal/commandservi
 import { createBusinessWorkspaceQueryService } from "@/contexts/business/application/internal/queryservices/business-workspace-query.service";
 import { getWorkspaceEstablishment, hasEstablishmentPermission } from "@/contexts/shared/application/services/workspace-establishment-permissions";
 import { ActionState } from "./register-customer.action";
-import { createBusinessWorkspaceQueryService } from "@/contexts/business/application/internal/queryservices/business-workspace-query.service";
 
 export async function deleteCustomerAction(
   id: string,

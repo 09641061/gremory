@@ -7,7 +7,6 @@ import { Appointment } from "../../domain/model/entities/appointment";
 import { createSchedulingCommandService } from "../../application/internal/commandservices/scheduling-command.service.impl";
 import { createBusinessWorkspaceQueryService } from "@/contexts/business/application/internal/queryservices/business-workspace-query.service";
 import { ActionState } from "./action-state";
-import { createBusinessWorkspaceQueryService } from "@/contexts/business/application/internal/queryservices/business-workspace-query.service";
 import { getWorkspaceEstablishment, hasEstablishmentPermission } from "@/contexts/shared/application/services/workspace-establishment-permissions";
 
 export { type ActionState };

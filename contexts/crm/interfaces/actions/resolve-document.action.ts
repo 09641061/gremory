@@ -5,7 +5,6 @@ import { createBusinessWorkspaceQueryService } from "@/contexts/business/applica
 import { getWorkspaceEstablishment } from "@/contexts/shared/application/services/workspace-establishment-permissions";
 import { ResolvedCustomerData } from "../../domain/model/entities/customer";
 import { ActionState } from "./register-customer.action";
-import { createBusinessWorkspaceQueryService } from "@/contexts/business/application/internal/queryservices/business-workspace-query.service";
 
 export async function resolveDocumentAction(
   type: "dni" | "ruc",

@@ -8,7 +8,6 @@ import { RegisterCustomerCommand } from "../../domain/model/commands/register-cu
 import { ApiError } from "@/contexts/shared/infrastructure/http/api-client";
 import { CustomerResponse } from "../../domain/model/entities/customer";
 import { registerCustomerSchema } from "../schemas/register-customer.schema";
-import { createBusinessWorkspaceQueryService } from "@/contexts/business/application/internal/queryservices/business-workspace-query.service";
 
 export type ActionState<T> =
   | { status: "idle"; data: null; error: null }

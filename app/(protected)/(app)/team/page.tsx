@@ -35,7 +35,10 @@ export default async function TeamPage({ searchParams }: TeamPageProps) {
     teamService.getMyMembership(establishmentId ?? undefined).catch(() => null),
   ]);
   const members = mergeCurrentMembership(membersPage?.content ?? [], currentMembership);
-  const schedulingEmployees = establishmentId ? await loadSchedulingMembers(establishmentId, workspace.organization?.id) : [];
+  const schedulingEmployees =
+    establishmentId && workspace.organization?.id
+      ? await loadSchedulingMembers(establishmentId, workspace.organization.id)
+      : [];
   const availabilityByUserId = new Map(
     schedulingEmployees.map((employee) => [employee.userId, employee.availableForScheduling]),
   );

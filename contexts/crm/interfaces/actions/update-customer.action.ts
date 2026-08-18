@@ -9,7 +9,6 @@ import { ApiError } from "@/contexts/shared/infrastructure/http/api-client";
 import { ActionState } from "./register-customer.action";
 import { CustomerResponse } from "../../domain/model/entities/customer";
 import { updateCustomerSchema } from "../schemas/update-customer.schema";
-import { createBusinessWorkspaceQueryService } from "@/contexts/business/application/internal/queryservices/business-workspace-query.service";
 
 export async function updateCustomerAction(
   command: Omit<UpdateCustomerCommand, "establishmentId">,
