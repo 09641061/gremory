@@ -7,7 +7,11 @@ import { PageResponse } from "../../model/page-response";
 import { SchedulingQueryService } from "../../services/scheduling-query.service";
 
 export class SchedulingQueryServiceImpl implements SchedulingQueryService {
-  private readonly gateway = new SchedulingApiGateway();
+  private readonly gateway: SchedulingApiGateway;
+
+  constructor(organizationId?: string) {
+    this.gateway = new SchedulingApiGateway(organizationId);
+  }
 
   getAppointment(id: string, token?: string): Promise<Appointment> {
     return this.gateway.getAppointment(id, token);
@@ -21,6 +25,6 @@ export class SchedulingQueryServiceImpl implements SchedulingQueryService {
   }
 }
 
-export function createSchedulingQueryService() {
-  return new SchedulingQueryServiceImpl();
+export function createSchedulingQueryService(organizationId?: string) {
+  return new SchedulingQueryServiceImpl(organizationId);
 }

@@ -49,6 +49,7 @@ export class SchedulingApiGateway
       command,
       {
         token: authToken,
+        headers: this.tenantHeaders(),
         errorMessage: "Failed to create appointment",
         errorType: SchedulingApiError,
       }
@@ -64,6 +65,7 @@ export class SchedulingApiGateway
       `${apiConfig.routes.scheduling.appointments}/${encodeURIComponent(id)}`,
       {
         token: authToken,
+        headers: this.tenantHeaders(),
         errorMessage: "Appointment not found",
         errorType: SchedulingApiError,
       }
@@ -88,6 +90,7 @@ export class SchedulingApiGateway
       `${apiConfig.routes.scheduling.appointments}?${params.toString()}`,
       {
         token: authToken,
+        headers: this.tenantHeaders(),
         errorMessage: "Failed to fetch appointments",
         errorType: SchedulingApiError,
       }
@@ -103,6 +106,7 @@ export class SchedulingApiGateway
       `${apiConfig.routes.scheduling.appointments}/${encodeURIComponent(id)}`,
       {
         token: authToken,
+        headers: this.tenantHeaders(),
         errorMessage: "Failed to delete appointment",
         errorType: SchedulingApiError,
       }
@@ -120,6 +124,7 @@ export class SchedulingApiGateway
       command,
       {
         token: authToken,
+        headers: this.tenantHeaders(),
         errorMessage: "Failed to reschedule appointment",
         errorType: SchedulingApiError,
       }
@@ -137,6 +142,7 @@ export class SchedulingApiGateway
       command,
       {
         token: authToken,
+        headers: this.tenantHeaders(),
         errorMessage: "Failed to update appointment details",
         errorType: SchedulingApiError,
       }
@@ -154,6 +160,7 @@ export class SchedulingApiGateway
       command,
       {
         token: authToken,
+        headers: this.tenantHeaders(),
         errorMessage: "Failed to cancel appointment",
         errorType: SchedulingApiError,
       }
@@ -170,6 +177,7 @@ export class SchedulingApiGateway
       {},
       {
         token: authToken,
+        headers: this.tenantHeaders(),
         errorMessage: "Failed to complete appointment",
         errorType: SchedulingApiError,
       }
@@ -186,6 +194,7 @@ export class SchedulingApiGateway
       {},
       {
         token: authToken,
+        headers: this.tenantHeaders(),
         errorMessage: "Failed to start appointment",
         errorType: SchedulingApiError,
       }
@@ -202,6 +211,7 @@ export class SchedulingApiGateway
       {},
       {
         token: authToken,
+        headers: this.tenantHeaders(),
         errorMessage: "Failed to mark appointment as no-show",
         errorType: SchedulingApiError,
       }
