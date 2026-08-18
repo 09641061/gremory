@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { OrganizationsPage } from "@/contexts/business/interfaces/components/organization/organizations-page/organizations-page";
 import { createBusinessWorkspaceQueryService } from "@/contexts/business/application/internal/queryservices/business-workspace-query.service";
-import { OrganizationApiGateway } from "@/contexts/business/infrastructure/gateways/organization-api.gateway";
+import { createOrganizationQueryService } from "@/contexts/business/application/internal/queryservices/organization-query.service";
 import {
   canCreateOrganization,
   type WorkspaceNavigationOrganizationGroup,
@@ -21,7 +21,7 @@ export default async function OrganizationsRoutePage({ searchParams }: Organizat
   // would scope the response to one organization and hide foreign memberships.
   const [workspace, accessibleOrganizations] = await Promise.all([
     createBusinessWorkspaceQueryService().getHeaderViewModel({ establishmentId: query.establishmentId }),
-    new OrganizationApiGateway().findAccessible(),
+    createOrganizationQueryService().getAccessible(),
   ]);
   const requestedOrganizationId = query.organizationId;
   const requestedPreviewOrganizationId = query.previewOrganizationId;

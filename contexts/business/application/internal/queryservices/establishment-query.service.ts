@@ -12,7 +12,7 @@ import type {
   EstablishmentSummary,
   PageView,
 } from "../../model/business.read-models";
-import { createEstablishmentAdapter } from "@/contexts/business/infrastructure/adapters/establishment.adapter";
+import { EstablishmentApiGateway } from "@/contexts/business/infrastructure/gateways/establishment-api.gateway";
 
 export class EstablishmentQueryServiceImpl implements EstablishmentQueryService {
   constructor(private readonly establishments: EstablishmentRepository) {}
@@ -43,7 +43,7 @@ export class EstablishmentQueryServiceImpl implements EstablishmentQueryService 
 
 export function createEstablishmentQueryService(
 ): EstablishmentQueryService {
-  return new EstablishmentQueryServiceImpl(createEstablishmentAdapter());
+  return new EstablishmentQueryServiceImpl(new EstablishmentApiGateway());
 }
 
 function toEstablishmentSummary(

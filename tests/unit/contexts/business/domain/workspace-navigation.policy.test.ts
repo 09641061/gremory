@@ -172,6 +172,15 @@ describe("canManageOrganization", () => {
     ).toBe(true);
   });
 
+  it("allows editing the owned organization even without an explicit establishment:update permission", () => {
+    expect(
+      canManageOrganization(
+        { organizationId: "org-1", establishments: [{ id: "est-1", name: "Main", effectivePermissions: [] }] },
+        "org-1",
+      ),
+    ).toBe(true);
+  });
+
   it("denies editing a foreign organization without a granted business:manage permission", () => {
     expect(
       canManageOrganization(

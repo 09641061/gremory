@@ -87,7 +87,6 @@ export class EstablishmentApiGateway implements EstablishmentRepository {
         name: establishment.name.value,
         photoUrl: establishment.photoUrl.value,
         timeZone: establishment.timeZone,
-        ownerAvailableForScheduling: establishment.ownerAvailableForScheduling,
       },
       authToken,
       { "X-Organization-Id": establishment.organizationId.value },

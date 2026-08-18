@@ -136,11 +136,7 @@ export function canManageOrganization(
   ownedOrganizationId: string | null,
 ): boolean {
   if (organization.canUpdate !== undefined) return organization.canUpdate;
-  if (organization.organizationId === ownedOrganizationId) {
-    return organization.establishments.some((establishment) =>
-      establishment.effectivePermissions?.includes("establishment:update"),
-    );
-  }
+  if (organization.organizationId === ownedOrganizationId) return true;
   return organization.establishments.some((establishment) =>
     establishment.effectivePermissions?.includes("establishment:update"),
   );

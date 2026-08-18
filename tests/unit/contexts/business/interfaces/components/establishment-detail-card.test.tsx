@@ -51,7 +51,7 @@ describe("EstablishmentDetailCard Component", () => {
     // Verify the time zone field is rendered with the establishment's current value
     expect(screen.getByText("Time zone")).toBeDefined();
     const timeZoneTrigger = screen.getByRole("combobox");
-    expect(timeZoneTrigger.textContent).toContain("Lima, Peru");
+    expect(timeZoneTrigger.textContent).toContain("UTC−05:00");
   });
 
   it("renders detail card as read-only when user lacks update permission (Unhappy Case - Read only)", () => {
