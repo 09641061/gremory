@@ -8,6 +8,7 @@ import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-ses
 import { RenameConversationCommandService } from "@/contexts/assistant/application/internal/commandservices/rename-conversation-command.service";
 import { DeleteConversationCommandService } from "@/contexts/assistant/application/internal/commandservices/delete-conversation-command.service";
 import type { AssistantConversationSummaryReadModel } from "@/contexts/assistant/application/internal/transforms/assistant.read-models";
+import { createAssistantConversationRepository } from "./assistant-action-context";
 
 import {
   assistantConversationIdParamSchema,
@@ -61,7 +62,8 @@ export async function renameAssistantConversationAction(
       };
     }
 
-    const conversation = await new RenameConversationCommandService().handle(
+    const repository = await createAssistantConversationRepository();
+    const conversation = await new RenameConversationCommandService(repository).handle(
       {
         conversationId: parsed.id,
         title: parsed.title,
@@ -100,7 +102,8 @@ export async function deleteAssistantConversationAction(
       };
     }
 
-    await new DeleteConversationCommandService().handle(
+    const repository = await createAssistantConversationRepository();
+    await new DeleteConversationCommandService(repository).handle(
       { conversationId: parsed.id },
       accessToken,
     );

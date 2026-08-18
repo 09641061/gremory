@@ -18,6 +18,7 @@ import {
 } from "../schemas/team.schemas";
 import { getTeamAccessToken, requireTeamAccessToken } from "@/contexts/workforce/infrastructure/session/team-session";
 import { TeamApiError } from "@/contexts/workforce/infrastructure/gateways/team-api.gateway";
+import { createBusinessWorkspaceQueryService } from "@/contexts/business/application/internal/queryservices/business-workspace-query.service";
 
 const uuidSchema = z.string().uuid();
 const listMembersQuerySchema = z.object({
@@ -33,8 +34,14 @@ export async function listWorkforceMembersRoute(request: Request) {
     const query = parseListMembersQuery(request);
     if ("error" in query) return query.error;
 
+    const workspace = await createBusinessWorkspaceQueryService().getHeaderViewModel({
+      establishmentId: query.value.establishmentId,
+    });
     const result = await createTeamQueryService(token).list(
-      listTeamUsersQuery(query.value),
+      listTeamUsersQuery({
+        ...query.value,
+        organizationId: workspace.organization?.id,
+      }),
     );
     return NextResponse.json(result);
   } catch (error) {

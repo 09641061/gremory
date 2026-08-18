@@ -23,6 +23,6 @@ export class AssistantConversationsAdapter {
   }
 }
 
-export function createAssistantConversationsAdapter() {
-  return new AssistantConversationsAdapter();
+export function createAssistantConversationsAdapter(organizationId?: string) {
+  return new AssistantConversationsAdapter(new AssistantApiGateway(organizationId));
 }

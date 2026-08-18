@@ -4,12 +4,14 @@ import { revalidatePath } from "next/cache";
 import { ApiError } from "@/contexts/shared/infrastructure/http/api-client";
 import { ActionState } from "./action-state";
 import { createSchedulingCommandService } from "../../application/internal/commandservices/scheduling-command.service.impl";
+import { createBusinessWorkspaceQueryService } from "@/contexts/business/application/internal/queryservices/business-workspace-query.service";
 
 export async function deleteAppointmentAction(
   appointmentId: string
 ): Promise<ActionState<void>> {
   try {
-    const commandService = createSchedulingCommandService();
+    const workspace = await createBusinessWorkspaceQueryService().getHeaderViewModel();
+    const commandService = createSchedulingCommandService(workspace.organization?.id);
     await commandService.deleteAppointment(appointmentId);
     revalidatePath("/schedule");
     return { status: "success", data: undefined, error: null, fieldErrors: null };

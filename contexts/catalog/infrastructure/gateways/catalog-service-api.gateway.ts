@@ -64,6 +64,12 @@ async function resolveAccessToken(providedToken?: string): Promise<string | unde
 export class CatalogServiceApiGateway
   implements CatalogServiceCommandService
 {
+  constructor(private readonly organizationId?: string) {}
+
+  private tenantHeaders() {
+    return this.organizationId ? { "X-Organization-Id": this.organizationId } : undefined;
+  }
+
   async search(
     params: CatalogServiceSearchParams,
     token?: string
@@ -85,6 +91,7 @@ export class CatalogServiceApiGateway
       `${apiConfig.routes.catalogServices}?${query}`,
       {
         token: authToken,
+        headers: this.tenantHeaders(),
         errorMessage: "Failed to fetch catalog services",
       },
     );
@@ -102,6 +109,7 @@ export class CatalogServiceApiGateway
       `${apiConfig.routes.catalogServices}/${encodeURIComponent(id)}?${query}`,
       {
         token: authToken,
+        headers: this.tenantHeaders(),
         errorMessage: "Service not found",
       },
     );
@@ -115,6 +123,7 @@ export class CatalogServiceApiGateway
       command,
       {
         token: authToken,
+        headers: this.tenantHeaders(),
         errorMessage: "Failed to create catalog service",
       },
     );
@@ -129,6 +138,7 @@ export class CatalogServiceApiGateway
       payload,
       {
         token: authToken,
+        headers: this.tenantHeaders(),
         errorMessage: "Failed to update service",
       },
     );
@@ -143,6 +153,7 @@ export class CatalogServiceApiGateway
       undefined,
       {
         token: authToken,
+        headers: this.tenantHeaders(),
         errorMessage: "Failed to change service status",
       },
     );
@@ -154,6 +165,7 @@ export class CatalogServiceApiGateway
       `${apiConfig.routes.catalogServices}/${encodeURIComponent(command.id)}`,
       {
         token: authToken,
+        headers: this.tenantHeaders(),
         errorMessage: "Failed to delete service",
       },
     );

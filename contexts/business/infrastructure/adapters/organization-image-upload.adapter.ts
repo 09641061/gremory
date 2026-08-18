@@ -25,6 +25,7 @@ export class OrganizationImageUploadAdapter implements OrganizationImageStorage 
         method: "PUT",
         headers: {
           Authorization: `Bearer ${authToken}`,
+          "X-Organization-Id": id.value,
         },
         body: formData,
       },

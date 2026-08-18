@@ -24,12 +24,13 @@ export class EstablishmentCommandServiceImpl implements EstablishmentCommandServ
   ) {}
 
   async create(command: CreateEstablishmentCommand) {
+    const organizationId = createOrganizationId(command.organizationId);
     const photo = command.photoFile
-      ? await this.photos.upload(command.photoFile)
+      ? await this.photos.upload(command.photoFile, organizationId)
       : createEstablishmentPhoto(command.photoUrl);
 
     const establishment = await this.establishments.create(
-      createOrganizationId(command.organizationId),
+      organizationId,
       createEstablishmentName(command.name),
       photo,
       command.timeZone ?? "UTC",
@@ -42,7 +43,7 @@ export class EstablishmentCommandServiceImpl implements EstablishmentCommandServ
     const establishment = await this.establishments.findById(id);
     if (!establishment) throw new Error("Establishment not found");
 
-    const photo = await this.resolvePhoto(id, command);
+    const photo = await this.resolvePhoto(id, establishment.organizationId, command);
     establishment.update(command.name, photo.value, command.timeZone, command.ownerAvailableForScheduling);
     const saved = await this.establishments.save(establishment);
     return saved.id;
@@ -55,9 +56,10 @@ export class EstablishmentCommandServiceImpl implements EstablishmentCommandServ
   /** A replacement wins over a removal: both together is a contradictory intent. */
   private async resolvePhoto(
     id: ReturnType<typeof createEstablishmentId>,
+    organizationId: ReturnType<typeof createOrganizationId>,
     command: UpdateEstablishmentCommand,
   ) {
-    if (command.photoFile) return this.photos.upload(command.photoFile);
+    if (command.photoFile) return this.photos.upload(command.photoFile, organizationId);
 
     if (command.removePhoto) {
       await this.photos.remove(id);

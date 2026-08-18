@@ -27,6 +27,6 @@ export class CrmCommandServiceImpl implements CrmCommandService {
   }
 }
 
-export function createCrmCommandService(): CrmCommandService {
-  return new CrmCommandServiceImpl(new CrmApiGateway());
+export function createCrmCommandService(organizationId?: string): CrmCommandService {
+  return new CrmCommandServiceImpl(new CrmApiGateway(organizationId));
 }

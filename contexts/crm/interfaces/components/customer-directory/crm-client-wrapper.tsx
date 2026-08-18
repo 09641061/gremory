@@ -172,10 +172,7 @@ export function CrmClientWrapper({
                     {customers.map((cust) => (
                       <TableRow key={cust.id} className="hover:bg-muted/20">
                         <TableCell className="px-5 py-4">
-                          <div className="min-w-0">
-                            <p className="truncate text-sm font-medium text-foreground">{cust.name}</p>
-                            <p className="truncate text-xs text-muted-foreground">{cust.establishmentId}</p>
-                          </div>
+                          <p className="truncate text-sm font-medium text-foreground">{cust.name}</p>
                         </TableCell>
                         <TableCell className="px-5 py-4 text-sm text-muted-foreground">{cust.documentNumber}</TableCell>
                         <TableCell className="px-5 py-4">

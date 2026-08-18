@@ -1,5 +1,7 @@
 import type { ReactNode } from "react";
 
+import { ListOrdered } from "lucide-react";
+
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/contexts/shared/interfaces/components/ui/empty";
 import { formatNumber } from "@/contexts/analytics/interfaces/components/free-analytics/free-analytics.utils";
 
@@ -16,7 +18,9 @@ export function RankingList<T>({
     return (
       <Empty className="border-border/70 bg-background/70 py-10">
         <EmptyHeader>
-          <EmptyMedia variant="icon" />
+          <EmptyMedia variant="icon">
+            <ListOrdered />
+          </EmptyMedia>
           <EmptyContent>
             <EmptyTitle>No data yet</EmptyTitle>
             <EmptyDescription>{emptyLabel}</EmptyDescription>

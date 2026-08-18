@@ -32,7 +32,7 @@ export interface OrganizationImageStorage {
 }
 
 export interface EstablishmentPhotoStorage {
-  upload(photo: File): Promise<EstablishmentPhoto>;
+  upload(photo: File, organizationId: OrganizationId): Promise<EstablishmentPhoto>;
   remove(id: EstablishmentId): Promise<void>;
 }
 

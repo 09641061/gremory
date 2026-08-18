@@ -1,5 +1,4 @@
 import type { ReactNode } from "react";
-
 import ProtectedAppShell from "@/contexts/shared/interfaces/components/protected-app-shell";
 
 /**

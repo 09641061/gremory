@@ -44,6 +44,9 @@ export class TeamCommandServiceImpl implements TeamCommandService {
   }
 }
 
-export function createTeamCommandService(token?: string): TeamCommandService {
-  return new TeamCommandServiceImpl(new TeamApiGateway(token));
+export function createTeamCommandService(
+  token?: string,
+  organizationId?: string,
+): TeamCommandService {
+  return new TeamCommandServiceImpl(new TeamApiGateway(token, organizationId));
 }

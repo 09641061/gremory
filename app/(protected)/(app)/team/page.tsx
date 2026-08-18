@@ -30,12 +30,15 @@ export default async function TeamPage({ searchParams }: TeamPageProps) {
   const teamService = createTeamQueryService();
   const [membersPage, currentMembership] = await Promise.all([
     establishmentId
-      ? teamService.list({ establishmentId, size: 100 }).catch(() => null)
+      ? teamService.list({ organizationId: workspace.organization?.id, establishmentId, size: 100 }).catch(() => null)
       : Promise.resolve(null),
     teamService.getMyMembership(establishmentId ?? undefined).catch(() => null),
   ]);
   const members = mergeCurrentMembership(membersPage?.content ?? [], currentMembership);
-  const schedulingEmployees = establishmentId ? await loadSchedulingMembers(establishmentId) : [];
+  const schedulingEmployees =
+    establishmentId && workspace.organization?.id
+      ? await loadSchedulingMembers(establishmentId, workspace.organization.id)
+      : [];
   const availabilityByUserId = new Map(
     schedulingEmployees.map((employee) => [employee.userId, employee.availableForScheduling]),
   );
@@ -44,7 +47,6 @@ export default async function TeamPage({ searchParams }: TeamPageProps) {
       ? { ...member, availableForScheduling: availabilityByUserId.get(member.userId) === true }
       : member,
   );
-
   return (
     <TeamPageView
       establishmentId={establishmentId ?? null}

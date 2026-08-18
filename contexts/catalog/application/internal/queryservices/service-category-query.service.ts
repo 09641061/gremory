@@ -7,6 +7,8 @@ import { ServiceCategoryApiGateway } from "../../../infrastructure/gateways/serv
 import { createServiceCategoryReadModel } from "../../model/service-category.read-model";
 
 export class ServiceCategoryQueryServiceImpl implements ServiceCategoryQueryService {
+  constructor(private readonly organizationId?: string) {}
+
   async list(
     establishmentId: string,
     page?: number,
@@ -14,7 +16,12 @@ export class ServiceCategoryQueryServiceImpl implements ServiceCategoryQueryServ
     token?: string
   ): Promise<PageResponse<CategoryDTO>> {
     const authToken = await resolveAccessToken(token);
-    const result = await new ServiceCategoryApiGateway().list(establishmentId, page, size, authToken);
+    const result = await new ServiceCategoryApiGateway(this.organizationId).list(
+      establishmentId,
+      page,
+      size,
+      authToken,
+    );
     return {
       ...result,
       content: result.content.map(createServiceCategoryReadModel),
@@ -22,8 +29,8 @@ export class ServiceCategoryQueryServiceImpl implements ServiceCategoryQueryServ
   }
 }
 
-export function createServiceCategoryQueryService() {
-  return new ServiceCategoryQueryServiceImpl();
+export function createServiceCategoryQueryService(organizationId?: string) {
+  return new ServiceCategoryQueryServiceImpl(organizationId);
 }
 
 async function resolveAccessToken(providedToken?: string): Promise<string | undefined> {

@@ -10,12 +10,14 @@ import { CatalogServiceApiGateway } from "../../../infrastructure/gateways/catal
 import { createCatalogServiceReadModel } from "../../model/catalog-service.read-model";
 
 export class CatalogServiceQueryServiceImpl implements CatalogServiceQueryService {
+  constructor(private readonly organizationId?: string) {}
+
   async search(
     params: CatalogServiceSearchParams,
     token?: string
   ): Promise<PageResponse<DetailedServiceDTO>> {
     const authToken = await resolveAccessToken(token);
-    const page = await new CatalogServiceApiGateway().search(params, authToken);
+    const page = await new CatalogServiceApiGateway(this.organizationId).search(params, authToken);
     return {
       ...page,
       content: page.content.map(createCatalogServiceReadModel),
@@ -24,13 +26,13 @@ export class CatalogServiceQueryServiceImpl implements CatalogServiceQueryServic
 
   async getById(id: string, establishmentId: string, token?: string): Promise<DetailedServiceDTO> {
     const authToken = await resolveAccessToken(token);
-    const service = await new CatalogServiceApiGateway().getById(id, establishmentId, authToken);
+    const service = await new CatalogServiceApiGateway(this.organizationId).getById(id, establishmentId, authToken);
     return createCatalogServiceReadModel(service);
   }
 }
 
-export function createCatalogServiceQueryService() {
-  return new CatalogServiceQueryServiceImpl();
+export function createCatalogServiceQueryService(organizationId?: string) {
+  return new CatalogServiceQueryServiceImpl(organizationId);
 }
 
 async function resolveAccessToken(providedToken?: string): Promise<string | undefined> {

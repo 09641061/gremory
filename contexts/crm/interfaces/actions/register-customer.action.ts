@@ -29,7 +29,8 @@ export async function registerCustomerAction(
   }
 
   try {
-    const service = createCrmCommandService();
+    const workspace = await createBusinessWorkspaceQueryService().getHeaderViewModel({ establishmentId });
+    const service = createCrmCommandService(workspace.organization?.id);
     const result = await service.registerCustomer({
       ...parsed.data,
       establishmentId,

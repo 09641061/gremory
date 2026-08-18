@@ -16,6 +16,9 @@ export async function createSessionAction(input: {
   const cookieStore = await cookies();
   cookieStore.set(iamSessionCookies.accessToken, input.accessToken, iamSessionCookieOptions);
   cookieStore.set(iamSessionCookies.refreshToken, input.refreshToken, iamSessionCookieOptions);
+  // Workspace context belongs to the previous account/session and must never
+  // leak into onboarding or the next user's tenant resolution.
+  cookieStore.delete(workspaceSelectionCookies.establishmentId);
   cookieStore.delete(iamSessionCookies.returnTo);
   cookieStore.delete(workspaceSelectionCookies.organizationId);
   cookieStore.delete(workspaceSelectionCookies.establishmentId);

@@ -16,7 +16,8 @@ export async function deleteCustomerAction(
   }
 
   try {
-    const service = createCrmCommandService();
+    const workspace = await createBusinessWorkspaceQueryService().getHeaderViewModel({ establishmentId });
+    const service = createCrmCommandService(workspace.organization?.id);
     await service.deleteCustomer({ id, establishmentId });
 
     revalidatePath("/crm");

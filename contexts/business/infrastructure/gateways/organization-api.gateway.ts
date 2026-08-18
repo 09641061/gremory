@@ -82,7 +82,8 @@ export class OrganizationApiGateway implements OrganizationRepository {
     const resource = await businessPut<OrganizationResource>(
       `${apiConfig.routes.organizations}/${encodeURIComponent(organization.id.value)}`,
       { name: organization.name.value, imageUrl: organization.imageUrl.value },
-      authToken
+      authToken,
+      { "X-Organization-Id": organization.id.value },
     );
     return toOrganization(resource);
   }

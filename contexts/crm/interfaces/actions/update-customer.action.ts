@@ -25,7 +25,8 @@ export async function updateCustomerAction(
   }
 
   try {
-    const service = createCrmCommandService();
+    const workspace = await createBusinessWorkspaceQueryService().getHeaderViewModel({ establishmentId });
+    const service = createCrmCommandService(workspace.organization?.id);
     const result = await service.updateCustomer({
       ...parsed.data,
       establishmentId,

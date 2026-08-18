@@ -1,6 +1,7 @@
 import type { WorkforceUserStatus } from "../enums/workforce-user-status";
 
 export type ListTeamUsersQuery = Readonly<{
+  organizationId?: string;
   establishmentId?: string;
   status?: WorkforceUserStatus;
   page?: number;

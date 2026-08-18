@@ -8,6 +8,7 @@ import {
   iamSessionCookieOptions,
   iamSessionCookies,
 } from "../../../infrastructure/session/iam-session-cookie";
+import { workspaceSelectionCookies } from "@/contexts/business/infrastructure/session/workspace-selection-cookie";
 
 const sessionSchema = z.object({
   accessToken: z.string().min(1),
@@ -30,6 +31,7 @@ export async function createSessionRoute(request: Request) {
     ...iamSessionCookieOptions,
     maxAge: iamSessionCookieMaxAge.refreshToken,
   });
+  cookieStore.delete(workspaceSelectionCookies.establishmentId);
   cookieStore.delete(iamSessionCookies.returnTo);
 
   return new Response(null, { status: 204 });
@@ -41,5 +43,6 @@ export async function clearSessionRoute() {
   cookieStore.delete(iamSessionCookies.refreshToken);
   cookieStore.delete(iamSessionCookies.pendingEmail);
   cookieStore.delete(iamSessionCookies.returnTo);
+  cookieStore.delete(workspaceSelectionCookies.establishmentId);
   return new Response(null, { status: 204 });
 }

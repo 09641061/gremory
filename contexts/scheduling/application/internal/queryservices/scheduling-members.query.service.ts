@@ -4,10 +4,12 @@ import { SchedulingApiGateway } from "@/contexts/scheduling/infrastructure/gatew
 import type { SchedulingMemberViewModel } from "../../model/scheduling-page-data.view-model";
 
 export async function loadSchedulingMembers(
-  establishmentId: string
+  establishmentId: string,
+  organizationId: string,
 ): Promise<SchedulingMemberViewModel[]> {
   try {
-    const employees = await new SchedulingApiGateway().getSchedulingEmployees(establishmentId);
+    const gateway = new SchedulingApiGateway(organizationId);
+    const employees = await gateway.getSchedulingEmployees(establishmentId);
     return employees.map((employee) => ({
       id: employee.userId,
       userId: employee.userId,

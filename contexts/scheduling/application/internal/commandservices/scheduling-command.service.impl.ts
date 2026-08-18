@@ -9,7 +9,11 @@ import { UpdateAppointmentCommand } from "../../../domain/model/commands/update-
 import { SchedulingCommandService } from "../../services/scheduling-command.service";
 
 export class SchedulingCommandServiceImpl implements SchedulingCommandService {
-  private readonly gateway = new SchedulingApiGateway();
+  private readonly gateway: SchedulingApiGateway;
+
+  constructor(organizationId?: string) {
+    this.gateway = new SchedulingApiGateway(organizationId);
+  }
 
   createAppointment(command: CreateAppointmentCommand, token?: string): Promise<Appointment> {
     return this.gateway.createAppointment(command, token);
@@ -56,6 +60,6 @@ export class SchedulingCommandServiceImpl implements SchedulingCommandService {
   }
 }
 
-export function createSchedulingCommandService() {
-  return new SchedulingCommandServiceImpl();
+export function createSchedulingCommandService(organizationId?: string) {
+  return new SchedulingCommandServiceImpl(organizationId);
 }

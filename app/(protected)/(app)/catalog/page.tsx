@@ -15,7 +15,7 @@ export default async function CatalogPage({ searchParams }: CatalogPageProps) {
   const query = await searchParams;
   const { establishmentId: paramEstId, serviceId: paramServiceId } = query;
   const workspace = await createBusinessWorkspaceQueryService().getHeaderViewModel(query);
-  if (workspace.accessPolicy?.canOpenCatalog !== true) {
+  if (workspace.accessPolicy?.canOpenCatalog !== true || !workspace.organization) {
     redirect(resolveModuleAccessFallback(workspace));
   }
 
@@ -33,8 +33,8 @@ export default async function CatalogPage({ searchParams }: CatalogPageProps) {
   let services: DetailedServiceDTO[] = [];
 
   if (establishmentId) {
-    const categoryQueryService = createServiceCategoryQueryService();
-    const serviceQueryService = createCatalogServiceQueryService();
+    const categoryQueryService = createServiceCategoryQueryService(workspace.organization.id);
+    const serviceQueryService = createCatalogServiceQueryService(workspace.organization.id);
     const [categoriesPage, servicesPage] = await Promise.all([
       categoryQueryService.list(establishmentId, 0, 100),
       serviceQueryService.search({ establishmentId, page: 0, size: 100 }),

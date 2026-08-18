@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { createBusinessWorkspaceQueryService } from "@/contexts/business/application/internal/queryservices/business-workspace-query.service";
 import { createWorkforceRoleCommandService } from "../../application/internal/commandservices/workforce-role-command.service";
 import {
   assignWorkforceRoleCommand,
@@ -28,7 +29,10 @@ export async function createWorkforceRoleAction(
   if (!parsed.success) return workforceRoleActionError(parsed.error.issues[0]?.message);
 
   try {
-    const service = createWorkforceRoleCommandService(await requireTeamAccessToken());
+    const service = createWorkforceRoleCommandService(
+      await requireTeamAccessToken(),
+      await resolveOrganizationId(),
+    );
     const role = await service.create(
       createWorkforceRoleCommand(parsed.data),
     );
@@ -58,7 +62,10 @@ export async function patchWorkforceRoleAction(
   if (!parsed.success) return workforceRoleActionError(parsed.error.issues[0]?.message);
 
   try {
-    const service = createWorkforceRoleCommandService(await requireTeamAccessToken());
+    const service = createWorkforceRoleCommandService(
+      await requireTeamAccessToken(),
+      await resolveOrganizationId(),
+    );
     const role = await service.patch(
       patchWorkforceRoleCommand({
         roleId: roleIdParsed.data.roleId,
@@ -89,7 +96,10 @@ export async function assignWorkforceRoleAction(
   if (!memberIdValue.trim()) return workforceRoleActionError("Member ID is required");
 
   try {
-    const service = createWorkforceRoleCommandService(await requireTeamAccessToken());
+    const service = createWorkforceRoleCommandService(
+      await requireTeamAccessToken(),
+      await resolveOrganizationId(),
+    );
     await service.assign(
       assignWorkforceRoleCommand({
         memberId: memberIdValue,
@@ -111,7 +121,10 @@ export async function removeWorkforceRoleAssignmentAction(
   const member = assignWorkforceRoleRequestSchema.shape.roleId.safeParse(formData.get("memberId"));
   if (!role.success || !member.success) return workforceRoleActionError("Invalid role assignment");
   try {
-    const service = createWorkforceRoleCommandService(await requireTeamAccessToken());
+    const service = createWorkforceRoleCommandService(
+      await requireTeamAccessToken(),
+      await resolveOrganizationId(),
+    );
     if (!service.removeAssignment) throw new Error("Role assignment removal is unavailable");
     await service.removeAssignment(
       removeWorkforceRoleAssignmentCommand({ memberId: member.data, roleId: role.data.roleId }),
@@ -133,7 +146,10 @@ export async function deleteWorkforceRoleAction(
   if (!roleIdParsed.success) return workforceRoleActionError(roleIdParsed.error.issues[0]?.message);
 
   try {
-    const service = createWorkforceRoleCommandService(await requireTeamAccessToken());
+    const service = createWorkforceRoleCommandService(
+      await requireTeamAccessToken(),
+      await resolveOrganizationId(),
+    );
     await service.delete(
       deleteWorkforceRoleCommand({
         roleId: roleIdParsed.data.roleId,
@@ -163,6 +179,11 @@ function parsePatchRolePayload(formData: FormData) {
     permissions,
     position: formData.has("position") ? Number(formData.get("position")) : undefined,
   };
+}
+
+async function resolveOrganizationId(): Promise<string | undefined> {
+  const workspace = await createBusinessWorkspaceQueryService().getHeaderViewModel();
+  return workspace.organization?.id;
 }
 
 function revalidateWorkforceRoleView() {

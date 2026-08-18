@@ -17,7 +17,8 @@ export async function resolveDocumentAction(
   }
 
   try {
-    const service = createCrmCommandService();
+    const workspace = await createBusinessWorkspaceQueryService().getHeaderViewModel({ establishmentId });
+    const service = createCrmCommandService(workspace.organization?.id);
     const result = await service.resolveDocument(
       type === "dni" ? number : undefined,
       type === "ruc" ? number : undefined

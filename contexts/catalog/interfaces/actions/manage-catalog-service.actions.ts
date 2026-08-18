@@ -3,7 +3,7 @@
 import { updateTag } from "next/cache";
 import { updateCatalogServiceSchema } from "../rest/schemas/catalog-service.schemas";
 import { createCatalogServiceCommandService } from "../../application/internal/commandservices/catalog-service-command.service";
-import { requireCatalogAccessToken } from "./catalog-action-auth";
+import { requireCatalogAccessToken, requireCatalogOrganizationId } from "./catalog-action-auth";
 import { createCatalogServiceUpdateCommand } from "../../domain/model/commands/catalog-service.commands";
 
 export type CatalogServiceActionResult = {
@@ -36,8 +36,11 @@ export async function updateCatalogServiceAction(
   }
 
   try {
-    const token = await requireCatalogAccessToken();
-    const service = createCatalogServiceCommandService();
+    const [token, organizationId] = await Promise.all([
+      requireCatalogAccessToken(),
+      requireCatalogOrganizationId(),
+    ]);
+    const service = createCatalogServiceCommandService(organizationId);
     const command = createCatalogServiceUpdateCommand(parsed.data);
     await service.update(command, token);
 
@@ -57,8 +60,11 @@ export async function changeCatalogServiceStatusAction(
   active: boolean
 ): Promise<CatalogServiceActionResult> {
   try {
-    const token = await requireCatalogAccessToken();
-    const service = createCatalogServiceCommandService();
+    const [token, organizationId] = await Promise.all([
+      requireCatalogAccessToken(),
+      requireCatalogOrganizationId(),
+    ]);
+    const service = createCatalogServiceCommandService(organizationId);
     await service.changeStatus({ id, active }, token);
     updateTag("catalog-services");
     updateTag(`catalog-service:${id}`);
@@ -75,8 +81,11 @@ export async function deleteCatalogServiceAction(
   id: string
 ): Promise<CatalogServiceActionResult> {
   try {
-    const token = await requireCatalogAccessToken();
-    const service = createCatalogServiceCommandService();
+    const [token, organizationId] = await Promise.all([
+      requireCatalogAccessToken(),
+      requireCatalogOrganizationId(),
+    ]);
+    const service = createCatalogServiceCommandService(organizationId);
     await service.delete({ id }, token);
     updateTag("catalog-services");
     updateTag(`catalog-service:${id}`);

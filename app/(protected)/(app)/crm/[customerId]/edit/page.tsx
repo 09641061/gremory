@@ -29,7 +29,10 @@ export default async function EditCustomerPage({ params, searchParams }: EditCus
 
   let customer: CustomerResponse;
   try {
-    customer = await createCrmQueryService().getCustomer(customerId, establishmentId);
+    customer = await createCrmQueryService(workspace.organization?.id).getCustomer(
+      customerId,
+      establishmentId,
+    );
   } catch {
     redirect("/crm");
   }

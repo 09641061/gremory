@@ -5,8 +5,8 @@ import { createAppointmentSchema } from "../rest/schemas/appointment.schemas";
 import { ApiError } from "@/contexts/shared/infrastructure/http/api-client";
 import { Appointment } from "../../domain/model/entities/appointment";
 import { createSchedulingCommandService } from "../../application/internal/commandservices/scheduling-command.service.impl";
-import { ActionState } from "./action-state";
 import { createBusinessWorkspaceQueryService } from "@/contexts/business/application/internal/queryservices/business-workspace-query.service";
+import { ActionState } from "./action-state";
 import { getWorkspaceEstablishment, hasEstablishmentPermission } from "@/contexts/shared/application/services/workspace-establishment-permissions";
 
 export { type ActionState };
@@ -55,7 +55,10 @@ export async function createAppointmentAction(
   }
 
   try {
-    const commandService = createSchedulingCommandService();
+    const workspace = await createBusinessWorkspaceQueryService().getHeaderViewModel({
+      establishmentId: parsed.data.establishmentId,
+    });
+    const commandService = createSchedulingCommandService(workspace.organization?.id);
     const result = await commandService.createAppointment(parsed.data);
     revalidatePath("/schedule");
     return { status: "success", data: result, error: null, fieldErrors: null };
