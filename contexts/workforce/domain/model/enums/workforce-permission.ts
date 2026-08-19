@@ -13,6 +13,7 @@ export const workforceAssignablePermissions = [
   "workforce:read",
   "workforce:manage",
   "analytics:read",
+  "assistant:manage",
   "establishment:update",
 ] as const;
 
@@ -62,6 +63,9 @@ export const workforcePermissions = {
   scheduling: {
     read: "scheduling:read",
     manage: "scheduling:manage",
+  },
+  assistant: {
+    manage: "assistant:manage",
   },
 } as const;
 
