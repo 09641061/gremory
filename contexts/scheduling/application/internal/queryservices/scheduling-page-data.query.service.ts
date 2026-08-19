@@ -10,11 +10,17 @@ import { loadSchedulingServices } from "./scheduling-services.query.service";
 export async function loadSchedulingPageData(
   establishmentId: string,
   organizationId: string,
+  canReadCatalog: boolean,
+  canReadCrm: boolean,
 ): Promise<SchedulingPageData> {
   const [services, members, customers] = await Promise.all([
-    loadSchedulingServices(establishmentId, organizationId),
+    canReadCatalog
+      ? loadSchedulingServices(establishmentId, organizationId)
+      : Promise.resolve([]),
     loadSchedulingMembers(establishmentId, organizationId),
-    loadSchedulingCustomers(establishmentId, organizationId),
+    canReadCrm
+      ? loadSchedulingCustomers(establishmentId, organizationId)
+      : Promise.resolve([]),
   ]);
 
   return { services, members, customers };

@@ -34,12 +34,16 @@ export default async function SchedulePage({ searchParams }: SchedulePageProps) 
   const canCreateAppointment = canManageScheduling;
   const canUpdateAppointment = canManageScheduling;
   const canDeleteAppointment = canManageScheduling;
+  const canReadCatalog = hasEstablishmentPermission(establishment, "catalog:read");
+  const canReadCrm = hasEstablishmentPermission(establishment, "crm:read");
 
   const establishmentDetails = await createEstablishmentQueryService().getById({ id: establishmentId });
   const timeZone = establishmentDetails?.timeZone ?? "UTC";
   const { services, members, customers } = await loadSchedulingPageData(
     establishmentId,
     workspace.organization.id,
+    canReadCatalog,
+    canReadCrm,
   );
 
   return (
