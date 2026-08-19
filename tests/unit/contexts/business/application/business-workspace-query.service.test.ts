@@ -123,6 +123,32 @@ describe("business workspace query service", () => {
     expect(result.canCreateEstablishment).toBe(true);
   });
 
+  it("hides New organization link when the account already owns an organization", async () => {
+    mocks.getWorkspace.mockResolvedValue(
+      workspace({
+        ownedOrganizationId: organizationId,
+      }),
+    );
+
+    const result = await createBusinessWorkspaceQueryService().getHeaderViewModel();
+
+    expect(result.canCreateOrganization).toBe(false);
+  });
+
+  it("shows New organization link for an account that owns no organization yet", async () => {
+    mocks.getWorkspace.mockResolvedValue(
+      workspace({
+        accountType: "MEMBER",
+        organization: null,
+        ownedOrganizationId: null,
+      }),
+    );
+
+    const result = await createBusinessWorkspaceQueryService().getHeaderViewModel();
+
+    expect(result.canCreateOrganization).toBe(true);
+  });
+
   it("hides the owner creation entry point when Billing reports a plan limit", async () => {
     mocks.getWorkspace.mockResolvedValue(
       workspace({

@@ -1,7 +1,19 @@
+/**
+ * Metadata-only shape for a picked file. The domain model stays free of the
+ * browser `File` DOM type; interfaces/application code that reads an actual
+ * `File` off a form still satisfies this structurally, since `File` is a
+ * superset of it.
+ */
+export type CommandFileMetadata = Readonly<{
+  name: string;
+  type: string;
+  size: number;
+}>;
+
 export type CreateOrganizationCommand = Readonly<{
   name: string;
   /** New logo picked by the account, stored before the write lands. */
-  imageFile?: File | null;
+  imageFile?: CommandFileMetadata | null;
 }>;
 
 export type UpdateOrganizationCommand = Readonly<{
@@ -9,7 +21,7 @@ export type UpdateOrganizationCommand = Readonly<{
   name: string;
   imageUrl?: string | null;
   /** New logo picked by the account, stored before the write lands. */
-  imageFile?: File | null;
+  imageFile?: CommandFileMetadata | null;
 }>;
 
 export type CreateEstablishmentCommand = Readonly<{
@@ -18,14 +30,14 @@ export type CreateEstablishmentCommand = Readonly<{
   photoUrl?: string | null;
   timeZone?: string | null;
   /** New photo picked by the account, stored before the write lands. */
-  photoFile?: File | null;
+  photoFile?: CommandFileMetadata | null;
 }>;
 export type UpdateEstablishmentCommand = Readonly<{
   id: string;
   name: string;
   photoUrl?: string | null;
   timeZone?: string | null;
-  photoFile?: File | null;
+  photoFile?: CommandFileMetadata | null;
   /** Drops the stored photo when no replacement is provided. */
   removePhoto?: boolean;
   ownerAvailableForScheduling?: boolean;

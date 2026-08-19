@@ -38,7 +38,7 @@ export type WorkspaceAccessPolicy = Readonly<{
   canManageBilling: boolean;
 }>;
 
-export type WorkspaceAuthorizationRole = "OWNER" | "ADMIN" | "MANAGER" | "WORKER";
+export type WorkspaceAuthorizationRole = "OWNER" | "MANAGER" | "WORKER";
 
 export type WorkspaceAuthorizationScope = Readonly<{
   type: "ORGANIZATION" | "ESTABLISHMENT";
@@ -111,6 +111,9 @@ export type WorkspaceHeaderViewModel = Readonly<{
   canReadOrganization: boolean;
   canReadEstablishments: boolean;
   canCreateEstablishment: boolean;
+  // Whether the account may create a new organization: only while it owns
+  // none yet (see `canCreateOrganization` in workspace-navigation.policy).
+  canCreateOrganization: boolean;
   subscription?: WorkspaceSubscription;
   pendingInvitation?: WorkspacePendingInvitation;
 }>;

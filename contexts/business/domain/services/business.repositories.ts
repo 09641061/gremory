@@ -42,5 +42,5 @@ export interface EstablishmentRepository {
     size: number,
   ): Promise<PageResult<Establishment>>;
   save(establishment: Establishment): Promise<Establishment>;
-  delete(id: EstablishmentId): Promise<void>;
+  delete(id: EstablishmentId, organizationId: OrganizationId): Promise<void>;
 }

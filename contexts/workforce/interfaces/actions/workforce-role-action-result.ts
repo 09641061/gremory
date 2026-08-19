@@ -1,11 +1,8 @@
-export type WorkforceRoleActionResult =
-  | { status: "idle"; data: null; error: null }
-  | {
-      status: "success";
-      data: { roleId?: string; name?: string; position?: number } | null;
-      error: null;
-    }
-  | { status: "error"; data: null; error: string };
+import type { ActionResult } from "@/contexts/shared/interfaces/actions/action-result";
+
+export type WorkforceRoleActionResult = ActionResult<
+  { roleId?: string; name?: string; position?: number } | null
+>;
 
 export const initialWorkforceRoleActionResult: WorkforceRoleActionResult = {
   status: "idle",

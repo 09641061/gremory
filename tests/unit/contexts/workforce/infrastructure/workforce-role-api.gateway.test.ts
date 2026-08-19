@@ -6,20 +6,37 @@ afterEach(() => {
 });
 
 describe("WorkforceRoleApiGateway", () => {
-  it("should list roles from the backend", async () => {
-    const fetchMock = vi.fn().mockResolvedValue(jsonResponse({ content: [roleResource()] }));
+  it("should list roles from the backend using page params", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse(pageResource()));
     vi.stubGlobal("fetch", fetchMock);
 
     const roles = await new WorkforceRoleApiGateway("access-token").list();
 
     expect(fetchMock).toHaveBeenCalledWith(
-      "http://localhost:8080/api/workforce/roles",
+      "http://localhost:8080/api/workforce/roles?page=0&size=20",
       expect.objectContaining({
         method: "GET",
         headers: { Authorization: "Bearer access-token" },
       }),
     );
     expect(roles[0]?.getName()).toBe("Catalog manager");
+  });
+
+  it("should forward the tenant when listing roles for an organization", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse(pageResource()));
+    vi.stubGlobal("fetch", fetchMock);
+
+    await new WorkforceRoleApiGateway("access-token", "44444444-4444-4444-8444-444444444444").list();
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "http://localhost:8080/api/workforce/roles?page=0&size=20",
+      expect.objectContaining({
+        headers: {
+          Authorization: "Bearer access-token",
+          "X-Organization-Id": "44444444-4444-4444-8444-444444444444",
+        },
+      }),
+    );
   });
 
   it("should create a role using POST", async () => {
@@ -87,17 +104,35 @@ describe("WorkforceRoleApiGateway", () => {
     );
   });
 
-  it("should load supported permissions", async () => {
+  it("should load the assignable permissions from the backend", async () => {
     const fetchMock = vi.fn().mockResolvedValue(jsonResponse([
-      "establishment:read",
+      "scheduling:read",
+      "scheduling:manage",
+      "catalog:read",
       "catalog:manage",
+      "crm:read",
+      "crm:manage",
+      "workforce:read",
+      "workforce:manage",
       "analytics:read",
+      "establishment:update",
     ]));
     vi.stubGlobal("fetch", fetchMock);
 
     const permissions = await new WorkforceRoleApiGateway("access-token").permissions();
 
-    expect(permissions).toEqual(["establishment:read", "catalog:manage", "analytics:read"]);
+    expect(permissions).toEqual([
+      "scheduling:read",
+      "scheduling:manage",
+      "catalog:read",
+      "catalog:manage",
+      "crm:read",
+      "crm:manage",
+      "workforce:read",
+      "workforce:manage",
+      "analytics:read",
+      "establishment:update",
+    ]);
     expect(fetchMock).toHaveBeenCalledWith(
       "http://localhost:8080/api/workforce/roles/permissions",
       expect.objectContaining({
@@ -105,6 +140,15 @@ describe("WorkforceRoleApiGateway", () => {
         headers: { Authorization: "Bearer access-token" },
       }),
     );
+  });
+
+  it("should reject non-assignable permissions from the catalog", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(jsonResponse(["establishment:read", "workforce:invite"])),
+    );
+
+    await expect(new WorkforceRoleApiGateway("access-token").permissions()).rejects.toThrow();
   });
 });
 
@@ -114,6 +158,16 @@ function roleResource() {
     name: "Catalog manager",
       permissions: ["catalog:manage", "establishment:read", "analytics:read"],
     systemRole: false,
+    position: 1,
+  };
+}
+
+function pageResource() {
+  return {
+    content: [roleResource()],
+    page: 0,
+    size: 20,
+    totalElements: 1,
   };
 }
 

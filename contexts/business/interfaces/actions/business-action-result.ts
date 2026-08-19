@@ -1,7 +1,6 @@
-export type BusinessActionResult =
-  | { status: "idle"; data: null; error: null }
-  | { status: "success"; data: { id?: string } | null; error: null }
-  | { status: "error"; data: null; error: string };
+import type { ActionResult } from "@/contexts/shared/interfaces/actions/action-result";
+
+export type BusinessActionResult = ActionResult<{ id?: string } | null>;
 
 export const initialBusinessActionResult: BusinessActionResult = {
   status: "idle",

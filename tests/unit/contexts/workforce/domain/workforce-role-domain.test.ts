@@ -1,8 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { WorkforceRole } from "@/contexts/workforce/domain/model/entities/workforce-role.entity";
 import {
+  workforceAssignablePermissions,
   workforcePermissionCodes,
   isWorkforcePermission,
+  isWorkforceAssignablePermission,
 } from "@/contexts/workforce/domain/model/enums/workforce-permission";
 
 describe("Workforce role domain", () => {
@@ -41,5 +43,24 @@ describe("Workforce role domain", () => {
     expect(workforcePermissionCodes).toContain("workforce:manage_roles");
     expect(isWorkforcePermission("catalog:manage")).toBe(true);
     expect(isWorkforcePermission("not-supported")).toBe(false);
+  });
+
+  it("should expose exactly the assignable permissions the backend accepts", () => {
+    expect(workforceAssignablePermissions).toEqual([
+      "scheduling:read",
+      "scheduling:manage",
+      "catalog:read",
+      "catalog:manage",
+      "crm:read",
+      "crm:manage",
+      "workforce:read",
+      "workforce:manage",
+      "analytics:read",
+      "establishment:update",
+    ]);
+    expect(isWorkforceAssignablePermission("scheduling:manage")).toBe(true);
+    expect(isWorkforceAssignablePermission("analytics:read")).toBe(true);
+    expect(isWorkforceAssignablePermission("establishment:read")).toBe(false);
+    expect(isWorkforceAssignablePermission("workforce:invite")).toBe(false);
   });
 });

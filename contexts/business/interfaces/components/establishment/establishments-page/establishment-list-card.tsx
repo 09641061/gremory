@@ -1,20 +1,18 @@
-import { PencilLine, Store } from "lucide-react";
+import { PencilLine, Store, Trash2 } from "lucide-react";
 import type { EstablishmentListItem } from "./establishments-page";
 import { Card, CardContent } from "@/contexts/shared/interfaces/components/ui/card";
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@/contexts/shared/interfaces/components/ui/avatar";
 import { StatusBadge } from "@/contexts/shared/interfaces/components/ui/status-badge";
+import { EntityListRow } from "@/contexts/shared/interfaces/components/entity-list-row";
 
 interface EstablishmentListCardProps {
   establishments: EstablishmentListItem[];
   filteredEstablishments: EstablishmentListItem[];
   selectedEstId: string | null;
   canUpdateMap?: Record<string, boolean>;
+  canDeleteMap?: Record<string, boolean>;
   defaultCanUpdate?: boolean;
   onSelect: (id: string) => void;
+  onDelete?: (id: string) => void;
 }
 
 export function EstablishmentListCard({
@@ -22,8 +20,10 @@ export function EstablishmentListCard({
   filteredEstablishments,
   selectedEstId,
   canUpdateMap = {},
+  canDeleteMap = {},
   defaultCanUpdate = true,
   onSelect,
+  onDelete,
 }: EstablishmentListCardProps) {
   return (
     <Card className="overflow-hidden rounded-xl border-border bg-card shadow-sm lg:flex lg:min-h-0 lg:flex-1 lg:flex-col">
@@ -42,37 +42,37 @@ export function EstablishmentListCard({
             filteredEstablishments.map((est) => {
               const selected = est.id === selectedEstId;
               const canUpdate = canUpdateMap[est.id] ?? defaultCanUpdate;
+              const canDelete = canDeleteMap[est.id] ?? false;
               return (
-                <button
+                <EntityListRow
                   key={est.id}
-                  type="button"
-                  aria-pressed={selected}
-                  onClick={() => onSelect(est.id)}
-                  className={`flex w-full cursor-pointer items-center gap-3 border-b border-border px-5 py-4 text-left transition-colors outline-none last:border-b-0 hover:bg-muted/40 focus-visible:bg-muted/40 ${
-                    selected ? "bg-accent/60" : ""
-                  }`}
-                >
-                  <Avatar>
-                    {est.photoUrl ? (
-                      <AvatarImage src={est.photoUrl} alt={est.name} />
-                    ) : (
-                      <AvatarFallback>
-                        <Store className="size-4" />
-                      </AvatarFallback>
-                    )}
-                  </Avatar>
-                  <div className="flex min-w-0 flex-1 items-center gap-2">
-                    <p className="truncate text-sm font-medium text-foreground">
-                      {est.name}
-                    </p>
-                    {canUpdate ? (
+                  avatarSrc={est.photoUrl}
+                  avatarFallbackIcon={<Store className="size-4" />}
+                  name={est.name}
+                  selected={selected}
+                  onSelect={() => onSelect(est.id)}
+                  badges={
+                    canUpdate ? (
                       <StatusBadge tone="success">
                         <PencilLine className="size-3" />
                         Editable
                       </StatusBadge>
-                    ) : null}
-                  </div>
-                </button>
+                    ) : null
+                  }
+                  actions={
+                    canDelete
+                      ? [
+                          {
+                            label: "Delete",
+                            icon: Trash2,
+                            variant: "destructive",
+                            onSelect: () => onDelete?.(est.id),
+                          },
+                        ]
+                      : undefined
+                  }
+                  actionsLabel={`Actions for ${est.name}`}
+                />
               );
             })
           )}

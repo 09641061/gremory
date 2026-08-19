@@ -20,6 +20,7 @@ import type {
   OrganizationSummary,
   PageView,
 } from "../model/business.read-models";
+import type { AccessibleOrganizationResource } from "../../interfaces/rest/schemas/accessible-organization.schemas";
 
 /**
  * Image storage sits outside the write model: the file is stored first and only
@@ -45,6 +46,8 @@ export interface OrganizationCommandService {
 export interface OrganizationQueryService {
   getMyOrganization(query?: GetMyOrganizationQuery): Promise<OrganizationSummary>;
   getById(query: GetOrganizationByIdQuery): Promise<OrganizationSummary | null>;
+  /** All organizations the current member can see (owned or joined via membership). */
+  getAccessible(): Promise<AccessibleOrganizationResource[]>;
 }
 
 export interface EstablishmentCommandService {

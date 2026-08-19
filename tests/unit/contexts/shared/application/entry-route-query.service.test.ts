@@ -73,7 +73,7 @@ describe("entry route query service", () => {
     });
   });
 
-  it("keeps a member inside the app shell when no module is readable", async () => {
+  it("lands a member with an editable establishment on the establishments page when no module is openable", async () => {
     mocks.getWorkspace.mockResolvedValue({
       accountType: "MEMBER",
       onboardingStatus: "COMPLETED",
@@ -82,23 +82,57 @@ describe("entry route query service", () => {
         id: "org-1",
         name: "Acme",
         imageUrl: null,
-        permissions: { canRead: true, canUpdate: true, canCreateEstablishment: true },
+        permissions: { canRead: true, canUpdate: false, canCreateEstablishment: false },
       },
       establishments: [
         {
           id: "est-1",
           name: "Main",
           photoUrl: null,
-          effectivePermissions: [],
-          permissions: { canRead: true, canUpdate: true, canDelete: true },
+          canUpdate: true,
         },
       ],
       activeEstablishmentId: "est-1",
       accessPolicy: {
         canUseAssistant: false,
-        canCreateEstablishment: true,
       },
-      canCreateEstablishment: true,
+      canReadEstablishments: true,
+    });
+
+    const result = await createEntryRouteQueryService().resolveRoute({
+      accessToken: "access-token",
+    });
+
+    expect(result).toEqual({
+      status: "ready",
+      homeHref: "/establishments",
+    });
+  });
+
+  it("keeps a member without readable or editable establishments at access denied", async () => {
+    mocks.getWorkspace.mockResolvedValue({
+      accountType: "MEMBER",
+      onboardingStatus: "COMPLETED",
+      onboardingCompleted: true,
+      organization: {
+        id: "org-1",
+        name: "Acme",
+        imageUrl: null,
+        permissions: { canRead: true, canUpdate: false, canCreateEstablishment: false },
+      },
+      establishments: [
+        {
+          id: "est-1",
+          name: "Main",
+          photoUrl: null,
+          canUpdate: false,
+        },
+      ],
+      activeEstablishmentId: "est-1",
+      accessPolicy: {
+        canUseAssistant: false,
+      },
+      canReadEstablishments: true,
     });
 
     const result = await createEntryRouteQueryService().resolveRoute({
@@ -108,6 +142,85 @@ describe("entry route query service", () => {
     expect(result).toEqual({
       status: "ready",
       homeHref: "/access-denied",
+    });
+  });
+
+  it("lands a guest with only establishment:update on the establishments page", async () => {
+    mocks.getWorkspace.mockResolvedValue({
+      accountType: "MEMBER",
+      onboardingStatus: "COMPLETED",
+      onboardingCompleted: true,
+      organization: {
+        id: "org-1",
+        name: "Acme",
+        imageUrl: null,
+        permissions: { canRead: true, canUpdate: false, canCreateEstablishment: false },
+      },
+      establishments: [
+        {
+          id: "est-1",
+          name: "Main",
+          photoUrl: null,
+          effectivePermissions: ["establishment:update"],
+          canUpdate: true,
+          organizationId: "org-1",
+          organizationName: "Acme",
+        },
+      ],
+      activeEstablishmentId: "est-1",
+      accessPolicy: {
+        canUseAssistant: false,
+      },
+      canReadEstablishments: true,
+    });
+
+    const result = await createEntryRouteQueryService().resolveRoute({
+      accessToken: "access-token",
+    });
+
+    expect(result).toEqual({
+      status: "ready",
+      homeHref: "/establishments",
+    });
+  });
+
+  it("lands a member with only analytics access on the analytics page", async () => {
+    mocks.getWorkspace.mockResolvedValue({
+      accountType: "MEMBER",
+      onboardingStatus: "COMPLETED",
+      onboardingCompleted: true,
+      organization: {
+        id: "org-1",
+        name: "Acme",
+        imageUrl: null,
+        permissions: { canRead: true, canUpdate: false, canCreateEstablishment: false },
+      },
+      establishments: [
+        {
+          id: "est-1",
+          name: "Main",
+          photoUrl: null,
+          effectivePermissions: ["analytics:read"],
+          permissions: { canRead: true, canUpdate: false, canDelete: false },
+          organizationId: "org-1",
+          organizationName: "Acme",
+        },
+      ],
+      activeEstablishmentId: "est-1",
+      accessPolicy: {
+        canUseAssistant: false,
+        canOpenAnalytics: true,
+      },
+      canReadEstablishments: true,
+    });
+
+    const result = await createEntryRouteQueryService().resolveRoute({
+      accessToken: "access-token",
+    });
+
+    expect(result).toEqual({
+      status: "ready",
+      homeHref: "/analytics",
     });
   });
 });

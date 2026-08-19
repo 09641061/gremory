@@ -1,6 +1,7 @@
 import { createTeamQueryService } from "@/contexts/workforce/application/internal/queryservices/team-query.service";
 import { createWorkforceRoleQueryService } from "@/contexts/workforce/application/internal/queryservices/workforce-role-query.service";
 import type { WorkforceRoleSummary } from "@/contexts/workforce/application/model/workforce-role.read-models";
+import { isWorkforceAssignablePermission } from "@/contexts/workforce/domain/model/enums/workforce-permission";
 import { PermissionsPageView } from "@/contexts/workforce/interfaces/components/permissions/permissions-page-view";
 
 import { redirect } from "next/navigation";
@@ -23,8 +24,7 @@ export default async function PermissionsPage({ searchParams }: PermissionsPageP
   const establishmentId = paramEstId ?? workspace.activeEstablishmentId;
   const establishment = getWorkspaceEstablishment(workspace, establishmentId);
   const organizationId = establishment?.organizationId ?? workspace.organization?.id;
-  const canManageRoles = hasEstablishmentPermission(establishment, "workforce:manage_roles") ||
-    hasEstablishmentPermission(establishment, "workforce:manage");
+  const canManageRoles = hasEstablishmentPermission(establishment, "workforce:manage");
   const canReadRoles = canManageRoles;
   const canCreateRole = canManageRoles;
   const canUpdateRole = canManageRoles;
@@ -50,10 +50,7 @@ export default async function PermissionsPage({ searchParams }: PermissionsPageP
     queryService.list(organizationId),
     queryService.permissions(),
   ]);
-  const permissions = supportedPermissions.filter(
-    (permission) =>
-      !permission.startsWith("organization:") && permission !== "establishment:delete",
-  );
+  const permissions = supportedPermissions.filter(isWorkforceAssignablePermission);
 
   const roles = roleEntities
     .filter((role) => role.getName().trim().toLowerCase() !== "everyone")

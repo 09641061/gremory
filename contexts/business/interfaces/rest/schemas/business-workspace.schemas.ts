@@ -27,7 +27,7 @@ const workspaceAccessPolicySchema = z
 
 const workspaceAuthorizationSchema = z
   .object({
-    role: z.enum(["OWNER", "ADMIN", "MANAGER", "WORKER"]),
+    role: z.enum(["OWNER", "MANAGER", "WORKER"]),
     scope: z.object({
       type: z.enum(["ORGANIZATION", "ESTABLISHMENT"]).nullish(),
       id: uuidSchema.nullish(),

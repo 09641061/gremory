@@ -1,8 +1,12 @@
 import { z } from "zod";
-import { workforcePermissionCodes, isWorkforcePermission } from "../../../domain/model/enums/workforce-permission";
+import {
+  workforceAssignablePermissions,
+  workforcePermissionCodes,
+  isWorkforceAssignablePermission,
+} from "../../../domain/model/enums/workforce-permission";
 
 const uuidSchema = z.string().uuid();
-const workforcePermissionSchema = z.string().refine(isWorkforcePermission, {
+const workforcePermissionSchema = z.string().refine(isWorkforceAssignablePermission, {
   message: "Unsupported workforce permission",
 });
 
@@ -35,8 +39,11 @@ export const workforceRoleResourcesSchema = z.array(workforceRoleResourceSchema)
 
 export const workforceRolePageResourceSchema = z.object({
   content: z.array(workforceRoleResourceSchema),
+  page: z.number().int().nonnegative().optional(),
+  size: z.number().int().nonnegative().optional(),
+  totalElements: z.number().int().nonnegative().optional(),
 });
 
 export const workforceRolePermissionsSchema = z.array(
-  z.enum(workforcePermissionCodes),
+  z.enum(workforceAssignablePermissions),
 );

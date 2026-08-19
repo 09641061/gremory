@@ -87,7 +87,6 @@ export class EstablishmentApiGateway implements EstablishmentRepository {
         name: establishment.name.value,
         photoUrl: establishment.photoUrl.value,
         timeZone: establishment.timeZone,
-        ownerAvailableForScheduling: establishment.ownerAvailableForScheduling,
       },
       authToken,
       { "X-Organization-Id": establishment.organizationId.value },
@@ -103,11 +102,12 @@ export class EstablishmentApiGateway implements EstablishmentRepository {
     );
   }
 
-  async delete(id: EstablishmentId): Promise<void> {
+  async delete(id: EstablishmentId, organizationId: OrganizationId): Promise<void> {
     const authToken = await requireBusinessAccessToken(this.providedToken);
     await businessDelete(
       `${apiConfig.routes.establishments}/${encodeURIComponent(id.value)}`,
-      authToken
+      authToken,
+      { "X-Organization-Id": organizationId.value },
     );
   }
 }

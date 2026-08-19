@@ -116,6 +116,15 @@ export function groupEstablishmentsByOrganization(
 }
 
 /**
+ * Whether the account may create a new organization: only while it owns
+ * none yet. An account that already owns one organization creates
+ * establishments inside it instead - it never gets a second organization.
+ */
+export function canCreateOrganization(ownedOrganizationId: string | null): boolean {
+  return ownedOrganizationId === null;
+}
+
+/**
  * Whether the account can edit this organization's name and logo: always
  * true for the one it owns, and for a foreign one only when some membership
   * inside it was granted `establishment:update` - the same permission the backend
@@ -127,11 +136,7 @@ export function canManageOrganization(
   ownedOrganizationId: string | null,
 ): boolean {
   if (organization.canUpdate !== undefined) return organization.canUpdate;
-  if (organization.organizationId === ownedOrganizationId) {
-    return organization.establishments.some((establishment) =>
-      establishment.effectivePermissions?.includes("establishment:update"),
-    );
-  }
+  if (organization.organizationId === ownedOrganizationId) return true;
   return organization.establishments.some((establishment) =>
     establishment.effectivePermissions?.includes("establishment:update"),
   );

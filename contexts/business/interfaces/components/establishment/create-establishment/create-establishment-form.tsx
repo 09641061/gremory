@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useId, useState, useRef } from "react";
+import { useActionState, useEffect, useId, useState } from "react";
 import Link from "next/link";
 import { Store, Plus } from "lucide-react";
 import { createEstablishmentAction } from "../../../actions/establishment.actions";
@@ -10,11 +10,7 @@ import { Input } from "@/contexts/shared/interfaces/components/ui/input";
 import { Button, buttonVariants } from "@/contexts/shared/interfaces/components/ui/button";
 import { ErrorAlert } from "@/contexts/shared/interfaces/components/error";
 import { Spinner } from "@/contexts/shared/interfaces/components/ui/spinner";
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@/contexts/shared/interfaces/components/ui/avatar";
+import { ImageUploadAvatar } from "@/contexts/shared/interfaces/components/image-upload-avatar";
 import { TimeZoneField } from "../time-zone-field";
 
 /**
@@ -31,11 +27,9 @@ export function CreateEstablishmentForm({
   organizationId: string;
   showCancel?: boolean;
 }) {
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const nameHeadingId = useId();
 
   const [name, setName] = useState("");
-  const [photoPreviewUrl, setPhotoPreviewUrl] = useState<string | null>(null);
   const [timeZone, setTimeZone] = useState("America/Lima");
 
   const [state, formAction, pending] = useActionState(
@@ -49,41 +43,10 @@ export function CreateEstablishmentForm({
     if (state.status === "error") {
       setTimeout(() => {
         setName("");
-        setPhotoPreviewUrl((current) => {
-          if (current) URL.revokeObjectURL(current);
-          return null;
-        });
         setFormResetKey((k) => k + 1);
       }, 0);
     }
   }, [state.error, state.status]);
-
-  useEffect(() => {
-    return () => {
-      if (photoPreviewUrl) {
-        URL.revokeObjectURL(photoPreviewUrl);
-      }
-    };
-  }, [photoPreviewUrl]);
-
-  const handleAvatarClick = () => {
-    fileInputRef.current?.click();
-  };
-
-  const handlePhotoChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0] ?? null;
-
-    if (photoPreviewUrl) {
-      URL.revokeObjectURL(photoPreviewUrl);
-    }
-
-    if (!file) {
-      setPhotoPreviewUrl(null);
-      return;
-    }
-
-    setPhotoPreviewUrl(URL.createObjectURL(file));
-  };
 
   return (
     <>
@@ -102,14 +65,6 @@ export function CreateEstablishmentForm({
         <Card className="rounded-xl border-border bg-card shadow-sm overflow-hidden">
           <form key={formResetKey} action={formAction} className="flex flex-col">
             <input type="hidden" name="organizationId" value={organizationId} />
-            <input
-              ref={fileInputRef}
-              type="file"
-              name="photoFile"
-              accept="image/*"
-              className="hidden"
-              onChange={handlePhotoChange}
-            />
 
             <CardContent className="p-0 flex flex-col">
               {/* Photo Section */}
@@ -122,18 +77,11 @@ export function CreateEstablishmentForm({
                       Click on the photo to upload a custom one from your files.
                     </p>
                   </div>
-                  <Avatar
-                    className="size-16 cursor-pointer border border-border transition-opacity hover:opacity-80"
-                    onClick={handleAvatarClick}
-                  >
-                    {photoPreviewUrl ? (
-                      <AvatarImage src={photoPreviewUrl} alt={name} />
-                    ) : (
-                      <AvatarFallback className="bg-muted">
-                        <Store className="size-8 text-muted-foreground" />
-                      </AvatarFallback>
-                    )}
-                  </Avatar>
+                  <ImageUploadAvatar
+                    name="photoFile"
+                    alt={name}
+                    fallbackIcon={<Store className="size-8 text-muted-foreground" />}
+                  />
                 </div>
               </div>
 

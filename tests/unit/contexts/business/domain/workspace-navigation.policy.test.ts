@@ -2,11 +2,22 @@ import { describe, expect, it } from "vitest";
 
 import {
   buildWorkspacePath,
+  canCreateOrganization,
   canManageOrganization,
   groupEstablishmentsByOrganization,
   hasSomewhereToCancelTo,
   resolveEstablishmentEntryPath,
 } from "@/contexts/business/domain/services/workspace-navigation.policy";
+
+describe("canCreateOrganization", () => {
+  it("allows creating an organization when the account owns none yet", () => {
+    expect(canCreateOrganization(null)).toBe(true);
+  });
+
+  it("hides New organization link when the account already owns an organization", () => {
+    expect(canCreateOrganization("org-1")).toBe(false);
+  });
+});
 
 describe("buildWorkspacePath", () => {
   it("keeps the selected establishment in the query string", () => {
@@ -158,6 +169,15 @@ describe("canManageOrganization", () => {
   it("uses the workspace organization permission for the owned organization", () => {
     expect(
       canManageOrganization({ organizationId: "org-1", establishments: [], canUpdate: true }, "org-1"),
+    ).toBe(true);
+  });
+
+  it("allows editing the owned organization even without an explicit establishment:update permission", () => {
+    expect(
+      canManageOrganization(
+        { organizationId: "org-1", establishments: [{ id: "est-1", name: "Main", effectivePermissions: [] }] },
+        "org-1",
+      ),
     ).toBe(true);
   });
 

@@ -58,7 +58,9 @@ async function AppShellSidebar() {
   const [currentProfile, assistantConversations] = await Promise.all([
     getMyProfileServerQuery(),
     shell.hasAssistantAccess
-      ? new ListConversationsQueryService().handle({ page: 0, size: 20 })
+      ? new ListConversationsQueryService()
+          .handle({ page: 0, size: 20 })
+          .catch(() => ({ content: [] as AssistantConversationSummaryReadModel[] }))
       : Promise.resolve({ content: [] as AssistantConversationSummaryReadModel[] }),
   ]);
 

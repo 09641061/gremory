@@ -123,6 +123,23 @@ describe("Business command services", () => {
     expect(current.photoUrl.value).toBe("https://example.com/shop.png");
     expect(id.value).toBe(establishmentId);
   });
+
+  it("resolves the owning organization before deleting an establishment", async () => {
+    const current = establishment("Old shop", null);
+    const repository = establishmentRepository();
+    vi.spyOn(repository, "findById").mockResolvedValue(current);
+    const remove = vi.spyOn(repository, "delete").mockResolvedValue(undefined);
+
+    await new EstablishmentCommandServiceImpl(
+      repository,
+      establishmentPhotoStorage(),
+    ).delete({ id: establishmentId });
+
+    expect(remove).toHaveBeenCalledWith(
+      expect.objectContaining({ value: establishmentId }),
+      expect.objectContaining({ value: organizationId }),
+    );
+  });
 });
 
 describe("Business query services", () => {
