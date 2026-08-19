@@ -63,7 +63,10 @@ export class WorkforceAccessPolicyService {
       const canUpdateRole = canOpenModules && (capabilities?.canUpdateRole ?? hasManage);
       const canDeleteRole = canOpenModules && (capabilities?.canDeleteRole ?? hasManage);
       const canCreateRole = canUpdateRole;
-      const canEditEstablishmentProfile = canOpenModules && (capabilities?.canEditEstablishmentProfile ?? hasManage);
+      const canEditEstablishmentProfile =
+        canOpenModules &&
+        (capabilities?.canEditEstablishmentProfile ??
+          hasAnyPermission(perms, ["establishment:update"]));
        return {
          canReadTeam,
          canDeleteMember: canOpenModules && (capabilities?.canDeleteInvitation ?? hasManage),

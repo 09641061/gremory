@@ -94,7 +94,17 @@ function resolveAccessPolicyEntryPath(
   if (accessPolicy.canOpenCatalog) return "/catalog" as const;
   if (accessPolicy.canOpenCrm) return "/crm" as const;
   if (accessPolicy.canOpenTeam) return "/team" as const;
-  if (workspace.organization?.canRead) return "/organization" as const;
+  if (accessPolicy.canOpenAnalytics) return "/analytics" as const;
+  // No module is openable, but the account may still manage the establishment
+  // profile (`establishment:update`), which lives on the establishments page.
+  // Anything else without a module is denied explicitly, on a screen that has
+  // the sidebar, instead of being stranded on the read-only organization page.
+  if (
+    workspace.canReadEstablishments &&
+    workspace.establishments.some((establishment) => establishment.canUpdate === true)
+  ) {
+    return "/establishments" as const;
+  }
   return "/access-denied" as const;
 }
 

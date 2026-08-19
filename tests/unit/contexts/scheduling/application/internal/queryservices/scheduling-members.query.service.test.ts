@@ -31,7 +31,12 @@ describe("loadSchedulingMembers", () => {
         },
       ]);
 
-    await expect(loadSchedulingMembers("55555555-5555-4555-8555-555555555555")).resolves.toEqual([
+    await expect(
+      loadSchedulingMembers(
+        "55555555-5555-4555-8555-555555555555",
+        "66666666-6666-4666-8666-666666666666",
+      ),
+    ).resolves.toEqual([
       {
         id: "11111111-1111-4111-8111-111111111111",
         userId: "11111111-1111-4111-8111-111111111111",

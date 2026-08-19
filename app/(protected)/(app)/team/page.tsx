@@ -20,12 +20,11 @@ export default async function TeamPage({ searchParams }: TeamPageProps) {
   }
 
   const establishment = getWorkspaceEstablishment(workspace, establishmentId ?? undefined);
-  const canManageTeam = hasEstablishmentPermission(establishment, "workforce:manage") ||
-    hasEstablishmentPermission(establishment, "workforce:manage_members");
-  const canCreateInvitation = hasEstablishmentPermission(establishment, "workforce:invite") || canManageTeam;
+  const canManageTeam = hasEstablishmentPermission(establishment, "workforce:manage");
+  const canCreateInvitation = canManageTeam;
   const canDeleteMember = canManageTeam;
   const canDeleteInvitation = canManageTeam;
-  const canReadRoles = hasEstablishmentPermission(establishment, "workforce:manage_roles") || canManageTeam;
+  const canReadRoles = canManageTeam;
 
   const teamService = createTeamQueryService();
   const [membersPage, currentMembership] = await Promise.all([

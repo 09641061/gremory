@@ -27,10 +27,12 @@ describe("permissions utils", () => {
     ]);
   });
 
-  it("keeps Organization and Establishments first in the permission hierarchy", () => {
-    expect(permissionGroupPriority("organization")).toBeLessThan(permissionGroupPriority("workforce"));
-    expect(permissionGroupPriority("establishment")).toBeLessThan(permissionGroupPriority("workforce"));
-    expect(permissionGroupPriority("workforce")).toBeLessThan(permissionGroupPriority("scheduling"));
+  it("orders modules as the backend contract suggests", () => {
+    expect(permissionGroupPriority("scheduling")).toBeLessThan(permissionGroupPriority("catalog"));
+    expect(permissionGroupPriority("catalog")).toBeLessThan(permissionGroupPriority("crm"));
+    expect(permissionGroupPriority("crm")).toBeLessThan(permissionGroupPriority("workforce"));
+    expect(permissionGroupPriority("workforce")).toBeLessThan(permissionGroupPriority("analytics"));
+    expect(permissionGroupPriority("analytics")).toBeLessThan(permissionGroupPriority("establishment"));
   });
 
   it("keeps other permission groups readable", () => {

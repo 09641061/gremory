@@ -4,6 +4,7 @@ import { useActionState, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Save, User } from "lucide-react";
 import type { WorkforcePermission } from "@/contexts/workforce/domain/model/enums/workforce-permission";
+import { isWorkforceAssignablePermission } from "@/contexts/workforce/domain/model/enums/workforce-permission";
 import type { WorkforceRoleSummary } from "@/contexts/workforce/application/model/workforce-role.read-models";
 import type { TeamUserSummary } from "@/contexts/workforce/application/model/team.read-models";
 import { patchWorkforceRoleAction } from "@/contexts/workforce/interfaces/actions/workforce-role.actions";
@@ -28,11 +29,17 @@ interface PermissionsWorkspaceProps {
   canUpdateRole?: boolean;
 }
 
-export function PermissionsWorkspace({ role, permissions, members, onCancel, canUpdateRole = true }: PermissionsWorkspaceProps) {
+export function PermissionsWorkspace({
+  role,
+  permissions,
+  members,
+  onCancel,
+  canUpdateRole = true,
+}: PermissionsWorkspaceProps) {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<"permissions" | "members">("permissions");
   const [selectedPermissions, setSelectedPermissions] = useState<ReadonlySet<string>>(
-    new Set(role?.permissions ?? []),
+    new Set((role?.permissions ?? []).filter((permission) => isWorkforceAssignablePermission(permission))),
   );
   const [permissionFilter, setPermissionFilter] = useState("");
   const [state, formAction, pending] = useActionState(
@@ -61,7 +68,9 @@ export function PermissionsWorkspace({ role, permissions, members, onCancel, can
   const editable = !role.systemRole && canUpdateRole;
 
   function cancelChanges() {
-    setSelectedPermissions(new Set(role?.permissions ?? []));
+    setSelectedPermissions(
+      new Set((role?.permissions ?? []).filter((permission) => isWorkforceAssignablePermission(permission))),
+    );
     onCancel?.();
   }
 

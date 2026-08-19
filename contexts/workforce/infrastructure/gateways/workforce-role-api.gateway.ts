@@ -1,7 +1,10 @@
 import "server-only";
 
 import { apiConfig } from "@/api.config";
-import { WorkforceRole } from "../../domain/model/entities/workforce-role.entity";
+import {
+  EVERYONE_POSITION,
+  WorkforceRole,
+} from "../../domain/model/entities/workforce-role.entity";
 import type {
   AssignWorkforceRoleCommand,
   DeleteWorkforceRoleCommand,
@@ -34,8 +37,13 @@ export class WorkforceRoleApiGateway implements WorkforceRoleRepository {
   async list(organizationId?: string) {
     const token = await requireTeamAccessToken(this.providedToken);
     const resolvedOrgId = organizationId ?? this.organizationId;
-    const query = resolvedOrgId ? `?organizationId=${encodeURIComponent(resolvedOrgId)}` : "";
-    const response = await teamGet<unknown>(`${apiConfig.routes.workforce.roles}${query}`, token, this.tenantHeaders());
+    const params = new URLSearchParams({ page: "0", size: "20" });
+    const headers = resolvedOrgId ? { "X-Organization-Id": resolvedOrgId } : undefined;
+    const response = await teamGet<unknown>(
+      `${apiConfig.routes.workforce.roles}?${params}`,
+      token,
+      headers,
+    );
     const page = workforceRolePageResourceSchema.parse(response);
     return workforceRoleResourcesSchema.parse(page.content).map(toRole);
   }
@@ -112,6 +120,6 @@ function toRole(resource: WorkforceRoleResource) {
     name: resource.name,
     permissions: resource.permissions,
     systemRole: resource.systemRole,
-    position: resource.position ?? (resource.systemRole ? 2_147_483_647 : 1),
+    position: resource.systemRole ? EVERYONE_POSITION : (resource.position ?? 1),
   });
 }

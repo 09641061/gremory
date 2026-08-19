@@ -12,7 +12,7 @@ import {
   patchWorkforceRoleCommand,
   removeWorkforceRoleAssignmentCommand,
 } from "@/contexts/workforce/domain/model/commands/workforce-role.commands";
-import { workforcePermissionCodes } from "@/contexts/workforce/domain/model/enums/workforce-permission";
+import { workforceAssignablePermissions } from "@/contexts/workforce/domain/model/enums/workforce-permission";
 import { TeamApiError } from "@/contexts/workforce/infrastructure/gateways/team-api.gateway";
 import { requireTeamAccessToken } from "@/contexts/workforce/infrastructure/session/team-session";
 import {
@@ -38,7 +38,7 @@ export async function listWorkforceRolesRoute() {
 }
 
 export async function listWorkforceRolePermissionsRoute() {
-  return NextResponse.json(workforcePermissionCodes);
+  return NextResponse.json(workforceAssignablePermissions);
 }
 
 export async function createWorkforceRoleRoute(request: Request) {
