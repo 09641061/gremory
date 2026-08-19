@@ -219,8 +219,6 @@ function toTeamUser(resource: {
   username?: string | null;
   imageUrl?: string | null;
   email: string;
-  roleId?: string;
-  roleName?: string;
   isOwner: boolean;
   roles?: Array<{
     id: string;
@@ -241,12 +239,7 @@ function toTeamUser(resource: {
   availableForScheduling: boolean;
   canUpdateSchedulingAvailability: boolean;
 }): TeamUser {
-  const roles =
-    resource.roles && resource.roles.length > 0
-      ? resource.roles
-      : resource.roleId
-        ? [{ id: resource.roleId, name: resource.roleName ?? "Everyone", position: 2_147_483_647, systemRole: true, permissions: [] }]
-        : [];
+  const roles = resource.roles ?? [];
   return TeamUser.create({
     invitationId: createInvitationId(resource.invitationId),
     memberId: resource.memberId ? createMemberId(resource.memberId) : null,
@@ -254,8 +247,8 @@ function toTeamUser(resource: {
     name: resource.username ?? null,
     imageUrl: resource.imageUrl ?? null,
     email: createInvitedEmail(resource.email),
-    roleId: createTeamRoleId(roles[0]?.id ?? resource.roleId ?? "00000000-0000-4000-8000-000000000000"),
-    roleName: roles[0]?.name ?? resource.roleName ?? "Everyone",
+    roleId: roles[0]?.id ? createTeamRoleId(roles[0].id) : null,
+    roleName: roles[0]?.name ?? null,
     isOwner: resource.isOwner,
     roles: roles.map((role) => ({
       id: createTeamRoleId(role.id),

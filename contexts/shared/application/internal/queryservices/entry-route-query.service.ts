@@ -105,6 +105,12 @@ function resolveAccessPolicyEntryPath(
   ) {
     return "/establishments" as const;
   }
+  // A member with no roles or only roles without permissions is in the
+  // restricted state; the backend flags it with `canOpenModules: false`. Show
+  // the "Sin acceso aún" screen instead of the generic denied page.
+  if (workspace.authorization?.capabilities?.canOpenModules === false) {
+    return "/no-access" as const;
+  }
   return "/access-denied" as const;
 }
 

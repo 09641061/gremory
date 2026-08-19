@@ -12,8 +12,6 @@ import {
 interface RoleSummary {
   id: string;
   name: string;
-  systemRole?: boolean;
-  permissions?: ReadonlyArray<string>;
 }
 
 interface MemberRolesDropdownProps {
@@ -21,23 +19,15 @@ interface MemberRolesDropdownProps {
 }
 
 export function MemberRolesDropdown({ roles }: MemberRolesDropdownProps) {
-  const visibleRoles = roles.filter(
-    (role) =>
-      !(
-        role.systemRole === true &&
-        role.name.trim().toLowerCase() === "everyone" &&
-        (role.permissions?.length ?? 0) === 0
-      ),
-  );
-  if (visibleRoles.length === 0) {
+  if (roles.length === 0) {
     return (
       <span className="inline-flex rounded-full border border-dashed border-border px-3 py-1 text-xs text-muted-foreground">
-        No role assigned
+        Sin rol
       </span>
     );
   }
 
-  const count = visibleRoles.length;
+  const count = roles.length;
   const label = count === 1 ? "1 Role" : `${count} Roles`;
 
   return (
@@ -56,19 +46,13 @@ export function MemberRolesDropdown({ roles }: MemberRolesDropdownProps) {
         <ChevronDown className="size-3.5 text-muted-foreground" />
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-48 p-1">
-        {visibleRoles.map((role) => (
+        {roles.map((role) => (
           <DropdownMenuItem
             key={role.id}
             className="flex items-center gap-2 px-2.5 py-2 text-sm text-foreground focus:bg-muted/50 cursor-default"
           >
             <User className="size-3.5 text-muted-foreground/70" />
             <span className="truncate">{role.name}</span>
-            {role.systemRole && (
-              <span className="ml-auto text-[10px] bg-muted text-muted-foreground px-1.5 py-0.5 rounded-full font-semibold">
-                System
-              </span>
-            )}
-
           </DropdownMenuItem>
         ))}
       </DropdownMenuContent>

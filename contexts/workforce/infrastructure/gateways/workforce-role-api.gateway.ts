@@ -1,10 +1,7 @@
 import "server-only";
 
 import { apiConfig } from "@/api.config";
-import {
-  EVERYONE_POSITION,
-  WorkforceRole,
-} from "../../domain/model/entities/workforce-role.entity";
+import { WorkforceRole } from "../../domain/model/entities/workforce-role.entity";
 import type {
   AssignWorkforceRoleCommand,
   DeleteWorkforceRoleCommand,
@@ -58,7 +55,7 @@ export class WorkforceRoleApiGateway implements WorkforceRoleRepository {
     const token = await requireTeamAccessToken(this.providedToken);
     const body = workforceRoleCreateRequestSchema.parse({
       name: role.getName(),
-      position: role.id === null || role.position === 2_147_483_647 ? undefined : role.position,
+      position: role.id === null ? undefined : role.position,
     });
     const response = await teamPost<unknown>(
       apiConfig.routes.workforce.roles,
@@ -120,6 +117,6 @@ function toRole(resource: WorkforceRoleResource) {
     name: resource.name,
     permissions: resource.permissions,
     systemRole: resource.systemRole,
-    position: resource.systemRole ? EVERYONE_POSITION : (resource.position ?? 1),
+    position: resource.position ?? 1,
   });
 }

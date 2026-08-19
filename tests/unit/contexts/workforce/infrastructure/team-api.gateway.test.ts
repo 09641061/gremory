@@ -201,10 +201,8 @@ describe("TeamApiGateway", () => {
     })).rejects.toThrow("ACTIVE team users require member and user IDs");
   });
 
-  it("should accept a pending user with no explicit roles from the API", async () => {
+  it("should keep a member with no roles as role-less", async () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(jsonResponse(pageResource({
-      roleId: undefined,
-      roleName: undefined,
       roles: [],
     }))));
 
@@ -213,8 +211,9 @@ describe("TeamApiGateway", () => {
       size: 20,
     });
 
-    expect(result.content[0]?.roles).toHaveLength(1);
-    expect(result.content[0]?.roleName).toBe("Everyone");
+    expect(result.content[0]?.roles).toHaveLength(0);
+    expect(result.content[0]?.roleName).toBeNull();
+    expect(result.content[0]?.roleId).toBeNull();
   });
 });
 
@@ -225,8 +224,7 @@ function pageResource(overrides: Record<string, unknown> = {}) {
       memberId: null,
       userId: null,
       email: "employee@example.com",
-      roleId: "66666666-6666-4666-8666-666666666666",
-      roleName: "Everyone",
+      roles: [],
       organizationId,
       establishmentId,
       establishmentName: "Miraflores",

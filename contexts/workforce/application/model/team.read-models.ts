@@ -7,8 +7,8 @@ export interface TeamUserSummary {
   name: string | null;
   imageUrl: string | null;
   email: string;
-  roleId: string;
-  roleName: string;
+  roleId: string | null;
+  roleName: string | null;
   isOwner?: boolean;
   roles: ReadonlyArray<{
     id: string;

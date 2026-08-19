@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createBusinessWorkspaceQueryService } from "@/contexts/business/application/internal/queryservices/business-workspace-query.service";
+import { ApiError } from "@/contexts/shared/infrastructure/http/api-client";
 import { createWorkforceRoleCommandService } from "../../application/internal/commandservices/workforce-role-command.service";
 import {
   assignWorkforceRoleCommand,
@@ -158,6 +159,11 @@ export async function deleteWorkforceRoleAction(
     revalidateWorkforceRoleView();
     return { status: "success", data: null, error: null };
   } catch (error) {
+    if (error instanceof ApiError && error.status === 409) {
+      return workforceRoleActionError(
+        new Error("No se puede borrar un rol asignado a miembros"),
+      );
+    }
     return workforceRoleActionError(error);
   }
 }

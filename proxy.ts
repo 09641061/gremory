@@ -99,6 +99,7 @@ function isPrivateRoute(pathname: string) {
     "/organizations",
     "/establishments",
     "/access-denied",
+    "/no-access",
     // Lives under app/(protected): plans are shown to signed-in users only.
     "/upgrade",
   ].some((route) => pathname === route || pathname.startsWith(`${route}/`));
@@ -225,5 +226,6 @@ export const config = {
     "/organizations/:path*",
     "/establishments/:path*",
     "/access-denied/:path*",
+    "/no-access/:path*",
   ],
 };

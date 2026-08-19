@@ -65,7 +65,7 @@ export function PermissionsWorkspace({
     );
   }
 
-  const editable = !role.systemRole && canUpdateRole;
+  const editable = canUpdateRole;
 
   function cancelChanges() {
     setSelectedPermissions(

@@ -64,7 +64,7 @@ export function MemberRow({
   const canRemove = member.canRemoveMembership && memberId !== null && canRemoveMembers;
   const canCancel = member.canRevokeInvitation && canCancelInvitations;
   const error = removeState.error ?? revokeState.error ?? availabilityState.error;
-  const isOwner = ownerFromWorkspace || member.roleName.trim().toLowerCase() === "owner";
+  const isOwner = ownerFromWorkspace || member.isOwner === true;
 
   return (
     <div className="grid min-h-[92px] grid-cols-[minmax(300px,1.4fr)_minmax(220px,1fr)_minmax(150px,.8fr)_minmax(150px,.55fr)_minmax(170px,.7fr)] items-center border-b border-border/70 px-5 py-4 transition-colors last:border-b-0 hover:bg-muted/20">

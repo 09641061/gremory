@@ -16,8 +16,8 @@ export interface TeamUserProps {
   name?: string | null;
   imageUrl?: string | null;
   email: InvitedEmail;
-  roleId?: TeamRoleId;
-  roleName?: string;
+  roleId?: TeamRoleId | null;
+  roleName?: string | null;
   isOwner?: boolean;
   roles?: ReadonlyArray<TeamRoleSummary>;
   organizationId: TeamOrganizationId;
@@ -49,8 +49,8 @@ export class TeamUser {
     public readonly name: string | null,
     public readonly imageUrl: string | null,
     public readonly email: InvitedEmail,
-    public readonly roleId: TeamRoleId,
-    public readonly roleName: string,
+    public readonly roleId: TeamRoleId | null,
+    public readonly roleName: string | null,
     public readonly isOwner: boolean,
     public readonly roles: ReadonlyArray<TeamRoleSummary>,
     public readonly organizationId: TeamOrganizationId,
@@ -76,20 +76,8 @@ export class TeamUser {
     if (Number.isNaN(props.invitedAt.getTime()) || Number.isNaN(props.invitationExpiresAt.getTime())) {
       throw new Error("Team user invitation dates must be valid");
     }
-    const roles =
-      props.roles && props.roles.length > 0
-        ? [...props.roles]
-        : props.roleId && props.roleName
-          ? [{
-              id: props.roleId,
-              name: props.roleName,
-              position: 2_147_483_647,
-              systemRole: true,
-              permissions: [],
-            }]
-          : [];
+    const roles = props.roles ? [...props.roles] : [];
     const primaryRole = roles[0];
-    if (!primaryRole) throw new Error("Team users require at least Everyone role");
     return new TeamUser(
       props.invitationId,
       props.memberId,
@@ -97,8 +85,8 @@ export class TeamUser {
       normalizeName(props.name),
       normalizeImageUrl(props.imageUrl),
       props.email,
-      primaryRole.id,
-      primaryRole.name.trim(),
+      primaryRole?.id ?? null,
+      primaryRole ? primaryRole.name.trim() : null,
       props.isOwner ?? false,
       Object.freeze(roles),
       props.organizationId,

@@ -22,7 +22,16 @@ describe("TeamPageView", () => {
     email: "alex@example.com",
     roleId: "44444444-4444-4444-8444-444444444444",
     roleName: "Worker",
-    roles: [],
+    roles: [
+      {
+        id: "44444444-4444-4444-8444-444444444444",
+        name: "Worker",
+        position: 1,
+        systemRole: false,
+        permissions: [],
+      },
+    ],
+    isOwner: false,
     organizationId: "55555555-5555-4555-8555-555555555555",
     establishmentId: "66666666-6666-4666-8666-666666666666",
     establishmentName: "Main location",
@@ -49,13 +58,14 @@ describe("TeamPageView", () => {
     roleName: "Owner",
     roles: [
       {
-        id: "owner",
+        id: "99999999-9999-4999-8999-999999999999",
         name: "Owner",
         position: 1,
         systemRole: true,
         permissions: [],
       },
     ],
+    isOwner: true,
     invitedAt: null,
     invitationExpiresAt: null,
     acceptedAt: null,
