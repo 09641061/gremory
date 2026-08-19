@@ -8,10 +8,19 @@ import { createOrganizationId } from "../../../domain/model/valueobjects/organiz
 import type { OrganizationRepository } from "../../../domain/services/business.repositories";
 import type { OrganizationQueryService } from "../../services/business.services";
 import type { OrganizationSummary } from "../../model/business.read-models";
-import { createOrganizationAdapter } from "@/contexts/business/infrastructure/adapters/organization.adapter";
+import { OrganizationApiGateway } from "@/contexts/business/infrastructure/gateways/organization-api.gateway";
+import type { AccessibleOrganizationResource } from "@/contexts/business/interfaces/rest/schemas/accessible-organization.schemas";
+
+/** Only the accessible-organizations lookup, so tests can stub it without implementing the full repository. */
+interface AccessibleOrganizationSource {
+  findAccessible(): Promise<AccessibleOrganizationResource[]>;
+}
 
 export class OrganizationQueryServiceImpl implements OrganizationQueryService {
-  constructor(private readonly organizations: OrganizationRepository) {}
+  constructor(
+    private readonly organizations: OrganizationRepository,
+    private readonly accessibleOrganizations: AccessibleOrganizationSource = new OrganizationApiGateway(),
+  ) {}
 
   async getMyOrganization(
     query: GetMyOrganizationQuery = {},
@@ -28,11 +37,15 @@ export class OrganizationQueryServiceImpl implements OrganizationQueryService {
     );
     return organization ? toOrganizationSummary(organization) : null;
   }
+
+  async getAccessible(): Promise<AccessibleOrganizationResource[]> {
+    return this.accessibleOrganizations.findAccessible();
+  }
 }
 
 export function createOrganizationQueryService(
 ): OrganizationQueryService {
-  return new OrganizationQueryServiceImpl(createOrganizationAdapter());
+  return new OrganizationQueryServiceImpl(new OrganizationApiGateway());
 }
 
 function toOrganizationSummary(

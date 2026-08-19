@@ -11,7 +11,7 @@ import type {
   OrganizationCommandService,
   OrganizationImageStorage,
 } from "../../services/business.services";
-import { createOrganizationAdapter } from "@/contexts/business/infrastructure/adapters/organization.adapter";
+import { OrganizationApiGateway } from "@/contexts/business/infrastructure/gateways/organization-api.gateway";
 import { createOrganizationImageUploadAdapter } from "@/contexts/business/infrastructure/adapters/organization-image-upload.adapter";
 
 export class OrganizationCommandServiceImpl implements OrganizationCommandService {
@@ -23,7 +23,9 @@ export class OrganizationCommandServiceImpl implements OrganizationCommandServic
   async create(command: CreateOrganizationCommand) {
     const organization = await this.organizations.create(
       createOrganizationName(command.name),
-      command.imageFile,
+      // The domain command types this as file metadata only; interfaces
+      // code always populates it from a real browser File.
+      command.imageFile as File | null | undefined,
     );
     return organization.id;
   }
@@ -39,7 +41,7 @@ export class OrganizationCommandServiceImpl implements OrganizationCommandServic
     organization.update(command.name, command.imageUrl);
 
     if (command.imageFile) {
-      await this.images.upload(organization.id, organization.name, command.imageFile);
+      await this.images.upload(organization.id, organization.name, command.imageFile as File);
       return organization.id;
     }
 
@@ -50,7 +52,7 @@ export class OrganizationCommandServiceImpl implements OrganizationCommandServic
 
 export function createOrganizationCommandService(): OrganizationCommandService {
   return new OrganizationCommandServiceImpl(
-    createOrganizationAdapter(),
+    new OrganizationApiGateway(),
     createOrganizationImageUploadAdapter(),
   );
 }

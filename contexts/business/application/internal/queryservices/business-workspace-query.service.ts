@@ -12,6 +12,7 @@ import type {
   WorkspaceHeaderOrganization,
   WorkspaceHeaderViewModel,
 } from "@/contexts/business/application/model/business-workspace.view-models";
+import { canCreateOrganization } from "@/contexts/business/domain/services/workspace-navigation.policy";
 
 export type BusinessWorkspaceQuery = BusinessWorkspaceSelection;
 
@@ -80,6 +81,7 @@ export function toHeaderViewModel(
     canReadOrganization: organization?.canRead === true,
     canReadEstablishments: organization?.canReadEstablishments === true,
     canCreateEstablishment: organization?.canCreateEstablishment === true,
+    canCreateOrganization: canCreateOrganization(resource.ownedOrganizationId ?? null),
     subscription: resource.subscription
       ? {
           active: resource.subscription.active,

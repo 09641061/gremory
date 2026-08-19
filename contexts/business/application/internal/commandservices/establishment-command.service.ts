@@ -14,7 +14,7 @@ import type {
   EstablishmentCommandService,
   EstablishmentPhotoStorage,
 } from "../../services/business.services";
-import { createEstablishmentAdapter } from "@/contexts/business/infrastructure/adapters/establishment.adapter";
+import { EstablishmentApiGateway } from "@/contexts/business/infrastructure/gateways/establishment-api.gateway";
 import { createEstablishmentPhotoAdapter } from "@/contexts/business/infrastructure/adapters/establishment-photo.adapter";
 
 export class EstablishmentCommandServiceImpl implements EstablishmentCommandService {
@@ -26,7 +26,7 @@ export class EstablishmentCommandServiceImpl implements EstablishmentCommandServ
   async create(command: CreateEstablishmentCommand) {
     const organizationId = createOrganizationId(command.organizationId);
     const photo = command.photoFile
-      ? await this.photos.upload(command.photoFile, organizationId)
+      ? await this.photos.upload(command.photoFile as File, organizationId)
       : createEstablishmentPhoto(command.photoUrl);
 
     const establishment = await this.establishments.create(
@@ -49,8 +49,12 @@ export class EstablishmentCommandServiceImpl implements EstablishmentCommandServ
     return saved.id;
   }
 
-  delete(command: DeleteEstablishmentCommand) {
-    return this.establishments.delete(createEstablishmentId(command.id));
+  async delete(command: DeleteEstablishmentCommand) {
+    const id = createEstablishmentId(command.id);
+    const establishment = await this.establishments.findById(id);
+    if (!establishment) throw new Error("Establishment not found");
+
+    return this.establishments.delete(id, establishment.organizationId);
   }
 
   /** A replacement wins over a removal: both together is a contradictory intent. */
@@ -59,7 +63,7 @@ export class EstablishmentCommandServiceImpl implements EstablishmentCommandServ
     organizationId: ReturnType<typeof createOrganizationId>,
     command: UpdateEstablishmentCommand,
   ) {
-    if (command.photoFile) return this.photos.upload(command.photoFile, organizationId);
+    if (command.photoFile) return this.photos.upload(command.photoFile as File, organizationId);
 
     if (command.removePhoto) {
       await this.photos.remove(id);
@@ -72,7 +76,7 @@ export class EstablishmentCommandServiceImpl implements EstablishmentCommandServ
 
 export function createEstablishmentCommandService(): EstablishmentCommandService {
   return new EstablishmentCommandServiceImpl(
-    createEstablishmentAdapter(),
+    new EstablishmentApiGateway(),
     createEstablishmentPhotoAdapter(),
   );
 }

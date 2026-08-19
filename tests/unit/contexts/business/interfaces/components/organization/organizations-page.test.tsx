@@ -13,13 +13,14 @@ vi.mock("next/navigation", () => ({
 }));
 
 vi.mock("@/contexts/business/interfaces/components/organization/organizations-page/organizations-search-bar", () => ({
-  OrganizationsSearchBar: () => null,
+  OrganizationsSearchBar: ({ canCreate }: { canCreate?: boolean }) =>
+    canCreate ? <a href="/organizations/new">New organization</a> : null,
 }));
 
 vi.mock("@/contexts/business/interfaces/components/organization/organizations-page/organization-list-card", () => ({
-  OrganizationListCard: ({ organizations, onConfirm }: { organizations: Array<{ organizationId: string }>; onConfirm: (id: string) => void }) => (
-    <button type="button" onClick={() => onConfirm(organizations[0].organizationId)}>
-      Work in
+  OrganizationListCard: ({ filteredOrganizations, onPreview }: { filteredOrganizations: Array<{ organizationId: string }>; onPreview: (id: string) => void }) => (
+    <button type="button" onClick={() => onPreview(filteredOrganizations[0].organizationId)}>
+      Select organization
     </button>
   ),
 }));
@@ -37,7 +38,7 @@ describe("OrganizationsPage", () => {
     document.cookie = "takodu.preview_organization_id=; path=/; max-age=0";
   });
 
-  it("navigates to establishment setup when the confirmed organization is owned and empty", () => {
+  it("navigates to establishment setup when the selected organization is owned and empty", () => {
     render(
       <OrganizationsPage
         organizations={[
@@ -53,12 +54,12 @@ describe("OrganizationsPage", () => {
       />,
     );
 
-    fireEvent.click(screen.getByRole("button", { name: "Work in" }));
+    fireEvent.click(screen.getByRole("button", { name: "Select organization" }));
 
     expect(mocks.router.push).toHaveBeenCalledWith("/establishments/setup?organizationId=org-1");
   });
 
-  it("returns to the app home when the confirmed organization already has establishments", () => {
+  it("returns to the app home when the selected organization already has establishments", () => {
     render(
       <OrganizationsPage
         organizations={[
@@ -74,8 +75,41 @@ describe("OrganizationsPage", () => {
       />,
     );
 
-    fireEvent.click(screen.getByRole("button", { name: "Work in" }));
+    fireEvent.click(screen.getByRole("button", { name: "Select organization" }));
 
     expect(mocks.router.push).toHaveBeenCalledWith("/?organizationId=org-1&establishmentId=est-1");
+  });
+
+  it("hides New organization link when the account already owns an organization", () => {
+    render(
+      <OrganizationsPage
+        organizations={[
+          {
+            organizationId: "org-1",
+            organizationName: "Acme",
+            organizationImageUrl: null,
+            establishments: [],
+          },
+        ]}
+        ownedOrganizationId="org-1"
+        activeOrganizationId={null}
+        canCreateOrganization={false}
+      />,
+    );
+
+    expect(screen.queryByRole("link", { name: "New organization" })).toBeNull();
+  });
+
+  it("shows New organization link for an account that owns no organization yet", () => {
+    render(
+      <OrganizationsPage
+        organizations={[]}
+        ownedOrganizationId={null}
+        activeOrganizationId={null}
+        canCreateOrganization={true}
+      />,
+    );
+
+    expect(screen.getByRole("link", { name: "New organization" })).toBeDefined();
   });
 });

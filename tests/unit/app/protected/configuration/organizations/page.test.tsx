@@ -107,6 +107,7 @@ describe("OrganizationsRoutePage", () => {
     expect(element).toMatchObject({
       props: expect.objectContaining({
         ownedOrganizationId: "own-org",
+        canCreateOrganization: false,
         initialPreviewOrganizationId: "own-org",
         activeOrganizationId: "host-org",
         organizations: expect.arrayContaining([

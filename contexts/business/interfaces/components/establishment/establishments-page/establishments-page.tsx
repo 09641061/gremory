@@ -4,6 +4,9 @@ import { useMemo, useState } from "react";
 import { EstablishmentsSearchBar } from "./establishments-search-bar";
 import { EstablishmentListCard } from "./establishment-list-card";
 import { EstablishmentDetailCard } from "./establishment-detail-card";
+import { deleteEstablishmentAction } from "@/contexts/business/interfaces/actions/establishment.actions";
+import { DeleteConfirmDialog } from "@/contexts/shared/interfaces/components/delete-confirm-dialog";
+import { useEntityDelete } from "@/contexts/shared/interfaces/components/hooks/use-entity-delete";
 
 export type EstablishmentListItem = {
   id: string;
@@ -34,6 +37,9 @@ export function EstablishmentsPage({
   const [selectedEstId, setSelectedEstId] = useState<string | null>(
     initialSelectedEstablishmentId ?? null,
   );
+  const { targetId: deleteTargetId, requestDelete, dialogProps } = useEntityDelete(
+    deleteEstablishmentAction,
+  );
 
   const filteredEstablishments = useMemo(() => {
     const normalized = filter.trim().toLowerCase();
@@ -48,7 +54,9 @@ export function EstablishmentsPage({
     establishments.find((est) => est.id === selectedEstId) ??
     null;
   const canUpdateSelected = selectedEst ? (canUpdateMap[selectedEst.id] ?? defaultCanUpdate) : defaultCanUpdate;
-  const canDeleteSelected = selectedEst ? (canDeleteMap[selectedEst.id] ?? false) : false;
+  const deleteTarget = deleteTargetId
+    ? establishments.find((est) => est.id === deleteTargetId)
+    : null;
 
   return (
     <section className="mx-auto flex w-full max-w-7xl flex-col gap-6 lg:flex-row">
@@ -75,10 +83,22 @@ export function EstablishmentsPage({
           filteredEstablishments={filteredEstablishments}
           selectedEstId={selectedEstId}
           canUpdateMap={canUpdateMap}
+          canDeleteMap={canDeleteMap}
           defaultCanUpdate={defaultCanUpdate}
           onSelect={setSelectedEstId}
+          onDelete={requestDelete}
         />
       </div>
+
+      {deleteTarget ? (
+        <DeleteConfirmDialog
+          {...dialogProps}
+          entityLabel="establishment"
+          entityName={deleteTarget.name}
+        >
+          <input type="hidden" name="id" value={deleteTarget.id} />
+        </DeleteConfirmDialog>
+      ) : null}
 
       {/* Columna derecha */}
       <EstablishmentDetailCard
@@ -89,7 +109,6 @@ export function EstablishmentsPage({
         }
         establishment={selectedEst}
         canUpdate={canUpdateSelected}
-        canDelete={canDeleteSelected}
         onCancel={() => setSelectedEstId(null)}
         className={selectedEst ? "" : "hidden lg:block"}
       />

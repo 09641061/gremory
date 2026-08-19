@@ -23,14 +23,10 @@ describe("OrganizationListCard", () => {
   it("shows the selected badge only for the confirmed organization", () => {
     render(
       <OrganizationListCard
-        organizations={organizations}
         filteredOrganizations={organizations}
         previewOrgId="org-1"
-        previewOrganization={organizations[0]}
         activeOrganizationId="org-2"
-        ownedOrganizationId="org-1"
         onPreview={() => {}}
-        onConfirm={() => {}}
       />,
     );
 
@@ -38,43 +34,37 @@ describe("OrganizationListCard", () => {
     expect(screen.queryAllByText("Selected").length).toBe(1);
   });
 
-  it("confirms the selected organization even when it has no establishments", () => {
-    const onConfirm = vi.fn();
+  it("selects the organization when the row is clicked, without a separate confirm button", () => {
+    const onPreview = vi.fn();
     render(
       <OrganizationListCard
-        organizations={organizations}
         filteredOrganizations={organizations}
-        previewOrgId="org-1"
-        previewOrganization={organizations[0]}
-        activeOrganizationId="org-2"
-        ownedOrganizationId="org-1"
-        onPreview={() => {}}
-        onConfirm={onConfirm}
+        previewOrgId={null}
+        activeOrganizationId={null}
+        onPreview={onPreview}
       />,
     );
 
-    fireEvent.click(screen.getByRole("button", { name: /work in acme/i }));
+    expect(screen.queryByRole("button", { name: /work in/i })).toBeNull();
 
-    expect(onConfirm).toHaveBeenCalledWith("org-1");
+    fireEvent.click(screen.getByText("Acme"));
+
+    expect(onPreview).toHaveBeenCalledWith("org-1");
   });
 
-  it("confirms the selected organization when there is one establishment", () => {
-    const onConfirm = vi.fn();
+  it("selects an organization with establishments in the same single step", () => {
+    const onPreview = vi.fn();
     render(
       <OrganizationListCard
-        organizations={organizations}
         filteredOrganizations={organizations}
-        previewOrgId="org-2"
-        previewOrganization={organizations[1]}
-        activeOrganizationId="org-2"
-        ownedOrganizationId="org-1"
-        onPreview={() => {}}
-        onConfirm={onConfirm}
+        previewOrgId={null}
+        activeOrganizationId={null}
+        onPreview={onPreview}
       />,
     );
 
-    fireEvent.click(screen.getByRole("button", { name: /work in studio/i }));
+    fireEvent.click(screen.getByText("Studio"));
 
-    expect(onConfirm).toHaveBeenCalledWith("org-2");
+    expect(onPreview).toHaveBeenCalledWith("org-2");
   });
 });
