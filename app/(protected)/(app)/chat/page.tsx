@@ -1,14 +1,41 @@
+import { Suspense } from "react";
 import { GetConversationQueryService } from "@/contexts/assistant/application/internal/queryservices/get-conversation-query.service";
 import { createAssistantConversationsAdapter } from "@/contexts/assistant/infrastructure/adapters/assistant-conversations.adapter";
 import { createBusinessWorkspaceQueryService } from "@/contexts/business/application/internal/queryservices/business-workspace-query.service";
 import { AssistantChatView } from "@/contexts/assistant/interfaces/components/chat-view/assistant-chat-view";
+import { AssistantChatLoadingState } from "@/contexts/assistant/interfaces/components/chat-view/assistant-chat-loading-state";
 import { toConversationViewModel } from "@/contexts/assistant/interfaces/presenters/assistant-chat.presenter.server";
 import { Alert, AlertTitle, AlertDescription } from "@/contexts/shared/interfaces/components/ui/alert";
 
-export default async function ChatPage({
+type ChatPageSearchParams = {
+  conversationId?: string;
+  denied?: string;
+  establishmentId?: string;
+};
+
+/**
+ * Touches no dynamic API itself: `searchParams` and every data fetch live in
+ * `ChatPageContent`, behind its own `<Suspense>` boundary below. Awaiting
+ * `searchParams` up here instead would make the whole route dynamic before
+ * it ever reaches a boundary, so Next couldn't prerender a static shell for
+ * it (see nextjs.org/docs/messages/blocking-prerender-dynamic).
+ */
+export default function ChatPage({
   searchParams,
 }: {
-  searchParams?: Promise<{ conversationId?: string; denied?: string; establishmentId?: string }>;
+  searchParams?: Promise<ChatPageSearchParams>;
+}) {
+  return (
+    <Suspense fallback={<AssistantChatLoadingState />}>
+      <ChatPageContent searchParams={searchParams} />
+    </Suspense>
+  );
+}
+
+async function ChatPageContent({
+  searchParams,
+}: {
+  searchParams?: Promise<ChatPageSearchParams>;
 }) {
   const resolvedSearchParams = searchParams ? await searchParams : undefined;
   const conversationId = resolvedSearchParams?.conversationId;

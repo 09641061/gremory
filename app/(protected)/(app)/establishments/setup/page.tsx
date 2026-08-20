@@ -1,14 +1,24 @@
+import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 
 import { createBusinessWorkspaceQueryService } from "@/contexts/business/application/internal/queryservices/business-workspace-query.service";
 import { buttonVariants } from "@/contexts/shared/interfaces/components/ui/button";
+import { PageLoading } from "@/contexts/shared/interfaces/components/page-loading";
 
-export default async function EstablishmentSetupPage({
-  searchParams,
-}: {
+interface EstablishmentSetupPageProps {
   searchParams: Promise<{ organizationId?: string; establishmentId?: string }>;
-}) {
+}
+
+export default function EstablishmentSetupPage({ searchParams }: EstablishmentSetupPageProps) {
+  return (
+    <Suspense fallback={<PageLoading />}>
+      <EstablishmentSetupPageContent searchParams={searchParams} />
+    </Suspense>
+  );
+}
+
+async function EstablishmentSetupPageContent({ searchParams }: EstablishmentSetupPageProps) {
   const workspace = await createBusinessWorkspaceQueryService().getHeaderViewModel(await searchParams);
 
   if (workspace.accountType === "PENDING_INVITATION") {

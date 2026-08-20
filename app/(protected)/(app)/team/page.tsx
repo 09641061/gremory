@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { createTeamQueryService } from "@/contexts/workforce/application/internal/queryservices/team-query.service";
 import { TeamPageView } from "@/contexts/workforce/interfaces/components/team/team-page-view";
 import { redirect } from "next/navigation";
@@ -5,12 +6,21 @@ import { createBusinessWorkspaceQueryService } from "@/contexts/business/applica
 import { resolveModuleAccessFallback } from "@/contexts/shared/application/services/module-access.policy";
 import { getWorkspaceEstablishment, hasEstablishmentPermission } from "@/contexts/shared/application/services/workspace-establishment-permissions";
 import { loadSchedulingMembers } from "@/contexts/scheduling/application/internal/queryservices/scheduling-members.query.service";
+import { PageLoading } from "@/contexts/shared/interfaces/components/page-loading";
 
 interface TeamPageProps {
   searchParams: Promise<{ organizationId?: string; establishmentId?: string }>;
 }
 
-export default async function TeamPage({ searchParams }: TeamPageProps) {
+export default function TeamPage({ searchParams }: TeamPageProps) {
+  return (
+    <Suspense fallback={<PageLoading />}>
+      <TeamPageContent searchParams={searchParams} />
+    </Suspense>
+  );
+}
+
+async function TeamPageContent({ searchParams }: TeamPageProps) {
   const query = await searchParams;
   const workspace = await createBusinessWorkspaceQueryService().getHeaderViewModel(query);
   const establishmentId = resolveTeamEstablishmentId(query, workspace);

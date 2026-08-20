@@ -1,22 +1,59 @@
-/** @vitest-environment jsdom */
-import { render, screen } from "@testing-library/react";
+import type { ReactElement } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   workspace: {
     getHeaderViewModel: vi.fn(),
   },
+  redirect: vi.fn(),
 }));
 
 vi.mock("@/contexts/business/application/internal/queryservices/business-workspace-query.service", () => ({
   createBusinessWorkspaceQueryService: () => mocks.workspace,
 }));
 
+vi.mock("next/navigation", () => ({
+  redirect: mocks.redirect,
+}));
+
+import { renderToPipeableStream } from "react-dom/server";
+import { Writable } from "node:stream";
 import EstablishmentSetupPage from "@/app/(protected)/(app)/establishments/setup/page";
+
+async function renderFullyResolved(element: ReactElement): Promise<string> {
+  return new Promise((resolve, reject) => {
+    let html = "";
+    const writable = new Writable({
+      write(chunk, _encoding, callback) {
+        html += chunk.toString();
+        callback();
+      },
+    });
+    const { pipe } = renderToPipeableStream(element, {
+      onAllReady() {
+        pipe(writable);
+        writable.on("finish", () => resolve(html));
+      },
+      onError(error) {
+        reject(error);
+      },
+    });
+  });
+}
 
 describe("EstablishmentSetupPage", () => {
   beforeEach(() => {
     vi.resetAllMocks();
+  });
+
+  it("touches no dynamic API before entering its own Suspense boundary", () => {
+    // The outer component must stay synchronous: awaiting searchParams (or
+    // anything else) before the Suspense boundary would make the whole
+    // route dynamic and block prerendering (blocking-prerender-dynamic).
+    expect(
+      EstablishmentSetupPage({ searchParams: Promise.resolve({}) }),
+    ).toBeDefined();
+    expect(mocks.workspace.getHeaderViewModel).not.toHaveBeenCalled();
   });
 
   it("shows the onboarding guidance for a ready organization without establishments", async () => {
@@ -31,31 +68,27 @@ describe("EstablishmentSetupPage", () => {
       canCreateEstablishment: true,
     });
 
-    const element = await EstablishmentSetupPage({
-      searchParams: Promise.resolve({ organizationId: "org-1" }),
-    });
-    render(element);
-
-    expect(screen.getByText("Set up your first establishment")).toBeTruthy();
-    expect(screen.getByRole("link", { name: "Create establishment" })).toHaveAttribute(
-      "href",
-      "/establishments/new?organizationId=org-1",
+    const markup = await renderFullyResolved(
+      EstablishmentSetupPage({ searchParams: Promise.resolve({ organizationId: "org-1" }) }),
     );
+
+    expect(mocks.workspace.getHeaderViewModel).toHaveBeenCalled();
+    expect(markup).toContain("Set up your first establishment");
+    expect(markup).toContain("/establishments/new?organizationId=org-1");
   });
 
-  it("keeps the setup guidance when the first establishment capability is not present", async () => {
+  it("redirects to organizations when the organization already has establishments", async () => {
     mocks.workspace.getHeaderViewModel.mockResolvedValue({
       accountType: "OWNER",
       organization: { id: "org-1", name: "Acme", imageUrl: null },
-      establishments: [],
-      canCreateEstablishment: false,
+      establishments: [{ id: "est-1", organizationId: "org-1" }],
+      canCreateEstablishment: true,
     });
 
-    const element = await EstablishmentSetupPage({
-      searchParams: Promise.resolve({ organizationId: "org-1" }),
-    });
-    render(element);
+    await renderFullyResolved(
+      EstablishmentSetupPage({ searchParams: Promise.resolve({ organizationId: "org-1" }) }),
+    );
 
-    expect(screen.getByText("Set up your first establishment")).toBeTruthy();
+    expect(mocks.redirect).toHaveBeenCalledWith("/organizations");
   });
 });

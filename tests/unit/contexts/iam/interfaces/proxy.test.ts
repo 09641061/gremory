@@ -120,6 +120,42 @@ describe("IAM session proxy", () => {
     expect(response.status).toBe(307);
   });
 
+  it("should keep both the rotated session cookie and the establishment header when rotation and workspace context happen together", async () => {
+    mocks.resolveSession.mockResolvedValue({
+      status: "authenticated",
+      accessToken: "new-access-token",
+      rotatedSession: {
+        accessToken: "new-access-token",
+        refreshToken: "new-refresh-token",
+      },
+    });
+    stubFetch(workspace({
+      accountType: "MEMBER",
+      establishments: [establishment(establishmentId, ["scheduling:read"])],
+    }));
+
+    const response = await proxy(
+      requestWithSession(
+        "access-token",
+        "refresh-token",
+        `/schedule?establishmentId=${establishmentId}`,
+      ),
+    );
+
+    // The rotated cookie must reach the browser...
+    expect(response.cookies.get("takodu.access_token")?.value).toBe("new-access-token");
+    expect(response.cookies.get("takodu.refresh_token")?.value).toBe("new-refresh-token");
+
+    // ...and the establishment header override must not have been dropped by
+    // the rotation, i.e. both survive on the single forwarded-request headers
+    // list rather than one clobbering the other.
+    const overrideHeaderNames = (response.headers.get("x-middleware-override-headers") ?? "")
+      .split(",")
+      .map((name) => name.trim());
+    expect(overrideHeaderNames).toContain("x-takodu-establishment-id");
+    expect(response.headers.get("x-middleware-request-x-takodu-establishment-id")).toBe(establishmentId);
+  });
+
   it("should redirect an active session from home to the dashboard", async () => {
     const response = await proxy(requestWithSession());
 

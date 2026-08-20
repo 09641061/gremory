@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { createFreeAnalyticsQueryService } from "@/contexts/analytics/application/internal/queryservices/free-analytics-query.service";
 import { FreeAnalyticsPageView } from "@/contexts/analytics/interfaces/components/free-analytics/free-analytics-page-view";
 import type { FreeAnalyticsDashboard } from "@/contexts/analytics/interfaces/view-models/free-analytics.view-model";
@@ -6,8 +7,17 @@ import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-ses
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { resolveModuleAccessFallback } from "@/contexts/shared/application/services/module-access.policy";
+import { PageLoading } from "@/contexts/shared/interfaces/components/page-loading";
 
-export default async function AnalyticsPage() {
+export default function AnalyticsPage() {
+  return (
+    <Suspense fallback={<PageLoading />}>
+      <AnalyticsPageContent />
+    </Suspense>
+  );
+}
+
+async function AnalyticsPageContent() {
   let analytics: FreeAnalyticsDashboard | null = null;
   let errorMessage = "Unable to load analytics.";
   const cookieStore = await cookies();
