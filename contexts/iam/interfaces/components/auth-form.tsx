@@ -7,7 +7,7 @@ import { GoogleIcon } from "./icons/google";
 import { ErrorAlert } from "@/contexts/shared/interfaces/components/error";
 import { PageShell } from "@/contexts/shared/interfaces/components/page-shell";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/contexts/shared/interfaces/components/ui/card";
+import { Card, CardContent } from "@/contexts/shared/interfaces/components/ui/card";
 import { Input } from "@/contexts/shared/interfaces/components/ui/input";
 import { Label } from "@/contexts/shared/interfaces/components/ui/label";
 import { Separator } from "@/contexts/shared/interfaces/components/ui/separator";
@@ -50,9 +50,6 @@ export function AuthForm({ returnTo = null }: { returnTo?: string | null }) {
           </header>
 
           <Card>
-            <CardHeader className="pb-3 text-center">
-              <CardTitle className="text-base">Access your workspace</CardTitle>
-            </CardHeader>
             <CardContent className="space-y-4 p-6 pt-0">
               <form action={startGoogleAuthAction}>
                 {returnTo ? <input type="hidden" name="returnTo" value={returnTo} /> : null}
