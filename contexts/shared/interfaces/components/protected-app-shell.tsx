@@ -63,7 +63,9 @@ async function AppShellSidebar() {
   const [currentProfile, assistantConversations] = await Promise.all([
     getMyProfileServerQuery(),
     shell.hasAssistantAccess
-      ? new ListConversationsQueryService(createAssistantConversationsAdapter(workspace.organization?.id))
+      ? new ListConversationsQueryService(
+          createAssistantConversationsAdapter(workspace.organization?.id),
+        )
           .handle({ page: 0, size: 20 })
           .catch((error) => {
             logAppShellError("list assistant conversations", error);
