@@ -8,10 +8,15 @@ import {
   iamSessionCookies,
 } from "../../infrastructure/session/iam-session-cookie";
 
+export type SessionRotationResult = {
+  response: NextResponse;
+  headers: Headers;
+};
+
 export function continueRequestWithSession(
   request: NextRequest,
   session: AuthenticationSession,
-): NextResponse {
+): SessionRotationResult {
   const forwardedRequest = new NextRequest(request.url, {
     headers: request.headers,
   });
@@ -22,7 +27,7 @@ export function continueRequestWithSession(
     request: { headers: forwardedRequest.headers },
   });
   persistSessionCookies(response, session);
-  return response;
+  return { response, headers: forwardedRequest.headers };
 }
 
 export function persistSessionCookies(

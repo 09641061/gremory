@@ -9,6 +9,7 @@ import { createOrganizationQueryService } from "@/contexts/business/application/
 import type { WorkspaceHeaderViewModel } from "@/contexts/business/application/model/business-workspace.view-models";
 import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-session-cookie";
 import { getMyProfileServerQuery } from "@/contexts/profiles/interfaces/queries/get-my-profile.query-handler";
+import { ApiError } from "@/contexts/shared/infrastructure/http/api-client";
 import { createAppShellQueryService } from "@/contexts/shared/application/internal/queryservices/app-shell-query.service";
 import { AppSidebar } from "@/contexts/shared/interfaces/components/app-sidebar";
 import { AppSidebarFallback } from "@/contexts/shared/interfaces/components/app-sidebar-fallback";
@@ -47,7 +48,10 @@ async function AppShellSidebar() {
   const shell = accessToken
     ? await createAppShellQueryService()
         .resolve({ workspace: { establishmentId } })
-        .catch(() => null)
+        .catch((error) => {
+          logAppShellError("app shell resolve", error);
+          return null;
+        })
     : null;
 
   if (!shell || shell.workspace.accountType === "PENDING_INVITATION") {
@@ -60,7 +64,10 @@ async function AppShellSidebar() {
     shell.hasAssistantAccess
       ? new ListConversationsQueryService()
           .handle({ page: 0, size: 20 })
-          .catch(() => ({ content: [] as AssistantConversationSummaryReadModel[] }))
+          .catch((error) => {
+            logAppShellError("list assistant conversations", error);
+            return { content: [] as AssistantConversationSummaryReadModel[] };
+          })
       : Promise.resolve({ content: [] as AssistantConversationSummaryReadModel[] }),
   ]);
 
@@ -74,6 +81,17 @@ async function AppShellSidebar() {
       showAssistantNavigation={shell.hasAssistantAccess}
     />
   );
+}
+
+function logAppShellError(context: string, error: unknown): void {
+  if (error instanceof ApiError && error.status === 401) {
+    console.error(
+      `[protected-app-shell] ${context} failed: unauthorized — access token may be stale`,
+      error,
+    );
+    return;
+  }
+  console.error(`[protected-app-shell] ${context} failed: unexpected error`, error);
 }
 
 async function resolveSidebarWorkspace(

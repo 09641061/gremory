@@ -14,6 +14,7 @@ export async function proxy(request: NextRequest) {
   const refreshToken = request.cookies.get(iamSessionCookies.refreshToken)?.value;
   const { pathname } = request.nextUrl;
   let response: NextResponse | null = null;
+  let rotatedHeaders: Headers | null = null;
 
   // Login must remain reachable even when the browser still sends cookies for
   // a session revoked by a login in another browser.
@@ -36,12 +37,14 @@ export async function proxy(request: NextRequest) {
 
   accessToken = session.accessToken;
   if (session.rotatedSession) {
-    response = continueRequestWithSession(request, session.rotatedSession);
+    const rotated = continueRequestWithSession(request, session.rotatedSession);
+    response = rotated.response;
+    rotatedHeaders = rotated.headers;
   }
 
   // Subscription is a capability input, never an onboarding prerequisite.
   if (pathname === "/upgrade") {
-    return continueWithWorkspaceContext(request, response);
+    return continueWithWorkspaceContext(request, response, rotatedHeaders);
   }
 
   const landing = await createEntryRouteQueryService().resolveRoute({
@@ -53,7 +56,7 @@ export async function proxy(request: NextRequest) {
     return redirectToLogin(request);
   }
   if (landing.status === "unavailable") {
-    return continueWithWorkspaceContext(request, response);
+    return continueWithWorkspaceContext(request, response, rotatedHeaders);
   }
 
   if (
@@ -64,7 +67,7 @@ export async function proxy(request: NextRequest) {
     if (!landing.allowedPaths.includes(pathname)) {
       return redirectWithCookies(request, landing.setupHref, response);
     }
-    return continueWithWorkspaceContext(request, response);
+    return continueWithWorkspaceContext(request, response, rotatedHeaders);
   }
 
   const homePath = landing.homeHref;
@@ -81,7 +84,7 @@ export async function proxy(request: NextRequest) {
     return redirectWithCookies(request, homePath, response);
   }
 
-  return continueWithWorkspaceContext(request, response);
+  return continueWithWorkspaceContext(request, response, rotatedHeaders);
 }
 
 function isPrivateRoute(pathname: string) {
@@ -147,13 +150,17 @@ function redirectWithCookies(request: NextRequest, path: string, response: NextR
   return redirectResponse;
 }
 
-function continueWithWorkspaceContext(request: NextRequest, response: NextResponse | null) {
+function continueWithWorkspaceContext(
+  request: NextRequest,
+  response: NextResponse | null,
+  rotatedHeaders: Headers | null = null,
+) {
   const urlEstablishmentId = request.nextUrl.searchParams.get("establishmentId");
   const establishmentId = urlEstablishmentId || resolveEstablishmentSelection(
     request,
     !isOnboardingPath(request.nextUrl.pathname),
   );
-  const forwardedHeaders = new Headers(request.headers);
+  const forwardedHeaders = new Headers(rotatedHeaders ?? request.headers);
 
   forwardedHeaders.delete("x-takodu-organization-id");
   if (establishmentId) forwardedHeaders.set("x-takodu-establishment-id", establishmentId);
@@ -191,11 +198,6 @@ function persistEstablishmentSelection(request: NextRequest, target: NextRespons
 
 function copyResponseCookies(source: NextResponse | null, target: NextResponse) {
   if (!source) return;
-  for (const [name, value] of source.headers) {
-    if (name.startsWith("x-middleware-")) {
-      target.headers.set(name, value);
-    }
-  }
   for (const cookie of source.cookies.getAll()) {
     target.cookies.set(cookie);
   }
