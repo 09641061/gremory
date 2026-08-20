@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import { headers } from "next/headers";
 
 import { ListConversationsQueryService } from "@/contexts/assistant/application/internal/queryservices/list-conversations-query.service";
+import { createAssistantConversationsAdapter } from "@/contexts/assistant/infrastructure/adapters/assistant-conversations.adapter";
 import type { AssistantConversationSummaryReadModel } from "@/contexts/assistant/application/internal/transforms/assistant.read-models";
 import { createOrganizationQueryService } from "@/contexts/business/application/internal/queryservices/organization-query.service";
 import type { WorkspaceHeaderViewModel } from "@/contexts/business/application/model/business-workspace.view-models";
@@ -62,7 +63,7 @@ async function AppShellSidebar() {
   const [currentProfile, assistantConversations] = await Promise.all([
     getMyProfileServerQuery(),
     shell.hasAssistantAccess
-      ? new ListConversationsQueryService()
+      ? new ListConversationsQueryService(createAssistantConversationsAdapter(workspace.organization?.id))
           .handle({ page: 0, size: 20 })
           .catch((error) => {
             logAppShellError("list assistant conversations", error);
