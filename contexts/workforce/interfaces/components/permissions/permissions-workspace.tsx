@@ -7,6 +7,9 @@ import type { WorkforcePermission } from "@/contexts/workforce/domain/model/enum
 import { isWorkforceAssignablePermission } from "@/contexts/workforce/domain/model/enums/workforce-permission";
 import type { WorkforceRoleSummary } from "@/contexts/workforce/application/model/workforce-role.read-models";
 import type { TeamUserSummary } from "@/contexts/workforce/application/model/team.read-models";
+import type { WorkspaceSubscription } from "@/contexts/business/application/model/business-workspace.view-models";
+import { isAssistantPermissionLocked } from "@/contexts/billing/domain/services/subscription-access.policy";
+import { canOfferUpgrade } from "@/contexts/billing/domain/services/subscription-upgrade.policy";
 import { patchWorkforceRoleAction } from "@/contexts/workforce/interfaces/actions/workforce-role.actions";
 import { initialWorkforceRoleActionResult } from "@/contexts/workforce/interfaces/actions/workforce-role-action-result";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
@@ -27,6 +30,7 @@ interface PermissionsWorkspaceProps {
   members: ReadonlyArray<TeamUserSummary>;
   onCancel?: () => void;
   canUpdateRole?: boolean;
+  subscription?: WorkspaceSubscription;
 }
 
 export function PermissionsWorkspace({
@@ -35,6 +39,7 @@ export function PermissionsWorkspace({
   members,
   onCancel,
   canUpdateRole = true,
+  subscription,
 }: PermissionsWorkspaceProps) {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<"permissions" | "members">("permissions");
@@ -66,6 +71,8 @@ export function PermissionsWorkspace({
   }
 
   const editable = canUpdateRole;
+  const assistantLocked = isAssistantPermissionLocked(subscription);
+  const canUpgradeAssistant = canOfferUpgrade(subscription);
 
   function cancelChanges() {
     setSelectedPermissions(
@@ -107,6 +114,8 @@ export function PermissionsWorkspace({
             setSelectedPermissions={setSelectedPermissions}
             permissionFilter={permissionFilter}
             setPermissionFilter={setPermissionFilter}
+            assistantLocked={assistantLocked}
+            canUpgradeAssistant={canUpgradeAssistant}
           />
         ) : (
           <RoleMembersTab role={role} members={members} editable={editable} />

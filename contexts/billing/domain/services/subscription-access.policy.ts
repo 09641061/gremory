@@ -1,7 +1,8 @@
 export type SubscriptionAccessSnapshot = Readonly<{
   active?: boolean;
-  status?: string;
+  status?: string | null;
   planId?: number;
+  planName?: string | null;
   billingCycle?: string;
   cancelAtPeriodEnd?: boolean;
   currentPeriodEnd?: string;
@@ -25,6 +26,18 @@ export function hasAssistantSubscriptionAccess(
   subscription: SubscriptionAccessSnapshot | null | undefined,
 ): boolean {
   return hasActiveSubscription(subscription) && (subscription?.planId ?? 0) > 0;
+}
+
+/**
+ * Whether the assistant permission should render locked in the role editor.
+ * The subscription always describes the owner's plan, so a Free plan means
+ * the owner cannot enable the AI assistant and the permission is shown but
+ * not assignable (an upsell gate instead of a surprise rejection).
+ */
+export function isAssistantPermissionLocked(
+  subscription: SubscriptionAccessSnapshot | null | undefined,
+): boolean {
+  return (subscription?.planName ?? "").trim().toUpperCase() === "FREE";
 }
 
 export function getApplicationHomePath(

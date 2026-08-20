@@ -66,6 +66,7 @@ export default async function PermissionsPage({ searchParams }: PermissionsPageP
       permissions={permissions}
       members={members}
       authorization={workspace.authorization}
+      subscription={workspace.subscription}
       canCreateRole={canCreateRole}
       canUpdateRole={canUpdateRole}
       canDeleteRole={canDeleteRole}
