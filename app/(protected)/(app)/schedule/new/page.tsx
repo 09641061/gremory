@@ -18,10 +18,8 @@ export default async function NewAppointmentPage({ searchParams }: NewAppointmen
   }
 
   const establishmentId = query.establishmentId ?? workspace.activeEstablishmentId;
-  const canCreateAppointment = hasEstablishmentPermission(
-    getWorkspaceEstablishment(workspace, establishmentId),
-    "scheduling:manage",
-  );
+  const workspaceEstablishment = getWorkspaceEstablishment(workspace, establishmentId);
+  const canCreateAppointment = hasEstablishmentPermission(workspaceEstablishment, "scheduling:manage");
 
   if (!canCreateAppointment || !establishmentId || !workspace.organization) {
     redirect("/access-denied");
@@ -30,6 +28,7 @@ export default async function NewAppointmentPage({ searchParams }: NewAppointmen
   const { services, members, customers } = await loadSchedulingPageData(
     establishmentId,
     workspace.organization.id,
+    canCreateAppointment,
   );
   const establishment = await createEstablishmentQueryService().getById({ id: establishmentId });
   const timeZone = establishment?.timeZone ?? "UTC";

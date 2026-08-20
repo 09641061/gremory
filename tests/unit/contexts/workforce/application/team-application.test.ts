@@ -8,7 +8,6 @@ import {
   createMemberId,
   createTeamEstablishmentId,
   createTeamOrganizationId,
-  createTeamRoleId,
 } from "@/contexts/workforce/domain/model/valueobjects/team-identifiers.vo";
 import type { TeamRepository } from "@/contexts/workforce/domain/services/team.repository";
 
@@ -16,7 +15,6 @@ const invitationId = "11111111-1111-4111-8111-111111111111";
 const memberId = "22222222-2222-4222-8222-222222222222";
 const organizationId = "44444444-4444-4444-8444-444444444444";
 const establishmentId = "55555555-5555-4555-8555-555555555555";
-const roleId = "66666666-6666-4666-8666-666666666666";
 
 describe("Team application services", () => {
   it("should normalize invitation input before invoking repository", async () => {
@@ -75,15 +73,9 @@ describe("Team application services", () => {
       name: null,
       imageUrl: null,
       email: "employee@example.com",
-      roleId,
-      roleName: "Everyone",
-      roles: [{
-        id: roleId,
-        name: "Everyone",
-        position: 2_147_483_647,
-        systemRole: true,
-        permissions: [],
-      }],
+      roleId: null,
+      roleName: null,
+      roles: [],
       organizationId,
       establishmentId,
       establishmentName: "Miraflores",
@@ -164,8 +156,9 @@ function pendingUser() {
     memberId: null,
     userId: null,
     email: createInvitedEmail("employee@example.com"),
-    roleId: createTeamRoleId(roleId),
-    roleName: "Everyone",
+    roleId: null,
+    roleName: null,
+    roles: [],
     organizationId: createTeamOrganizationId(organizationId),
     establishmentId: createTeamEstablishmentId(establishmentId),
     establishmentName: "Miraflores",

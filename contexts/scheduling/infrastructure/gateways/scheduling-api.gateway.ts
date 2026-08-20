@@ -247,4 +247,40 @@ export class SchedulingApiGateway
       { token: authToken, errorMessage: "Failed to update employee availability", errorType: SchedulingApiError },
     );
   }
+
+  async getSchedulingServices(
+    establishmentId: string,
+    token?: string
+  ): Promise<{ id: string; name: string; price: number; durationMinutes: number }[]> {
+    const authToken = await resolveAccessToken(token);
+    return apiClient.get<{ id: string; name: string; price: number; durationMinutes: number }[]>(
+      `${apiConfig.routes.scheduling.appointments}/services?establishmentId=${encodeURIComponent(establishmentId)}`,
+      {
+        token: authToken,
+        headers: this.tenantHeaders(),
+        errorMessage: "Failed to fetch scheduling services",
+        errorType: SchedulingApiError,
+      }
+    );
+  }
+
+  async getSchedulingCustomers(
+    establishmentId: string,
+    search?: string,
+    token?: string
+  ): Promise<{ id: string; name: string; email: string | null; phone: string | null }[]> {
+    const authToken = await resolveAccessToken(token);
+    const params = new URLSearchParams();
+    params.append("establishmentId", establishmentId);
+    if (search) params.append("search", search);
+    return apiClient.get<{ id: string; name: string; email: string | null; phone: string | null }[]>(
+      `${apiConfig.routes.scheduling.appointments}/customers?${params.toString()}`,
+      {
+        token: authToken,
+        headers: this.tenantHeaders(),
+        errorMessage: "Failed to fetch scheduling customers",
+        errorType: SchedulingApiError,
+      }
+    );
+  }
 }

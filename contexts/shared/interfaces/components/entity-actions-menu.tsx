@@ -17,6 +17,8 @@ export type EntityAction = {
   /** `destructive` paints the item with the destructive token, never the accent color. */
   variant?: "default" | "destructive";
   disabled?: boolean;
+  /** Tooltip shown when the item is disabled, e.g. why a delete is blocked. */
+  title?: string;
   /** Skips the item entirely, e.g. when the user lacks the permission. */
   hidden?: boolean;
 };
@@ -77,6 +79,7 @@ export function EntityActionsMenu({
               key={action.label}
               variant={action.variant}
               disabled={action.disabled}
+              title={action.disabled ? action.title : undefined}
               onClick={action.onSelect}
               className="gap-2 whitespace-nowrap"
             >

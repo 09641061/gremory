@@ -46,6 +46,7 @@ export function permissionDescription(permission: string) {
     "crm:read": "Can open and view customers.",
     "crm:manage": "Can create and manage customers.",
     "analytics:read": "Can open and view analytics.",
+    "assistant:manage": "Can use the AI assistant in the workspace.",
   };
 
   return descriptions[permission] ?? "Allows this capability in the workspace.";
@@ -65,7 +66,8 @@ export function permissionGroupPriority(context: string) {
     crm: 3,
     workforce: 4,
     analytics: 5,
-    establishment: 6,
+    assistant: 6,
+    establishment: 7,
   };
 
   return order[context] ?? 100;

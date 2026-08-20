@@ -8,7 +8,8 @@ export type EntryRoutePath =
   | "/establishments"
   | "/organization"
   | "/welcome"
-  | "/access-denied";
+  | "/access-denied"
+  | "/no-access";
 
 // `setupHref` is where an unfinished workspace is sent. `allowedPaths` are the
 // routes that setup flow may legitimately reach on its own, so the proxy does

@@ -54,10 +54,6 @@ export function PermissionsPageView({
     const merged = [...roles, ...createdRoles.filter((role) => !role.id || !existingIds.has(role.id))];
 
     return merged.sort((left, right) => {
-      if (left.systemRole !== right.systemRole) {
-        return left.systemRole ? 1 : -1;
-      }
-
       if (left.position !== right.position) {
         return left.position - right.position;
       }
@@ -65,6 +61,16 @@ export function PermissionsPageView({
       return left.name.localeCompare(right.name);
     });
   }, [createdRoles, roles]);
+
+  const memberCountByRoleId = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const member of members) {
+      for (const role of member.roles) {
+        counts.set(role.id, (counts.get(role.id) ?? 0) + 1);
+      }
+    }
+    return counts;
+  }, [members]);
 
   const filteredRoles = useMemo(() => {
     const normalizedFilter = filter.trim().toLowerCase();
@@ -80,8 +86,7 @@ export function PermissionsPageView({
     setDropPosition(null);
   };
 
-  const resolveDropPosition = (event: React.DragEvent<HTMLDivElement>, role: WorkforceRoleSummary) => {
-    if (role.systemRole) return "before" as const;
+  const resolveDropPosition = (event: React.DragEvent<HTMLDivElement>) => {
     const rect = event.currentTarget.getBoundingClientRect();
     return event.clientY < rect.top + rect.height / 2 ? "before" as const : "after" as const;
   };
@@ -91,7 +96,7 @@ export function PermissionsPageView({
     if (draggedRoleId === targetRole.id) return;
 
     const draggedRole = visibleRoles.find((role) => role.id === draggedRoleId);
-    if (!draggedRole || draggedRole.systemRole || !draggedRole.id) return;
+    if (!draggedRole || !draggedRole.id) return;
 
     const newPosition = placement === "after" ? targetRole.position + 1 : targetRole.position;
     if (draggedRole.position === newPosition) return;
@@ -205,7 +210,7 @@ export function PermissionsPageView({
             key={deletingRole.id}
             roleId={deletingRole.id}
             roleName={deletingRole.name}
-            isSystemRole={deletingRole.systemRole}
+            memberCount={memberCountByRoleId.get(deletingRole.id) ?? 0}
             open={!!deletingRole}
             onOpenChange={(open) => {
               if (!open) setDeletingRole(null);
@@ -230,6 +235,7 @@ export function PermissionsPageView({
                   <RoleRow
                     key={role.id ?? role.name}
                     role={role}
+                    memberCount={memberCountByRoleId.get(role.id ?? "") ?? 0}
                     selected={role.id === selectedRoleId}
                     isDragging={draggedRoleId === role.id}
                     dropPosition={dropTargetRoleId === role.id ? dropPosition : null}
@@ -237,7 +243,7 @@ export function PermissionsPageView({
                     onEdit={(selectedRole) => setEditingRole(selectedRole)}
                     onDelete={(selectedRole) => setDeletingRole(selectedRole)}
                     onDragStart={(draggedRole) => {
-                      if (draggedRole.systemRole || reorderInProgress || !draggedRole.id || !canUpdateRole) return;
+                      if (reorderInProgress || !draggedRole.id || !canUpdateRole) return;
                       setReorderError(null);
                       setDraggedRoleId(draggedRole.id);
                     }}
@@ -248,12 +254,12 @@ export function PermissionsPageView({
                       event.preventDefault();
                       event.dataTransfer.dropEffect = "move";
                       setDropTargetRoleId(hoveredRole.id);
-                      setDropPosition(resolveDropPosition(event, hoveredRole));
+                      setDropPosition(resolveDropPosition(event));
                     }}
                     onDrop={(event, targetRole) => {
                       event.preventDefault();
                       if (reorderInProgress || !canUpdateRole) return;
-                      const placement = resolveDropPosition(event, targetRole);
+                      const placement = resolveDropPosition(event);
                       void handleReorderRole(targetRole, placement);
                     }}
                     canUpdateRole={canUpdateRole}

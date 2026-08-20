@@ -106,6 +106,7 @@ export function DailyStaffCalendar({
                 router.push(`/schedule/new?establishmentId=${encodeURIComponent(establishmentId)}`);
               }
             }}
+            canCreateAppointment={canCreateAppointment}
           />
         </div>
 

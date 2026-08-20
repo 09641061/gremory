@@ -21,7 +21,8 @@ export type AppShellHomeHref =
   | "/establishments/new"
   | "/establishments/setup"
   | "/invitations/pending"
-  | "/access-denied";
+  | "/access-denied"
+  | "/no-access";
 
 export type AppShellViewModel = Readonly<{
   workspace: WorkspaceHeaderViewModel;

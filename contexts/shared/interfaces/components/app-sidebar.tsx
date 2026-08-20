@@ -140,7 +140,12 @@ export function AppSidebar({
       </SidebarContent>
 
       <SidebarFooter className="gap-2 px-3 pb-3">
-        {canManageBilling && canOfferUpgrade(workspace.subscription) ? <SidebarUpgradeCallout /> : null}
+        {canManageBilling ? (
+          <SidebarUpgradeCallout
+            planName={workspace.subscription?.planName ?? null}
+            canUpgrade={canOfferUpgrade(workspace.subscription)}
+          />
+        ) : null}
 
         <SidebarProfile
           profile={currentProfile}

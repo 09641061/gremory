@@ -96,10 +96,12 @@ describe("workforce role routes", () => {
       "workforce:read",
       "workforce:manage",
       "analytics:read",
+      "assistant:manage",
       "establishment:update",
     ]);
     expect(body).not.toContain("establishment:read");
     expect(body).toContain("analytics:read");
+    expect(body).toContain("assistant:manage");
   });
 
   it("should create a role", async () => {

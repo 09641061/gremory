@@ -9,12 +9,13 @@ import { DeleteConfirmDialog } from "@/contexts/shared/interfaces/components/del
 interface DeleteRoleDialogProps {
   roleId: string;
   roleName: string;
-  isSystemRole: boolean;
+  /** Number of members currently assigned this role. Blocks deletion while > 0. */
+  memberCount: number;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-export function DeleteRoleDialog({ roleId, roleName, isSystemRole, open, onOpenChange }: DeleteRoleDialogProps) {
+export function DeleteRoleDialog({ roleId, roleName, memberCount, open, onOpenChange }: DeleteRoleDialogProps) {
   const router = useRouter();
   const [state, formAction, pending] = useActionState(
     deleteWorkforceRoleAction,
@@ -28,6 +29,8 @@ export function DeleteRoleDialog({ roleId, roleName, isSystemRole, open, onOpenC
     }
   }, [onOpenChange, router, state.status]);
 
+  const assignedToMembers = memberCount > 0;
+
   return (
     <DeleteConfirmDialog
       open={open && state.status !== "success"}
@@ -36,12 +39,13 @@ export function DeleteRoleDialog({ roleId, roleName, isSystemRole, open, onOpenC
       entityName={roleName}
       pending={pending}
       error={state.status === "error" ? state.error : null}
-      confirmDisabled={isSystemRole}
+      confirmDisabled={assignedToMembers}
       formAction={formAction}
       description={
-        isSystemRole ? (
+        assignedToMembers ? (
           <>
-            <span className="font-medium text-foreground">{roleName}</span> is protected and cannot be deleted.
+            <span className="font-medium text-foreground">{roleName}</span> is assigned to {memberCount}{" "}
+            {memberCount === 1 ? "member" : "members"}. Remove the role from all members before deleting it.
           </>
         ) : undefined
       }

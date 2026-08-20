@@ -40,6 +40,7 @@ export default async function SchedulePage({ searchParams }: SchedulePageProps) 
   const { services, members, customers } = await loadSchedulingPageData(
     establishmentId,
     workspace.organization.id,
+    canManageScheduling,
   );
 
   return (

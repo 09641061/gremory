@@ -129,5 +129,8 @@ function resolveHomeHref(
   ) {
     return "/establishments";
   }
+  if (workspace.authorization?.capabilities?.canOpenModules === false) {
+    return "/no-access";
+  }
   return "/access-denied";
 }

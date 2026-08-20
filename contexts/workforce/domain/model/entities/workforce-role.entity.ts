@@ -1,7 +1,5 @@
 import type { WorkforcePermission } from "../enums/workforce-permission";
 
-export const EVERYONE_POSITION = 2_147_483_647;
-
 export interface WorkforceRoleProps {
   id: string | null;
   name: string;
@@ -20,18 +18,16 @@ export class WorkforceRole {
   ) {}
 
   static create(props: Omit<WorkforceRoleProps, "id">): WorkforceRole {
-    const position = props.position ?? (props.systemRole ? EVERYONE_POSITION : 1);
+    const position = props.position ?? 1;
     if (!Number.isInteger(position) || position < 1) throw new Error("Role position must be positive");
-    if (props.systemRole && position !== EVERYONE_POSITION) throw new Error("Everyone must remain last");
     const normalized = normalizeRole(props.name, props.permissions);
     return new WorkforceRole(null, normalized.name, normalized.permissions, props.systemRole, position);
   }
 
   static rehydrate(props: WorkforceRoleProps): WorkforceRole {
     const normalized = normalizeRole(props.name, props.permissions);
-    const position = props.position ?? (props.systemRole ? EVERYONE_POSITION : 1);
+    const position = props.position ?? 1;
     if (!Number.isInteger(position) || position < 1) throw new Error("Role position must be positive");
-    if (props.systemRole && position !== EVERYONE_POSITION) throw new Error("Everyone must remain last");
     return new WorkforceRole(props.id, normalized.name, normalized.permissions, props.systemRole, position);
   }
 

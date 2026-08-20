@@ -11,6 +11,7 @@ interface CalendarToolbarProps {
   onToday: () => void;
   onDateSelect: (date: Date) => void;
   onScheduleAppointment: () => void;
+  canCreateAppointment: boolean;
   timeZone: string;
 }
 
@@ -21,6 +22,7 @@ export function CalendarToolbar({
   onToday,
   onDateSelect,
   onScheduleAppointment,
+  canCreateAppointment,
   timeZone,
 }: CalendarToolbarProps) {
   const [isPickerOpen, setIsPickerOpen] = useState(false);
@@ -90,9 +92,11 @@ export function CalendarToolbar({
         </div>
       </div>
       
-      <Button onClick={onScheduleAppointment}>
-        Schedule appointment
-      </Button>
+      {canCreateAppointment && (
+        <Button onClick={onScheduleAppointment}>
+          Schedule appointment
+        </Button>
+      )}
     </div>
   );
 }
