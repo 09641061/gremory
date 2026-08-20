@@ -54,6 +54,11 @@ vi.mock("@/contexts/shared/interfaces/components/ui/alert", () => ({
   AlertDescription: () => null,
 }));
 
+vi.mock("@/contexts/assistant/interfaces/components/chat-view/assistant-chat-loading-state", () => ({
+  AssistantChatLoadingState: () => null,
+}));
+
+import { renderToStaticMarkup } from "react-dom/server";
 import ChatPage from "@/app/(protected)/(app)/chat/page";
 
 describe("ChatPage", () => {
@@ -78,8 +83,18 @@ describe("ChatPage", () => {
     });
   });
 
+  it("touches no dynamic API before entering its own Suspense boundary", () => {
+    // The outer component must stay synchronous: awaiting searchParams (or
+    // anything else) before the Suspense boundary would make the whole
+    // route dynamic and block prerendering (blocking-prerender-dynamic).
+    expect(ChatPage({})).toBeDefined();
+    expect(mocks.workspace.getHeaderViewModel).not.toHaveBeenCalled();
+  });
+
   it("renders the shell fallback when the workspace assistant policy is false", async () => {
-    await expect(ChatPage({})).resolves.toBeDefined();
+    renderToStaticMarkup(ChatPage({}));
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
     expect(mocks.conversation.handle).not.toHaveBeenCalled();
   });
 });

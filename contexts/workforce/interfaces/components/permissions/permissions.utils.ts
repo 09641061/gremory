@@ -1,3 +1,9 @@
+export const ASSISTANT_PERMISSION = "assistant:manage";
+
+export function isAssistantPermission(permission: string): boolean {
+  return permission === ASSISTANT_PERMISSION;
+}
+
 export type PermissionGroup = Readonly<{
   context: string;
   label: string;

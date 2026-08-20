@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { createEstablishmentQueryService } from "@/contexts/business/application/internal/queryservices/establishment-query.service";
 import { loadSchedulingPageData } from "@/contexts/scheduling/application/internal/queryservices/scheduling-page-data.query.service";
 import { CreateAppointmentForm } from "@/contexts/scheduling/interfaces/components/appointment-form/create-appointment-form";
@@ -5,12 +6,21 @@ import { redirect } from "next/navigation";
 import { createBusinessWorkspaceQueryService } from "@/contexts/business/application/internal/queryservices/business-workspace-query.service";
 import { resolveModuleAccessFallback } from "@/contexts/shared/application/services/module-access.policy";
 import { getWorkspaceEstablishment, hasEstablishmentPermission } from "@/contexts/shared/application/services/workspace-establishment-permissions";
+import { PageLoading } from "@/contexts/shared/interfaces/components/page-loading";
 
 interface NewAppointmentPageProps {
   searchParams: Promise<{ establishmentId?: string }>;
 }
 
-export default async function NewAppointmentPage({ searchParams }: NewAppointmentPageProps) {
+export default function NewAppointmentPage({ searchParams }: NewAppointmentPageProps) {
+  return (
+    <Suspense fallback={<PageLoading />}>
+      <NewAppointmentPageContent searchParams={searchParams} />
+    </Suspense>
+  );
+}
+
+async function NewAppointmentPageContent({ searchParams }: NewAppointmentPageProps) {
   const query = await searchParams;
   const workspace = await createBusinessWorkspaceQueryService().getHeaderViewModel(query);
   if (workspace.accessPolicy?.canOpenScheduling !== true) {

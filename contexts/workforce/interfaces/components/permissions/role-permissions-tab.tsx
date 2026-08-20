@@ -1,12 +1,24 @@
 "use client";
 
-import { useMemo, type Dispatch, type SetStateAction } from "react";
-import { Search } from "lucide-react";
+import { useMemo, useState, type Dispatch, type SetStateAction } from "react";
+import Link from "next/link";
+import { Lock, Search } from "lucide-react";
 
 import { Input } from "@/contexts/shared/interfaces/components/ui/input";
 import { Switch } from "@/contexts/shared/interfaces/components/ui/switch";
+import { Badge } from "@/contexts/shared/interfaces/components/ui/badge";
+import { Button } from "@/contexts/shared/interfaces/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/contexts/shared/interfaces/components/ui/dialog";
 import {
   groupPermissions,
+  isAssistantPermission,
   permissionGroupPriority,
   permissionLabel,
   permissionDescription,
@@ -21,6 +33,8 @@ interface RolePermissionsTabProps {
   setSelectedPermissions: Dispatch<SetStateAction<ReadonlySet<string>>>;
   permissionFilter: string;
   setPermissionFilter: Dispatch<SetStateAction<string>>;
+  assistantLocked?: boolean;
+  canUpgradeAssistant?: boolean;
 }
 
 export function RolePermissionsTab({
@@ -30,6 +44,8 @@ export function RolePermissionsTab({
   setSelectedPermissions,
   permissionFilter,
   setPermissionFilter,
+  assistantLocked = false,
+  canUpgradeAssistant = false,
 }: RolePermissionsTabProps) {
   const filteredGroupedPermissions = useMemo(() => {
     const normalizedFilter = permissionFilter.trim().toLowerCase();
@@ -84,6 +100,8 @@ export function RolePermissionsTab({
                 editable={editable}
                 selectedPermissions={selectedPermissions}
                 setSelectedPermissions={setSelectedPermissions}
+                assistantLocked={assistantLocked}
+                canUpgradeAssistant={canUpgradeAssistant}
                 headingClassName="text-sm font-medium capitalize tracking-wide text-muted-foreground"
               />
             ))}
@@ -99,30 +117,90 @@ function PermissionToggle({
   editable,
   checked,
   onCheckedChange,
+  assistantLocked,
+  canUpgradeAssistant,
 }: {
   permission: string;
   editable: boolean;
   checked: boolean;
   onCheckedChange: (checked: boolean) => void;
+  assistantLocked: boolean;
+  canUpgradeAssistant: boolean;
+}) {
+  const [upgradeOpen, setUpgradeOpen] = useState(false);
+  const locked = assistantLocked && isAssistantPermission(permission);
+
+  return (
+    <>
+      <label
+        className={`flex cursor-pointer items-center justify-between gap-4 rounded-lg border p-4 transition-colors ${
+          checked ? "border-primary/40 bg-accent/50" : "border-border hover:bg-muted/40"
+        } ${locked ? "cursor-not-allowed hover:bg-transparent" : ""}`}
+        onClick={locked ? () => setUpgradeOpen(true) : undefined}
+        aria-disabled={locked}
+      >
+        <span className="min-w-0 space-y-1">
+          <span className="flex flex-wrap items-center gap-2">
+            <span className="block text-sm font-medium text-foreground">{permissionLabel(permission)}</span>
+            {locked ? (
+              <Badge variant="outline" className="gap-1 text-xs">
+                <Lock className="size-3" aria-hidden="true" />
+                Disponible en Plan Pro
+              </Badge>
+            ) : null}
+          </span>
+          <span className="block truncate text-xs text-muted-foreground">{permission}</span>
+          <span className="block text-xs text-muted-foreground">{permissionDescription(permission)}</span>
+        </span>
+        <Switch
+          disabled={!editable || locked}
+          checked={checked && !locked}
+          onCheckedChange={onCheckedChange}
+          aria-label={permissionLabel(permission)}
+        />
+      </label>
+      {locked ? (
+        <AssistantUpgradeDialog
+          open={upgradeOpen}
+          onOpenChange={setUpgradeOpen}
+          canUpgradeAssistant={canUpgradeAssistant}
+        />
+      ) : null}
+    </>
+  );
+}
+
+function AssistantUpgradeDialog({
+  open,
+  onOpenChange,
+  canUpgradeAssistant,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  canUpgradeAssistant: boolean;
 }) {
   return (
-    <label
-      className={`flex cursor-pointer items-center justify-between gap-4 rounded-lg border p-4 transition-colors ${
-        checked ? "border-primary/40 bg-accent/50" : "border-border hover:bg-muted/40"
-      }`}
-    >
-      <span className="min-w-0 space-y-1">
-        <span className="block text-sm font-medium text-foreground">{permissionLabel(permission)}</span>
-        <span className="block truncate text-xs text-muted-foreground">{permission}</span>
-        <span className="block text-xs text-muted-foreground">{permissionDescription(permission)}</span>
-      </span>
-      <Switch
-        disabled={!editable}
-        checked={checked}
-        onCheckedChange={onCheckedChange}
-        aria-label={permissionLabel(permission)}
-      />
-    </label>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Disponible en Plan Pro</DialogTitle>
+          <DialogDescription>
+            El asistente IA solo está disponible en el Plan Pro.
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter>
+          {canUpgradeAssistant ? (
+            <Button render={<Link href="/upgrade" />} nativeButton={false}>
+              Actualizar plan
+            </Button>
+          ) : (
+            <Button render={<Link href="/upgrade" />} nativeButton={false} variant="ghost">
+              Más información
+            </Button>
+          )}
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -131,12 +209,16 @@ function PermissionGroupSection({
   editable,
   selectedPermissions,
   setSelectedPermissions,
+  assistantLocked,
+  canUpgradeAssistant,
   headingClassName,
 }: {
   group: PermissionGroup;
   editable: boolean;
   selectedPermissions: ReadonlySet<string>;
   setSelectedPermissions: Dispatch<SetStateAction<ReadonlySet<string>>>;
+  assistantLocked: boolean;
+  canUpgradeAssistant: boolean;
   headingClassName: string;
 }) {
   return (
@@ -157,6 +239,8 @@ function PermissionGroupSection({
                 return next;
               });
             }}
+            assistantLocked={assistantLocked}
+            canUpgradeAssistant={canUpgradeAssistant}
           />
         ))}
       </div>

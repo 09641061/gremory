@@ -17,6 +17,7 @@ import { RoleRow } from "./role-row";
 import { PermissionsWorkspace } from "./permissions-workspace";
 import { patchWorkforceRoleAction } from "@/contexts/workforce/interfaces/actions/workforce-role.actions";
 import type { WorkspaceAuthorization } from "@/contexts/business/application/model/business-workspace.view-models";
+import type { WorkspaceSubscription } from "@/contexts/business/application/model/business-workspace.view-models";
 
 export function PermissionsPageView({
   roles,
@@ -26,6 +27,7 @@ export function PermissionsPageView({
   canCreateRole = true,
   canUpdateRole = true,
   canDeleteRole = true,
+  subscription,
 }: {
   roles: ReadonlyArray<WorkforceRoleSummary>;
   permissions: ReadonlyArray<string>;
@@ -34,6 +36,7 @@ export function PermissionsPageView({
   canCreateRole?: boolean;
   canUpdateRole?: boolean;
   canDeleteRole?: boolean;
+  subscription?: WorkspaceSubscription;
 }) {
   const [filter, setFilter] = useState("");
   const [createOpen, setCreateOpen] = useState(false);
@@ -279,6 +282,7 @@ export function PermissionsPageView({
         onCancel={() => setSelectedRoleId(null)}
         members={members}
         canUpdateRole={canUpdateRole}
+        subscription={subscription}
       />
 
     </section>
