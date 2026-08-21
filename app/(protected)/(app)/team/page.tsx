@@ -44,9 +44,14 @@ async function TeamPageContent({ searchParams }: TeamPageProps) {
     teamService.getMyMembership(establishmentId ?? undefined).catch(() => null),
   ]);
   const members = mergeCurrentMembership(membersPage?.content ?? [], currentMembership);
+  let schedulingAvailabilityError: string | null = null;
   const schedulingEmployees =
     establishmentId && workspace.organization?.id
-      ? await loadSchedulingMembers(establishmentId, workspace.organization.id)
+      ? await loadSchedulingMembers(establishmentId, workspace.organization.id).catch((error: unknown) => {
+          schedulingAvailabilityError =
+            error instanceof Error ? error.message : "Unable to load scheduling availability.";
+          return [];
+        })
       : [];
   const availabilityByUserId = new Map(
     schedulingEmployees.map((employee) => [employee.userId, employee.availableForScheduling]),
@@ -70,6 +75,7 @@ async function TeamPageContent({ searchParams }: TeamPageProps) {
         getWorkspaceEstablishment(workspace, establishmentId ?? undefined),
         "scheduling:manage",
       )}
+      availabilityError={schedulingAvailabilityError}
     />
   );
 }

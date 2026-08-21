@@ -242,9 +242,14 @@ export class SchedulingApiGateway
   ): Promise<void> {
     const authToken = await resolveAccessToken(token);
     await apiClient.put<void>(
-      `${apiConfig.routes.scheduling.appointments}/employees/${encodeURIComponent(userId)}/availability?establishmentId=${encodeURIComponent(establishmentId)}&available=${available}`,
+      `${apiConfig.routes.scheduling.appointments}/employees/${encodeURIComponent(userId)}/availability?establishmentId=${encodeURIComponent(establishmentId)}&available=${available ? "true" : "false"}`,
       undefined,
-      { token: authToken, errorMessage: "Failed to update employee availability", errorType: SchedulingApiError },
+      {
+        token: authToken,
+        headers: this.tenantHeaders(),
+        errorMessage: "Failed to update employee availability",
+        errorType: SchedulingApiError,
+      },
     );
   }
 

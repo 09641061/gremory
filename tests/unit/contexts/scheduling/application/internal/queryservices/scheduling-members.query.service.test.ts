@@ -50,4 +50,15 @@ describe("loadSchedulingMembers", () => {
       },
     ]);
   });
+
+  it("propagates the gateway error instead of swallowing it", async () => {
+    employeesMock.mockRejectedValue(new Error("Failed to fetch scheduling employees"));
+
+    await expect(
+      loadSchedulingMembers(
+        "55555555-5555-4555-8555-555555555555",
+        "66666666-6666-4666-8666-666666666666",
+      ),
+    ).rejects.toThrow("Failed to fetch scheduling employees");
+  });
 });

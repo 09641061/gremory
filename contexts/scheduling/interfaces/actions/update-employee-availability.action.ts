@@ -12,7 +12,7 @@ const availabilitySchema = z.object({
 });
 
 export type UpdateEmployeeAvailabilityState = {
-  status: "success" | "error";
+  status: "idle" | "success" | "error";
   error: string;
 };
 
@@ -34,15 +34,24 @@ export async function updateEmployeeAvailabilityAction(
   if (!hasEstablishmentPermission(establishment, "scheduling:manage")) {
     return { status: "error", error: "You are not authorized to update scheduling availability." } as const;
   }
+  const organizationId = establishment?.organizationId ?? workspace.organization?.id;
+  if (!organizationId) {
+    return { status: "error", error: "Missing organization context." } as const;
+  }
 
   try {
-    await new SchedulingApiGateway().updateEmployeeAvailability(
+    await new SchedulingApiGateway(
+      workspace.organization?.id ?? establishment?.organizationId,
+    ).updateEmployeeAvailability(
       parsed.data.userId,
       parsed.data.establishmentId,
       parsed.data.available,
     );
     return { status: "success", error: "" } as const;
   } catch (error) {
-    return { status: "error", error: error instanceof Error ? error.message : "Unable to update availability." } as const;
+    const message =
+      error instanceof Error && error.message.trim() ? error.message : "Unable to update availability.";
+    console.error("Failed to update employee availability:", error);
+    return { status: "error", error: message } as const;
   }
 }

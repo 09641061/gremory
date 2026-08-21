@@ -1,6 +1,6 @@
 "use client";
 
-import { startTransition, useActionState, useEffect, useState } from "react";
+import { startTransition, useActionState, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { User, UserMinus, UserX } from "lucide-react";
 import { Switch } from "@/contexts/shared/interfaces/components/ui/switch";
@@ -49,16 +49,24 @@ export function MemberRow({
   const [revokeState, revokeAction, revokePending] = useActionState(revokeTeamInvitationAction, initialActionState);
   const [availabilityState, availabilityAction, availabilityPending] = useActionState(
     updateEmployeeAvailabilityAction,
-    { status: "error", error: "" } satisfies UpdateEmployeeAvailabilityState,
+    { status: "idle", error: "" } satisfies UpdateEmployeeAvailabilityState,
   );
   const router = useRouter();
   const [confirming, setConfirming] = useState<"remove" | "revoke" | null>(null);
 
   useEffect(() => {
-    if ([removeState.status, revokeState.status, availabilityState.status].includes("success")) {
+    if ([removeState.status, revokeState.status].includes("success")) {
       router.refresh();
     }
-  }, [removeState.status, revokeState.status, availabilityState.status, router]);
+  }, [removeState.status, revokeState.status, router]);
+
+  const wasAvailabilityPending = useRef(false);
+  useEffect(() => {
+    if (wasAvailabilityPending.current && !availabilityPending) {
+      router.refresh();
+    }
+    wasAvailabilityPending.current = availabilityPending;
+  }, [availabilityPending, router]);
 
   const memberId = member.memberId;
   const canRemove = member.canRemoveMembership && memberId !== null && canRemoveMembers;
@@ -99,6 +107,7 @@ export function MemberRow({
               checked={member.availableForScheduling}
               disabled={!canEditAvailability || !canManageScheduling || availabilityPending}
               onCheckedChange={(available) => {
+                if (available === member.availableForScheduling) return;
                 const formData = new FormData();
                 formData.append("userId", member.userId!);
                 formData.append("establishmentId", member.establishmentId);

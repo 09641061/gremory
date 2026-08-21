@@ -2,9 +2,10 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Search, Settings2, UserPlus } from "lucide-react";
+import { Search, Settings2, UserPlus, AlertCircle } from "lucide-react";
 
 import { PageHeader, PageShell } from "@/contexts/shared/interfaces/components/page-shell";
+import { Alert, AlertDescription } from "@/contexts/shared/interfaces/components/ui/alert";
 import { Card, CardContent } from "@/contexts/shared/interfaces/components/ui/card";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import { Input } from "@/contexts/shared/interfaces/components/ui/input";
@@ -23,6 +24,7 @@ export function TeamPageView({
   currentUserId = null,
   currentUserIsOwner = false,
   canManageScheduling = false,
+  availabilityError = null,
 }: {
   establishmentId: string | null;
   members: TeamUserSummary[];
@@ -33,6 +35,7 @@ export function TeamPageView({
   currentUserId?: string | null;
   currentUserIsOwner?: boolean;
   canManageScheduling?: boolean;
+  availabilityError?: string | null;
 }) {
   const [filter, setFilter] = useState("");
   const [inviteOpen, setInviteOpen] = useState(false);
@@ -92,6 +95,12 @@ export function TeamPageView({
       <Card>
         <CardContent className="p-0">
           <div className="min-w-[920px]">
+            {availabilityError ? (
+              <Alert variant="destructive" className="mb-4 rounded-none border-x-0 border-t-0">
+                <AlertCircle className="size-4" />
+                <AlertDescription>{availabilityError}</AlertDescription>
+              </Alert>
+            ) : null}
             <div className="grid grid-cols-[minmax(300px,1.4fr)_minmax(220px,1fr)_minmax(150px,.8fr)_minmax(150px,.55fr)_minmax(170px,.7fr)] border-b border-border/70 bg-muted/30 px-5 py-3 text-xs font-medium uppercase tracking-wide text-muted-foreground">
               <span>Name</span>
               <span>Email</span>
