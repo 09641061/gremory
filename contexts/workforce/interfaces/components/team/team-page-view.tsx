@@ -106,18 +106,19 @@ export function TeamPageView({
 
       <Card>
         <CardContent className="p-0">
-          <div className="min-w-[920px]">
+          <div className="min-w-[1180px]">
             {availabilityError ? (
               <Alert variant="destructive" className="mb-4 rounded-none border-x-0 border-t-0">
                 <AlertCircle className="size-4" />
                 <AlertDescription>{availabilityError}</AlertDescription>
               </Alert>
             ) : null}
-            <div className="grid grid-cols-[minmax(300px,1.4fr)_minmax(220px,1fr)_minmax(150px,.8fr)_minmax(150px,.55fr)_minmax(170px,.7fr)] border-b border-border/70 bg-muted/30 px-5 py-3 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+            <div className="grid grid-cols-[minmax(300px,1.4fr)_minmax(220px,1fr)_minmax(150px,.8fr)_minmax(120px,.55fr)_minmax(260px,1fr)_minmax(90px,.3fr)] border-b border-border/70 bg-muted/30 px-5 py-3 text-xs font-medium uppercase tracking-wide text-muted-foreground">
               <span>Name</span>
               <span>Email</span>
               <span>Role</span>
               <span>Status</span>
+              <span>Scheduling</span>
               <div className="flex justify-end">
                 <span className="min-w-[116px] text-left" aria-hidden="true" />
               </div>

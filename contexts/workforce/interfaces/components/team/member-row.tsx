@@ -84,7 +84,7 @@ export function MemberRow({
   const isOwner = ownerFromWorkspace || member.isOwner === true;
 
   return (
-    <div className="grid min-h-[92px] grid-cols-[minmax(300px,1.4fr)_minmax(220px,1fr)_minmax(150px,.8fr)_minmax(150px,.55fr)_minmax(170px,.7fr)] items-center border-b border-border/70 px-5 py-4 transition-colors last:border-b-0 hover:bg-muted/20">
+    <div className="grid min-h-[92px] grid-cols-[minmax(300px,1.4fr)_minmax(220px,1fr)_minmax(150px,.8fr)_minmax(120px,.55fr)_minmax(260px,1fr)_minmax(90px,.3fr)] items-center border-b border-border/70 px-5 py-4 transition-colors last:border-b-0 hover:bg-muted/20">
       <div className="flex items-center gap-4">
         <Avatar className="size-11 shrink-0 border border-border/70">
           <AvatarImage src={member.imageUrl ?? undefined} alt={member.name ?? member.email} />
@@ -108,8 +108,10 @@ export function MemberRow({
           <MemberRolesDropdown roles={member.roles} />
         )}
       </div>
+      <div>
+        <span className={statusBadgeClass(member.status)}>{formatStatus(member.status)}</span>
+      </div>
       <div className="flex flex-col gap-1.5 justify-center">
-        <span className="text-[15px] text-muted-foreground">{formatStatus(member.status)}</span>
         {member.userId && member.status === "ACTIVE" ? (
           <label className="flex items-center gap-2 text-xs text-muted-foreground">
             <Switch
@@ -145,6 +147,9 @@ export function MemberRow({
             />
             {member.visibleForScheduling !== false ? "Visible on schedule" : "Hidden from schedule"}
           </label>
+        ) : null}
+        {!member.userId || member.status !== "ACTIVE" ? (
+          <span className="text-xs text-muted-foreground">Not configurable</span>
         ) : null}
       </div>
       <div className="flex flex-col items-end gap-2">
@@ -226,6 +231,15 @@ export function MemberRow({
 
 function formatStatus(status: TeamUserSummary["status"]): string {
   return status.charAt(0) + status.slice(1).toLowerCase();
+}
+
+function statusBadgeClass(status: TeamUserSummary["status"]): string {
+  const tone = status === "ACTIVE"
+    ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-700"
+    : status === "PENDING"
+      ? "border-amber-500/20 bg-amber-500/10 text-amber-700"
+      : "border-slate-500/20 bg-slate-500/10 text-slate-700";
+  return `inline-flex rounded-full border px-2.5 py-1 text-xs font-semibold uppercase tracking-wide ${tone}`;
 }
 
 function initials(name: string): string {
