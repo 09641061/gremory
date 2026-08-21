@@ -15,6 +15,7 @@ import {
 import { workforceAssignablePermissions } from "@/contexts/workforce/domain/model/enums/workforce-permission";
 import { TeamApiError } from "@/contexts/workforce/infrastructure/gateways/team-api.gateway";
 import { requireTeamAccessToken } from "@/contexts/workforce/infrastructure/session/team-session";
+import { createBusinessWorkspaceQueryService } from "@/contexts/business/application/internal/queryservices/business-workspace-query.service";
 import {
   workforceRoleCreateRequestSchema,
   workforceRolePatchRequestSchema,
@@ -26,9 +27,11 @@ const uuidSchema = z.string().uuid();
 
 export async function listWorkforceRolesRoute() {
   try {
+    const organizationId = await resolveOrganizationId();
     const roles = await createWorkforceRoleQueryService(
       await requireTeamAccessToken(),
-    ).list();
+      organizationId,
+    ).list(organizationId);
     return NextResponse.json(
       workforceRoleResourcesSchema.parse(roles.map(roleToResource)),
     );
@@ -48,7 +51,10 @@ export async function createWorkforceRoleRoute(request: Request) {
       return validationErrorResponse(parsed.error.issues[0]?.message);
     }
 
-    const role = await createWorkforceRoleCommandService(await requireTeamAccessToken()).create(
+    const role = await createWorkforceRoleCommandService(
+      await requireTeamAccessToken(),
+      await resolveOrganizationId(),
+    ).create(
       createWorkforceRoleCommand(parsed.data),
     );
     return NextResponse.json(
@@ -74,7 +80,10 @@ export async function patchWorkforceRoleRoute(
       return validationErrorResponse(parsed.error.issues[0]?.message);
     }
 
-    const role = await createWorkforceRoleCommandService(await requireTeamAccessToken()).patch(
+    const role = await createWorkforceRoleCommandService(
+      await requireTeamAccessToken(),
+      await resolveOrganizationId(),
+    ).patch(
       patchWorkforceRoleCommand({
         roleId: roleIdParsed.data,
         ...parsed.data,
@@ -95,7 +104,10 @@ export async function deleteWorkforceRoleRoute(roleId: string) {
       return validationErrorResponse(roleIdParsed.error.issues[0]?.message);
     }
 
-    await createWorkforceRoleCommandService(await requireTeamAccessToken()).delete(
+    await createWorkforceRoleCommandService(
+      await requireTeamAccessToken(),
+      await resolveOrganizationId(),
+    ).delete(
       deleteWorkforceRoleCommand({
         roleId: roleIdParsed.data,
       }),
@@ -121,7 +133,10 @@ export async function assignWorkforceRoleRoute(
       return validationErrorResponse(roleIdParsed.error.issues[0]?.message);
     }
 
-    await createWorkforceRoleCommandService(await requireTeamAccessToken()).assign(
+    await createWorkforceRoleCommandService(
+      await requireTeamAccessToken(),
+      await resolveOrganizationId(),
+    ).assign(
       assignWorkforceRoleCommand({
         memberId: memberIdParsed.data,
         roleId: roleIdParsed.data,
@@ -138,7 +153,10 @@ export async function removeWorkforceRoleAssignmentRoute(memberId: string, roleI
     const member = uuidSchema.safeParse(memberId);
     const role = uuidSchema.safeParse(roleId);
     if (!member.success || !role.success) return validationErrorResponse("Invalid member or role ID");
-    const service = createWorkforceRoleCommandService(await requireTeamAccessToken());
+    const service = createWorkforceRoleCommandService(
+      await requireTeamAccessToken(),
+      await resolveOrganizationId(),
+    );
     if (!service.removeAssignment) throw new Error("Role assignment removal is unavailable");
     await service.removeAssignment(
       removeWorkforceRoleAssignmentCommand({ memberId: member.data, roleId: role.data }),
@@ -147,6 +165,11 @@ export async function removeWorkforceRoleAssignmentRoute(memberId: string, roleI
   } catch (error) {
     return toRouteErrorResponse(error);
   }
+}
+
+async function resolveOrganizationId(): Promise<string | undefined> {
+  const workspace = await createBusinessWorkspaceQueryService().getHeaderViewModel();
+  return workspace.organization?.id;
 }
 
 function roleToResource(role: WorkforceRole) {

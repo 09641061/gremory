@@ -58,7 +58,8 @@ export async function createWorkforceInvitationRoute(request: Request) {
       return validationErrorResponse(parsed.error.issues[0]?.message);
     }
 
-    const invitationId = await createTeamCommandService(token).invite(
+    const organizationId = await resolveOrganizationId(parsed.data.establishmentId);
+    const invitationId = await createTeamCommandService(token, organizationId).invite(
       inviteTeamUserCommand(parsed.data),
     );
     return NextResponse.json({ id: invitationId.value }, { status: 201 });
@@ -75,7 +76,7 @@ export async function revokeWorkforceInvitationRoute(invitationId: string) {
       return validationErrorResponse(parsed.error.issues[0]?.message);
     }
 
-    await createTeamCommandService(token).revokeInvitation(
+    await createTeamCommandService(token, await resolveOrganizationId()).revokeInvitation(
       revokeTeamInvitationCommand({ invitationId: parsed.data }),
     );
     return new Response(null, { status: 204 });
@@ -92,7 +93,7 @@ export async function removeWorkforceMemberRoute(memberId: string) {
       return validationErrorResponse(parsed.error.issues[0]?.message);
     }
 
-    await createTeamCommandService(token).removeMember(
+    await createTeamCommandService(token, await resolveOrganizationId()).removeMember(
       removeTeamMemberCommand({ memberId: parsed.data }),
     );
     return new Response(null, { status: 204 });
@@ -137,6 +138,13 @@ export async function acceptWorkforceInvitationRoute(request: Request) {
   } catch (error) {
     return toRouteErrorResponse(error);
   }
+}
+
+async function resolveOrganizationId(establishmentId?: string): Promise<string | undefined> {
+  const workspace = await createBusinessWorkspaceQueryService().getHeaderViewModel(
+    establishmentId ? { establishmentId } : {},
+  );
+  return workspace.organization?.id;
 }
 
 export async function workforceAccessRoute() {

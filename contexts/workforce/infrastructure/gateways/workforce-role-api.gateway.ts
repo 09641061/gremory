@@ -47,7 +47,7 @@ export class WorkforceRoleApiGateway implements WorkforceRoleRepository {
 
   async permissions() {
     const token = await requireTeamAccessToken(this.providedToken);
-    const response = await teamGet<unknown>(apiConfig.routes.workforce.rolePermissions, token, this.tenantHeaders());
+    const response = await teamGet<unknown>(apiConfig.routes.workforce.rolePermissions, token);
     return workforceRolePermissionsSchema.parse(response);
   }
 

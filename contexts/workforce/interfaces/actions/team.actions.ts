@@ -99,7 +99,6 @@ export async function acceptTeamInvitationAction(
   try {
     const service = createTeamCommandService(
       await requireTeamAccessToken(),
-      await resolveOrganizationId(),
     );
     const memberId = await service.acceptInvitation(
       acceptTeamInvitationCommand({ token: parsed.data }),
@@ -126,7 +125,6 @@ export async function acceptPendingInvitationAction(
   try {
     const service = createTeamCommandService(
       await requireTeamAccessToken(),
-      await resolveOrganizationId(),
     );
     const memberId = await service.acceptPendingInvitation();
     revalidateTeamView();
