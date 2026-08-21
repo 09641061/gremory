@@ -47,7 +47,7 @@ async function TeamPageContent({ searchParams }: TeamPageProps) {
   let schedulingAvailabilityError: string | null = null;
   const schedulingEmployees =
     establishmentId && workspace.organization?.id
-      ? await loadSchedulingMembers(establishmentId, workspace.organization.id).catch((error: unknown) => {
+       ? await loadSchedulingMembers(establishmentId, workspace.organization.id, true).catch((error: unknown) => {
           schedulingAvailabilityError =
             error instanceof Error ? error.message : "Unable to load scheduling availability.";
           return [];
@@ -56,9 +56,16 @@ async function TeamPageContent({ searchParams }: TeamPageProps) {
   const availabilityByUserId = new Map(
     schedulingEmployees.map((employee) => [employee.userId, employee.availableForScheduling]),
   );
+  const visibilityByUserId = new Map(
+    schedulingEmployees.map((employee) => [employee.userId, employee.visibleForScheduling !== false]),
+  );
   const membersWithAvailability = members.map((member) =>
     member.userId && availabilityByUserId.has(member.userId)
-      ? { ...member, availableForScheduling: availabilityByUserId.get(member.userId) === true }
+       ? {
+           ...member,
+           availableForScheduling: availabilityByUserId.get(member.userId) === true,
+           visibleForScheduling: visibilityByUserId.get(member.userId) !== false,
+         }
       : member,
   );
   return (
@@ -75,10 +82,14 @@ async function TeamPageContent({ searchParams }: TeamPageProps) {
         getWorkspaceEstablishment(workspace, establishmentId ?? undefined),
         "availability:manage_self",
       )}
-      canManageOtherAvailability={hasEstablishmentPermission(
+       canManageOtherAvailability={hasEstablishmentPermission(
         getWorkspaceEstablishment(workspace, establishmentId ?? undefined),
         "availability:manage_all",
-      )}
+       )}
+       canManageScheduling={hasEstablishmentPermission(
+         getWorkspaceEstablishment(workspace, establishmentId ?? undefined),
+         "scheduling:manage",
+       )}
       availabilityError={schedulingAvailabilityError}
     />
   );

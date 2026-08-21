@@ -30,6 +30,7 @@ export interface TeamUserSummary {
   joinedAt: string | null;
   removedAt: string | null;
   availableForScheduling: boolean;
+  visibleForScheduling?: boolean;
   canUpdateSchedulingAvailability: boolean;
 }
 

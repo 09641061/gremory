@@ -108,11 +108,12 @@ describe("TeamPageView", () => {
         currentUserIsOwner={true}
         canManageOwnAvailability={true}
         canManageOtherAvailability={true}
+        canManageScheduling={true}
       />,
     );
 
     const all = switches();
-    expect(all).toHaveLength(2);
+    expect(all).toHaveLength(4);
     expect(all.every(({ disabled }) => disabled === false)).toBe(true);
   });
 
@@ -133,11 +134,13 @@ describe("TeamPageView", () => {
     );
 
     const all = switches();
-    expect(all).toHaveLength(2);
+    expect(all).toHaveLength(4);
     // The worker can edit its own row (manage_self) and others' (manage_all),
     // but never the owner's row.
     expect(all[0].disabled).toBe(true);
-    expect(all[1].disabled).toBe(false);
+    expect(all[1].disabled).toBe(true);
+    expect(all[2].disabled).toBe(false);
+    expect(all[3].disabled).toBe(true);
   });
 
   it("lets a worker with manage_self edit only its own availability", () => {
@@ -157,8 +160,10 @@ describe("TeamPageView", () => {
     );
 
     const all = switches();
-    expect(all).toHaveLength(2);
+    expect(all).toHaveLength(4);
     expect(all[0].disabled).toBe(true);
-    expect(all[1].disabled).toBe(false);
+    expect(all[1].disabled).toBe(true);
+    expect(all[2].disabled).toBe(false);
+    expect(all[3].disabled).toBe(true);
   });
 });

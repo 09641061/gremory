@@ -221,9 +221,9 @@ export class SchedulingApiGateway
   async getSchedulingEmployees(
     establishmentId: string,
     token?: string
-  ): Promise<{ userId: string; name: string; imageUrl: string | null; isOwner: boolean; availableForScheduling: boolean }[]> {
+  ): Promise<{ userId: string; name: string; imageUrl: string | null; isOwner: boolean; availableForScheduling: boolean; visibleForScheduling: boolean }[]> {
     const authToken = await resolveAccessToken(token);
-    return apiClient.get<{ userId: string; name: string; imageUrl: string | null; isOwner: boolean; availableForScheduling: boolean }[]>(
+    return apiClient.get<{ userId: string; name: string; imageUrl: string | null; isOwner: boolean; availableForScheduling: boolean; visibleForScheduling: boolean }[]>(
       `${apiConfig.routes.scheduling.appointments}/employees?establishmentId=${encodeURIComponent(establishmentId)}`,
       {
         token: authToken,
@@ -231,6 +231,25 @@ export class SchedulingApiGateway
         errorMessage: "Failed to fetch scheduling employees",
         errorType: SchedulingApiError,
       }
+    );
+  }
+
+  async updateEmployeeVisibility(
+    userId: string,
+    establishmentId: string,
+    visible: boolean,
+    token?: string,
+  ): Promise<void> {
+    const authToken = await resolveAccessToken(token);
+    await apiClient.put<void>(
+      `${apiConfig.routes.scheduling.appointments}/employees/${encodeURIComponent(userId)}/visibility?establishmentId=${encodeURIComponent(establishmentId)}&visible=${visible ? "true" : "false"}`,
+      undefined,
+      {
+        token: authToken,
+        headers: this.tenantHeaders(),
+        errorMessage: "Failed to update scheduling visibility",
+        errorType: SchedulingApiError,
+      },
     );
   }
 

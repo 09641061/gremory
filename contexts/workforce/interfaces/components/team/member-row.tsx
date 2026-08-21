@@ -14,10 +14,14 @@ import {
 } from "@/contexts/workforce/interfaces/actions/team.actions";
 import { updateEmployeeAvailabilityAction } from "@/contexts/scheduling/interfaces/actions/update-employee-availability.action";
 import type { UpdateEmployeeAvailabilityState } from "@/contexts/scheduling/interfaces/actions/update-employee-availability.action";
+import { updateEmployeeVisibilityAction } from "@/contexts/scheduling/interfaces/actions/update-employee-visibility.action";
+import type { UpdateEmployeeVisibilityState } from "@/contexts/scheduling/interfaces/actions/update-employee-visibility.action";
 import type { TeamUserSummary } from "@/contexts/workforce/application/model/team.read-models";
 import { MemberRolesDropdown } from "./member-roles-dropdown";
 
 const initialActionState = { status: "idle", data: null, error: null } as const;
+const initialAvailabilityState: UpdateEmployeeAvailabilityState = { status: "idle", error: "" };
+const initialVisibilityState: UpdateEmployeeVisibilityState = { status: "idle", error: "" };
 
 /** Dispatches a Server Action that expects a single form field, without a <form> wrapper. */
 function submitField(
@@ -36,18 +40,24 @@ export function MemberRow({
   canCancelInvitations = true,
   isOwner: ownerFromWorkspace = false,
   canEditAvailability = false,
+  canEditVisibility = false,
 }: {
   member: TeamUserSummary;
   canRemoveMembers?: boolean;
   canCancelInvitations?: boolean;
   isOwner?: boolean;
   canEditAvailability?: boolean;
+  canEditVisibility?: boolean;
 }) {
   const [removeState, removeAction, removePending] = useActionState(removeTeamMemberAction, initialActionState);
   const [revokeState, revokeAction, revokePending] = useActionState(revokeTeamInvitationAction, initialActionState);
   const [availabilityState, availabilityAction, availabilityPending] = useActionState(
     updateEmployeeAvailabilityAction,
-    { status: "idle", error: "" } satisfies UpdateEmployeeAvailabilityState,
+    initialAvailabilityState,
+  );
+  const [visibilityState, visibilityAction, visibilityPending] = useActionState(
+    updateEmployeeVisibilityAction,
+    initialVisibilityState,
   );
   const router = useRouter();
   const [confirming, setConfirming] = useState<"remove" | "revoke" | null>(null);
@@ -58,18 +68,19 @@ export function MemberRow({
     }
   }, [removeState.status, revokeState.status, router]);
 
-  const wasAvailabilityPending = useRef(false);
+  const wasSchedulingPending = useRef(false);
   useEffect(() => {
-    if (wasAvailabilityPending.current && !availabilityPending) {
+    const schedulingPending = availabilityPending || visibilityPending;
+    if (wasSchedulingPending.current && !schedulingPending) {
       router.refresh();
     }
-    wasAvailabilityPending.current = availabilityPending;
-  }, [availabilityPending, router]);
+    wasSchedulingPending.current = schedulingPending;
+  }, [availabilityPending, visibilityPending, router]);
 
   const memberId = member.memberId;
   const canRemove = member.canRemoveMembership && memberId !== null && canRemoveMembers;
   const canCancel = member.canRevokeInvitation && canCancelInvitations;
-  const error = removeState.error ?? revokeState.error ?? availabilityState.error;
+  const error = removeState.error ?? revokeState.error ?? availabilityState.error ?? visibilityState.error;
   const isOwner = ownerFromWorkspace || member.isOwner === true;
 
   return (
@@ -115,6 +126,24 @@ export function MemberRow({
               size="sm"
             />
             {member.availableForScheduling ? "Available for appointments" : "Unavailable for appointments"}
+          </label>
+        ) : null}
+        {member.userId && member.status === "ACTIVE" ? (
+          <label className="flex items-center gap-2 text-xs text-muted-foreground">
+            <Switch
+              checked={member.visibleForScheduling !== false}
+              disabled={!canEditVisibility || visibilityPending}
+              onCheckedChange={(visible) => {
+                if (visible === (member.visibleForScheduling !== false)) return;
+                const formData = new FormData();
+                formData.append("userId", member.userId!);
+                formData.append("establishmentId", member.establishmentId);
+                formData.append("visible", String(visible));
+                startTransition(() => visibilityAction(formData));
+              }}
+              size="sm"
+            />
+            {member.visibleForScheduling !== false ? "Visible on schedule" : "Hidden from schedule"}
           </label>
         ) : null}
       </div>

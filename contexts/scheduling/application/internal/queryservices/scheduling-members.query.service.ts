@@ -6,10 +6,11 @@ import type { SchedulingMemberViewModel } from "../../model/scheduling-page-data
 export async function loadSchedulingMembers(
   establishmentId: string,
   organizationId: string,
+  includeHidden = false,
 ): Promise<SchedulingMemberViewModel[]> {
   const gateway = new SchedulingApiGateway(organizationId);
   const employees = await gateway.getSchedulingEmployees(establishmentId);
-  return employees.map((employee) => ({
+  return employees.filter((employee) => includeHidden || employee.visibleForScheduling !== false).map((employee) => ({
     id: employee.userId,
     userId: employee.userId,
     name: employee.name,
@@ -19,5 +20,6 @@ export async function loadSchedulingMembers(
     imageUrl: employee.imageUrl,
     isOwner: employee.isOwner,
     availableForScheduling: employee.availableForScheduling,
+    visibleForScheduling: employee.visibleForScheduling,
   }));
 }
