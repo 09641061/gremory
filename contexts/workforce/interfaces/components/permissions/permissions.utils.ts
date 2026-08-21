@@ -47,6 +47,8 @@ export function permissionDescription(permission: string) {
     "workforce:manage": "Can manage team members and roles.",
     "scheduling:read": "Can open the scheduling page and view appointments.",
     "scheduling:manage": "Can create and manage appointments.",
+    "availability:manage_self": "Can change the member's own availability for appointments.",
+    "availability:manage_all": "Can change the availability of other members for appointments.",
     "catalog:read": "Can open and view the catalog.",
     "catalog:manage": "Can create and manage catalog items.",
     "crm:read": "Can open and view customers.",
@@ -68,12 +70,13 @@ export function permissionGroupPriority(context: string) {
   const order: Record<string, number> = {
     organization: 0,
     scheduling: 1,
-    catalog: 2,
-    crm: 3,
-    workforce: 4,
-    analytics: 5,
-    assistant: 6,
-    establishment: 7,
+    availability: 2,
+    catalog: 3,
+    crm: 4,
+    workforce: 5,
+    analytics: 6,
+    assistant: 7,
+    establishment: 8,
   };
 
   return order[context] ?? 100;

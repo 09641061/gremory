@@ -34,14 +34,16 @@ describe("Workforce role domain", () => {
   });
 
   it("should expose the supported workforce permissions", () => {
-    expect(workforcePermissionCodes).toHaveLength(20);
-    expect(new Set(workforcePermissionCodes)).toHaveLength(20);
+    expect(workforcePermissionCodes).toHaveLength(22);
+    expect(new Set(workforcePermissionCodes)).toHaveLength(22);
     expect(workforcePermissionCodes).toContain("establishment:read");
     expect(workforcePermissionCodes).toContain("analytics:read");
     expect(workforcePermissionCodes).toContain("assistant:manage");
     expect(workforcePermissionCodes).toContain("workforce:invite");
     expect(workforcePermissionCodes).toContain("workforce:manage_members");
     expect(workforcePermissionCodes).toContain("workforce:manage_roles");
+    expect(workforcePermissionCodes).toContain("availability:manage_self");
+    expect(workforcePermissionCodes).toContain("availability:manage_all");
     expect(isWorkforcePermission("catalog:manage")).toBe(true);
     expect(isWorkforcePermission("not-supported")).toBe(false);
   });
@@ -50,6 +52,8 @@ describe("Workforce role domain", () => {
     expect(workforceAssignablePermissions).toEqual([
       "scheduling:read",
       "scheduling:manage",
+      "availability:manage_self",
+      "availability:manage_all",
       "catalog:read",
       "catalog:manage",
       "crm:read",

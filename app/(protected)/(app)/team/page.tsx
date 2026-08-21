@@ -36,7 +36,7 @@ async function TeamPageContent({ searchParams }: TeamPageProps) {
   const canDeleteInvitation = canManageTeam;
   const canReadRoles = canManageTeam;
 
-  const teamService = createTeamQueryService();
+  const teamService = createTeamQueryService(undefined, workspace.organization?.id);
   const [membersPage, currentMembership] = await Promise.all([
     establishmentId
       ? teamService.list({ organizationId: workspace.organization?.id, establishmentId, size: 100 }).catch(() => null)

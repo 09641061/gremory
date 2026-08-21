@@ -89,6 +89,8 @@ describe("workforce role routes", () => {
     expect(body).toEqual([
       "scheduling:read",
       "scheduling:manage",
+      "availability:manage_self",
+      "availability:manage_all",
       "catalog:read",
       "catalog:manage",
       "crm:read",

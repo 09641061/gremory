@@ -6,6 +6,8 @@
 export const workforceAssignablePermissions = [
   "scheduling:read",
   "scheduling:manage",
+  "availability:manage_self",
+  "availability:manage_all",
   "catalog:read",
   "catalog:manage",
   "crm:read",
@@ -63,6 +65,10 @@ export const workforcePermissions = {
   scheduling: {
     read: "scheduling:read",
     manage: "scheduling:manage",
+  },
+  availability: {
+    manageSelf: "availability:manage_self",
+    manageAll: "availability:manage_all",
   },
   assistant: {
     manage: "assistant:manage",
