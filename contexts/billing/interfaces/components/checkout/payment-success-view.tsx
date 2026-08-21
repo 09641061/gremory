@@ -26,7 +26,10 @@ export function PaymentSuccessView() {
         if (cancelled) return;
 
         if (hasActiveSubscription(subscription)) {
-          // Re-run session, onboarding, workspace and capability resolution.
+          // Intentional hard navigation (not router.push/refresh): forces the browser
+          // to re-request "/" so middleware + server components re-resolve session,
+          // onboarding, workspace, and capability state after subscription activation.
+          // eslint-disable-next-line @next/next/no-location-assign-relative-destination
           window.location.assign("/");
           return;
         }

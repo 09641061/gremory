@@ -1,9 +1,19 @@
+import { Suspense } from "react";
+import { redirect } from "next/navigation";
 import { CreateOrganizationForm } from "@/contexts/business/interfaces/components/organization/create-organization/create-organization-form";
 import { createBusinessWorkspaceQueryService } from "@/contexts/business/application/internal/queryservices/business-workspace-query.service";
 import { hasSomewhereToCancelTo } from "@/contexts/business/domain/services/workspace-navigation.policy";
-import { redirect } from "next/navigation";
+import { PageLoading } from "@/contexts/shared/interfaces/components/page-loading";
 
-export default async function NewOrganizationPage() {
+export default function NewOrganizationPage() {
+  return (
+    <Suspense fallback={<PageLoading />}>
+      <NewOrganizationPageContent />
+    </Suspense>
+  );
+}
+
+async function NewOrganizationPageContent() {
   const workspace = await createBusinessWorkspaceQueryService().getHeaderViewModel();
 
   // An account without an organization has an invitation to accept first.

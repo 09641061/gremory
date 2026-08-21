@@ -1,4 +1,7 @@
+import type { ReactElement } from "react";
 import { describe, expect, it, vi, beforeEach } from "vitest";
+import { renderToPipeableStream } from "react-dom/server";
+import { Writable } from "node:stream";
 
 const mocks = vi.hoisted(() => ({
   redirect: vi.fn((href: string) => {
@@ -25,6 +28,28 @@ vi.mock("@/contexts/business/interfaces/components/organization/create-organizat
 
 import NewOrganizationPage from "@/app/(protected)/(configuration)/organizations/new/page";
 
+function renderFullyResolved(element: ReactElement): Promise<string> {
+  return new Promise((resolve, reject) => {
+    let html = "";
+    const writable = new Writable({
+      write(chunk, _encoding, callback) {
+        html += chunk.toString();
+        callback();
+      },
+    });
+
+    const { pipe } = renderToPipeableStream(element, {
+      onAllReady() {
+        pipe(writable);
+        writable.on("finish", () => resolve(html));
+      },
+      onError(error) {
+        reject(error);
+      },
+    });
+  });
+}
+
 function baseWorkspace(overrides: Record<string, unknown> = {}) {
   return {
     accountType: "OWNER",
@@ -47,7 +72,9 @@ describe("NewOrganizationPage guard", () => {
       baseWorkspace({ canCreateOrganization: false }),
     );
 
-    await expect(NewOrganizationPage()).rejects.toThrow("REDIRECT:/");
+    await expect(renderFullyResolved(NewOrganizationPage())).rejects.toThrow(
+      "REDIRECT:/",
+    );
   });
 
   it("renders the create form for an account that owns no organization yet", async () => {
@@ -55,9 +82,11 @@ describe("NewOrganizationPage guard", () => {
       baseWorkspace({ canCreateOrganization: true }),
     );
 
-    const element = await NewOrganizationPage();
+    await renderFullyResolved(NewOrganizationPage());
 
-    expect(element).toMatchObject({ type: expect.any(Function) });
+    expect(mocks.createForm).toHaveBeenCalledWith(
+      expect.objectContaining({ showCancel: expect.any(Boolean) }),
+    );
     expect(mocks.redirect).not.toHaveBeenCalled();
   });
 
@@ -66,6 +95,8 @@ describe("NewOrganizationPage guard", () => {
       baseWorkspace({ accountType: "PENDING_INVITATION", canCreateOrganization: true }),
     );
 
-    await expect(NewOrganizationPage()).rejects.toThrow("REDIRECT:/invitations/pending");
+    await expect(
+      renderFullyResolved(NewOrganizationPage()),
+    ).rejects.toThrow("REDIRECT:/invitations/pending");
   });
 });
