@@ -86,10 +86,6 @@ async function TeamPageContent({ searchParams }: TeamPageProps) {
         getWorkspaceEstablishment(workspace, establishmentId ?? undefined),
         "availability:manage_all",
        )}
-       canManageScheduling={hasEstablishmentPermission(
-         getWorkspaceEstablishment(workspace, establishmentId ?? undefined),
-         "scheduling:manage",
-       )}
       availabilityError={schedulingAvailabilityError}
     />
   );

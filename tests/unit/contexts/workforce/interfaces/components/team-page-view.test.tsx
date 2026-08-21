@@ -108,7 +108,6 @@ describe("TeamPageView", () => {
         currentUserIsOwner={true}
         canManageOwnAvailability={true}
         canManageOtherAvailability={true}
-        canManageScheduling={true}
       />,
     );
 
@@ -140,7 +139,7 @@ describe("TeamPageView", () => {
     expect(all[0].disabled).toBe(true);
     expect(all[1].disabled).toBe(true);
     expect(all[2].disabled).toBe(false);
-    expect(all[3].disabled).toBe(true);
+    expect(all[3].disabled).toBe(false);
   });
 
   it("lets a worker with manage_self edit only its own availability", () => {
@@ -164,6 +163,6 @@ describe("TeamPageView", () => {
     expect(all[0].disabled).toBe(true);
     expect(all[1].disabled).toBe(true);
     expect(all[2].disabled).toBe(false);
-    expect(all[3].disabled).toBe(true);
+    expect(all[3].disabled).toBe(false);
   });
 });
