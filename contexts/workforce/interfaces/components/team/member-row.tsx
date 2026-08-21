@@ -35,14 +35,12 @@ export function MemberRow({
   canRemoveMembers = true,
   canCancelInvitations = true,
   isOwner: ownerFromWorkspace = false,
-  canManageScheduling = false,
   canEditAvailability = false,
 }: {
   member: TeamUserSummary;
   canRemoveMembers?: boolean;
   canCancelInvitations?: boolean;
   isOwner?: boolean;
-  canManageScheduling?: boolean;
   canEditAvailability?: boolean;
 }) {
   const [removeState, removeAction, removePending] = useActionState(removeTeamMemberAction, initialActionState);
@@ -105,7 +103,7 @@ export function MemberRow({
           <label className="flex items-center gap-2 text-xs text-muted-foreground">
             <Switch
               checked={member.availableForScheduling}
-              disabled={!canEditAvailability || !canManageScheduling || availabilityPending}
+              disabled={!canEditAvailability || availabilityPending}
               onCheckedChange={(available) => {
                 if (available === member.availableForScheduling) return;
                 const formData = new FormData();

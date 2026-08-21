@@ -23,7 +23,8 @@ export function TeamPageView({
   canCancelInvitations = true,
   currentUserId = null,
   currentUserIsOwner = false,
-  canManageScheduling = false,
+  canManageOwnAvailability = false,
+  canManageOtherAvailability = false,
   availabilityError = null,
 }: {
   establishmentId: string | null;
@@ -34,7 +35,8 @@ export function TeamPageView({
   canCancelInvitations?: boolean;
   currentUserId?: string | null;
   currentUserIsOwner?: boolean;
-  canManageScheduling?: boolean;
+  canManageOwnAvailability?: boolean;
+  canManageOtherAvailability?: boolean;
   availabilityError?: string | null;
 }) {
   const [filter, setFilter] = useState("");
@@ -50,6 +52,16 @@ export function TeamPageView({
       ),
     [filter, members],
   );
+
+  const canEditAvailabilityFor = (member: TeamUserSummary) => {
+    if (!member.userId) return false;
+    const isSelf = member.userId === currentUserId;
+    // The owner's availability can only be changed by the owner itself.
+    if (member.isOwner) return currentUserIsOwner;
+    // The owner can manage everyone's availability implicitly.
+    if (currentUserIsOwner) return true;
+    return isSelf ? canManageOwnAvailability : canManageOtherAvailability;
+  };
 
   return (
     <PageShell>
@@ -117,8 +129,7 @@ export function TeamPageView({
                 canRemoveMembers={canRemoveMembers}
                 canCancelInvitations={canCancelInvitations}
                 isOwner={member.isOwner || (currentUserIsOwner && member.userId !== null && member.userId === currentUserId)}
-                canManageScheduling={canManageScheduling}
-                canEditAvailability={currentUserIsOwner && member.isOwner === true}
+                canEditAvailability={canEditAvailabilityFor(member)}
               />
             ))}
             {filteredMembers.length === 0 && <div className="px-5 py-10 text-sm text-muted-foreground">No members found.</div>}
