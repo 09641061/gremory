@@ -168,6 +168,7 @@ function pageResource() {
     page: 0,
     size: 20,
     totalElements: 1,
+    totalPages: 1,
   };
 }
 

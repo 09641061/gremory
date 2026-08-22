@@ -61,8 +61,8 @@ export const workforceCurrentMemberResourceSchema = z.object({
   isOwner: z.boolean().default(false),
   organizationId: uuidSchema,
   organizationName: z.string().trim().min(1),
-  establishmentId: uuidSchema,
-  establishmentName: z.string().trim().min(1),
+  establishmentId: uuidSchema.nullable(),
+  establishmentName: z.string().trim().min(1).nullable(),
   status: z.enum(workforceUserStatuses),
   availableForScheduling: z.boolean().default(false),
   canUpdateSchedulingAvailability: z.boolean().default(false),
@@ -70,14 +70,10 @@ export const workforceCurrentMemberResourceSchema = z.object({
 
 export const teamPageResourceSchema = z.object({
   content: z.array(workforceUserResourceSchema),
-  number: z.number().int().nonnegative(),
+  page: z.number().int().nonnegative(),
   size: z.number().int().nonnegative(),
   totalElements: z.number().int().nonnegative(),
   totalPages: z.number().int().nonnegative(),
-  first: z.boolean(),
-  last: z.boolean(),
-  numberOfElements: z.number().int().nonnegative(),
-  empty: z.boolean(),
 });
 
 export const invitationCreatedResourceSchema = z.object({
