@@ -47,6 +47,7 @@ export async function createSubscriptionAction(
     revalidatePath("/upgrade");
     revalidatePath("/chat");
     revalidatePath("/schedule");
+    revalidatePath("/invoices");
 
     return { status: "success", data: result, error: null };
   } catch (error) {
