@@ -36,11 +36,6 @@ export function InvoiceView({ currentSubscription, initialInvoices }: InvoiceVie
   const [currentPage, setCurrentPage] = useState(initialInvoices.pageable.pageNumber);
   const [loading, setLoading] = useState(false);
 
-  React.useEffect(() => {
-    // Force a dynamic fetch on client-side mount to bypass compilation components cache
-    fetchPage(0);
-  }, []);
-
   const fetchPage = async (page: number) => {
     setLoading(true);
     try {
@@ -56,6 +51,19 @@ export function InvoiceView({ currentSubscription, initialInvoices }: InvoiceVie
       setLoading(false);
     }
   };
+
+  React.useEffect(() => {
+    // Force a dynamic fetch on client-side mount to bypass compilation components cache
+    let active = true;
+    setTimeout(() => {
+      if (active) {
+        fetchPage(0);
+      }
+    }, 0);
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const currentPlanName =
     currentSubscription?.planId === 2 ? "Premium" : currentSubscription?.planId === 1 ? "Standard" : "Free";
