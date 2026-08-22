@@ -2,6 +2,10 @@ import { z } from "zod";
 import { workforceUserStatuses } from "../../../domain/model/enums/workforce-user-status";
 
 const uuidSchema = z.string().uuid();
+const emailSchema = z.string().trim().max(254).refine(
+  (value) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value),
+  "Invalid email address",
+);
 const dateTimeSchema = z.string().refine(
   (value) => !Number.isNaN(Date.parse(value)),
   "Invalid date-time",
@@ -16,7 +20,7 @@ const workforceRoleResourceSchema = z.object({
 
 export const inviteTeamUserSchema = z.object({
   establishmentId: uuidSchema,
-  email: z.string().trim().email().max(254),
+  email: emailSchema,
 });
 
 export const invitationIdSchema = uuidSchema;
@@ -29,7 +33,7 @@ export const workforceUserResourceSchema = z.object({
   userId: uuidSchema.nullable(),
   username: z.string().trim().min(1).nullable().optional(),
   imageUrl: z.string().url().nullable().optional(),
-  email: z.string().email(),
+  email: emailSchema,
   roleId: uuidSchema.optional(),
   roleName: z.string().trim().min(1).optional(),
   isOwner: z.boolean().default(false),
@@ -52,7 +56,7 @@ export const workforceCurrentMemberResourceSchema = z.object({
   userId: uuidSchema.nullable(),
   username: z.string().trim().min(1).nullable().optional(),
   imageUrl: z.string().url().nullable().optional(),
-  email: z.string().email(),
+  email: emailSchema,
   roles: z.array(workforceRoleResourceSchema).optional(),
   isOwner: z.boolean().default(false),
   organizationId: uuidSchema,

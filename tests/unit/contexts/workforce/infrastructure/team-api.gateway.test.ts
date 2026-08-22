@@ -41,6 +41,19 @@ describe("TeamApiGateway", () => {
     expect(result.content[0]?.canRevokeInvitation).toBe(true);
   });
 
+  it("should accept Google contact emails with a percent in the local part", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(jsonResponse(pageResource({
+      email: "u202121325%upc.edu.pe@gtempaccount.com",
+    }))));
+
+    const result = await new TeamApiGateway("access-token").list({
+      page: 0,
+      size: 20,
+    });
+
+    expect(result.content[0]?.email.value).toBe("u202121325%upc.edu.pe@gtempaccount.com");
+  });
+
   it("should send normalized invitation data with authentication", async () => {
     const fetchMock = vi.fn().mockResolvedValue(jsonResponse({ id: invitationId }, 201));
     vi.stubGlobal("fetch", fetchMock);

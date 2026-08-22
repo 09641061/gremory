@@ -16,7 +16,10 @@ export async function loadSchedulingPageData(
     canManageScheduling
       ? loadSchedulingServices(establishmentId, organizationId)
       : Promise.resolve([]),
-    loadSchedulingMembers(establishmentId, organizationId),
+    loadSchedulingMembers(establishmentId, organizationId).catch((error) => {
+      console.error("Failed to load scheduling members:", error);
+      return [];
+    }),
     canManageScheduling
       ? loadSchedulingCustomers(establishmentId, organizationId)
       : Promise.resolve([]),

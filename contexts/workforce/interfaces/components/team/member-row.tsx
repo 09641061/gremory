@@ -1,6 +1,6 @@
 "use client";
 
-import { startTransition, useActionState, useEffect, useState } from "react";
+import { startTransition, useActionState, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { User, UserMinus, UserX } from "lucide-react";
 import { Switch } from "@/contexts/shared/interfaces/components/ui/switch";
@@ -14,10 +14,14 @@ import {
 } from "@/contexts/workforce/interfaces/actions/team.actions";
 import { updateEmployeeAvailabilityAction } from "@/contexts/scheduling/interfaces/actions/update-employee-availability.action";
 import type { UpdateEmployeeAvailabilityState } from "@/contexts/scheduling/interfaces/actions/update-employee-availability.action";
+import { updateEmployeeVisibilityAction } from "@/contexts/scheduling/interfaces/actions/update-employee-visibility.action";
+import type { UpdateEmployeeVisibilityState } from "@/contexts/scheduling/interfaces/actions/update-employee-visibility.action";
 import type { TeamUserSummary } from "@/contexts/workforce/application/model/team.read-models";
 import { MemberRolesDropdown } from "./member-roles-dropdown";
 
 const initialActionState = { status: "idle", data: null, error: null } as const;
+const initialAvailabilityState: UpdateEmployeeAvailabilityState = { status: "idle", error: "" };
+const initialVisibilityState: UpdateEmployeeVisibilityState = { status: "idle", error: "" };
 
 /** Dispatches a Server Action that expects a single form field, without a <form> wrapper. */
 function submitField(
@@ -35,39 +39,52 @@ export function MemberRow({
   canRemoveMembers = true,
   canCancelInvitations = true,
   isOwner: ownerFromWorkspace = false,
-  canManageScheduling = false,
   canEditAvailability = false,
+  canEditVisibility = false,
 }: {
   member: TeamUserSummary;
   canRemoveMembers?: boolean;
   canCancelInvitations?: boolean;
   isOwner?: boolean;
-  canManageScheduling?: boolean;
   canEditAvailability?: boolean;
+  canEditVisibility?: boolean;
 }) {
   const [removeState, removeAction, removePending] = useActionState(removeTeamMemberAction, initialActionState);
   const [revokeState, revokeAction, revokePending] = useActionState(revokeTeamInvitationAction, initialActionState);
   const [availabilityState, availabilityAction, availabilityPending] = useActionState(
     updateEmployeeAvailabilityAction,
-    { status: "error", error: "" } satisfies UpdateEmployeeAvailabilityState,
+    initialAvailabilityState,
+  );
+  const [visibilityState, visibilityAction, visibilityPending] = useActionState(
+    updateEmployeeVisibilityAction,
+    initialVisibilityState,
   );
   const router = useRouter();
   const [confirming, setConfirming] = useState<"remove" | "revoke" | null>(null);
 
   useEffect(() => {
-    if ([removeState.status, revokeState.status, availabilityState.status].includes("success")) {
+    if ([removeState.status, revokeState.status].includes("success")) {
       router.refresh();
     }
-  }, [removeState.status, revokeState.status, availabilityState.status, router]);
+  }, [removeState.status, revokeState.status, router]);
+
+  const wasSchedulingPending = useRef(false);
+  useEffect(() => {
+    const schedulingPending = availabilityPending || visibilityPending;
+    if (wasSchedulingPending.current && !schedulingPending) {
+      router.refresh();
+    }
+    wasSchedulingPending.current = schedulingPending;
+  }, [availabilityPending, visibilityPending, router]);
 
   const memberId = member.memberId;
   const canRemove = member.canRemoveMembership && memberId !== null && canRemoveMembers;
   const canCancel = member.canRevokeInvitation && canCancelInvitations;
-  const error = removeState.error ?? revokeState.error ?? availabilityState.error;
+  const error = removeState.error ?? revokeState.error ?? availabilityState.error ?? visibilityState.error;
   const isOwner = ownerFromWorkspace || member.isOwner === true;
 
   return (
-    <div className="grid min-h-[92px] grid-cols-[minmax(300px,1.4fr)_minmax(220px,1fr)_minmax(150px,.8fr)_minmax(150px,.55fr)_minmax(170px,.7fr)] items-center border-b border-border/70 px-5 py-4 transition-colors last:border-b-0 hover:bg-muted/20">
+    <div className="grid min-h-[92px] grid-cols-[minmax(300px,1.4fr)_minmax(220px,1fr)_minmax(150px,.8fr)_minmax(120px,.55fr)_minmax(260px,1fr)_minmax(90px,.3fr)] items-center border-b border-border/70 px-5 py-4 transition-colors last:border-b-0 hover:bg-muted/20">
       <div className="flex items-center gap-4">
         <Avatar className="size-11 shrink-0 border border-border/70">
           <AvatarImage src={member.imageUrl ?? undefined} alt={member.name ?? member.email} />
@@ -91,14 +108,17 @@ export function MemberRow({
           <MemberRolesDropdown roles={member.roles} />
         )}
       </div>
+      <div>
+        <span className={statusBadgeClass(member.status)}>{formatStatus(member.status)}</span>
+      </div>
       <div className="flex flex-col gap-1.5 justify-center">
-        <span className="text-[15px] text-muted-foreground">{formatStatus(member.status)}</span>
         {member.userId && member.status === "ACTIVE" ? (
           <label className="flex items-center gap-2 text-xs text-muted-foreground">
             <Switch
               checked={member.availableForScheduling}
-              disabled={!canEditAvailability || !canManageScheduling || availabilityPending}
+              disabled={!canEditAvailability || availabilityPending}
               onCheckedChange={(available) => {
+                if (available === member.availableForScheduling) return;
                 const formData = new FormData();
                 formData.append("userId", member.userId!);
                 formData.append("establishmentId", member.establishmentId);
@@ -109,6 +129,27 @@ export function MemberRow({
             />
             {member.availableForScheduling ? "Available for appointments" : "Unavailable for appointments"}
           </label>
+        ) : null}
+        {member.userId && member.status === "ACTIVE" ? (
+          <label className="flex items-center gap-2 text-xs text-muted-foreground">
+            <Switch
+              checked={member.visibleForScheduling !== false}
+              disabled={!canEditVisibility || visibilityPending}
+              onCheckedChange={(visible) => {
+                if (visible === (member.visibleForScheduling !== false)) return;
+                const formData = new FormData();
+                formData.append("userId", member.userId!);
+                formData.append("establishmentId", member.establishmentId);
+                formData.append("visible", String(visible));
+                startTransition(() => visibilityAction(formData));
+              }}
+              size="sm"
+            />
+            {member.visibleForScheduling !== false ? "Visible on schedule" : "Hidden from schedule"}
+          </label>
+        ) : null}
+        {!member.userId || member.status !== "ACTIVE" ? (
+          <span className="text-xs text-muted-foreground">Not configurable</span>
         ) : null}
       </div>
       <div className="flex flex-col items-end gap-2">
@@ -190,6 +231,15 @@ export function MemberRow({
 
 function formatStatus(status: TeamUserSummary["status"]): string {
   return status.charAt(0) + status.slice(1).toLowerCase();
+}
+
+function statusBadgeClass(status: TeamUserSummary["status"]): string {
+  const tone = status === "ACTIVE"
+    ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-700"
+    : status === "PENDING"
+      ? "border-amber-500/20 bg-amber-500/10 text-amber-700"
+      : "border-slate-500/20 bg-slate-500/10 text-slate-700";
+  return `inline-flex rounded-full border px-2.5 py-1 text-xs font-semibold uppercase tracking-wide ${tone}`;
 }
 
 function initials(name: string): string {

@@ -15,6 +15,7 @@ export type SchedulingMemberViewModel = Readonly<{
   imageUrl: string | null;
   isOwner: boolean;
   availableForScheduling: boolean;
+  visibleForScheduling?: boolean;
 }>;
 
 export type SchedulingCustomerViewModel = Readonly<{

@@ -1,6 +1,6 @@
 /** @vitest-environment jsdom */
-import { render } from "@testing-library/react";
-import { describe, it, vi } from "vitest";
+import { render, screen } from "@testing-library/react";
+import { describe, expect, it, vi } from "vitest";
 import { TeamPageView } from "@/contexts/workforce/interfaces/components/team/team-page-view";
 import type { TeamUserSummary } from "@/contexts/workforce/application/model/team.read-models";
 
@@ -11,6 +11,12 @@ vi.mock("next/navigation", () => ({
     push: routerPush,
   }),
 }));
+
+const switches = () =>
+  screen.getAllByRole("switch").map((el) => ({
+    el,
+    disabled: el.getAttribute("data-disabled") !== null,
+  }));
 
 describe("TeamPageView", () => {
   const member = {
@@ -87,6 +93,76 @@ describe("TeamPageView", () => {
         currentUserId={currentUser.userId}
       />,
     );
+  });
 
+  it("enables the owner to edit its own availability and everyone else's", () => {
+    render(
+      <TeamPageView
+        establishmentId="66666666-6666-4666-8666-666666666666"
+        members={[currentUser, member]}
+        canManageRoles={true}
+        canInviteMembers={true}
+        canRemoveMembers={true}
+        canCancelInvitations={true}
+        currentUserId={currentUser.userId}
+        currentUserIsOwner={true}
+        canManageOwnAvailability={true}
+        canManageOtherAvailability={true}
+      />,
+    );
+
+    const all = switches();
+    expect(all).toHaveLength(4);
+    expect(all.every(({ disabled }) => disabled === false)).toBe(true);
+  });
+
+  it("prevents a non-owner from editing the owner's availability", () => {
+    render(
+      <TeamPageView
+        establishmentId="66666666-6666-4666-8666-666666666666"
+        members={[currentUser, member]}
+        canManageRoles={true}
+        canInviteMembers={true}
+        canRemoveMembers={true}
+        canCancelInvitations={true}
+        currentUserId={member.userId}
+        currentUserIsOwner={false}
+        canManageOwnAvailability={true}
+        canManageOtherAvailability={true}
+      />,
+    );
+
+    const all = switches();
+    expect(all).toHaveLength(4);
+    // The worker can edit its own row (manage_self) and others' (manage_all),
+    // but never the owner's row.
+    expect(all[0].disabled).toBe(true);
+    expect(all[1].disabled).toBe(true);
+    expect(all[2].disabled).toBe(false);
+    expect(all[3].disabled).toBe(false);
+  });
+
+  it("lets a worker with manage_self edit only its own availability", () => {
+    render(
+      <TeamPageView
+        establishmentId="66666666-6666-4666-8666-666666666666"
+        members={[currentUser, member]}
+        canManageRoles={true}
+        canInviteMembers={true}
+        canRemoveMembers={true}
+        canCancelInvitations={true}
+        currentUserId={member.userId}
+        currentUserIsOwner={false}
+        canManageOwnAvailability={true}
+        canManageOtherAvailability={false}
+      />,
+    );
+
+    const all = switches();
+    expect(all).toHaveLength(4);
+    expect(all[0].disabled).toBe(true);
+    expect(all[1].disabled).toBe(true);
+    expect(all[2].disabled).toBe(false);
+    expect(all[3].disabled).toBe(false);
   });
 });

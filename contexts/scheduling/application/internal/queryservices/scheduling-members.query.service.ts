@@ -6,23 +6,20 @@ import type { SchedulingMemberViewModel } from "../../model/scheduling-page-data
 export async function loadSchedulingMembers(
   establishmentId: string,
   organizationId: string,
+  includeHidden = false,
 ): Promise<SchedulingMemberViewModel[]> {
-  try {
-    const gateway = new SchedulingApiGateway(organizationId);
-    const employees = await gateway.getSchedulingEmployees(establishmentId);
-    return employees.map((employee) => ({
-      id: employee.userId,
-      userId: employee.userId,
-      name: employee.name,
-      email: "",
-      role: "",
-      status: employee.availableForScheduling ? "AVAILABLE" : "UNAVAILABLE",
-      imageUrl: employee.imageUrl,
-      isOwner: employee.isOwner,
-      availableForScheduling: employee.availableForScheduling,
-    }));
-  } catch (error) {
-    console.error("Failed to load scheduling employees:", error);
-    return [];
-  }
+  const gateway = new SchedulingApiGateway(organizationId);
+  const employees = await gateway.getSchedulingEmployees(establishmentId);
+  return employees.filter((employee) => includeHidden || employee.visibleForScheduling !== false).map((employee) => ({
+    id: employee.userId,
+    userId: employee.userId,
+    name: employee.name,
+    email: "",
+    role: "",
+    status: employee.availableForScheduling ? "AVAILABLE" : "UNAVAILABLE",
+    imageUrl: employee.imageUrl,
+    isOwner: employee.isOwner,
+    availableForScheduling: employee.availableForScheduling,
+    visibleForScheduling: employee.visibleForScheduling,
+  }));
 }

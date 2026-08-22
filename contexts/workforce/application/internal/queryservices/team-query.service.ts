@@ -110,8 +110,8 @@ export class TeamQueryServiceImpl implements TeamQueryService {
   }
 }
 
-export function createTeamQueryService(token?: string): TeamQueryService {
-  return new TeamQueryServiceImpl(new TeamApiGateway(token));
+export function createTeamQueryService(token?: string, organizationId?: string): TeamQueryService {
+  return new TeamQueryServiceImpl(new TeamApiGateway(token, organizationId));
 }
 
 function toTeamUserSummary(

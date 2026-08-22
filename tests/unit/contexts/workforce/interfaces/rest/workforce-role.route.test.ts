@@ -35,6 +35,17 @@ vi.mock(
   () => ({ createWorkforceRoleQueryService: mocks.serviceFactory }),
 );
 
+vi.mock(
+  "@/contexts/business/application/internal/queryservices/business-workspace-query.service",
+  () => ({
+    createBusinessWorkspaceQueryService: () => ({
+      getHeaderViewModel: vi.fn().mockResolvedValue({
+        organization: { id: "44444444-4444-4444-8444-444444444444" },
+      }),
+    }),
+  }),
+);
+
 describe("workforce role routes", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -79,6 +90,10 @@ describe("workforce role routes", () => {
         position: 1,
       },
     ]);
+    expect(mocks.serviceFactory).toHaveBeenCalledWith(
+      "access-token",
+      "44444444-4444-4444-8444-444444444444",
+    );
   });
 
   it("should list supported permissions publicly", async () => {
@@ -89,6 +104,8 @@ describe("workforce role routes", () => {
     expect(body).toEqual([
       "scheduling:read",
       "scheduling:manage",
+      "availability:manage_self",
+      "availability:manage_all",
       "catalog:read",
       "catalog:manage",
       "crm:read",

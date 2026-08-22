@@ -5,34 +5,34 @@ import { createBusinessWorkspaceQueryService } from "@/contexts/business/applica
 import { getWorkspaceEstablishment, hasEstablishmentPermission } from "@/contexts/shared/application/services/workspace-establishment-permissions";
 import { SchedulingApiGateway } from "../../infrastructure/gateways/scheduling-api.gateway";
 
-const availabilitySchema = z.object({
+const visibilitySchema = z.object({
   userId: z.string().uuid(),
   establishmentId: z.string().uuid(),
-  available: z.enum(["true", "false"]).transform((value) => value === "true"),
+  visible: z.enum(["true", "false"]).transform((value) => value === "true"),
 });
 
-export type UpdateEmployeeAvailabilityState = {
+export type UpdateEmployeeVisibilityState = {
   status: "idle" | "success" | "error";
   error: string;
 };
 
-export async function updateEmployeeAvailabilityAction(
-  _previous: UpdateEmployeeAvailabilityState,
+export async function updateEmployeeVisibilityAction(
+  _previous: UpdateEmployeeVisibilityState,
   formData: FormData,
 ) {
-  const parsed = availabilitySchema.safeParse({
+  const parsed = visibilitySchema.safeParse({
     userId: formData.get("userId"),
     establishmentId: formData.get("establishmentId"),
-    available: formData.get("available"),
+    visible: formData.get("visible"),
   });
-  if (!parsed.success) return { status: "error", error: "Invalid availability data." } as const;
+  if (!parsed.success) return { status: "error", error: "Invalid scheduling visibility data." } as const;
 
   const workspace = await createBusinessWorkspaceQueryService().getHeaderViewModel({
     establishmentId: parsed.data.establishmentId,
   });
   const establishment = getWorkspaceEstablishment(workspace, parsed.data.establishmentId);
   if (!hasEstablishmentPermission(establishment, "scheduling:manage")) {
-    return { status: "error", error: "You are not authorized to update scheduling availability." } as const;
+    return { status: "error", error: "You are not authorized to update scheduling visibility." } as const;
   }
   const organizationId = establishment?.organizationId ?? workspace.organization?.id;
   if (!organizationId) {
@@ -40,18 +40,17 @@ export async function updateEmployeeAvailabilityAction(
   }
 
   try {
-    await new SchedulingApiGateway(
-      workspace.organization?.id ?? establishment?.organizationId,
-    ).updateEmployeeAvailability(
+    await new SchedulingApiGateway(organizationId).updateEmployeeVisibility(
       parsed.data.userId,
       parsed.data.establishmentId,
-      parsed.data.available,
+      parsed.data.visible,
     );
     return { status: "success", error: "" } as const;
   } catch (error) {
-    const message =
-      error instanceof Error && error.message.trim() ? error.message : "Unable to update availability.";
-    console.error("Failed to update employee availability:", error);
+    const message = error instanceof Error && error.message.trim()
+      ? error.message
+      : "Unable to update scheduling visibility.";
+    console.error("Failed to update scheduling visibility:", error);
     return { status: "error", error: message } as const;
   }
 }

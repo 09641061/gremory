@@ -36,7 +36,7 @@ async function TeamPageContent({ searchParams }: TeamPageProps) {
   const canDeleteInvitation = canManageTeam;
   const canReadRoles = canManageTeam;
 
-  const teamService = createTeamQueryService();
+  const teamService = createTeamQueryService(undefined, workspace.organization?.id);
   const [membersPage, currentMembership] = await Promise.all([
     establishmentId
       ? teamService.list({ organizationId: workspace.organization?.id, establishmentId, size: 100 }).catch(() => null)
@@ -44,16 +44,28 @@ async function TeamPageContent({ searchParams }: TeamPageProps) {
     teamService.getMyMembership(establishmentId ?? undefined).catch(() => null),
   ]);
   const members = mergeCurrentMembership(membersPage?.content ?? [], currentMembership);
+  let schedulingAvailabilityError: string | null = null;
   const schedulingEmployees =
     establishmentId && workspace.organization?.id
-      ? await loadSchedulingMembers(establishmentId, workspace.organization.id)
+       ? await loadSchedulingMembers(establishmentId, workspace.organization.id, true).catch((error: unknown) => {
+          schedulingAvailabilityError =
+            error instanceof Error ? error.message : "Unable to load scheduling availability.";
+          return [];
+        })
       : [];
   const availabilityByUserId = new Map(
     schedulingEmployees.map((employee) => [employee.userId, employee.availableForScheduling]),
   );
+  const visibilityByUserId = new Map(
+    schedulingEmployees.map((employee) => [employee.userId, employee.visibleForScheduling !== false]),
+  );
   const membersWithAvailability = members.map((member) =>
     member.userId && availabilityByUserId.has(member.userId)
-      ? { ...member, availableForScheduling: availabilityByUserId.get(member.userId) === true }
+       ? {
+           ...member,
+           availableForScheduling: availabilityByUserId.get(member.userId) === true,
+           visibleForScheduling: visibilityByUserId.get(member.userId) !== false,
+         }
       : member,
   );
   return (
@@ -66,10 +78,15 @@ async function TeamPageContent({ searchParams }: TeamPageProps) {
       canCancelInvitations={canDeleteInvitation}
       currentUserId={currentMembership?.userId ?? null}
       currentUserIsOwner={workspace.authorization?.role === "OWNER"}
-      canManageScheduling={hasEstablishmentPermission(
+      canManageOwnAvailability={hasEstablishmentPermission(
         getWorkspaceEstablishment(workspace, establishmentId ?? undefined),
-        "scheduling:manage",
+        "availability:manage_self",
       )}
+       canManageOtherAvailability={hasEstablishmentPermission(
+        getWorkspaceEstablishment(workspace, establishmentId ?? undefined),
+        "availability:manage_all",
+       )}
+      availabilityError={schedulingAvailabilityError}
     />
   );
 }

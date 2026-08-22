@@ -2,9 +2,10 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Search, Settings2, UserPlus } from "lucide-react";
+import { Search, Settings2, UserPlus, AlertCircle } from "lucide-react";
 
 import { PageHeader, PageShell } from "@/contexts/shared/interfaces/components/page-shell";
+import { Alert, AlertDescription } from "@/contexts/shared/interfaces/components/ui/alert";
 import { Card, CardContent } from "@/contexts/shared/interfaces/components/ui/card";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import { Input } from "@/contexts/shared/interfaces/components/ui/input";
@@ -22,7 +23,9 @@ export function TeamPageView({
   canCancelInvitations = true,
   currentUserId = null,
   currentUserIsOwner = false,
-  canManageScheduling = false,
+  canManageOwnAvailability = false,
+  canManageOtherAvailability = false,
+  availabilityError = null,
 }: {
   establishmentId: string | null;
   members: TeamUserSummary[];
@@ -32,7 +35,9 @@ export function TeamPageView({
   canCancelInvitations?: boolean;
   currentUserId?: string | null;
   currentUserIsOwner?: boolean;
-  canManageScheduling?: boolean;
+  canManageOwnAvailability?: boolean;
+  canManageOtherAvailability?: boolean;
+  availabilityError?: string | null;
 }) {
   const [filter, setFilter] = useState("");
   const [inviteOpen, setInviteOpen] = useState(false);
@@ -47,6 +52,16 @@ export function TeamPageView({
       ),
     [filter, members],
   );
+
+  const canEditAvailabilityFor = (member: TeamUserSummary) => {
+    if (!member.userId) return false;
+    const isSelf = member.userId === currentUserId;
+    // The owner's availability can only be changed by the owner itself.
+    if (member.isOwner) return currentUserIsOwner;
+    // The owner can manage everyone's availability implicitly.
+    if (currentUserIsOwner) return true;
+    return isSelf ? canManageOwnAvailability : canManageOtherAvailability;
+  };
 
   return (
     <PageShell>
@@ -91,12 +106,19 @@ export function TeamPageView({
 
       <Card>
         <CardContent className="p-0">
-          <div className="min-w-[920px]">
-            <div className="grid grid-cols-[minmax(300px,1.4fr)_minmax(220px,1fr)_minmax(150px,.8fr)_minmax(150px,.55fr)_minmax(170px,.7fr)] border-b border-border/70 bg-muted/30 px-5 py-3 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+          <div className="min-w-[1180px]">
+            {availabilityError ? (
+              <Alert variant="destructive" className="mb-4 rounded-none border-x-0 border-t-0">
+                <AlertCircle className="size-4" />
+                <AlertDescription>{availabilityError}</AlertDescription>
+              </Alert>
+            ) : null}
+            <div className="grid grid-cols-[minmax(300px,1.4fr)_minmax(220px,1fr)_minmax(150px,.8fr)_minmax(120px,.55fr)_minmax(260px,1fr)_minmax(90px,.3fr)] border-b border-border/70 bg-muted/30 px-5 py-3 text-xs font-medium uppercase tracking-wide text-muted-foreground">
               <span>Name</span>
               <span>Email</span>
               <span>Role</span>
               <span>Status</span>
+              <span>Scheduling</span>
               <div className="flex justify-end">
                 <span className="min-w-[116px] text-left" aria-hidden="true" />
               </div>
@@ -108,8 +130,8 @@ export function TeamPageView({
                 canRemoveMembers={canRemoveMembers}
                 canCancelInvitations={canCancelInvitations}
                 isOwner={member.isOwner || (currentUserIsOwner && member.userId !== null && member.userId === currentUserId)}
-                canManageScheduling={canManageScheduling}
-                canEditAvailability={currentUserIsOwner && member.isOwner === true}
+                canEditAvailability={canEditAvailabilityFor(member)}
+                canEditVisibility={canEditAvailabilityFor(member)}
               />
             ))}
             {filteredMembers.length === 0 && <div className="px-5 py-10 text-sm text-muted-foreground">No members found.</div>}
