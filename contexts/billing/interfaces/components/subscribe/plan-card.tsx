@@ -26,6 +26,7 @@ interface PlanCardProps {
   buttonDisabled?: boolean;
   onSuccess?: (data: unknown) => void;
   onError?: (error: string) => void;
+  onSelect?: (execute: () => void) => void;
 }
 
 /**
@@ -44,6 +45,7 @@ export function PlanCard({
   buttonDisabled = false,
   onSuccess,
   onError,
+  onSelect,
 }: PlanCardProps) {
   const [isPending, startTransition] = useTransition();
 
@@ -55,7 +57,7 @@ export function PlanCard({
     buttonLabel ??
     (planId === 0 ? "Get Free plan" : planId === 2 ? "Get Premium plan" : "Get Standart plan");
 
-  const handleSelectPlan = () => {
+  const executeSubscriptionChange = () => {
     startTransition(async () => {
       const result = await createSubscriptionAction({
         planId,
@@ -69,6 +71,14 @@ export function PlanCard({
         onError?.(result.error);
       }
     });
+  };
+
+  const handleSelectPlan = () => {
+    if (onSelect) {
+      onSelect(executeSubscriptionChange);
+    } else {
+      executeSubscriptionChange();
+    }
   };
 
   return (

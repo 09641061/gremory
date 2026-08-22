@@ -18,6 +18,8 @@ export interface SubscriptionResponse {
   cancelAtPeriodEnd?: boolean;
   clientSecret?: string | null;
   stripePublicKey?: string | null;
+  pendingPlanId?: number | null;
+  pendingBillingCycle?: string | null;
 }
 
 export interface BillingPlanResponse {

@@ -52,6 +52,19 @@ export function InvoiceView({ currentSubscription, initialInvoices }: InvoiceVie
     }
   };
 
+  React.useEffect(() => {
+    // Force a dynamic fetch on client-side mount to bypass compilation components cache
+    let active = true;
+    setTimeout(() => {
+      if (active) {
+        fetchPage(0);
+      }
+    }, 0);
+    return () => {
+      active = false;
+    };
+  }, []);
+
   const currentPlanName =
     currentSubscription?.planId === 2 ? "Premium" : currentSubscription?.planId === 1 ? "Standard" : "Free";
 

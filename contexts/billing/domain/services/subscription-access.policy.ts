@@ -6,6 +6,8 @@ export type SubscriptionAccessSnapshot = Readonly<{
   billingCycle?: string;
   cancelAtPeriodEnd?: boolean;
   currentPeriodEnd?: string;
+  pendingPlanId?: number | null;
+  pendingBillingCycle?: string | null;
 }>;
 
 /**
