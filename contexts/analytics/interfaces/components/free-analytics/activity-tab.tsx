@@ -4,9 +4,11 @@ import type { StandardAnalyticsDashboard } from "@/contexts/analytics/domain/mod
 import { AnalyticsSection } from "@/contexts/analytics/interfaces/components/free-analytics/charts/analytics-section";
 import { StatBadge, StatusBar, SplitMetricRow } from "@/contexts/analytics/interfaces/components/free-analytics/charts/stat-badge";
 import { TrendChart } from "@/contexts/analytics/interfaces/components/free-analytics/charts/trend-chart";
+import { ComparisonTrendChart } from "@/contexts/analytics/interfaces/components/free-analytics/charts/comparison-trend-chart";
 import {
   findPeakCategoryPoint,
   findPeakTrendPoint,
+  formatMoney,
   formatNumber,
   formatTrendRange,
 } from "@/contexts/analytics/interfaces/components/free-analytics/free-analytics.utils";
@@ -67,6 +69,28 @@ export function ActivityTab({ analytics, standardAnalytics }: ActivityTabProps) 
       </div>
 
       {standardAnalytics ? <div className="grid gap-6 xl:grid-cols-2">
+        <Card className="overflow-hidden rounded-xl border-border bg-card shadow-sm xl:col-span-2">
+          <CardHeader className="border-b border-border/60 pb-4">
+            <CardTitle>Completed vs cancelled</CardTitle>
+            <p className="pt-1 text-xs text-muted-foreground">Daily comparison for the selected period.</p>
+          </CardHeader>
+          <CardContent className="p-5">
+            <ComparisonTrendChart
+              series={[
+                {
+                  label: "Completed",
+                  tone: "text-success",
+                  data: standardAnalytics.completionVsCancellationTrend.map((point) => ({ date: point.date, value: point.completed })),
+                },
+                {
+                  label: "Cancelled",
+                  tone: "text-destructive",
+                  data: standardAnalytics.completionVsCancellationTrend.map((point) => ({ date: point.date, value: point.cancelled })),
+                },
+              ]}
+            />
+          </CardContent>
+        </Card>
         <Card className="overflow-hidden rounded-xl border-border bg-card shadow-sm">
           <CardHeader className="border-b border-border/60 pb-4">
             <CardTitle>Standard performance</CardTitle>
@@ -77,6 +101,21 @@ export function ActivityTab({ analytics, standardAnalytics }: ActivityTabProps) 
           <CardContent className="space-y-4 p-5">
             <StatusBar label="Completed" value={completedAppointments} total={completedAppointments + cancelledAppointments} tone="bg-success" />
             <StatusBar label="Cancelled" value={cancelledAppointments} total={completedAppointments + cancelledAppointments} tone="bg-destructive" />
+            <StatBadge
+              label="Average ticket change"
+              value={`${analytics.averageTicket.delta >= 0 ? "+" : "-"}${formatMoney(Math.abs(analytics.averageTicket.delta))}`}
+              detail={`Current ${formatMoney(analytics.averageTicket.currentValue)} vs previous ${formatMoney(analytics.averageTicket.lastPeriodValue)}`}
+            />
+            <StatBadge
+              label="Appointments created by Assistant"
+              value={formatNumber(standardAnalytics.assistantCreatedAppointments)}
+              detail="Appointments attributed to the Assistant in the selected period"
+            />
+            <StatBadge
+              label="Assistant conversion"
+              value={`${Math.round(standardAnalytics.assistantConversionRate * 100)}%`}
+              detail={`${formatNumber(standardAnalytics.assistantConvertedChats)} of ${formatNumber(standardAnalytics.assistantChats)} chats created an appointment`}
+            />
           </CardContent>
         </Card>
         <Card className="overflow-hidden rounded-xl border-border bg-card shadow-sm">

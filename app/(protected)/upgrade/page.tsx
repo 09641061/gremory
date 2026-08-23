@@ -1,5 +1,6 @@
 import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { Suspense } from "react";
 
 import { SubscribeView } from "@/contexts/billing/interfaces/components/subscribe/subscribe-view";
 import { createCurrentSubscriptionQueryService } from "@/contexts/billing/application/internal/queryservices/current-subscription-query.service";
@@ -7,8 +8,17 @@ import { listPlansByCurrencyQueryService } from "@/contexts/billing/application/
 import { createAppShellQueryService } from "@/contexts/shared/application/internal/queryservices/app-shell-query.service";
 import { createBusinessWorkspaceQueryService } from "@/contexts/business/application/internal/queryservices/business-workspace-query.service";
 import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-session-cookie";
+import { PageLoading } from "@/contexts/shared/interfaces/components/page-loading";
 
-export default async function UpgradePage() {
+export default function UpgradePage() {
+  return (
+    <Suspense fallback={<PageLoading />}>
+      <UpgradePageContent />
+    </Suspense>
+  );
+}
+
+async function UpgradePageContent() {
   // Read outside any cached scope: the session is per-request.
   const accessToken = (await cookies()).get(iamSessionCookies.accessToken)?.value;
   const requestHeaders = await headers();

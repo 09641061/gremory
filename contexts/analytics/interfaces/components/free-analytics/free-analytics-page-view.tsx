@@ -4,6 +4,7 @@ import { useState } from "react";
 
 import { PageHeader, PageShell } from "@/contexts/shared/interfaces/components/page-shell";
 import { Tabs, TabsList, TabsTrigger } from "@/contexts/shared/interfaces/components/ui/tabs";
+import { Alert, AlertDescription, AlertTitle } from "@/contexts/shared/interfaces/components/ui/alert";
 import type { FreeAnalyticsDashboard } from "@/contexts/analytics/interfaces/view-models/free-analytics.view-model";
 import type { StandardAnalyticsDashboard } from "@/contexts/analytics/domain/model/standard-analytics-dashboard";
 import { FreeAnalyticsErrorState } from "@/contexts/analytics/interfaces/components/free-analytics/charts/analytics-section";
@@ -15,13 +16,20 @@ import { FrictionTab } from "./friction-tab";
 interface FreeAnalyticsPageViewProps {
   analytics?: FreeAnalyticsDashboard | null;
   errorMessage?: string | null;
+  noticeMessage?: string | null;
   standardRange?: { from: string; to: string };
   standardAnalytics?: StandardAnalyticsDashboard;
 }
 
 type AnalyticsGroup = "activity" | "revenue" | "rankings" | "friction";
 
-export function FreeAnalyticsPageView({ analytics, errorMessage, standardRange, standardAnalytics }: FreeAnalyticsPageViewProps) {
+export function FreeAnalyticsPageView({
+  analytics,
+  errorMessage,
+  noticeMessage,
+  standardRange,
+  standardAnalytics,
+}: FreeAnalyticsPageViewProps) {
   const [selectedGroup, setSelectedGroup] = useState<AnalyticsGroup>("activity");
 
   if (!analytics) {
@@ -80,10 +88,17 @@ export function FreeAnalyticsPageView({ analytics, errorMessage, standardRange, 
         }
       />
 
+      {noticeMessage ? (
+        <Alert variant="destructive" className="border-destructive/20 bg-destructive/10">
+          <AlertTitle>Range adjusted</AlertTitle>
+          <AlertDescription>{noticeMessage}</AlertDescription>
+        </Alert>
+      ) : null}
+
       {selectedGroup === "activity" ? <ActivityTab analytics={analytics} standardAnalytics={standardAnalytics} /> : null}
       {selectedGroup === "revenue" ? <RevenueTab analytics={analytics} /> : null}
       {selectedGroup === "rankings" ? <RankingsTab analytics={analytics} /> : null}
-      {selectedGroup === "friction" ? <FrictionTab analytics={analytics} /> : null}
+      {selectedGroup === "friction" ? <FrictionTab analytics={analytics} standardAnalytics={standardAnalytics} /> : null}
     </PageShell>
   );
 }

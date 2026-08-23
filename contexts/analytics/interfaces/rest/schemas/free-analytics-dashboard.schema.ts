@@ -112,6 +112,10 @@ export const standardAnalyticsDashboardSchema = freeAnalyticsDashboardSchema
   .extend({
     from: z.string(),
     to: z.string(),
+    assistantCreatedAppointments: z.number(),
+    assistantChats: z.number(),
+    assistantConvertedChats: z.number(),
+    assistantConversionRate: z.number(),
     completedAppointments: z.number(),
     cancelledAppointments: z.number(),
     noShowAppointments: z.number(),
@@ -121,4 +125,10 @@ export const standardAnalyticsDashboardSchema = freeAnalyticsDashboardSchema
       cancelled: z.number(),
     })),
     leadTimeTrend: z.array(analyticsTrendPointSchema),
+    cancellationReasons: z.array(z.object({
+      rank: z.number(),
+      reason: z.string(),
+      cancellationsCount: z.number(),
+      rate: z.number(),
+    })),
   });

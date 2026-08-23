@@ -31,6 +31,7 @@ async function AnalyticsPageContent({
   let analytics: FreeAnalyticsDashboard | null = null;
   let standardAnalytics: StandardAnalyticsDashboard | undefined;
   let errorMessage = "Unable to load analytics.";
+  let noticeMessage: string | undefined;
   let standardRange: { from: string; to: string } | undefined;
   const cookieStore = await cookies();
   const accessToken = cookieStore.get(iamSessionCookies.accessToken)?.value ?? null;
@@ -57,7 +58,20 @@ async function AnalyticsPageContent({
       analytics = await createFreeAnalyticsQueryService().handle({ accessToken });
     }
   } catch (error) {
-    errorMessage = error instanceof Error ? error.message : errorMessage;
+    const message = error instanceof Error ? error.message : errorMessage;
+    if (isStandardRangeLimitError(message)) {
+      noticeMessage = "The selected range exceeds the 90-day limit. Showing the default 30-day range instead.";
+      try {
+        const standard = await getStandardAnalyticsDashboard({ accessToken });
+        standardAnalytics = standard;
+        analytics = toFreeCompatibleDashboard(standard);
+        standardRange = { from: standard.from, to: standard.to };
+      } catch (fallbackError) {
+        errorMessage = fallbackError instanceof Error ? fallbackError.message : errorMessage;
+      }
+    } else {
+      errorMessage = message;
+    }
   }
 
   return (
@@ -65,9 +79,14 @@ async function AnalyticsPageContent({
       analytics={analytics}
       standardAnalytics={standardAnalytics}
       errorMessage={analytics ? undefined : errorMessage}
+      noticeMessage={noticeMessage}
       standardRange={standardRange}
     />
   );
+}
+
+function isStandardRangeLimitError(message: string) {
+  return message.toLowerCase().includes("standard analytics range cannot exceed 90 days");
 }
 
 function toFreeCompatibleDashboard(standard: StandardAnalyticsDashboard): FreeAnalyticsDashboard {
