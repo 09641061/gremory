@@ -22,8 +22,8 @@ export class CrmCommandServiceImpl implements CrmCommandService {
     return this.gateway.deleteCustomer(command);
   }
 
-  resolveDocument(dni?: string, ruc?: string): Promise<ResolvedCustomerData> {
-    return this.gateway.resolveDocument(dni, ruc);
+  resolveDocument(establishmentId: string, dni?: string, ruc?: string): Promise<ResolvedCustomerData> {
+    return this.gateway.resolveDocument(establishmentId, dni, ruc);
   }
 }
 
