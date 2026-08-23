@@ -1,5 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/contexts/shared/interfaces/components/ui/card";
 import type { FreeAnalyticsDashboard } from "@/contexts/analytics/interfaces/view-models/free-analytics.view-model";
+import type { StandardAnalyticsDashboard } from "@/contexts/analytics/domain/model/standard-analytics-dashboard";
 import { AnalyticsSection } from "@/contexts/analytics/interfaces/components/free-analytics/charts/analytics-section";
 import { StatBadge, StatusBar, SplitMetricRow } from "@/contexts/analytics/interfaces/components/free-analytics/charts/stat-badge";
 import { TrendChart } from "@/contexts/analytics/interfaces/components/free-analytics/charts/trend-chart";
@@ -12,13 +13,15 @@ import {
 
 interface ActivityTabProps {
   analytics: FreeAnalyticsDashboard;
+  standardAnalytics?: StandardAnalyticsDashboard;
 }
 
-export function ActivityTab({ analytics }: ActivityTabProps) {
+export function ActivityTab({ analytics, standardAnalytics }: ActivityTabProps) {
+  const completedAppointments = standardAnalytics?.completedAppointments ?? analytics.completedAppointmentsLastSevenDays;
+  const cancelledAppointments = standardAnalytics?.cancelledAppointments ?? analytics.cancelledAppointmentsLastSevenDays;
+  const noShowAppointments = standardAnalytics?.noShowAppointments ?? analytics.noShowAppointmentsLastSevenDays;
   const statusTotal =
-    analytics.completedAppointmentsLastSevenDays +
-    analytics.cancelledAppointmentsLastSevenDays +
-    analytics.noShowAppointmentsLastSevenDays;
+    completedAppointments + cancelledAppointments + noShowAppointments;
   const statusRange = formatTrendRange(
     analytics.appointmentsTrend[0]?.date,
     analytics.appointmentsTrend.at(-1)?.date,
@@ -45,23 +48,51 @@ export function ActivityTab({ analytics }: ActivityTabProps) {
           </CardHeader>
 
           <CardContent className="space-y-4 p-5">
-            <StatusBar label="Completed" value={analytics.completedAppointmentsLastSevenDays} total={statusTotal} tone="bg-success" />
-            <StatusBar label="Cancelled" value={analytics.cancelledAppointmentsLastSevenDays} total={statusTotal} tone="bg-destructive" />
+            <StatusBar label="Completed" value={completedAppointments} total={statusTotal} tone="bg-success" />
+            <StatusBar label="Cancelled" value={cancelledAppointments} total={statusTotal} tone="bg-destructive" />
             <StatusBar
               label="No show"
-              value={analytics.noShowAppointmentsLastSevenDays}
+              value={noShowAppointments}
               total={statusTotal}
               tone="bg-warning"
               inactiveTone="bg-muted"
             />
             <p className="text-xs text-muted-foreground">
               {statusTotal > 0
-                ? `${statusTotal} final status events captured in the last 7 days.`
-                : "No final appointment status events captured in the last 7 days."}
+                ? `${statusTotal} final status events captured in the selected period.`
+                : "No final appointment status events captured in the selected period."}
             </p>
           </CardContent>
         </Card>
       </div>
+
+      {standardAnalytics ? <div className="grid gap-6 xl:grid-cols-2">
+        <Card className="overflow-hidden rounded-xl border-border bg-card shadow-sm">
+          <CardHeader className="border-b border-border/60 pb-4">
+            <CardTitle>Standard performance</CardTitle>
+            <p className="pt-1 text-xs text-muted-foreground">
+              Completion and cancellation trend for {standardAnalytics.from} to {standardAnalytics.to}.
+            </p>
+          </CardHeader>
+          <CardContent className="space-y-4 p-5">
+            <StatusBar label="Completed" value={completedAppointments} total={completedAppointments + cancelledAppointments} tone="bg-success" />
+            <StatusBar label="Cancelled" value={cancelledAppointments} total={completedAppointments + cancelledAppointments} tone="bg-destructive" />
+          </CardContent>
+        </Card>
+        <Card className="overflow-hidden rounded-xl border-border bg-card shadow-sm">
+          <CardHeader className="border-b border-border/60 pb-4">
+            <CardTitle>Lead time</CardTitle>
+            <p className="pt-1 text-xs text-muted-foreground">Average hours between booking and appointment.</p>
+          </CardHeader>
+          <CardContent className="p-5">
+            <StatBadge
+              label="Average lead time"
+              value={`${averageLeadTime(standardAnalytics.leadTimeTrend).toFixed(1)} h`}
+              detail="Calculated from appointments in the selected period"
+            />
+          </CardContent>
+        </Card>
+      </div> : null}
 
       <div className="grid gap-6 xl:grid-cols-3">
         <Card className="overflow-hidden rounded-xl border-border bg-card shadow-sm">
@@ -99,4 +130,9 @@ export function ActivityTab({ analytics }: ActivityTabProps) {
       </div>
     </AnalyticsSection>
   );
+}
+
+function averageLeadTime(points: Array<{ value: number }>): number {
+  if (points.length === 0) return 0;
+  return points.reduce((total, point) => total + point.value, 0) / points.length;
 }
