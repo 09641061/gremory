@@ -7,5 +7,5 @@ export interface CrmCommandService {
   registerCustomer(command: RegisterCustomerCommand): Promise<CustomerResponse>;
   updateCustomer(command: UpdateCustomerCommand): Promise<CustomerResponse>;
   deleteCustomer(command: DeleteCustomerCommand): Promise<void>;
-  resolveDocument(dni?: string, ruc?: string): Promise<ResolvedCustomerData>;
+  resolveDocument(establishmentId: string, dni?: string, ruc?: string): Promise<ResolvedCustomerData>;
 }

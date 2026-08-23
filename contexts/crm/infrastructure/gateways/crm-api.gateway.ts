@@ -65,9 +65,15 @@ export class CrmApiGateway implements CrmCommandService, CrmQueryService {
     );
   }
 
-  async resolveDocument(dni?: string, ruc?: string, token?: string): Promise<ResolvedCustomerData> {
+  async resolveDocument(
+    establishmentId: string,
+    dni?: string,
+    ruc?: string,
+    token?: string
+  ): Promise<ResolvedCustomerData> {
     const authToken = await resolveAccessToken(token);
     const query = new URLSearchParams();
+    query.append("establishmentId", establishmentId);
     if (dni) query.append("dni", dni);
     if (ruc) query.append("ruc", ruc);
     

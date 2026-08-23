@@ -18,7 +18,7 @@ export interface TeamUserSummary {
     permissions: ReadonlyArray<string>;
   }>;
   organizationId: string;
-  establishmentId: string;
+  establishmentId: string | null;
   establishmentName: string | null;
   status: WorkforceUserStatus;
   hasAcceptedInvitation: boolean;

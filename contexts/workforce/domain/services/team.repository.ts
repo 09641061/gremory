@@ -35,8 +35,8 @@ export interface TeamUserCriteria {
 export interface TeamInvitationPreview {
   organizationId: TeamOrganizationId;
   organizationName: string;
-  establishmentId: TeamEstablishmentId;
-  establishmentName: string;
+  establishmentId: TeamEstablishmentId | null;
+  establishmentName: string | null;
   maskedEmail: string;
   status: "PENDING" | "ACCEPTED" | "REMOVED";
   expiresAt: Date;

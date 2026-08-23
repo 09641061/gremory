@@ -66,7 +66,14 @@ export class TeamApiGateway implements TeamRepository {
     );
     const resource = teamPageResourceSchema.parse(response);
     return {
-      ...resource,
+      number: resource.page,
+      size: resource.size,
+      totalElements: resource.totalElements,
+      totalPages: resource.totalPages,
+      first: resource.page === 0,
+      last: resource.totalPages === 0 || resource.page >= resource.totalPages - 1,
+      numberOfElements: resource.content.length,
+      empty: resource.content.length === 0,
       content: resource.content.map(toTeamUser),
     };
   }
@@ -87,7 +94,9 @@ export class TeamApiGateway implements TeamRepository {
       userId: resource.userId ? createTeamUserId(resource.userId) : null,
       organizationId: createTeamOrganizationId(resource.organizationId),
       organizationName: resource.organizationName,
-      establishmentId: createTeamEstablishmentId(resource.establishmentId),
+       establishmentId: resource.establishmentId
+         ? createTeamEstablishmentId(resource.establishmentId)
+         : null,
       establishmentName: resource.establishmentName,
       status: resource.status,
       roles: (resource.roles ?? []).map(toTeamRoleSummary),

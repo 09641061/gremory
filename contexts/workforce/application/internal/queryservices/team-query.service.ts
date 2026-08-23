@@ -77,7 +77,7 @@ export class TeamQueryServiceImpl implements TeamQueryService {
       ...(membership.isOwner ? { isOwner: true } : {}),
       roles,
       organizationId: membership.organizationId.value,
-      establishmentId: membership.establishmentId.value,
+      establishmentId: membership.establishmentId?.value ?? null,
       establishmentName: membership.establishmentName,
       status: membership.status,
       hasAcceptedInvitation: membership.status === "ACTIVE" || membership.status === "REMOVED",

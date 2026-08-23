@@ -28,4 +28,18 @@ describe("AssistantChatMessageBubble", () => {
     expect(screen.getByText("code")).toBeVisible();
     expect(screen.getByTestId("assistant-avatar")).toBeVisible();
   });
+
+  it("normalizes an inline first bullet after an introduction", () => {
+    const message: AssistantMessageViewModel = {
+      id: "message-2",
+      role: "assistant",
+      content: "Para agendar necesito: - El servicio\n- El empleado\n- La fecha",
+      createdAt: "2026-07-29T00:00:00.000Z",
+    };
+
+    render(<AssistantChatMessageBubble message={message} />);
+
+    expect(screen.getAllByRole("listitem")).toHaveLength(3);
+    expect(screen.getByText("El servicio")).toBeVisible();
+  });
 });

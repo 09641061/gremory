@@ -9,7 +9,11 @@ import type { AssistantMessageViewModel } from "@/contexts/assistant/interfaces/
 import { AssistantAvatar } from "@/contexts/shared/interfaces/components/kodu/kodu-avatar";
 
 function normalizeAssistantMarkdownContent(content: string): string {
-  const normalizedLines = content.replace(/\r\n/g, "\n").split("\n");
+  const normalizedLines = content
+    .replace(/\r\n/g, "\n")
+    // Keep a list marker from being parsed as text after an introductory colon.
+    .replace(/([:：])\s+([-*])\s+(?=\S)/g, "$1\n\n$2 ")
+    .split("\n");
 
   return normalizedLines
     .map((line) => {

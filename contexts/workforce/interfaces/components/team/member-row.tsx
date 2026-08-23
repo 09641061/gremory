@@ -112,7 +112,7 @@ export function MemberRow({
         <span className={statusBadgeClass(member.status)}>{formatStatus(member.status)}</span>
       </div>
       <div className="flex flex-col gap-1.5 justify-center">
-        {member.userId && member.status === "ACTIVE" ? (
+        {member.userId && member.establishmentId && member.status === "ACTIVE" ? (
           <label className="flex items-center gap-2 text-xs text-muted-foreground">
             <Switch
               checked={member.availableForScheduling}
@@ -130,7 +130,7 @@ export function MemberRow({
             {member.availableForScheduling ? "Available for appointments" : "Unavailable for appointments"}
           </label>
         ) : null}
-        {member.userId && member.status === "ACTIVE" ? (
+        {member.userId && member.establishmentId && member.status === "ACTIVE" ? (
           <label className="flex items-center gap-2 text-xs text-muted-foreground">
             <Switch
               checked={member.visibleForScheduling !== false}

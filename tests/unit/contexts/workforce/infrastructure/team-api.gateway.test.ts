@@ -249,14 +249,10 @@ function pageResource(overrides: Record<string, unknown> = {}) {
       removedAt: null,
       ...overrides,
     }],
-    number: 0,
+    page: 0,
     size: 20,
     totalElements: 1,
     totalPages: 1,
-    first: true,
-    last: true,
-    numberOfElements: 1,
-    empty: false,
   };
 }
 
