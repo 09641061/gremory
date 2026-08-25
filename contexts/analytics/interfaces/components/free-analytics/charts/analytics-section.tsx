@@ -35,9 +35,7 @@ export function FreeAnalyticsErrorState({ message }: { message: string }) {
               </EmptyContent>
             </EmptyHeader>
           </Empty>
-          <p className="text-sm text-muted-foreground">
-            The dashboard contract is wired, but the backend response is still needed for a live snapshot.
-          </p>
+          <p className="text-sm text-muted-foreground">Check your connection or try again later.</p>
         </CardContent>
       </Card>
     </main>

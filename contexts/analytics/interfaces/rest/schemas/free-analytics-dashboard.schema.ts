@@ -102,3 +102,33 @@ export const freeAnalyticsDashboardSchema = z.object({
   cancellationRateByService: z.array(analyticsServiceRateItemSchema),
   noShowRateByService: z.array(analyticsServiceRateItemSchema),
 });
+
+export const standardAnalyticsDashboardSchema = freeAnalyticsDashboardSchema
+  .omit({
+    completedAppointmentsLastSevenDays: true,
+    cancelledAppointmentsLastSevenDays: true,
+    noShowAppointmentsLastSevenDays: true,
+  })
+  .extend({
+    from: z.string(),
+    to: z.string(),
+    assistantCreatedAppointments: z.number(),
+    assistantChats: z.number(),
+    assistantConvertedChats: z.number(),
+    assistantConversionRate: z.number(),
+    completedAppointments: z.number(),
+    cancelledAppointments: z.number(),
+    noShowAppointments: z.number(),
+    completionVsCancellationTrend: z.array(z.object({
+      date: z.string(),
+      completed: z.number(),
+      cancelled: z.number(),
+    })),
+    leadTimeTrend: z.array(analyticsTrendPointSchema),
+    cancellationReasons: z.array(z.object({
+      rank: z.number(),
+      reason: z.string(),
+      cancellationsCount: z.number(),
+      rate: z.number(),
+    })),
+  });
