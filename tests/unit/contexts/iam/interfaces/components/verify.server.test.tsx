@@ -42,6 +42,7 @@ describe("Verify server component", () => {
   it("should render the verification form with an error when magic-link verification fails", async () => {
     // Arrange
     mocks.service.verifyMagicLink.mockRejectedValue(new Error("Expired"));
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
 
     // Act
     const result = await Verify({ searchParams: Promise.resolve({ email: "user@example.com", token: "expired" }) });
@@ -49,6 +50,8 @@ describe("Verify server component", () => {
     // Assert
     expect(result).toBeTruthy();
     expect(redirect).not.toHaveBeenCalled();
+    expect(consoleError).toHaveBeenCalled();
+    consoleError.mockRestore();
   });
 
   it("should use the pending cookie email when the route has no email parameter", async () => {

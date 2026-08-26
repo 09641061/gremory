@@ -1,5 +1,6 @@
 /** @vitest-environment jsdom */
 import { act, renderHook } from "@testing-library/react";
+import { startTransition } from "react";
 import { describe, expect, it, vi, beforeEach } from "vitest";
 
 const mocks = vi.hoisted(() => ({
@@ -57,7 +58,9 @@ describe("useEntityDelete", () => {
     const formData = new FormData();
     formData.append("id", "est-1");
     await act(async () => {
-      result.current.dialogProps.formAction(formData);
+      startTransition(() => {
+        result.current.dialogProps.formAction(formData);
+      });
     });
 
     expect(mocks.refresh).toHaveBeenCalled();
@@ -79,7 +82,9 @@ describe("useEntityDelete", () => {
     const formData = new FormData();
     formData.append("id", "est-1");
     await act(async () => {
-      result.current.dialogProps.formAction(formData);
+      startTransition(() => {
+        result.current.dialogProps.formAction(formData);
+      });
     });
 
     expect(mocks.refresh).not.toHaveBeenCalled();
