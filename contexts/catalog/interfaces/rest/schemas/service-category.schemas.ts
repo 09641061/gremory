@@ -12,3 +12,7 @@ export const updateServiceCategorySchema = z.object({
 
 export type CreateServiceCategoryInput = z.infer<typeof createServiceCategorySchema>;
 export type UpdateServiceCategoryInput = z.infer<typeof updateServiceCategorySchema>;
+
+export const serviceCategoryResponseSchema = z.object({
+  id: z.string().min(1), establishmentId: z.string().min(1), name: z.string().min(1),
+});

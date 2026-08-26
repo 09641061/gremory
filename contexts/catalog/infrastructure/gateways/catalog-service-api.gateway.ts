@@ -18,6 +18,7 @@ import type {
 } from "../../domain/model/commands/catalog-service.commands";
 import { apiConfig } from "@/api.config";
 import { apiClient } from "@/contexts/shared/infrastructure/http/api-client";
+import { catalogServiceResponseSchema } from "../../interfaces/rest/schemas/catalog-service.schemas";
 
 type RawCatalogService = {
   id: string;
@@ -113,7 +114,7 @@ export class CatalogServiceApiGateway
         errorMessage: "Service not found",
       },
     );
-    return mapServiceToEntity(resource);
+    return mapServiceToEntity(catalogServiceResponseSchema.parse(resource));
   }
 
   async create(command: CreateCatalogServiceCommand, token?: string): Promise<CatalogService> {
@@ -127,7 +128,7 @@ export class CatalogServiceApiGateway
         errorMessage: "Failed to create catalog service",
       },
     );
-    return mapServiceToEntity(resource);
+    return mapServiceToEntity(catalogServiceResponseSchema.parse(resource));
   }
 
   async update(command: UpdateCatalogServiceCommand, token?: string): Promise<CatalogService> {
@@ -142,7 +143,7 @@ export class CatalogServiceApiGateway
         errorMessage: "Failed to update service",
       },
     );
-    return mapServiceToEntity(resource);
+    return mapServiceToEntity(catalogServiceResponseSchema.parse(resource));
   }
 
   async changeStatus(command: ChangeCatalogServiceStatusCommand, token?: string): Promise<void> {

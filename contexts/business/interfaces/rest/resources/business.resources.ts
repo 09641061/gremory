@@ -11,7 +11,7 @@ export interface EstablishmentResource {
   name: string;
   photoUrl: string | null;
   timeZone: string | null;
-  ownerAvailableForScheduling: boolean;
+  ownerAvailableForScheduling?: boolean;
 }
 
 export interface PageResource<T> {

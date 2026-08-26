@@ -21,3 +21,10 @@ export const deleteEstablishmentSchema = z.object({
 
 export type CreateEstablishmentInput = z.infer<typeof createEstablishmentSchema>;
 export type UpdateEstablishmentInput = z.infer<typeof updateEstablishmentSchema>;
+
+export const establishmentResponseSchema = z.object({
+  id: z.string().min(1), organizationId: z.string().min(1), name: z.string().min(1),
+  photoUrl: z.string().nullable(), timeZone: z.string().nullable(),
+  // Older business API responses do not include this field; the aggregate defaults it to true.
+  ownerAvailableForScheduling: z.boolean().optional(),
+});

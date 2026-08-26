@@ -19,6 +19,7 @@ import {
 } from "../http/business-api.client";
 import { requireBusinessAccessToken } from "../session/business-session";
 import { apiConfig } from "@/api.config";
+import { establishmentResponseSchema } from "../../interfaces/rest/schemas/establishment.schemas";
 
 export class EstablishmentApiGateway implements EstablishmentRepository {
   constructor(private readonly providedToken?: string) {}
@@ -41,7 +42,7 @@ export class EstablishmentApiGateway implements EstablishmentRepository {
       authToken,
       { "X-Organization-Id": organizationId.value },
     );
-    return toEstablishment(resource);
+    return toEstablishment(establishmentResponseSchema.parse(resource));
   }
 
   async findById(id: EstablishmentId): Promise<Establishment | null> {
@@ -51,7 +52,7 @@ export class EstablishmentApiGateway implements EstablishmentRepository {
         `${apiConfig.routes.establishments}/${encodeURIComponent(id.value)}`,
         authToken
       );
-      return toEstablishment(resource);
+      return toEstablishment(establishmentResponseSchema.parse(resource));
     } catch (error) {
       if (error instanceof BusinessApiError && error.status === 404) return null;
       throw error;
@@ -91,7 +92,7 @@ export class EstablishmentApiGateway implements EstablishmentRepository {
       authToken,
       { "X-Organization-Id": establishment.organizationId.value },
     );
-    return toEstablishment(resource);
+    return toEstablishment(establishmentResponseSchema.parse(resource));
   }
 
   async deletePhoto(id: EstablishmentId): Promise<void> {

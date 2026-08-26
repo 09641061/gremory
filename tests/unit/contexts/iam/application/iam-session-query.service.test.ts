@@ -9,6 +9,7 @@ function dependencies() {
     refreshSession: vi.fn(),
     signOut: vi.fn(),
     verifyMagicLink: vi.fn(),
+    exchangeGoogleCode: vi.fn(),
   };
   const coordinator = vi.fn(
     (

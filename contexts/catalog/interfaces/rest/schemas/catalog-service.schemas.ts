@@ -19,3 +19,10 @@ export const updateCatalogServiceSchema = createCatalogServiceSchema.omit({ esta
 
 export type CreateCatalogServiceInput = z.infer<typeof createCatalogServiceSchema>;
 export type UpdateCatalogServiceInput = z.infer<typeof updateCatalogServiceSchema>;
+
+export const catalogServiceResponseSchema = z.object({
+  id: z.string().min(1), establishmentId: z.string().min(1), name: z.string().min(1), description: z.string(),
+  price: z.number(), durationMinutes: z.number().int(), categoryId: z.string().nullable(),
+  preServiceInstructions: z.string().nullable(), postServiceRecommendations: z.string().nullable(),
+  preparationMinutes: z.number().int(), cleanupMinutes: z.number().int(), status: z.enum(["ACTIVE", "INACTIVE", "DELETED"]),
+});

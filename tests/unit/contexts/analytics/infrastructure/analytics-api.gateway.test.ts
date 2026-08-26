@@ -55,11 +55,28 @@ describe("AnalyticsApiGateway", () => {
     vi.stubGlobal("fetch", fetchMock);
   });
 
-  it("calls the backend analytics endpoint with the bearer token", async () => {
+  it("accepts the documented numeric daily decimal points", async () => {
     const gateway = new AnalyticsApiGateway();
     const result = await gateway.getFreeDashboard("access-token");
 
+    expect(result.weeklyRevenueBalance.dailyTrend).toEqual([]);
     expect(result.completedAppointmentsLastSevenDays).toBe(0);
     expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("rejects a backend decimal serialized as a string", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(jsonResponse({
+      completedAppointmentsLastSevenDays: 0,
+      cancelledAppointmentsLastSevenDays: 0,
+      noShowAppointmentsLastSevenDays: 0,
+      appointmentsTrend: [{ date: "2026-01-01", value: "12.50" }],
+    })));
+
+    await expect(new AnalyticsApiGateway().getFreeDashboard("access-token")).rejects.toThrow();
+  });
+
+  it("preserves RFC 7807 analytics errors", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(jsonResponse({ type: "about:blank", title: "Forbidden", status: 403, detail: "Analytics access denied" }, 403)));
+    await expect(new AnalyticsApiGateway().getFreeDashboard("access-token")).rejects.toMatchObject({ status: 403, message: "Analytics access denied" });
   });
 });

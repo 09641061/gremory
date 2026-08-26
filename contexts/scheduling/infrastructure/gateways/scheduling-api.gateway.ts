@@ -12,6 +12,10 @@ import { SchedulingQueryService } from "../../application/services/scheduling-qu
 import { PageResponse } from "../../application/model/page-response";
 import { apiConfig } from "@/api.config";
 import { ApiError, apiClient } from "@/contexts/shared/infrastructure/http/api-client";
+import {
+  appointmentPageResponseSchema,
+  appointmentResponseSchema,
+} from "../../interfaces/rest/schemas/appointment.schemas";
 
 export class SchedulingApiError extends ApiError {
   constructor(message: string, status: number, details?: unknown) {
@@ -44,7 +48,7 @@ export class SchedulingApiGateway
     token?: string
   ): Promise<Appointment> {
     const authToken = await resolveAccessToken(token);
-    return apiClient.post<Appointment>(
+    const response = await apiClient.post<unknown>(
       apiConfig.routes.scheduling.appointments,
       command,
       {
@@ -54,6 +58,7 @@ export class SchedulingApiGateway
         errorType: SchedulingApiError,
       }
     );
+    return appointmentResponseSchema.parse(response);
   }
 
   async getAppointment(
@@ -61,7 +66,7 @@ export class SchedulingApiGateway
     token?: string
   ): Promise<Appointment> {
     const authToken = await resolveAccessToken(token);
-    return apiClient.get<Appointment>(
+    const response = await apiClient.get<unknown>(
       `${apiConfig.routes.scheduling.appointments}/${encodeURIComponent(id)}`,
       {
         token: authToken,
@@ -70,6 +75,7 @@ export class SchedulingApiGateway
         errorType: SchedulingApiError,
       }
     );
+    return appointmentResponseSchema.parse(response);
   }
 
   async searchAppointments(
@@ -86,7 +92,7 @@ export class SchedulingApiGateway
     params.append("page", String(query.page ?? 0));
     params.append("size", String(query.size ?? 100));
 
-    return apiClient.get<PageResponse<Appointment>>(
+    const response = await apiClient.get<unknown>(
       `${apiConfig.routes.scheduling.appointments}?${params.toString()}`,
       {
         token: authToken,
@@ -95,6 +101,7 @@ export class SchedulingApiGateway
         errorType: SchedulingApiError,
       }
     );
+    return appointmentPageResponseSchema.parse(response);
   }
 
   async deleteAppointment(
@@ -119,7 +126,7 @@ export class SchedulingApiGateway
     token?: string
   ): Promise<Appointment> {
     const authToken = await resolveAccessToken(token);
-    return apiClient.patch<Appointment>(
+    const response = await apiClient.patch<unknown>(
       `${apiConfig.routes.scheduling.appointments}/${encodeURIComponent(id)}/reschedule`,
       command,
       {
@@ -129,6 +136,7 @@ export class SchedulingApiGateway
         errorType: SchedulingApiError,
       }
     );
+    return appointmentResponseSchema.parse(response);
   }
 
   async updateAppointment(
@@ -137,7 +145,7 @@ export class SchedulingApiGateway
     token?: string
   ): Promise<Appointment> {
     const authToken = await resolveAccessToken(token);
-    return apiClient.patch<Appointment>(
+    const response = await apiClient.patch<unknown>(
       `${apiConfig.routes.scheduling.appointments}/${encodeURIComponent(id)}`,
       command,
       {
@@ -147,6 +155,7 @@ export class SchedulingApiGateway
         errorType: SchedulingApiError,
       }
     );
+    return appointmentResponseSchema.parse(response);
   }
 
   async cancelAppointment(
@@ -155,7 +164,7 @@ export class SchedulingApiGateway
     token?: string
   ): Promise<Appointment> {
     const authToken = await resolveAccessToken(token);
-    return apiClient.patch<Appointment>(
+    const response = await apiClient.patch<unknown>(
       `${apiConfig.routes.scheduling.appointments}/${encodeURIComponent(id)}/cancel`,
       command,
       {
@@ -165,6 +174,7 @@ export class SchedulingApiGateway
         errorType: SchedulingApiError,
       }
     );
+    return appointmentResponseSchema.parse(response);
   }
 
   async completeAppointment(
@@ -172,7 +182,7 @@ export class SchedulingApiGateway
     token?: string
   ): Promise<Appointment> {
     const authToken = await resolveAccessToken(token);
-    return apiClient.patch<Appointment>(
+    const response = await apiClient.patch<unknown>(
       `${apiConfig.routes.scheduling.appointments}/${encodeURIComponent(id)}/complete`,
       {},
       {
@@ -182,6 +192,7 @@ export class SchedulingApiGateway
         errorType: SchedulingApiError,
       }
     );
+    return appointmentResponseSchema.parse(response);
   }
 
   async startAppointment(
@@ -189,7 +200,7 @@ export class SchedulingApiGateway
     token?: string
   ): Promise<Appointment> {
     const authToken = await resolveAccessToken(token);
-    return apiClient.patch<Appointment>(
+    const response = await apiClient.patch<unknown>(
       `${apiConfig.routes.scheduling.appointments}/${encodeURIComponent(id)}/start`,
       {},
       {
@@ -199,6 +210,7 @@ export class SchedulingApiGateway
         errorType: SchedulingApiError,
       }
     );
+    return appointmentResponseSchema.parse(response);
   }
 
   async markNoShowAppointment(
@@ -206,7 +218,7 @@ export class SchedulingApiGateway
     token?: string
   ): Promise<Appointment> {
     const authToken = await resolveAccessToken(token);
-    return apiClient.patch<Appointment>(
+    const response = await apiClient.patch<unknown>(
       `${apiConfig.routes.scheduling.appointments}/${encodeURIComponent(id)}/no-show`,
       {},
       {
@@ -216,6 +228,7 @@ export class SchedulingApiGateway
         errorType: SchedulingApiError,
       }
     );
+    return appointmentResponseSchema.parse(response);
   }
 
   async getSchedulingEmployees(
