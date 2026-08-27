@@ -31,6 +31,7 @@ export const apiConfig = Object.freeze({
     invoices: "/api/billing/invoices",
     analytics: Object.freeze({
       free: "/api/analytics/free",
+      standard: "/api/analytics/standard",
     }),
     assistantConversations: "/api/assistant/chats",
     catalogCategories: "/api/catalog/categories",
