@@ -75,6 +75,39 @@ describe("IamApiGateway", () => {
     );
   });
 
+  it("should exchange a URL-encoded Google code and return a session when the code is valid", async () => {
+    // Arrange
+    const session = { accessToken: "a", refreshToken: "r" };
+    const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify(session), { status: 200 }));
+    vi.stubGlobal("fetch", fetchMock);
+    const gateway = new IamApiGateway();
+
+    // Act
+    const result = await gateway.exchangeGoogleCode({ code: "code with spaces" });
+
+    // Assert
+    expect(result).toEqual(session);
+    expect(fetchMock).toHaveBeenCalledWith(
+      "http://localhost:8080/api/v1/auth/google/exchange?code=code%20with%20spaces",
+      { cache: "no-store" },
+    );
+  });
+
+  it("should throw IamApiError with the backend detail when Google code exchange is unauthorized", async () => {
+    // Arrange
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({ detail: "Invalid or expired Google exchange code" }), { status: 401 }),
+    ));
+    const gateway = new IamApiGateway();
+
+    // Act / Assert
+    await expect(gateway.exchangeGoogleCode({ code: "spent-code" })).rejects.toMatchObject({
+      name: "IamApiError",
+      status: 401,
+      message: "Invalid or expired Google exchange code",
+    });
+  });
+
   it("should return a session when the magic-link response is valid", async () => {
     // Arrange
     const session = { accessToken: "a", refreshToken: "r" };

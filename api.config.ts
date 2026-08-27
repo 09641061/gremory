@@ -14,6 +14,7 @@ export const apiConfig = Object.freeze({
       signOut: "/api/v1/auth/sign-out",
       magicLink: "/api/v1/auth/magic-link",
       googleAuthorize: "/api/v1/auth/google/authorize",
+      googleExchange: "/api/v1/auth/google/exchange",
     }),
     profiles: Object.freeze({
       root: "/api/v1/profiles",

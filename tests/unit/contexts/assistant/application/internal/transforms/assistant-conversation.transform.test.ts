@@ -7,12 +7,14 @@ describe("assistant conversation transform", () => {
   it("removes the default assistant greeting from new conversations", () => {
     const conversation = toConversationReadModel({
       id: "conversation-0",
+      userId: "user-1",
       title: "New conversation",
       createdAt: "2026-07-29T00:00:00.000Z",
       updatedAt: "2026-07-29T00:00:00.000Z",
       messages: [
         {
           id: "message-0",
+          sender: "USER",
           role: "ASSISTANT",
           content: "Hello. I am your assistant for business, customers, catalog, and scheduling.",
           createdAt: "2026-07-29T00:00:00.000Z",
@@ -26,18 +28,21 @@ describe("assistant conversation transform", () => {
   it("keeps assistant messages on the left when roles are present", () => {
     const conversation = toConversationReadModel({
       id: "conversation-1",
+      userId: "user-1",
       title: "Test conversation",
       createdAt: "2026-07-29T00:00:00.000Z",
       updatedAt: "2026-07-29T00:00:00.000Z",
       messages: [
         {
           id: "message-1",
+          sender: "USER",
           role: "USER",
           content: "Hello",
           createdAt: "2026-07-29T00:00:00.000Z",
         },
         {
           id: "message-2",
+          sender: "USER",
           role: "ASSISTANT",
           content: "Hello, how can I help you?",
           createdAt: "2026-07-29T00:00:01.000Z",
@@ -52,18 +57,21 @@ describe("assistant conversation transform", () => {
   it("strips internal call tags from assistant messages before exposing them to the UI", () => {
     const conversation = toConversationReadModel({
       id: "conversation-1b",
+      userId: "user-1",
       title: "Test conversation",
       createdAt: "2026-07-29T00:00:00.000Z",
       updatedAt: "2026-07-29T00:00:00.000Z",
       messages: [
         {
           id: "message-1",
+          sender: "USER",
           role: "USER",
           content: "Crea la categoría faciales",
           createdAt: "2026-07-29T00:00:00.000Z",
         },
         {
           id: "message-2",
+          sender: "USER",
           role: "ASSISTANT",
           content:
             "[CALL: createCategory(1f3253fa-f29e-4540-b391-57719f804c2d, faciales)]\n\nLa categoría \"faciales\" ya está creada.",
@@ -79,18 +87,21 @@ describe("assistant conversation transform", () => {
   it("drops assistant messages that only contain internal control tags", () => {
     const conversation = toConversationReadModel({
       id: "conversation-1c",
+      userId: "user-1",
       title: "Test conversation",
       createdAt: "2026-07-29T00:00:00.000Z",
       updatedAt: "2026-07-29T00:00:00.000Z",
       messages: [
         {
           id: "message-1",
+          sender: "USER",
           role: "USER",
           content: "Crea la categoría faciales",
           createdAt: "2026-07-29T00:00:00.000Z",
         },
         {
           id: "message-2",
+          sender: "USER",
           role: "ASSISTANT",
           content: "[CALL: createCategory(1f3253fa-f29e-4540-b391-57719f804c2d, faciales)]",
           createdAt: "2026-07-29T00:00:01.000Z",
@@ -105,24 +116,28 @@ describe("assistant conversation transform", () => {
   it("alternates roles for legacy conversations that arrive flattened", () => {
     const conversation = toConversationReadModel({
       id: "conversation-2",
+      userId: "user-1",
       title: "Legacy conversation",
       createdAt: "2026-07-29T00:00:00.000Z",
       updatedAt: "2026-07-29T00:00:00.000Z",
       messages: [
         {
           id: "message-1",
+          sender: "USER",
           role: "USER",
           content: "Hello",
           createdAt: "2026-07-29T00:00:00.000Z",
         },
         {
           id: "message-2",
+          sender: "USER",
           role: "USER",
           content: "Te ayudo con eso",
           createdAt: "2026-07-29T00:00:01.000Z",
         },
         {
           id: "message-3",
+          sender: "USER",
           role: "USER",
           content: "Gracias",
           createdAt: "2026-07-29T00:00:02.000Z",
@@ -140,24 +155,28 @@ describe("assistant conversation transform", () => {
   it("removes the default greeting before the first real user turn", () => {
     const conversation = toConversationReadModel({
       id: "conversation-4",
+      userId: "user-1",
       title: "Started conversation",
       createdAt: "2026-07-29T00:00:00.000Z",
       updatedAt: "2026-07-29T00:00:02.000Z",
       messages: [
         {
           id: "message-0",
+          sender: "USER",
           role: "ASSISTANT",
           content: "Hello. I am your assistant for business, customers, catalog, and scheduling.",
           createdAt: "2026-07-29T00:00:00.000Z",
         },
         {
           id: "message-1",
+          sender: "USER",
           role: "USER",
           content: "Hello",
           createdAt: "2026-07-29T00:00:01.000Z",
         },
         {
           id: "message-2",
+          sender: "USER",
           role: "ASSISTANT",
           content: "Hello, how can I help you?",
           createdAt: "2026-07-29T00:00:02.000Z",
@@ -181,18 +200,21 @@ describe("assistant conversation transform", () => {
       getMessages: () => [
         {
           id: "message-1",
+          sender: "USER",
           role: "USER",
           content: "Hello",
           createdAt: "2026-07-29T00:00:00.000Z",
         },
         {
           id: "message-2",
+          sender: "USER",
           role: "USER",
           content: "Te ayudo con eso",
           createdAt: "2026-07-29T00:00:01.000Z",
         },
         {
           id: "message-3",
+          sender: "USER",
           role: "USER",
           content: "Gracias",
           createdAt: "2026-07-29T00:00:02.000Z",

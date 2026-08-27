@@ -3,13 +3,22 @@ import "server-only";
 import { cookies } from "next/headers";
 
 import { apiConfig } from "@/api.config";
-import { apiClient } from "@/contexts/shared/infrastructure/http/api-client";
+import {
+  ApiError,
+  apiClient,
+  extractApiErrorMessage,
+} from "@/contexts/shared/infrastructure/http/api-client";
 import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-session-cookie";
+import {
+  assistantConversationPageResponseSchema,
+  assistantConversationResponseSchema,
+} from "../../interfaces/rest/schemas/assistant-chat.schemas";
 
 export type AssistantMessageRole = "USER" | "AGENT" | string;
 
 export interface AssistantConversationSummaryResponse {
   id: string;
+  userId: string;
   title: string | null;
   createdAt: string;
   updatedAt: string;
@@ -17,6 +26,7 @@ export interface AssistantConversationSummaryResponse {
 
 export interface AssistantMessageResponse {
   id: string;
+  sender: string;
   role: AssistantMessageRole;
   content: string;
   createdAt: string;
@@ -88,7 +98,7 @@ export class AssistantApiGateway {
     query.set("page", String(params.page ?? 0));
     query.set("size", String(params.size ?? 20));
 
-    return apiClient.get<PageResponse<AssistantConversationSummaryResponse>>(
+    const response = await apiClient.get<unknown>(
       `${apiConfig.routes.assistantConversations}?${query.toString()}`,
       {
         token: authToken,
@@ -96,6 +106,7 @@ export class AssistantApiGateway {
         errorMessage: "Failed to fetch assistant conversations",
       },
     );
+    return assistantConversationPageResponseSchema.parse(response);
   }
 
   async getConversation(
@@ -104,7 +115,7 @@ export class AssistantApiGateway {
   ): Promise<AssistantConversationResponse> {
     const authToken = await resolveAccessToken(token);
 
-    return apiClient.get<AssistantConversationResponse>(
+    const response = await apiClient.get<unknown>(
       `${apiConfig.routes.assistantConversations}/${encodeURIComponent(id)}`,
       {
         token: authToken,
@@ -112,6 +123,7 @@ export class AssistantApiGateway {
         errorMessage: "Failed to fetch assistant conversation",
       },
     );
+    return assistantConversationResponseSchema.parse(response);
   }
 
   async createConversation(
@@ -120,7 +132,7 @@ export class AssistantApiGateway {
   ): Promise<AssistantConversationResponse> {
     const authToken = await resolveAccessToken(token);
 
-    return apiClient.post<AssistantConversationResponse>(
+    const response = await apiClient.post<unknown>(
       apiConfig.routes.assistantConversations,
       command,
       {
@@ -129,6 +141,7 @@ export class AssistantApiGateway {
         errorMessage: "Failed to create assistant conversation",
       },
     );
+    return assistantConversationResponseSchema.parse(response);
   }
 
   async sendMessage(
@@ -138,7 +151,7 @@ export class AssistantApiGateway {
   ): Promise<AssistantConversationResponse> {
     const authToken = await resolveAccessToken(token);
 
-    return apiClient.post<AssistantConversationResponse>(
+    const response = await apiClient.post<unknown>(
       `${apiConfig.routes.assistantConversations}/${encodeURIComponent(id)}/messages`,
       command,
       {
@@ -147,6 +160,7 @@ export class AssistantApiGateway {
         errorMessage: "Failed to send assistant message",
       },
     );
+    return assistantConversationResponseSchema.parse(response);
   }
 
   async sendMessageStream(
@@ -156,7 +170,7 @@ export class AssistantApiGateway {
   ): Promise<Response> {
     const authToken = await resolveAccessToken(token);
 
-    return fetch(
+    const response = await fetch(
       `${apiClient.buildUrl(apiConfig.routes.assistantConversations)}/${encodeURIComponent(id)}/messages/stream`,
       {
         method: "POST",
@@ -169,6 +183,18 @@ export class AssistantApiGateway {
         body: JSON.stringify(command),
       },
     );
+    if (!response.ok) {
+      const body = await response.text();
+      let message = body;
+      try {
+        const parsed: unknown = JSON.parse(body);
+        message = extractApiErrorMessage(parsed) ?? message;
+      } catch {
+        // Keep the raw response body when the server does not return JSON.
+      }
+      throw new ApiError(message || `Assistant stream failed with status ${response.status}`, response.status);
+    }
+    return response;
   }
 
   async renameConversation(

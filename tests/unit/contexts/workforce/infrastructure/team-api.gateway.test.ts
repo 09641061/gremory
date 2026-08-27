@@ -39,6 +39,10 @@ describe("TeamApiGateway", () => {
     );
     expect(result.content[0]?.status).toBe("PENDING");
     expect(result.content[0]?.canRevokeInvitation).toBe(true);
+    expect(result.numberOfElements).toBe(1);
+    expect(result.first).toBe(true);
+    expect(result.last).toBe(true);
+    expect(result.empty).toBe(false);
   });
 
   it("should accept Google contact emails with a percent in the local part", async () => {
@@ -149,6 +153,31 @@ describe("TeamApiGateway", () => {
     );
   });
 
+  it("should preserve a membership without an establishment", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(jsonResponse(currentMemberResource({
+      establishmentId: null,
+      establishmentName: null,
+    }))));
+
+    const result = await new TeamApiGateway("access-token").getMyMembership();
+
+    expect(result).not.toBeNull();
+    expect(result?.establishmentId).toBeNull();
+    expect(result?.establishmentName).toBeNull();
+  });
+
+  it("should construct the establishment identifier for a membership with an establishment", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(jsonResponse(currentMemberResource({
+      establishmentId,
+      establishmentName: "Main location",
+    }))));
+
+    const result = await new TeamApiGateway("access-token").getMyMembership();
+
+    expect(result?.establishmentId?.value).toBe(establishmentId);
+    expect(result?.establishmentName).toBe("Main location");
+  });
+
   it("should load member organization and establishment access", async () => {
     const fetchMock = vi.fn().mockResolvedValue(jsonResponse({
       active: true,
@@ -229,6 +258,21 @@ describe("TeamApiGateway", () => {
     expect(result.content[0]?.roleId).toBeNull();
   });
 });
+
+function currentMemberResource(overrides: Record<string, unknown> = {}) {
+  return {
+    memberId,
+    userId,
+    email: "employee@example.com",
+    roles: [],
+    organizationId,
+    organizationName: "Naari",
+    establishmentId,
+    establishmentName: "Main location",
+    status: "ACTIVE",
+    ...overrides,
+  };
+}
 
 function pageResource(overrides: Record<string, unknown> = {}) {
   return {

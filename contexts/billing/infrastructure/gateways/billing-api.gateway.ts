@@ -1,9 +1,12 @@
 import "server-only";
 
+import { z } from "zod";
+
 import type { CreateSubscriptionCommand } from "../../domain/model/commands/create-subscription.command";
 import type { CurrencyCode } from "../../domain/model/value-objects/currency";
 import { apiConfig } from "@/api.config";
 import { apiClient } from "@/contexts/shared/infrastructure/http/api-client";
+import { billingPlanResponseSchema, subscriptionResponseSchema } from "../../interfaces/rest/schemas/billing.schemas";
 
 export interface SubscriptionResponse {
   id: string;
@@ -78,43 +81,43 @@ export class BillingApiGateway {
       if (command.cancelUrl) body.cancelUrl = command.cancelUrl;
     }
 
-    return apiClient.post<SubscriptionResponse>(
-      apiConfig.routes.subscriptions,
-      body,
-      { token: accessToken, errorMessage: "Failed to create subscription" },
-    );
+    const response = await apiClient.post<unknown>(apiConfig.routes.subscriptions, body, {
+      token: accessToken, errorMessage: "Failed to create subscription",
+    });
+    return subscriptionResponseSchema.parse(response);
   }
 
   async getPlans(currency?: CurrencyCode): Promise<BillingPlanResponse[]> {
     const query = currency ? `?currency=${encodeURIComponent(currency)}` : "";
 
-    return apiClient.get<BillingPlanResponse[]>(`${apiConfig.routes.plans}${query}`, {
+    const response = await apiClient.get<unknown>(`${apiConfig.routes.plans}${query}`, {
       errorMessage: "Failed to retrieve plans",
     });
+    return z.array(billingPlanResponseSchema).parse(response);
   }
 
   async getCurrentSubscription(accessToken: string): Promise<SubscriptionResponse> {
-    return apiClient.get<SubscriptionResponse>(apiConfig.routes.subscriptions, {
-      token: accessToken,
-      errorMessage: "Failed to retrieve subscription",
+    const response = await apiClient.get<unknown>(apiConfig.routes.subscriptions, {
+      token: accessToken, errorMessage: "Failed to retrieve subscription",
     });
+    return subscriptionResponseSchema.parse(response);
   }
 
   async renewSubscription(
     accessToken: string,
     request: RenewSubscriptionRequest
   ): Promise<SubscriptionResponse> {
-    return apiClient.put<SubscriptionResponse>(apiConfig.routes.subscriptions, request, {
-      token: accessToken,
-      errorMessage: "Failed to renew subscription",
+    const response = await apiClient.put<unknown>(apiConfig.routes.subscriptions, request, {
+      token: accessToken, errorMessage: "Failed to renew subscription",
     });
+    return subscriptionResponseSchema.parse(response);
   }
 
   async cancelSubscription(accessToken: string): Promise<SubscriptionResponse> {
-    return apiClient.delete<SubscriptionResponse>(apiConfig.routes.subscriptions, {
-      token: accessToken,
-      errorMessage: "Failed to cancel subscription",
+    const response = await apiClient.delete<unknown>(apiConfig.routes.subscriptions, {
+      token: accessToken, errorMessage: "Failed to cancel subscription",
     });
+    return subscriptionResponseSchema.parse(response);
   }
 
   async getInvoices(accessToken: string, page = 0, size = 20): Promise<PageResponse<InvoiceResponse>> {

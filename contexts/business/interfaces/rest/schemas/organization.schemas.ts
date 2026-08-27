@@ -14,3 +14,7 @@ export const updateOrganizationSchema = z.object({
 
 export type CreateOrganizationInput = z.infer<typeof createOrganizationSchema>;
 export type UpdateOrganizationInput = z.infer<typeof updateOrganizationSchema>;
+
+export const organizationResponseSchema = z.object({
+  id: z.string().min(1), ownerId: z.string().min(1), name: z.string().min(1), imageUrl: z.string().nullable(),
+});

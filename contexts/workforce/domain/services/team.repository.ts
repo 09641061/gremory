@@ -35,8 +35,9 @@ export interface TeamUserCriteria {
 export interface TeamInvitationPreview {
   organizationId: TeamOrganizationId;
   organizationName: string;
-  establishmentId: TeamEstablishmentId | null;
-  establishmentName: string | null;
+  // Invitation previews always resolve an establishment; only current membership may omit one.
+  establishmentId: TeamEstablishmentId;
+  establishmentName: string;
   maskedEmail: string;
   status: "PENDING" | "ACCEPTED" | "REMOVED";
   expiresAt: Date;
@@ -73,8 +74,8 @@ export interface TeamMembershipContext {
   userId: TeamUserId | null;
   organizationId: TeamOrganizationId;
   organizationName: string;
-  establishmentId: TeamEstablishmentId;
-  establishmentName: string;
+  establishmentId: TeamEstablishmentId | null;
+  establishmentName: string | null;
   status: WorkforceUserStatus;
   roles: Array<{
     id: TeamRoleId;

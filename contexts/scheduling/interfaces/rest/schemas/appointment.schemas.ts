@@ -1,5 +1,19 @@
 import { z } from "zod";
 
+export const appointmentResponseSchema = z.object({
+  id: z.string().min(1), title: z.string(), startsAt: z.string(), endsAt: z.string(),
+  serviceId: z.string().nullable(), customerId: z.string().nullable(), employeeId: z.string().nullable(), establishmentId: z.string().nullable(),
+  status: z.enum(["CONFIRMED", "IN_PROGRESS", "COMPLETED", "CANCELLED", "NO_SHOW"]), createdBy: z.string().nullable(), cancelledBy: z.string().nullable(), deletedBy: z.string().nullable(),
+  cancellationReason: z.string().nullable(), cancelledAt: z.string().nullable(), deletedAt: z.string().nullable(),
+  createdAt: z.string(), updatedAt: z.string(),
+});
+
+export const appointmentPageResponseSchema = z.object({
+  content: z.array(appointmentResponseSchema),
+  pageable: z.object({ pageNumber: z.number().int(), pageSize: z.number().int() }),
+  totalPages: z.number().int().nonnegative(), totalElements: z.number().int().nonnegative(), last: z.boolean(),
+});
+
 export const createAppointmentSchema = z.object({
   title: z
     .string()

@@ -18,6 +18,7 @@ import {
 } from "../http/business-api.client";
 import { requireBusinessAccessToken } from "../session/business-session";
 import { apiConfig } from "@/api.config";
+import { organizationResponseSchema } from "../../interfaces/rest/schemas/organization.schemas";
 
 type OrganizationCreateResponse = OrganizationResource & { message?: string };
 
@@ -48,13 +49,13 @@ export class OrganizationApiGateway implements OrganizationRepository {
       );
     }
 
-    return toOrganization(data as OrganizationResource);
+    return toOrganization(organizationResponseSchema.parse(data));
   }
 
   async findMine(): Promise<Organization> {
     const authToken = await requireBusinessAccessToken(this.providedToken);
     const resource = await businessGet<OrganizationResource>(apiConfig.routes.organizations, authToken);
-    return toOrganization(resource);
+    return toOrganization(organizationResponseSchema.parse(resource));
   }
 
   async findAccessible(): Promise<AccessibleOrganizationResource[]> {
@@ -70,7 +71,7 @@ export class OrganizationApiGateway implements OrganizationRepository {
         `${apiConfig.routes.organizations}/${encodeURIComponent(id.value)}`,
         authToken
       );
-      return toOrganization(resource);
+      return toOrganization(organizationResponseSchema.parse(resource));
     } catch (error) {
       if (error instanceof BusinessApiError && error.status === 404) return null;
       throw error;
@@ -85,7 +86,7 @@ export class OrganizationApiGateway implements OrganizationRepository {
       authToken,
       { "X-Organization-Id": organization.id.value },
     );
-    return toOrganization(resource);
+    return toOrganization(organizationResponseSchema.parse(resource));
   }
 }
 

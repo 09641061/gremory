@@ -15,6 +15,7 @@ import type {
 import type { PageResponse } from "../../domain/services/catalog-service.services";
 import { apiConfig } from "@/api.config";
 import { apiClient } from "@/contexts/shared/infrastructure/http/api-client";
+import { serviceCategoryResponseSchema } from "../../interfaces/rest/schemas/service-category.schemas";
 
 type RawServiceCategory = {
   id: string;
@@ -87,7 +88,7 @@ export class ServiceCategoryApiGateway
         errorMessage: "Failed to create category",
       },
     );
-    return mapCategoryToEntity(resource);
+    return mapCategoryToEntity(serviceCategoryResponseSchema.parse(resource));
   }
 
   async update(command: UpdateServiceCategoryCommand, token?: string): Promise<ServiceCategory> {
@@ -101,7 +102,7 @@ export class ServiceCategoryApiGateway
         errorMessage: "Failed to update category",
       },
     );
-    return mapCategoryToEntity(resource);
+    return mapCategoryToEntity(serviceCategoryResponseSchema.parse(resource));
   }
 
   async delete(command: DeleteServiceCategoryCommand, token?: string): Promise<void> {

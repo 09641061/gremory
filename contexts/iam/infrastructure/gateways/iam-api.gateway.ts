@@ -7,6 +7,7 @@ import type { RequestEmailSignInCommand } from "../../domain/model/commands/requ
 import type { RefreshSessionCommand } from "../../domain/model/commands/refresh-session.command";
 import type { SignOutCommand } from "../../domain/model/commands/sign-out.command";
 import type { VerifyMagicLinkCommand } from "../../domain/model/commands/verify-magic-link.command";
+import type { ExchangeGoogleCodeCommand } from "../../domain/model/commands/exchange-google-code.command";
 import type { IamAuthenticationQueryService } from "../../application/services/iam-authentication-query.service";
 import type { AccessTokenVerification } from "../../application/model/resolved-session";
 import { authenticationSessionSchema } from "../../interfaces/rest/schemas/authentication.schemas";
@@ -98,6 +99,20 @@ export class IamApiGateway
       errorMessage: "Authentication request failed",
       errorType: IamApiError,
     });
+  }
+
+  async exchangeGoogleCode(
+    command: ExchangeGoogleCodeCommand
+  ): Promise<AuthenticationSession> {
+    const session = await apiClient.request<unknown>(
+      `${apiConfig.routes.authentication.googleExchange}?code=${encodeURIComponent(command.code)}`,
+      {
+        errorMessage: "Authentication request failed",
+        errorType: IamApiError,
+      },
+    );
+
+    return authenticationSessionSchema.parse(session);
   }
 
   async verifyMagicLink(

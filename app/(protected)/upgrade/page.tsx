@@ -1,6 +1,6 @@
+import { Suspense } from "react";
 import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
-import { Suspense } from "react";
 
 import { SubscribeView } from "@/contexts/billing/interfaces/components/subscribe/subscribe-view";
 import { createCurrentSubscriptionQueryService } from "@/contexts/billing/application/internal/queryservices/current-subscription-query.service";
@@ -10,6 +10,10 @@ import { createBusinessWorkspaceQueryService } from "@/contexts/business/applica
 import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-session-cookie";
 import { PageLoading } from "@/contexts/shared/interfaces/components/page-loading";
 
+/**
+ * Keep the route shell instant-renderable while request-bound billing data is
+ * resolved in its own Suspense subtree.
+ */
 export default function UpgradePage() {
   return (
     <Suspense fallback={<PageLoading />}>

@@ -89,7 +89,7 @@ export class ApiClient {
     const responseBody = await readResponseBody(response);
     if (!response.ok) {
       throw new ErrorType(
-        extractMessage(responseBody) ??
+        extractApiErrorMessage(responseBody) ??
           errorMessage ??
           `API request failed with status ${response.status}`,
         response.status,
@@ -140,10 +140,20 @@ async function readResponseBody(response: Response): Promise<unknown> {
   }
 }
 
-function extractMessage(body: unknown): string | undefined {
+export function extractApiErrorMessage(body: unknown): string | undefined {
   if (!body || typeof body !== "object") return undefined;
-  const message = (body as Record<string, unknown>).message;
-  return typeof message === "string" ? message : undefined;
+  const record = body as Record<string, unknown>;
+
+  const message = record.message;
+  if (typeof message === "string" && message.length > 0) return message;
+
+  const detail = record.detail;
+  if (typeof detail === "string" && detail.length > 0) return detail;
+
+  const title = record.title;
+  if (typeof title === "string" && title.length > 0) return title;
+
+  return undefined;
 }
 
 function toHeaderRecord(headers?: HeadersInit): Record<string, string> {

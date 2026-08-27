@@ -6,6 +6,7 @@ import type { RequestEmailSignInCommand } from "../../../domain/model/commands/r
 import type { RefreshSessionCommand } from "../../../domain/model/commands/refresh-session.command";
 import type { SignOutCommand } from "../../../domain/model/commands/sign-out.command";
 import type { VerifyMagicLinkCommand } from "../../../domain/model/commands/verify-magic-link.command";
+import type { ExchangeGoogleCodeCommand } from "../../../domain/model/commands/exchange-google-code.command";
 import type { IamAuthenticationCommandService } from "../../../domain/services/iam-authentication-command.service";
 import { IamApiGateway } from "../../../infrastructure/gateways/iam-api.gateway";
 
@@ -34,6 +35,10 @@ export class IamAuthenticationCommandServiceImpl
 
   verifyMagicLink(command: VerifyMagicLinkCommand) {
     return this.gateway.verifyMagicLink(command);
+  }
+
+  exchangeGoogleCode(command: ExchangeGoogleCodeCommand) {
+    return this.gateway.exchangeGoogleCode(command);
   }
 }
 
