@@ -1,0 +1,152 @@
+"use client";
+
+import { useActionState, useEffect, useId, useState } from "react";
+import Link from "next/link";
+import { Store, Plus } from "lucide-react";
+import { createEstablishmentAction } from "../../../actions/establishment.actions";
+import { initialBusinessActionResult } from "../../../actions/business-action-result";
+import { Card, CardContent, CardFooter } from "@/contexts/shared/interfaces/components/ui/card";
+import { Input } from "@/contexts/shared/interfaces/components/ui/input";
+import { Button, buttonVariants } from "@/contexts/shared/interfaces/components/ui/button";
+import { ErrorAlert } from "@/contexts/shared/interfaces/components/error";
+import { Spinner } from "@/contexts/shared/interfaces/components/ui/spinner";
+import { ImageUploadAvatar } from "@/contexts/shared/interfaces/components/image-upload-avatar";
+import { TimeZoneField } from "../time-zone-field";
+
+/**
+ * `showCancel` must stay false during mandatory onboarding (`ESTABLISHMENT_PENDING`):
+ * with no establishment created yet, there is nowhere valid to cancel to -
+ * `/establishments` is not reachable and the guard would just bounce the
+ * account right back here. It is true once onboarding is already completed,
+ * e.g. an owner adding another establishment to an org that already has one.
+ */
+export function CreateEstablishmentForm({
+  organizationId,
+  showCancel = false,
+}: {
+  organizationId: string;
+  showCancel?: boolean;
+}) {
+  const nameHeadingId = useId();
+
+  const [name, setName] = useState("");
+  const [timeZone, setTimeZone] = useState("America/Lima");
+
+  const [state, formAction, pending] = useActionState(
+    createEstablishmentAction,
+    initialBusinessActionResult,
+  );
+
+  const [formResetKey, setFormResetKey] = useState(0);
+
+  useEffect(() => {
+    if (state.status === "error") {
+      setTimeout(() => {
+        setName("");
+        setFormResetKey((k) => k + 1);
+      }, 0);
+    }
+  }, [state.error, state.status]);
+
+  return (
+    <>
+      <ErrorAlert
+        title="Unable to create establishment"
+        message={state.status === "error" && !pending ? state.error : undefined}
+      />
+      <div className="mx-auto w-full max-w-2xl space-y-6">
+        <div>
+          <h1 className="page-title">New establishment</h1>
+          <p className="page-description mt-2">
+            Add a location for your organization.
+          </p>
+        </div>
+
+        <Card className="rounded-xl border-border bg-card shadow-sm overflow-hidden">
+          <form key={formResetKey} action={formAction} className="flex flex-col">
+            <input type="hidden" name="organizationId" value={organizationId} />
+
+            <CardContent className="p-0 flex flex-col">
+              {/* Photo Section */}
+              <div className="flex flex-col border-b border-border">
+                <div className="flex items-center justify-between p-6">
+                  <div className="space-y-1">
+                    <h3 className="text-base font-semibold text-foreground">Establishment Photo</h3>
+                    <p className="text-sm text-muted-foreground">
+                      This is your establishment photo.<br />
+                      Click on the photo to upload a custom one from your files.
+                    </p>
+                  </div>
+                  <ImageUploadAvatar
+                    name="photoFile"
+                    alt={name}
+                    fallbackIcon={<Store className="size-8 text-muted-foreground" />}
+                  />
+                </div>
+              </div>
+
+              {/* Name Section */}
+              <div className="flex flex-col">
+                <div className="space-y-4 p-6">
+                  <div className="space-y-1">
+                    {/* The section heading names the only field, so it labels it. */}
+                    <h3 id={nameHeadingId} className="text-base font-semibold text-foreground">
+                      Establishment Name
+                    </h3>
+                    <p className="text-sm text-muted-foreground">
+                      Please enter the official name for your establishment.
+                    </p>
+                  </div>
+                  <div className="max-w-xs">
+                    <Input
+                      name="name"
+                      aria-labelledby={nameHeadingId}
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      placeholder="Establishment name"
+                      maxLength={32}
+                      required
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex flex-col border-t border-border">
+                <div className="space-y-4 p-6">
+                  <div className="space-y-1">
+                    <h3 className="text-base font-semibold text-foreground">Time zone</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Use an IANA zone like America/Lima. This is used for local scheduling and analytics.
+                    </p>
+                  </div>
+                  <div className="max-w-xs">
+                    <TimeZoneField
+                      name="timeZone"
+                      value={timeZone}
+                      onChange={setTimeZone}
+                    />
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+
+            <CardFooter className="justify-end gap-2 rounded-b-xl border-t border-border bg-card px-6 py-5">
+              {showCancel && (
+                <Link
+                  href="/establishments"
+                  className={buttonVariants({ variant: "ghost" })}
+                >
+                  Cancel
+                </Link>
+              )}
+              <Button type="submit" disabled={pending} className="gap-2">
+                {pending ? <Spinner className="size-4" /> : <Plus className="size-4" />}
+                {pending ? "Creating..." : "Create"}
+              </Button>
+            </CardFooter>
+          </form>
+        </Card>
+      </div>
+    </>
+  );
+}
