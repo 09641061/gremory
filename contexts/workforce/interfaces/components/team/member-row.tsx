@@ -113,52 +113,34 @@ export function MemberRow({
       </div>
       <div className="flex flex-col gap-1.5 justify-center">
         {member.userId && member.establishmentId && member.status === "ACTIVE" ? (
-          (() => {
-            const userId = member.userId;
-            const establishmentId = member.establishmentId;
-            return (
-              <label className="flex items-center gap-2 text-xs text-muted-foreground">
-                <Switch
-                  checked={member.availableForScheduling}
-                  disabled={!canEditAvailability || availabilityPending}
-                  onCheckedChange={(available) => {
-                    if (available === member.availableForScheduling) return;
-                    const formData = new FormData();
-                    formData.append("userId", userId);
-                    formData.append("establishmentId", establishmentId);
-                    formData.append("available", String(available));
-                    startTransition(() => availabilityAction(formData));
-                  }}
-                  size="sm"
-                />
-                {member.availableForScheduling ? "Available for appointments" : "Unavailable for appointments"}
-              </label>
-            );
-          })()
-        ) : null}
-        {member.userId && member.establishmentId && member.status === "ACTIVE" ? (
-          (() => {
-            const userId = member.userId;
-            const establishmentId = member.establishmentId;
-            return (
-              <label className="flex items-center gap-2 text-xs text-muted-foreground">
-                <Switch
-                  checked={member.visibleForScheduling !== false}
-                  disabled={!canEditVisibility || visibilityPending}
-                  onCheckedChange={(visible) => {
-                    if (visible === (member.visibleForScheduling !== false)) return;
-                    const formData = new FormData();
-                    formData.append("userId", userId);
-                    formData.append("establishmentId", establishmentId);
-                    formData.append("visible", String(visible));
-                    startTransition(() => visibilityAction(formData));
-                  }}
-                  size="sm"
-                />
-                {member.visibleForScheduling !== false ? "Visible on schedule" : "Hidden from schedule"}
-              </label>
-            );
-          })()
+          isOwner ? (
+            (() => {
+              const userId = member.userId;
+              const establishmentId = member.establishmentId;
+              return (
+                <label className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <Switch
+                    checked={member.visibleForScheduling !== false}
+                    disabled={!canEditVisibility || visibilityPending}
+                    onCheckedChange={(visible) => {
+                      if (visible === (member.visibleForScheduling !== false)) return;
+                      const formData = new FormData();
+                      formData.append("userId", userId);
+                      formData.append("establishmentId", establishmentId);
+                      formData.append("visible", String(visible));
+                      startTransition(() => visibilityAction(formData));
+                    }}
+                    size="sm"
+                  />
+                  {member.visibleForScheduling !== false ? "Visible on schedule" : "Hidden from schedule"}
+                </label>
+              );
+            })()
+          ) : (
+            <span className="text-xs text-muted-foreground">
+              {member.visibleForScheduling !== false ? "Visible on schedule" : "Hidden from schedule"}
+            </span>
+          )
         ) : null}
         {!member.userId || member.status !== "ACTIVE" ? (
           <span className="text-xs text-muted-foreground">Not configurable</span>

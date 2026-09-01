@@ -13,7 +13,11 @@ export type PermissionGroup = Readonly<{
 export function groupPermissions(permissions: ReadonlyArray<string>) {
   const groups = new Map<string, string[]>();
   for (const permission of permissions) {
-    const [context] = permission.split(":");
+    if (permission === "availability:manage_all") continue;
+    let context = permission.split(":")[0];
+    if (permission === "availability:manage_self") {
+      context = "scheduling";
+    }
     const group = groups.get(context) ?? [];
     group.push(permission);
     groups.set(context, group);
@@ -26,6 +30,9 @@ export function groupPermissions(permissions: ReadonlyArray<string>) {
 }
 
 export function permissionLabel(permission: string) {
+  if (permission === "availability:manage_self") {
+    return "Visible on Schedule";
+  }
   const action = permission.split(":").at(-1) ?? permission;
   return action
     .replaceAll("_", " ")
@@ -47,8 +54,7 @@ export function permissionDescription(permission: string) {
     "workforce:manage": "Can manage team members and roles.",
     "scheduling:read": "Can open the scheduling page and view appointments.",
     "scheduling:manage": "Can create and manage appointments.",
-    "availability:manage_self": "Can change the member's own availability for appointments.",
-    "availability:manage_all": "Can change the availability of other members for appointments.",
+    "availability:manage_self": "Allows members with this role to be visible and selectable on the schedule.",
     "catalog:read": "Can open and view the catalog.",
     "catalog:manage": "Can create and manage catalog items.",
     "crm:read": "Can open and view customers.",
@@ -70,13 +76,12 @@ export function permissionGroupPriority(context: string) {
   const order: Record<string, number> = {
     organization: 0,
     scheduling: 1,
-    availability: 2,
-    catalog: 3,
-    crm: 4,
-    workforce: 5,
-    analytics: 6,
-    assistant: 7,
-    establishment: 8,
+    catalog: 2,
+    crm: 3,
+    workforce: 4,
+    analytics: 5,
+    assistant: 6,
+    establishment: 7,
   };
 
   return order[context] ?? 100;

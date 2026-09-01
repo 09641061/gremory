@@ -78,14 +78,8 @@ async function TeamPageContent({ searchParams }: TeamPageProps) {
       canCancelInvitations={canDeleteInvitation}
       currentUserId={currentMembership?.userId ?? null}
       currentUserIsOwner={workspace.authorization?.role === "OWNER"}
-      canManageOwnAvailability={hasEstablishmentPermission(
-        getWorkspaceEstablishment(workspace, establishmentId ?? undefined),
-        "availability:manage_self",
-      )}
-       canManageOtherAvailability={hasEstablishmentPermission(
-        getWorkspaceEstablishment(workspace, establishmentId ?? undefined),
-        "availability:manage_all",
-       )}
+      canManageOwnAvailability={canManageTeam}
+      canManageOtherAvailability={canManageTeam}
       availabilityError={schedulingAvailabilityError}
     />
   );

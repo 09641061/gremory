@@ -30,7 +30,7 @@ export const assignWorkforceRoleRequestSchema = z.object({
 export const workforceRoleResourceSchema = z.object({
   id: uuidSchema,
   name: z.string().trim().min(1),
-  permissions: z.array(z.enum(workforcePermissionCodes)),
+  permissions: z.array(z.string()),
   systemRole: z.boolean(),
   position: z.number().int().min(1).optional(),
 });
