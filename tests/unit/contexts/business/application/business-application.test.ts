@@ -67,7 +67,7 @@ describe("Business command services", () => {
     vi.spyOn(repository, "save").mockImplementation(async (value) => value);
     const photos = establishmentPhotoStorage();
     const upload = vi.spyOn(photos, "upload").mockResolvedValue(
-      createEstablishmentPhoto("https://cdn.example.com/stored.png"),
+      createEstablishmentPhoto("https://picsum.photos/seed/replik-test/800/600"),
     );
 
     await new EstablishmentCommandServiceImpl(repository, photos).update({
@@ -80,11 +80,11 @@ describe("Business command services", () => {
       expect.any(File),
       expect.objectContaining({ value: organizationId }),
     );
-    expect(current.photoUrl.value).toBe("https://cdn.example.com/stored.png");
+    expect(current.photoUrl.value).toBe("https://picsum.photos/seed/replik-test/800/600");
   });
 
   it("drops the stored photo when the account removes it", async () => {
-    const current = establishment("Shop", "https://example.com/old.png");
+    const current = establishment("Shop", "https://picsum.photos/seed/replik-test/800/600");
     const repository = establishmentRepository();
     vi.spyOn(repository, "findById").mockResolvedValue(current);
     vi.spyOn(repository, "save").mockImplementation(async (value) => value);
@@ -115,12 +115,12 @@ describe("Business command services", () => {
     ).update({
       id: establishmentId,
       name: "New shop",
-      photoUrl: "https://example.com/shop.png",
+      photoUrl: "https://picsum.photos/seed/replik-test/800/600",
     });
 
     expect(save).toHaveBeenCalledWith(current);
     expect(current.name.value).toBe("New shop");
-    expect(current.photoUrl.value).toBe("https://example.com/shop.png");
+    expect(current.photoUrl.value).toBe("https://picsum.photos/seed/replik-test/800/600");
     expect(id.value).toBe(establishmentId);
   });
 

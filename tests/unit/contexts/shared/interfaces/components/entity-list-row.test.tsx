@@ -8,14 +8,14 @@ describe("EntityListRow", () => {
   it("renders the avatar image when a src is given", () => {
     render(
       <EntityListRow
-        avatarSrc="http://example.com/photo.jpg"
+        avatarSrc="https://picsum.photos/seed/replik-test/800/600"
         avatarFallbackIcon={<Store className="size-4" />}
         name="Main Store"
       />,
     );
 
     const img = screen.getByAltText("Main Store") as HTMLImageElement;
-    expect(img.src).toBe("http://example.com/photo.jpg");
+    expect(img.src).toBe("https://picsum.photos/seed/replik-test/800/600");
   });
 
   it("renders the fallback icon when there is no avatar src", () => {

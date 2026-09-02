@@ -17,7 +17,7 @@ vi.mock("next/navigation", () => ({
 const organization = {
   id: "org-1",
   name: "Acme",
-  imageUrl: "https://cdn.test/acme.png",
+  imageUrl: "https://picsum.photos/seed/replik-test/800/600",
   canRead: true,
   canUpdate: true,
 };
@@ -29,7 +29,7 @@ const baseWorkspace: WorkspaceHeaderViewModel = {
   ownedOrganizationId: organization.id,
   organization,
   establishments: [
-    { id: "est-1", name: "Main branch", photoUrl: "https://cdn.test/main.png" },
+    { id: "est-1", name: "Main branch", photoUrl: "https://picsum.photos/seed/replik-test/800/600" },
   ],
   activeEstablishmentId: "est-1",
   canReadOrganization: true,

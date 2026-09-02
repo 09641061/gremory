@@ -29,7 +29,7 @@ describe("Business value objects", () => {
   });
 
   it("shouldCreateOrganizationImageWhenUrlIsValid", () => {
-    expect(createOrganizationImage("  https://example.com/logo.png  ").value).toBe("https://example.com/logo.png");
+    expect(createOrganizationImage("  https://picsum.photos/seed/replik-test/800/600  ").value).toBe("https://picsum.photos/seed/replik-test/800/600");
   });
 
   it("shouldRejectOrganizationImageWhenUrlExceedsTheLimit", () => {
@@ -61,10 +61,10 @@ describe("Business entities", () => {
       active: true,
     });
 
-    organization.update("New name", "https://example.com/logo.png");
+    organization.update("New name", "https://picsum.photos/seed/replik-test/800/600");
 
     expect(organization.name.value).toBe("New name");
-    expect(organization.imageUrl.value).toBe("https://example.com/logo.png");
+    expect(organization.imageUrl.value).toBe("https://picsum.photos/seed/replik-test/800/600");
   });
 
   it("shouldUpdateEstablishmentDetailsWhenValuesAreValid", () => {
@@ -76,9 +76,9 @@ describe("Business entities", () => {
       active: true,
     });
 
-    establishment.update("New shop", "https://example.com/shop.png");
+    establishment.update("New shop", "https://picsum.photos/seed/replik-test/800/600");
 
     expect(establishment.name.value).toBe("New shop");
-    expect(establishment.photoUrl.value).toBe("https://example.com/shop.png");
+    expect(establishment.photoUrl.value).toBe("https://picsum.photos/seed/replik-test/800/600");
   });
 });

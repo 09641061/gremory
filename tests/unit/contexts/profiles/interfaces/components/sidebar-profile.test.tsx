@@ -92,4 +92,34 @@ describe("SidebarProfile", () => {
     expect(screen.queryByRole("menuitem", { name: "Invoices" })).toBeNull();
     expect(screen.getByRole("menuitem", { name: "Log out" })).toBeVisible();
   });
+
+  it("should synchronize username and photo when profile prop updates", () => {
+    const { rerender, container } = render(
+      <SidebarProfile profile={{ username: "mateo", imageUrl: null }} profileHref="/profile" />
+    );
+
+    expect(screen.getByRole("button", { name: /mateo/i })).toBeVisible();
+    expect(container.querySelector("img")).toBeNull();
+
+    rerender(
+      <SidebarProfile
+        profile={{ username: "carlos", imageUrl: "https://picsum.photos/seed/replik-test/800/600" }}
+        profileHref="/profile"
+      />
+    );
+
+    expect(screen.getByRole("button", { name: /carlos/i })).toBeVisible();
+    const img = container.querySelector("img");
+    expect(img).not.toBeNull();
+    expect(img).toHaveAttribute("src", "https://picsum.photos/seed/replik-test/800/600");
+  });
+
+  it("should render the Lucide User icon inside avatar fallback when profile imageUrl is null", () => {
+    const { container } = render(
+      <SidebarProfile profile={{ username: "mateo", imageUrl: null }} profileHref="/profile" />
+    );
+
+    const fallbackSvg = container.querySelector("svg.lucide-user");
+    expect(fallbackSvg).toBeInTheDocument();
+  });
 });

@@ -20,7 +20,7 @@ describe("HttpProfileRepository", () => {
   let repository: HttpProfileRepository;
   const rawApiResponse = {
     username: "mateo",
-    imageUrl: "https://example.com/avatar.jpg",
+    imageUrl: "https://picsum.photos/seed/replik-test/800/600",
     language: "ES",
     theme: "SYSTEM",
   };
@@ -41,7 +41,7 @@ describe("HttpProfileRepository", () => {
       // Assert
       expect(result).toEqual({
         username: "mateo",
-        imageUrl: "https://example.com/avatar.jpg",
+        imageUrl: "https://picsum.photos/seed/replik-test/800/600",
         language: "ES",
         theme: "SYSTEM",
       });
@@ -77,7 +77,7 @@ describe("HttpProfileRepository", () => {
       vi.mocked(apiClient.put).mockResolvedValue(rawApiResponse);
       const command = {
         username: createUsername("mateo"),
-        imageUrl: createProfileImageUrl("https://example.com/avatar.jpg"),
+        imageUrl: createProfileImageUrl("https://picsum.photos/seed/replik-test/800/600"),
       };
 
       // Act
@@ -86,13 +86,13 @@ describe("HttpProfileRepository", () => {
       // Assert
       expect(result).toEqual({
         username: "mateo",
-        imageUrl: "https://example.com/avatar.jpg",
+        imageUrl: "https://picsum.photos/seed/replik-test/800/600",
         language: "ES",
         theme: "SYSTEM",
       });
       expect(apiClient.put).toHaveBeenCalledWith(
         "/api/v1/profiles",
-        { username: "mateo", imageUrl: "https://example.com/avatar.jpg" },
+        { username: "mateo", imageUrl: "https://picsum.photos/seed/replik-test/800/600" },
         expect.objectContaining({ token: "token-abc" })
       );
     });
@@ -118,7 +118,7 @@ describe("HttpProfileRepository", () => {
       // Assert
       expect(result).toEqual({
         username: "mateo",
-        imageUrl: "https://example.com/avatar.jpg",
+        imageUrl: "https://picsum.photos/seed/replik-test/800/600",
         language: "ES",
         theme: "SYSTEM",
       });
@@ -130,6 +130,35 @@ describe("HttpProfileRepository", () => {
           body: expect.any(FormData),
         })
       );
+    });
+
+    it("should include imageUrl in FormData when imageUrl is present along with image file", async () => {
+      // Arrange
+      let capturedFormData: FormData | null = null;
+      const mockFetch = vi.fn().mockImplementation((_url, options) => {
+        capturedFormData = options.body;
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve(rawApiResponse),
+        });
+      });
+      vi.stubGlobal("fetch", mockFetch);
+
+      const dummyFile = new File(["bytes"], "photo.png", { type: "image/png" });
+      const command = {
+        username: createUsername("mateo"),
+        imageUrl: createProfileImageUrl("https://picsum.photos/seed/replik-test/800/600"),
+        imageFile: dummyFile,
+      };
+
+      // Act
+      await repository.updateProfile(command, "token-abc");
+
+      // Assert
+      expect(capturedFormData).not.toBeNull();
+      expect(capturedFormData!.get("username")).toBe("mateo");
+      expect(capturedFormData!.get("photoFile")).toBe(dummyFile);
+      expect(capturedFormData!.get("imageUrl")).toBe("https://picsum.photos/seed/replik-test/800/600");
     });
 
     it("should throw ProfileApiError when update with image fails", async () => {
@@ -167,7 +196,7 @@ describe("HttpProfileRepository", () => {
       // Assert
       expect(result).toEqual({
         username: "mateo",
-        imageUrl: "https://example.com/avatar.jpg",
+        imageUrl: "https://picsum.photos/seed/replik-test/800/600",
         language: "ES",
         theme: "SYSTEM",
       });

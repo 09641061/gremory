@@ -18,6 +18,7 @@ interface ImageUploadAvatarProps {
   fallbackIcon: ReactNode;
   className?: string;
   initialUrl?: string | null;
+  onFileSelect?: (file: File | null) => void;
 }
 
 /**
@@ -26,9 +27,42 @@ interface ImageUploadAvatarProps {
  * Owns the object URL lifecycle (create on choose, revoke on change/unmount)
  * so callers only need to supply the field name and the empty-state icon.
  */
-export function ImageUploadAvatar({ name, alt, fallbackIcon, className, initialUrl = null }: ImageUploadAvatarProps) {
+export function ImageUploadAvatar({
+  name,
+  alt,
+  fallbackIcon,
+  className,
+  initialUrl = null,
+  onFileSelect,
+}: ImageUploadAvatarProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(initialUrl);
+
+  useEffect(() => {
+    setPreviewUrl(initialUrl);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  }, [initialUrl]);
+
+  useEffect(() => {
+    const input = fileInputRef.current;
+    if (!input?.form) return;
+
+    const handleFormReset = () => {
+      setPreviewUrl(initialUrl);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+      onFileSelect?.(null);
+    };
+
+    const form = input.form;
+    form.addEventListener("reset", handleFormReset);
+    return () => {
+      form.removeEventListener("reset", handleFormReset);
+    };
+  }, [initialUrl, onFileSelect]);
 
   useEffect(() => {
     return () => {
@@ -50,6 +84,7 @@ export function ImageUploadAvatar({ name, alt, fallbackIcon, className, initialU
     }
 
     setPreviewUrl(file ? URL.createObjectURL(file) : null);
+    onFileSelect?.(file);
   };
 
   return (

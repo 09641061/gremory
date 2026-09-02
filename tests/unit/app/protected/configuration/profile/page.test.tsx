@@ -47,7 +47,7 @@ describe("Profile Route Page", () => {
   it("should render ProfileCard with fetched profile data when profile exists", async () => {
     const dummyProfile = {
       username: "mateo",
-      imageUrl: "https://example.com/avatar.jpg",
+      imageUrl: "https://picsum.photos/seed/replik-test/800/600",
       language: "ES" as const,
       theme: "SYSTEM" as const,
     };

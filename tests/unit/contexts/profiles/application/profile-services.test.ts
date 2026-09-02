@@ -9,7 +9,7 @@ import { defaultProfilePreferences } from "@/contexts/profiles/domain/model/valu
 describe("Profile Application Services", () => {
   const dummyProfile = {
     username: "mateo",
-    imageUrl: "https://example.com/avatar.jpg",
+    imageUrl: "https://picsum.photos/seed/replik-test/800/600",
     language: "ES" as const,
     theme: "SYSTEM" as const,
   };
@@ -29,7 +29,7 @@ describe("Profile Application Services", () => {
 
       const command = {
         username: createUsername("mateo"),
-        imageUrl: createProfileImageUrl("https://example.com/avatar.jpg"),
+        imageUrl: createProfileImageUrl("https://picsum.photos/seed/replik-test/800/600"),
       };
 
       // Act

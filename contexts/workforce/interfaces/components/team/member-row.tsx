@@ -81,7 +81,7 @@ export function MemberRow({
         <Avatar className="size-11 shrink-0 border border-border/70">
           <AvatarImage src={member.imageUrl ?? undefined} alt={member.name ?? member.email} />
           <AvatarFallback className="bg-muted/40 text-muted-foreground">
-            {member.name ? initials(member.name) : <User className="size-5" />}
+            <User className="size-5 text-muted-foreground" aria-hidden="true" />
           </AvatarFallback>
         </Avatar>
         <div className="min-w-0">
@@ -228,11 +228,3 @@ function statusBadgeClass(status: TeamUserSummary["status"]): string {
   return `inline-flex rounded-full border px-2.5 py-1 text-xs font-semibold uppercase tracking-wide ${tone}`;
 }
 
-function initials(name: string): string {
-  return name
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase() ?? "")
-    .join("");
-}

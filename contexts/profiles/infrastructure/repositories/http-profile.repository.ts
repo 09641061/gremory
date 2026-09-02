@@ -56,6 +56,9 @@ export class HttpProfileRepository implements ProfileRepository {
     const formData = new FormData();
     formData.set("username", command.username.value);
     formData.set("photoFile", command.imageFile as File);
+    if (command.imageUrl?.value) {
+      formData.set("imageUrl", command.imageUrl.value);
+    }
 
     const response = await fetch(`${apiConfig.baseUrl}${apiConfig.routes.profiles.root}`, {
       method: "PUT",

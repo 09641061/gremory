@@ -20,7 +20,7 @@ export const updateProfileSchema = z.object({
     .min(MIN_USERNAME_LENGTH, `Username must be at least ${MIN_USERNAME_LENGTH} characters`)
     .max(MAX_USERNAME_LENGTH, `Username must be at most ${MAX_USERNAME_LENGTH} characters`)
     .regex(USERNAME_REGEX, "Username must contain only letters (A-Z, a-z)"),
-  imageUrl: z.string().url("Invalid image URL").nullable().optional().or(z.literal("")),
+  imageUrl: z.string().trim().max(1000).nullish().or(z.literal("")),
 });
 
 export type UpdateProfileInput = z.infer<typeof updateProfileSchema>;

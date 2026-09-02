@@ -2,7 +2,7 @@
 
 import "server-only";
 import { cookies } from "next/headers";
-import { updateTag } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
 import { z } from "zod";
 import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-session-cookie";
 import { updateProfileSchema } from "../rest/schemas/profile.schemas";
@@ -52,6 +52,9 @@ export async function updateProfileAction(
     const profile = await service.updateProfile(command, accessToken);
 
     updateTag("profile");
+    revalidatePath("/team");
+    revalidatePath("/profile");
+    revalidatePath("/", "layout");
 
     return {
       status: "success",

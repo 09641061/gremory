@@ -1,17 +1,21 @@
 import { describe, expect, it } from "vitest";
-import { updateProfileSchema } from "@/contexts/profiles/interfaces/rest/schemas/profile.schemas";
+import {
+  updateProfileSchema,
+  updatePreferencesSchema,
+  profileResponseSchema,
+} from "@/contexts/profiles/interfaces/rest/schemas/profile.schemas";
 
 describe("Profile Validation Schemas", () => {
   it("should validate a correct profile payload when username and image are valid", () => {
     const result = updateProfileSchema.safeParse({
       username: "mateo",
-      imageUrl: "https://example.com/avatar.png",
+      imageUrl: "https://picsum.photos/seed/replik-test/800/600",
     });
 
     expect(result.success).toBe(true);
     if (result.success) {
       expect(result.data.username).toBe("mateo");
-      expect(result.data.imageUrl).toBe("https://example.com/avatar.png");
+      expect(result.data.imageUrl).toBe("https://picsum.photos/seed/replik-test/800/600");
     }
   });
 
@@ -63,15 +67,78 @@ describe("Profile Validation Schemas", () => {
     }
   });
 
-  it("should reject an invalid image URL format", () => {
+  it("should allow relative image path or URL format", () => {
     const result = updateProfileSchema.safeParse({
       username: "mateo",
-      imageUrl: "not-a-valid-url",
+      imageUrl: "images/profiles/avatar.png",
+    });
+
+    expect(result.success).toBe(true);
+  });
+
+  it("should reject image URL exceeding maximum length", () => {
+    const result = updateProfileSchema.safeParse({
+      username: "mateo",
+      imageUrl: "https://example.com/" + "a".repeat(1000),
     });
 
     expect(result.success).toBe(false);
-    if (!result.success) {
-      expect(result.error.issues[0]?.message).toBe("Invalid image URL");
-    }
+  });
+
+  describe("updatePreferencesSchema", () => {
+    it("should accept valid language and theme combinations", () => {
+      const result = updatePreferencesSchema.safeParse({
+        language: "ES",
+        theme: "DARK",
+      });
+
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data.language).toBe("ES");
+        expect(result.data.theme).toBe("DARK");
+      }
+    });
+
+    it("should reject invalid language", () => {
+      const result = updatePreferencesSchema.safeParse({
+        language: "FR",
+        theme: "LIGHT",
+      });
+
+      expect(result.success).toBe(false);
+    });
+
+    it("should reject invalid theme", () => {
+      const result = updatePreferencesSchema.safeParse({
+        language: "EN",
+        theme: "BLUE",
+      });
+
+      expect(result.success).toBe(false);
+    });
+  });
+
+  describe("profileResponseSchema", () => {
+    it("should parse valid profile response payload", () => {
+      const result = profileResponseSchema.safeParse({
+        username: "Alice",
+        imageUrl: "https://picsum.photos/seed/replik-test/800/600",
+        language: "EN",
+        theme: "LIGHT",
+      });
+
+      expect(result.success).toBe(true);
+    });
+
+    it("should allow null or undefined imageUrl in response", () => {
+      const result = profileResponseSchema.safeParse({
+        username: "Alice",
+        imageUrl: null,
+        language: "ES",
+        theme: "SYSTEM",
+      });
+
+      expect(result.success).toBe(true);
+    });
   });
 });

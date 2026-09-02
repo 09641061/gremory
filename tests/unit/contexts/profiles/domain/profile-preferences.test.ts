@@ -60,8 +60,8 @@ describe("Profile Value Objects", () => {
     });
 
     it("should trim and store valid image url", () => {
-      const img = createProfileImageUrl("  https://example.com/pic.jpg  ");
-      expect(img.value).toBe("https://example.com/pic.jpg");
+      const img = createProfileImageUrl("  https://picsum.photos/seed/replik-test/800/600  ");
+      expect(img.value).toBe("https://picsum.photos/seed/replik-test/800/600");
       expect(Object.isFrozen(img)).toBe(true);
     });
   });

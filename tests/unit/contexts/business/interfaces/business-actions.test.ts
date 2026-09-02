@@ -91,7 +91,7 @@ describe("Business server actions", () => {
       form({
         organizationId,
         name: "  Main store  ",
-        photoUrl: "https://example.com/store.png",
+        photoUrl: "https://picsum.photos/seed/replik-test/800/600",
       }),
     )).rejects.toThrow(`REDIRECT:/welcome?establishmentId=${establishmentId}`);
 
@@ -100,7 +100,7 @@ describe("Business server actions", () => {
     expect(mocks.establishmentService.create).toHaveBeenCalledWith({
       organizationId,
       name: "Main store",
-      photoUrl: "https://example.com/store.png",
+      photoUrl: "https://picsum.photos/seed/replik-test/800/600",
       timeZone: "America/Lima",
       photoFile: null,
     });

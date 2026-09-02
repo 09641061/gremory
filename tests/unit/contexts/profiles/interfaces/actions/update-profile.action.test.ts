@@ -1,13 +1,17 @@
 const mocks = vi.hoisted(() => ({
   cookies: { get: vi.fn() },
   updateTag: vi.fn(),
+  revalidatePath: vi.fn(),
   commandService: {
     updateProfile: vi.fn(),
   },
 }));
 
 vi.mock("next/headers", () => ({ cookies: vi.fn(() => mocks.cookies) }));
-vi.mock("next/cache", () => ({ updateTag: mocks.updateTag }));
+vi.mock("next/cache", () => ({
+  updateTag: mocks.updateTag,
+  revalidatePath: mocks.revalidatePath,
+}));
 vi.mock("@/contexts/profiles/application/factory", () => ({
   createProfileCommandService: () => mocks.commandService,
 }));
@@ -65,7 +69,7 @@ describe("updateProfileAction", () => {
     mocks.cookies.get.mockReturnValue({ value: "test-token" });
     const updatedProfile = {
       username: "mateo",
-      imageUrl: "https://example.com/avatar.png",
+      imageUrl: "https://picsum.photos/seed/replik-test/800/600",
       language: "ES" as const,
       theme: "LIGHT" as const,
     };
@@ -73,7 +77,7 @@ describe("updateProfileAction", () => {
 
     const formData = form({
       username: "mateo",
-      currentImageUrl: "https://example.com/avatar.png",
+      currentImageUrl: "https://picsum.photos/seed/replik-test/800/600",
     });
 
     // Act
@@ -86,10 +90,13 @@ describe("updateProfileAction", () => {
       error: null,
     });
     expect(mocks.updateTag).toHaveBeenCalledWith("profile");
+    expect(mocks.revalidatePath).toHaveBeenCalledWith("/team");
+    expect(mocks.revalidatePath).toHaveBeenCalledWith("/profile");
+    expect(mocks.revalidatePath).toHaveBeenCalledWith("/", "layout");
     expect(mocks.commandService.updateProfile).toHaveBeenCalledWith(
       expect.objectContaining({
         username: { value: "mateo" },
-        imageUrl: { value: "https://example.com/avatar.png" },
+        imageUrl: { value: "https://picsum.photos/seed/replik-test/800/600" },
       }),
       "test-token"
     );
@@ -101,7 +108,7 @@ describe("updateProfileAction", () => {
     const dummyFile = new File(["test-content"], "avatar.png", { type: "image/png" });
     const updatedProfile = {
       username: "mateo",
-      imageUrl: "https://example.com/new.png",
+      imageUrl: "https://picsum.photos/seed/replik-test/800/600",
       language: "ES" as const,
       theme: "SYSTEM" as const,
     };
@@ -120,6 +127,37 @@ describe("updateProfileAction", () => {
     expect(mocks.commandService.updateProfile).toHaveBeenCalledWith(
       expect.objectContaining({
         imageFile: expect.any(File),
+      }),
+      "test-token"
+    );
+  });
+
+  it("should treat empty image file (size 0) as null when calling command service", async () => {
+    // Arrange
+    mocks.cookies.get.mockReturnValue({ value: "test-token" });
+    const emptyFile = new File([], "empty.png", { type: "image/png" });
+    const updatedProfile = {
+      username: "mateo",
+      imageUrl: "https://picsum.photos/seed/replik-test/800/600",
+      language: "ES" as const,
+      theme: "SYSTEM" as const,
+    };
+    mocks.commandService.updateProfile.mockResolvedValue(updatedProfile);
+
+    const formData = form({
+      username: "mateo",
+      currentImageUrl: "https://picsum.photos/seed/replik-test/800/600",
+      imageFile: emptyFile,
+    });
+
+    // Act
+    const result = await updateProfileAction({ status: "idle", data: null, error: null }, formData);
+
+    // Assert
+    expect(result.status).toBe("success");
+    expect(mocks.commandService.updateProfile).toHaveBeenCalledWith(
+      expect.objectContaining({
+        imageFile: null,
       }),
       "test-token"
     );

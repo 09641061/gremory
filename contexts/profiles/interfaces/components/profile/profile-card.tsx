@@ -33,14 +33,27 @@ export function ProfileCard({ profile }: { profile: ProfileViewModel }) {
   const usernameErrorId = useId();
 
   const [username, setUsername] = useState(profile.username);
+  const [hasFileSelected, setHasFileSelected] = useState(false);
   const [state, formAction, pending] = useActionState(
     updateProfileAction,
     initialProfileActionState
   );
 
+  const activeProfile = state.status === "success" && state.data ? state.data : profile;
+
   useEffect(() => {
-    if (state.status === "success") router.refresh();
-  }, [router, state.status]);
+    if (state.status === "success") {
+      router.refresh();
+      setHasFileSelected(false);
+      if (state.data) {
+        setUsername(state.data.username);
+      }
+    }
+  }, [router, state.status, state.data]);
+
+  useEffect(() => {
+    setUsername(profile.username);
+  }, [profile.username]);
 
   const handleUsernameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const sanitized = event.target.value.replace(/[^a-zA-Z]/g, "").slice(0, MAX_USERNAME_LENGTH);
@@ -48,14 +61,14 @@ export function ProfileCard({ profile }: { profile: ProfileViewModel }) {
   };
 
   const isTooShort = username.length > 0 && username.length < MIN_USERNAME_LENGTH;
-  const isUnchanged = username === profile.username;
+  const isUnchanged = username === activeProfile.username && !hasFileSelected;
   const isValid = username.length >= MIN_USERNAME_LENGTH && username.length <= MAX_USERNAME_LENGTH;
   const canSave = isValid && !pending;
 
   return (
     <Card className="mx-auto w-full max-w-3xl overflow-hidden rounded-xl border-border bg-card shadow-sm">
       <form action={formAction}>
-        <input type="hidden" name="currentImageUrl" value={profile.imageUrl ?? ""} />
+        <input type="hidden" name="currentImageUrl" value={activeProfile.imageUrl ?? ""} />
         <CardContent className="p-0">
           {state.status === "error" ? (
             <div className="p-6 pb-0">
@@ -71,7 +84,8 @@ export function ProfileCard({ profile }: { profile: ProfileViewModel }) {
             <ImageUploadAvatar
               name="imageFile"
               alt={username || "Profile photo"}
-              initialUrl={profile.imageUrl}
+              initialUrl={activeProfile.imageUrl}
+              onFileSelect={(file) => setHasFileSelected(Boolean(file))}
               fallbackIcon={<UserRound className="size-8 text-muted-foreground" aria-hidden="true" />}
             />
           </div>
@@ -120,7 +134,10 @@ export function ProfileCard({ profile }: { profile: ProfileViewModel }) {
           <Button
             type="button"
             variant="ghost"
-            onClick={() => setUsername(profile.username)}
+            onClick={() => {
+              setUsername(activeProfile.username);
+              setHasFileSelected(false);
+            }}
             disabled={pending || isUnchanged}
           >
             Cancel

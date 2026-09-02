@@ -5,7 +5,7 @@ describe("Profile Mapper", () => {
   it("should map valid API response to ProfileViewModel", () => {
     const raw = {
       username: "mateo",
-      imageUrl: "https://example.com/avatar.jpg",
+      imageUrl: "https://picsum.photos/seed/replik-test/800/600",
       language: "ES",
       theme: "LIGHT",
     };
@@ -14,7 +14,7 @@ describe("Profile Mapper", () => {
 
     expect(result).toEqual({
       username: "mateo",
-      imageUrl: "https://example.com/avatar.jpg",
+      imageUrl: "https://picsum.photos/seed/replik-test/800/600",
       language: "ES",
       theme: "LIGHT",
     });

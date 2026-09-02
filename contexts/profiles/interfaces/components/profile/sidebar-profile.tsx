@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTransition } from "react";
-import { ChevronsUpDown, CircleArrowUp, LogOut, Receipt, UserRound } from "lucide-react";
+import { ChevronsUpDown, CircleArrowUp, LogOut, Receipt, User, UserRound } from "lucide-react";
 
 import {
   Avatar,
@@ -30,15 +30,6 @@ type SidebarProfileProps = {
   /** Highlights the trigger while the settings route is open. */
   active?: boolean;
 };
-
-function getProfileFallback(username: string) {
-  const trimmedUsername = username.trim();
-  if (!trimmedUsername) {
-    return "P";
-  }
-
-  return trimmedUsername.slice(0, 2).toUpperCase();
-}
 
 /**
  * Sidebar footer account control.
@@ -82,8 +73,8 @@ export function SidebarProfile({
         <Avatar className="size-(--app-sidebar-avatar-size) shrink-0 border border-border/60 bg-muted">
           {/* Above the fold on every route, so it competes for bandwidth. */}
           <AvatarImage src={imageUrl ?? undefined} alt="" fetchPriority="high" />
-          <AvatarFallback className="bg-muted text-[0.7rem] font-semibold text-muted-foreground">
-            {getProfileFallback(username)}
+          <AvatarFallback className="bg-muted text-muted-foreground">
+            <User className="size-4 text-muted-foreground" aria-hidden="true" />
           </AvatarFallback>
         </Avatar>
 

@@ -13,7 +13,7 @@ describe("Profile Entity", () => {
   const profileId = createProfileId("p-1");
   const userId = createUserId("u-1");
   const username = createUsername("mateo");
-  const imageUrl = createProfileImageUrl("https://example.com/avatar.jpg");
+  const imageUrl = createProfileImageUrl("https://picsum.photos/seed/replik-test/800/600");
   const preferences = defaultProfilePreferences();
   const createdAt = "2026-01-01T00:00:00.000Z";
   const updatedAt = "2026-01-01T00:00:00.000Z";
@@ -52,14 +52,14 @@ describe("Profile Entity", () => {
       updatedAt
     );
     const newUsername = createUsername("alex");
-    const newImageUrl = createProfileImageUrl("https://example.com/new.jpg");
+    const newImageUrl = createProfileImageUrl("https://picsum.photos/seed/replik-test/800/600");
 
     // Act
     profile.updateDetails(newUsername, newImageUrl);
 
     // Assert
     expect(profile.username.value).toBe("alex");
-    expect(profile.imageUrl.value).toBe("https://example.com/new.jpg");
+    expect(profile.imageUrl.value).toBe("https://picsum.photos/seed/replik-test/800/600");
     expect(profile.updatedAt).not.toBe(updatedAt);
   });
 

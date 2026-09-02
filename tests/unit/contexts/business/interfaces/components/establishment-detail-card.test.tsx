@@ -24,7 +24,7 @@ describe("EstablishmentDetailCard Component", () => {
   const mockEstablishment = {
     id: "est-123",
     name: "Test Establishment",
-    photoUrl: "http://example.com/photo.jpg",
+    photoUrl: "https://picsum.photos/seed/replik-test/800/600",
     timeZone: "America/Lima",
   };
 
