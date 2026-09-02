@@ -19,6 +19,7 @@ import {
 } from "@/contexts/shared/interfaces/components/ui/dropdown-menu";
 import type { ProfileViewModel } from "@/contexts/profiles/application/services/profile.view-model";
 import { signOutAction } from "@/contexts/iam/interfaces/actions/sign-out.action";
+import { NotificationDropdown } from "@/contexts/notifications/interfaces/components/notification-dropdown";
 import { cn } from "@/lib/utils";
 
 type SidebarProfileProps = {
@@ -60,7 +61,8 @@ export function SidebarProfile({
   const imageUrl = profile?.imageUrl;
 
   return (
-    <DropdownMenu>
+    <div className="flex w-full items-center gap-2">
+      <DropdownMenu>
       <DropdownMenuTrigger
         className={cn(
           "group flex h-(--app-sidebar-profile-height) w-full items-center gap-(--app-sidebar-control-gap) rounded-(--app-sidebar-item-radius) border border-border/60 bg-card px-(--app-sidebar-control-padding-x) text-left transition-colors outline-none",
@@ -124,6 +126,8 @@ export function SidebarProfile({
           {pending ? "Signing out..." : "Log out"}
         </DropdownMenuItem>
       </DropdownMenuContent>
-    </DropdownMenu>
+      </DropdownMenu>
+      <NotificationDropdown />
+    </div>
   );
 }
