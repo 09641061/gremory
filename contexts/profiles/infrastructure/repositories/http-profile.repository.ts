@@ -37,22 +37,36 @@ export class HttpProfileRepository implements ProfileRepository {
     command: UpdateProfileCommand,
     accessToken: string
   ): Promise<ProfileViewModel> {
-    const payload = {
-      username: command.username.value,
-      imageUrl: command.imageUrl.value,
-    };
-
-    const response = await apiClient.put<unknown>(
-      apiConfig.routes.profiles.root,
-      payload,
-      {
-        token: accessToken,
-        errorMessage: "Failed to update profile",
-        errorType: ProfileApiError,
-      }
-    );
+    const response = command.imageFile
+      ? await this.updateWithImage(command, accessToken)
+      : await apiClient.put<unknown>(
+          apiConfig.routes.profiles.root,
+          { username: command.username.value, imageUrl: command.imageUrl.value },
+          {
+            token: accessToken,
+            errorMessage: "Failed to update profile",
+            errorType: ProfileApiError,
+          },
+        );
 
     return profileFromApiResponse(response);
+  }
+
+  private async updateWithImage(command: UpdateProfileCommand, accessToken: string) {
+    const formData = new FormData();
+    formData.set("username", command.username.value);
+    formData.set("photoFile", command.imageFile as File);
+
+    const response = await fetch(`${apiConfig.baseUrl}${apiConfig.routes.profiles.root}`, {
+      method: "PUT",
+      headers: { Authorization: `Bearer ${accessToken}` },
+      body: formData,
+    });
+    const data = await response.json().catch(() => null);
+    if (!response.ok) {
+      throw new ProfileApiError("Failed to update profile", response.status, data);
+    }
+    return data;
   }
 
   async updatePreferences(

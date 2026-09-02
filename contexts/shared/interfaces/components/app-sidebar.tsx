@@ -149,14 +149,14 @@ export function AppSidebar({
 
         <SidebarProfile
           profile={currentProfile}
-          settingsHref={
-            establishmentId ? `/settings?establishmentId=${establishmentId}` : "/settings"
+          profileHref={
+            establishmentId ? `/profile?establishmentId=${establishmentId}` : "/profile"
           }
           canManageBilling={canManageBilling}
           invoiceHref={establishmentId ? `/invoice?establishmentId=${establishmentId}` : "/invoice"}
           active={
-            pathname === "/settings" ||
-            pathname.startsWith("/settings/") ||
+            pathname === "/profile" ||
+            pathname.startsWith("/profile/") ||
             pathname === "/invoice" ||
             pathname.startsWith("/invoice/")
           }

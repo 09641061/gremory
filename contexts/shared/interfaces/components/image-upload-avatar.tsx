@@ -17,6 +17,7 @@ interface ImageUploadAvatarProps {
   /** Icon shown while no file has been chosen. */
   fallbackIcon: ReactNode;
   className?: string;
+  initialUrl?: string | null;
 }
 
 /**
@@ -25,13 +26,13 @@ interface ImageUploadAvatarProps {
  * Owns the object URL lifecycle (create on choose, revoke on change/unmount)
  * so callers only need to supply the field name and the empty-state icon.
  */
-export function ImageUploadAvatar({ name, alt, fallbackIcon, className }: ImageUploadAvatarProps) {
+export function ImageUploadAvatar({ name, alt, fallbackIcon, className, initialUrl = null }: ImageUploadAvatarProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(initialUrl);
 
   useEffect(() => {
     return () => {
-      if (previewUrl) {
+      if (previewUrl?.startsWith("blob:")) {
         URL.revokeObjectURL(previewUrl);
       }
     };
@@ -44,7 +45,7 @@ export function ImageUploadAvatar({ name, alt, fallbackIcon, className }: ImageU
   const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0] ?? null;
 
-    if (previewUrl) {
+    if (previewUrl?.startsWith("blob:")) {
       URL.revokeObjectURL(previewUrl);
     }
 
@@ -58,6 +59,7 @@ export function ImageUploadAvatar({ name, alt, fallbackIcon, className }: ImageU
         type="file"
         name={name}
         accept="image/*"
+        aria-label={`Upload ${name.replace(/File$/, "").replace(/([A-Z])/g, " $1").toLowerCase()}`}
         className="hidden"
         onChange={handleChange}
       />
