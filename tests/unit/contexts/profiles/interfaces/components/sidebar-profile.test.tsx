@@ -6,6 +6,10 @@ import { fireEvent } from "@testing-library/react";
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ replace: vi.fn() }),
 }));
+vi.mock("@/contexts/iam/interfaces/actions/sign-out.action", () => ({
+  signOutAction: vi.fn().mockResolvedValue({ status: "success" }),
+}));
+
 import { SidebarProfile } from "@/contexts/profiles/interfaces/components/profile/sidebar-profile";
 
 const profile = { username: "user", imageUrl: null };
