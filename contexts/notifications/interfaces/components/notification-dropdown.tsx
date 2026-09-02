@@ -166,6 +166,9 @@ function NotificationItem({
   isPending: boolean;
 }) {
   const isUnread = notification.status === "UNREAD";
+  const isPendingInvitation =
+    notification.type === "WORKFORCE_INVITATION" &&
+    !notification.title.toLowerCase().includes("accepted");
 
   return (
     <div
@@ -191,7 +194,7 @@ function NotificationItem({
             {notification.message}
           </p>
 
-          {notification.type === "WORKFORCE_INVITATION" && (
+          {isPendingInvitation && (
             <div className="mt-2 flex items-center gap-2">
               <Button
                 size="sm"
