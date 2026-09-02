@@ -7,7 +7,6 @@ export type EntryRoutePath =
   | "/analytics"
   | "/establishments"
   | "/organization"
-  | "/welcome"
   | "/access-denied"
   | "/no-access";
 

@@ -93,7 +93,7 @@ describe("Business server actions", () => {
         name: "  MainStore  ",
         photoUrl: "https://picsum.photos/seed/replik-test/800/600",
       }),
-    )).rejects.toThrow(`REDIRECT:/welcome?establishmentId=${establishmentId}`);
+    )).rejects.toThrow(`REDIRECT:/?establishmentId=${establishmentId}`);
 
     expect(mocks.requireToken).toHaveBeenCalledTimes(1);
     expect(mocks.establishmentFactory).toHaveBeenCalledWith();

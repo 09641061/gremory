@@ -76,10 +76,6 @@ export async function proxy(request: NextRequest) {
     return redirectWithCookies(request, homePath, response);
   }
 
-  if (pathname === "/welcome" && homePath !== "/welcome") {
-    return redirectWithCookies(request, homePath, response);
-  }
-
   if (homePath !== "/chat" && (pathname === "/chat" || pathname.startsWith("/chat/"))) {
     return redirectWithCookies(request, homePath, response);
   }
@@ -95,7 +91,6 @@ function isPrivateRoute(pathname: string) {
     "/crm",
     "/catalog",
     "/team",
-    "/welcome",
     "/settings",
     "/organization",
     "/invitations/pending",
@@ -221,7 +216,6 @@ export const config = {
     "/crm/:path*",
     "/catalog/:path*",
     "/team/:path*",
-    "/welcome",
     "/settings/:path*",
     "/organization/:path*",
     "/invitations/pending",
