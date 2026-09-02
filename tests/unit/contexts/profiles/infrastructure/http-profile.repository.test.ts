@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { HttpProfileRepository, ProfileApiError } from "@/contexts/profiles/infrastructure/repositories/http-profile.repository";
+import { HttpProfileRepository } from "@/contexts/profiles/infrastructure/repositories/http-profile.repository";
 import { ApiError, apiClient } from "@/contexts/shared/infrastructure/http/api-client";
 import { createUsername } from "@/contexts/profiles/domain/model/valueobjects/username";
 import { createProfileImageUrl } from "@/contexts/profiles/domain/model/valueobjects/profile-image-url";
@@ -19,7 +19,7 @@ vi.mock("@/contexts/shared/infrastructure/http/api-client", async (importOrigina
 describe("HttpProfileRepository", () => {
   let repository: HttpProfileRepository;
   const rawApiResponse = {
-    username: "mateo",
+    username: "user",
     imageUrl: "https://picsum.photos/seed/replik-test/800/600",
     language: "ES",
     theme: "LIGHT",
@@ -40,7 +40,7 @@ describe("HttpProfileRepository", () => {
 
       // Assert
       expect(result).toEqual({
-        username: "mateo",
+        username: "user",
         imageUrl: "https://picsum.photos/seed/replik-test/800/600",
         language: "ES",
         theme: "LIGHT",
@@ -76,7 +76,7 @@ describe("HttpProfileRepository", () => {
       // Arrange
       vi.mocked(apiClient.put).mockResolvedValue(rawApiResponse);
       const command = {
-        username: createUsername("mateo"),
+        username: createUsername("user"),
         imageUrl: createProfileImageUrl("https://picsum.photos/seed/replik-test/800/600"),
       };
 
@@ -85,14 +85,14 @@ describe("HttpProfileRepository", () => {
 
       // Assert
       expect(result).toEqual({
-        username: "mateo",
+        username: "user",
         imageUrl: "https://picsum.photos/seed/replik-test/800/600",
         language: "ES",
         theme: "LIGHT",
       });
       expect(apiClient.put).toHaveBeenCalledWith(
         "/api/v1/profiles",
-        { username: "mateo", imageUrl: "https://picsum.photos/seed/replik-test/800/600" },
+        { username: "user", imageUrl: "https://picsum.photos/seed/replik-test/800/600" },
         expect.objectContaining({ token: "token-abc" })
       );
     });
@@ -107,7 +107,7 @@ describe("HttpProfileRepository", () => {
 
       const dummyFile = new File(["bytes"], "photo.png", { type: "image/png" });
       const command = {
-        username: createUsername("mateo"),
+        username: createUsername("user"),
         imageUrl: createProfileImageUrl(null),
         imageFile: dummyFile,
       };
@@ -117,7 +117,7 @@ describe("HttpProfileRepository", () => {
 
       // Assert
       expect(result).toEqual({
-        username: "mateo",
+        username: "user",
         imageUrl: "https://picsum.photos/seed/replik-test/800/600",
         language: "ES",
         theme: "LIGHT",
@@ -146,7 +146,7 @@ describe("HttpProfileRepository", () => {
 
       const dummyFile = new File(["bytes"], "photo.png", { type: "image/png" });
       const command = {
-        username: createUsername("mateo"),
+        username: createUsername("user"),
         imageUrl: createProfileImageUrl("https://picsum.photos/seed/replik-test/800/600"),
         imageFile: dummyFile,
       };
@@ -156,7 +156,7 @@ describe("HttpProfileRepository", () => {
 
       // Assert
       expect(capturedFormData).not.toBeNull();
-      expect(capturedFormData!.get("username")).toBe("mateo");
+      expect(capturedFormData!.get("username")).toBe("user");
       expect(capturedFormData!.get("photoFile")).toBe(dummyFile);
       expect(capturedFormData!.get("imageUrl")).toBe("https://picsum.photos/seed/replik-test/800/600");
     });
@@ -172,7 +172,7 @@ describe("HttpProfileRepository", () => {
 
       const dummyFile = new File(["bytes"], "photo.png", { type: "image/png" });
       const command = {
-        username: createUsername("mateo"),
+        username: createUsername("user"),
         imageUrl: createProfileImageUrl(null),
         imageFile: dummyFile,
       };
@@ -195,7 +195,7 @@ describe("HttpProfileRepository", () => {
 
       // Assert
       expect(result).toEqual({
-        username: "mateo",
+        username: "user",
         imageUrl: "https://picsum.photos/seed/replik-test/800/600",
         language: "ES",
         theme: "LIGHT",

@@ -23,9 +23,9 @@ describe("TeamPageView", () => {
     invitationId: "11111111-1111-4111-8111-111111111111",
     memberId: "22222222-2222-4222-8222-222222222222",
     userId: "33333333-3333-4333-8333-333333333333",
-    name: "Alex Member",
+    name: "User Member",
     imageUrl: null,
-    email: "alex@example.com",
+    email: "user@example.com",
     roleId: "44444444-4444-4444-8444-444444444444",
     roleName: "Worker",
     roles: [

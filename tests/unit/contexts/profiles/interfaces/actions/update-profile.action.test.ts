@@ -35,7 +35,7 @@ describe("updateProfileAction", () => {
 
   it("should return an authentication error when accessToken cookie is missing", async () => {
     // Arrange
-    const formData = form({ username: "mateo" });
+    const formData = form({ username: "user" });
 
     // Act
     const result = await updateProfileAction({ status: "idle", data: null, error: null }, formData);
@@ -52,7 +52,7 @@ describe("updateProfileAction", () => {
   it("should return a clean validation error without raw JSON when username is invalid", async () => {
     // Arrange
     mocks.cookies.get.mockReturnValue({ value: "test-token" });
-    const formData = form({ username: "mateo_123" });
+    const formData = form({ username: "user_123" });
 
     // Act
     const result = await updateProfileAction({ status: "idle", data: null, error: null }, formData);
@@ -68,7 +68,7 @@ describe("updateProfileAction", () => {
     // Arrange
     mocks.cookies.get.mockReturnValue({ value: "test-token" });
     const updatedProfile = {
-      username: "mateo",
+      username: "user",
       imageUrl: "https://picsum.photos/seed/replik-test/800/600",
       language: "ES" as const,
       theme: "LIGHT" as const,
@@ -76,7 +76,7 @@ describe("updateProfileAction", () => {
     mocks.commandService.updateProfile.mockResolvedValue(updatedProfile);
 
     const formData = form({
-      username: "mateo",
+      username: "user",
       currentImageUrl: "https://picsum.photos/seed/replik-test/800/600",
     });
 
@@ -95,7 +95,7 @@ describe("updateProfileAction", () => {
     expect(mocks.revalidatePath).toHaveBeenCalledWith("/", "layout");
     expect(mocks.commandService.updateProfile).toHaveBeenCalledWith(
       expect.objectContaining({
-        username: { value: "mateo" },
+        username: { value: "user" },
         imageUrl: { value: "https://picsum.photos/seed/replik-test/800/600" },
       }),
       "test-token"
@@ -107,7 +107,7 @@ describe("updateProfileAction", () => {
     mocks.cookies.get.mockReturnValue({ value: "test-token" });
     const dummyFile = new File(["test-content"], "avatar.png", { type: "image/png" });
     const updatedProfile = {
-      username: "mateo",
+      username: "user",
       imageUrl: "https://picsum.photos/seed/replik-test/800/600",
       language: "ES" as const,
       theme: "LIGHT" as const,
@@ -115,7 +115,7 @@ describe("updateProfileAction", () => {
     mocks.commandService.updateProfile.mockResolvedValue(updatedProfile);
 
     const formData = form({
-      username: "mateo",
+      username: "user",
       imageFile: dummyFile,
     });
 
@@ -137,7 +137,7 @@ describe("updateProfileAction", () => {
     mocks.cookies.get.mockReturnValue({ value: "test-token" });
     const emptyFile = new File([], "empty.png", { type: "image/png" });
     const updatedProfile = {
-      username: "mateo",
+      username: "user",
       imageUrl: "https://picsum.photos/seed/replik-test/800/600",
       language: "ES" as const,
       theme: "LIGHT" as const,
@@ -145,7 +145,7 @@ describe("updateProfileAction", () => {
     mocks.commandService.updateProfile.mockResolvedValue(updatedProfile);
 
     const formData = form({
-      username: "mateo",
+      username: "user",
       currentImageUrl: "https://picsum.photos/seed/replik-test/800/600",
       imageFile: emptyFile,
     });
@@ -167,7 +167,7 @@ describe("updateProfileAction", () => {
     // Arrange
     mocks.cookies.get.mockReturnValue({ value: "test-token" });
     mocks.commandService.updateProfile.mockRejectedValue(new Error("Username already taken"));
-    const formData = form({ username: "mateo" });
+    const formData = form({ username: "user" });
 
     // Act
     const result = await updateProfileAction({ status: "idle", data: null, error: null }, formData);

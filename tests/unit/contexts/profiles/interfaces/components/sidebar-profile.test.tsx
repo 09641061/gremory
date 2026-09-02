@@ -8,20 +8,20 @@ vi.mock("next/navigation", () => ({
 }));
 import { SidebarProfile } from "@/contexts/profiles/interfaces/components/profile/sidebar-profile";
 
-const profile = { username: "mateo", imageUrl: null };
+const profile = { username: "user", imageUrl: null };
 
 describe("SidebarProfile", () => {
   it("should render the username on a trigger that announces a menu", () => {
     render(<SidebarProfile profile={profile} profileHref="/profile" />);
 
-    const trigger = screen.getByRole("button", { name: /mateo/i });
+    const trigger = screen.getByRole("button", { name: /user/i });
     expect(trigger).toBeVisible();
     expect(trigger).toHaveAttribute("aria-haspopup", "menu");
   });
 
   it("should show the user fallback when the profile image fails", () => {
     const { container } = render(
-      <SidebarProfile profile={{ username: "mateo", imageUrl: "https://picsum.photos/seed/replik-test/800/600" }} profileHref="/profile" />,
+      <SidebarProfile profile={{ username: "user", imageUrl: "https://picsum.photos/seed/replik-test/800/600" }} profileHref="/profile" />,
     );
     fireEvent.error(container.querySelector("img")!);
     expect(container.querySelector("img")).toBeNull();
@@ -46,7 +46,7 @@ describe("SidebarProfile", () => {
       <SidebarProfile profile={profile} profileHref="/profile?establishmentId=abc" />
     );
 
-    await user.click(screen.getByRole("button", { name: /mateo/i }));
+    await user.click(screen.getByRole("button", { name: /user/i }));
 
     expect(await screen.findByRole("menuitem", { name: "Profile" })).toHaveAttribute(
       "href",
@@ -62,7 +62,7 @@ describe("SidebarProfile", () => {
     const user = userEvent.setup();
     render(<SidebarProfile profile={profile} profileHref="/profile" />);
 
-    await user.click(screen.getByRole("button", { name: /mateo/i }));
+    await user.click(screen.getByRole("button", { name: /user/i }));
     await screen.findByRole("menu");
 
     expect(screen.getAllByRole("menuitem").map((item) => item.textContent)).toEqual([
@@ -71,7 +71,7 @@ describe("SidebarProfile", () => {
       "Invoices",
       "Log out",
     ]);
-    expect(screen.getByRole("menu")).not.toHaveTextContent("mateo");
+    expect(screen.getByRole("menu")).not.toHaveTextContent("user");
   });
 
   it("should point Upgrade plan at a caller-supplied route", async () => {
@@ -80,7 +80,7 @@ describe("SidebarProfile", () => {
       <SidebarProfile profile={profile} profileHref="/profile" upgradeHref="/billing" />
     );
 
-    await user.click(screen.getByRole("button", { name: /mateo/i }));
+    await user.click(screen.getByRole("button", { name: /user/i }));
 
     expect(await screen.findByRole("menuitem", { name: "Upgrade plan" })).toHaveAttribute(
       "href",
@@ -92,7 +92,7 @@ describe("SidebarProfile", () => {
     const user = userEvent.setup();
     render(<SidebarProfile profile={profile} profileHref="/profile" canManageBilling={false} />);
 
-    await user.click(screen.getByRole("button", { name: /mateo/i }));
+    await user.click(screen.getByRole("button", { name: /user/i }));
 
     expect(await screen.findByRole("menuitem", { name: "Profile" })).toHaveAttribute(
       "href",
@@ -105,10 +105,10 @@ describe("SidebarProfile", () => {
 
   it("should synchronize username and photo when profile prop updates", () => {
     const { rerender, container } = render(
-      <SidebarProfile profile={{ username: "mateo", imageUrl: null }} profileHref="/profile" />
+      <SidebarProfile profile={{ username: "user", imageUrl: null }} profileHref="/profile" />
     );
 
-    expect(screen.getByRole("button", { name: /mateo/i })).toBeVisible();
+    expect(screen.getByRole("button", { name: /user/i })).toBeVisible();
     expect(container.querySelector("img")).toBeNull();
 
     rerender(
@@ -126,7 +126,7 @@ describe("SidebarProfile", () => {
 
   it("should render the Lucide User icon inside avatar fallback when profile imageUrl is null", () => {
     const { container } = render(
-      <SidebarProfile profile={{ username: "mateo", imageUrl: null }} profileHref="/profile" />
+      <SidebarProfile profile={{ username: "user", imageUrl: null }} profileHref="/profile" />
     );
 
     const fallbackSvg = container.querySelector("svg.lucide-user");

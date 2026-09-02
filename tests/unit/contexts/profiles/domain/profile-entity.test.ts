@@ -12,7 +12,7 @@ import {
 describe("Profile Entity", () => {
   const profileId = createProfileId("p-1");
   const userId = createUserId("u-1");
-  const username = createUsername("mateo");
+  const username = createUsername("user");
   const imageUrl = createProfileImageUrl("https://picsum.photos/seed/replik-test/800/600");
   const preferences = defaultProfilePreferences();
   const createdAt = "2026-01-01T00:00:00.000Z";
@@ -51,14 +51,14 @@ describe("Profile Entity", () => {
       createdAt,
       updatedAt
     );
-    const newUsername = createUsername("alex");
+    const newUsername = createUsername("user");
     const newImageUrl = createProfileImageUrl("https://picsum.photos/seed/replik-test/800/600");
 
     // Act
     profile.updateDetails(newUsername, newImageUrl);
 
     // Assert
-    expect(profile.username.value).toBe("alex");
+    expect(profile.username.value).toBe("user");
     expect(profile.imageUrl.value).toBe("https://picsum.photos/seed/replik-test/800/600");
     expect(profile.updatedAt).not.toBe(updatedAt);
   });

@@ -62,7 +62,7 @@ describe("updatePreferencesAction", () => {
   it("should update preferences and invalidate cache tag on valid submission", async () => {
     mocks.cookies.get.mockReturnValue({ value: "test-token" });
     const updatedProfile = {
-      username: "mateo",
+      username: "user",
       imageUrl: null,
       language: "EN" as const,
       theme: "DARK" as const,

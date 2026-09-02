@@ -36,14 +36,7 @@ export function ImageUploadAvatar({
   onFileSelect,
 }: ImageUploadAvatarProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(initialUrl);
-
-  useEffect(() => {
-    setPreviewUrl(initialUrl);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
-  }, [initialUrl]);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(() => initialUrl);
 
   useEffect(() => {
     const input = fileInputRef.current;

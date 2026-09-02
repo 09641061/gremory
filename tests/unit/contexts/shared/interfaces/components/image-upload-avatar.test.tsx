@@ -80,9 +80,10 @@ describe("ImageUploadAvatar", () => {
     expect(img).toHaveAttribute("src", "https://picsum.photos/seed/replik-test/800/600");
   });
 
-  it("should synchronize previewUrl when initialUrl prop updates", () => {
+  it("should initialize preview from the current initialUrl when remounted", () => {
     const { rerender } = render(
       <ImageUploadAvatar
+        key="version-1"
         name="imageFile"
         alt="User photo"
         initialUrl="https://picsum.photos/seed/replik-test/800/600"
@@ -97,16 +98,17 @@ describe("ImageUploadAvatar", () => {
 
     rerender(
       <ImageUploadAvatar
+        key="version-2"
         name="imageFile"
         alt="User photo"
-        initialUrl="https://picsum.photos/seed/replik-test/800/600"
+        initialUrl="https://picsum.photos/seed/replik-test/900/700"
         fallbackIcon={<span data-testid="fallback">No photo</span>}
       />
     );
 
     expect(screen.getByRole("img", { name: "User photo" })).toHaveAttribute(
       "src",
-      "https://picsum.photos/seed/replik-test/800/600"
+      "https://picsum.photos/seed/replik-test/900/700"
     );
   });
 

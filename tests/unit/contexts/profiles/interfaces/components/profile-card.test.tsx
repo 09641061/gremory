@@ -8,7 +8,7 @@ vi.mock("next/navigation", () => ({
 }));
 
 const profile = {
-  username: "mateo",
+  username: "user",
   imageUrl: "https://picsum.photos/seed/replik-test/800/600",
   language: "ES" as const,
   theme: "LIGHT" as const,
@@ -20,13 +20,14 @@ describe("ProfileCard", () => {
 
     expect(screen.getByRole("heading", { name: "Profile photo" })).toBeVisible();
     expect(screen.getByRole("heading", { name: "Username" })).toBeVisible();
-    expect(screen.getByRole("textbox", { name: "Username" })).toHaveValue("mateo");
-    expect(screen.getByText("5/20")).toBeVisible();
+    expect(screen.getByRole("textbox", { name: "Username" })).toHaveValue("user");
+    expect(screen.getByText("4/20")).toBeVisible();
     expect(
       screen.getByText("Only letters (A-Z, a-z), 3 to 20 characters.")
     ).toBeVisible();
     expect(screen.getByLabelText("Upload image")).toHaveAttribute("name", "imageFile");
-    expect(screen.getByRole("img", { name: "mateo" })).toHaveAttribute(
+    expect(screen.queryByPlaceholderText("e.g. User")).not.toBeInTheDocument();
+    expect(screen.getByRole("img", { name: "user" })).toHaveAttribute(
       "src",
       "https://picsum.photos/seed/replik-test/800/600",
     );
@@ -38,9 +39,9 @@ describe("ProfileCard", () => {
 
     const input = screen.getByRole("textbox", { name: "Username" });
     await user.clear(input);
-    await user.type(input, "Mateo123!_ ñ");
+    await user.type(input, "User123!_ ñ");
 
-    expect(input).toHaveValue("Mateo");
+    expect(input).toHaveValue("User");
   });
 
   it("should truncate input exceeding the maximum length of 20 characters", async () => {
@@ -81,7 +82,7 @@ describe("ProfileCard", () => {
     const cancelButton = screen.getByRole("button", { name: "Cancel" });
     await user.click(cancelButton);
 
-    expect(input).toHaveValue("mateo");
+    expect(input).toHaveValue("user");
   });
 
   it("should have Cancel button disabled initially and enabled when username is modified", async () => {
@@ -100,7 +101,7 @@ describe("ProfileCard", () => {
 
   it("should synchronize username when profile prop changes", () => {
     const { rerender } = render(<ProfileCard profile={profile} />);
-    expect(screen.getByRole("textbox", { name: "Username" })).toHaveValue("mateo");
+    expect(screen.getByRole("textbox", { name: "Username" })).toHaveValue("user");
 
     rerender(<ProfileCard profile={{ ...profile, username: "carlos" }} />);
     expect(screen.getByRole("textbox", { name: "Username" })).toHaveValue("carlos");
@@ -108,19 +109,23 @@ describe("ProfileCard", () => {
 
   it("should synchronize image when profile imageUrl prop changes", () => {
     const { rerender } = render(<ProfileCard profile={profile} />);
-    expect(screen.getByRole("img", { name: "mateo" })).toHaveAttribute(
+    expect(screen.getByRole("img", { name: "user" })).toHaveAttribute(
       "src",
       "https://picsum.photos/seed/replik-test/800/600"
     );
 
     rerender(
       <ProfileCard
-        profile={{ ...profile, username: "carlos", imageUrl: "https://picsum.photos/seed/replik-test/800/600" }}
+        profile={{
+          ...profile,
+          username: "carlos",
+          imageUrl: "https://picsum.photos/seed/replik-test/900/700",
+        }}
       />
     );
     expect(screen.getByRole("img", { name: "carlos" })).toHaveAttribute(
       "src",
-      "https://picsum.photos/seed/replik-test/800/600"
+      "https://picsum.photos/seed/replik-test/900/700"
     );
   });
 

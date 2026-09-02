@@ -8,7 +8,7 @@ import { defaultProfilePreferences } from "@/contexts/profiles/domain/model/valu
 
 describe("Profile Application Services", () => {
   const dummyProfile = {
-    username: "mateo",
+    username: "user",
     imageUrl: "https://picsum.photos/seed/replik-test/800/600",
     language: "ES" as const,
     theme: "LIGHT" as const,
@@ -28,7 +28,7 @@ describe("Profile Application Services", () => {
       const service = new ProfileCommandServiceImpl(repository);
 
       const command = {
-        username: createUsername("mateo"),
+        username: createUsername("user"),
         imageUrl: createProfileImageUrl("https://picsum.photos/seed/replik-test/800/600"),
       };
 

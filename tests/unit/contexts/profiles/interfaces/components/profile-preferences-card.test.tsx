@@ -18,7 +18,11 @@ describe("ProfilePreferencesCard", () => {
 
     expect(screen.getByText("Preferences")).toBeVisible();
     expect(screen.getByLabelText("Language")).toHaveValue("ES");
+    expect(screen.getByRole("option", { name: "Es" })).toBeVisible();
+    expect(screen.getByRole("option", { name: "En" })).toBeVisible();
     expect(screen.getByLabelText("Theme")).toHaveValue("LIGHT");
+    expect(screen.getByRole("option", { name: "Light" })).toBeVisible();
+    expect(screen.getByRole("option", { name: "Dark" })).toBeVisible();
     expect(screen.queryByRole("option", { name: "SYSTEM" })).not.toBeInTheDocument();
   });
 

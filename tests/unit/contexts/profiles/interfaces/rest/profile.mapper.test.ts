@@ -4,7 +4,7 @@ import { profileFromApiResponse } from "@/contexts/profiles/interfaces/rest/mapp
 describe("Profile Mapper", () => {
   it("should map valid API response to ProfileViewModel", () => {
     const raw = {
-      username: "mateo",
+      username: "user",
       imageUrl: "https://picsum.photos/seed/replik-test/800/600",
       language: "ES",
       theme: "LIGHT",
@@ -13,7 +13,7 @@ describe("Profile Mapper", () => {
     const result = profileFromApiResponse(raw);
 
     expect(result).toEqual({
-      username: "mateo",
+      username: "user",
       imageUrl: "https://picsum.photos/seed/replik-test/800/600",
       language: "ES",
       theme: "LIGHT",
@@ -22,7 +22,7 @@ describe("Profile Mapper", () => {
 
   it("should normalize missing or undefined imageUrl to null", () => {
     const raw = {
-      username: "alex",
+      username: "user",
       language: "EN",
       theme: "LIGHT",
     };
@@ -30,7 +30,7 @@ describe("Profile Mapper", () => {
     const result = profileFromApiResponse(raw);
 
     expect(result).toEqual({
-      username: "alex",
+      username: "user",
       imageUrl: null,
       language: "EN",
       theme: "LIGHT",

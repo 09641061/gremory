@@ -8,13 +8,13 @@ import {
 describe("Profile Validation Schemas", () => {
   it("should validate a correct profile payload when username and image are valid", () => {
     const result = updateProfileSchema.safeParse({
-      username: "mateo",
+      username: "user",
       imageUrl: "https://picsum.photos/seed/replik-test/800/600",
     });
 
     expect(result.success).toBe(true);
     if (result.success) {
-      expect(result.data.username).toBe("mateo");
+      expect(result.data.username).toBe("user");
       expect(result.data.imageUrl).toBe("https://picsum.photos/seed/replik-test/800/600");
     }
   });
@@ -33,7 +33,7 @@ describe("Profile Validation Schemas", () => {
 
   it("should reject username when it contains non-letter characters", () => {
     const result = updateProfileSchema.safeParse({
-      username: "mateo_123",
+      username: "user_123",
       imageUrl: null,
     });
 
@@ -69,7 +69,7 @@ describe("Profile Validation Schemas", () => {
 
   it("should allow relative image path or URL format", () => {
     const result = updateProfileSchema.safeParse({
-      username: "mateo",
+      username: "user",
       imageUrl: "images/profiles/avatar.png",
     });
 
@@ -78,7 +78,7 @@ describe("Profile Validation Schemas", () => {
 
   it("should reject image URL exceeding maximum length", () => {
     const result = updateProfileSchema.safeParse({
-      username: "mateo",
+      username: "user",
       imageUrl: "https://example.com/" + "a".repeat(1000),
     });
 
