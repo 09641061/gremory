@@ -15,6 +15,7 @@ import {
   DropdownMenuTrigger,
 } from "@/contexts/shared/interfaces/components/ui/dropdown-menu";
 import type { ProfileViewModel } from "@/contexts/profiles/application/services/profile.view-model";
+import { NotificationDropdown } from "@/contexts/notifications/interfaces/components/notification-dropdown";
 import { cn } from "@/lib/utils";
 
 type SidebarProfileProps = {
@@ -37,10 +38,7 @@ function getProfileFallback(username: string) {
 }
 
 /**
- * Sidebar footer account control.
- *
- * The `ChevronsUpDown` affordance promises a menu, so the trigger opens one
- * instead of navigating straight to settings.
+ * Sidebar footer account control with Notification Dropdown.
  */
 export function SidebarProfile({
   profile,
@@ -54,60 +52,64 @@ export function SidebarProfile({
   const imageUrl = profile?.imageUrl;
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger
-        className={cn(
-          "group flex h-(--app-sidebar-profile-height) w-full items-center gap-(--app-sidebar-control-gap) rounded-(--app-sidebar-item-radius) border border-border/60 bg-card px-(--app-sidebar-control-padding-x) text-left transition-colors outline-none",
-          "hover:bg-accent/70 hover:text-accent-foreground",
-          "focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50",
-          "data-popup-open:bg-accent/70 data-popup-open:text-accent-foreground",
-          active && "border-accent/40 bg-accent text-accent-foreground",
-        )}
-      >
-        <Avatar className="size-(--app-sidebar-avatar-size) shrink-0 border border-border/60 bg-muted">
-          {/* Above the fold on every route, so it competes for bandwidth. */}
-          <AvatarImage src={imageUrl ?? undefined} alt="" fetchPriority="high" />
-          <AvatarFallback className="bg-muted text-[0.7rem] font-semibold text-muted-foreground">
-            {getProfileFallback(username)}
-          </AvatarFallback>
-        </Avatar>
-
-        <span className="min-w-0 flex-1 truncate text-sm font-medium">{username}</span>
-
-        <ChevronsUpDown
+    <div className="flex items-center gap-2 w-full">
+      <DropdownMenu>
+        <DropdownMenuTrigger
           className={cn(
-            "size-(--app-sidebar-icon-size) shrink-0 text-muted-foreground transition-colors group-hover:text-accent-foreground",
-            active && "text-accent-foreground",
+            "group flex h-(--app-sidebar-profile-height) flex-1 min-w-0 items-center gap-(--app-sidebar-control-gap) rounded-(--app-sidebar-item-radius) border border-border/60 bg-card px-(--app-sidebar-control-padding-x) text-left transition-colors outline-none",
+            "hover:bg-accent/70 hover:text-accent-foreground",
+            "focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50",
+            "data-popup-open:bg-accent/70 data-popup-open:text-accent-foreground",
+            active && "border-accent/40 bg-accent text-accent-foreground",
           )}
-          aria-hidden="true"
-        />
-      </DropdownMenuTrigger>
+        >
+          <Avatar className="size-(--app-sidebar-avatar-size) shrink-0 border border-border/60 bg-muted">
+            {/* Above the fold on every route, so it competes for bandwidth. */}
+            <AvatarImage src={imageUrl ?? undefined} alt="" fetchPriority="high" />
+            <AvatarFallback className="bg-muted text-[0.7rem] font-semibold text-muted-foreground">
+              {getProfileFallback(username)}
+            </AvatarFallback>
+          </Avatar>
 
-      {/* Opens upward: the trigger sits in the sidebar footer. */}
-      <DropdownMenuContent
-        side="top"
-        align="start"
-        className="w-(--anchor-width) min-w-56"
-      >
-        <DropdownMenuItem render={<Link href={settingsHref} />}>
-          <Settings aria-hidden="true" />
-          Settings
-        </DropdownMenuItem>
+          <span className="min-w-0 flex-1 truncate text-sm font-medium">{username}</span>
 
-        {canManageBilling ? (
-          <>
-            <DropdownMenuItem render={<Link href={upgradeHref} />}>
-              <CircleArrowUp aria-hidden="true" />
-              Upgrade plan
-            </DropdownMenuItem>
+          <ChevronsUpDown
+            className={cn(
+              "size-(--app-sidebar-icon-size) shrink-0 text-muted-foreground transition-colors group-hover:text-accent-foreground",
+              active && "text-accent-foreground",
+            )}
+            aria-hidden="true"
+          />
+        </DropdownMenuTrigger>
 
-            <DropdownMenuItem render={<Link href={invoiceHref} />}>
-              <Receipt aria-hidden="true" />
-              Invoices
-            </DropdownMenuItem>
-          </>
-        ) : null}
-      </DropdownMenuContent>
-    </DropdownMenu>
+        {/* Opens upward: the trigger sits in the sidebar footer. */}
+        <DropdownMenuContent
+          side="top"
+          align="start"
+          className="w-(--anchor-width) min-w-56"
+        >
+          <DropdownMenuItem render={<Link href={settingsHref} />}>
+            <Settings aria-hidden="true" />
+            Settings
+          </DropdownMenuItem>
+
+          {canManageBilling ? (
+            <>
+              <DropdownMenuItem render={<Link href={upgradeHref} />}>
+                <CircleArrowUp aria-hidden="true" />
+                Upgrade plan
+              </DropdownMenuItem>
+
+              <DropdownMenuItem render={<Link href={invoiceHref} />}>
+                <Receipt aria-hidden="true" />
+                Invoices
+              </DropdownMenuItem>
+            </>
+          ) : null}
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      <NotificationDropdown />
+    </div>
   );
 }
