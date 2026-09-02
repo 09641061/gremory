@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useTransition } from "react";
-import { Bell, MoreVertical, Trash2, CheckCircle2, ChevronLeft, ChevronRight, Building2 } from "lucide-react";
+import { Bell, MoreVertical, Trash2, CheckCircle2, XCircle, ChevronLeft, ChevronRight, Building2 } from "lucide-react";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import { Badge } from "@/contexts/shared/interfaces/components/ui/badge";
 import {
@@ -43,6 +43,10 @@ export function NotificationDropdown() {
 
   useEffect(() => {
     loadUnreadCount();
+    const interval = setInterval(() => {
+      loadUnreadCount();
+    }, 15000);
+    return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
@@ -65,8 +69,7 @@ export function NotificationDropdown() {
   };
 
   const handleAcceptInvitation = async (notificationId: string, token?: string) => {
-    if (!token) return;
-    await acceptInvitationNotificationAction(notificationId, token);
+    await acceptInvitationNotificationAction(notificationId, token || "");
     loadNotifications(currentPage);
     loadUnreadCount();
     window.location.reload();
@@ -75,12 +78,12 @@ export function NotificationDropdown() {
   return (
     <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
       <DropdownMenuTrigger
-        className="relative inline-flex size-8 items-center justify-center rounded-md border border-border/60 bg-muted/50 text-muted-foreground hover:bg-accent hover:text-accent-foreground focus:outline-none"
+        className="relative inline-flex size-7 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-accent-foreground focus:outline-none"
         aria-label="Notifications"
       >
         <Bell className="size-4" />
         {unreadCount > 0 && (
-          <span className="absolute -top-1 -right-1 flex size-4 items-center justify-center rounded-full bg-destructive text-[10px] font-bold text-destructive-foreground">
+          <span className="absolute -top-1 -right-1 flex size-3.5 items-center justify-center rounded-full bg-destructive text-[9px] font-bold text-destructive-foreground">
             {unreadCount > 9 ? "9+" : unreadCount}
           </span>
         )}
@@ -171,8 +174,8 @@ function NotificationItem({
         isUnread && "bg-accent/20"
       )}
     >
-      <div className="flex gap-2.5 min-w-0 flex-1">
-        <div className="mt-0.5 shrink-0 rounded-full bg-primary/10 p-1.5 text-primary">
+      <div className="flex items-start gap-2.5 min-w-0 flex-1">
+        <div className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
           <Building2 className="size-4" />
         </div>
         <div className="min-w-0 flex-1">
@@ -199,13 +202,23 @@ function NotificationItem({
                 <CheckCircle2 className="mr-1 size-3.5" />
                 Accept
               </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-7 px-2.5 text-xs font-medium text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                disabled={isPending}
+                onClick={() => onDelete(notification.id)}
+              >
+                <XCircle className="mr-1 size-3.5" />
+                Decline
+              </Button>
             </div>
           )}
 
           <span className="mt-1.5 block text-[10px] text-muted-foreground/70">
             {new Date(notification.createdAt).toLocaleDateString("en-US", {
-              day: "2-digit",
               month: "short",
+              day: "2-digit",
               hour: "2-digit",
               minute: "2-digit",
             })}

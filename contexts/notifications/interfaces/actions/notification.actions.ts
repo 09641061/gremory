@@ -5,6 +5,10 @@ import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-session-cookie";
 import {
+  workspaceSelectionCookies,
+  workspaceSelectionCookieOptions,
+} from "@/contexts/business/infrastructure/session/workspace-selection-cookie";
+import {
   createNotificationCommandService,
   createNotificationQueryService,
 } from "../../application/factory";
@@ -74,10 +78,23 @@ export async function acceptInvitationNotificationAction(notificationId: string,
   if (!token) return { success: false, error: "Authentication required" };
   try {
     const commandService = createNotificationCommandService();
-    await commandService.acceptInvitation({ notificationId, invitationToken }, token);
+    const result = await commandService.acceptInvitation({ notificationId, invitationToken }, token);
+
+    try {
+      const cookieStore = await cookies();
+      if (result?.organizationId) {
+        cookieStore.set(workspaceSelectionCookies.organizationId, result.organizationId, workspaceSelectionCookieOptions);
+      }
+      if (result?.establishmentId) {
+        cookieStore.set(workspaceSelectionCookies.establishmentId, result.establishmentId, workspaceSelectionCookieOptions);
+      }
+    } catch {
+    }
+
     revalidatePath("/", "layout");
     return { success: true };
   } catch (error) {
+    console.error("acceptInvitationNotificationAction error:", error);
     return { success: false, error: error instanceof Error ? error.message : "Failed to accept invitation" };
   }
 }

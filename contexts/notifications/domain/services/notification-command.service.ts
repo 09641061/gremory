@@ -6,5 +6,5 @@ import type { AcceptInvitationNotificationCommand } from "../model/commands/acce
 export interface NotificationCommandService {
   markAsRead(command: MarkNotificationReadCommand, accessToken: string): Promise<AppNotification>;
   deleteNotification(command: DeleteNotificationCommand, accessToken: string): Promise<void>;
-  acceptInvitation(command: AcceptInvitationNotificationCommand, accessToken: string): Promise<void>;
+  acceptInvitation(command: AcceptInvitationNotificationCommand, accessToken: string): Promise<{ organizationId?: string; establishmentId?: string }>;
 }

@@ -14,14 +14,17 @@ export class NotificationCommandServiceImpl implements NotificationCommandServic
     return this.gateway.markAsRead(accessToken, command.id);
   }
 
-  deleteNotification(command: DeleteNotificationCommand, accessToken: string): Promise<void> {
-    return this.gateway.deleteNotification(accessToken, command.id);
+  async deleteNotification(command: DeleteNotificationCommand, accessToken: string): Promise<void> {
+    await this.gateway.markAsRead(accessToken, command.id);
+    await this.gateway.deleteNotification(accessToken, command.id);
   }
 
-  async acceptInvitation(command: AcceptInvitationNotificationCommand, accessToken: string): Promise<void> {
-    if (command.invitationToken) {
-      await this.gateway.acceptInvitation(accessToken, command.invitationToken);
-    }
-    await this.gateway.deleteNotification(accessToken, command.notificationId);
+  async acceptInvitation(
+    command: AcceptInvitationNotificationCommand,
+    accessToken: string
+  ): Promise<{ organizationId?: string; establishmentId?: string }> {
+    await this.gateway.acceptNotification(accessToken, command.notificationId);
+    const result = await this.gateway.acceptInvitation(accessToken, command.invitationToken);
+    return result;
   }
 }

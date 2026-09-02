@@ -2,7 +2,7 @@ import "server-only";
 
 import { apiConfig } from "@/api.config";
 import { ApiError, apiClient } from "@/contexts/shared/infrastructure/http/api-client";
-import type { AppNotification, PaginatedNotifications } from "../../domain/model/notification";
+import type { AppNotification, PaginatedNotifications } from "../../domain/model/entities/notification";
 
 export class NotificationApiError extends ApiError {
   constructor(message: string, status: number, details?: unknown) {
@@ -10,6 +10,11 @@ export class NotificationApiError extends ApiError {
     this.name = "NotificationApiError";
   }
 }
+
+export type AcceptanceResult = {
+  organizationId: string;
+  establishmentId: string;
+};
 
 export class NotificationApiGateway {
   async getNotifications(accessToken: string, page = 0, size = 10): Promise<PaginatedNotifications> {
@@ -40,6 +45,15 @@ export class NotificationApiGateway {
     });
   }
 
+  async acceptNotification(accessToken: string, id: string): Promise<AppNotification> {
+    const url = `${apiConfig.routes.notifications}/${id}/accept`;
+    return apiClient.patch<AppNotification>(url, {}, {
+      token: accessToken,
+      errorMessage: "Failed to mark notification as accepted",
+      errorType: NotificationApiError,
+    });
+  }
+
   async deleteNotification(accessToken: string, id: string): Promise<void> {
     const url = `${apiConfig.routes.notifications}/${id}`;
     return apiClient.delete<void>(url, {
@@ -49,13 +63,22 @@ export class NotificationApiGateway {
     });
   }
 
-  async acceptInvitation(accessToken: string, token: string): Promise<void> {
-    const url = `${apiConfig.routes.workforce.invitations}/accept`;
-    return apiClient.post<void>(url, { token }, {
-      token: accessToken,
-      errorMessage: "Failed to accept invitation",
-      errorType: NotificationApiError,
-    });
+  async acceptInvitation(accessToken: string, token?: string): Promise<AcceptanceResult> {
+    if (token && token.trim().length > 0) {
+      const url = `${apiConfig.routes.workforce.invitations}/accept`;
+      return apiClient.post<AcceptanceResult>(url, { token }, {
+        token: accessToken,
+        errorMessage: "Failed to accept invitation",
+        errorType: NotificationApiError,
+      });
+    } else {
+      const url = `${apiConfig.routes.workforce.invitations}/accept-pending`;
+      return apiClient.post<AcceptanceResult>(url, {}, {
+        token: accessToken,
+        errorMessage: "Failed to accept pending invitation",
+        errorType: NotificationApiError,
+      });
+    }
   }
 }
 
