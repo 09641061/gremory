@@ -13,10 +13,6 @@ vi.mock("next/navigation", () => ({
 vi.mock("@/contexts/iam/interfaces/actions/sign-out.action", () => ({
   signOutAction: mocks.signOutAction,
 }));
-vi.mock("@/contexts/notifications/interfaces/components/notification-dropdown", () => ({
-  NotificationDropdown: () => <div data-testid="notification-dropdown" />,
-}));
-
 import { SidebarProfile } from "@/contexts/profiles/interfaces/components/profile/sidebar-profile";
 
 const profile = { username: "user", imageUrl: null };
@@ -34,7 +30,7 @@ describe("SidebarProfile", () => {
     const trigger = screen.getByRole("button", { name: /user/i });
     expect(trigger).toBeVisible();
     expect(trigger).toHaveAttribute("aria-haspopup", "menu");
-    expect(screen.getByTestId("notification-dropdown")).toBeInTheDocument();
+    expect(trigger).toHaveAttribute("data-slot", "dropdown-menu-trigger");
   });
 
   it("should keep the menu closed until the trigger is clicked", () => {
