@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTransition } from "react";
-import { ChevronsUpDown, CircleArrowUp, LogOut, Receipt, User, UserRound } from "lucide-react";
+import { CircleArrowUp, LogOut, MoreHorizontal, Receipt, User, UserRound } from "lucide-react";
 
 import {
   Avatar,
@@ -82,9 +82,9 @@ export function SidebarProfile({
 
         <span className="min-w-0 flex-1 truncate text-sm font-medium">{username}</span>
 
-        <ChevronsUpDown
-          className={cn(
-            "size-(--app-sidebar-icon-size) shrink-0 text-muted-foreground transition-colors group-hover:text-accent-foreground",
+          <MoreHorizontal
+            className={cn(
+            "size-5 shrink-0 text-muted-foreground transition-colors group-hover:text-accent-foreground",
             active && "text-accent-foreground",
           )}
           aria-hidden="true"
