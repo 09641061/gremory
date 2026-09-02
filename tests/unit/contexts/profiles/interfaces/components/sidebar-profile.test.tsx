@@ -13,9 +13,21 @@ vi.mock("next/navigation", () => ({
 vi.mock("@/contexts/iam/interfaces/actions/sign-out.action", () => ({
   signOutAction: mocks.signOutAction,
 }));
+
 import { SidebarProfile } from "@/contexts/profiles/interfaces/components/profile/sidebar-profile";
 
 const profile = { username: "user", imageUrl: null };
+
+function renderSidebarProfile(overrides: Partial<React.ComponentProps<typeof SidebarProfile>> = {}) {
+  return render(<SidebarProfile profile={profile} profileHref="/profile" {...overrides} />);
+}
+
+async function openSidebarProfileMenu() {
+  const user = userEvent.setup();
+  renderSidebarProfile();
+  await user.click(screen.getByRole("button", { name: /user/i }));
+  return user;
+}
 
 describe("SidebarProfile", () => {
   beforeEach(() => {
@@ -24,8 +36,8 @@ describe("SidebarProfile", () => {
     mocks.signOutAction.mockResolvedValue({ status: "success" });
   });
 
-  it("should render the username on a trigger that announces a menu", () => {
-    render(<SidebarProfile profile={profile} profileHref="/profile" />);
+  it("should render the username in a button that announces a menu", () => {
+    renderSidebarProfile();
 
     const trigger = screen.getByRole("button", { name: /user/i });
     expect(trigger).toBeVisible();
@@ -33,17 +45,16 @@ describe("SidebarProfile", () => {
     expect(trigger).toHaveAttribute("data-slot", "dropdown-menu-trigger");
   });
 
-  it("should keep the menu closed until the trigger is clicked", () => {
-    render(<SidebarProfile profile={profile} profileHref="/profile" />);
+  it("should keep the menu closed before the trigger is clicked", () => {
+    renderSidebarProfile();
 
+    expect(screen.queryByRole("menu")).toBeNull();
     expect(screen.queryByRole("menuitem", { name: "Profile" })).toBeNull();
   });
 
-  it("should open a menu with Profile and Upgrade plan when clicked", async () => {
+  it("should open profile and billing links when the trigger is clicked", async () => {
     const user = userEvent.setup();
-    render(
-      <SidebarProfile profile={profile} profileHref="/profile?establishmentId=abc" />,
-    );
+    renderSidebarProfile({ profileHref: "/profile?establishmentId=abc" });
 
     await user.click(screen.getByRole("button", { name: /user/i }));
 
@@ -57,12 +68,12 @@ describe("SidebarProfile", () => {
     );
   });
 
-  it("should list Profile, billing links and logout, without an account header", async () => {
+  it("should list billing links and log out without an account header", async () => {
     const user = userEvent.setup();
-    render(<SidebarProfile profile={profile} profileHref="/profile" />);
+    renderSidebarProfile();
 
     await user.click(screen.getByRole("button", { name: /user/i }));
-    await screen.findByRole("menu");
+    const menu = await screen.findByRole("menu");
 
     expect(screen.getAllByRole("menuitem").map((item) => item.textContent)).toEqual([
       "Profile",
@@ -70,14 +81,12 @@ describe("SidebarProfile", () => {
       "Invoices",
       "Log out",
     ]);
-    expect(screen.getByRole("menu")).not.toHaveTextContent("user");
+    expect(menu).not.toHaveTextContent("user");
   });
 
-  it("should point Upgrade plan at a caller-supplied route", async () => {
+  it("should point the upgrade link at a caller-supplied route", async () => {
     const user = userEvent.setup();
-    render(
-      <SidebarProfile profile={profile} profileHref="/profile" upgradeHref="/billing" />,
-    );
+    renderSidebarProfile({ upgradeHref: "/billing" });
 
     await user.click(screen.getByRole("button", { name: /user/i }));
 
@@ -89,7 +98,7 @@ describe("SidebarProfile", () => {
 
   it("should hide billing links when the account cannot manage billing", async () => {
     const user = userEvent.setup();
-    render(<SidebarProfile profile={profile} profileHref="/profile" canManageBilling={false} />);
+    renderSidebarProfile({ canManageBilling: false });
 
     await user.click(screen.getByRole("button", { name: /user/i }));
 
@@ -102,25 +111,24 @@ describe("SidebarProfile", () => {
     expect(screen.getByRole("menuitem", { name: "Log out" })).toBeVisible();
   });
 
-  it("should sign out and redirect to login when Log out is clicked", async () => {
+  it("should sign out and redirect to the login page when Log out is clicked", async () => {
     const user = userEvent.setup();
-    render(<SidebarProfile profile={profile} profileHref="/profile" />);
+    renderSidebarProfile();
 
     await user.click(screen.getByRole("button", { name: /user/i }));
-    const logoutItem = await screen.findByRole("menuitem", { name: "Log out" });
-    await user.click(logoutItem);
+    await user.click(await screen.findByRole("menuitem", { name: "Log out" }));
 
-    expect(mocks.signOutAction).toHaveBeenCalled();
+    expect(mocks.signOutAction).toHaveBeenCalledTimes(1);
     expect(mocks.replace).toHaveBeenCalledWith("/login");
   });
 
   it("should keep the avatar fallback visible when there is no image", () => {
-    const { container } = render(<SidebarProfile profile={profile} profileHref="/profile" />);
+    const { container } = renderSidebarProfile();
 
     expect(container.querySelector("svg.lucide-user")).toBeInTheDocument();
   });
 
-  it("should update the visible username when profile prop changes", () => {
+  it("should update the visible username when the profile changes", () => {
     const { rerender } = render(
       <SidebarProfile profile={{ username: "user", imageUrl: null }} profileHref="/profile" />,
     );

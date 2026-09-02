@@ -8,6 +8,7 @@ import {
   workspaceSelectionCookies,
   workspaceSelectionCookieOptions,
 } from "@/contexts/business/infrastructure/session/workspace-selection-cookie";
+import { ApiError } from "@/contexts/shared/infrastructure/http/api-client";
 import {
   createNotificationCommandService,
   createNotificationQueryService,
@@ -23,6 +24,10 @@ async function getAccessToken(): Promise<string | null> {
   }
 }
 
+function isExpectedAuthorizationError(error: unknown): boolean {
+  return error instanceof ApiError && (error.status === 401 || error.status === 403);
+}
+
 export async function fetchNotificationsAction(page = 0, size = 10): Promise<PaginatedNotifications | null> {
   const token = await getAccessToken();
   if (!token) return null;
@@ -30,7 +35,9 @@ export async function fetchNotificationsAction(page = 0, size = 10): Promise<Pag
     const queryService = createNotificationQueryService();
     return await queryService.getNotifications(token, page, size);
   } catch (error) {
-    console.error("fetchNotificationsAction error:", error);
+    if (!isExpectedAuthorizationError(error)) {
+      console.error("fetchNotificationsAction error:", error);
+    }
     return null;
   }
 }
@@ -42,7 +49,9 @@ export async function fetchUnreadNotificationsCountAction(): Promise<number> {
     const queryService = createNotificationQueryService();
     return await queryService.getUnreadCount(token);
   } catch (error) {
-    console.error("fetchUnreadNotificationsCountAction error:", error);
+    if (!isExpectedAuthorizationError(error)) {
+      console.error("fetchUnreadNotificationsCountAction error:", error);
+    }
     return 0;
   }
 }
