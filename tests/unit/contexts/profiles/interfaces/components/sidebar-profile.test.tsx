@@ -22,13 +22,6 @@ function renderSidebarProfile(overrides: Partial<React.ComponentProps<typeof Sid
   return render(<SidebarProfile profile={profile} profileHref="/profile" {...overrides} />);
 }
 
-async function openSidebarProfileMenu() {
-  const user = userEvent.setup();
-  renderSidebarProfile();
-  await user.click(screen.getByRole("button", { name: /user/i }));
-  return user;
-}
-
 describe("SidebarProfile", () => {
   beforeEach(() => {
     mocks.replace.mockReset();

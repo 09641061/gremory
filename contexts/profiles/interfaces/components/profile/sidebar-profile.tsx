@@ -61,73 +61,85 @@ export function SidebarProfile({
   const imageUrl = profile?.imageUrl;
 
   return (
-    <div className="flex w-full items-center gap-2">
+    <div
+      data-slot="sidebar-profile-card"
+      className={cn(
+        "flex w-full items-center justify-between gap-1 rounded-(--app-sidebar-item-radius) border border-border/60 bg-card p-1 shadow-xs transition-colors",
+        active && "border-accent/40 bg-accent/30",
+      )}
+    >
       <DropdownMenu>
-      <DropdownMenuTrigger
-        className={cn(
-          "group flex h-(--app-sidebar-profile-height) w-full items-center gap-(--app-sidebar-control-gap) rounded-(--app-sidebar-item-radius) border border-border/60 bg-card px-(--app-sidebar-control-padding-x) text-left transition-colors outline-none",
-          "hover:bg-accent/70 hover:text-accent-foreground",
-          "focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50",
-          "data-popup-open:bg-accent/70 data-popup-open:text-accent-foreground",
-          active && "border-accent/40 bg-accent text-accent-foreground",
-        )}
-      >
-        <Avatar className="size-(--app-sidebar-avatar-size) shrink-0 border border-border/60 bg-muted">
-          {/* Above the fold on every route, so it competes for bandwidth. */}
-          <AvatarImage src={imageUrl ?? undefined} alt="" fetchPriority="high" />
-          <AvatarFallback className="bg-muted text-muted-foreground">
-            <User className="size-4 text-muted-foreground" aria-hidden="true" />
-          </AvatarFallback>
-        </Avatar>
-
-        <span className="min-w-0 flex-1 truncate text-sm font-medium">{username}</span>
-
-          <MoreHorizontal
-            className={cn(
-            "size-5 shrink-0 text-muted-foreground transition-colors group-hover:text-accent-foreground",
-            active && "text-accent-foreground",
+        <DropdownMenuTrigger
+          className={cn(
+            "group/profile flex min-w-0 flex-1 items-center gap-(--app-sidebar-control-gap) rounded-[calc(var(--app-sidebar-item-radius)-2px)] px-1.5 py-1 text-left outline-none transition-colors",
+            "focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/50",
           )}
-          aria-hidden="true"
-        />
-      </DropdownMenuTrigger>
-
-      {/* Opens upward: the trigger sits in the sidebar footer. */}
-      <DropdownMenuContent
-        side="top"
-        align="start"
-        className="w-(--anchor-width) min-w-56"
-      >
-        <DropdownMenuItem render={<Link href={profileHref} />}>
-          <UserRound aria-hidden="true" />
-          Profile
-        </DropdownMenuItem>
-
-        {canManageBilling ? (
-          <>
-            <DropdownMenuItem render={<Link href={upgradeHref} />}>
-              <CircleArrowUp aria-hidden="true" />
-              Upgrade plan
-            </DropdownMenuItem>
-
-            <DropdownMenuItem render={<Link href={invoiceHref} />}>
-              <Receipt aria-hidden="true" />
-              Invoices
-            </DropdownMenuItem>
-          </>
-        ) : null}
-
-        <DropdownMenuSeparator />
-        <DropdownMenuItem
-          variant="destructive"
-          disabled={pending}
-          onClick={handleLogout}
+          title={username}
         >
-          <LogOut aria-hidden="true" />
-          {pending ? "Signing out..." : "Log out"}
-        </DropdownMenuItem>
-      </DropdownMenuContent>
+          <Avatar className="size-(--app-sidebar-avatar-size) shrink-0 border border-border/60 bg-muted">
+            {/* Above the fold on every route, so it competes for bandwidth. */}
+            <AvatarImage src={imageUrl ?? undefined} alt={username} fetchPriority="high" />
+            <AvatarFallback className="bg-muted text-muted-foreground">
+              <User className="size-4 text-muted-foreground" aria-hidden="true" />
+            </AvatarFallback>
+          </Avatar>
+
+          <span className="min-w-0 flex-1 truncate text-xs font-medium text-foreground">
+            {username}
+          </span>
+
+          <span
+            className={cn(
+              "flex size-7 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors",
+              "group-hover/profile:bg-accent group-hover/profile:text-accent-foreground",
+              "group-data-[popup-open]/profile:bg-accent group-data-[popup-open]/profile:text-accent-foreground",
+              "group-aria-expanded/profile:bg-accent group-aria-expanded/profile:text-accent-foreground",
+              active && "text-accent-foreground",
+            )}
+            aria-hidden="true"
+          >
+            <MoreHorizontal className="size-4" />
+          </span>
+        </DropdownMenuTrigger>
+
+        {/* Opens upward: the trigger sits in the sidebar footer. */}
+        <DropdownMenuContent
+          side="top"
+          align="start"
+          className="w-(--anchor-width) min-w-56"
+        >
+          <DropdownMenuItem render={<Link href={profileHref} />}>
+            <UserRound aria-hidden="true" />
+            Profile
+          </DropdownMenuItem>
+
+          {canManageBilling ? (
+            <>
+              <DropdownMenuItem render={<Link href={upgradeHref} />}>
+                <CircleArrowUp aria-hidden="true" />
+                Upgrade plan
+              </DropdownMenuItem>
+
+              <DropdownMenuItem render={<Link href={invoiceHref} />}>
+                <Receipt aria-hidden="true" />
+                Invoices
+              </DropdownMenuItem>
+            </>
+          ) : null}
+
+          <DropdownMenuSeparator />
+          <DropdownMenuItem
+            variant="destructive"
+            disabled={pending}
+            onClick={handleLogout}
+          >
+            <LogOut aria-hidden="true" />
+            {pending ? "Signing out..." : "Log out"}
+          </DropdownMenuItem>
+        </DropdownMenuContent>
       </DropdownMenu>
-      <NotificationDropdown />
+
+      <NotificationDropdown variant="compact" />
     </div>
   );
 }
