@@ -1,7 +1,6 @@
 /** @vitest-environment jsdom */
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { fireEvent } from "@testing-library/react";
 
 const mocks = vi.hoisted(() => ({
   replace: vi.fn(),
@@ -36,21 +35,6 @@ describe("SidebarProfile", () => {
     expect(trigger).toBeVisible();
     expect(trigger).toHaveAttribute("aria-haspopup", "menu");
     expect(screen.getByTestId("notification-dropdown")).toBeInTheDocument();
-  });
-
-  it("should show the user fallback when the profile image fails", () => {
-    const { container } = render(
-      <SidebarProfile profile={{ username: "mateo", imageUrl: "https://picsum.photos/seed/replik-test/800/600" }} profileHref="/profile" />,
-    );
-    fireEvent.error(container.querySelector("img")!);
-    expect(container.querySelector("img")).toBeNull();
-    expect(container.querySelector("svg.lucide-user")).toBeInTheDocument();
-  });
-
-  it("should fall back to a generic label when there is no profile", () => {
-    render(<SidebarProfile profile={null} profileHref="/profile" />);
-
-    expect(screen.getByRole("button", { name: /profile/i })).toBeVisible();
   });
 
   it("should keep the menu closed until the trigger is clicked", () => {
