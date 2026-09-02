@@ -54,7 +54,7 @@ export function NotificationDropdown() {
       loadNotifications(currentPage);
       loadUnreadCount();
     }
-  }, [isOpen]);
+  }, [isOpen, currentPage]);
 
   const handleMarkAsRead = async (id: string) => {
     await markNotificationAsReadAction(id);
