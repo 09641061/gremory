@@ -22,7 +22,7 @@ describe("HttpProfileRepository", () => {
     username: "mateo",
     imageUrl: "https://picsum.photos/seed/replik-test/800/600",
     language: "ES",
-    theme: "SYSTEM",
+    theme: "LIGHT",
   };
 
   beforeEach(() => {
@@ -43,7 +43,7 @@ describe("HttpProfileRepository", () => {
         username: "mateo",
         imageUrl: "https://picsum.photos/seed/replik-test/800/600",
         language: "ES",
-        theme: "SYSTEM",
+        theme: "LIGHT",
       });
       expect(apiClient.get).toHaveBeenCalledWith(
         "/api/v1/profiles",
@@ -88,7 +88,7 @@ describe("HttpProfileRepository", () => {
         username: "mateo",
         imageUrl: "https://picsum.photos/seed/replik-test/800/600",
         language: "ES",
-        theme: "SYSTEM",
+        theme: "LIGHT",
       });
       expect(apiClient.put).toHaveBeenCalledWith(
         "/api/v1/profiles",
@@ -120,7 +120,7 @@ describe("HttpProfileRepository", () => {
         username: "mateo",
         imageUrl: "https://picsum.photos/seed/replik-test/800/600",
         language: "ES",
-        theme: "SYSTEM",
+        theme: "LIGHT",
       });
       expect(mockFetch).toHaveBeenCalledWith(
         expect.stringContaining("/api/v1/profiles"),
@@ -198,11 +198,11 @@ describe("HttpProfileRepository", () => {
         username: "mateo",
         imageUrl: "https://picsum.photos/seed/replik-test/800/600",
         language: "ES",
-        theme: "SYSTEM",
+        theme: "LIGHT",
       });
       expect(apiClient.put).toHaveBeenCalledWith(
         "/api/v1/profiles/preferences",
-        { language: "ES", theme: "SYSTEM" },
+        { language: "ES", theme: "LIGHT" },
         expect.objectContaining({ token: "token-abc" })
       );
     });

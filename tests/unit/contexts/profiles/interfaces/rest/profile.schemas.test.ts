@@ -116,6 +116,15 @@ describe("Profile Validation Schemas", () => {
 
       expect(result.success).toBe(false);
     });
+
+    it("should reject SYSTEM because the backend only supports explicit themes", () => {
+      const result = updatePreferencesSchema.safeParse({
+        language: "EN",
+        theme: "SYSTEM",
+      });
+
+      expect(result.success).toBe(false);
+    });
   });
 
   describe("profileResponseSchema", () => {
@@ -135,7 +144,7 @@ describe("Profile Validation Schemas", () => {
         username: "Alice",
         imageUrl: null,
         language: "ES",
-        theme: "SYSTEM",
+        theme: "LIGHT",
       });
 
       expect(result.success).toBe(true);

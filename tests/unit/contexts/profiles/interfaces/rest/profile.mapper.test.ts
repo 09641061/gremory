@@ -24,7 +24,7 @@ describe("Profile Mapper", () => {
     const raw = {
       username: "alex",
       language: "EN",
-      theme: "SYSTEM",
+      theme: "LIGHT",
     };
 
     const result = profileFromApiResponse(raw);
@@ -33,7 +33,7 @@ describe("Profile Mapper", () => {
       username: "alex",
       imageUrl: null,
       language: "EN",
-      theme: "SYSTEM",
+      theme: "LIGHT",
     });
   });
 

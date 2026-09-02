@@ -24,15 +24,15 @@ describe("Profile Value Objects", () => {
   });
 
   describe("Theme", () => {
-    it("should accept valid themes LIGHT, DARK, SYSTEM regardless of casing", () => {
+    it("should accept valid themes LIGHT and DARK regardless of casing", () => {
       expect(createTheme("LIGHT")).toBe("LIGHT");
       expect(createTheme("dark")).toBe("DARK");
-      expect(createTheme("system")).toBe("SYSTEM");
     });
 
     it("should throw error when given an unsupported theme", () => {
-      expect(() => createTheme("BLUE")).toThrow("Theme must be LIGHT, DARK, or SYSTEM");
-      expect(() => createTheme("")).toThrow("Theme must be LIGHT, DARK, or SYSTEM");
+      expect(() => createTheme("BLUE")).toThrow("Theme must be LIGHT or DARK");
+      expect(() => createTheme("SYSTEM")).toThrow("Theme must be LIGHT or DARK");
+      expect(() => createTheme("")).toThrow("Theme must be LIGHT or DARK");
     });
   });
 
@@ -44,10 +44,10 @@ describe("Profile Value Objects", () => {
       expect(Object.isFrozen(preferences)).toBe(true);
     });
 
-    it("should create default profile preferences as ES and SYSTEM", () => {
+    it("should create default profile preferences as ES and LIGHT", () => {
       const defaultPrefs = defaultProfilePreferences();
       expect(defaultPrefs.language).toBe("ES");
-      expect(defaultPrefs.theme).toBe("SYSTEM");
+      expect(defaultPrefs.theme).toBe("LIGHT");
     });
   });
 

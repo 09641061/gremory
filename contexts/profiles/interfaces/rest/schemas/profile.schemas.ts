@@ -9,7 +9,7 @@ export const profileResponseSchema = z.object({
   username: z.string(),
   imageUrl: z.string().nullable().optional(),
   language: z.enum(["ES", "EN"]),
-  theme: z.enum(["LIGHT", "DARK", "SYSTEM"]),
+  theme: z.enum(["LIGHT", "DARK"]),
 });
 
 export const updateProfileSchema = z.object({
@@ -29,8 +29,8 @@ export const updatePreferencesSchema = z.object({
   language: z.enum(["ES", "EN"], {
     message: "Language must be ES or EN",
   }),
-  theme: z.enum(["LIGHT", "DARK", "SYSTEM"], {
-    message: "Theme must be LIGHT, DARK, or SYSTEM",
+  theme: z.enum(["LIGHT", "DARK"], {
+    message: "Theme must be LIGHT or DARK",
   }),
 });
 

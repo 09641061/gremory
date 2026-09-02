@@ -11,7 +11,7 @@ describe("Profile Application Services", () => {
     username: "mateo",
     imageUrl: "https://picsum.photos/seed/replik-test/800/600",
     language: "ES" as const,
-    theme: "SYSTEM" as const,
+    theme: "LIGHT" as const,
   };
 
   const createMockRepository = (): ProfileRepository => ({

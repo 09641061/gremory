@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 
 import { getMyProfileServerQuery } from "@/contexts/profiles/interfaces/queries/get-my-profile.query-handler";
 import { ProfileCard } from "@/contexts/profiles/interfaces/components/profile/profile-card";
+import { ProfilePreferencesCard } from "@/contexts/profiles/interfaces/components/profile/profile-preferences-card";
 
 export default function ProfilePage() {
   return (
@@ -26,6 +27,7 @@ export async function ProfilePageContent() {
         <p className="page-description mt-2">Manage your profile photo and username.</p>
       </div>
       <ProfileCard profile={profile} />
+      <ProfilePreferencesCard profile={profile} />
     </div>
   );
 }
