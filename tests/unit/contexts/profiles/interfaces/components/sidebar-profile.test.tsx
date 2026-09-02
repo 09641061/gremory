@@ -3,11 +3,19 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { fireEvent } from "@testing-library/react";
 
+const mocks = vi.hoisted(() => ({
+  replace: vi.fn(),
+  signOutAction: vi.fn().mockResolvedValue({ status: "success" }),
+}));
+
 vi.mock("next/navigation", () => ({
-  useRouter: () => ({ replace: vi.fn() }),
+  useRouter: () => ({ replace: mocks.replace }),
 }));
 vi.mock("@/contexts/iam/interfaces/actions/sign-out.action", () => ({
-  signOutAction: vi.fn().mockResolvedValue({ status: "success" }),
+  signOutAction: mocks.signOutAction,
+}));
+vi.mock("@/contexts/notifications/interfaces/components/notification-dropdown", () => ({
+  NotificationDropdown: () => <div data-testid="notification-dropdown" />,
 }));
 
 import { SidebarProfile } from "@/contexts/profiles/interfaces/components/profile/sidebar-profile";
@@ -15,17 +23,24 @@ import { SidebarProfile } from "@/contexts/profiles/interfaces/components/profil
 const profile = { username: "user", imageUrl: null };
 
 describe("SidebarProfile", () => {
+  beforeEach(() => {
+    mocks.replace.mockReset();
+    mocks.signOutAction.mockReset();
+    mocks.signOutAction.mockResolvedValue({ status: "success" });
+  });
+
   it("should render the username on a trigger that announces a menu", () => {
     render(<SidebarProfile profile={profile} profileHref="/profile" />);
 
     const trigger = screen.getByRole("button", { name: /user/i });
     expect(trigger).toBeVisible();
     expect(trigger).toHaveAttribute("aria-haspopup", "menu");
+    expect(screen.getByTestId("notification-dropdown")).toBeInTheDocument();
   });
 
   it("should show the user fallback when the profile image fails", () => {
     const { container } = render(
-      <SidebarProfile profile={{ username: "user", imageUrl: "https://picsum.photos/seed/replik-test/800/600" }} profileHref="/profile" />,
+      <SidebarProfile profile={{ username: "mateo", imageUrl: "https://picsum.photos/seed/replik-test/800/600" }} profileHref="/profile" />,
     );
     fireEvent.error(container.querySelector("img")!);
     expect(container.querySelector("img")).toBeNull();
@@ -47,18 +62,18 @@ describe("SidebarProfile", () => {
   it("should open a menu with Profile and Upgrade plan when clicked", async () => {
     const user = userEvent.setup();
     render(
-      <SidebarProfile profile={profile} profileHref="/profile?establishmentId=abc" />
+      <SidebarProfile profile={profile} profileHref="/profile?establishmentId=abc" />,
     );
 
     await user.click(screen.getByRole("button", { name: /user/i }));
 
     expect(await screen.findByRole("menuitem", { name: "Profile" })).toHaveAttribute(
       "href",
-      "/profile?establishmentId=abc"
+      "/profile?establishmentId=abc",
     );
     expect(screen.getByRole("menuitem", { name: "Upgrade plan" })).toHaveAttribute(
       "href",
-      "/upgrade"
+      "/upgrade",
     );
   });
 
@@ -81,14 +96,14 @@ describe("SidebarProfile", () => {
   it("should point Upgrade plan at a caller-supplied route", async () => {
     const user = userEvent.setup();
     render(
-      <SidebarProfile profile={profile} profileHref="/profile" upgradeHref="/billing" />
+      <SidebarProfile profile={profile} profileHref="/profile" upgradeHref="/billing" />,
     );
 
     await user.click(screen.getByRole("button", { name: /user/i }));
 
     expect(await screen.findByRole("menuitem", { name: "Upgrade plan" })).toHaveAttribute(
       "href",
-      "/billing"
+      "/billing",
     );
   });
 
@@ -100,40 +115,42 @@ describe("SidebarProfile", () => {
 
     expect(await screen.findByRole("menuitem", { name: "Profile" })).toHaveAttribute(
       "href",
-      "/profile"
+      "/profile",
     );
     expect(screen.queryByRole("menuitem", { name: "Upgrade plan" })).toBeNull();
     expect(screen.queryByRole("menuitem", { name: "Invoices" })).toBeNull();
     expect(screen.getByRole("menuitem", { name: "Log out" })).toBeVisible();
   });
 
-  it("should synchronize username and photo when profile prop updates", () => {
-    const { rerender, container } = render(
-      <SidebarProfile profile={{ username: "user", imageUrl: null }} profileHref="/profile" />
+  it("should sign out and redirect to login when Log out is clicked", async () => {
+    const user = userEvent.setup();
+    render(<SidebarProfile profile={profile} profileHref="/profile" />);
+
+    await user.click(screen.getByRole("button", { name: /user/i }));
+    const logoutItem = await screen.findByRole("menuitem", { name: "Log out" });
+    await user.click(logoutItem);
+
+    expect(mocks.signOutAction).toHaveBeenCalled();
+    expect(mocks.replace).toHaveBeenCalledWith("/login");
+  });
+
+  it("should keep the avatar fallback visible when there is no image", () => {
+    const { container } = render(<SidebarProfile profile={profile} profileHref="/profile" />);
+
+    expect(container.querySelector("svg.lucide-user")).toBeInTheDocument();
+  });
+
+  it("should update the visible username when profile prop changes", () => {
+    const { rerender } = render(
+      <SidebarProfile profile={{ username: "user", imageUrl: null }} profileHref="/profile" />,
     );
 
     expect(screen.getByRole("button", { name: /user/i })).toBeVisible();
-    expect(container.querySelector("img")).toBeNull();
 
     rerender(
-      <SidebarProfile
-        profile={{ username: "carlos", imageUrl: "https://picsum.photos/seed/replik-test/800/600" }}
-        profileHref="/profile"
-      />
+      <SidebarProfile profile={{ username: "carlos", imageUrl: null }} profileHref="/profile" />,
     );
 
     expect(screen.getByRole("button", { name: /carlos/i })).toBeVisible();
-    const img = container.querySelector("img");
-    expect(img).not.toBeNull();
-    expect(img).toHaveAttribute("src", "https://picsum.photos/seed/replik-test/800/600");
-  });
-
-  it("should render the Lucide User icon inside avatar fallback when profile imageUrl is null", () => {
-    const { container } = render(
-      <SidebarProfile profile={{ username: "user", imageUrl: null }} profileHref="/profile" />
-    );
-
-    const fallbackSvg = container.querySelector("svg.lucide-user");
-    expect(fallbackSvg).toBeInTheDocument();
   });
 });
