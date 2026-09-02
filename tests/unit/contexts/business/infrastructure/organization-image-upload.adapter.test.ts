@@ -9,6 +9,24 @@ vi.mock("@/contexts/business/infrastructure/session/business-session", () => ({
 }));
 
 describe("OrganizationImageUploadAdapter", () => {
+  it("returns the API detail when uploading a logo fails", async () => {
+    mocks.requireToken.mockResolvedValue("access-token");
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        new Response(JSON.stringify({ detail: "Logo is too large" }), { status: 413 }),
+      ),
+    );
+
+    await expect(
+      new OrganizationImageUploadAdapter().upload(
+        createOrganizationId("11111111-1111-4111-8111-111111111111"),
+        createOrganizationName("Takodu"),
+        new File(["logo"], "logo.png", { type: "image/png" }),
+      ),
+    ).rejects.toThrow("Logo is too large");
+  });
+
   it("sends the organization tenant when uploading a logo", async () => {
     mocks.requireToken.mockResolvedValue("access-token");
     const fetchMock = vi.fn().mockResolvedValue(

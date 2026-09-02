@@ -4,6 +4,7 @@ import { fireEvent, render, screen } from "@testing-library/react";
 
 import { OrganizationBadge } from "@/contexts/business/interfaces/components/workspace/organization-badge/organization-badge";
 import { WorkspaceSwitcher } from "@/contexts/business/interfaces/components/workspace/workspace-switcher/workspace-switcher";
+import { WorkspaceAvatar } from "@/contexts/business/interfaces/components/workspace/workspace-avatar/workspace-avatar";
 import type { WorkspaceHeaderViewModel } from "@/contexts/business/application/model/business-workspace.view-models";
 
 const push = vi.fn();
@@ -46,6 +47,22 @@ function openMenu(name = /Main branch/) {
   fireEvent.click(screen.getByRole("combobox", { name }));
 }
 
+describe("WorkspaceAvatar", () => {
+  it("shows fallbacks when establishment and organization images fail", () => {
+    const { container } = render(
+      <WorkspaceAvatar
+        establishmentPhotoUrl="https://example.com/establishment.png"
+        organizationImageUrl="https://example.com/organization.png"
+        hasOrganization
+      />,
+    );
+    container.querySelectorAll("img").forEach((image) => fireEvent.error(image));
+    expect(container.querySelectorAll("img")).toHaveLength(0);
+    expect(container.querySelector("svg.lucide-store")).toBeInTheDocument();
+    expect(container.querySelector("svg.lucide-building-2")).toBeInTheDocument();
+  });
+});
+
 describe("OrganizationBadge", () => {
   it("opens the organizations hub instead of the old organization editor", () => {
     render(<OrganizationBadge organization={organization} href="/organizations" />);
@@ -54,6 +71,13 @@ describe("OrganizationBadge", () => {
       "/organizations",
     );
     expect(screen.queryByRole("combobox")).toBeNull();
+  });
+
+  it("shows the organization fallback when its image fails", () => {
+    const { container } = render(<OrganizationBadge organization={organization} />);
+    fireEvent.error(container.querySelector("img")!);
+    expect(container.querySelector("img")).toBeNull();
+    expect(container.querySelector("svg.lucide-building-2")).toBeInTheDocument();
   });
 
   it("renders the organization as plain text when the account cannot read it", () => {

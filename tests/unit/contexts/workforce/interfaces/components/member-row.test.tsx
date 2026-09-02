@@ -1,5 +1,5 @@
 /** @vitest-environment jsdom */
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { MemberRow } from "@/contexts/workforce/interfaces/components/team/member-row";
 import type { TeamUserSummary } from "@/contexts/workforce/application/model/team.read-models";
@@ -59,6 +59,13 @@ describe("MemberRow", () => {
     const img = container.querySelector("img");
     expect(img).not.toBeNull();
     expect(img).toHaveAttribute("src", "https://picsum.photos/seed/replik-test/800/600");
+  });
+
+  it("should render avatar fallback when imageUrl fails", () => {
+    const { container } = render(<MemberRow member={memberWithImage} />);
+    fireEvent.error(container.querySelector("img")!);
+    expect(container.querySelector("img")).toBeNull();
+    expect(container.querySelector("svg.lucide-user")).toBeInTheDocument();
   });
 
   it("should render avatar fallback with Lucide User icon when imageUrl is null", () => {

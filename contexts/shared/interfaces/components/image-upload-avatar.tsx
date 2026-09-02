@@ -98,19 +98,22 @@ export function ImageUploadAvatar({
         className="hidden"
         onChange={handleChange}
       />
-      <Avatar
-        className={cn(
-          "size-16 cursor-pointer border border-border transition-opacity hover:opacity-80",
-          className,
-        )}
+      <button
+        type="button"
+        aria-label={`Choose ${alt.toLowerCase()}`}
         onClick={handleClick}
+        className="rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       >
-        {previewUrl ? (
-          <AvatarImage src={previewUrl} alt={alt} />
-        ) : (
+        <Avatar
+          className={cn(
+            "size-16 cursor-pointer border border-border transition-opacity hover:opacity-80",
+            className,
+          )}
+        >
+          <AvatarImage src={previewUrl ?? undefined} alt={alt} />
           <AvatarFallback className="bg-muted">{fallbackIcon}</AvatarFallback>
-        )}
-      </Avatar>
+        </Avatar>
+      </button>
     </>
   );
 }

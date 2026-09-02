@@ -149,9 +149,7 @@ export function AppSidebar({
 
         <SidebarProfile
           profile={currentProfile}
-          profileHref={
-            establishmentId ? `/profile?establishmentId=${establishmentId}` : "/profile"
-          }
+          profileHref="/profile"
           canManageBilling={canManageBilling}
           invoiceHref={establishmentId ? `/invoice?establishmentId=${establishmentId}` : "/invoice"}
           active={

@@ -1,6 +1,7 @@
 /** @vitest-environment jsdom */
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { fireEvent } from "@testing-library/react";
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ replace: vi.fn() }),
@@ -16,6 +17,15 @@ describe("SidebarProfile", () => {
     const trigger = screen.getByRole("button", { name: /mateo/i });
     expect(trigger).toBeVisible();
     expect(trigger).toHaveAttribute("aria-haspopup", "menu");
+  });
+
+  it("should show the user fallback when the profile image fails", () => {
+    const { container } = render(
+      <SidebarProfile profile={{ username: "mateo", imageUrl: "https://picsum.photos/seed/replik-test/800/600" }} profileHref="/profile" />,
+    );
+    fireEvent.error(container.querySelector("img")!);
+    expect(container.querySelector("img")).toBeNull();
+    expect(container.querySelector("svg.lucide-user")).toBeInTheDocument();
   });
 
   it("should fall back to a generic label when there is no profile", () => {

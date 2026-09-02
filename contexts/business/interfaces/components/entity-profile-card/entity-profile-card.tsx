@@ -149,21 +149,28 @@ export function EntityProfileCard({
                   )}
                 </p>
               </div>
-              <Avatar
-                className={cn(
-                  "size-16 border border-border",
-                  canUpdate && "cursor-pointer transition-opacity hover:opacity-80",
-                )}
-                onClick={canUpdate ? handleAvatarClick : undefined}
-              >
-                {previewUrl ? (
-                  <AvatarImage src={previewUrl} alt={name} />
-                ) : (
+              {canUpdate ? (
+                <button
+                  type="button"
+                  aria-label={`Choose ${photoNoun} for ${name}`}
+                  onClick={handleAvatarClick}
+                  className="rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  <Avatar className="size-16 cursor-pointer border border-border transition-opacity hover:opacity-80">
+                    <AvatarImage src={previewUrl ?? undefined} alt={name} />
+                    <AvatarFallback className="bg-muted">
+                      <Icon className="size-8 text-muted-foreground" />
+                    </AvatarFallback>
+                  </Avatar>
+                </button>
+              ) : (
+                <Avatar className="size-16 border border-border">
+                  <AvatarImage src={previewUrl ?? undefined} alt={name} />
                   <AvatarFallback className="bg-muted">
                     <Icon className="size-8 text-muted-foreground" />
                   </AvatarFallback>
-                )}
-              </Avatar>
+                </Avatar>
+              )}
             </div>
           </div>
 

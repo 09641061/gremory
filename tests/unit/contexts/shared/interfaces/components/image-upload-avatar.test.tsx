@@ -18,6 +18,25 @@ describe("ImageUploadAvatar", () => {
     vi.restoreAllMocks();
   });
 
+  it("should open the file picker from the keyboard", async () => {
+    const user = userEvent.setup();
+    render(
+      <ImageUploadAvatar
+        name="imageFile"
+        alt="User photo"
+        fallbackIcon={<span data-testid="fallback">No photo</span>}
+      />,
+    );
+
+    const input = screen.getByLabelText(/Upload image/i) as HTMLInputElement;
+    const click = vi.spyOn(input, "click");
+    const trigger = screen.getByRole("button", { name: "Choose user photo" });
+    trigger.focus();
+    await user.keyboard("{Enter}");
+
+    expect(click).toHaveBeenCalled();
+  });
+
   it("should render fallback icon when no initialUrl is provided", () => {
     render(
       <ImageUploadAvatar
@@ -29,6 +48,22 @@ describe("ImageUploadAvatar", () => {
 
     expect(screen.getByTestId("fallback")).toBeVisible();
     expect(screen.queryByRole("img")).toBeNull();
+  });
+
+  it("should render fallback when the initial image URL fails", () => {
+    render(
+      <ImageUploadAvatar
+        name="imageFile"
+        alt="User photo"
+        initialUrl="https://picsum.photos/seed/replik-test/800/600"
+        fallbackIcon={<span data-testid="fallback">No photo</span>}
+      />,
+    );
+
+    fireEvent.error(screen.getByRole("img", { name: "User photo" }));
+
+    expect(screen.getByTestId("fallback")).toBeVisible();
+    expect(screen.queryByRole("img", { name: "User photo" })).toBeNull();
   });
 
   it("should render image when initialUrl is provided", () => {
