@@ -90,17 +90,17 @@ describe("Business server actions", () => {
       initialBusinessActionResult,
       form({
         organizationId,
-        name: "  Main store  ",
-        photoUrl: "https://example.com/store.png",
+        name: "  MainStore  ",
+        photoUrl: "https://picsum.photos/seed/replik-test/800/600",
       }),
-    )).rejects.toThrow(`REDIRECT:/welcome?establishmentId=${establishmentId}`);
+    )).rejects.toThrow(`REDIRECT:/?establishmentId=${establishmentId}`);
 
     expect(mocks.requireToken).toHaveBeenCalledTimes(1);
     expect(mocks.establishmentFactory).toHaveBeenCalledWith();
     expect(mocks.establishmentService.create).toHaveBeenCalledWith({
       organizationId,
-      name: "Main store",
-      photoUrl: "https://example.com/store.png",
+      name: "MainStore",
+      photoUrl: "https://picsum.photos/seed/replik-test/800/600",
       timeZone: "America/Lima",
       photoFile: null,
     });
@@ -124,12 +124,12 @@ describe("Business server actions", () => {
   it("updates organizations using explicit commands", async () => {
     const updated = await updateOrganizationAction(
       initialBusinessActionResult,
-      form({ id: organizationId, name: "Acme Group" }),
+      form({ id: organizationId, name: "Acme" }),
     );
 
     expect(mocks.organizationService.update).toHaveBeenCalledWith({
       id: organizationId,
-      name: "Acme Group",
+      name: "Acme",
       imageUrl: null,
       imageFile: null,
     });
@@ -143,11 +143,11 @@ describe("Business server actions", () => {
 
     await expect(createOrganizationAction(
       initialBusinessActionResult,
-      form({ name: "Acme Group" }),
+      form({ name: "Acme" }),
     )).rejects.toThrow("REDIRECT:/establishments/new?organizationId=11111111-1111-4111-8111-111111111111");
 
     expect(mocks.organizationService.create).toHaveBeenCalledWith({
-      name: "Acme Group",
+      name: "Acme",
       imageFile: null,
     });
     expect(deleteCookie).toHaveBeenCalledWith("takodu.active_establishment_id");
@@ -156,7 +156,7 @@ describe("Business server actions", () => {
   it("rejects an invalid organization id before reaching the application service", async () => {
     const result = await updateOrganizationAction(
       initialBusinessActionResult,
-      form({ id: "not-a-uuid", name: "Acme Group" }),
+      form({ id: "not-a-uuid", name: "Acme" }),
     );
 
     expect(result.status).toBe("error");
@@ -168,7 +168,7 @@ describe("Business server actions", () => {
 
     const result = await updateOrganizationAction(
       initialBusinessActionResult,
-      form({ id: organizationId, name: "Acme Group" }),
+      form({ id: organizationId, name: "Acme" }),
     );
 
     expect(result).toEqual({

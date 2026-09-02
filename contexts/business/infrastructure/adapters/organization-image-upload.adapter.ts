@@ -7,7 +7,8 @@ import { requireBusinessAccessToken } from "@/contexts/business/infrastructure/s
 import { apiConfig } from "@/api.config";
 
 type OrganizationImageUploadResponse = {
-  message?: string;
+  message?: unknown;
+  detail?: unknown;
 };
 
 export class OrganizationImageUploadAdapter implements OrganizationImageStorage {
@@ -33,7 +34,13 @@ export class OrganizationImageUploadAdapter implements OrganizationImageStorage 
 
     if (!response.ok) {
       const data = (await response.json().catch(() => null)) as OrganizationImageUploadResponse | null;
-      throw new Error(data?.message || "Failed to update organization");
+      const message =
+        typeof data?.message === "string" && data.message.trim()
+          ? data.message
+          : typeof data?.detail === "string" && data.detail.trim()
+            ? data.detail
+            : "Failed to update organization";
+      throw new Error(message);
     }
   }
 }

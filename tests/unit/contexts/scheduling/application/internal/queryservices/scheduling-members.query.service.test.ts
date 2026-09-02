@@ -25,7 +25,7 @@ describe("loadSchedulingMembers", () => {
           userId: "11111111-1111-4111-8111-111111111111",
           memberId: "22222222-2222-4222-8222-222222222222",
           name: "Available Person",
-          imageUrl: "https://example.com/a.png",
+          imageUrl: "https://picsum.photos/seed/replik-test/800/600",
           isOwner: false,
           availableForScheduling: true,
         },
@@ -46,7 +46,7 @@ describe("loadSchedulingMembers", () => {
         status: "AVAILABLE",
         isOwner: false,
         availableForScheduling: true,
-        imageUrl: "https://example.com/a.png",
+        imageUrl: "https://picsum.photos/seed/replik-test/800/600",
       },
     ]);
   });

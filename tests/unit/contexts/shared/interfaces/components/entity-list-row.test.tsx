@@ -1,5 +1,5 @@
 /** @vitest-environment jsdom */
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { Store } from "lucide-react";
 import { EntityListRow } from "@/contexts/shared/interfaces/components/entity-list-row";
@@ -8,14 +8,29 @@ describe("EntityListRow", () => {
   it("renders the avatar image when a src is given", () => {
     render(
       <EntityListRow
-        avatarSrc="http://example.com/photo.jpg"
+        avatarSrc="https://picsum.photos/seed/replik-test/800/600"
         avatarFallbackIcon={<Store className="size-4" />}
         name="Main Store"
       />,
     );
 
     const img = screen.getByAltText("Main Store") as HTMLImageElement;
-    expect(img.src).toBe("http://example.com/photo.jpg");
+    expect(img.src).toBe("https://picsum.photos/seed/replik-test/800/600");
+  });
+
+  it("renders the fallback icon when an avatar URL fails", () => {
+    render(
+      <EntityListRow
+        avatarSrc="https://picsum.photos/seed/replik-test/800/600"
+        avatarFallbackIcon={<Store data-testid="fallback-icon" className="size-4" />}
+        name="Main Store"
+      />,
+    );
+
+    fireEvent.error(screen.getByRole("img", { name: "Main Store" }));
+
+    expect(screen.getByTestId("fallback-icon")).toBeVisible();
+    expect(screen.queryByRole("img", { name: "Main Store" })).toBeNull();
   });
 
   it("renders the fallback icon when there is no avatar src", () => {

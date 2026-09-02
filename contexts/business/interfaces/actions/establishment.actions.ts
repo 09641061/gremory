@@ -58,7 +58,7 @@ export async function createEstablishmentAction(
     return actionError(error);
   }
 
-  redirect(`/welcome?establishmentId=${encodeURIComponent(establishmentId)}`);
+  redirect(`/?establishmentId=${encodeURIComponent(establishmentId)}`);
 }
 
 export async function updateEstablishmentAction(

@@ -20,7 +20,7 @@ describe("OrganizationSettingsCard", () => {
   const organization = {
     id: "org-123",
     name: "Test Organization",
-    imageUrl: "http://example.com/logo.jpg",
+    imageUrl: "https://picsum.photos/seed/replik-test/800/600",
   };
 
   it("lets an account with update permission edit its organization", () => {

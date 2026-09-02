@@ -94,12 +94,12 @@ describe("IAM client components", () => {
     const { exchangeGoogleCodeAction } = await import("@/contexts/iam/interfaces/actions/exchange-google-code.action");
 
     // Act
-    render(<AuthCallback returnTo="/welcome" />);
+    render(<AuthCallback returnTo="/chat" />);
 
     // Assert
     await waitFor(() => expect(exchangeGoogleCodeAction).toHaveBeenCalledWith("abc"));
     expect(exchangeGoogleCodeAction).toHaveBeenCalledTimes(1);
-    await waitFor(() => expect(mocks.router.replace).toHaveBeenCalledWith("/welcome"));
+    await waitFor(() => expect(mocks.router.replace).toHaveBeenCalledWith("/chat"));
     expect(window.location.hash).toBe("");
   });
 

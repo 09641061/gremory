@@ -203,7 +203,7 @@ describe("app shell query service", () => {
     const shell = await createAppShellQueryService().resolve();
 
     expect(shell.visibleSidebarRoutes).toEqual([]);
-    expect(shell.homeHref).toBe("/welcome");
+    expect(shell.homeHref).toBe("/establishments");
   });
 
   it("routes a member without visible modules but readable establishments to the establishments page", async () => {

@@ -12,7 +12,8 @@ import { requireBusinessAccessToken } from "@/contexts/business/infrastructure/s
 import { apiConfig } from "@/api.config";
 
 type EstablishmentPhotoUploadResponse = {
-  message?: string;
+  message?: unknown;
+  detail?: unknown;
   storedPath?: string;
   photoUrl?: string;
 };
@@ -37,9 +38,13 @@ export class EstablishmentPhotoAdapter implements EstablishmentPhotoStorage {
     const data = (await response.json().catch(() => null)) as EstablishmentPhotoUploadResponse | null;
 
     if (!response.ok) {
-      throw new Error(
-        (data?.message ? String(data.message) : "") || "Failed to upload establishment image",
-      );
+      const message =
+        typeof data?.message === "string" && data.message.trim()
+          ? data.message
+          : typeof data?.detail === "string" && data.detail.trim()
+            ? data.detail
+            : "Failed to upload establishment image";
+      throw new Error(message);
     }
 
     const storedReference = data?.photoUrl ?? data?.storedPath;

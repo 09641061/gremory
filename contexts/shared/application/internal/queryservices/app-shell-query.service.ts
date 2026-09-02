@@ -120,7 +120,6 @@ function resolveHomeHref(
   const firstWorkRoute = visibleRoutes.find((route) => route !== "/analytics");
   if (firstWorkRoute) return firstWorkRoute;
 
-  if (workspace.accountType === "OWNER") return "/welcome";
   // No module is openable, but the account may still manage an establishment
   // profile (`establishment:update`), which lives on the establishments page.
   if (

@@ -141,7 +141,13 @@ async function readResponseBody(response: Response): Promise<unknown> {
 }
 
 export function extractApiErrorMessage(body: unknown): string | undefined {
-  if (!body || typeof body !== "object") return undefined;
+  if (!body) return undefined;
+
+  if (Array.isArray(body) && body.length > 0) {
+    return extractApiErrorMessage(body[0]);
+  }
+
+  if (typeof body !== "object") return undefined;
   const record = body as Record<string, unknown>;
 
   const message = record.message;
