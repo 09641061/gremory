@@ -12,7 +12,7 @@ export default function ProfilePage() {
   );
 }
 
-async function ProfilePageContent() {
+export async function ProfilePageContent() {
   const profile = await getMyProfileServerQuery();
 
   if (!profile) {

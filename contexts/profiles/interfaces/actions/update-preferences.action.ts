@@ -3,6 +3,7 @@
 import "server-only";
 import { cookies } from "next/headers";
 import { updateTag } from "next/cache";
+import { z } from "zod";
 import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-session-cookie";
 import { updatePreferencesSchema } from "../rest/schemas/profile.schemas";
 import { createLanguage } from "../../domain/model/valueobjects/language";
@@ -55,6 +56,14 @@ export async function updatePreferencesAction(
       error: null,
     };
   } catch (error) {
+    if (error instanceof z.ZodError) {
+      return {
+        status: "error",
+        data: null,
+        error: error.issues[0]?.message ?? "Invalid preferences data",
+      };
+    }
+
     return {
       status: "error",
       data: null,

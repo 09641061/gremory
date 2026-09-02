@@ -3,6 +3,7 @@
 import "server-only";
 import { cookies } from "next/headers";
 import { updateTag } from "next/cache";
+import { z } from "zod";
 import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-session-cookie";
 import { updateProfileSchema } from "../rest/schemas/profile.schemas";
 import { createUsername } from "../../domain/model/valueobjects/username";
@@ -58,6 +59,14 @@ export async function updateProfileAction(
       error: null,
     };
   } catch (error) {
+    if (error instanceof z.ZodError) {
+      return {
+        status: "error",
+        data: null,
+        error: error.issues[0]?.message ?? "Invalid profile data",
+      };
+    }
+
     return {
       status: "error",
       data: null,

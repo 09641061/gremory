@@ -1,7 +1,7 @@
 import "server-only";
 
 import { apiConfig } from "@/api.config";
-import { ApiError, apiClient } from "@/contexts/shared/infrastructure/http/api-client";
+import { ApiError, apiClient, extractApiErrorMessage } from "@/contexts/shared/infrastructure/http/api-client";
 import type { ProfileRepository } from "../../domain/repositories/profile.repository";
 import type { UpdateProfileCommand } from "../../domain/model/commands/update-profile.command";
 import type { UpdateProfilePreferencesCommand } from "../../domain/model/commands/update-profile-preferences.command";
@@ -64,7 +64,11 @@ export class HttpProfileRepository implements ProfileRepository {
     });
     const data = await response.json().catch(() => null);
     if (!response.ok) {
-      throw new ProfileApiError("Failed to update profile", response.status, data);
+      throw new ProfileApiError(
+        extractApiErrorMessage(data) ?? "Failed to update profile",
+        response.status,
+        data,
+      );
     }
     return data;
   }
