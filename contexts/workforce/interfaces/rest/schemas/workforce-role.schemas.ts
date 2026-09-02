@@ -1,7 +1,6 @@
 import { z } from "zod";
 import {
   workforceAssignablePermissions,
-  workforcePermissionCodes,
   isWorkforceAssignablePermission,
 } from "../../../domain/model/enums/workforce-permission";
 

@@ -12,7 +12,7 @@ export class WorkforceRoleQueryServiceImpl implements WorkforceRoleQueryService 
     return this.roles.list(organizationId);
   }
 
-  permissions(): Promise<ReadonlyArray<WorkforcePermission>> {
+  permissions(): Promise<ReadonlyArray<WorkforcePermission | string>> {
     return this.roles.permissions();
   }
 }

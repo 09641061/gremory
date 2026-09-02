@@ -3,7 +3,7 @@ import type { WorkforcePermission } from "../enums/workforce-permission";
 export interface WorkforceRoleProps {
   id: string | null;
   name: string;
-  permissions: ReadonlyArray<WorkforcePermission>;
+  permissions: ReadonlyArray<WorkforcePermission | string>;
   systemRole: boolean;
   position?: number;
 }
@@ -12,7 +12,7 @@ export class WorkforceRole {
   private constructor(
     public readonly id: string | null,
     private name: string,
-    private permissions: WorkforcePermission[],
+    private permissions: (WorkforcePermission | string)[],
     private readonly systemRole: boolean,
     public readonly position: number,
   ) {}
@@ -36,7 +36,7 @@ export class WorkforceRole {
     this.name = normalized;
   }
 
-  replacePermissions(permissions: ReadonlyArray<WorkforcePermission>): void {
+  replacePermissions(permissions: ReadonlyArray<WorkforcePermission | string>): void {
     this.permissions = normalizePermissions(permissions);
   }
 
@@ -44,7 +44,7 @@ export class WorkforceRole {
     return this.name;
   }
 
-  getPermissions(): ReadonlyArray<WorkforcePermission> {
+  getPermissions(): ReadonlyArray<WorkforcePermission | string> {
     return Object.freeze([...this.permissions]);
   }
 
@@ -59,7 +59,7 @@ export class WorkforceRole {
 
 function normalizeRole(
   name: string,
-  permissions: ReadonlyArray<WorkforcePermission>,
+  permissions: ReadonlyArray<WorkforcePermission | string>,
 ) {
   return {
     name: normalizeName(name),
@@ -79,10 +79,10 @@ function normalizeName(value: string): string {
 }
 
 function normalizePermissions(
-  permissions: ReadonlyArray<WorkforcePermission>,
-): WorkforcePermission[] {
+  permissions: ReadonlyArray<WorkforcePermission | string>,
+): (WorkforcePermission | string)[] {
   if (!permissions) {
     throw new Error("Role permissions are required");
   }
-  return [...new Set(permissions.map((permission) => permission.trim() as WorkforcePermission))];
+  return [...new Set(permissions.map((permission) => permission.trim()))];
 }
