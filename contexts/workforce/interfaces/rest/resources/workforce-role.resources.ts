@@ -3,7 +3,7 @@ import type { WorkforcePermission } from "../../../domain/model/enums/workforce-
 export interface WorkforceRoleResource {
   id: string;
   name: string;
-  permissions: ReadonlyArray<WorkforcePermission>;
+  permissions: ReadonlyArray<WorkforcePermission | string>;
   systemRole: boolean;
   position?: number;
 }

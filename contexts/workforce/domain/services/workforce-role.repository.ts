@@ -9,7 +9,7 @@ import type {
 
 export interface WorkforceRoleRepository {
   list(organizationId?: string): Promise<WorkforceRole[]>;
-  permissions(): Promise<readonly WorkforcePermission[]>;
+  permissions(): Promise<ReadonlyArray<WorkforcePermission | string>>;
   save(role: WorkforceRole): Promise<WorkforceRole>;
   patch(command: PatchWorkforceRoleCommand): Promise<WorkforceRole>;
   delete(command: DeleteWorkforceRoleCommand): Promise<void>;

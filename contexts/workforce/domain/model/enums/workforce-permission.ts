@@ -66,10 +66,6 @@ export const workforcePermissions = {
     read: "scheduling:read",
     manage: "scheduling:manage",
   },
-  availability: {
-    manageSelf: "availability:manage_self",
-    manageAll: "availability:manage_all",
-  },
   assistant: {
     manage: "assistant:manage",
   },

@@ -95,7 +95,7 @@ describe("TeamPageView", () => {
     );
   });
 
-  it("enables the owner to edit its own availability and everyone else's", () => {
+  it("enables the owner to edit its own availability switch", () => {
     render(
       <TeamPageView
         establishmentId="66666666-6666-4666-8666-666666666666"
@@ -112,15 +112,15 @@ describe("TeamPageView", () => {
     );
 
     const all = switches();
-    expect(all).toHaveLength(4);
-    expect(all.every(({ disabled }) => disabled === false)).toBe(true);
+    expect(all).toHaveLength(1);
+    expect(all[0].disabled).toBe(false);
   });
 
-  it("prevents a non-owner from editing the owner's availability", () => {
+  it("does not render switches for non-owner members", () => {
     render(
       <TeamPageView
         establishmentId="66666666-6666-4666-8666-666666666666"
-        members={[currentUser, member]}
+        members={[member]}
         canManageRoles={true}
         canInviteMembers={true}
         canRemoveMembers={true}
@@ -132,37 +132,7 @@ describe("TeamPageView", () => {
       />,
     );
 
-    const all = switches();
-    expect(all).toHaveLength(4);
-    // The worker can edit its own row (manage_self) and others' (manage_all),
-    // but never the owner's row.
-    expect(all[0].disabled).toBe(true);
-    expect(all[1].disabled).toBe(true);
-    expect(all[2].disabled).toBe(false);
-    expect(all[3].disabled).toBe(false);
-  });
-
-  it("lets a worker with manage_self edit only its own availability", () => {
-    render(
-      <TeamPageView
-        establishmentId="66666666-6666-4666-8666-666666666666"
-        members={[currentUser, member]}
-        canManageRoles={true}
-        canInviteMembers={true}
-        canRemoveMembers={true}
-        canCancelInvitations={true}
-        currentUserId={member.userId}
-        currentUserIsOwner={false}
-        canManageOwnAvailability={true}
-        canManageOtherAvailability={false}
-      />,
-    );
-
-    const all = switches();
-    expect(all).toHaveLength(4);
-    expect(all[0].disabled).toBe(true);
-    expect(all[1].disabled).toBe(true);
-    expect(all[2].disabled).toBe(false);
-    expect(all[3].disabled).toBe(false);
+    const all = screen.queryAllByRole("switch");
+    expect(all).toHaveLength(0);
   });
 });
