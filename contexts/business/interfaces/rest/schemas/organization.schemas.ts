@@ -1,14 +1,43 @@
 import { z } from "zod";
+import {
+  MAX_ORGANIZATION_NAME_LENGTH,
+  MIN_ORGANIZATION_NAME_LENGTH,
+  ORGANIZATION_NAME_REGEX,
+} from "@/contexts/business/domain/model/valueobjects/organization-name.vo";
 
 // Onboarding step 1: the owner creates the organization themselves. A member
 // who later starts their own business reuses the same command.
 export const createOrganizationSchema = z.object({
-  name: z.string().trim().min(1, "Organization name is required").max(150),
+  name: z
+    .string()
+    .trim()
+    .min(1, "Organization name is required")
+    .min(
+      MIN_ORGANIZATION_NAME_LENGTH,
+      `Organization name must be at least ${MIN_ORGANIZATION_NAME_LENGTH} characters`
+    )
+    .max(
+      MAX_ORGANIZATION_NAME_LENGTH,
+      `Organization name must be at most ${MAX_ORGANIZATION_NAME_LENGTH} characters`
+    )
+    .regex(ORGANIZATION_NAME_REGEX, "Organization name must contain only letters (A-Z, a-z)"),
 });
 
 export const updateOrganizationSchema = z.object({
   id: z.string().uuid("Invalid organization ID"),
-  name: z.string().trim().min(1, "Organization name is required").max(150),
+  name: z
+    .string()
+    .trim()
+    .min(1, "Organization name is required")
+    .min(
+      MIN_ORGANIZATION_NAME_LENGTH,
+      `Organization name must be at least ${MIN_ORGANIZATION_NAME_LENGTH} characters`
+    )
+    .max(
+      MAX_ORGANIZATION_NAME_LENGTH,
+      `Organization name must be at most ${MAX_ORGANIZATION_NAME_LENGTH} characters`
+    )
+    .regex(ORGANIZATION_NAME_REGEX, "Organization name must contain only letters (A-Z, a-z)"),
   imageUrl: z.string().trim().max(500, "Image URL cannot exceed 500 characters").nullish(),
 });
 
