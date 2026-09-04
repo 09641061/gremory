@@ -9,7 +9,6 @@ import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import { Card, CardContent } from "@/contexts/shared/interfaces/components/ui/card";
 import { Input } from "@/contexts/shared/interfaces/components/ui/input";
 import { ErrorAlert } from "@/contexts/shared/interfaces/components/error";
-import { InfoBadge } from "@/contexts/shared/interfaces/components/ui/info-badge";
 import { CreateRoleDialog } from "./create-role-dialog";
 import { EditRoleDialog } from "./edit-role-dialog";
 import { DeleteRoleDialog } from "./delete-role-dialog";
@@ -132,21 +131,6 @@ export function PermissionsPageView({
             <p className="page-description mt-2">
               Search, create, and manage the team roles available in your account.
             </p>
-            {authorization ? (
-              <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                <InfoBadge>
-                  {formatAuthorizationRole(authorization.role)}
-                </InfoBadge>
-                {authorization.scope ? (
-                  <>
-                    <InfoBadge>
-                      {formatAuthorizationScope(authorization.scope.type)} scope
-                    </InfoBadge>
-                    <InfoBadge>{authorization.scope.name}</InfoBadge>
-                  </>
-                ) : null}
-              </div>
-            ) : null}
           </div>
         </div>
 
@@ -287,12 +271,4 @@ export function PermissionsPageView({
 
     </section>
   );
-}
-
-function formatAuthorizationRole(role: string) {
-  return role.charAt(0) + role.slice(1).toLowerCase();
-}
-
-function formatAuthorizationScope(scopeType: string) {
-  return scopeType.charAt(0) + scopeType.slice(1).toLowerCase();
 }
