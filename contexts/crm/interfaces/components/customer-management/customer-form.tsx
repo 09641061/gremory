@@ -11,6 +11,7 @@ import { Label } from "@/contexts/shared/interfaces/components/ui/label";
 import { NativeSelect, NativeSelectOption } from "@/contexts/shared/interfaces/components/ui/native-select";
 
 import { PhoneInput } from "./phone-input";
+import { useCrmTranslations } from "@/contexts/crm/interfaces/i18n";
 
 export interface CustomerFormData {
   docType: string;
@@ -40,6 +41,7 @@ export function CustomerForm({
   submitIcon,
   establishmentId,
 }: CustomerFormProps) {
+  const t = useCrmTranslations();
   const [docType, setDocType] = React.useState(initialData?.docType || "dni");
   const [docNumber, setDocNumber] = React.useState(initialData?.docNumber || "");
   const [name, setName] = React.useState(initialData?.name || "");
@@ -72,28 +74,28 @@ export function CustomerForm({
 
     if (docType === "dni") {
       if (!/^\d{8}$/.test(docNumber)) {
-        setError("The DNI must have exactly 8 digits.");
+        setError(t.form.validation.dniLength);
         return;
       }
     } else if (docType === "ruc") {
       if (!/^\d{11}$/.test(docNumber)) {
-        setError("The RUC must have exactly 11 digits.");
+        setError(t.form.validation.rucLength);
         return;
       }
     } else if (docType === "foreign_resident_card") {
       if (!/^\d{9,11}$/.test(docNumber)) {
-        setError("The Foreign Resident Card must have between 9 and 11 digits.");
+        setError(t.form.validation.foreignCardLength);
         return;
       }
     } else if (docType === "passport") {
       if (!/^[A-Z0-9]{6,15}$/.test(docNumber)) {
-        setError("The Passport must be 6 to 15 alphanumeric characters.");
+        setError(t.form.validation.passportLength);
         return;
       }
     }
 
     if (!/^\+?\d+$/.test(phoneCountryCode.trim()) || !/^\d+$/.test(phoneNumber)) {
-      setError("The country code must contain only digits and may start with +.");
+      setError(t.form.validation.phoneFormat);
       return;
     }
 
@@ -113,7 +115,7 @@ export function CustomerForm({
     <form onSubmit={handleSubmit} className="space-y-6">
       {error ? (
         <Alert variant="destructive">
-          <AlertTitle>Validation error</AlertTitle>
+          <AlertTitle>{t.form.validation.errorTitle}</AlertTitle>
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       ) : null}
@@ -121,14 +123,14 @@ export function CustomerForm({
       <section className="space-y-4">
         <div className="flex items-center justify-between gap-3 border-b border-border/70 pb-3">
           <div>
-            <h2 className="text-sm font-semibold text-foreground">Customer identity</h2>
-            <p className="text-xs text-muted-foreground">Document and name.</p>
+            <h2 className="text-sm font-semibold text-foreground">{t.form.identitySection}</h2>
+            <p className="text-xs text-muted-foreground">{t.form.identitySubtitle}</p>
           </div>
         </div>
 
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
           <div className="space-y-1.5">
-            <Label htmlFor="doc_type">Document type</Label>
+            <Label htmlFor="doc_type">{t.form.documentTypeLabel}</Label>
             <NativeSelect
               id="doc_type"
               className="w-full"
@@ -141,15 +143,15 @@ export function CustomerForm({
                 setError(null);
               }}
             >
-              <NativeSelectOption value="dni">DNI (National ID)</NativeSelectOption>
-              <NativeSelectOption value="ruc">RUC (Corporate Tax ID)</NativeSelectOption>
-              <NativeSelectOption value="foreign_resident_card">Foreign Resident Card</NativeSelectOption>
-              <NativeSelectOption value="passport">Passport</NativeSelectOption>
+              <NativeSelectOption value="dni">{t.form.docTypes.dni}</NativeSelectOption>
+              <NativeSelectOption value="ruc">{t.form.docTypes.ruc}</NativeSelectOption>
+              <NativeSelectOption value="foreign_resident_card">{t.form.docTypes.foreign_resident_card}</NativeSelectOption>
+              <NativeSelectOption value="passport">{t.form.docTypes.passport}</NativeSelectOption>
             </NativeSelect>
           </div>
 
           <div className="space-y-1.5 md:col-span-2">
-            <Label htmlFor="doc_number">Document number</Label>
+            <Label htmlFor="doc_number">{t.form.documentNumberLabel}</Label>
             <div className="flex gap-2">
               <Input
                 id="doc_number"
@@ -163,24 +165,24 @@ export function CustomerForm({
                   }
                 }}
                 maxLength={docType === "dni" ? 8 : docType === "ruc" || docType === "foreign_resident_card" ? 11 : 15}
-                placeholder="Enter number"
+                placeholder={t.form.documentNumberPlaceholder}
                 required
               />
               {isDniOrRuc ? (
                 <Button type="button" variant="outline" onClick={handleResolve} disabled={isResolving || !docNumber}>
-                  {isResolving ? <Loader2 className="size-4 animate-spin" /> : "Verify"}
+                  {isResolving ? <Loader2 className="size-4 animate-spin" /> : t.form.autoFill}
                 </Button>
               ) : null}
             </div>
           </div>
 
           <div className="space-y-1.5 md:col-span-3">
-            <Label htmlFor="full_name">Full name / business name</Label>
+            <Label htmlFor="full_name">{t.form.nameLabel}</Label>
             <Input
               id="full_name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder={isDniOrRuc ? "e.g. Juan Pérez García" : "e.g. Acme S.A.C."}
+              placeholder={t.form.namePlaceholder}
               required
             />
           </div>
@@ -190,20 +192,20 @@ export function CustomerForm({
       <section className="space-y-4 border-t border-border/70 pt-6">
         <div className="flex items-center justify-between gap-3">
           <div>
-            <h2 className="text-sm font-semibold text-foreground">Contact details</h2>
-            <p className="text-xs text-muted-foreground">Email and phone.</p>
+            <h2 className="text-sm font-semibold text-foreground">{t.form.contactSection}</h2>
+            <p className="text-xs text-muted-foreground">{t.form.contactSubtitle}</p>
           </div>
         </div>
 
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <div className="space-y-1.5">
-            <Label htmlFor="email">Email address</Label>
+            <Label htmlFor="email">{t.form.emailLabel}</Label>
             <Input
               id="email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="customer@example.com"
+              placeholder={t.form.emailPlaceholder}
               required
             />
           </div>
@@ -222,7 +224,7 @@ export function CustomerForm({
       <div className="flex justify-end gap-3 border-t border-border/70 pt-4">
         {onCancel ? (
           <Button type="button" variant="outline" onClick={onCancel} disabled={isSaving}>
-            Cancel
+            {t.form.cancel}
           </Button>
         ) : null}
         <Button type="submit" disabled={isSaving} className="gap-2">

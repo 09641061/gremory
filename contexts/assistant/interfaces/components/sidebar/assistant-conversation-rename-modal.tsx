@@ -12,6 +12,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/contexts/shared/interfaces/components/ui/dialog";
+import { useAssistantTranslations } from "@/contexts/assistant/interfaces/i18n";
 
 type AssistantConversationRenameModalProps = {
   open: boolean;
@@ -34,6 +35,7 @@ export function AssistantConversationRenameModal({
   onChange,
   onSubmit,
 }: AssistantConversationRenameModalProps) {
+  const { t } = useAssistantTranslations();
   const inputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
@@ -51,15 +53,15 @@ export function AssistantConversationRenameModal({
     <Dialog open={open} onOpenChange={(nextOpen) => { if (!nextOpen) onClose(); }}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Edit chat</DialogTitle>
+          <DialogTitle>{t.chat.editChat}</DialogTitle>
           <DialogDescription>
-            Rename <span className="font-medium text-foreground">{conversationTitle}</span>.
+            {t.chat.renameChatPrompt.replace("{title}", conversationTitle)}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-2">
           <label htmlFor="conversation-title" className="text-sm font-medium">
-            Chat name
+            {t.chat.chatName}
           </label>
           <Input
             ref={inputRef}
@@ -76,7 +78,7 @@ export function AssistantConversationRenameModal({
 
         <DialogFooter>
           <Button type="button" variant="outline" onClick={onClose} disabled={isSaving}>
-            Cancel
+            {t.chat.cancel}
           </Button>
           <Button
             type="button"
@@ -84,7 +86,7 @@ export function AssistantConversationRenameModal({
             disabled={isSaving || !value.trim() || value.trim().length > 200}
             className="gap-2"
           >
-            {isSaving ? "Saving..." : "Save"}
+            {isSaving ? t.chat.saving : t.chat.save}
           </Button>
         </DialogFooter>
       </DialogContent>

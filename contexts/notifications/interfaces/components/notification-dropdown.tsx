@@ -19,12 +19,14 @@ import {
   acceptInvitationNotificationAction,
 } from "../actions/notification.actions";
 import { cn } from "@/lib/utils";
+import { useNotificationTranslations } from "@/contexts/notifications/interfaces/i18n";
 
 type NotificationDropdownProps = {
   variant?: "default" | "compact";
 };
 
 export function NotificationDropdown({ variant = "default" }: NotificationDropdownProps = {}) {
+  const { t, locale } = useNotificationTranslations();
   const [isOpen, setIsOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [paginatedData, setPaginatedData] = useState<PaginatedNotifications | null>(null);
@@ -89,7 +91,7 @@ export function NotificationDropdown({ variant = "default" }: NotificationDropdo
             ? "size-7 rounded-md"
             : "size-9 shrink-0 rounded-full border border-border/70 bg-background shadow-xs",
         )}
-        aria-label="Notifications"
+        aria-label={t.notifications.title}
       >
         <Bell className={variant === "compact" ? "size-3.5" : "size-4"} />
         {unreadCount > 0 && (
@@ -112,10 +114,10 @@ export function NotificationDropdown({ variant = "default" }: NotificationDropdo
 
       <DropdownMenuContent side="top" align="end" className="w-80 p-0 shadow-lg">
         <div className="flex items-center justify-between border-b border-border/60 px-4 py-3">
-          <h4 className="text-sm font-semibold text-foreground">Notifications</h4>
+          <h4 className="text-sm font-semibold text-foreground">{t.notifications.title}</h4>
           {unreadCount > 0 && (
             <Badge variant="secondary" className="text-xs">
-              {unreadCount} new
+              {t.notifications.unreadNew.replace("{count}", String(unreadCount))}
             </Badge>
           )}
         </div>
@@ -123,7 +125,7 @@ export function NotificationDropdown({ variant = "default" }: NotificationDropdo
         <div className="max-h-80 overflow-y-auto">
           {!paginatedData || paginatedData.content.length === 0 ? (
             <div className="p-6 text-center text-xs text-muted-foreground">
-              You have no pending notifications
+              {t.notifications.empty}
             </div>
           ) : (
             <div className="divide-y divide-border/40">
@@ -131,6 +133,7 @@ export function NotificationDropdown({ variant = "default" }: NotificationDropdo
                 <NotificationItem
                   key={item.id}
                   notification={item}
+                  locale={locale}
                   onMarkAsRead={handleMarkAsRead}
                   onDelete={handleDelete}
                   onAcceptInvitation={handleAcceptInvitation}
@@ -144,7 +147,9 @@ export function NotificationDropdown({ variant = "default" }: NotificationDropdo
         {paginatedData && paginatedData.totalPages > 1 && (
           <div className="flex items-center justify-between border-t border-border/60 px-3 py-2 text-xs text-muted-foreground">
             <span>
-              Page {paginatedData.number + 1} of {paginatedData.totalPages}
+              {t.notifications.page
+                .replace("{page}", String(paginatedData.number + 1))
+                .replace("{totalPages}", String(paginatedData.totalPages))}
             </span>
             <div className="flex items-center gap-1">
               <Button
@@ -175,17 +180,20 @@ export function NotificationDropdown({ variant = "default" }: NotificationDropdo
 
 function NotificationItem({
   notification,
+  locale,
   onMarkAsRead,
   onDelete,
   onAcceptInvitation,
   isPending,
 }: {
   notification: AppNotification;
+  locale: string;
   onMarkAsRead: (id: string) => void;
   onDelete: (id: string) => void;
   onAcceptInvitation: (id: string, token?: string) => void;
   isPending: boolean;
 }) {
+  const { t } = useNotificationTranslations();
   const isUnread = notification.status === "UNREAD";
   const isPendingInvitation =
     notification.type === "WORKFORCE_INVITATION" &&
@@ -224,7 +232,7 @@ function NotificationItem({
                 onClick={() => onAcceptInvitation(notification.id, notification.targetToken)}
               >
                 <CheckCircle2 className="mr-1 size-3.5" />
-                Accept
+                {t.notifications.accept}
               </Button>
               <Button
                 size="sm"
@@ -234,13 +242,13 @@ function NotificationItem({
                 onClick={() => onDelete(notification.id)}
               >
                 <XCircle className="mr-1 size-3.5" />
-                Decline
+                {t.notifications.decline}
               </Button>
             </div>
           )}
 
           <span className="mt-1.5 block text-[10px] text-muted-foreground/70">
-            {new Date(notification.createdAt).toLocaleDateString("en-US", {
+            {new Date(notification.createdAt).toLocaleDateString(locale === "es" ? "es-ES" : "en-US", {
               month: "short",
               day: "2-digit",
               hour: "2-digit",
@@ -254,7 +262,7 @@ function NotificationItem({
       <DropdownMenu>
         <DropdownMenuTrigger
           className="shrink-0 size-7 inline-flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-accent focus:outline-none"
-          aria-label="Notification actions"
+          aria-label={t.notifications.actionsAria}
         >
           <MoreVertical className="size-3.5" />
         </DropdownMenuTrigger>
@@ -262,7 +270,7 @@ function NotificationItem({
           {isUnread && (
             <DropdownMenuItem onClick={() => onMarkAsRead(notification.id)}>
               <CheckCircle2 className="mr-2 size-3.5 text-muted-foreground" />
-              Mark as read
+              {t.notifications.markAsRead}
             </DropdownMenuItem>
           )}
           <DropdownMenuItem
@@ -270,7 +278,7 @@ function NotificationItem({
             onClick={() => onDelete(notification.id)}
           >
             <Trash2 className="mr-2 size-3.5" />
-            Delete
+            {t.notifications.delete}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

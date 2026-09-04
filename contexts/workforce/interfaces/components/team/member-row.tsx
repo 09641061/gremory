@@ -15,6 +15,7 @@ import {
 import { updateEmployeeVisibilityAction } from "@/contexts/scheduling/interfaces/actions/update-employee-visibility.action";
 import type { UpdateEmployeeVisibilityState } from "@/contexts/scheduling/interfaces/actions/update-employee-visibility.action";
 import type { TeamUserSummary } from "@/contexts/workforce/application/model/team.read-models";
+import { useWorkforceTranslations, type WorkforceDictionary } from "@/contexts/workforce/interfaces/i18n";
 import { MemberRolesDropdown } from "./member-roles-dropdown";
 
 const initialActionState = { status: "idle", data: null, error: null } as const;
@@ -45,6 +46,7 @@ export function MemberRow({
   canEditAvailability?: boolean;
   canEditVisibility?: boolean;
 }) {
+  const { t } = useWorkforceTranslations();
   const [removeState, removeAction, removePending] = useActionState(removeTeamMemberAction, initialActionState);
   const [revokeState, revokeAction, revokePending] = useActionState(revokeTeamInvitationAction, initialActionState);
   const [visibilityState, visibilityAction, visibilityPending] = useActionState(
@@ -94,14 +96,14 @@ export function MemberRow({
       <div>
         {isOwner ? (
           <span className="inline-flex rounded-full border border-amber-500/20 bg-amber-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-amber-700">
-            OWNER
+            {t.team.ownerBadge}
           </span>
         ) : (
           <MemberRolesDropdown roles={member.roles} />
         )}
       </div>
       <div>
-        <span className={statusBadgeClass(member.status)}>{formatStatus(member.status)}</span>
+        <span className={statusBadgeClass(member.status)}>{formatStatus(member.status, t)}</span>
       </div>
       <div className="flex flex-col gap-1.5 justify-center">
         {member.userId && member.establishmentId && member.status === "ACTIVE" ? (
@@ -124,27 +126,27 @@ export function MemberRow({
                     }}
                     size="sm"
                   />
-                  {member.visibleForScheduling !== false ? "Visible on schedule" : "Hidden from schedule"}
+                  {member.visibleForScheduling !== false ? t.team.visibleOnSchedule : t.team.hiddenFromSchedule}
                 </label>
               );
             })()
           ) : (
             <span className="text-xs text-muted-foreground">
-              {member.visibleForScheduling !== false ? "Visible on schedule" : "Hidden from schedule"}
+              {member.visibleForScheduling !== false ? t.team.visibleOnSchedule : t.team.hiddenFromSchedule}
             </span>
           )
         ) : null}
         {!member.userId || member.status !== "ACTIVE" ? (
-          <span className="text-xs text-muted-foreground">Not configurable</span>
+          <span className="text-xs text-muted-foreground">{t.team.notConfigurable}</span>
         ) : null}
       </div>
       <div className="flex flex-col items-end gap-2">
         <EntityActionsMenu
-          label={`Member actions for ${member.email}`}
+          label={t.team.memberActionsLabel.replace("{email}", member.email)}
           size="icon-sm"
           actions={[
             {
-              label: revokePending ? "Cancelling..." : "Cancel invite",
+              label: revokePending ? t.team.cancelling : t.team.cancelInvite,
               icon: UserX,
               variant: "destructive",
               hidden: !canCancel,
@@ -152,7 +154,7 @@ export function MemberRow({
               onSelect: () => setConfirming("revoke"),
             },
             {
-              label: removePending ? "Removing..." : "Remove member",
+              label: removePending ? t.team.removing : t.team.removeMember,
               icon: UserMinus,
               variant: "destructive",
               hidden: !canRemove,
@@ -160,9 +162,9 @@ export function MemberRow({
               onSelect: () => setConfirming("remove"),
             },
           ]}
-          />
+        />
         {error && confirming === null ? (
-          <ErrorAlert title="Action failed" message={error} />
+          <ErrorAlert title={t.team.actionFailed} message={error} />
         ) : null}
 
         <DeleteConfirmDialog
@@ -172,14 +174,13 @@ export function MemberRow({
           }}
           entityLabel="member"
           entityName={member.email}
-          confirmLabel="Remove"
-          pendingLabel="Removing..."
+          confirmLabel={t.team.removeConfirmTitle}
+          pendingLabel={t.team.removing}
           pending={removePending}
           error={removeState.error}
           description={
             <>
-              <span className="font-medium text-foreground">{member.email}</span> will lose access to this
-              workspace.
+              <span className="font-medium text-foreground">{member.email}</span> {t.team.removeConfirmDescription}
             </>
           }
           onConfirm={() => {
@@ -195,14 +196,18 @@ export function MemberRow({
           }}
           entityLabel="invitation"
           entityName={member.email}
-          confirmLabel="Cancel"
-          pendingLabel="Cancelling..."
+          confirmLabel={t.team.cancelConfirmTitle}
+          pendingLabel={t.team.cancelling}
           pending={revokePending}
           error={revokeState.error}
           description={
             <>
-              The invitation sent to{" "}
-              <span className="font-medium text-foreground">{member.email}</span> will no longer be valid.
+              {t.team.cancelConfirmDescription.split("{email}").map((part, index, arr) => (
+                <span key={index}>
+                  {part}
+                  {index < arr.length - 1 && <span className="font-medium text-foreground">{member.email}</span>}
+                </span>
+              ))}
             </>
           }
           onConfirm={() => {
@@ -215,8 +220,10 @@ export function MemberRow({
   );
 }
 
-function formatStatus(status: TeamUserSummary["status"]): string {
-  return status.charAt(0) + status.slice(1).toLowerCase();
+function formatStatus(status: TeamUserSummary["status"], t: WorkforceDictionary): string {
+  if (status === "ACTIVE") return t.team.statuses.active;
+  if (status === "PENDING") return t.team.statuses.pending;
+  return t.team.statuses.inactive;
 }
 
 function statusBadgeClass(status: TeamUserSummary["status"]): string {

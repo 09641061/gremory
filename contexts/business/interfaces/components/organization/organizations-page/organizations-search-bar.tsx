@@ -1,4 +1,7 @@
+"use client";
+
 import { EntitySearchBar } from "@/contexts/shared/interfaces/components/entity-search-bar";
+import { useBusinessTranslations } from "@/contexts/business/interfaces/i18n";
 
 interface OrganizationsSearchBarProps {
   value: string;
@@ -7,13 +10,15 @@ interface OrganizationsSearchBarProps {
 }
 
 export function OrganizationsSearchBar({ value, onChange, canCreate = true }: OrganizationsSearchBarProps) {
+  const { t } = useBusinessTranslations();
+
   return (
     <EntitySearchBar
       value={value}
       onChange={onChange}
-      searchPlaceholder="Search organizations"
+      searchPlaceholder={t.organizations.searchPlaceholder}
       createHref="/organizations/new"
-      createLabel="New organization"
+      createLabel={t.organizations.createLabel}
       canCreate={canCreate}
     />
   );

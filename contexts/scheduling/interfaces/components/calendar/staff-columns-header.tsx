@@ -4,6 +4,8 @@ import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+import { useSchedulingTranslations } from "../../i18n";
+
 interface StaffColumnsHeaderProps {
   employees: SchedulingMemberViewModel[];
   visibleEmployees: SchedulingMemberViewModel[];
@@ -21,6 +23,7 @@ export function StaffColumnsHeader({
   onShiftRight,
   maxColumns,
 }: StaffColumnsHeaderProps) {
+  const { t } = useSchedulingTranslations();
   const canShiftLeft = startIndex > 0;
   const canShiftRight = startIndex + maxColumns < employees.length;
 
@@ -41,8 +44,8 @@ export function StaffColumnsHeader({
               size="icon"
               className="h-6 w-6"
               onClick={onShiftLeft}
-              aria-label="Previous staff members"
-              title="Previous staff members"
+              aria-label={t.calendar.previousStaff}
+              title={t.calendar.previousStaff}
               disabled={!canShiftLeft}
             >
               <ChevronLeft className="h-4 w-4" />
@@ -52,8 +55,8 @@ export function StaffColumnsHeader({
               size="icon"
               className="h-6 w-6"
               onClick={onShiftRight}
-              aria-label="Next staff members"
-              title="Next staff members"
+              aria-label={t.calendar.nextStaff}
+              title={t.calendar.nextStaff}
               disabled={!canShiftRight}
             >
               <ChevronRight className="h-4 w-4" />

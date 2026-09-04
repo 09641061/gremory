@@ -12,6 +12,7 @@ import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/contexts/shared/interfaces/components/ui/card";
 import { Spinner } from "@/contexts/shared/interfaces/components/ui/spinner";
 import { buildInvitationLandingHref } from "./invitation-navigation";
+import { useWorkforceTranslations } from "@/contexts/workforce/interfaces/i18n";
 
 export type PendingInvitationView = Readonly<{
   establishmentId: string;
@@ -26,6 +27,7 @@ export type PendingInvitationView = Readonly<{
  * authenticated account's email.
  */
 export function PendingInvitationView({ invitation }: { invitation: PendingInvitationView }) {
+  const { t } = useWorkforceTranslations();
   const router = useRouter();
   const [state, formAction, pending] = useActionState(acceptPendingInvitationAction, initialTeamActionResult);
 
@@ -40,7 +42,7 @@ export function PendingInvitationView({ invitation }: { invitation: PendingInvit
       <main className="mx-auto w-full max-w-md">
         <Card>
           <CardHeader className="pb-3 text-center">
-            <CardTitle>You have been invited</CardTitle>
+            <CardTitle>{t.invitations.pendingTitle}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-5 p-6 pt-0">
             <div className="space-y-3 text-sm text-foreground">
@@ -53,18 +55,18 @@ export function PendingInvitationView({ invitation }: { invitation: PendingInvit
                 {invitation.establishmentName}
               </p>
               <p className="text-muted-foreground">
-                This invitation expires on {new Date(invitation.expiresAt).toLocaleDateString()}.
+                {t.invitations.pendingExpiresOn.replace("{date}", new Date(invitation.expiresAt).toLocaleDateString())}
               </p>
             </div>
 
             {state.status === "error" ? (
-              <ErrorAlert title="Unable to accept invitation" message={state.error ?? undefined} />
+              <ErrorAlert title={t.invitations.unableToAccept} message={state.error ?? undefined} />
             ) : null}
 
             <form action={formAction}>
               <Button type="submit" disabled={pending} className="w-full gap-2">
                 {pending ? <Spinner className="size-4" /> : <Check className="size-4" />}
-                {pending ? "Accepting..." : "Accept invitation"}
+                {pending ? t.invitations.accepting : t.invitations.acceptInvitation}
               </Button>
             </form>
           </CardContent>
@@ -75,15 +77,16 @@ export function PendingInvitationView({ invitation }: { invitation: PendingInvit
 }
 
 export function NoPendingInvitationView() {
+  const { t } = useWorkforceTranslations();
   return (
     <PageShell className="min-h-svh max-w-none justify-center">
       <main className="mx-auto w-full max-w-md">
         <Card>
           <CardHeader className="pb-3 text-center">
-            <CardTitle>No invitation waiting</CardTitle>
+            <CardTitle>{t.invitations.noPendingTitle}</CardTitle>
           </CardHeader>
           <CardContent className="text-sm text-muted-foreground">
-            The invitation for this account is no longer available. Ask whoever invited you to send a new one.
+            {t.invitations.noPendingMessage}
           </CardContent>
         </Card>
       </main>

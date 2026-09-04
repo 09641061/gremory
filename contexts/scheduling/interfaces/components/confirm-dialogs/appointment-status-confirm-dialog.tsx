@@ -58,6 +58,8 @@ const TRANSITIONS: Readonly<Record<AppointmentStatusTransition, TransitionCopy>>
   },
 };
 
+import { useSchedulingTranslations } from "../../i18n";
+
 interface AppointmentStatusConfirmDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
@@ -80,7 +82,43 @@ export function AppointmentStatusConfirmDialog({
   appointmentId,
   onSuccess,
 }: AppointmentStatusConfirmDialogProps) {
-  const copy = TRANSITIONS[transition];
+  const { t } = useSchedulingTranslations();
+
+  const copy = (() => {
+    switch (transition) {
+      case "start":
+        return {
+          action: startAppointmentAction,
+          title: t.dialogs.startTitle,
+          description: t.dialogs.startDescription,
+          confirmLabel: t.dialogs.startConfirm,
+          pendingLabel: t.dialogs.startPending,
+          variant: "default" as const,
+          fallbackError: t.dialogs.startError,
+        };
+      case "complete":
+        return {
+          action: completeAppointmentAction,
+          title: t.dialogs.completeTitle,
+          description: t.dialogs.completeDescription,
+          confirmLabel: t.dialogs.completeConfirm,
+          pendingLabel: t.dialogs.completePending,
+          variant: "default" as const,
+          fallbackError: t.dialogs.completeError,
+        };
+      case "no-show":
+        return {
+          action: markNoShowAppointmentAction,
+          title: t.dialogs.noShowTitle,
+          description: t.dialogs.noShowDescription,
+          confirmLabel: t.dialogs.noShowConfirm,
+          pendingLabel: t.dialogs.noShowPending,
+          variant: "outline" as const,
+          fallbackError: t.dialogs.noShowError,
+        };
+    }
+  })();
+
   const [error, setError] = useState<string | null>(null);
   // Re-keys the alert so retrying and failing the same way re-announces it.
   const [attempt, setAttempt] = useState(0);
@@ -115,7 +153,7 @@ export function AppointmentStatusConfirmDialog({
         description={copy.description}
         footer={
           <>
-            <AlertDialogCancel disabled={isPending}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel disabled={isPending}>{t.form.cancel}</AlertDialogCancel>
             <Button
               type="button"
               variant={copy.variant}

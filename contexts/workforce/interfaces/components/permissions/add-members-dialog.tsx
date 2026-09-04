@@ -17,6 +17,7 @@ import {
 } from "@/contexts/shared/interfaces/components/ui/dialog";
 import type { TeamUserSummary } from "@/contexts/workforce/application/model/team.read-models";
 import { assignWorkforceRoleAction } from "@/contexts/workforce/interfaces/actions/workforce-role.actions";
+import { useWorkforceTranslations } from "@/contexts/workforce/interfaces/i18n";
 
 interface AddMembersDialogProps {
   roleId: string;
@@ -25,6 +26,7 @@ interface AddMembersDialogProps {
 }
 
 export function AddMembersDialog({ roleId, availableMembers, onClose }: AddMembersDialogProps) {
+  const { t } = useWorkforceTranslations();
   const router = useRouter();
   const [filter, setFilter] = useState("");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -85,10 +87,10 @@ export function AddMembersDialog({ roleId, availableMembers, onClose }: AddMembe
       >
         <DialogHeader className="relative">
           <div className="flex items-center justify-between">
-            <DialogTitle className="text-xl font-semibold text-foreground">Add members to role</DialogTitle>
+            <DialogTitle className="text-xl font-semibold text-foreground">{t.roleDialogs.addMembersTitle}</DialogTitle>
           </div>
           <DialogDescription className="text-sm text-muted-foreground mt-1">
-            Select members from the workspace to assign them to this role.
+            {t.roleDialogs.addMembersDescription}
           </DialogDescription>
         </DialogHeader>
 
@@ -98,22 +100,22 @@ export function AddMembersDialog({ roleId, availableMembers, onClose }: AddMembe
             <Input
               value={filter}
               onChange={(e) => setFilter(e.target.value)}
-              placeholder="Search members"
+              placeholder={t.roleDialogs.addMembersSearchPlaceholder}
               className="pl-9 h-10 bg-muted/40 border border-border"
               disabled={isPending}
             />
           </label>
 
-          {error && <ErrorAlert title="Unable to add members" message={error} />}
+          {error && <ErrorAlert title={t.roleDialogs.addMembersFailed} message={error} />}
 
           <div className="flex flex-col gap-2">
             <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-              Members
+              {t.roleDialogs.membersSectionTitle}
             </span>
             <div className="max-h-72 overflow-y-auto rounded-lg border border-border divide-y divide-border bg-muted/10">
               {filteredMembers.length === 0 ? (
                 <div className="p-8 text-center text-sm text-muted-foreground">
-                  No members available to add.
+                  {t.roleDialogs.noMembersAvailable}
                 </div>
               ) : (
                 filteredMembers.map((member) => {
@@ -166,7 +168,7 @@ export function AddMembersDialog({ roleId, availableMembers, onClose }: AddMembe
             disabled={isPending}
             className="px-5 h-10 border border-border bg-transparent hover:bg-muted/40 text-foreground transition-colors"
           >
-            Cancel
+            {t.permissions.cancel}
           </Button>
           <Button
             type="button"
@@ -174,7 +176,7 @@ export function AddMembersDialog({ roleId, availableMembers, onClose }: AddMembe
             disabled={selectedIds.length === 0 || isPending}
             className="px-5 h-10 bg-primary hover:bg-primary/90 text-primary-foreground transition-colors min-w-[80px]"
           >
-            {isPending ? <Spinner className="size-4" /> : "Add"}
+            {isPending ? <Spinner className="size-4" /> : t.roleDialogs.add}
           </Button>
         </DialogFooter>
       </DialogContent>

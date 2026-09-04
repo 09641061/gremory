@@ -6,9 +6,11 @@ import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import { ErrorAlert } from "@/contexts/shared/interfaces/components/error";
 import { Spinner } from "@/contexts/shared/interfaces/components/ui/spinner";
 import { signOutAction } from "../actions/sign-out.action";
+import { useI18n } from "@/contexts/shared/interfaces/i18n";
 
 export function LogoutButton() {
   const router = useRouter();
+  const { t } = useI18n();
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
@@ -31,14 +33,14 @@ export function LogoutButton() {
         {pending ? (
           <>
             <Spinner data-icon="inline-start" />
-            Signing out...
+            {t.auth.signingOut}
           </>
         ) : (
-          "Log out"
+          t.auth.logOut
         )}
       </Button>
       <ErrorAlert
-        title="Unable to log out"
+        title={t.auth.unableToLogOut}
         message={!pending ? error ?? undefined : undefined}
         resetKey={pending ? "pending" : error ?? "idle"}
       />

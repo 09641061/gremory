@@ -4,6 +4,9 @@ import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/contexts/shared/interfaces/components/ui/popover";
 import { Calendar } from "@/contexts/shared/interfaces/components/ui/calendar";
 
+import { useI18n } from "@/contexts/shared/interfaces/i18n";
+import { useSchedulingTranslations } from "../../i18n";
+
 interface CalendarToolbarProps {
   currentDate: Date;
   onPrevDay: () => void;
@@ -25,8 +28,10 @@ export function CalendarToolbar({
   canCreateAppointment,
   timeZone,
 }: CalendarToolbarProps) {
+  const { locale } = useI18n();
+  const { t } = useSchedulingTranslations();
   const [isPickerOpen, setIsPickerOpen] = useState(false);
-  const formatter = new Intl.DateTimeFormat("en-US", {
+  const formatter = new Intl.DateTimeFormat(locale === "es" ? "es-ES" : "en-US", {
     timeZone,
     weekday: "long",
     year: "numeric",
@@ -65,15 +70,15 @@ export function CalendarToolbar({
 
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" onClick={onToday}>
-            Today
+            {t.calendar.today}
           </Button>
           <div className="flex items-center rounded-md border">
             <Button
               variant="ghost"
               size="icon"
               onClick={onPrevDay}
-              aria-label="Previous day"
-              title="Previous day"
+              aria-label={t.calendar.prevDay}
+              title={t.calendar.prevDay}
               className="h-8 w-8 rounded-none rounded-l-md border-r"
             >
               <ChevronLeft className="h-4 w-4" />
@@ -82,8 +87,8 @@ export function CalendarToolbar({
               variant="ghost"
               size="icon"
               onClick={onNextDay}
-              aria-label="Next day"
-              title="Next day"
+              aria-label={t.calendar.nextDay}
+              title={t.calendar.nextDay}
               className="h-8 w-8 rounded-none rounded-r-md"
             >
               <ChevronRight className="h-4 w-4" />
@@ -94,7 +99,7 @@ export function CalendarToolbar({
       
       {canCreateAppointment && (
         <Button onClick={onScheduleAppointment}>
-          Schedule appointment
+          {t.calendar.scheduleAppointment}
         </Button>
       )}
     </div>

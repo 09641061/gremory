@@ -27,6 +27,7 @@ import { Card, CardContent } from "@/contexts/shared/interfaces/components/ui/ca
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/contexts/shared/interfaces/components/ui/empty";
 import { Input } from "@/contexts/shared/interfaces/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/contexts/shared/interfaces/components/ui/table";
+import { useCrmTranslations } from "@/contexts/crm/interfaces/i18n";
 
 interface CrmClientWrapperProps {
   initialCustomers: PageResponse<CustomerResponse>;
@@ -45,6 +46,7 @@ export function CrmClientWrapper({
   canDeleteCustomer = true,
   loadError = false,
 }: CrmClientWrapperProps) {
+  const t = useCrmTranslations();
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -87,10 +89,10 @@ export function CrmClientWrapper({
           router.refresh();
         });
       } else {
-        setErrorMsg(res.error || "Failed to delete customer.");
+        setErrorMsg(res.error || t.directory.errors.deleteFailed);
       }
     } catch {
-      setErrorMsg("An unexpected error occurred while deleting.");
+      setErrorMsg(t.directory.errors.unexpectedDelete);
     } finally {
       setIsDeleting(null);
     }
@@ -104,19 +106,19 @@ export function CrmClientWrapper({
   return (
     <>
       <ErrorAlert
-        title="Error loading customers"
-        message={loadError ? "Failed to load the customer list. Please try refreshing the page." : undefined}
+        title={t.directory.errors.loadTitle}
+        message={loadError ? t.directory.errors.loadMessage : undefined}
       />
 
       <PageShell>
         <PageHeader
-          title="Customers"
-          description="Manage and organize your client directory."
+          title={t.directory.title}
+          description={t.directory.description}
           actions={
             canCreateCustomer ? (
               <Button onClick={() => router.push(`/crm/new${establishmentId ? `?establishmentId=${encodeURIComponent(establishmentId)}` : ""}`)} className="gap-2">
                 <Plus className="size-4" />
-                Add customer
+                {t.directory.addCustomer}
               </Button>
             ) : null
           }
@@ -130,12 +132,14 @@ export function CrmClientWrapper({
                 <Input
                   value={searchTerm}
                   onChange={(e) => handleSearchChange(e.target.value)}
-                  placeholder="Search by name, email, or document ID"
+                  placeholder={t.directory.searchPlaceholder}
                   className="pl-9"
                 />
               </label>
               <div className="text-sm text-muted-foreground">
-                {totalElements} {totalElements === 1 ? "customer" : "customers"}
+                {totalElements === 1
+                  ? t.directory.customerCount.replace("{count}", "1")
+                  : t.directory.customersCount.replace("{count}", String(totalElements))}
               </div>
             </div>
 
@@ -146,9 +150,9 @@ export function CrmClientWrapper({
                     <UsersRound />
                   </EmptyMedia>
                   <EmptyContent>
-                    <EmptyTitle>No customers found</EmptyTitle>
+                    <EmptyTitle>{t.directory.noCustomersTitle}</EmptyTitle>
                     <EmptyDescription>
-                      Try a different search or add the first customer to this establishment.
+                      {t.directory.noCustomersDescription}
                     </EmptyDescription>
                   </EmptyContent>
                 </EmptyHeader>
@@ -158,13 +162,13 @@ export function CrmClientWrapper({
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="px-5 py-3 text-xs font-medium uppercase tracking-wide text-muted-foreground">Customer</TableHead>
-                      <TableHead className="px-5 py-3 text-xs font-medium uppercase tracking-wide text-muted-foreground">Document</TableHead>
-                      <TableHead className="px-5 py-3 text-xs font-medium uppercase tracking-wide text-muted-foreground">Type</TableHead>
-                      <TableHead className="px-5 py-3 text-xs font-medium uppercase tracking-wide text-muted-foreground">Email</TableHead>
-                      <TableHead className="px-5 py-3 text-xs font-medium uppercase tracking-wide text-muted-foreground">Phone</TableHead>
+                      <TableHead className="px-5 py-3 text-xs font-medium uppercase tracking-wide text-muted-foreground">{t.directory.columns.customer}</TableHead>
+                      <TableHead className="px-5 py-3 text-xs font-medium uppercase tracking-wide text-muted-foreground">{t.directory.columns.document}</TableHead>
+                      <TableHead className="px-5 py-3 text-xs font-medium uppercase tracking-wide text-muted-foreground">{t.directory.columns.type}</TableHead>
+                      <TableHead className="px-5 py-3 text-xs font-medium uppercase tracking-wide text-muted-foreground">{t.directory.columns.email}</TableHead>
+                      <TableHead className="px-5 py-3 text-xs font-medium uppercase tracking-wide text-muted-foreground">{t.directory.columns.phone}</TableHead>
                       {(canUpdateCustomer || canDeleteCustomer) ? (
-                        <TableHead className="px-5 py-3 text-right text-xs font-medium uppercase tracking-wide text-muted-foreground">Actions</TableHead>
+                        <TableHead className="px-5 py-3 text-right text-xs font-medium uppercase tracking-wide text-muted-foreground">{t.directory.columns.actions}</TableHead>
                       ) : null}
                     </TableRow>
                   </TableHeader>
@@ -189,17 +193,17 @@ export function CrmClientWrapper({
                         {(canUpdateCustomer || canDeleteCustomer) ? (
                           <TableCell className="px-5 py-4 text-right">
                             <EntityActionsMenu
-                              label={`More actions for ${cust.name}`}
+                              label={t.directory.actions.moreActions.replace("{name}", cust.name)}
                               actions={[
                                 {
-                                  label: "Edit profile",
+                                  label: t.directory.actions.editProfile,
                                   icon: Edit,
                                   hidden: !canUpdateCustomer,
                                   onSelect: () =>
                                     router.push(`/crm/${cust.id}/edit?establishmentId=${encodeURIComponent(cust.establishmentId)}`),
                                 },
                                 {
-                                  label: isDeleting === cust.id ? "Deleting..." : "Delete",
+                                  label: isDeleting === cust.id ? t.directory.actions.deleting : t.directory.actions.delete,
                                   icon: Trash2,
                                   variant: "destructive",
                                   hidden: !canDeleteCustomer,
@@ -220,20 +224,22 @@ export function CrmClientWrapper({
             {totalPages > 1 ? (
               <footer className="flex items-center justify-between border-t border-border/70 bg-muted/20 px-5 py-4">
                 <div className="text-xs text-muted-foreground">
-                  Page <span className="font-semibold text-foreground">{currentPage + 1}</span> of{" "}
-                  <span className="font-semibold text-foreground">{totalPages}</span> ({totalElements} total)
+                  {t.directory.pagination.pageOf
+                    .replace("{page}", String(currentPage + 1))
+                    .replace("{totalPages}", String(totalPages))
+                    .replace("{totalElements}", String(totalElements))}
                 </div>
                 <div className="flex items-center gap-1">
-                  <Button variant="outline" size="icon-sm" onClick={() => handlePageChange(0)} disabled={currentPage === 0} aria-label="First page">
+                  <Button variant="outline" size="icon-sm" onClick={() => handlePageChange(0)} disabled={currentPage === 0} aria-label={t.directory.pagination.firstPage}>
                     <ChevronsLeft className="size-4" />
                   </Button>
-                  <Button variant="outline" size="icon-sm" onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage === 0} aria-label="Previous page">
+                  <Button variant="outline" size="icon-sm" onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage === 0} aria-label={t.directory.pagination.previousPage}>
                     <ChevronLeft className="size-4" />
                   </Button>
-                  <Button variant="outline" size="icon-sm" onClick={() => handlePageChange(currentPage + 1)} disabled={currentPage >= totalPages - 1} aria-label="Next page">
+                  <Button variant="outline" size="icon-sm" onClick={() => handlePageChange(currentPage + 1)} disabled={currentPage >= totalPages - 1} aria-label={t.directory.pagination.nextPage}>
                     <ChevronRight className="size-4" />
                   </Button>
-                  <Button variant="outline" size="icon-sm" onClick={() => handlePageChange(totalPages - 1)} disabled={currentPage >= totalPages - 1} aria-label="Last page">
+                  <Button variant="outline" size="icon-sm" onClick={() => handlePageChange(totalPages - 1)} disabled={currentPage >= totalPages - 1} aria-label={t.directory.pagination.lastPage}>
                     <ChevronsRight className="size-4" />
                   </Button>
                 </div>
@@ -248,7 +254,7 @@ export function CrmClientWrapper({
         onOpenChange={(open) => {
           if (!open) setCustomerToDelete(null);
         }}
-        entityLabel="customer"
+        entityLabel={t.directory.deleteDialog.entityLabel}
         entityName={customerToDelete?.name ?? ""}
         pending={isDeleting !== null}
         error={errorMsg}

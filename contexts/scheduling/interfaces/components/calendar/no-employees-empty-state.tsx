@@ -9,7 +9,11 @@ import {
   EmptyTitle,
 } from "@/contexts/shared/interfaces/components/ui/empty";
 
+import { useSchedulingTranslations } from "../../i18n";
+
 export function NoEmployeesEmptyState() {
+  const { t } = useSchedulingTranslations();
+
   return (
     <Empty className="min-h-[400px] rounded-xl border-border/70 bg-muted/10 p-12">
       <EmptyHeader>
@@ -17,9 +21,9 @@ export function NoEmployeesEmptyState() {
           <UsersRound aria-hidden="true" />
         </EmptyMedia>
         <EmptyContent>
-          <EmptyTitle>No team members yet</EmptyTitle>
+          <EmptyTitle>{t.calendar.noEmployeesTitle}</EmptyTitle>
           <EmptyDescription>
-            Invite employees to your establishment to start scheduling appointments.
+            {t.calendar.noEmployeesDescription}
           </EmptyDescription>
         </EmptyContent>
       </EmptyHeader>

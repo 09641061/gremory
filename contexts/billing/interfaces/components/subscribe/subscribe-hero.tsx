@@ -5,6 +5,7 @@ import type { BillingCycle, Currency } from "../../../domain/model/commands/crea
 import { CurrencySelector } from "./currency-selector";
 import { cn } from "@/lib/utils";
 import { Switch } from "@/contexts/shared/interfaces/components/ui/switch";
+import { useBillingTranslations } from "@/contexts/billing/interfaces/i18n";
 
 interface SubscribeHeroProps {
   billingCycle: BillingCycle;
@@ -22,15 +23,16 @@ export function SubscribeHero({
   onCycleToggle,
   onCurrencyChange,
 }: SubscribeHeroProps) {
+  const { t } = useBillingTranslations();
   const isAnnual = billingCycle === "ANNUAL";
 
   return (
     <section className="max-w-4xl mx-auto px-4 pt-8 text-center">
       <h1 className="page-title mb-3 text-foreground">
-        Choose the plan that fits you
+        {t.subscribe.heroTitle}
       </h1>
       <p className="page-description mx-auto max-w-2xl">
-        Scale your billing infrastructure with Takodu. From single shops to enterprise-level multi-establishment management, we have the right tools for your growth.
+        {t.subscribe.heroDescription}
       </p>
 
       {/* Control row: Billing Toggle & Currency Selector */}
@@ -43,7 +45,7 @@ export function SubscribeHero({
               !isAnnual ? "text-foreground font-bold" : "text-muted-foreground"
             )}
           >
-            Monthly
+            {t.subscribe.monthly}
           </span>
 
           <Switch checked={isAnnual} onCheckedChange={onCycleToggle} aria-label="Toggle annual billing" />
@@ -54,9 +56,9 @@ export function SubscribeHero({
               isAnnual ? "text-foreground font-bold" : "text-muted-foreground"
             )}
           >
-            Annual
+            {t.subscribe.annual}
             <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary font-extrabold uppercase tracking-wide">
-              Save 20%
+              {t.subscribe.savePercentage}
             </span>
           </span>
         </div>

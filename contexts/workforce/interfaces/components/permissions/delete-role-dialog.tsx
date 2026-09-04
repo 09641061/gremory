@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { deleteWorkforceRoleAction } from "@/contexts/workforce/interfaces/actions/workforce-role.actions";
 import { initialWorkforceRoleActionResult } from "@/contexts/workforce/interfaces/actions/workforce-role-action-result";
 import { DeleteConfirmDialog } from "@/contexts/shared/interfaces/components/delete-confirm-dialog";
+import { useWorkforceTranslations } from "@/contexts/workforce/interfaces/i18n";
 
 interface DeleteRoleDialogProps {
   roleId: string;
@@ -16,6 +17,7 @@ interface DeleteRoleDialogProps {
 }
 
 export function DeleteRoleDialog({ roleId, roleName, memberCount, open, onOpenChange }: DeleteRoleDialogProps) {
+  const { t } = useWorkforceTranslations();
   const router = useRouter();
   const [state, formAction, pending] = useActionState(
     deleteWorkforceRoleAction,
@@ -35,7 +37,7 @@ export function DeleteRoleDialog({ roleId, roleName, memberCount, open, onOpenCh
     <DeleteConfirmDialog
       open={open && state.status !== "success"}
       onOpenChange={onOpenChange}
-      entityLabel="role"
+      entityLabel={t.roleDialogs.deleteEntityLabel}
       entityName={roleName}
       pending={pending}
       error={state.status === "error" ? state.error : null}
@@ -44,8 +46,10 @@ export function DeleteRoleDialog({ roleId, roleName, memberCount, open, onOpenCh
       description={
         assignedToMembers ? (
           <>
-            <span className="font-medium text-foreground">{roleName}</span> is assigned to {memberCount}{" "}
-            {memberCount === 1 ? "member" : "members"}. Remove the role from all members before deleting it.
+            {t.roleDialogs.deleteAssignedWarning
+              .replace("{roleName}", roleName)
+              .replace("{count}", String(memberCount))
+              .replace("{membersLabel}", memberCount === 1 ? t.permissions.memberSingle : t.permissions.memberPlural)}
           </>
         ) : undefined
       }

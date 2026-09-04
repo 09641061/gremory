@@ -13,6 +13,7 @@ import type { TeamUserSummary } from "@/contexts/workforce/application/model/tea
 
 import { InviteMembersDialog } from "./invite-members-dialog";
 import { MemberRow } from "./member-row";
+import { useWorkforceTranslations } from "../../i18n";
 
 export function TeamPageView({
   establishmentId,
@@ -39,6 +40,7 @@ export function TeamPageView({
   canManageOtherAvailability?: boolean;
   availabilityError?: string | null;
 }) {
+  const { t } = useWorkforceTranslations();
   const [filter, setFilter] = useState("");
   const [inviteOpen, setInviteOpen] = useState(false);
   const router = useRouter();
@@ -63,23 +65,25 @@ export function TeamPageView({
     return isSelf ? canManageOwnAvailability : canManageOtherAvailability;
   };
 
+  const memberLabel = members.length === 1 ? t.team.memberSingle : t.team.memberPlural;
+
   return (
     <PageShell>
       <PageHeader
-        title="Team"
-        description="Manage team members and pending invitations."
+        title={t.team.title}
+        description={t.team.description}
         actions={
           <>
             {canManageRoles ? (
               <Button type="button" variant="outline" className="gap-2" onClick={() => router.push("/permissions")}>
                 <Settings2 className="size-4" />
-                Manage permissions
+                {t.team.managePermissions}
               </Button>
             ) : null}
             {canInviteMembers ? (
               <Button className="gap-2" onClick={() => setInviteOpen(true)} disabled={!establishmentId}>
                 <UserPlus className="size-4" />
-                Invite members
+                {t.team.inviteMembers}
               </Button>
             ) : null}
           </>
@@ -92,15 +96,20 @@ export function TeamPageView({
           <Input
             value={filter}
             onChange={(event) => setFilter(event.target.value)}
-            placeholder="Filter members"
-            aria-label="Filter members"
+            placeholder={t.team.filterPlaceholder}
+            aria-label={t.team.filterLabel}
             className="pl-9"
           />
         </label>
         <span className="shrink-0 text-sm text-muted-foreground">
           {filter.trim()
-            ? `${filteredMembers.length} of ${members.length} ${members.length === 1 ? "member" : "members"}`
-            : `${members.length} ${members.length === 1 ? "member" : "members"}`}
+            ? t.team.membersCount
+                .replace("{count}", String(filteredMembers.length))
+                .replace("{total}", String(members.length))
+                .replace("{label}", memberLabel)
+            : t.team.totalMembers
+                .replace("{total}", String(members.length))
+                .replace("{label}", memberLabel)}
         </span>
       </div>
 
@@ -114,11 +123,11 @@ export function TeamPageView({
               </Alert>
             ) : null}
             <div className="grid grid-cols-[minmax(300px,1.4fr)_minmax(220px,1fr)_minmax(150px,.8fr)_minmax(120px,.55fr)_minmax(260px,1fr)_minmax(90px,.3fr)] border-b border-border/70 bg-muted/30 px-5 py-3 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-              <span>Name</span>
-              <span>Email</span>
-              <span>Role</span>
-              <span>Status</span>
-              <span>Scheduling</span>
+              <span>{t.team.tableHeaders.name}</span>
+              <span>{t.team.tableHeaders.email}</span>
+              <span>{t.team.tableHeaders.role}</span>
+              <span>{t.team.tableHeaders.status}</span>
+              <span>{t.team.tableHeaders.scheduling}</span>
               <div className="flex justify-end">
                 <span className="min-w-[116px] text-left" aria-hidden="true" />
               </div>
@@ -134,7 +143,7 @@ export function TeamPageView({
                 canEditVisibility={canEditAvailabilityFor(member)}
               />
             ))}
-            {filteredMembers.length === 0 && <div className="px-5 py-10 text-sm text-muted-foreground">No members found.</div>}
+            {filteredMembers.length === 0 && <div className="px-5 py-10 text-sm text-muted-foreground">{t.team.noMembersFound}</div>}
           </div>
         </CardContent>
       </Card>

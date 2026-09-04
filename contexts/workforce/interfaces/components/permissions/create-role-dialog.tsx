@@ -16,6 +16,7 @@ import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import { ErrorAlert } from "@/contexts/shared/interfaces/components/error";
 import { Input } from "@/contexts/shared/interfaces/components/ui/input";
 import { Spinner } from "@/contexts/shared/interfaces/components/ui/spinner";
+import { useWorkforceTranslations } from "@/contexts/workforce/interfaces/i18n";
 
 interface CreateRoleDialogProps {
   open: boolean;
@@ -24,6 +25,7 @@ interface CreateRoleDialogProps {
 }
 
 export function CreateRoleDialog({ open, onOpenChange, onCreated }: CreateRoleDialogProps) {
+  const { t } = useWorkforceTranslations();
   const [state, formAction, pending] = useActionState(
     createWorkforceRoleAction,
     initialWorkforceRoleActionResult,
@@ -39,27 +41,27 @@ export function CreateRoleDialog({ open, onOpenChange, onCreated }: CreateRoleDi
   return (
     <>
       <ErrorAlert
-        title="Unable to create role"
+        title={t.roleDialogs.createFailed}
         message={state.status === "error" ? state.error : undefined}
       />
       <Dialog open={open && state.status !== "success"} onOpenChange={onOpenChange}>
         <DialogContent>
           <form action={formAction} className="space-y-5">
             <DialogHeader>
-              <DialogTitle>Create role</DialogTitle>
+              <DialogTitle>{t.roleDialogs.createTitle}</DialogTitle>
               <DialogDescription>
-                Create a role. Its permissions will start disabled and can be configured next.
+                {t.roleDialogs.createDescription}
               </DialogDescription>
             </DialogHeader>
 
             <div className="space-y-2">
               <label htmlFor="create-role-name" className="text-sm font-medium text-foreground">
-                Role name
+                {t.roleDialogs.roleNameLabel}
               </label>
               <Input
                 id="create-role-name"
                 name="name"
-                placeholder="e.g. Receptionist"
+                placeholder={t.roleDialogs.roleNamePlaceholder}
                 autoFocus
                 required
                 maxLength={100}
@@ -67,10 +69,10 @@ export function CreateRoleDialog({ open, onOpenChange, onCreated }: CreateRoleDi
             </div>
 
             <DialogFooter>
-              <Button type="button" variant="outline" disabled={pending} onClick={() => onOpenChange(false)}>Cancel</Button>
+              <Button type="button" variant="outline" disabled={pending} onClick={() => onOpenChange(false)}>{t.permissions.cancel}</Button>
               <Button type="submit" disabled={pending} className="gap-2">
                 {pending ? <Spinner className="size-4" /> : <Plus className="size-4" />}
-                {pending ? "Creating..." : "Create role"}
+                {pending ? t.roleDialogs.creating : t.roleDialogs.createTitle}
               </Button>
             </DialogFooter>
           </form>

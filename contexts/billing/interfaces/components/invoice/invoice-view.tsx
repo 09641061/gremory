@@ -21,6 +21,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/contexts/shared/interfaces/components/ui/table";
+import { useBillingTranslations } from "@/contexts/billing/interfaces/i18n";
 
 interface InvoiceViewProps {
   currentSubscription: SubscriptionAccessSnapshot | null;
@@ -28,6 +29,7 @@ interface InvoiceViewProps {
 }
 
 export function InvoiceView({ currentSubscription, initialInvoices }: InvoiceViewProps) {
+  const { t } = useBillingTranslations();
   const router = useRouter();
   const [cancelModalOpen, setCancelModalOpen] = useState(false);
   const [selectedInvoiceId, setSelectedInvoiceId] = useState<string | null>(null);
@@ -71,8 +73,8 @@ export function InvoiceView({ currentSubscription, initialInvoices }: InvoiceVie
   return (
     <PageShell>
       <PageHeader
-        title="Invoices"
-        description="Review your billing history and subscription status."
+        title={t.invoices.title}
+        description={t.invoices.description}
       />
 
       {currentSubscription && (currentSubscription.planId ?? 0) > 0 ? (
@@ -82,31 +84,37 @@ export function InvoiceView({ currentSubscription, initialInvoices }: InvoiceVie
               <div className="space-y-2">
                 <div className="flex flex-wrap items-center gap-2">
                   <Badge variant="outline" className="rounded-full px-2.5 uppercase tracking-wide">
-                    Current subscription
+                    {t.invoices.currentSubscription}
                   </Badge>
                   {currentSubscription.cancelAtPeriodEnd ? (
                     <Badge variant="destructive" className="rounded-full px-2.5 uppercase tracking-wide">
-                      Cancellation scheduled
+                      {t.invoices.cancellationScheduled}
                     </Badge>
                   ) : null}
                 </div>
                 <h2 className="text-lg font-semibold tracking-tight text-foreground">
-                  Takodu {currentPlanName} Plan
+                  {t.invoices.planTitle.replace("{plan}", currentPlanName)}
                 </h2>
                 <p className="max-w-2xl text-sm leading-6 text-muted-foreground">
                   {currentSubscription.cancelAtPeriodEnd
-                    ? `Your subscription will end on ${
-                        currentSubscription.currentPeriodEnd ? new Date(currentSubscription.currentPeriodEnd).toLocaleDateString() : "the scheduled date"
-                      } and then downgrade to Free.`
+                    ? t.invoices.endsOn.replace(
+                        "{date}",
+                        currentSubscription.currentPeriodEnd
+                          ? new Date(currentSubscription.currentPeriodEnd).toLocaleDateString()
+                          : ""
+                      )
                     : currentSubscription.currentPeriodEnd
-                      ? `Your subscription renews on ${new Date(currentSubscription.currentPeriodEnd).toLocaleDateString()}.`
-                      : "Your subscription is active."}
+                      ? t.invoices.renewsOn.replace(
+                          "{date}",
+                          new Date(currentSubscription.currentPeriodEnd).toLocaleDateString()
+                        )
+                      : t.invoices.active}
                 </p>
               </div>
 
               {!currentSubscription.cancelAtPeriodEnd ? (
                 <Button type="button" variant="destructive" onClick={() => setCancelModalOpen(true)}>
-                  Cancel subscription
+                  {t.invoices.cancelSubscription}
                 </Button>
               ) : null}
             </div>
@@ -117,8 +125,8 @@ export function InvoiceView({ currentSubscription, initialInvoices }: InvoiceVie
       <Card>
         <CardContent className="p-0">
           <div className="flex items-center justify-between border-b border-border/70 bg-muted/30 px-5 py-3 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-            <span>Billing history</span>
-            <span>{invoicesData.content.length} invoices</span>
+            <span>{t.invoices.billingHistory}</span>
+            <span>{t.invoices.invoicesCount.replace("{count}", String(invoicesData.content.length))}</span>
           </div>
 
           {invoicesData.content.length === 0 ? (
@@ -128,8 +136,8 @@ export function InvoiceView({ currentSubscription, initialInvoices }: InvoiceVie
                   <FileText />
                 </EmptyMedia>
                 <EmptyContent>
-                  <EmptyTitle>No invoices yet</EmptyTitle>
-                  <EmptyDescription>Invoices will appear here once billing starts.</EmptyDescription>
+                  <EmptyTitle>{t.invoices.noInvoicesTitle}</EmptyTitle>
+                  <EmptyDescription>{t.invoices.noInvoicesDescription}</EmptyDescription>
                 </EmptyContent>
               </EmptyHeader>
             </Empty>
@@ -139,10 +147,10 @@ export function InvoiceView({ currentSubscription, initialInvoices }: InvoiceVie
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="px-5 py-3 text-xs font-medium uppercase tracking-wide text-muted-foreground">Date</TableHead>
-                      <TableHead className="px-5 py-3 text-xs font-medium uppercase tracking-wide text-muted-foreground">Total</TableHead>
-                      <TableHead className="px-5 py-3 text-xs font-medium uppercase tracking-wide text-muted-foreground">Status</TableHead>
-                      <TableHead className="px-5 py-3 text-right text-xs font-medium uppercase tracking-wide text-muted-foreground">Actions</TableHead>
+                      <TableHead className="px-5 py-3 text-xs font-medium uppercase tracking-wide text-muted-foreground">{t.invoices.tableHeaders.date}</TableHead>
+                      <TableHead className="px-5 py-3 text-xs font-medium uppercase tracking-wide text-muted-foreground">{t.invoices.tableHeaders.total}</TableHead>
+                      <TableHead className="px-5 py-3 text-xs font-medium uppercase tracking-wide text-muted-foreground">{t.invoices.tableHeaders.status}</TableHead>
+                      <TableHead className="px-5 py-3 text-right text-xs font-medium uppercase tracking-wide text-muted-foreground">{t.invoices.tableHeaders.actions}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -180,7 +188,7 @@ export function InvoiceView({ currentSubscription, initialInvoices }: InvoiceVie
                             className="gap-2"
                           >
                             <FileDown className="size-4" />
-                            View
+                            {t.invoices.view}
                           </Button>
                         </TableCell>
                       </TableRow>
@@ -192,7 +200,9 @@ export function InvoiceView({ currentSubscription, initialInvoices }: InvoiceVie
               {invoicesData.totalPages > 1 ? (
                 <div className="flex items-center justify-between border-t border-border/70 bg-muted/20 px-5 py-4">
                   <span className="text-xs text-muted-foreground">
-                    Page {currentPage + 1} of {invoicesData.totalPages}
+                    {t.invoices.pageCount
+                      .replace("{current}", String(currentPage + 1))
+                      .replace("{total}", String(invoicesData.totalPages))}
                   </span>
                   <div className="flex items-center gap-2">
                     <Button
@@ -200,7 +210,7 @@ export function InvoiceView({ currentSubscription, initialInvoices }: InvoiceVie
                       size="icon-sm"
                       disabled={currentPage === 0 || loading}
                       onClick={() => fetchPage(currentPage - 1)}
-                      aria-label="Previous page"
+                      aria-label={t.invoices.previousPage}
                     >
                       <ChevronLeft className="size-4" />
                     </Button>
@@ -209,7 +219,7 @@ export function InvoiceView({ currentSubscription, initialInvoices }: InvoiceVie
                       size="icon-sm"
                       disabled={currentPage >= invoicesData.totalPages - 1 || loading}
                       onClick={() => fetchPage(currentPage + 1)}
-                      aria-label="Next page"
+                      aria-label={t.invoices.nextPage}
                     >
                       <ChevronRight className="size-4" />
                     </Button>

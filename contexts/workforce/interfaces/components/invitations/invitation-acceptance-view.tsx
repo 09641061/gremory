@@ -13,6 +13,7 @@ import { Button, buttonVariants } from "@/contexts/shared/interfaces/components/
 import { Card, CardContent, CardHeader, CardTitle } from "@/contexts/shared/interfaces/components/ui/card";
 import { Spinner } from "@/contexts/shared/interfaces/components/ui/spinner";
 import { buildInvitationLandingHref } from "./invitation-navigation";
+import { useWorkforceTranslations } from "@/contexts/workforce/interfaces/i18n";
 
 export function InvitationAcceptanceView({
   token,
@@ -23,6 +24,7 @@ export function InvitationAcceptanceView({
   invitation: TeamInvitationPreviewView;
   authenticated: boolean;
 }) {
+  const { t } = useWorkforceTranslations();
   const [state, formAction, pending] = useActionState(acceptTeamInvitationAction, initialTeamActionResult);
 
   useEffect(() => {
@@ -43,8 +45,8 @@ export function InvitationAcceptanceView({
   if (invitation.status === "REMOVED") {
     return (
       <InvitationShell
-        title="Workspace access removed"
-        subtitle="Your membership is no longer active. Ask the organization owner to send you a new invitation."
+        title={t.invitations.accessRemovedTitle}
+        subtitle={t.invitations.accessRemovedSubtitle}
         icon={<Users className="size-6" />}
       />
     );
@@ -59,8 +61,8 @@ export function InvitationAcceptanceView({
 
   return (
     <InvitationShell
-      title="Join the team"
-      subtitle="You have been invited to join this workspace."
+      title={t.invitations.joinTeamTitle}
+      subtitle={t.invitations.joinTeamSubtitle}
       icon={<Users className="size-6" />}
     >
       <Card className="mt-6 text-left">
@@ -77,24 +79,24 @@ export function InvitationAcceptanceView({
           </div>
           <div className="flex items-center gap-3 text-foreground">
             <Mail className="size-4 text-muted-foreground" />
-            <span className="text-muted-foreground">Invitation ready to accept</span>
+            <span className="text-muted-foreground">{t.invitations.invitationReady}</span>
           </div>
         </CardContent>
       </Card>
 
-      <ErrorAlert title="Invitation error" message={state.status === "error" ? state.error : undefined} />
+      <ErrorAlert title={t.invitations.invitationError} message={state.status === "error" ? state.error : undefined} />
 
       {authenticated ? (
         <form action={formAction} className="mt-6">
           <input type="hidden" name="token" value={token} />
           <Button type="submit" disabled={pending} className="w-full gap-2">
             {pending ? <Spinner className="size-4" /> : null}
-            {pending ? "Accepting..." : "Accept invitation"}
+            {pending ? t.invitations.accepting : t.invitations.acceptInvitation}
           </Button>
         </form>
       ) : (
         <Link href={signInPath} className={buttonVariants({ className: "mt-6 w-full" })}>
-          Sign in to accept
+          {t.invitations.signInToAccept}
         </Link>
       )}
     </InvitationShell>
@@ -108,34 +110,37 @@ function InvitationAcceptedView({
   redirecting?: boolean;
   href: string;
 }) {
+  const { t } = useWorkforceTranslations();
   return (
     <InvitationShell
-      title="Invitation accepted"
-      subtitle={redirecting ? "Redirecting you to Takodu..." : "You already have access to this workspace."}
+      title={t.invitations.acceptedTitle}
+      subtitle={redirecting ? t.invitations.acceptedSubtitleRedirecting : t.invitations.acceptedSubtitleAlready}
       icon={<Check className="size-6" />}
     >
       <Link href={href} className={buttonVariants({ className: "mt-6 w-full" })}>
-        Continue to Takodu
+        {t.invitations.continueToTakodu}
       </Link>
     </InvitationShell>
   );
 }
 
 export function InvitationExpiredView() {
+  const { t } = useWorkforceTranslations();
   return (
     <InvitationShell
-      title="Invitation expired"
-      subtitle="This invitation has expired and is no longer available."
+      title={t.invitations.expiredTitle}
+      subtitle={t.invitations.expiredSubtitle}
       icon={<Mail className="size-6" />}
     />
   );
 }
 
 export function InvitationUnavailableView() {
+  const { t } = useWorkforceTranslations();
   return (
     <InvitationShell
-      title="Invitation unavailable"
-      subtitle="This invitation is invalid or no longer available."
+      title={t.invitations.unavailableTitle}
+      subtitle={t.invitations.unavailableSubtitle}
       icon={<Mail className="size-6" />}
     />
   );
