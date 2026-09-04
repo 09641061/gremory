@@ -33,14 +33,7 @@ import { WorkspaceSwitcher } from "@/contexts/business/interfaces/components/wor
 import { SidebarUpgradeCallout } from "@/contexts/billing/interfaces/components/subscription/sidebar-upgrade-callout";
 import { canOfferUpgrade } from "@/contexts/billing/domain/services/subscription-upgrade.policy";
 
-const navigation = [
-  { label: "New Chat", href: "/chat", icon: MessageCircle },
-  { label: "Schedule", href: "/schedule", icon: CalendarDays },
-  { label: "CRM", href: "/crm", icon: ContactRound },
-  { label: "Catalog", href: "/catalog", icon: Package },
-  { label: "Team", href: "/team", icon: Users },
-  { label: "Analytics", href: "/analytics", icon: BarChart3 },
-];
+import { useI18n, LocaleSync } from "@/contexts/shared/interfaces/i18n";
 
 /**
  * The application's only chrome: workspace, navigation and account all live in
@@ -55,12 +48,13 @@ export function AppSidebar({
   showAssistantNavigation,
 }: {
   initialAssistantConversations: AssistantConversationSummaryReadModel[];
-  currentProfile: Pick<ProfileViewModel, "username" | "imageUrl"> | null;
+  currentProfile: Pick<ProfileViewModel, "username" | "imageUrl"> & { language?: "ES" | "EN" } | null;
   workspace: WorkspaceHeaderViewModel;
   visibleRoutes: ReadonlyArray<SidebarRouteId>;
   showAssistantSection: boolean;
   showAssistantNavigation: boolean;
 }) {
+  const { t } = useI18n();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const selectedConversationId = pathname.startsWith("/chat")
@@ -77,6 +71,15 @@ export function AppSidebar({
     .map((conversation) => `${conversation.id}:${conversation.updatedAt}:${conversation.title ?? ""}`)
     .join("|");
 
+  const navigation = [
+    { label: t.navigation.newChat, href: "/chat", icon: MessageCircle },
+    { label: t.navigation.schedule, href: "/schedule", icon: CalendarDays },
+    { label: t.navigation.crm, href: "/crm", icon: ContactRound },
+    { label: t.navigation.catalog, href: "/catalog", icon: Package },
+    { label: t.navigation.team, href: "/team", icon: Users },
+    { label: t.navigation.analytics, href: "/analytics", icon: BarChart3 },
+  ];
+
   const visibleRouteSet = new Set(visibleRoutes);
   const filteredNavigation = navigation.filter((item) => {
     if (!showAssistantNavigation && item.href === "/chat") {
@@ -86,6 +89,7 @@ export function AppSidebar({
   });
   return (
     <ShadcnSidebar collapsible="offcanvas">
+      <LocaleSync profileLanguage={currentProfile?.language} />
       <SidebarHeader className="border-b border-border/60 p-3">
         <WorkspaceSwitcher workspace={workspace} />
       </SidebarHeader>
