@@ -4,6 +4,7 @@ import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { RolePermissionsTab } from "@/contexts/workforce/interfaces/components/permissions/role-permissions-tab";
+import { I18nProvider } from "@/contexts/shared/interfaces/i18n";
 
 vi.mock("next/link", () => ({
   default: ({ href, ...props }: { href: string; children: React.ReactNode }) => (
@@ -40,7 +41,11 @@ function renderTab(overrides: { assistantLocked?: boolean; canUpgradeAssistant?:
     );
   }
 
-  render(<Harness />);
+  render(
+    <I18nProvider initialLocale="es">
+      <Harness />
+    </I18nProvider>,
+  );
 }
 
 describe("RolePermissionsTab assistant permission gating", () => {

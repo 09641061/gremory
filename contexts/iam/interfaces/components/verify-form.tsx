@@ -20,6 +20,7 @@ import {
   resendEmailSignInAction,
   type ResendEmailSignInActionState,
 } from "../actions/resend-email-sign-in.action";
+import { useI18n } from "@/contexts/shared/interfaces/i18n";
 
 const verificationCodeLength = 6;
 const initialActionState: ConfirmEmailSignInActionState = {
@@ -41,6 +42,7 @@ export function VerifyForm({
   initialError?: string;
 }) {
   const router = useRouter();
+  const { t } = useI18n();
   const [digits, setDigits] = useState<string[]>(
     Array(verificationCodeLength).fill("")
   );
@@ -92,7 +94,7 @@ export function VerifyForm({
   return (
     <>
       <ErrorAlert
-        title="Verification failed"
+        title={t.auth.verificationFailed}
         message={
           !pending && !resendPending
             ? initialError ??
@@ -110,10 +112,10 @@ export function VerifyForm({
         <section className="w-full max-w-[416px] text-center">
           <header className="mb-5">
             <h1 className="text-[27px] font-bold leading-tight tracking-[-0.03em]">
-              Check your email
+              {t.auth.checkEmail}
             </h1>
             <p className="mt-2 text-[14px] leading-5 text-muted-foreground">
-              We sent a secure sign-in link and verification code.
+              {t.auth.checkEmailDesc}
             </p>
           </header>
 
@@ -124,14 +126,14 @@ export function VerifyForm({
                 <input type="hidden" name="code" value={digits.join("")} readOnly />
                 {returnTo ? <input type="hidden" name="returnTo" value={returnTo} /> : null}
                 <p className="text-[14px] leading-5 text-foreground">
-                  To continue, click the link sent to
+                  {t.auth.clickLinkSentTo}
                   <br />
                   <span className="font-medium">{email}</span>
                 </p>
 
                 <div className="mt-5 text-left">
                   <Label className="mb-3 text-muted-foreground">
-                    Enter the verification code
+                    {t.auth.enterVerificationCode}
                   </Label>
 
                   <div className="grid grid-cols-6 gap-1.5">
@@ -163,10 +165,10 @@ export function VerifyForm({
                   {pending ? (
                     <>
                       <Spinner data-icon="inline-start" />
-                      Verifying...
+                      {t.auth.verifying}
                     </>
                   ) : (
-                    "Verify code"
+                    t.auth.verifyCode
                   )}
                 </Button>
               </form>
@@ -184,10 +186,10 @@ export function VerifyForm({
                     {resendPending ? (
                       <>
                         <Spinner data-icon="inline-start" />
-                        Resending...
+                        {t.auth.resending}
                       </>
                     ) : (
-                      "Resend email"
+                      t.auth.resendEmail
                     )}
                   </Button>
                 </form>
@@ -198,7 +200,7 @@ export function VerifyForm({
                   onClick={() => router.push(returnTo ? `/login?next=${encodeURIComponent(returnTo)}` : "/login")}
                   className="mt-3 h-auto p-0 text-[14px] font-semibold text-muted-foreground hover:bg-transparent hover:text-muted-foreground hover:underline"
                 >
-                  Use a different email
+                  {t.auth.useDifferentEmail}
                 </Button>
               </div>
             </CardContent>

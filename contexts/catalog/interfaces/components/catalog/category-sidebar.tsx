@@ -27,6 +27,7 @@ import { ErrorAlert } from "@/contexts/shared/interfaces/components/error";
 import { CategoryItem } from "./category-item";
 import { ServiceRow } from "./service-row";
 import { DeleteCategoryDialog } from "./delete-category-dialog";
+import { useCatalogTranslations } from "../../i18n";
 
 // Sentinel used as drop-target key for the "Uncategorized" bucket, which has no real category id
 const UNCATEGORIZED_DROP_ID = "__uncategorized__";
@@ -75,6 +76,7 @@ export function CategorySidebar({
   canDeleteCategory,
   canCreateService,
 }: CategorySidebarProps) {
+  const { t } = useCatalogTranslations();
   const [draggedServiceId, setDraggedServiceId] = useState<string | null>(null);
   const [dragOverCategoryId, setDragOverCategoryId] = useState<string | null>(null);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
@@ -165,7 +167,7 @@ export function CategorySidebar({
               className="flex-1 gap-2 border-0 font-medium"
             >
               <PlusIcon className="size-4" />
-              <span>{canCreateCategory ? "Create Category" : "Create Service"}</span>
+              <span>{canCreateCategory ? t.sidebar.createCategory : t.sidebar.createService}</span>
             </Button>
 
             {/* The chevron only earns its place when there is a second thing to
@@ -176,7 +178,7 @@ export function CategorySidebar({
                   render={
                     <Button
                       type="button"
-                      aria-label="More things to create"
+                      aria-label={t.sidebar.moreThingsToCreate}
                       // Not `size="icon"`: that is 32px against the 36px of the
                       // control beside it, and the group would step down at the
                       // seam. The divider is an inset line inside the fill, so
@@ -196,7 +198,7 @@ export function CategorySidebar({
                     className="gap-2 whitespace-nowrap"
                   >
                     <PackagePlusIcon className="size-3.5" />
-                    <span>Create Service</span>
+                    <span>{t.sidebar.createService}</span>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -217,7 +219,7 @@ export function CategorySidebar({
         {isEmpty ? (
           <div className="p-6 text-center text-muted-foreground flex flex-col items-center justify-center space-y-2">
             <FolderXIcon className="size-8 opacity-40 text-muted-foreground" />
-            <p className="text-xs font-medium">No categories available</p>
+            <p className="text-xs font-medium">{t.sidebar.noCategories}</p>
           </div>
         ) : (
           <>
@@ -275,7 +277,7 @@ export function CategorySidebar({
             render={<Button variant="outline" size="sm" className="gap-2 text-xs" />}
           >
             <MenuIcon className="size-4" />
-            <span>Categories ({categories.length})</span>
+            <span>{t.sidebar.categoriesCount.replace("{count}", String(categories.length))}</span>
           </SheetTrigger>
         </div>
 
@@ -293,7 +295,7 @@ export function CategorySidebar({
       {/* Desktop Sidebar */}
       <div className="hidden md:block h-full">{sidebarContent}</div>
       <ErrorAlert
-        title="Cannot Delete"
+        title={t.sidebar.cannotDeleteTitle}
         message={alertMessage ?? undefined}
         onDismiss={() => setAlertMessage(null)}
       />

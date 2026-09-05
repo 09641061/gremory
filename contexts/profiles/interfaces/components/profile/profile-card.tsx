@@ -19,6 +19,7 @@ import { ErrorAlert } from "@/contexts/shared/interfaces/components/error";
 import { Spinner } from "@/contexts/shared/interfaces/components/ui/spinner";
 import { ImageUploadAvatar } from "@/contexts/shared/interfaces/components/image-upload-avatar";
 import type { ProfileViewModel } from "@/contexts/profiles/application/services/profile.view-model";
+import { useI18n } from "@/contexts/shared/interfaces/i18n";
 
 const initialProfileActionState: UpdateProfileActionState = {
   status: "idle",
@@ -67,6 +68,7 @@ function ProfileCardForm({
   const usernameLabelId = useId();
   const usernameHintId = useId();
   const usernameErrorId = useId();
+  const { t, translate } = useI18n();
   const [username, setUsername] = useState(() => profile.username);
   const [hasFileSelected, setHasFileSelected] = useState(false);
 
@@ -86,19 +88,19 @@ function ProfileCardForm({
       <CardContent className="p-0">
         {state.status === "error" ? (
           <div className="p-6 pb-0">
-            <ErrorAlert title="Unable to update profile" message={state.error ?? undefined} />
+            <ErrorAlert title={t.profile.errorTitle} message={state.error ?? undefined} />
           </div>
         ) : null}
 
         <div className="flex items-center justify-between border-b border-border p-6">
           <div className="space-y-1">
-            <h2 className="text-base font-semibold text-foreground">Profile photo</h2>
-            <p className="text-sm text-muted-foreground">Click the photo to upload a new one.</p>
+            <h2 className="text-base font-semibold text-foreground">{t.profile.photoTitle}</h2>
+            <p className="text-sm text-muted-foreground">{t.profile.photoDescription}</p>
           </div>
           <ImageUploadAvatar
             key={profile.imageUrl ?? "no-image"}
             name="imageFile"
-            alt={username || "Profile photo"}
+            alt={username || t.profile.photoTitle}
             initialUrl={profile.imageUrl}
             onFileSelect={(file) => setHasFileSelected(Boolean(file))}
             fallbackIcon={<UserRound className="size-8 text-muted-foreground" aria-hidden="true" />}
@@ -109,14 +111,14 @@ function ProfileCardForm({
           <div className="space-y-1">
             <div className="flex items-center justify-between">
               <h2 id={usernameLabelId} className="text-base font-semibold text-foreground">
-                Username
+                {t.profile.usernameTitle}
               </h2>
               <span className="text-xs text-muted-foreground" aria-live="polite">
                 {username.length}/{MAX_USERNAME_LENGTH}
               </span>
             </div>
             <p id={usernameHintId} className="text-sm text-muted-foreground">
-              Only letters (A-Z, a-z), {MIN_USERNAME_LENGTH} to {MAX_USERNAME_LENGTH} characters.
+              {translate("profile.usernameHint", { min: MIN_USERNAME_LENGTH, max: MAX_USERNAME_LENGTH })}
             </p>
           </div>
 
@@ -138,7 +140,7 @@ function ProfileCardForm({
 
           {isTooShort ? (
             <p id={usernameErrorId} role="alert" className="text-xs font-medium text-destructive">
-              Username must be at least {MIN_USERNAME_LENGTH} characters.
+              {translate("profile.usernameMinLength", { min: MIN_USERNAME_LENGTH })}
             </p>
           ) : null}
         </div>
@@ -154,11 +156,11 @@ function ProfileCardForm({
           }}
           disabled={pending || isUnchanged}
         >
-          Cancel
+          {t.profile.cancel}
         </Button>
         <Button type="submit" disabled={!canSave} className="gap-2">
           {pending ? <Spinner className="size-4" /> : <Save className="size-4" />}
-          {pending ? "Saving..." : "Save"}
+          {pending ? t.profile.saving : t.profile.save}
         </Button>
       </CardFooter>
     </form>

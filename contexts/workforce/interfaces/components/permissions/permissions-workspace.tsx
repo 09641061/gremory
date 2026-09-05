@@ -23,6 +23,7 @@ import { ErrorAlert } from "@/contexts/shared/interfaces/components/error";
 import { Spinner } from "@/contexts/shared/interfaces/components/ui/spinner";
 import { RolePermissionsTab } from "./role-permissions-tab";
 import { RoleMembersTab } from "./role-members-tab";
+import { useWorkforceTranslations } from "@/contexts/workforce/interfaces/i18n";
 
 interface PermissionsWorkspaceProps {
   role: WorkforceRoleSummary | null;
@@ -41,6 +42,7 @@ export function PermissionsWorkspace({
   canUpdateRole = true,
   subscription,
 }: PermissionsWorkspaceProps) {
+  const { t } = useWorkforceTranslations();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<"permissions" | "members">("permissions");
   const [selectedPermissions, setSelectedPermissions] = useState<ReadonlySet<string>>(
@@ -62,8 +64,8 @@ export function PermissionsWorkspace({
         <div className="flex min-h-[calc(100vh-10rem)] items-center justify-center rounded-xl border border-border bg-card p-8 text-center shadow-sm lg:ml-3">
           <div className="max-w-xs">
             <User className="mx-auto size-10 text-muted-foreground/50" />
-            <p className="mt-4 text-sm font-medium text-foreground">Select a role</p>
-            <p className="mt-1 text-sm text-muted-foreground">Choose a role to configure its permissions.</p>
+            <p className="mt-4 text-sm font-medium text-foreground">{t.permissions.selectRoleTitle}</p>
+            <p className="mt-1 text-sm text-muted-foreground">{t.permissions.selectRolePrompt}</p>
           </div>
         </div>
       </div>
@@ -91,7 +93,7 @@ export function PermissionsWorkspace({
 
       <div className="flex min-h-0 flex-1 flex-col gap-6 px-6 py-5">
         <ErrorAlert
-          title="Unable to save permissions"
+          title={t.permissions.unableToSavePermissions}
           message={state.status === "error" ? state.error : undefined}
         />
 
@@ -101,8 +103,8 @@ export function PermissionsWorkspace({
           className="shrink-0"
         >
           <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="permissions">Permissions</TabsTrigger>
-            <TabsTrigger value="members">Manage members</TabsTrigger>
+            <TabsTrigger value="permissions">{t.permissions.permissionsTab}</TabsTrigger>
+            <TabsTrigger value="members">{t.permissions.manageMembersTab}</TabsTrigger>
           </TabsList>
         </Tabs>
 
@@ -125,11 +127,11 @@ export function PermissionsWorkspace({
       {activeTab === "permissions" ? (
         <CardFooter className="shrink-0 justify-end gap-2 rounded-b-xl border-t border-border bg-card px-6 py-5">
           <Button type="button" variant="ghost" onClick={cancelChanges} disabled={pending}>
-            Cancel
+            {t.permissions.cancel}
           </Button>
           <Button type="submit" disabled={pending || !editable} className="gap-2">
             {pending ? <Spinner className="size-4" /> : <Save className="size-4" />}
-            {pending ? "Saving..." : "Save"}
+            {pending ? t.permissions.saving : t.permissions.save}
           </Button>
         </CardFooter>
       ) : null}

@@ -1,3 +1,5 @@
+"use client";
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/contexts/shared/interfaces/components/ui/card";
 import type { FreeAnalyticsDashboard } from "@/contexts/analytics/interfaces/view-models/free-analytics.view-model";
 import { AnalyticsSection } from "@/contexts/analytics/interfaces/components/free-analytics/charts/analytics-section";
@@ -6,12 +8,14 @@ import { RankingList, RankingRow } from "@/contexts/analytics/interfaces/compone
 import { TrendChart } from "@/contexts/analytics/interfaces/components/free-analytics/charts/trend-chart";
 import { BarChart } from "@/contexts/analytics/interfaces/components/free-analytics/charts/bar-chart";
 import { formatMoney, formatNumber, formatTrendRange } from "@/contexts/analytics/interfaces/components/free-analytics/free-analytics.utils";
+import { useAnalyticsTranslations } from "@/contexts/analytics/interfaces/i18n";
 
 interface RevenueTabProps {
   analytics: FreeAnalyticsDashboard;
 }
 
 export function RevenueTab({ analytics }: RevenueTabProps) {
+  const { t } = useAnalyticsTranslations();
   const weeklyRevenueBalance = analytics.weeklyRevenueBalance ?? {
     totalRevenue: 0,
     appointmentsCount: 0,
@@ -40,14 +44,14 @@ export function RevenueTab({ analytics }: RevenueTabProps) {
       <div className="grid gap-6 xl:grid-cols-[1.5fr_0.9fr]">
         <Card className="overflow-hidden rounded-xl border-border bg-card shadow-sm">
           <CardHeader className="border-b border-border/60 pb-4">
-            <CardTitle>Weekly revenue balance</CardTitle>
+            <CardTitle>{t.revenue.weeklyBalance}</CardTitle>
             <p className="pt-1 text-xs text-muted-foreground">{weeklyRevenueRange}</p>
           </CardHeader>
           <CardContent className="space-y-4 p-5">
             <div className="grid gap-3 sm:grid-cols-2">
-              <StatBadge label="Total revenue" value={formatMoney(weeklyRevenueBalance.totalRevenue)} />
+              <StatBadge label={t.revenue.totalRevenue} value={formatMoney(weeklyRevenueBalance.totalRevenue)} />
               <StatBadge
-                label="Completed appointments"
+                label={t.revenue.completedAppointments}
                 value={formatNumber(weeklyRevenueBalance.appointmentsCount)}
               />
             </div>
@@ -55,7 +59,7 @@ export function RevenueTab({ analytics }: RevenueTabProps) {
               data={weeklyRevenueBalance.dailyTrend}
               tone="accent"
               valueFormatter={formatMoney}
-              unitLabel="revenue"
+              unitLabel={t.revenue.revenueUnit}
             />
           </CardContent>
         </Card>
@@ -63,7 +67,7 @@ export function RevenueTab({ analytics }: RevenueTabProps) {
         <div className="grid gap-6">
           <Card className="overflow-hidden rounded-xl border-border bg-card shadow-sm">
             <CardHeader className="border-b border-border/60 pb-4">
-              <CardTitle>Average ticket</CardTitle>
+              <CardTitle>{t.revenue.averageTicket}</CardTitle>
               <p className="pt-1 text-xs text-muted-foreground">{weeklyRevenueRange}</p>
             </CardHeader>
             <CardContent className="space-y-4 p-5">
@@ -71,33 +75,33 @@ export function RevenueTab({ analytics }: RevenueTabProps) {
                 <p className="text-3xl font-semibold tracking-tight text-foreground">
                   {formatMoney(averageTicket.currentValue)}
                 </p>
-                <p className="text-sm text-muted-foreground">vs previous period</p>
+                <p className="text-sm text-muted-foreground">{t.revenue.vsPreviousPeriod}</p>
                 <p className={`pt-2 text-sm font-semibold ${averageTicket.delta >= 0 ? "text-success" : "text-destructive"}`}>
                   {averageTicket.delta >= 0 ? "+" : "-"}
                   {formatMoney(Math.abs(averageTicket.delta))}
                 </p>
               </div>
               <div className="grid gap-3 sm:grid-cols-2">
-                <StatBadge label="Current" value={formatMoney(averageTicket.currentValue)} />
-                <StatBadge label="Previous" value={formatMoney(averageTicket.lastPeriodValue)} />
+                <StatBadge label={t.revenue.current} value={formatMoney(averageTicket.currentValue)} />
+                <StatBadge label={t.revenue.previous} value={formatMoney(averageTicket.lastPeriodValue)} />
               </div>
             </CardContent>
           </Card>
 
           <Card className="overflow-hidden rounded-xl border-border bg-card shadow-sm">
             <CardHeader className="border-b border-border/60 pb-4">
-              <CardTitle>Lost revenue</CardTitle>
+              <CardTitle>{t.revenue.lostRevenue}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4 p-5">
               <SplitMetricRow
-                label="Cancelled"
+                label={t.revenue.cancelled}
                 value={lostRevenue.cancelledRevenue}
                 total={lostRevenue.totalLostRevenue}
                 tone="bg-destructive"
                 valueFormatter={formatMoney}
               />
               <SplitMetricRow
-                label="No-show"
+                label={t.revenue.noShow}
                 value={lostRevenue.noShowRevenue}
                 total={lostRevenue.totalLostRevenue}
                 tone="bg-warning"
@@ -106,8 +110,8 @@ export function RevenueTab({ analytics }: RevenueTabProps) {
               />
               <p className="text-xs text-muted-foreground">
                 {lostRevenue.totalLostRevenue > 0
-                  ? `Total lost revenue: ${formatMoney(lostRevenue.totalLostRevenue)}.`
-                  : "No lost revenue recorded in the selected window."}
+                  ? t.revenue.totalLostRevenue.replace("{amount}", formatMoney(lostRevenue.totalLostRevenue))
+                  : t.revenue.noLostRevenue}
               </p>
             </CardContent>
           </Card>
@@ -117,7 +121,7 @@ export function RevenueTab({ analytics }: RevenueTabProps) {
       <div className="grid gap-6 xl:grid-cols-2">
         <Card className="overflow-hidden rounded-xl border-border bg-card shadow-sm">
           <CardHeader className="border-b border-border/60 pb-4">
-            <CardTitle>Top services by revenue</CardTitle>
+            <CardTitle>{t.revenue.topServicesByRevenue}</CardTitle>
           </CardHeader>
           <CardContent className="p-5">
             <BarChart
@@ -133,20 +137,22 @@ export function RevenueTab({ analytics }: RevenueTabProps) {
 
         <Card className="overflow-hidden rounded-xl border-border bg-card shadow-sm">
           <CardHeader className="border-b border-border/60 pb-4">
-            <CardTitle>Top customers by spend</CardTitle>
+            <CardTitle>{t.revenue.topCustomersBySpend}</CardTitle>
           </CardHeader>
           <CardContent className="p-5">
             <RankingList
               items={topCustomersBySpend}
-              emptyLabel="No spend rankings available."
+              emptyLabel={t.revenue.noSpendRankings}
               renderItem={(item) => (
                 <RankingRow
                   rank={item.rank}
                   label={item.customerName}
                   value={item.totalSpent}
-                  meta={`${item.appointmentsCount} appointments - avg ${formatMoney(item.averageTicket)}`}
+                  meta={t.revenue.customerMeta
+                    .replace("{count}", String(item.appointmentsCount))
+                    .replace("{avg}", formatMoney(item.averageTicket))}
                   valueFormatter={formatMoney}
-                  valueLabel="Spent"
+                  valueLabel={t.revenue.spentLabel}
                 />
               )}
             />

@@ -11,6 +11,10 @@ import { createTheme } from "../../domain/model/valueobjects/theme";
 import { createProfilePreferences } from "../../domain/model/valueobjects/profile-preferences";
 import { createProfileCommandService } from "../../application/factory";
 import type { ProfileViewModel } from "../../application/services/profile.view-model";
+import {
+  LOCALE_COOKIE_NAME,
+  LOCALE_COOKIE_OPTIONS,
+} from "@/contexts/shared/infrastructure/i18n/i18n-cookie";
 
 export type UpdatePreferencesActionState =
   | { status: "idle"; data: null; error: null }
@@ -47,6 +51,10 @@ export async function updatePreferencesAction(
 
     const service = createProfileCommandService();
     const profile = await service.updatePreferences(command, accessToken);
+
+    if (typeof cookieStore.set === "function") {
+      cookieStore.set(LOCALE_COOKIE_NAME, input.language.toLowerCase(), LOCALE_COOKIE_OPTIONS);
+    }
 
     updateTag("profile");
 

@@ -12,6 +12,7 @@ import { ActivityTab } from "./activity-tab";
 import { RevenueTab } from "./revenue-tab";
 import { RankingsTab } from "./rankings-tab";
 import { FrictionTab } from "./friction-tab";
+import { useAnalyticsTranslations } from "@/contexts/analytics/interfaces/i18n";
 
 interface FreeAnalyticsPageViewProps {
   analytics?: FreeAnalyticsDashboard | null;
@@ -30,23 +31,24 @@ export function FreeAnalyticsPageView({
   standardRange,
   standardAnalytics,
 }: FreeAnalyticsPageViewProps) {
+  const { t } = useAnalyticsTranslations();
   const [selectedGroup, setSelectedGroup] = useState<AnalyticsGroup>("activity");
 
   if (!analytics) {
-    return <FreeAnalyticsErrorState message={errorMessage ?? "Unable to load analytics right now."} />;
+    return <FreeAnalyticsErrorState message={errorMessage ?? t.dashboard.loadError} />;
   }
 
   return (
     <PageShell>
       <PageHeader
-        title="Analytics"
-        description="View only the group you need. Each group keeps the screen lighter and easier to read."
+        title={t.dashboard.title}
+        description={t.dashboard.description}
         actions={
           <div className="flex flex-wrap items-end justify-end gap-3">
             {standardRange ? (
               <form method="get" className="flex flex-wrap items-end gap-2 text-sm">
                 <label className="grid gap-1 text-muted-foreground">
-                  <span>From</span>
+                  <span>{t.dashboard.from}</span>
                   <input
                     type="date"
                     name="from"
@@ -56,7 +58,7 @@ export function FreeAnalyticsPageView({
                   />
                 </label>
                 <label className="grid gap-1 text-muted-foreground">
-                  <span>To</span>
+                  <span>{t.dashboard.to}</span>
                   <input
                     type="date"
                     name="to"
@@ -69,7 +71,7 @@ export function FreeAnalyticsPageView({
                   type="submit"
                   className="h-9 rounded-md border border-border bg-card px-3 font-medium text-foreground hover:bg-muted"
                 >
-                  Apply
+                  {t.dashboard.apply}
                 </button>
               </form>
             ) : null}
@@ -78,10 +80,10 @@ export function FreeAnalyticsPageView({
                 variant="line"
                 className="w-full flex-wrap justify-start rounded-full border border-border bg-card p-1 shadow-sm"
               >
-                <TabsTrigger value="activity">Activity</TabsTrigger>
-                <TabsTrigger value="revenue">Revenue</TabsTrigger>
-                <TabsTrigger value="rankings">Rankings</TabsTrigger>
-                <TabsTrigger value="friction">Friction</TabsTrigger>
+                <TabsTrigger value="activity">{t.dashboard.activityTab}</TabsTrigger>
+                <TabsTrigger value="revenue">{t.dashboard.revenueTab}</TabsTrigger>
+                <TabsTrigger value="rankings">{t.dashboard.rankingsTab}</TabsTrigger>
+                <TabsTrigger value="friction">{t.dashboard.frictionTab}</TabsTrigger>
               </TabsList>
             </Tabs>
           </div>
@@ -90,7 +92,7 @@ export function FreeAnalyticsPageView({
 
       {noticeMessage ? (
         <Alert variant="destructive" className="border-destructive/20 bg-destructive/10">
-          <AlertTitle>Range adjusted</AlertTitle>
+          <AlertTitle>{t.dashboard.rangeAdjustedTitle}</AlertTitle>
           <AlertDescription>{noticeMessage}</AlertDescription>
         </Alert>
       ) : null}

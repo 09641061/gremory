@@ -43,6 +43,8 @@ const initialActionState: ActionState<Appointment> = {
   fieldErrors: null,
 };
 
+import { useSchedulingTranslations } from "../../i18n";
+
 export function AppointmentFormModal({
   isOpen,
   onOpenChange,
@@ -53,6 +55,7 @@ export function AppointmentFormModal({
   onSuccess,
   timeZone,
 }: AppointmentFormModalProps) {
+  const { t } = useSchedulingTranslations();
   const [state, formAction, isPending] = useActionState(
     createAppointmentAction,
     initialActionState
@@ -93,7 +96,7 @@ export function AppointmentFormModal({
         <DialogContent className="max-w-md">
           <ErrorAlert
             key={(state.status === "error" ? state.errorId : null) ?? "scheduling-error"}
-            title="Scheduling Failed"
+            title={t.form.schedulingFailed}
             message={state.error ?? undefined}
           />
           <form action={formAction} className="space-y-4">
@@ -104,17 +107,17 @@ export function AppointmentFormModal({
             <DialogHeader>
               <div className="flex items-center gap-2">
                 <Calendar className="text-primary size-5" />
-                <DialogTitle>New Appointment</DialogTitle>
+                <DialogTitle>{t.form.newAppointmentTitle}</DialogTitle>
               </div>
-              <DialogDescription>Fill in the details to schedule a new appointment.</DialogDescription>
+              <DialogDescription>{t.form.newAppointmentSubtitle}</DialogDescription>
             </DialogHeader>
 
             <div className="space-y-1.5">
-              <Label htmlFor="create-title">Appointment Title</Label>
+              <Label htmlFor="create-title">{t.form.appointmentTitleLabel}</Label>
               <Input
                 id="create-title"
                 name="title"
-                placeholder="e.g. Haircut & Beard Trim"
+                placeholder={t.form.appointmentTitlePlaceholder}
                 required
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
@@ -123,11 +126,11 @@ export function AppointmentFormModal({
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="create-service">Service</Label>
+              <Label htmlFor="create-service">{t.form.serviceLabel}</Label>
               <DropdownField
                 id="create-service"
                 name="serviceId"
-                placeholder="Select a service..."
+                placeholder={t.form.selectServicePlaceholder}
                 value={selectedServiceId}
                 onChange={setSelectedServiceId}
                 options={serviceOptions}
@@ -136,11 +139,11 @@ export function AppointmentFormModal({
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="create-customer">Customer</Label>
+              <Label htmlFor="create-customer">{t.form.customerLabel}</Label>
               <DropdownField
                 id="create-customer"
                 name="customerId"
-                placeholder="Select a customer..."
+                placeholder={t.form.selectCustomerPlaceholder}
                 value={selectedCustomerId}
                 onChange={setSelectedCustomerId}
                 options={customerOptions}
@@ -149,11 +152,11 @@ export function AppointmentFormModal({
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="create-employee">Employee / Specialist</Label>
+              <Label htmlFor="create-employee">{t.form.employeeLabel}</Label>
               <DropdownField
                 id="create-employee"
                 name="employeeId"
-                placeholder="Select an employee..."
+                placeholder={t.form.selectEmployeePlaceholder}
                 value={selectedEmployeeId}
                 onChange={setSelectedEmployeeId}
                 options={employeeOptions}
@@ -163,12 +166,12 @@ export function AppointmentFormModal({
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <Label htmlFor="create-startDate">Start Date</Label>
-                <DateField id="create-startDate" placeholder="Select date..." value={startDate} onChange={setStartDate} />
+                <Label htmlFor="create-startDate">{t.form.dateLabel}</Label>
+                <DateField id="create-startDate" placeholder={t.form.selectDatePlaceholder} value={startDate} onChange={setStartDate} />
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="create-startTime">Start Time</Label>
+                <Label htmlFor="create-startTime">{t.form.timeLabel}</Label>
                 <TimePickerField
                   id="create-startTime"
                   value={startTime}
@@ -178,16 +181,16 @@ export function AppointmentFormModal({
             </div>
 
             <div className="rounded-lg border border-border bg-muted/40 p-3 space-y-1">
-              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Calculated End Time</p>
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t.form.calculatedEndTime}</p>
               <p className="text-sm font-medium text-foreground">{formattedEnd || "--"}</p>
             </div>
 
             <DialogFooter>
               <Button type="button" variant="outline" disabled={isPending} onClick={() => onOpenChange(false)}>
-                Cancel
+                {t.form.cancel}
               </Button>
               <Button type="submit" disabled={isPending || !startsAt || !endsAt}>
-                {isPending ? "Scheduling..." : "Create Appointment"}
+                {isPending ? t.form.scheduling : t.form.createAppointment}
               </Button>
             </DialogFooter>
           </form>

@@ -12,6 +12,7 @@ import { ErrorAlert } from "@/contexts/shared/interfaces/components/error";
 import { Spinner } from "@/contexts/shared/interfaces/components/ui/spinner";
 import { ImageUploadAvatar } from "@/contexts/shared/interfaces/components/image-upload-avatar";
 import { TimeZoneField } from "../time-zone-field";
+import { useBusinessTranslations } from "@/contexts/business/interfaces/i18n";
 
 /**
  * `showCancel` must stay false during mandatory onboarding (`ESTABLISHMENT_PENDING`):
@@ -32,6 +33,7 @@ export function CreateEstablishmentForm({
   organizationId: string;
   showCancel?: boolean;
 }) {
+  const { t } = useBusinessTranslations();
   const nameHeadingId = useId();
   const nameHintId = useId();
   const nameErrorId = useId();
@@ -66,14 +68,14 @@ export function CreateEstablishmentForm({
   return (
     <>
       <ErrorAlert
-        title="Unable to create establishment"
+        title={t.establishments.createErrorTitle}
         message={state.status === "error" && !pending ? state.error : undefined}
       />
       <div className="mx-auto w-full max-w-2xl space-y-6">
         <div>
-          <h1 className="page-title">New establishment</h1>
+          <h1 className="page-title">{t.establishments.newTitle}</h1>
           <p className="page-description mt-2">
-            Add a location for your organization.
+            {t.establishments.newDescription}
           </p>
         </div>
 
@@ -86,10 +88,9 @@ export function CreateEstablishmentForm({
               <div className="flex flex-col border-b border-border">
                 <div className="flex items-center justify-between p-6">
                   <div className="space-y-1">
-                    <h3 className="text-base font-semibold text-foreground">Establishment Photo</h3>
+                    <h3 className="text-base font-semibold text-foreground">{t.establishments.photoTitle}</h3>
                     <p className="text-sm text-muted-foreground">
-                      This is your establishment photo.<br />
-                      Click on the photo to upload a custom one from your files.
+                      {t.establishments.photoDescription}
                     </p>
                   </div>
                   <ImageUploadAvatar
@@ -106,14 +107,16 @@ export function CreateEstablishmentForm({
                   <div className="space-y-1">
                     <div className="flex items-center justify-between">
                       <h3 id={nameHeadingId} className="text-base font-semibold text-foreground">
-                        Establishment Name
+                        {t.establishments.nameLabel}
                       </h3>
                       <span className="text-xs text-muted-foreground" aria-live="polite">
                         {name.length}/{MAX_ESTABLISHMENT_NAME_LENGTH}
                       </span>
                     </div>
                     <p id={nameHintId} className="text-sm text-muted-foreground">
-                      Only letters (A-Z, a-z), {MIN_ESTABLISHMENT_NAME_LENGTH} to {MAX_ESTABLISHMENT_NAME_LENGTH} characters.
+                      {t.establishments.nameHint
+                        .replace("{min}", String(MIN_ESTABLISHMENT_NAME_LENGTH))
+                        .replace("{max}", String(MAX_ESTABLISHMENT_NAME_LENGTH))}
                     </p>
                   </div>
                   <div className="max-w-xs">
@@ -124,7 +127,7 @@ export function CreateEstablishmentForm({
                       aria-invalid={isTooShort}
                       value={name}
                       onChange={handleNameChange}
-                      placeholder="Establishment name"
+                      placeholder={t.establishments.namePlaceholder}
                       maxLength={MAX_ESTABLISHMENT_NAME_LENGTH}
                       minLength={MIN_ESTABLISHMENT_NAME_LENGTH}
                       pattern="^[a-zA-Z]+$"
@@ -136,7 +139,7 @@ export function CreateEstablishmentForm({
                     />
                     {isTooShort ? (
                       <p id={nameErrorId} role="alert" className="mt-1 text-xs font-medium text-destructive">
-                        Establishment name must be at least {MIN_ESTABLISHMENT_NAME_LENGTH} characters.
+                        {t.establishments.nameMinError.replace("{min}", String(MIN_ESTABLISHMENT_NAME_LENGTH))}
                       </p>
                     ) : null}
                   </div>
@@ -146,9 +149,9 @@ export function CreateEstablishmentForm({
               <div className="flex flex-col border-t border-border">
                 <div className="space-y-4 p-6">
                   <div className="space-y-1">
-                    <h3 className="text-base font-semibold text-foreground">Time zone</h3>
+                    <h3 className="text-base font-semibold text-foreground">{t.establishments.timeZoneTitle}</h3>
                     <p className="text-sm text-muted-foreground">
-                      Use an IANA zone like America/Lima. This is used for local scheduling and analytics.
+                      {t.establishments.timeZoneDescription}
                     </p>
                   </div>
                   <div className="max-w-xs">
@@ -168,12 +171,12 @@ export function CreateEstablishmentForm({
                   href="/establishments"
                   className={buttonVariants({ variant: "ghost" })}
                 >
-                  Cancel
+                  {t.establishments.cancelButton}
                 </Link>
               )}
               <Button type="submit" disabled={pending || !isValid} className="gap-2">
                 {pending ? <Spinner className="size-4" /> : <Plus className="size-4" />}
-                {pending ? "Creating..." : "Create"}
+                {pending ? t.establishments.creatingButton : t.establishments.createButton}
               </Button>
             </CardFooter>
           </form>

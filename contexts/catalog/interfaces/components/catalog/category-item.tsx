@@ -39,6 +39,8 @@ interface CategoryItemProps {
   onCreateService?: (categoryId: string) => void;
 }
 
+import { useCatalogTranslations } from "../../i18n";
+
 export function CategoryItem({
   cat,
   services,
@@ -62,6 +64,7 @@ export function CategoryItem({
   canDeleteCategory,
   canCreateService,
 }: CategoryItemProps) {
+  const { t } = useCatalogTranslations();
   const router = useRouter();
   const isCatSelected = selectedCategoryId === cat.id;
   const catServices = services.filter((s) => s.categoryId === cat.id);
@@ -104,14 +107,14 @@ export function CategoryItem({
         {(canCreateService || canUpdateCategory || canDeleteCategory) && (
           <div className="relative flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
             <EntityActionsMenu
-              label={`More actions for ${cat.name}`}
-              title="Category Options"
+              label={t.sidebar.moreActionsForCategory.replace("{name}", cat.name)}
+              title={t.sidebar.categoryOptions}
               size="icon-sm"
               triggerClassName="h-6 w-6 text-muted-foreground hover:text-foreground"
               contentClassName="w-44"
               actions={[
                 {
-                  label: "Create Service",
+                  label: t.sidebar.createService,
                   icon: Plus,
                   hidden: !canCreateService,
                   onSelect: () => {
@@ -124,19 +127,19 @@ export function CategoryItem({
                   },
                 },
                 {
-                  label: "Edit",
+                  label: t.sidebar.edit,
                   icon: Pencil,
                   hidden: !canUpdateCategory,
                   onSelect: () => onOpenEditCategoryModal(cat),
                 },
                 {
-                  label: "Delete",
+                  label: t.sidebar.delete,
                   icon: Trash2,
                   variant: "destructive",
                   hidden: !canDeleteCategory,
                   onSelect: () => {
                     if (catServices.length > 0) {
-                      setAlertMessage("You cannot delete a category that has services.");
+                      setAlertMessage(t.sidebar.cannotDeleteWithServices);
                     } else {
                       onDeleteCategory(cat);
                     }

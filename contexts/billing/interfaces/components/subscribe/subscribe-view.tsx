@@ -25,8 +25,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/contexts/shared/interfaces/components/ui/alert-dialog";
-
-
+import { useBillingTranslations } from "@/contexts/billing/interfaces/i18n";
 
 interface ActivePaymentState {
   clientSecret: string | null | undefined;
@@ -88,10 +87,6 @@ function enrichPlan(plan: PlanReadModel): BillingPlanViewModel | null {
   };
 }
 
-function buildPlanButtonLabel(planName: string): string {
-  return `Get ${planName} plan`;
-}
-
 interface SubscribeViewProps {
   /** Where the back arrow returns to. The page resolves it from the plan. */
   backHref: string;
@@ -101,6 +96,7 @@ interface SubscribeViewProps {
 }
 
 export function SubscribeView({ backHref, plansByCurrency, currentSubscription }: SubscribeViewProps) {
+  const { t } = useBillingTranslations();
   const [billingCycle, setBillingCycle] = useState<BillingCycleType>("MONTHLY");
   const [currency, setCurrency] = useState<CurrencyCode>("USD");
   const [feedbackMessage, setFeedbackMessage] = useState<FeedbackState | null>(null);
@@ -152,7 +148,7 @@ export function SubscribeView({ backHref, plansByCurrency, currentSubscription }
       {feedbackMessage ? (
         <ErrorAlert
           key={feedbackMessage.id}
-          title={feedbackMessage.type === "error" ? "Sign-in Required" : "Notification"}
+          title={feedbackMessage.type === "error" ? t.subscribe.signInRequired : t.subscribe.notification}
           message={feedbackMessage.text}
         />
       ) : null}
@@ -188,13 +184,13 @@ export function SubscribeView({ backHref, plansByCurrency, currentSubscription }
                 billingCycle={billingCycle}
                 features={[...plan.features]}
                 isPopular={plan.isPopular}
-                buttonLabel={isCurrent ? "Current plan" : buildPlanButtonLabel(plan.name)}
+                buttonLabel={isCurrent ? t.subscribe.currentPlan : t.subscribe.getPlan.replace("{name}", plan.name)}
                 buttonDisabled={isCurrent || currentSubscription?.pendingPlanId !== undefined && currentSubscription?.pendingPlanId !== null}
                 onSuccess={(data) => handlePlanSuccess(plan, displayPrice, data)}
                 onError={(err) =>
                   setFeedbackMessage({
                     type: "error",
-                    text: err || "You must be signed in to select a subscription plan.",
+                    text: err || t.subscribe.signInRequiredMessage,
                     id: Date.now(),
                   })
                 }
@@ -210,8 +206,8 @@ export function SubscribeView({ backHref, plansByCurrency, currentSubscription }
                       // Upgrade from standard paid plan
                       setConfirmDialogState({
                         isOpen: true,
-                        title: `Confirm Upgrade to ${plan.name}`,
-                        description: `You are upgrading to the ${plan.name} Plan. An immediate prorated amount will be charged to your default card in Stripe. Do you want to proceed?`,
+                        title: t.subscribe.confirmUpgradeTitle.replace("{planName}", plan.name),
+                        description: t.subscribe.confirmUpgradeDescription.replace("{planName}", plan.name),
                         action: () => {
                           setConfirmDialogState(null);
                           execute();
@@ -222,8 +218,10 @@ export function SubscribeView({ backHref, plansByCurrency, currentSubscription }
                     // Downgrade
                     setConfirmDialogState({
                       isOpen: true,
-                      title: `Confirm Downgrade to ${plan.name}`,
-                      description: `You are downgrading to the ${plan.name} Plan. The change will take effect at the end of your current billing period. You will continue to have ${currentSubscription?.planName ?? "your current"} benefits until then. Do you want to proceed?`,
+                      title: t.subscribe.confirmDowngradeTitle.replace("{planName}", plan.name),
+                      description: t.subscribe.confirmDowngradeDescription
+                        .replace("{planName}", plan.name)
+                        .replace("{currentPlan}", currentSubscription?.planName ?? "your current"),
                       action: () => {
                         setConfirmDialogState(null);
                         execute();
@@ -241,7 +239,7 @@ export function SubscribeView({ backHref, plansByCurrency, currentSubscription }
 
       <div className="flex flex-col items-center gap-2 mt-12">
         <p className="text-xs text-center text-muted-foreground">
-          Cancel anytime. Secure billing. Plans can be changed later.
+          {t.subscribe.cancelAnytime}
         </p>
       </div>
 
@@ -266,8 +264,8 @@ export function SubscribeView({ backHref, plansByCurrency, currentSubscription }
               <AlertDialogDescription>{confirmDialogState.description}</AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel onClick={() => setConfirmDialogState(null)}>Cancel</AlertDialogCancel>
-              <AlertDialogAction onClick={confirmDialogState.action}>Proceed</AlertDialogAction>
+              <AlertDialogCancel onClick={() => setConfirmDialogState(null)}>{t.subscribe.cancel}</AlertDialogCancel>
+              <AlertDialogAction onClick={confirmDialogState.action}>{t.subscribe.proceed}</AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>

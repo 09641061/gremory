@@ -6,6 +6,7 @@ import { canManageOrganization } from "@/contexts/business/domain/services/works
 import { updateOrganizationAction } from "@/contexts/business/interfaces/actions/organization.actions";
 import { EntityProfileCard } from "@/contexts/business/interfaces/components/entity-profile-card/entity-profile-card";
 import { cn } from "@/lib/utils";
+import { useBusinessTranslations } from "@/contexts/business/interfaces/i18n";
 
 import type { OrganizationListItem } from "./organizations-page";
 
@@ -24,15 +25,17 @@ export function OrganizationDetailCard({
   ownedOrganizationId,
   className,
 }: OrganizationDetailCardProps) {
+  const { t } = useBusinessTranslations();
+
   if (!organization) {
     return (
       <div className={cn("flex-1", className)}>
         <div className="flex min-h-(--app-page-viewport-height) items-center justify-center rounded-xl border border-border bg-card p-8 text-center shadow-sm lg:ml-3">
           <div className="max-w-xs">
             <Building2 className="mx-auto size-10 text-muted-foreground/50" />
-            <p className="mt-4 text-sm font-medium text-foreground">Select an organization</p>
+            <p className="mt-4 text-sm font-medium text-foreground">{t.organizations.selectPromptTitle}</p>
             <p className="mt-1 text-sm text-muted-foreground">
-              Choose an organization to view its details.
+              {t.organizations.selectPromptDescription}
             </p>
           </div>
         </div>

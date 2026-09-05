@@ -13,6 +13,8 @@ interface DeleteConfirmDialogProps {
   onSuccess: () => void;
 }
 
+import { useSchedulingTranslations } from "../../i18n";
+
 export function DeleteConfirmDialog({
   isOpen,
   onOpenChange,
@@ -20,6 +22,7 @@ export function DeleteConfirmDialog({
   appointmentTitle,
   onSuccess,
 }: DeleteConfirmDialogProps) {
+  const { t } = useSchedulingTranslations();
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
@@ -40,7 +43,7 @@ export function DeleteConfirmDialog({
     <SharedDeleteConfirmDialog
       open={isOpen}
       onOpenChange={onOpenChange}
-      entityLabel="appointment"
+      entityLabel={t.dialogs.deleteEntityLabel}
       entityName={appointmentTitle}
       pending={isPending}
       error={error}

@@ -25,6 +25,7 @@ import {
   type PermissionGroup,
 } from "./permissions.utils";
 import type { WorkforcePermission } from "@/contexts/workforce/domain/model/enums/workforce-permission";
+import { useWorkforceTranslations } from "@/contexts/workforce/interfaces/i18n";
 
 interface RolePermissionsTabProps {
   permissions: ReadonlyArray<WorkforcePermission | string>;
@@ -47,6 +48,7 @@ export function RolePermissionsTab({
   assistantLocked = false,
   canUpgradeAssistant = false,
 }: RolePermissionsTabProps) {
+  const { t } = useWorkforceTranslations();
   const filteredGroupedPermissions = useMemo(() => {
     const normalizedFilter = permissionFilter.trim().toLowerCase();
     const groupedPermissions = [...groupPermissions(permissions as ReadonlyArray<string>)].sort((left, right) => {
@@ -79,8 +81,8 @@ export function RolePermissionsTab({
           <Input
             value={permissionFilter}
             onChange={(event) => setPermissionFilter(event.target.value)}
-            placeholder="Search permissions"
-            aria-label="Search permissions"
+            placeholder={t.permissions.searchPermissionsPlaceholder}
+            aria-label={t.permissions.searchPermissionsLabel}
             className="pl-9"
           />
         </label>
@@ -89,7 +91,7 @@ export function RolePermissionsTab({
       <div className="scrollbar-hide min-h-0 flex-1 space-y-5 overflow-y-auto pr-1">
         {filteredGroupedPermissions.length === 0 ? (
           <div className="rounded-lg border border-dashed border-border px-4 py-8 text-sm text-muted-foreground">
-            No permissions found.
+            {t.permissions.noPermissionsFound}
           </div>
         ) : (
           <div className="space-y-5">
@@ -127,6 +129,7 @@ function PermissionToggle({
   assistantLocked: boolean;
   canUpgradeAssistant: boolean;
 }) {
+  const { t } = useWorkforceTranslations();
   const [upgradeOpen, setUpgradeOpen] = useState(false);
   const locked = assistantLocked && isAssistantPermission(permission);
 
@@ -145,7 +148,7 @@ function PermissionToggle({
             {locked ? (
               <Badge variant="outline" className="gap-1 text-xs">
                 <Lock className="size-3" aria-hidden="true" />
-                Disponible en Plan Pro
+                {t.permissions.proPlanBadge}
               </Badge>
             ) : null}
           </span>
@@ -179,23 +182,24 @@ function AssistantUpgradeDialog({
   onOpenChange: (open: boolean) => void;
   canUpgradeAssistant: boolean;
 }) {
+  const { t } = useWorkforceTranslations();
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Disponible en Plan Pro</DialogTitle>
+          <DialogTitle>{t.permissions.proPlanTitle}</DialogTitle>
           <DialogDescription>
-            El asistente IA solo está disponible en el Plan Pro.
+            {t.permissions.proPlanDescription}
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
           {canUpgradeAssistant ? (
             <Button render={<Link href="/upgrade" />} nativeButton={false}>
-              Actualizar plan
+              {t.permissions.upgradePlan}
             </Button>
           ) : (
             <Button render={<Link href="/upgrade" />} nativeButton={false} variant="ghost">
-              Más información
+              {t.permissions.learnMore}
             </Button>
           )}
         </DialogFooter>

@@ -21,6 +21,7 @@ import type { ProfileViewModel } from "@/contexts/profiles/application/services/
 import { signOutAction } from "@/contexts/iam/interfaces/actions/sign-out.action";
 import { NotificationDropdown } from "@/contexts/notifications/interfaces/components/notification-dropdown";
 import { cn } from "@/lib/utils";
+import { useI18n } from "@/contexts/shared/interfaces/i18n";
 
 type SidebarProfileProps = {
   profile: Pick<ProfileViewModel, "username" | "imageUrl"> | null;
@@ -47,8 +48,9 @@ export function SidebarProfile({
   active = false,
 }: SidebarProfileProps) {
   const router = useRouter();
+  const { t } = useI18n();
   const [pending, startTransition] = useTransition();
-  const username = profile?.username?.trim() || "Profile";
+  const username = profile?.username?.trim() || t.sidebarProfile.profile;
 
   function handleLogout() {
     startTransition(async () => {
@@ -110,19 +112,19 @@ export function SidebarProfile({
         >
           <DropdownMenuItem render={<Link href={profileHref} />}>
             <UserRound aria-hidden="true" />
-            Profile
+            {t.sidebarProfile.profile}
           </DropdownMenuItem>
 
           {canManageBilling ? (
             <>
               <DropdownMenuItem render={<Link href={upgradeHref} />}>
                 <CircleArrowUp aria-hidden="true" />
-                Upgrade plan
+                {t.sidebarProfile.upgradePlan}
               </DropdownMenuItem>
 
               <DropdownMenuItem render={<Link href={invoiceHref} />}>
                 <Receipt aria-hidden="true" />
-                Invoices
+                {t.sidebarProfile.invoices}
               </DropdownMenuItem>
             </>
           ) : null}
@@ -134,7 +136,7 @@ export function SidebarProfile({
             onClick={handleLogout}
           >
             <LogOut aria-hidden="true" />
-            {pending ? "Signing out..." : "Log out"}
+            {pending ? t.sidebarProfile.signingOut : t.sidebarProfile.logOut}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

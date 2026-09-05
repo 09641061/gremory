@@ -17,12 +17,12 @@ import { PermissionsWorkspace } from "./permissions-workspace";
 import { patchWorkforceRoleAction } from "@/contexts/workforce/interfaces/actions/workforce-role.actions";
 import type { WorkspaceAuthorization } from "@/contexts/business/application/model/business-workspace.view-models";
 import type { WorkspaceSubscription } from "@/contexts/business/application/model/business-workspace.view-models";
+import { useWorkforceTranslations } from "@/contexts/workforce/interfaces/i18n";
 
 export function PermissionsPageView({
   roles,
   permissions,
   members,
-  authorization,
   canCreateRole = true,
   canUpdateRole = true,
   canDeleteRole = true,
@@ -37,6 +37,7 @@ export function PermissionsPageView({
   canDeleteRole?: boolean;
   subscription?: WorkspaceSubscription;
 }) {
+  const { t } = useWorkforceTranslations();
   const [filter, setFilter] = useState("");
   const [createOpen, setCreateOpen] = useState(false);
   const [createSession, setCreateSession] = useState(0);
@@ -127,9 +128,9 @@ export function PermissionsPageView({
       <div className="w-full space-y-6 lg:flex-1 lg:flex lg:flex-col lg:h-[calc(100vh-10rem)]">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between shrink-0">
           <div>
-            <h1 className="page-title">Permissions</h1>
+            <h1 className="page-title">{t.permissions.title}</h1>
             <p className="page-description mt-2">
-              Search, create, and manage the team roles available in your account.
+              {t.permissions.description}
             </p>
           </div>
         </div>
@@ -140,8 +141,8 @@ export function PermissionsPageView({
             <Input
               value={filter}
               onChange={(event) => setFilter(event.target.value)}
-              placeholder="Search roles"
-              aria-label="Search roles"
+              placeholder={t.permissions.searchPlaceholder}
+              aria-label={t.permissions.searchLabel}
               className="pl-9"
             />
           </label>
@@ -153,12 +154,12 @@ export function PermissionsPageView({
               className="shrink-0 gap-2 sm:whitespace-nowrap"
             >
               <Plus className="size-4" />
-              Create role
+              {t.permissions.createRole}
             </Button>
           )}
         </div>
 
-        <ErrorAlert title="Unable to reorder role" message={reorderError ?? undefined} />
+        <ErrorAlert title={t.permissions.unableToReorder} message={reorderError ?? undefined} />
 
         <CreateRoleDialog
           key={createSession}
@@ -171,7 +172,7 @@ export function PermissionsPageView({
             if (!createdRole?.roleId) return;
             const nextRole: WorkforceRoleSummary = {
               id: createdRole.roleId ?? null,
-              name: createdRole.name ?? "New role",
+              name: createdRole.name ?? t.permissions.newRoleDefaultName,
               permissions: [],
               systemRole: false,
               position: createdRole.position ?? 1,
@@ -208,14 +209,14 @@ export function PermissionsPageView({
         <Card className="overflow-hidden rounded-xl border-border bg-card shadow-sm lg:flex lg:min-h-0 lg:flex-1 lg:flex-col">
           <CardContent className="p-0 lg:flex lg:min-h-0 lg:flex-1 lg:flex-col">
             <div className="grid grid-cols-[minmax(0,1fr)_auto] border-b border-border px-5 py-4 text-sm font-medium text-muted-foreground shrink-0">
-              <span>Roles - {visibleRoles.length}</span>
-              <span className="pr-1">Actions</span>
+              <span>{t.permissions.rolesCount.replace("{count}", String(visibleRoles.length))}</span>
+              <span className="pr-1">{t.permissions.actions}</span>
             </div>
 
             <div className="scrollbar-hide lg:flex-1 lg:overflow-y-auto lg:min-h-0">
               {filteredRoles.length === 0 ? (
                 <div className="px-5 py-10 text-sm text-muted-foreground">
-                  No roles found.
+                  {t.permissions.noRolesFound}
                 </div>
               ) : (
                 filteredRoles.map((role) => (

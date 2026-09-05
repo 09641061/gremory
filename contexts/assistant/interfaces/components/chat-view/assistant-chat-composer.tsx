@@ -5,6 +5,7 @@ import { ArrowUp } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
+import { useAssistantTranslations } from "@/contexts/assistant/interfaces/i18n";
 
 interface AssistantChatComposerProps {
   value: string;
@@ -38,6 +39,7 @@ export function AssistantChatComposer({
   disabled,
   variant = "default",
 }: AssistantChatComposerProps) {
+  const { t } = useAssistantTranslations();
   const isMinimal = variant === "minimal";
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const [textareaHeight, setTextareaHeight] = useState(MIN_HEIGHT);
@@ -75,10 +77,10 @@ export function AssistantChatComposer({
         variant="ghost"
         size="icon-lg"
         className={sendActionClass}
-        aria-label={isSending ? "Sending" : "Send message"}
+        aria-label={isSending ? t.chat.sending : t.chat.sendMessage}
       >
         <ArrowUp className="size-4" />
-        <span className="sr-only">{isSending ? "Sending" : "Send message"}</span>
+        <span className="sr-only">{isSending ? t.chat.sending : t.chat.sendMessage}</span>
       </Button>
     );
   }
@@ -92,7 +94,7 @@ export function AssistantChatComposer({
         onChange={(event) => onValueChange(event.target.value)}
         onKeyDown={onKeyDown}
         rows={1}
-        placeholder="Ask what you need about Takodu"
+        placeholder={t.chat.placeholder}
         disabled={disabled}
         className={cn(inputBaseClass, className)}
       />
@@ -121,7 +123,7 @@ export function AssistantChatComposer({
       <div className="mx-auto w-full max-w-3xl">
         <div className={shellClasses} data-composer-state={composerState} data-testid="assistant-composer-shell">
           <label htmlFor="assistant-chat-composer" className="sr-only">
-            Ask what you need about Takodu
+            {t.chat.placeholder}
           </label>
 
           <div className={composerRowClasses}>
@@ -138,7 +140,7 @@ export function AssistantChatComposer({
     <div className="mx-auto w-full max-w-4xl">
       <div className={shellClasses} data-composer-state={composerState} data-testid="assistant-composer-shell">
         <label htmlFor="assistant-chat-composer" className="sr-only">
-          Ask what you need about Takodu
+          {t.chat.placeholder}
         </label>
 
         <div className={composerRowClasses}>

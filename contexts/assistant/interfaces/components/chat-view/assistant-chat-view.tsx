@@ -11,6 +11,7 @@ import { AssistantChatEmptyState } from "./assistant-chat-empty-state";
 import { AssistantChatThread } from "./assistant-chat-thread";
 import { useAssistantStream } from "./hooks/use-assistant-stream";
 import { useConversationTitlePolling } from "./hooks/use-conversation-title-polling";
+import { useAssistantTranslations } from "@/contexts/assistant/interfaces/i18n";
 
 type AssistantChatViewProps = {
   conversationId: string | null;
@@ -25,6 +26,7 @@ export function AssistantChatView({
   hasAssistantAccess,
   establishmentId,
 }: AssistantChatViewProps) {
+  const { t } = useAssistantTranslations();
   const router = useRouter();
   const bottomRef = useRef<HTMLDivElement | null>(null);
 
@@ -98,10 +100,10 @@ export function AssistantChatView({
       )}
 
       <ErrorAlert
-        title="Assistant error"
+        title={t.chat.assistantError}
         message={
           !hasAssistantAccess
-            ? "You do not have active access to the assistant. Check your session or subscription."
+            ? t.chat.noAccessError
             : error ?? undefined
         }
       />

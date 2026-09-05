@@ -38,6 +38,9 @@ import {
   getAppointmentStatusLabel,
 } from "./appointment-detail-utils";
 
+import { useI18n } from "@/contexts/shared/interfaces/i18n";
+import { useSchedulingTranslations } from "../../i18n";
+
 /** Only one secondary flow can be open at a time, so one slot models them all. */
 type OpenFlow = AppointmentStatusTransition | "reschedule" | "cancel" | null;
 
@@ -68,6 +71,9 @@ export function AppointmentDetailModal({
   canDeleteAppointment,
   timeZone,
 }: AppointmentDetailModalProps) {
+  const { locale } = useI18n();
+  const { t } = useSchedulingTranslations();
+  const dateLocale = locale === "es" ? "es-ES" : "en-US";
   const [openFlow, setOpenFlow] = useState<OpenFlow>(null);
   const now = useNow();
 
@@ -90,9 +96,9 @@ export function AppointmentDetailModal({
       <Dialog open={isOpen} onOpenChange={onOpenChange}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Appointment details</DialogTitle>
+            <DialogTitle>{t.appointmentDetail.title}</DialogTitle>
             <DialogDescription>
-              Review this appointment or change its status.
+              {t.appointmentDetail.description}
             </DialogDescription>
           </DialogHeader>
 
@@ -101,27 +107,34 @@ export function AppointmentDetailModal({
               <Alert className="border-primary/30 bg-primary/5 text-primary">
                 <AlertTriangle className="size-4 text-primary" />
                 <AlertTitle className="font-semibold text-primary">
-                  Appointment overdue
+                  {t.appointmentDetail.overdueTitle}
                 </AlertTitle>
                 <AlertDescription className="text-primary/90">
-                  This was scheduled to start at {formatTimeInTimeZone(startsAt, timeZone)} and the client
-                  has not arrived yet.
+                  {t.appointmentDetail.overdueDescription.replace(
+                    "{time}",
+                    formatTimeInTimeZone(startsAt, timeZone, dateLocale)
+                  )}
                 </AlertDescription>
               </Alert>
             )}
 
             <AppointmentDetailSummary
               title={appointment.title}
-              serviceName={service?.name ?? "Unknown"}
-              statusLabel={getAppointmentStatusLabel(appointment.status)}
+              serviceName={service?.name ?? t.appointmentDetail.unknown}
+              statusLabel={getAppointmentStatusLabel(appointment.status, t.status)}
               statusClassName={getAppointmentStatusClasses(appointment.status)}
             />
 
             <AppointmentDetailInfo
-              formattedTime={formatAppointmentTime(appointment.startsAt, appointment.endsAt, timeZone)}
-              formattedDate={formatAppointmentDate(appointment.startsAt, timeZone)}
-              customerName={customer?.name ?? "Unknown"}
-              employeeName={employee?.name ?? "Unknown"}
+              formattedTime={formatAppointmentTime(
+                appointment.startsAt,
+                appointment.endsAt,
+                timeZone,
+                dateLocale
+              )}
+              formattedDate={formatAppointmentDate(appointment.startsAt, timeZone, dateLocale)}
+              customerName={customer?.name ?? t.appointmentDetail.unknown}
+              employeeName={employee?.name ?? t.appointmentDetail.unknown}
               cancellationReason={appointment.cancellationReason}
               isCancelled={appointment.status === "CANCELLED"}
             />

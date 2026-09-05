@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { getMyProfileServerQuery } from "@/contexts/profiles/interfaces/queries/get-my-profile.query-handler";
 import { ProfileCard } from "@/contexts/profiles/interfaces/components/profile/profile-card";
 import { ProfilePreferencesCard } from "@/contexts/profiles/interfaces/components/profile/profile-preferences-card";
+import { getServerDictionary } from "@/contexts/shared/infrastructure/i18n/server";
 
 export default function ProfilePage() {
   return (
@@ -20,11 +21,13 @@ export async function ProfilePageContent() {
     redirect("/login");
   }
 
+  const dict = await getServerDictionary();
+
   return (
     <div className="mx-auto w-full max-w-3xl space-y-6">
       <div>
-        <h1 className="page-title">Profile</h1>
-        <p className="page-description mt-2">Manage your profile photo and username.</p>
+        <h1 className="page-title">{dict.profile.pageTitle}</h1>
+        <p className="page-description mt-2">{dict.profile.pageDescription}</p>
       </div>
       <ProfileCard profile={profile} />
       <ProfilePreferencesCard profile={profile} />

@@ -28,6 +28,8 @@ const initialActionState: ActionState<Appointment> = {
   fieldErrors: null,
 };
 
+import { useSchedulingTranslations } from "../../i18n";
+
 /**
  * Cancellation is the one transition that collects input (a reason), so it
  * keeps its own form instead of using `AppointmentStatusConfirmDialog`.
@@ -38,6 +40,7 @@ export function CancelConfirmDialog({
   appointmentId,
   onSuccess,
 }: CancelConfirmDialogProps) {
+  const { t } = useSchedulingTranslations();
   // Keeps the submitted id current without re-creating the action identity.
   const appointmentIdRef = useRef(appointmentId);
   useEffect(() => {
@@ -64,18 +67,18 @@ export function CancelConfirmDialog({
     <>
       <ErrorAlert
         key={(state.status === "error" ? state.errorId : null) ?? "cancel-error"}
-        title="Cancellation failed"
+        title={t.dialogs.cancelFailed}
         message={state.error ?? undefined}
       />
       <AppointmentConfirmDialogShell
         isOpen={isOpen}
         onOpenChange={onOpenChange}
         tone="destructive"
-        title="Cancel appointment"
-        description="This is permanent and notifies the client. Tell them why so the reason shows on the appointment."
+        title={t.dialogs.cancelTitle}
+        description={t.dialogs.cancelDescription}
         footer={
           <>
-            <AlertDialogCancel disabled={isPending}>Go back</AlertDialogCancel>
+            <AlertDialogCancel disabled={isPending}>{t.dialogs.goBack}</AlertDialogCancel>
             <Button
               type="submit"
               form={FORM_ID}
@@ -84,19 +87,19 @@ export function CancelConfirmDialog({
               className="gap-2"
             >
               {isPending && <Spinner className="size-4" />}
-              {isPending ? "Cancelling..." : "Cancel appointment"}
+              {isPending ? t.dialogs.cancelPending : t.dialogs.cancelConfirm}
             </Button>
           </>
         }
       >
         <form id={FORM_ID} action={formAction} className="space-y-1.5">
           <Label htmlFor="cancel-reason">
-            Reason for cancellation <span className="text-destructive">*</span>
+            {t.dialogs.cancelReasonLabel} <span className="text-destructive">*</span>
           </Label>
           <Textarea
             id="cancel-reason"
             name="reason"
-            placeholder="Please enter a reason for cancellation..."
+            placeholder={t.dialogs.cancelReasonPlaceholder}
             required
             aria-describedby={state.fieldErrors?.reason ? "cancel-reason-error" : undefined}
             aria-invalid={Boolean(state.fieldErrors?.reason)}

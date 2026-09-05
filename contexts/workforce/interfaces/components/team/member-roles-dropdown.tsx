@@ -8,6 +8,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/contexts/shared/interfaces/components/ui/dropdown-menu";
+import { useWorkforceTranslations } from "@/contexts/workforce/interfaces/i18n";
 
 interface RoleSummary {
   id: string;
@@ -19,16 +20,18 @@ interface MemberRolesDropdownProps {
 }
 
 export function MemberRolesDropdown({ roles }: MemberRolesDropdownProps) {
+  const { t } = useWorkforceTranslations();
+
   if (roles.length === 0) {
     return (
       <span className="inline-flex rounded-full border border-dashed border-border px-3 py-1 text-xs text-muted-foreground">
-        Sin rol
+        {t.team.noRole}
       </span>
     );
   }
 
   const count = roles.length;
-  const label = count === 1 ? "1 Role" : `${count} Roles`;
+  const label = count === 1 ? t.team.roleCountSingle : t.team.roleCountPlural.replace("{count}", String(count));
 
   return (
     <DropdownMenu>

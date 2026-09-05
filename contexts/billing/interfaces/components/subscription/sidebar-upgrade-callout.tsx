@@ -1,5 +1,8 @@
+"use client";
+
 import Link from "next/link";
 import { CircleArrowUp } from "lucide-react";
+import { useBillingTranslations, type BillingDictionary } from "@/contexts/billing/interfaces/i18n";
 
 /**
  * Sidebar plan indicator, sitting directly above the account control.
@@ -18,32 +21,33 @@ export function SidebarUpgradeCallout({
   canUpgrade?: boolean;
   href?: string;
 }) {
+  const { t } = useBillingTranslations();
   return (
     <Link
       href={href}
       className="flex h-(--app-sidebar-control-height) items-center gap-(--app-sidebar-control-gap) rounded-(--app-sidebar-item-radius) px-(--app-sidebar-control-padding-x) text-xs font-medium text-muted-foreground transition-colors hover:bg-accent/70 hover:text-accent-foreground"
     >
       <CircleArrowUp className="size-(--app-sidebar-icon-size) shrink-0" aria-hidden="true" />
-      <span className="truncate">{formatPlanName(planName)}</span>
+      <span className="truncate">{formatPlanName(planName, t)}</span>
       {canUpgrade ? (
         <span className="ml-auto font-semibold text-foreground underline decoration-muted-foreground/60 underline-offset-2">
-          Upgrade
+          {t.sidebar.upgrade}
         </span>
       ) : null}
     </Link>
   );
 }
 
-function formatPlanName(planName?: string | null): string {
+function formatPlanName(planName: string | null | undefined, t: BillingDictionary): string {
   switch ((planName ?? "").trim().toUpperCase()) {
     case "FREE":
-      return "Free plan";
+      return t.sidebar.freePlan;
     case "STANDARD":
     case "STANDART":
-      return "Standard plan";
+      return t.sidebar.standardPlan;
     case "PREMIUM":
-      return "Premium plan";
+      return t.sidebar.premiumPlan;
     default:
-      return planName && planName.trim().length > 0 ? `${planName.trim()} plan` : "Free plan";
+      return planName && planName.trim().length > 0 ? `${planName.trim()} plan` : t.sidebar.freePlan;
   }
 }

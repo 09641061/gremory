@@ -1,3 +1,5 @@
+"use client";
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/contexts/shared/interfaces/components/ui/card";
 import type { FreeAnalyticsDashboard } from "@/contexts/analytics/interfaces/view-models/free-analytics.view-model";
 import type { StandardAnalyticsDashboard } from "@/contexts/analytics/domain/model/standard-analytics-dashboard";
@@ -12,6 +14,7 @@ import {
   formatNumber,
   formatTrendRange,
 } from "@/contexts/analytics/interfaces/components/free-analytics/free-analytics.utils";
+import { useAnalyticsTranslations } from "@/contexts/analytics/interfaces/i18n";
 
 interface ActivityTabProps {
   analytics: FreeAnalyticsDashboard;
@@ -19,6 +22,7 @@ interface ActivityTabProps {
 }
 
 export function ActivityTab({ analytics, standardAnalytics }: ActivityTabProps) {
+  const { t } = useAnalyticsTranslations();
   const completedAppointments = standardAnalytics?.completedAppointments ?? analytics.completedAppointmentsLastSevenDays;
   const cancelledAppointments = standardAnalytics?.cancelledAppointments ?? analytics.cancelledAppointmentsLastSevenDays;
   const noShowAppointments = standardAnalytics?.noShowAppointments ?? analytics.noShowAppointmentsLastSevenDays;
@@ -36,7 +40,7 @@ export function ActivityTab({ analytics, standardAnalytics }: ActivityTabProps) 
       <div className="grid gap-6 xl:grid-cols-3">
         <Card className="overflow-hidden rounded-xl border-border bg-card shadow-sm xl:col-span-2">
           <CardHeader className="border-b border-border/60 pb-4">
-            <CardTitle>Appointments trend</CardTitle>
+            <CardTitle>{t.activity.appointmentsTrend}</CardTitle>
           </CardHeader>
           <CardContent className="p-5">
             <TrendChart data={analytics.appointmentsTrend} tone="primary" />
@@ -45,15 +49,15 @@ export function ActivityTab({ analytics, standardAnalytics }: ActivityTabProps) 
 
         <Card className="overflow-hidden rounded-xl border-border bg-card shadow-sm">
           <CardHeader className="border-b border-border/60 pb-4">
-            <CardTitle>Appointment status mix</CardTitle>
+            <CardTitle>{t.activity.statusMix}</CardTitle>
             <p className="pt-1 text-xs text-muted-foreground">{statusRange}</p>
           </CardHeader>
 
           <CardContent className="space-y-4 p-5">
-            <StatusBar label="Completed" value={completedAppointments} total={statusTotal} tone="bg-success" />
-            <StatusBar label="Cancelled" value={cancelledAppointments} total={statusTotal} tone="bg-destructive" />
+            <StatusBar label={t.activity.completed} value={completedAppointments} total={statusTotal} tone="bg-success" />
+            <StatusBar label={t.activity.cancelled} value={cancelledAppointments} total={statusTotal} tone="bg-destructive" />
             <StatusBar
-              label="No show"
+              label={t.activity.noShow}
               value={noShowAppointments}
               total={statusTotal}
               tone="bg-warning"
@@ -61,8 +65,8 @@ export function ActivityTab({ analytics, standardAnalytics }: ActivityTabProps) 
             />
             <p className="text-xs text-muted-foreground">
               {statusTotal > 0
-                ? `${statusTotal} final status events captured in the selected period.`
-                : "No final appointment status events captured in the selected period."}
+                ? t.activity.capturedEvents.replace("{count}", String(statusTotal))
+                : t.activity.noCapturedEvents}
             </p>
           </CardContent>
         </Card>
@@ -71,19 +75,19 @@ export function ActivityTab({ analytics, standardAnalytics }: ActivityTabProps) 
       {standardAnalytics ? <div className="grid gap-6 xl:grid-cols-2">
         <Card className="overflow-hidden rounded-xl border-border bg-card shadow-sm xl:col-span-2">
           <CardHeader className="border-b border-border/60 pb-4">
-            <CardTitle>Completed vs cancelled</CardTitle>
-            <p className="pt-1 text-xs text-muted-foreground">Daily comparison for the selected period.</p>
+            <CardTitle>{t.activity.completedVsCancelled}</CardTitle>
+            <p className="pt-1 text-xs text-muted-foreground">{t.activity.dailyComparison}</p>
           </CardHeader>
           <CardContent className="p-5">
             <ComparisonTrendChart
               series={[
                 {
-                  label: "Completed",
+                  label: t.activity.completed,
                   tone: "text-success",
                   data: standardAnalytics.completionVsCancellationTrend.map((point) => ({ date: point.date, value: point.completed })),
                 },
                 {
-                  label: "Cancelled",
+                  label: t.activity.cancelled,
                   tone: "text-destructive",
                   data: standardAnalytics.completionVsCancellationTrend.map((point) => ({ date: point.date, value: point.cancelled })),
                 },
@@ -93,41 +97,45 @@ export function ActivityTab({ analytics, standardAnalytics }: ActivityTabProps) 
         </Card>
         <Card className="overflow-hidden rounded-xl border-border bg-card shadow-sm">
           <CardHeader className="border-b border-border/60 pb-4">
-            <CardTitle>Standard performance</CardTitle>
+            <CardTitle>{t.activity.standardPerformance}</CardTitle>
             <p className="pt-1 text-xs text-muted-foreground">
-              Completion and cancellation trend for {standardAnalytics.from} to {standardAnalytics.to}.
+              {t.activity.trendPeriod.replace("{from}", standardAnalytics.from).replace("{to}", standardAnalytics.to)}
             </p>
           </CardHeader>
           <CardContent className="space-y-4 p-5">
-            <StatusBar label="Completed" value={completedAppointments} total={completedAppointments + cancelledAppointments} tone="bg-success" />
-            <StatusBar label="Cancelled" value={cancelledAppointments} total={completedAppointments + cancelledAppointments} tone="bg-destructive" />
+            <StatusBar label={t.activity.completed} value={completedAppointments} total={completedAppointments + cancelledAppointments} tone="bg-success" />
+            <StatusBar label={t.activity.cancelled} value={cancelledAppointments} total={completedAppointments + cancelledAppointments} tone="bg-destructive" />
             <StatBadge
-              label="Average ticket change"
+              label={t.activity.averageTicketChange}
               value={`${analytics.averageTicket.delta >= 0 ? "+" : "-"}${formatMoney(Math.abs(analytics.averageTicket.delta))}`}
-              detail={`Current ${formatMoney(analytics.averageTicket.currentValue)} vs previous ${formatMoney(analytics.averageTicket.lastPeriodValue)}`}
+              detail={t.activity.currentVsPrevious
+                .replace("{current}", formatMoney(analytics.averageTicket.currentValue))
+                .replace("{previous}", formatMoney(analytics.averageTicket.lastPeriodValue))}
             />
             <StatBadge
-              label="Appointments created by Assistant"
+              label={t.activity.assistantAppointments}
               value={formatNumber(standardAnalytics.assistantCreatedAppointments)}
-              detail="Appointments attributed to the Assistant in the selected period"
+              detail={t.activity.assistantAppointmentsDetail}
             />
             <StatBadge
-              label="Assistant conversion"
+              label={t.activity.assistantConversion}
               value={`${Math.round(standardAnalytics.assistantConversionRate * 100)}%`}
-              detail={`${formatNumber(standardAnalytics.assistantConvertedChats)} of ${formatNumber(standardAnalytics.assistantChats)} chats created an appointment`}
+              detail={t.activity.assistantConversionDetail
+                .replace("{converted}", formatNumber(standardAnalytics.assistantConvertedChats))
+                .replace("{chats}", formatNumber(standardAnalytics.assistantChats))}
             />
           </CardContent>
         </Card>
         <Card className="overflow-hidden rounded-xl border-border bg-card shadow-sm">
           <CardHeader className="border-b border-border/60 pb-4">
-            <CardTitle>Lead time</CardTitle>
-            <p className="pt-1 text-xs text-muted-foreground">Average hours between booking and appointment.</p>
+            <CardTitle>{t.activity.leadTime}</CardTitle>
+            <p className="pt-1 text-xs text-muted-foreground">{t.activity.leadTimeSubtitle}</p>
           </CardHeader>
           <CardContent className="p-5">
             <StatBadge
-              label="Average lead time"
+              label={t.activity.averageLeadTime}
               value={`${averageLeadTime(standardAnalytics.leadTimeTrend).toFixed(1)} h`}
-              detail="Calculated from appointments in the selected period"
+              detail={t.activity.leadTimeDetail}
             />
           </CardContent>
         </Card>
@@ -136,33 +144,33 @@ export function ActivityTab({ analytics, standardAnalytics }: ActivityTabProps) 
       <div className="grid gap-6 xl:grid-cols-3">
         <Card className="overflow-hidden rounded-xl border-border bg-card shadow-sm">
           <CardHeader className="border-b border-border/60 pb-4">
-            <CardTitle>Activity snapshot</CardTitle>
+            <CardTitle>{t.activity.activitySnapshot}</CardTitle>
           </CardHeader>
           <CardContent className="grid gap-3 p-5">
-            <StatBadge label="Peak day" value={peakDay.label} detail={`${formatNumber(peakDay.value)} appointments`} />
-            <StatBadge label="Peak hour" value={peakHour.label} detail={`${formatNumber(peakHour.value)} appointments`} />
+            <StatBadge label={t.activity.peakDay} value={peakDay.label} detail={`${formatNumber(peakDay.value)} ${t.activity.appointmentsCount}`} />
+            <StatBadge label={t.activity.peakHour} value={peakHour.label} detail={`${formatNumber(peakHour.value)} ${t.activity.appointmentsCount}`} />
           </CardContent>
         </Card>
 
         <Card className="overflow-hidden rounded-xl border-border bg-card shadow-sm xl:col-span-2">
           <CardHeader className="border-b border-border/60 pb-4">
-            <CardTitle>New vs recurring customers</CardTitle>
+            <CardTitle>{t.activity.newVsRecurringCustomers}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4 p-5">
             <SplitMetricRow
-              label="New"
+              label={t.activity.newLabel}
               value={analytics.newVsRecurringCustomers.newCustomers}
               total={analytics.newVsRecurringCustomers.totalCustomers}
               tone="bg-primary"
             />
             <SplitMetricRow
-              label="Recurring"
+              label={t.activity.recurringLabel}
               value={analytics.newVsRecurringCustomers.recurrentCustomers}
               total={analytics.newVsRecurringCustomers.totalCustomers}
               tone="bg-info"
             />
             <p className="text-xs text-muted-foreground">
-              New is treated as one appointment in the selected period. It is a low-cost operational proxy, not a lifetime customer classification.
+              {t.activity.newDisclaimer}
             </p>
           </CardContent>
         </Card>
