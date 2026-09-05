@@ -3,7 +3,6 @@ import {
   en,
   es,
   getSchedulingDictionary,
-  schedulingLocales,
 } from "@/contexts/scheduling/interfaces/i18n";
 
 describe("Scheduling i18n translations", () => {

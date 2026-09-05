@@ -3,7 +3,6 @@ import {
   en,
   es,
   getCrmDictionary,
-  crmLocales,
 } from "@/contexts/crm/interfaces/i18n";
 
 describe("CRM i18n translations", () => {

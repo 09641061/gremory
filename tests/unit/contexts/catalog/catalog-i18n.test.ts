@@ -3,7 +3,6 @@ import {
   en,
   es,
   getCatalogDictionary,
-  catalogLocales,
 } from "@/contexts/catalog/interfaces/i18n";
 
 describe("Catalog i18n translations", () => {

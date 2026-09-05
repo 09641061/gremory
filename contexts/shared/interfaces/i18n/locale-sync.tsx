@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { normalizeLocale, type Locale } from "@/contexts/shared/domain/model/i18n";
+import { normalizeLocale } from "@/contexts/shared/domain/model/i18n";
 import { useI18n } from "./i18n-provider";
 
 export function LocaleSync({

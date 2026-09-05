@@ -6,7 +6,6 @@ import {
   useContext,
   useEffect,
   useMemo,
-  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -94,7 +93,11 @@ export function I18nProvider({
   children: ReactNode;
 }) {
   const [locale, setLocaleState] = useState<Locale>(initialLocale);
-  const prevInitialLocaleRef = useRef(initialLocale);
+  const [prevInitialLocale, setPrevInitialLocale] = useState(initialLocale);
+  if (initialLocale !== prevInitialLocale) {
+    setPrevInitialLocale(initialLocale);
+    setLocaleState(initialLocale);
+  }
 
   useEffect(() => {
     const hasCookie =
@@ -103,19 +106,17 @@ export function I18nProvider({
 
     if (hasCookie || initialLocale === DEFAULT_LOCALE) {
       const detected = getBrowserLocale();
-      if (detected !== locale) {
-        setLocaleState(detected);
-        if (typeof document !== "undefined") {
-          document.documentElement.lang = detected;
-        }
-      }
-    }
-  }, [initialLocale]);
-
-  useEffect(() => {
-    if (prevInitialLocaleRef.current !== initialLocale) {
-      prevInitialLocaleRef.current = initialLocale;
-      setLocaleState(initialLocale);
+      queueMicrotask(() => {
+        setLocaleState((current) => {
+          if (detected !== current) {
+            if (typeof document !== "undefined") {
+              document.documentElement.lang = detected;
+            }
+            return detected;
+          }
+          return current;
+        });
+      });
     }
   }, [initialLocale]);
 

@@ -6,59 +6,14 @@ import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import { Spinner } from "@/contexts/shared/interfaces/components/ui/spinner";
 import { ErrorAlert } from "@/contexts/shared/interfaces/components/error";
 import type { Appointment } from "../../../domain/model/entities/appointment";
-import type { ActionState } from "../../actions/action-state";
 import { startAppointmentAction } from "../../actions/start-appointment.action";
 import { completeAppointmentAction } from "../../actions/complete-appointment.action";
 import { markNoShowAppointmentAction } from "../../actions/mark-no-show-appointment.action";
 import { AppointmentConfirmDialogShell } from "./appointment-confirm-dialog-shell";
+import { useSchedulingTranslations } from "../../i18n";
 
 /** Status changes that only need a yes/no confirmation, with no extra input. */
 export type AppointmentStatusTransition = "start" | "complete" | "no-show";
-
-type TransitionCopy = Readonly<{
-  action: (appointmentId: string) => Promise<ActionState<Appointment>>;
-  title: string;
-  description: string;
-  confirmLabel: string;
-  pendingLabel: string;
-  variant: "default" | "outline";
-  fallbackError: string;
-}>;
-
-const TRANSITIONS: Readonly<Record<AppointmentStatusTransition, TransitionCopy>> = {
-  start: {
-    action: startAppointmentAction,
-    title: "Start appointment",
-    description:
-      "This marks the client as arrived and moves the appointment to In Progress.",
-    confirmLabel: "Start appointment",
-    pendingLabel: "Starting...",
-    variant: "default",
-    fallbackError: "Failed to start appointment",
-  },
-  complete: {
-    action: completeAppointmentAction,
-    title: "Complete appointment",
-    description:
-      "This marks the service as finished and moves the appointment to Completed.",
-    confirmLabel: "Complete appointment",
-    pendingLabel: "Completing...",
-    variant: "default",
-    fallbackError: "Failed to complete appointment",
-  },
-  "no-show": {
-    action: markNoShowAppointmentAction,
-    title: "Confirm no show",
-    description:
-      "This records that the client never arrived and moves the appointment to No Show.",
-    confirmLabel: "Confirm no show",
-    pendingLabel: "Marking...",
-    variant: "outline",
-    fallbackError: "Failed to mark appointment as no-show",
-  },
-};
-
-import { useSchedulingTranslations } from "../../i18n";
 
 interface AppointmentStatusConfirmDialogProps {
   isOpen: boolean;

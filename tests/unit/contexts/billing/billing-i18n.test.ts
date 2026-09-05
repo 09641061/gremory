@@ -3,7 +3,6 @@ import {
   en,
   es,
   getBillingDictionary,
-  billingLocales,
 } from "@/contexts/billing/interfaces/i18n";
 
 describe("Billing i18n translations", () => {

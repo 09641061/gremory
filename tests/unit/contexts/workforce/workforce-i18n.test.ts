@@ -3,7 +3,6 @@ import {
   en,
   es,
   getWorkforceDictionary,
-  workforceLocales,
 } from "@/contexts/workforce/interfaces/i18n";
 
 describe("Workforce i18n translations", () => {
