@@ -3,7 +3,11 @@ import { TEST_USERS } from "../fixtures/test-users";
 
 export { expect };
 
-export const test = base.extend({
+type AuthFixtures = {
+  loginAs: (userKey: keyof typeof TEST_USERS) => Promise<void>;
+};
+
+export const test = base.extend<AuthFixtures>({
   // Helper para autenticar dinámicamente la página con cualquiera de los usuarios preestablecidos
   // eslint-disable-next-line react-hooks/rules-of-hooks
   loginAs: async ({ context }, use) => {
@@ -12,7 +16,7 @@ export const test = base.extend({
       await context.addCookies([
         {
           name: "takodu.access_token",
-          value: user.accessToken,
+          value: `mock_access_token_for_${user.id}`,
           domain: "localhost",
           path: "/",
           httpOnly: true,
@@ -21,7 +25,7 @@ export const test = base.extend({
         },
         {
           name: "takodu.refresh_token",
-          value: user.refreshToken,
+          value: `mock_refresh_token_for_${user.id}`,
           domain: "localhost",
           path: "/",
           httpOnly: true,
