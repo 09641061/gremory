@@ -5,7 +5,8 @@ export { expect };
 
 export const test = base.extend({
   // Helper para autenticar dinámicamente la página con cualquiera de los usuarios preestablecidos
-  loginAs: async ({ page, context }, use) => {
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  loginAs: async ({ context }, use) => {
     const loginFn = async (userKey: keyof typeof TEST_USERS) => {
       const user = TEST_USERS[userKey];
       await context.addCookies([
