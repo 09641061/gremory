@@ -176,7 +176,7 @@ export function SubscribeView({ backHref, plansByCurrency, currentSubscription }
               currentSubscription?.pendingPlanId === plan.id &&
               currentSubscription?.pendingBillingCycle === billingCycle;
 
-            let buttonLabel = isCurrent
+            const buttonLabel = isCurrent
               ? t.subscribe.currentPlan
               : isPendingThisPlan
               ? "Reintentar pago"
