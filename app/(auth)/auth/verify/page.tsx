@@ -1,5 +1,7 @@
 import { Verify } from "@/contexts/iam/interfaces/components/verify";
 
+export const instant = false;
+
 export default function VerifyPage({
   searchParams,
 }: {
