@@ -172,6 +172,16 @@ export function SubscribeView({ backHref, plansByCurrency, currentSubscription }
               currentSubscription.planId === plan.id &&
               currentSubscription.billingCycle === billingCycle;
 
+            const isPendingThisPlan =
+              currentSubscription?.pendingPlanId === plan.id &&
+              currentSubscription?.pendingBillingCycle === billingCycle;
+
+            let buttonLabel = isCurrent
+              ? t.subscribe.currentPlan
+              : isPendingThisPlan
+              ? "Reintentar pago"
+              : t.subscribe.getPlan.replace("{name}", plan.name);
+
             return (
               <PlanCard
                 key={plan.id}
@@ -184,8 +194,8 @@ export function SubscribeView({ backHref, plansByCurrency, currentSubscription }
                 billingCycle={billingCycle}
                 features={[...plan.features]}
                 isPopular={plan.isPopular}
-                buttonLabel={isCurrent ? t.subscribe.currentPlan : t.subscribe.getPlan.replace("{name}", plan.name)}
-                buttonDisabled={isCurrent || currentSubscription?.pendingPlanId !== undefined && currentSubscription?.pendingPlanId !== null}
+                buttonLabel={buttonLabel}
+                buttonDisabled={isCurrent}
                 onSuccess={(data) => handlePlanSuccess(plan, displayPrice, data)}
                 onError={(err) =>
                   setFeedbackMessage({
