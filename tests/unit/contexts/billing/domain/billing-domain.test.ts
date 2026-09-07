@@ -8,9 +8,9 @@ import { PlanPricingPolicy } from "@/contexts/billing/domain/services/plan-prici
 
 describe("Billing Domain Model & Policies", () => {
   it("validates PlanId value object invariants", () => {
-    expect(createPlanId(0).value).toBe(0);
     expect(createPlanId(1).value).toBe(1);
     expect(createPlanId(2).value).toBe(2);
+    expect(() => createPlanId(0)).toThrow("Invalid PlanId");
     expect(() => createPlanId(3)).toThrow("Invalid PlanId");
   });
 
@@ -36,10 +36,6 @@ describe("Billing Domain Model & Policies", () => {
 
   it("calculates plan pricing policy correctly for PEN, USD, and EUR", () => {
     const policy = new PlanPricingPolicy();
-    
-    // Free plan is always zero cost
-    const usdFreeMonthly = policy.calculateMonthlyEquivalentPrice(0, "USD", "MONTHLY");
-    expect(usdFreeMonthly.amount).toBe(0);
 
     // Standard Monthly PEN
     const penStandardMonthly = policy.calculateMonthlyEquivalentPrice(1, "PEN", "MONTHLY");
@@ -49,16 +45,16 @@ describe("Billing Domain Model & Policies", () => {
     const penStandardAnnual = policy.calculateMonthlyEquivalentPrice(1, "PEN", "ANNUAL");
     expect(penStandardAnnual.amount).toBe(62.5);
 
-    // Premium Monthly USD
-    const usdPremiumMonthly = policy.calculateMonthlyEquivalentPrice(2, "USD", "MONTHLY");
-    expect(usdPremiumMonthly.amount).toBe(50);
+    // Max Monthly USD
+    const usdMaxMonthly = policy.calculateMonthlyEquivalentPrice(2, "USD", "MONTHLY");
+    expect(usdMaxMonthly.amount).toBe(50);
   });
 
   it("evaluates Plan entity invariants and helper methods", () => {
     const standardPlan = new Plan(createPlanId(1), "Standard", "Desc", 1, []);
     expect(standardPlan.isUnlimitedEstablishments()).toBe(false);
 
-    const premiumPlan = new Plan(createPlanId(2), "Premium", "Desc", -1, []);
-    expect(premiumPlan.isUnlimitedEstablishments()).toBe(true);
+    const maxPlan = new Plan(createPlanId(2), "Max", "Desc", -1, []);
+    expect(maxPlan.isUnlimitedEstablishments()).toBe(true);
   });
 });

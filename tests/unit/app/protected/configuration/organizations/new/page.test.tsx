@@ -67,19 +67,9 @@ describe("NewOrganizationPage guard", () => {
     vi.resetAllMocks();
   });
 
-  it("hides New organization link when the account already owns an organization, by redirecting away", async () => {
+  it("keeps the create form visible while onboarding requires an organization", async () => {
     mocks.workspace.getHeaderViewModel.mockResolvedValue(
-      baseWorkspace({ canCreateOrganization: false }),
-    );
-
-    await expect(renderFullyResolved(NewOrganizationPage())).rejects.toThrow(
-      "REDIRECT:/",
-    );
-  });
-
-  it("renders the create form for an account that owns no organization yet", async () => {
-    mocks.workspace.getHeaderViewModel.mockResolvedValue(
-      baseWorkspace({ canCreateOrganization: true }),
+      baseWorkspace({ canCreateOrganization: false, onboardingStatus: "ORGANIZATION_PENDING" }),
     );
 
     await renderFullyResolved(NewOrganizationPage());

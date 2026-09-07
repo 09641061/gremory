@@ -112,16 +112,23 @@ function normalizeSummary(
 export function toConversationPageReadModel(
   page: PageResponse<AssistantConversationSummaryResponse>,
 ): AssistantConversationPageReadModel {
+  const pageNumber = page.page?.number ?? page.pageable?.pageNumber ?? 0;
+  const pageSize = page.page?.size ?? page.pageable?.pageSize ?? page.content.length;
+  const totalElements = page.totalElements ?? page.page?.totalElements ?? page.content.length;
+  const totalPages = page.totalPages ?? page.page?.totalPages ?? 1;
+  const contentLength = page.content.length;
   return {
     content: page.content.map(normalizeSummary),
-    pageable: {
-      pageNumber: page.pageable.pageNumber,
-      pageSize: page.pageable.pageSize,
+    page: {
+      size: pageSize,
+      number: pageNumber,
+      totalElements,
+      totalPages,
     },
-    totalElements: page.totalElements,
-    totalPages: page.totalPages,
-    first: page.first,
-    last: page.last,
+    totalElements,
+    totalPages,
+    first: page.first ?? pageNumber === 0,
+    last: page.last ?? (pageNumber >= totalPages - 1 || contentLength === 0),
   };
 }
 

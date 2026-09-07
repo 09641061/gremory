@@ -74,9 +74,11 @@ export const assistantConversationResponseSchema = assistantConversationSummaryR
 
 export const assistantConversationPageResponseSchema = z.object({
   content: z.array(assistantConversationSummaryResponseSchema),
-  pageable: z.object({ pageNumber: z.number().int(), pageSize: z.number().int() }),
-  totalElements: z.number().int().nonnegative(),
-  totalPages: z.number().int().nonnegative(),
-  first: z.boolean(),
-  last: z.boolean(),
+  // Spring's `VIA_DTO` page serialization uses `PagedModel`, which flattens
+  // pagination into top-level scalar fields rather than a `pageable` object.
+  page: z.object({ size: z.number().int(), number: z.number().int(), totalElements: z.number().int().nonnegative(), totalPages: z.number().int().nonnegative() }).optional(),
+  totalElements: z.number().int().nonnegative().optional(),
+  totalPages: z.number().int().nonnegative().optional(),
+  first: z.boolean().optional(),
+  last: z.boolean().optional(),
 });

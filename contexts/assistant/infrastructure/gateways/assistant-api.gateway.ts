@@ -39,14 +39,20 @@ export interface AssistantConversationResponse
 
 export interface PageResponse<T> {
   content: T[];
-  pageable: {
-    pageNumber: number;
-    pageSize: number;
+  pageable?: {
+    pageNumber?: number;
+    pageSize?: number;
   };
-  totalElements: number;
-  totalPages: number;
-  first: boolean;
-  last: boolean;
+  page?: {
+    size: number;
+    number: number;
+    totalElements?: number;
+    totalPages?: number;
+  };
+  totalElements?: number;
+  totalPages?: number;
+  first?: boolean;
+  last?: boolean;
 }
 
 export interface CreateConversationRequest {

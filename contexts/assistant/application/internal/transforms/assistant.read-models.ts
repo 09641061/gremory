@@ -18,9 +18,11 @@ export type AssistantConversationReadModel = AssistantConversationSummaryReadMod
 
 export type AssistantConversationPageReadModel = {
   content: AssistantConversationSummaryReadModel[];
-  pageable: {
-    pageNumber: number;
-    pageSize: number;
+  page: {
+    size: number;
+    number: number;
+    totalElements: number;
+    totalPages: number;
   };
   totalElements: number;
   totalPages: number;
