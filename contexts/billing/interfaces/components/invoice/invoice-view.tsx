@@ -39,6 +39,7 @@ export function InvoiceView({ currentSubscription, initialInvoices }: InvoiceVie
   const [selectedInvoiceId, setSelectedInvoiceId] = useState<string | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [invoicesData, setInvoicesData] = useState<PageResponse<InvoiceResponse>>(initialInvoices);
+  const totalPages = invoicesData.totalPages ?? invoicesData.page?.totalPages ?? 0;
   const [currentPage, setCurrentPage] = useState(initialInvoices.pageable?.pageNumber ?? 0);
   const [loading, setLoading] = useState(false);
 
@@ -207,12 +208,12 @@ export function InvoiceView({ currentSubscription, initialInvoices }: InvoiceVie
                 </Table>
               </div>
 
-              {invoicesData.totalPages > 1 ? (
+              {totalPages > 1 ? (
                 <div className="flex items-center justify-between border-t border-border/70 bg-muted/20 px-5 py-4">
                   <span className="text-xs text-muted-foreground">
                     {t.invoices.pageCount
                       .replace("{current}", String(currentPage + 1))
-                      .replace("{total}", String(invoicesData.totalPages))}
+                      .replace("{total}", String(totalPages))}
                   </span>
                   <div className="flex items-center gap-2">
                     <Button
@@ -227,7 +228,7 @@ export function InvoiceView({ currentSubscription, initialInvoices }: InvoiceVie
                     <Button
                       variant="outline"
                       size="icon-sm"
-                      disabled={currentPage >= invoicesData.totalPages - 1 || loading}
+                      disabled={currentPage >= totalPages - 1 || loading}
                       onClick={() => fetchPage(currentPage + 1)}
                       aria-label={t.invoices.nextPage}
                     >

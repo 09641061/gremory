@@ -6,13 +6,9 @@ import { createBusinessWorkspaceQueryService } from "@/contexts/business/applica
 import { getWorkspaceEstablishment, hasEstablishmentPermission } from "@/contexts/shared/application/services/workspace-establishment-permissions";
 import { RegisterCustomerCommand } from "../../domain/model/commands/register-customer.command";
 import { ApiError } from "@/contexts/shared/infrastructure/http/api-client";
+import { createActionErrorId, type ActionState } from "./action-state";
 import { CustomerResponse } from "../../domain/model/entities/customer";
 import { registerCustomerSchema } from "../schemas/register-customer.schema";
-
-export type ActionState<T> =
-  | { status: "idle"; data: null; error: null }
-  | { status: "success"; data: T; error: null }
-  | { status: "error"; data: null; error: string };
 
 export async function registerCustomerAction(
   command: Omit<RegisterCustomerCommand, "establishmentId">,
@@ -20,12 +16,24 @@ export async function registerCustomerAction(
 ): Promise<ActionState<CustomerResponse>> {
   const workspace = await createBusinessWorkspaceQueryService().getHeaderViewModel({ establishmentId });
   if (!hasEstablishmentPermission(getWorkspaceEstablishment(workspace, establishmentId), "crm:manage")) {
-    return { status: "error", data: null, error: "You are not authorized to register customers." };
+    return {
+      status: "error",
+      data: null,
+      error: "You are not authorized to register customers.",
+      errorId: createActionErrorId(),
+      fieldErrors: null,
+    };
   }
 
   const parsed = registerCustomerSchema.safeParse(command);
   if (!parsed.success) {
-    return { status: "error", data: null, error: parsed.error.issues[0]?.message ?? "Invalid customer data." };
+    return {
+      status: "error",
+      data: null,
+      error: parsed.error.issues[0]?.message ?? "Invalid customer data.",
+      errorId: createActionErrorId(),
+      fieldErrors: null,
+    };
   }
 
   try {
@@ -37,7 +45,7 @@ export async function registerCustomerAction(
     });
 
     revalidatePath("/crm");
-    return { status: "success", data: result, error: null };
+    return { status: "success", data: result, error: null, errorId: null, fieldErrors: null };
   } catch (error: unknown) {
     console.error("Error registering customer:", error);
     let message = "An error occurred while registering the customer.";
@@ -50,6 +58,6 @@ export async function registerCustomerAction(
         message = error.message;
       }
     }
-    return { status: "error", data: null, error: message };
+    return { status: "error", data: null, error: message, errorId: createActionErrorId(), fieldErrors: null };
   }
 }

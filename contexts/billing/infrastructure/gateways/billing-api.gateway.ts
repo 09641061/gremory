@@ -6,6 +6,8 @@ import type { CreateSubscriptionCommand } from "../../domain/model/commands/crea
 import type { CurrencyCode } from "../../domain/model/value-objects/currency";
 import { apiConfig } from "@/api.config";
 import { apiClient } from "@/contexts/shared/infrastructure/http/api-client";
+import type { PageResponse } from "@/contexts/shared/application/model/page-response";
+export type { PageResponse } from "@/contexts/shared/application/model/page-response";
 import { billingPlanResponseSchema, subscriptionResponseSchema } from "../../interfaces/rest/schemas/billing.schemas";
 
 export interface SubscriptionResponse {
@@ -52,17 +54,6 @@ export interface InvoiceResponse {
   receiptUrl?: string | null;
   issueDate: string;
   paidDate?: string | null;
-}
-
-export interface PageResponse<T> {
-  content: T[];
-  pageable?: {
-    pageNumber?: number;
-    pageSize?: number;
-  };
-  totalPages: number;
-  totalElements: number;
-  last: boolean;
 }
 
 export class BillingApiGateway {

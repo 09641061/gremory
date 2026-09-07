@@ -14,7 +14,7 @@ export async function deleteAppointmentAction(
     const commandService = createSchedulingCommandService(workspace.organization?.id);
     await commandService.deleteAppointment(appointmentId);
     revalidatePath("/schedule");
-    return { status: "success", data: undefined, error: null, fieldErrors: null };
+    return { status: "success", data: undefined, error: null, errorId: null, fieldErrors: null };
   } catch (error: unknown) {
     console.error("Delete appointment action failed:", error);
     let message = "We could not delete this appointment. Please try again.";

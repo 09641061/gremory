@@ -6,7 +6,7 @@ import { createBusinessWorkspaceQueryService } from "@/contexts/business/applica
 import { getWorkspaceEstablishment, hasEstablishmentPermission } from "@/contexts/shared/application/services/workspace-establishment-permissions";
 import { UpdateCustomerCommand } from "../../domain/model/commands/update-customer.command";
 import { ApiError } from "@/contexts/shared/infrastructure/http/api-client";
-import { ActionState } from "./register-customer.action";
+import { createActionErrorId, type ActionState } from "./action-state";
 import { CustomerResponse } from "../../domain/model/entities/customer";
 import { updateCustomerSchema } from "../schemas/update-customer.schema";
 
@@ -16,12 +16,24 @@ export async function updateCustomerAction(
 ): Promise<ActionState<CustomerResponse>> {
   const workspace = await createBusinessWorkspaceQueryService().getHeaderViewModel({ establishmentId });
   if (!hasEstablishmentPermission(getWorkspaceEstablishment(workspace, establishmentId), "crm:manage")) {
-    return { status: "error", data: null, error: "You are not authorized to update customers." };
+    return {
+      status: "error",
+      data: null,
+      error: "You are not authorized to update customers.",
+      errorId: createActionErrorId(),
+      fieldErrors: null,
+    };
   }
 
   const parsed = updateCustomerSchema.safeParse(command);
   if (!parsed.success) {
-    return { status: "error", data: null, error: parsed.error.issues[0]?.message ?? "Invalid customer data." };
+    return {
+      status: "error",
+      data: null,
+      error: parsed.error.issues[0]?.message ?? "Invalid customer data.",
+      errorId: createActionErrorId(),
+      fieldErrors: null,
+    };
   }
 
   try {
@@ -33,7 +45,7 @@ export async function updateCustomerAction(
     });
 
     revalidatePath("/crm");
-    return { status: "success", data: result, error: null };
+    return { status: "success", data: result, error: null, errorId: null, fieldErrors: null };
   } catch (error: unknown) {
     console.error("Error updating customer:", error);
     let message = "An error occurred while updating the customer.";
@@ -46,6 +58,6 @@ export async function updateCustomerAction(
         message = error.message;
       }
     }
-    return { status: "error", data: null, error: message };
+    return { status: "error", data: null, error: message, errorId: createActionErrorId(), fieldErrors: null };
   }
 }
