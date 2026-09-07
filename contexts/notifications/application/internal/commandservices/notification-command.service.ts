@@ -24,7 +24,10 @@ export class NotificationCommandServiceImpl implements NotificationCommandServic
     accessToken: string
   ): Promise<{ organizationId?: string; establishmentId?: string }> {
     await this.gateway.acceptNotification(accessToken, command.notificationId);
-    const result = await this.gateway.acceptInvitation(accessToken, command.invitationToken);
-    return result;
+    return this.gateway.acceptInvitation(accessToken, command.invitationToken);
+  }
+
+  acceptPendingInvitation(accessToken: string): Promise<{ organizationId?: string; establishmentId?: string }> {
+    return this.gateway.acceptInvitation(accessToken);
   }
 }

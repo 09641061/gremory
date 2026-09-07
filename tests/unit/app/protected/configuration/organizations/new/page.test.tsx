@@ -26,7 +26,7 @@ vi.mock("@/contexts/business/interfaces/components/organization/create-organizat
   },
 }));
 
-import NewOrganizationPage from "@/app/(protected)/(configuration)/organizations/new/page";
+import NewOrganizationPage from "@/app/(protected)/(onboarding)/organizations/new/page";
 
 function renderFullyResolved(element: ReactElement): Promise<string> {
   return new Promise((resolve, reject) => {

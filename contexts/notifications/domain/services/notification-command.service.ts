@@ -7,4 +7,5 @@ export interface NotificationCommandService {
   markAsRead(command: MarkNotificationReadCommand, accessToken: string): Promise<AppNotification>;
   deleteNotification(command: DeleteNotificationCommand, accessToken: string): Promise<void>;
   acceptInvitation(command: AcceptInvitationNotificationCommand, accessToken: string): Promise<{ organizationId?: string; establishmentId?: string }>;
+  acceptPendingInvitation(accessToken: string): Promise<{ organizationId?: string; establishmentId?: string }>;
 }

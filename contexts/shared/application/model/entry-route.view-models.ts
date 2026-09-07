@@ -10,11 +10,22 @@ export type EntryRoutePath =
   | "/access-denied"
   | "/no-access";
 
+export type EntryRouteSubscriptionState =
+  | "active"
+  | "inactive"
+  | "not-required"
+  | "unavailable";
+
 // `setupHref` is where an unfinished workspace is sent. `allowedPaths` are the
 // routes that setup flow may legitimately reach on its own, so the proxy does
 // not bounce a user back while they are completing it.
 export type EntryRouteResolution =
   | { status: "ready"; homeHref: EntryRoutePath }
+  | {
+      status: "subscription-required";
+      setupHref: "/welcome";
+      allowedPaths: ReadonlyArray<string>;
+    }
   | {
       status: "invitation-pending";
       setupHref: "/invitations/pending";

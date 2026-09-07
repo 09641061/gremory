@@ -1,11 +1,16 @@
 import type { ReactNode } from "react";
-import { headers } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import ProtectedAppShell from "@/contexts/shared/interfaces/components/protected-app-shell";
-import { createBusinessWorkspaceQueryService } from "@/contexts/business/application/internal/queryservices/business-workspace-query.service";
+import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-session-cookie";
+import { workspaceSelectionCookies } from "@/contexts/business/infrastructure/session/workspace-selection-cookie";
+import { createEntryRouteQueryService } from "@/contexts/shared/application/internal/queryservices/entry-route-query.service";
+import { getServerDictionary } from "@/contexts/shared/infrastructure/i18n/server";
+import { EntryRouteUnavailable } from "@/contexts/shared/interfaces/components/entry-route-unavailable";
 
 /**
- * Shell for the work routes, the only ones the sidebar navigates between.
+ * Shell for work routes and the welcome account state. The sidebar remains
+ * available on welcome so account controls never disappear during activation.
  *
  * Configuration screens and `/upgrade` are entered from here and leave through
  * their own back link, so they render outside this group: a sidebar there would
@@ -19,20 +24,46 @@ export default async function AppLayout({
 }: {
   children: ReactNode;
 }) {
-  const establishmentId = (await headers()).get("x-takodu-establishment-id") ?? undefined;
-  const workspace = await createBusinessWorkspaceQueryService()
-    .getHeaderViewModel({ establishmentId })
-    .catch(() => null);
+  const cookieStore = await cookies();
+  const accessToken = cookieStore.get(iamSessionCookies.accessToken)?.value;
+  if (!accessToken) redirect("/login");
 
-  // An organization cannot enter the application shell until its first
-  // establishment exists. Keep this guard here as a server-side backstop in
-  // addition to proxy.ts, so stale client navigation cannot bypass onboarding.
+  const requestHeaders = await headers();
+  const pathname =
+    requestHeaders.get("x-takodu-pathname") ?? requestHeaders.get("x-invoke-path") ?? "";
+  const establishmentId = requestHeaders.get("x-takodu-establishment-id") ?? undefined;
+  const organizationId = cookieStore.get(workspaceSelectionCookies.organizationId)?.value ?? undefined;
+  const landing = await createEntryRouteQueryService()
+    .resolveRoute({ accessToken, organizationId, establishmentId })
+    .catch(() => ({ status: "unavailable" as const }));
+
+  // Proxy is the fast path. This server-side backstop protects client
+  // transitions and stale pages from entering the application shell before
+  // subscription and workspace onboarding are complete.
+  if (landing.status === "unauthenticated") redirect("/login");
   if (
-    workspace?.accountType === "OWNER" &&
-    workspace.organization &&
-    workspace.establishments.length === 0
+    landing.status === "subscription-required" &&
+    pathname === "/welcome"
   ) {
-    redirect(`/establishments/new?organizationId=${encodeURIComponent(workspace.organization.id)}`);
+    // Welcome intentionally stays inside the application shell so the account
+    // menu (profile, invoices and sign-out) remains available during setup.
+  } else if (
+    landing.status === "subscription-required" ||
+    landing.status === "invitation-pending" ||
+    landing.status === "organization-required" ||
+    landing.status === "establishment-required"
+  ) {
+    redirect(landing.setupHref);
+  }
+  if (landing.status === "unavailable") {
+    const dictionary = await getServerDictionary();
+    return (
+      <EntryRouteUnavailable
+        title={dictionary.onboarding.serviceUnavailableTitle}
+        description={dictionary.onboarding.unavailableDescription}
+        retryLabel={dictionary.onboarding.retry}
+      />
+    );
   }
 
   return <ProtectedAppShell>{children}</ProtectedAppShell>;

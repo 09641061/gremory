@@ -27,6 +27,7 @@ const mocks = vi.hoisted(() => ({
       ],
       activeOrganizationId: "org-1",
       activeEstablishmentId: "est-1",
+      subscription: { active: true, status: "ACTIVE" },
       accessPolicy: {
         canUseAssistant: true,
         canOpenAnalytics: true,

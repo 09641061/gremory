@@ -154,11 +154,19 @@ The workspace response contains the active context and its permissions:
 
 ## Onboarding
 
-- `accountType === "PENDING_INVITATION"`: show the invitation acceptance flow.
-- `organization === null` and `onboardingStatus === "ORGANIZATION_PENDING"`: show `/organizations/new`.
-- `organization !== null` and `onboardingStatus === "ESTABLISHMENT_PENDING"`: send the regular flow to `/establishments/new`.
-- `/establishments/setup` is only an informational fallback reached from the organization selector. It is not the creation form.
+- `accountType === "PENDING_INVITATION"`: show the invitation acceptance flow
+  before checking Billing; invited members do not need their own subscription.
+- An owner without a confirmed active Billing subscription goes to `/welcome`.
+- An active owner with no organization goes to `/organizations/new`. This is a
+  one-time setup screen in the onboarding route group, not a normal settings
+  destination.
+- `organization !== null` and `onboardingStatus === "ESTABLISHMENT_PENDING"`:
+  send the regular flow to `/establishments/new`.
+- `/establishments/setup` is only an informational fallback reached from the
+  organization selector. It is not the creation form.
 - `onboardingStatus === "COMPLETED"`: show the normal application shell.
+- A Billing outage is an unavailable state, not proof that the subscription is
+  missing.
 
 ## Organization Permissions
 

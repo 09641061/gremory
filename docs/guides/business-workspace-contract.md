@@ -24,10 +24,17 @@ El frontend debe leer este endpoint una sola vez al arrancar el shell y construi
 
 Orden recomendado de resolucion:
 
-1. `business/workspace` como fuente primaria
-2. `workforce/access` como fuente complementaria para detalle de membresia
-3. `billing` solo para vistas de plan o facturacion, no para inferir navegacion
-4. `analytics/free` solo como endpoint de datos, no como fuente de autorizacion de UI
+1. autenticacion y sesion valida
+2. `business/workspace` para contexto, onboarding y permisos
+3. `billing` para confirmar la suscripcion activa del owner
+4. `workforce/access` como fuente complementaria para detalle de membresia
+5. `analytics/free` solo como endpoint de datos, no como fuente de autorizacion de UI
+
+La entrada del owner sigue este orden: suscripcion activa, organizacion,
+establecimiento y finalmente el primer modulo autorizado. Una suscripcion
+inexistente lleva a `/welcome`; un fallo de Billing se muestra como estado de
+servicio no disponible y no se interpreta como una suscripcion ausente. Los
+miembros no se bloquean por una consulta de Billing del owner.
 
 ## Respuesta
 
@@ -196,8 +203,11 @@ La idea importante es:
 - No conviene que cada modulo calcule acceso por su cuenta.
 - `effectivePermissions` puede seguir existiendo para inspeccion o debugging, pero no debe ser la fuente primaria si `accessPolicy` ya esta disponible.
 - `accountType` sirve para layout y UX, no para autorizacion.
-- `subscription` sirve para billing y plan, no para decidir por si solo acceso a modulos.
-- `subscription` no debe influir en onboarding ni en la entrada general a la app.
+- `subscription` del workspace sirve para enriquecer el shell y billing, pero
+  la confirmacion de entrada del owner viene de `GET /api/billing/subscriptions`.
+- Una suscripcion del owner inactiva o inexistente lleva a `/welcome` antes de
+  cualquier setup de organizacion.
+- Un error de Billing no debe convertirse en `subscription-required`.
 - las mutaciones de billing solo deben ejecutarse desde pantallas explicitas de billing y solo cuando el usuario sea owner.
 
 ## Casos de uso

@@ -1,11 +1,14 @@
 import "server-only";
 
+import { hasActiveSubscription } from "@/contexts/billing/domain/services/subscription-access.policy";
 import { createBusinessWorkspaceQueryService } from "@/contexts/business/application/internal/queryservices/business-workspace-query.service";
 import type {
   AppShellHomeHref,
   AppShellViewModel,
   SidebarRouteId,
 } from "@/contexts/shared/application/model/app-shell.view-models";
+import type { EntryRouteSubscriptionState } from "@/contexts/shared/application/model/entry-route.view-models";
+import { resolveEntryRoutePolicy } from "@/contexts/shared/application/services/entry-route.policy";
 
 export interface AppShellQueryInput {
   workspace?: Readonly<{
@@ -38,10 +41,12 @@ export class AppShellQueryService {
       hasAssistantAccess,
     );
 
+    const entry = resolveEntryRoutePolicy(workspace, resolveWorkspaceSubscriptionState(workspace));
+
     return {
       workspace,
       hasAssistantAccess,
-      homeHref: resolveHomeHref(hasAssistantAccess, visibleSidebarRoutes, workspace),
+      homeHref: resolveShellHomeHref(entry),
       visibleSidebarRoutes,
     };
   }
@@ -83,53 +88,22 @@ function resolveVisibleSidebarRoutes(
   return routes;
 }
 
-function resolveHomeHref(
-  hasAssistantAccess: boolean,
-  visibleRoutes: ReadonlyArray<SidebarRouteId>,
+function resolveWorkspaceSubscriptionState(
   workspace: AppShellViewModel["workspace"],
+): EntryRouteSubscriptionState {
+  if (workspace.accountType !== "OWNER") return "not-required";
+  return workspace.subscription && hasActiveSubscription(workspace.subscription)
+    ? "active"
+    : "inactive";
+}
+
+function resolveShellHomeHref(
+  entry: ReturnType<typeof resolveEntryRoutePolicy>,
 ): AppShellHomeHref {
-  if (workspace.accountType === "PENDING_INVITATION" || workspace.onboardingStatus === "ORGANIZATION_PENDING") {
-    // An account that registered through an invitation belongs nowhere until it
-    // accepts. A new owner needs to create its organization before entering the
-    // application shell.
-    if (workspace.accountType === "PENDING_INVITATION") return "/invitations/pending";
-    return "/organizations/new";
-  }
-  if (workspace.onboardingStatus === "ESTABLISHMENT_PENDING") {
-    return "/establishments/new";
-  }
-  // Keep the legacy fallback only for workspace responses that predate the
-  // onboarding status contract. Once the backend sends a status, that status
-  // is the source of truth.
-  if (
-    workspace.onboardingStatus == null &&
-    workspace.accountType === "OWNER" &&
-    workspace.organization &&
-    workspace.establishments.length === 0 &&
-    workspace.canCreateEstablishment
-  ) {
-    return "/establishments/new";
-  }
-  if (!workspace.organization) {
-    return "/access-denied";
-  }
-  if (hasAssistantAccess) {
-    return "/chat";
-  }
-
-  const firstWorkRoute = visibleRoutes.find((route) => route !== "/analytics");
-  if (firstWorkRoute) return firstWorkRoute;
-
-  // No module is openable, but the account may still manage an establishment
-  // profile (`establishment:update`), which lives on the establishments page.
-  if (
-    workspace.canReadEstablishments &&
-    workspace.establishments.some((establishment) => establishment.canUpdate === true)
-  ) {
-    return "/establishments";
-  }
-  if (workspace.authorization?.capabilities?.canOpenModules === false) {
-    return "/no-access";
-  }
-  return "/access-denied";
+  if (entry.status === "ready") return entry.homeHref;
+  if ("setupHref" in entry) return entry.setupHref;
+  // An unavailable dependency is not a valid application destination. The
+  // canonical root renders the retryable unavailable state; keeping the shell
+  // fallback on welcome prevents a stale back link from opening a module.
+  return "/welcome";
 }

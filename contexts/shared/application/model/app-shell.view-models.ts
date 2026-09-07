@@ -14,11 +14,13 @@ export type AppShellHomeHref =
   | "/crm"
   | "/catalog"
   | "/team"
+  | "/analytics"
   | "/organization"
   | "/establishments"
   | "/organizations/new"
   | "/establishments/new"
   | "/establishments/setup"
+  | "/welcome"
   | "/invitations/pending"
   | "/access-denied"
   | "/no-access";

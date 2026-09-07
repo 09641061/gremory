@@ -42,8 +42,10 @@ export async function proxy(request: NextRequest) {
     rotatedHeaders = rotated.headers;
   }
 
-  // Subscription is a capability input, never an onboarding prerequisite.
-  if (pathname === "/upgrade" || pathname === "/welcome" || pathname === "/invoice") {
+  // Explicit billing screens remain reachable so an owner can activate or
+  // inspect a subscription. `/welcome` is resolved by the same entry policy as
+  // every other route and is only reachable while activation is required.
+  if (pathname === "/upgrade" || pathname === "/invoice") {
     return continueWithWorkspaceContext(request, response, rotatedHeaders);
   }
 
@@ -60,6 +62,7 @@ export async function proxy(request: NextRequest) {
   }
 
   if (
+    landing.status === "subscription-required" ||
     landing.status === "invitation-pending" ||
     landing.status === "organization-required" ||
     landing.status === "establishment-required"
@@ -118,7 +121,12 @@ function resolveEstablishmentSelection(request: NextRequest, useCookie = true): 
 }
 
 function isOnboardingPath(pathname: string) {
-  return pathname === "/organizations/new" || pathname === "/establishments/new";
+  return (
+    pathname === "/welcome" ||
+    pathname === "/organizations/new" ||
+    pathname === "/establishments/new" ||
+    pathname === "/invitations/pending"
+  );
 }
 
 function resolveOrganizationSelection(request: NextRequest): string | undefined {
@@ -129,8 +137,12 @@ function resolveOrganizationSelection(request: NextRequest): string | undefined 
 
 function redirectWithCookies(request: NextRequest, path: string, response: NextResponse | null) {
   const redirectUrl = new URL(path, request.url);
+  const targetIsOnboarding = isOnboardingPath(redirectUrl.pathname);
   const organizationId = resolveOrganizationSelection(request);
-  const establishmentId = resolveEstablishmentSelection(request, !isOnboardingPath(request.nextUrl.pathname));
+  const establishmentId = resolveEstablishmentSelection(
+    request,
+    !isOnboardingPath(request.nextUrl.pathname) && !targetIsOnboarding,
+  );
   if (organizationId) redirectUrl.searchParams.set("organizationId", organizationId);
   if (establishmentId) redirectUrl.searchParams.set("establishmentId", establishmentId);
 
@@ -140,7 +152,7 @@ function redirectWithCookies(request: NextRequest, path: string, response: NextR
       redirectResponse.cookies.set(cookie);
     }
   }
-  if (isOnboardingPath(request.nextUrl.pathname) && !request.nextUrl.searchParams.has("establishmentId")) {
+  if (targetIsOnboarding && !redirectUrl.searchParams.has("establishmentId")) {
     redirectResponse.cookies.delete(workspaceSelectionCookies.establishmentId);
   }
   persistEstablishmentSelection(request, redirectResponse);
@@ -158,6 +170,10 @@ function continueWithWorkspaceContext(
     !isOnboardingPath(request.nextUrl.pathname),
   );
   const forwardedHeaders = new Headers(rotatedHeaders ?? request.headers);
+  // Route-group layouts cannot receive the pathname as a prop. Forward the
+  // canonical request path so their defensive entry guard can distinguish an
+  // allowed onboarding page from a route that must be redirected.
+  forwardedHeaders.set("x-takodu-pathname", request.nextUrl.pathname);
 
   forwardedHeaders.delete("x-takodu-organization-id");
   if (establishmentId) forwardedHeaders.set("x-takodu-establishment-id", establishmentId);

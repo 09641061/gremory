@@ -55,7 +55,7 @@ async function AppShellSidebarServer() {
         })
     : null;
 
-  if (!shell || shell.workspace.accountType === "PENDING_INVITATION") {
+  if (!shell) {
     return null;
   }
 

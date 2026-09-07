@@ -29,11 +29,17 @@ export function AppShellSidebarClient({
   // Use client pathname for active state detection and route checks
   const pathname = usePathname();
 
-  // Hide workspace switcher on welcome route
+  // Welcome intentionally keeps the application sidebar: users must retain
+  // profile, invoice and sign-out controls while activating their account.
   const isWelcomeRoute = pathname === "/welcome";
-
-  // Always show billing menu (invoices, upgrade) - even on welcome/onboarding
-  const showBillingMenu = true;
+  const isAccountStateRoute =
+    isWelcomeRoute ||
+    pathname === "/organizations/new" ||
+    pathname === "/invitations/pending" ||
+    pathname === "/access-denied" ||
+    pathname === "/no-access";
+  const showBillingMenu =
+    isAccountStateRoute || workspace.accessPolicy?.canManageBilling === true;
 
   return (
     <AppSidebar

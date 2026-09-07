@@ -29,6 +29,7 @@ import type { AssistantConversationSummaryReadModel } from "@/contexts/assistant
 import type { ProfileViewModel } from "@/contexts/profiles/application/services/profile.view-model";
 import { SidebarProfile } from "@/contexts/profiles/interfaces/components/profile/sidebar-profile";
 import type { SidebarRouteId } from "@/contexts/shared/application/model/app-shell.view-models";
+import { hasActiveSubscription } from "@/contexts/billing/domain/services/subscription-access.policy";
 import type { WorkspaceHeaderViewModel } from "@/contexts/business/application/model/business-workspace.view-models";
 import { WorkspaceSwitcher } from "@/contexts/business/interfaces/components/workspace/workspace-switcher/workspace-switcher";
 
@@ -152,19 +153,15 @@ export function AppSidebar({
       </SidebarContent>
 
       <SidebarFooter className="gap-2 px-3 pb-3">
-        {(() => {
-          const hasActiveSubscription = workspace.subscription?.active === true;
-          const buttonText = hasActiveSubscription ? "Upgrade" : "Get Started";
-          return (
-            <Link
-              href="/upgrade"
-              className="flex h-(--app-sidebar-control-height) items-center gap-(--app-sidebar-control-gap) rounded-(--app-sidebar-item-radius) px-(--app-sidebar-control-padding-x) text-xs font-medium text-muted-foreground transition-colors hover:bg-accent/70 hover:text-accent-foreground"
-            >
-              <CircleArrowUp className="size-(--app-sidebar-icon-size) shrink-0" />
-              <span>{buttonText}</span>
-            </Link>
-          );
-        })()}
+        {canManageBilling ? (
+          <Link
+            href="/upgrade"
+            className="flex h-(--app-sidebar-control-height) items-center gap-(--app-sidebar-control-gap) rounded-(--app-sidebar-item-radius) px-(--app-sidebar-control-padding-x) text-xs font-medium text-muted-foreground transition-colors hover:bg-accent/70 hover:text-accent-foreground"
+          >
+            <CircleArrowUp className="size-(--app-sidebar-icon-size) shrink-0" />
+            <span>{hasActiveSubscription(workspace.subscription) ? "Upgrade" : "Get Started"}</span>
+          </Link>
+        ) : null}
 
         <SidebarProfile
           profile={currentProfile}

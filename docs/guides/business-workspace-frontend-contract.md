@@ -123,8 +123,10 @@ La capa de policy sigue siendo util para UI y entrada a modulos.
   - sirve para sidebar, tabs, rutas y navegacion de modulos
 - `subscription`
   - sirve para billing y limites del plan
-  - no debe decidir onboarding, shell o permisos generales
-  - si falta o falla, la UI sigue funcionando con `business/workspace`
+  - para el owner, Billing confirma si puede superar el estado de bienvenida
+  - una ausencia confirmada lleva a `/welcome`; un fallo de Billing es un
+    estado no disponible, no una ausencia de suscripcion
+  - los miembros no se bloquean por la consulta de suscripcion del owner
 - `accountType`
   - sirve para UX general, no para autorizar
 
@@ -133,8 +135,12 @@ La capa de policy sigue siendo util para UI y entrada a modulos.
 - `PENDING_INVITATION` debe resolver todo en `false`
 - si un flag no viene, el frontend debe denegar por defecto
 - `OWNER` no significa acceso total automatico en la UI
-- `subscription` no debe usarse para decidir navegacion general
-- `subscription` solo enriquece pantallas explicitas de billing
+- `subscription` no debe usarse para sustituir `accessPolicy` ni autorizar
+  modulos del workspace
+- La suscripcion si es un gate de bootstrap para el owner: sin una suscripcion
+  activa se muestra `/welcome` antes de `/organizations/new`
+- Los miembros invitados siguen el estado y permisos del workspace de su
+  organizacion, sin un gate de Billing en su cuenta
 - `ownedOrganizationId` sirve para distinguir ownership real de contexto activo
 
 ## Caso recomendado para analytics
@@ -173,8 +179,11 @@ La idea importante es:
 - No conviene que cada modulo calcule acceso por su cuenta.
 - `effectivePermissions` puede seguir existiendo para inspeccion o debugging, pero no debe ser la fuente primaria si `accessPolicy` ya esta disponible.
 - `accountType` sirve para layout y UX, no para autorizacion.
-- `subscription` no debe gatillar onboarding, shell o home.
-- `subscription` solo debe leerse en pantallas explicitas de billing o plan.
+- `subscription` no debe gatillar permisos de modulos ni reemplazar la
+  policy del workspace.
+- Para el bootstrap del owner, la consulta estricta de Billing decide si se
+  puede abandonar `/welcome`; las pantallas de Billing pueden seguir usando la
+  suscripcion como enriquecimiento.
 
 ## Casos de uso
 

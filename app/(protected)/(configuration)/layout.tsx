@@ -1,22 +1,64 @@
 import type { CSSProperties, ReactNode } from "react";
 import { Suspense } from "react";
 import { cookies, headers } from "next/headers";
+import { redirect } from "next/navigation";
 
 import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-session-cookie";
+import { workspaceSelectionCookies } from "@/contexts/business/infrastructure/session/workspace-selection-cookie";
+import { createEntryRouteQueryService } from "@/contexts/shared/application/internal/queryservices/entry-route-query.service";
+import { getServerDictionary } from "@/contexts/shared/infrastructure/i18n/server";
+import { EntryRouteUnavailable } from "@/contexts/shared/interfaces/components/entry-route-unavailable";
 import { createPlanHomeRouteQueryService } from "@/contexts/shared/application/internal/queryservices/plan-home-route-query.service";
 import { createBusinessWorkspaceQueryService } from "@/contexts/business/application/internal/queryservices/business-workspace-query.service";
 import { hasSomewhereToCancelTo } from "@/contexts/business/domain/services/workspace-navigation.policy";
-import { workspaceSelectionCookies } from "@/contexts/business/infrastructure/session/workspace-selection-cookie";
 import { BackNavigationButton } from "@/contexts/shared/interfaces/components/back-navigation-button";
 
 /**
- * Establishments, organization and permissions.
+ * Establishments, organization settings and permissions. One-time
+ * organization creation lives in the onboarding route group instead.
  *
  * These are settings reached from the app and left again, so the back arrow is
  * their only chrome, exactly as on `/upgrade`. It streams behind its own
  * boundary so resolving the plan never delays the page underneath it.
  */
-export default function ConfigurationLayout({ children }: { children: ReactNode }) {
+export default async function ConfigurationLayout({ children }: { children: ReactNode }) {
+  const cookieStore = await cookies();
+  const accessToken = cookieStore.get(iamSessionCookies.accessToken)?.value;
+  if (!accessToken) redirect("/login");
+
+  const requestHeaders = await headers();
+  const pathname =
+    requestHeaders.get("x-takodu-pathname") ?? requestHeaders.get("x-invoke-path") ?? "";
+  const landing = await createEntryRouteQueryService()
+    .resolveRoute({
+      accessToken,
+      organizationId: cookieStore.get(workspaceSelectionCookies.organizationId)?.value ?? undefined,
+      establishmentId: requestHeaders.get("x-takodu-establishment-id") ?? undefined,
+    })
+    .catch(() => ({ status: "unavailable" as const }));
+
+  if (landing.status === "unauthenticated") redirect("/login");
+  if (
+    landing.status === "subscription-required" ||
+    landing.status === "invitation-pending" ||
+    landing.status === "organization-required" ||
+    landing.status === "establishment-required"
+  ) {
+    if (!pathname || !landing.allowedPaths.includes(pathname)) {
+      redirect(landing.setupHref);
+    }
+  }
+  if (landing.status === "unavailable") {
+    const dictionary = await getServerDictionary();
+    return (
+      <EntryRouteUnavailable
+        title={dictionary.onboarding.serviceUnavailableTitle}
+        description={dictionary.onboarding.unavailableDescription}
+        retryLabel={dictionary.onboarding.retry}
+      />
+    );
+  }
+
   return (
     <main
       className="flex min-w-0 flex-1 flex-col p-6"
@@ -50,15 +92,17 @@ export async function resolveConfigurationBackHref() {
   const accessToken = cookieStore.get(iamSessionCookies.accessToken)?.value;
   const requestHeaders = await headers();
   const establishmentId = requestHeaders.get("x-takodu-establishment-id") ?? undefined;
-  const pathname = requestHeaders.get("x-invoke-path") ?? "";
+  const pathname =
+    requestHeaders.get("x-takodu-pathname") ?? requestHeaders.get("x-invoke-path") ?? "";
   const organizationId = cookieStore.get(workspaceSelectionCookies.organizationId)?.value ?? undefined;
   const previewOrganizationId =
     cookieStore.get(workspaceSelectionCookies.previewOrganizationId)?.value ?? undefined;
 
   // Every other screen under this layout is only reachable once onboarding is
-  // complete (the guard restricts `/organizations/new` and `/establishments/new`
-  // to exactly that mandatory, nowhere-to-go-back-to state), so this same check
-  // naturally covers the whole group: it only ever hides the arrow on those two.
+  // complete (the guard restricts `/establishments/new` to the mandatory,
+  // nowhere-to-go-back-to state), so this same check
+  // naturally covers the whole group: it only ever hides the arrow on the
+  // mandatory first-establishment screen.
   const workspace = await createBusinessWorkspaceQueryService()
     .getHeaderViewModel({ establishmentId })
     .catch(() => null);
@@ -67,7 +111,7 @@ export async function resolveConfigurationBackHref() {
   // same back button as `/upgrade`, even when the workspace has no
   // establishment yet.
   const isMandatoryOnboardingPath =
-    pathname === "/organizations/new" || pathname === "/establishments/new";
+    pathname === "/establishments/new";
   if (
     isMandatoryOnboardingPath &&
     workspace &&

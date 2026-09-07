@@ -3,11 +3,9 @@ import type { ReactNode } from "react";
 import { ErrorBanner } from "@/contexts/shared/interfaces/components/error-banner";
 
 /**
- * Shell for every authenticated route.
- *
- * It carries only what all of them share — the surface and the permission
- * banner. The sidebar belongs to the `(app)` group alone, since the
- * configuration screens and `/upgrade` navigate through their own back link.
+ * Shared surface for authenticated routes. The application sidebar is used by
+ * work, onboarding and terminal account-state routes; configuration and
+ * billing keep their focused layouts.
  */
 export default function ProtectedLayout({
   children,
