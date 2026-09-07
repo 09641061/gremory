@@ -24,7 +24,11 @@ async function NewOrganizationPageContent() {
   // An account that already owns an organization has nothing left to set up
   // here, regardless of account type or onboarding state - it creates
   // establishments inside that organization instead of a second one.
-  if (!workspace.canCreateOrganization) {
+  // The onboarding status is authoritative here. Keeping this page reachable
+  // while organization onboarding is pending prevents `/` from redirecting
+  // back to this route forever when an older workspace response has a stale
+  // `ownedOrganizationId` value.
+  if (!workspace.canCreateOrganization && workspace.onboardingStatus !== "ORGANIZATION_PENDING") {
     redirect("/");
   }
 

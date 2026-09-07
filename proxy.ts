@@ -43,7 +43,7 @@ export async function proxy(request: NextRequest) {
   }
 
   // Subscription is a capability input, never an onboarding prerequisite.
-  if (pathname === "/upgrade" || pathname === "/welcome") {
+  if (pathname === "/upgrade" || pathname === "/welcome" || pathname === "/invoice") {
     return continueWithWorkspaceContext(request, response, rotatedHeaders);
   }
 
@@ -105,6 +105,7 @@ function isPrivateRoute(pathname: string) {
     "/welcome",
     // Lives under app/(protected): plans are shown to signed-in users only.
     "/upgrade",
+    "/invoice",
   ].some((route) => pathname === route || pathname.startsWith(`${route}/`));
 }
 
@@ -222,6 +223,7 @@ export const config = {
     "/login",
     "/upgrade",
     "/welcome",
+    "/invoice",
     "/chat/:path*",
     "/analytics/:path*",
     "/schedule/:path*",

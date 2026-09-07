@@ -56,9 +56,9 @@ export interface InvoiceResponse {
 
 export interface PageResponse<T> {
   content: T[];
-  pageable: {
-    pageNumber: number;
-    pageSize: number;
+  pageable?: {
+    pageNumber?: number;
+    pageSize?: number;
   };
   totalPages: number;
   totalElements: number;

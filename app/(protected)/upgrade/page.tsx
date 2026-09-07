@@ -37,17 +37,24 @@ async function UpgradePageContent() {
         .catch(() => null)
     : null;
 
+  // Only redirect if user has explicit deny for billing management
+  // (not just when they're in onboarding without org yet)
   if (workspace?.accessPolicy?.canManageBilling === false) {
-    redirect(shell?.homeHref ?? "/access-denied");
+    // If they have an org but can't manage billing, redirect
+    if (workspace.organization) {
+      redirect(shell?.homeHref ?? "/access-denied");
+    }
+    // If no org yet (onboarding), allow access to upgrade page
+    // but don't require subscription data
   }
 
-  const subscription = accessToken
+  const subscription = accessToken && workspace?.organization
     ? await createCurrentSubscriptionQueryService().getCurrentSubscriptionSnapshot(accessToken)
     : null;
 
   return (
     <SubscribeView
-      backHref={shell?.homeHref ?? "/access-denied"}
+      backHref={workspace?.organization ? (shell?.homeHref ?? "/welcome") : "/welcome"}
       plansByCurrency={await listPlansByCurrencyQueryService()}
       currentSubscription={subscription}
     />

@@ -4,10 +4,14 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronLeft, ChevronRight, FileDown, FileText } from "lucide-react";
 
-import type { SubscriptionAccessSnapshot } from "../../../domain/services/subscription-access.policy";
+import {
+  hasActiveSubscription,
+  type SubscriptionAccessSnapshot,
+} from "../../../domain/services/subscription-access.policy";
 import type { InvoiceResponse, PageResponse } from "../../../infrastructure/gateways/billing-api.gateway";
 import { CancelSubscriptionModal } from "../cancel/cancel-subscription-modal";
 import { InvoiceDetailModal } from "./invoice-detail-modal";
+import { BackNavigationButton } from "@/contexts/shared/interfaces/components/back-navigation-button";
 import { PageHeader, PageShell } from "@/contexts/shared/interfaces/components/page-shell";
 import { Badge } from "@/contexts/shared/interfaces/components/ui/badge";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
@@ -35,7 +39,7 @@ export function InvoiceView({ currentSubscription, initialInvoices }: InvoiceVie
   const [selectedInvoiceId, setSelectedInvoiceId] = useState<string | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [invoicesData, setInvoicesData] = useState<PageResponse<InvoiceResponse>>(initialInvoices);
-  const [currentPage, setCurrentPage] = useState(initialInvoices.pageable.pageNumber);
+  const [currentPage, setCurrentPage] = useState(initialInvoices.pageable?.pageNumber ?? 0);
   const [loading, setLoading] = useState(false);
 
   const fetchPage = async (page: number) => {
@@ -68,10 +72,16 @@ export function InvoiceView({ currentSubscription, initialInvoices }: InvoiceVie
   }, []);
 
   const currentPlanName =
-    currentSubscription?.planId === 2 ? "Premium" : currentSubscription?.planId === 1 ? "Standard" : "Free";
+    currentSubscription?.planId === 2 ? "Premium" : "Standard";
+  const hasCancellableSubscription =
+    hasActiveSubscription(currentSubscription) && (currentSubscription?.planId ?? 0) > 0;
 
   return (
-    <PageShell>
+    <>
+      <div className="absolute left-6 top-6 z-20 sm:left-8">
+        <BackNavigationButton fallbackHref="/welcome" />
+      </div>
+      <PageShell className="pt-14">
       <PageHeader
         title={t.invoices.title}
         description={t.invoices.description}
@@ -112,7 +122,7 @@ export function InvoiceView({ currentSubscription, initialInvoices }: InvoiceVie
                 </p>
               </div>
 
-              {!currentSubscription.cancelAtPeriodEnd ? (
+              {hasCancellableSubscription && !currentSubscription.cancelAtPeriodEnd ? (
                 <Button type="button" variant="destructive" onClick={() => setCancelModalOpen(true)}>
                   {t.invoices.cancelSubscription}
                 </Button>
@@ -247,6 +257,7 @@ export function InvoiceView({ currentSubscription, initialInvoices }: InvoiceVie
         onClose={() => setIsDetailOpen(false)}
         invoiceId={selectedInvoiceId}
       />
-    </PageShell>
+      </PageShell>
+    </>
   );
 }

@@ -26,19 +26,6 @@ export class ListPlansQueryService {
   public getAvailablePlans(
     currencyCode: CurrencyCode
   ): PlanReadModel[] {
-    const freePlan = new Plan(
-      createPlanId(0),
-      "Free",
-      "Try the core product experience.",
-      1,
-      [
-        "Create and manage your organization",
-        "Core operational workflows",
-        "Upgrade later when you need automation",
-      ],
-      false
-    );
-
     const standardPlan = new Plan(
       createPlanId(1),
       "Standard",
@@ -68,7 +55,7 @@ export class ListPlansQueryService {
       true
     );
 
-    return [freePlan, standardPlan, premiumPlan].map((plan) => {
+    return [standardPlan, premiumPlan].map((plan) => {
       const planIdVal = plan.id.value;
       const monthlyPriceObj = this.pricingPolicy.calculateMonthlyEquivalentPrice(
         planIdVal,

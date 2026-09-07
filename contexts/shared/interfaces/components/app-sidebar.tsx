@@ -5,6 +5,7 @@ import { usePathname, useSearchParams } from "next/navigation";
 import {
   BarChart3,
   CalendarDays,
+  CircleArrowUp,
   ContactRound,
   MessageCircle,
   Package,
@@ -30,8 +31,6 @@ import { SidebarProfile } from "@/contexts/profiles/interfaces/components/profil
 import type { SidebarRouteId } from "@/contexts/shared/application/model/app-shell.view-models";
 import type { WorkspaceHeaderViewModel } from "@/contexts/business/application/model/business-workspace.view-models";
 import { WorkspaceSwitcher } from "@/contexts/business/interfaces/components/workspace/workspace-switcher/workspace-switcher";
-import { SidebarUpgradeCallout } from "@/contexts/billing/interfaces/components/subscription/sidebar-upgrade-callout";
-import { canOfferUpgrade } from "@/contexts/billing/domain/services/subscription-upgrade.policy";
 
 import { useI18n, LocaleSync } from "@/contexts/shared/interfaces/i18n";
 
@@ -46,6 +45,9 @@ export function AppSidebar({
   visibleRoutes,
   showAssistantSection,
   showAssistantNavigation,
+  showWorkspaceSwitcher = true,
+  pathname: pathnameProp,
+  showBillingMenu,
 }: {
   initialAssistantConversations: AssistantConversationSummaryReadModel[];
   currentProfile: Pick<ProfileViewModel, "username" | "imageUrl"> & { language?: "ES" | "EN" } | null;
@@ -53,9 +55,13 @@ export function AppSidebar({
   visibleRoutes: ReadonlyArray<SidebarRouteId>;
   showAssistantSection: boolean;
   showAssistantNavigation: boolean;
+  showWorkspaceSwitcher?: boolean;
+  pathname?: string;
+  showBillingMenu?: boolean;
 }) {
   const { t } = useI18n();
-  const pathname = usePathname();
+  const currentPathname = usePathname();
+  const pathname = pathnameProp ?? currentPathname;
   const searchParams = useSearchParams();
   const selectedConversationId = pathname.startsWith("/chat")
     ? searchParams.get("conversationId")
@@ -66,7 +72,7 @@ export function AppSidebar({
     workspace.establishments.some((item) => item.id === requestedEstablishmentId)
       ? requestedEstablishmentId
       : workspace.activeEstablishmentId ?? null;
-  const canManageBilling = workspace.accessPolicy?.canManageBilling ?? false;
+  const canManageBilling = showBillingMenu ?? workspace.accessPolicy?.canManageBilling ?? false;
   const assistantChatsSectionKey = initialAssistantConversations
     .map((conversation) => `${conversation.id}:${conversation.updatedAt}:${conversation.title ?? ""}`)
     .join("|");
@@ -90,9 +96,11 @@ export function AppSidebar({
   return (
     <ShadcnSidebar collapsible="offcanvas">
       <LocaleSync profileLanguage={currentProfile?.language} />
-      <SidebarHeader className="border-b border-border/60 p-3">
-        <WorkspaceSwitcher workspace={workspace} />
-      </SidebarHeader>
+      {showWorkspaceSwitcher && (
+        <SidebarHeader className="border-b border-border/60 p-3">
+          <WorkspaceSwitcher workspace={workspace} />
+        </SidebarHeader>
+      )}
 
       <SidebarContent className="overflow-hidden px-3 py-3">
         <SidebarGroup className="mt-2 p-0">
@@ -144,12 +152,19 @@ export function AppSidebar({
       </SidebarContent>
 
       <SidebarFooter className="gap-2 px-3 pb-3">
-        {canManageBilling ? (
-          <SidebarUpgradeCallout
-            planName={workspace.subscription?.planName ?? null}
-            canUpgrade={canOfferUpgrade(workspace.subscription)}
-          />
-        ) : null}
+        {(() => {
+          const hasActiveSubscription = workspace.subscription?.active === true;
+          const buttonText = hasActiveSubscription ? "Upgrade" : "Get Started";
+          return (
+            <Link
+              href="/upgrade"
+              className="flex h-(--app-sidebar-control-height) items-center gap-(--app-sidebar-control-gap) rounded-(--app-sidebar-item-radius) px-(--app-sidebar-control-padding-x) text-xs font-medium text-muted-foreground transition-colors hover:bg-accent/70 hover:text-accent-foreground"
+            >
+              <CircleArrowUp className="size-(--app-sidebar-icon-size) shrink-0" />
+              <span>{buttonText}</span>
+            </Link>
+          );
+        })()}
 
         <SidebarProfile
           profile={currentProfile}

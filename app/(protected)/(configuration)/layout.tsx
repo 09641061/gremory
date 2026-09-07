@@ -24,11 +24,13 @@ export default function ConfigurationLayout({ children }: { children: ReactNode 
       // that size themselves against the viewport have to discount it too.
       style={{ "--app-page-viewport-height": "calc(100vh - 9.5rem)" } as CSSProperties}
     >
-      <div className="mb-4 flex h-8 items-center">
+      <div className="absolute left-6 top-6 z-20 sm:left-8">
         <Suspense fallback={null}>
           <BackToHomeLink />
         </Suspense>
       </div>
+
+      <div className="mb-4 h-8" aria-hidden="true" />
 
       {children}
     </main>
@@ -46,7 +48,9 @@ export async function resolveConfigurationBackHref() {
   // Read outside any cached scope: the session is per-request.
   const cookieStore = await cookies();
   const accessToken = cookieStore.get(iamSessionCookies.accessToken)?.value;
-  const establishmentId = (await headers()).get("x-takodu-establishment-id") ?? undefined;
+  const requestHeaders = await headers();
+  const establishmentId = requestHeaders.get("x-takodu-establishment-id") ?? undefined;
+  const pathname = requestHeaders.get("x-invoke-path") ?? "";
   const organizationId = cookieStore.get(workspaceSelectionCookies.organizationId)?.value ?? undefined;
   const previewOrganizationId =
     cookieStore.get(workspaceSelectionCookies.previewOrganizationId)?.value ?? undefined;
@@ -58,7 +62,14 @@ export async function resolveConfigurationBackHref() {
   const workspace = await createBusinessWorkspaceQueryService()
     .getHeaderViewModel({ establishmentId })
     .catch(() => null);
+  // Mandatory onboarding screens have no valid destination to return to.
+  // Other configuration pages, including `/profile`, must always expose the
+  // same back button as `/upgrade`, even when the workspace has no
+  // establishment yet.
+  const isMandatoryOnboardingPath =
+    pathname === "/organizations/new" || pathname === "/establishments/new";
   if (
+    isMandatoryOnboardingPath &&
     workspace &&
     !hasSomewhereToCancelTo(workspace.establishments, workspace.organization?.id, workspace.onboardingCompleted)
   ) {

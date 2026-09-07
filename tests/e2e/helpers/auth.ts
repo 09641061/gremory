@@ -9,7 +9,6 @@ type AuthFixtures = {
 
 export const test = base.extend<AuthFixtures>({
   // Helper para autenticar dinámicamente la página con cualquiera de los usuarios preestablecidos
-  // eslint-disable-next-line react-hooks/rules-of-hooks
   loginAs: async ({ context }, use) => {
     const loginFn = async (userKey: keyof typeof TEST_USERS) => {
       const user = TEST_USERS[userKey];
