@@ -43,8 +43,12 @@ export async function proxy(request: NextRequest) {
   }
 
   // Subscription is a capability input, never an onboarding prerequisite.
-  if (pathname === "/upgrade") {
+  if (pathname === "/upgrade" || pathname === "/welcome") {
     return continueWithWorkspaceContext(request, response, rotatedHeaders);
+  }
+
+  if (pathname === "/") {
+    return redirectToWelcome(request, response);
   }
 
   const landing = await createEntryRouteQueryService().resolveRoute({
@@ -98,6 +102,7 @@ function isPrivateRoute(pathname: string) {
     "/establishments",
     "/access-denied",
     "/no-access",
+    "/welcome",
     // Lives under app/(protected): plans are shown to signed-in users only.
     "/upgrade",
   ].some((route) => pathname === route || pathname.startsWith(`${route}/`));
@@ -205,11 +210,18 @@ function redirectToLogin(request: NextRequest) {
   return response;
 }
 
+function redirectToWelcome(request: NextRequest, response: NextResponse | null) {
+  const nextResponse = NextResponse.redirect(new URL("/welcome", request.url));
+  copyResponseCookies(response, nextResponse);
+  return nextResponse;
+}
+
 export const config = {
   matcher: [
     "/",
     "/login",
     "/upgrade",
+    "/welcome",
     "/chat/:path*",
     "/analytics/:path*",
     "/schedule/:path*",
