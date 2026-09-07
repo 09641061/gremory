@@ -47,10 +47,6 @@ export async function proxy(request: NextRequest) {
     return continueWithWorkspaceContext(request, response, rotatedHeaders);
   }
 
-  if (pathname === "/") {
-    return redirectToWelcome(request, response);
-  }
-
   const landing = await createEntryRouteQueryService().resolveRoute({
     accessToken,
     organizationId: resolveOrganizationSelection(request),
@@ -209,12 +205,6 @@ function redirectToLogin(request: NextRequest) {
   response.cookies.delete(iamSessionCookies.accessToken);
   response.cookies.delete(iamSessionCookies.refreshToken);
   return response;
-}
-
-function redirectToWelcome(request: NextRequest, response: NextResponse | null) {
-  const nextResponse = NextResponse.redirect(new URL("/welcome", request.url));
-  copyResponseCookies(response, nextResponse);
-  return nextResponse;
 }
 
 export const config = {

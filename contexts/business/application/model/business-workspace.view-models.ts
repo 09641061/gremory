@@ -3,6 +3,7 @@ export type WorkspaceAccountType = "OWNER" | "MEMBER" | "PENDING_INVITATION";
 export type WorkspaceOnboardingStatus =
   | "ORGANIZATION_PENDING"
   | "ESTABLISHMENT_PENDING"
+  | "PAYMENT_PENDING"
   | "COMPLETED";
 
 export type WorkspaceHeaderEstablishment = Readonly<{
