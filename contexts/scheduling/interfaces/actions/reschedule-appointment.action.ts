@@ -36,7 +36,7 @@ export async function rescheduleAppointmentAction(
     const commandService = createSchedulingCommandService(workspace.organization?.id);
     const result = await commandService.rescheduleAppointment(appointmentId, parsed.data);
     revalidatePath("/schedule");
-    return { status: "success", data: result, error: null, fieldErrors: null };
+    return { status: "success", data: result, error: null, errorId: null, fieldErrors: null };
   } catch (error: unknown) {
     console.error("Reschedule appointment action failed:", error);
     let message = "We could not reschedule this appointment. Please try again.";

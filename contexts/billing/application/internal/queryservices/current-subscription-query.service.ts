@@ -15,10 +15,10 @@ export class CurrentSubscriptionQueryService {
   }
 
   /**
-   * Subscription is a capability input, never a prerequisite: a user that owns
-   * no subscription (an invited member, for instance) has no plan, not an
-   * error. Callers that render the app shell must keep working, so the absence
-   * is modelled as `null` instead of a thrown Billing failure.
+   * Optional read for billing UI. The entry-route resolver uses the strict
+   * method above so it can distinguish a missing subscription from a Billing
+   * outage; this convenience method intentionally keeps those failures out of
+   * non-routing billing surfaces.
    */
   async getCurrentSubscriptionSnapshot(
     accessToken: string,

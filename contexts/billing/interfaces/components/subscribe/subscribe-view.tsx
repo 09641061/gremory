@@ -49,9 +49,7 @@ type BillingPlanMetadata = {
 type BillingPlanViewModel = PlanReadModel & BillingPlanMetadata;
 
 /**
- * Paid plans only. Membership here is what puts a plan on the page: the
- * catalog endpoint still returns the free plan, and `enrichPlan` drops
- * anything without metadata.
+ * Paid plans only. Membership here is what puts a plan on the page.
  */
 const PLAN_METADATA: Record<number, BillingPlanMetadata> = {
   1: {
@@ -205,25 +203,26 @@ export function SubscribeView({ backHref, plansByCurrency, currentSubscription }
                   })
                 }
                 onSelect={(execute) => {
-                  const currentPlanId = currentSubscription?.planId ?? 0;
+                  // If no subscription or no active subscription, go straight to payment
+                  if (!currentSubscription || !currentSubscription.active || !currentSubscription.planId) {
+                    execute();
+                    return;
+                  }
+                  
+                  const currentPlanId = currentSubscription.planId;
                   const targetPlanId = plan.id;
                   
                   if (targetPlanId > currentPlanId) {
-                    if (currentPlanId === 0) {
-                      // Upgrading from Free plan, no modal warning needed, go straight to payment modal
-                      execute();
-                    } else {
-                      // Upgrade from standard paid plan
-                      setConfirmDialogState({
-                        isOpen: true,
-                        title: t.subscribe.confirmUpgradeTitle.replace("{planName}", plan.name),
-                        description: t.subscribe.confirmUpgradeDescription.replace("{planName}", plan.name),
-                        action: () => {
-                          setConfirmDialogState(null);
-                          execute();
-                        }
-                      });
-                    }
+                    // Upgrade: show confirmation dialog
+                    setConfirmDialogState({
+                      isOpen: true,
+                      title: t.subscribe.confirmUpgradeTitle.replace("{planName}", plan.name),
+                      description: t.subscribe.confirmUpgradeDescription.replace("{planName}", plan.name),
+                      action: () => {
+                        setConfirmDialogState(null);
+                        execute();
+                      }
+                    });
                   } else if (targetPlanId < currentPlanId) {
                     // Downgrade
                     setConfirmDialogState({

@@ -31,24 +31,24 @@ export async function createOrganizationAction(
   });
   if (!parsed.success) return actionError(parsed.error.issues[0]?.message);
 
-  let organizationId = "";
-
   try {
     await requireBusinessAccessToken();
-    const created = await createOrganizationCommandService().create(
+    await createOrganizationCommandService().create(
       createOrganizationCommand({
         ...parsed.data,
         imageFile: readPhotoFileFromFormData(formData),
       }),
     );
-    organizationId = created.value;
     await clearWorkspaceSelection();
     revalidateBusinessViews();
   } catch (error) {
     return actionError(error);
   }
 
-  redirect(`/establishments/new?organizationId=${encodeURIComponent(organizationId)}`);
+  // Let the entry-route resolver decide whether the generated first
+  // establishment still needs setup. This avoids sending every owner to the
+  // establishment form when organization creation already created it.
+  redirect("/");
 }
 
 export async function updateOrganizationAction(

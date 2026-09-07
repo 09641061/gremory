@@ -1,6 +1,12 @@
 import "server-only";
 
 import { apiConfig } from "@/api.config";
+import {
+  buildApiRequestHeaders,
+  type ApiRequestContext,
+  type AuthenticatedRequestContext,
+} from "./request-context";
+import { extractProblemDetailsMessage, type ProblemDetails } from "./problem-details";
 
 export class ApiError extends Error {
   constructor(
@@ -20,13 +26,15 @@ type ApiErrorConstructor = new (
   details?: unknown,
 ) => ApiError;
 
-export type ApiRequestOptions = Omit<RequestInit, "body" | "headers"> & {
-  token?: string;
-  body?: unknown;
-  headers?: HeadersInit;
-  errorMessage?: string;
-  errorType?: ApiErrorConstructor;
-};
+export type ApiRequestOptions = Omit<RequestInit, "body" | "headers"> &
+  ApiRequestContext & {
+    body?: unknown;
+    headers?: HeadersInit;
+    errorMessage?: string;
+    errorType?: ApiErrorConstructor;
+  };
+
+export type { ApiRequestContext, AuthenticatedRequestContext, ProblemDetails };
 
 export type ApiResponse<T> = {
   data: T;
@@ -52,17 +60,14 @@ export class ApiClient {
   ): Promise<ApiResponse<T>> {
     const {
       token,
+      tenantId,
       body,
       headers: customHeaders,
       errorMessage,
       errorType: ErrorType = ApiError,
       ...requestInit
     } = options;
-    const headers = toHeaderRecord(customHeaders);
-
-    if (token && !hasHeader(headers, "authorization")) {
-      headers.Authorization = `Bearer ${token}`;
-    }
+    const headers = buildApiRequestHeaders({ token, tenantId }, customHeaders);
 
     let requestBody: BodyInit | undefined;
     if (body !== undefined) {
@@ -141,32 +146,7 @@ async function readResponseBody(response: Response): Promise<unknown> {
 }
 
 export function extractApiErrorMessage(body: unknown): string | undefined {
-  if (!body) return undefined;
-
-  if (Array.isArray(body) && body.length > 0) {
-    return extractApiErrorMessage(body[0]);
-  }
-
-  if (typeof body !== "object") return undefined;
-  const record = body as Record<string, unknown>;
-
-  const message = record.message;
-  if (typeof message === "string" && message.length > 0) return message;
-
-  const detail = record.detail;
-  if (typeof detail === "string" && detail.length > 0) return detail;
-
-  const title = record.title;
-  if (typeof title === "string" && title.length > 0) return title;
-
-  return undefined;
-}
-
-function toHeaderRecord(headers?: HeadersInit): Record<string, string> {
-  if (!headers) return {};
-  if (headers instanceof Headers) return Object.fromEntries(headers.entries());
-  if (Array.isArray(headers)) return Object.fromEntries(headers);
-  return { ...headers };
+  return extractProblemDetailsMessage(body);
 }
 
 function hasHeader(headers: Record<string, string>, name: string): boolean {

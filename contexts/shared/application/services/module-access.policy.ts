@@ -1,11 +1,12 @@
 import type { WorkspaceHeaderViewModel } from "@/contexts/business/application/model/business-workspace.view-models";
+import { hasActiveSubscription } from "@/contexts/billing/domain/services/subscription-access.policy";
 
 export function resolveModuleAccessFallback(
   workspace: WorkspaceHeaderViewModel,
 ): "/upgrade" | "/no-access" | "/access-denied" {
   if (
     workspace.accountType === "OWNER" &&
-    workspace.subscription?.active === false &&
+    !hasActiveSubscription(workspace.subscription) &&
     workspace.accessPolicy?.canManageBilling === true
   ) {
     return "/upgrade";

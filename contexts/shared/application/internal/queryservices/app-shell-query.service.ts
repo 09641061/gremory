@@ -1,11 +1,25 @@
 import "server-only";
 
+import { cookies } from "next/headers";
+import { createCurrentSubscriptionQueryService } from "@/contexts/billing/application/internal/queryservices/current-subscription-query.service";
+import {
+  hasActiveSubscription,
+  type SubscriptionAccessSnapshot,
+} from "@/contexts/billing/domain/services/subscription-access.policy";
 import { createBusinessWorkspaceQueryService } from "@/contexts/business/application/internal/queryservices/business-workspace-query.service";
+import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-session-cookie";
 import type {
   AppShellHomeHref,
   AppShellViewModel,
   SidebarRouteId,
 } from "@/contexts/shared/application/model/app-shell.view-models";
+import type { EntryRouteSubscriptionState } from "@/contexts/shared/application/model/entry-route.view-models";
+import { resolveEntryRoutePolicy } from "@/contexts/shared/application/services/entry-route.policy";
+import { ApiError } from "@/contexts/shared/infrastructure/http/api-client";
+
+type SubscriptionReader = Readonly<{
+  getCurrentSubscription: (accessToken: string) => Promise<SubscriptionAccessSnapshot>;
+}>;
 
 export interface AppShellQueryInput {
   workspace?: Readonly<{
@@ -15,10 +29,15 @@ export interface AppShellQueryInput {
 }
 
 export class AppShellQueryService {
+  constructor(
+    private readonly workspaceQuery = createBusinessWorkspaceQueryService(),
+    private readonly billing: SubscriptionReader = createCurrentSubscriptionQueryService(),
+  ) {}
+
   async resolve({ workspace: workspaceSelection }: AppShellQueryInput = {}): Promise<AppShellViewModel> {
-    const workspace = await createBusinessWorkspaceQueryService().getHeaderViewModel(workspaceSelection);
+    const workspace = await this.workspaceQuery.getHeaderViewModel(workspaceSelection);
     const accessPolicy = workspace.accessPolicy;
-    const hasAssistantAccess = accessPolicy?.canUseAssistant ?? false;
+    const hasAssistantPolicy = accessPolicy?.canUseAssistant ?? false;
     const canReadScheduling =
       accessPolicy?.canOpenScheduling ?? workspace.capabilities?.canReadAppointments ?? false;
     const canReadCatalog =
@@ -35,14 +54,21 @@ export class AppShellQueryService {
       canReadCrm,
       canReadTeam,
       canReadAnalytics,
-      hasAssistantAccess,
+      hasAssistantPolicy,
     );
+
+    const entry = resolveEntryRoutePolicy(
+      workspace,
+      await resolveWorkspaceSubscriptionState(workspace, this.billing),
+    );
+    const isApplicationReady = entry.status === "ready";
+    const hasAssistantAccess = isApplicationReady && (accessPolicy?.canUseAssistant ?? false);
 
     return {
       workspace,
       hasAssistantAccess,
-      homeHref: resolveHomeHref(hasAssistantAccess, visibleSidebarRoutes, workspace),
-      visibleSidebarRoutes,
+      homeHref: resolveShellHomeHref(entry),
+      visibleSidebarRoutes: isApplicationReady ? visibleSidebarRoutes : [],
     };
   }
 }
@@ -83,53 +109,43 @@ function resolveVisibleSidebarRoutes(
   return routes;
 }
 
-function resolveHomeHref(
-  hasAssistantAccess: boolean,
-  visibleRoutes: ReadonlyArray<SidebarRouteId>,
+async function resolveWorkspaceSubscriptionState(
   workspace: AppShellViewModel["workspace"],
+  billing: SubscriptionReader,
+): Promise<EntryRouteSubscriptionState> {
+  if (workspace.accountType !== "OWNER") return "not-required";
+
+  try {
+    return hasActiveSubscription(await billing.getCurrentSubscription(await getAccessToken()))
+      ? "active"
+      : "inactive";
+  } catch (error) {
+    // Keep the shell conservative when Billing is unavailable. This is distinct
+    // from a 404, which is the normal "no plan selected" state.
+    return getErrorStatus(error) === 404 ? "inactive" : "unavailable";
+  }
+}
+
+async function getAccessToken(): Promise<string> {
+  const token = (await cookies()).get(iamSessionCookies.accessToken)?.value;
+  if (!token) throw new ApiError("Authentication is required", 401);
+  return token;
+}
+
+function getErrorStatus(error: unknown): number | undefined {
+  if (error instanceof ApiError) return error.status;
+  if (!error || typeof error !== "object") return undefined;
+  const status = (error as { status?: unknown }).status;
+  return typeof status === "number" ? status : undefined;
+}
+
+function resolveShellHomeHref(
+  entry: ReturnType<typeof resolveEntryRoutePolicy>,
 ): AppShellHomeHref {
-  if (workspace.accountType === "PENDING_INVITATION" || workspace.onboardingStatus === "ORGANIZATION_PENDING") {
-    // An account that registered through an invitation belongs nowhere until it
-    // accepts. A new owner needs to create its organization before entering the
-    // application shell.
-    if (workspace.accountType === "PENDING_INVITATION") return "/invitations/pending";
-    return "/organizations/new";
-  }
-  if (workspace.onboardingStatus === "ESTABLISHMENT_PENDING") {
-    return "/establishments/new";
-  }
-  // Keep the legacy fallback only for workspace responses that predate the
-  // onboarding status contract. Once the backend sends a status, that status
-  // is the source of truth.
-  if (
-    workspace.onboardingStatus == null &&
-    workspace.accountType === "OWNER" &&
-    workspace.organization &&
-    workspace.establishments.length === 0 &&
-    workspace.canCreateEstablishment
-  ) {
-    return "/establishments/new";
-  }
-  if (!workspace.organization) {
-    return "/access-denied";
-  }
-  if (hasAssistantAccess) {
-    return "/chat";
-  }
-
-  const firstWorkRoute = visibleRoutes.find((route) => route !== "/analytics");
-  if (firstWorkRoute) return firstWorkRoute;
-
-  // No module is openable, but the account may still manage an establishment
-  // profile (`establishment:update`), which lives on the establishments page.
-  if (
-    workspace.canReadEstablishments &&
-    workspace.establishments.some((establishment) => establishment.canUpdate === true)
-  ) {
-    return "/establishments";
-  }
-  if (workspace.authorization?.capabilities?.canOpenModules === false) {
-    return "/no-access";
-  }
-  return "/access-denied";
+  if (entry.status === "ready") return entry.homeHref;
+  if ("setupHref" in entry) return entry.setupHref;
+  // An unavailable dependency is not a valid application destination. The
+  // canonical root renders the retryable unavailable state; keeping the shell
+  // fallback on welcome prevents a stale back link from opening a module.
+  return "/welcome";
 }

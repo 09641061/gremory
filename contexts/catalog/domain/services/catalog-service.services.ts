@@ -6,6 +6,8 @@ import type {
 } from "../model/commands/catalog-service.commands";
 import type { CatalogService } from "../model/entities/catalog-service.entity";
 import type { DetailedServiceDTO } from "../../application/model/catalog-view.models";
+import type { PageResponse } from "@/contexts/shared/application/model/page-response";
+export type { PageResponse } from "@/contexts/shared/application/model/page-response";
 
 export interface CatalogServiceSearchParams {
   establishmentId: string;
@@ -18,17 +20,6 @@ export interface CatalogServiceSearchParams {
   maxDuration?: number;
   page?: number;
   size?: number;
-}
-
-export interface PageResponse<T> {
-  content: T[];
-  pageable: {
-    pageNumber: number;
-    pageSize: number;
-  };
-  totalPages: number;
-  totalElements: number;
-  last: boolean;
 }
 
 export interface CatalogServiceCommandService {

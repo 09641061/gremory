@@ -12,14 +12,15 @@ import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-ses
 import { getMyProfileServerQuery } from "@/contexts/profiles/interfaces/queries/get-my-profile.query-handler";
 import { ApiError } from "@/contexts/shared/infrastructure/http/api-client";
 import { createAppShellQueryService } from "@/contexts/shared/application/internal/queryservices/app-shell-query.service";
-import { AppSidebar } from "@/contexts/shared/interfaces/components/app-sidebar";
 import { AppSidebarFallback } from "@/contexts/shared/interfaces/components/app-sidebar-fallback";
+import { PageLoading } from "@/contexts/shared/interfaces/components/page-loading";
 import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/contexts/shared/interfaces/components/ui/sidebar";
 import { workspaceSelectionCookies } from "@/contexts/business/infrastructure/session/workspace-selection-cookie";
 import type { WorkspaceHeaderOrganization } from "@/contexts/business/application/model/business-workspace.view-models";
+import { AppShellSidebarClient } from "./app-shell-sidebar-client";
 
 export default function ProtectedAppShell({
   children,
@@ -29,18 +30,23 @@ export default function ProtectedAppShell({
   return (
     <SidebarProvider className="bg-background text-foreground">
       <Suspense fallback={<AppSidebarFallback />}>
-        <AppShellSidebar />
+        <AppShellSidebarServer />
       </Suspense>
 
       <main className="flex min-w-0 flex-1 flex-col p-6">
         <SidebarTrigger className="mb-4 md:hidden" />
-        {children}
+        {/*
+          Safety-net Suspense: each page is expected to wrap its own dynamic
+          reads, but if a sibling forgets, this boundary keeps the navigation
+          instant under Cache Components.
+        */}
+        <Suspense fallback={<PageLoading />}>{children}</Suspense>
       </main>
     </SidebarProvider>
   );
 }
 
-async function AppShellSidebar() {
+async function AppShellSidebarServer() {
   const cookieStore = await cookies();
   const accessToken = cookieStore.get(iamSessionCookies.accessToken)?.value;
   const requestHeaders = await headers();
@@ -55,7 +61,7 @@ async function AppShellSidebar() {
         })
     : null;
 
-  if (!shell || shell.workspace.accountType === "PENDING_INVITATION") {
+  if (!shell) {
     return null;
   }
 
@@ -75,13 +81,14 @@ async function AppShellSidebar() {
   ]);
 
   return (
-    <AppSidebar
+    <AppShellSidebarClient
       initialAssistantConversations={assistantConversations.content}
       currentProfile={currentProfile}
       workspace={workspace}
       visibleRoutes={shell.visibleSidebarRoutes}
       showAssistantSection={shell.hasAssistantAccess}
       showAssistantNavigation={shell.hasAssistantAccess}
+      showWorkspaceSwitcher={true}
     />
   );
 }

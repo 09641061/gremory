@@ -79,9 +79,25 @@ function workspace(overrides: Record<string, unknown> = {}) {
   });
 }
 
+function billingSubscription(overrides: Record<string, unknown> = {}) {
+  return jsonResponse({
+    id: "sub-1",
+    ownerId: "owner-1",
+    planId: 1,
+    billingCycle: "MONTHLY",
+    status: "ACTIVE",
+    active: true,
+    ...overrides,
+  });
+}
+
 function stubFetch(...responses: ReadonlyArray<Response>) {
   const fetchMock = vi.fn();
   for (const response of responses) fetchMock.mockResolvedValueOnce(response);
+  // Entry resolution performs a strict Billing lookup for owners after the
+  // workspace lookup. Existing scenarios represent an active subscription
+  // unless they explicitly replace this queued response.
+  fetchMock.mockResolvedValueOnce(billingSubscription());
   vi.stubGlobal("fetch", fetchMock);
   return fetchMock;
 }
@@ -164,6 +180,57 @@ describe("IAM session proxy", () => {
     expect(response.headers.get("location")).toBe("http://localhost/schedule");
   });
 
+  it("should send an owner without an active subscription to welcome before organization setup", async () => {
+    stubFetch(
+      workspace({
+        organization: null,
+        establishments: [],
+        activeEstablishmentId: null,
+        onboardingStatus: "ORGANIZATION_PENDING",
+      }),
+      billingSubscription({ active: false, status: "PAST_DUE" }),
+    );
+
+    const response = await proxy(requestWithSession("access-token", "refresh-token", "/"));
+
+    expect(response.status).toBe(307);
+    expect(response.headers.get("location")).toBe("http://localhost/welcome");
+  });
+
+  it("should keep welcome reachable while an owner selects a subscription", async () => {
+    stubFetch(
+      workspace({
+        organization: null,
+        establishments: [],
+        activeEstablishmentId: null,
+        onboardingStatus: "ORGANIZATION_PENDING",
+      }),
+      billingSubscription({ active: false, status: "CANCELLED" }),
+    );
+
+    const response = await proxy(requestWithSession("access-token", "refresh-token", "/welcome"));
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get("location")).toBeNull();
+  });
+
+  it("should send an active owner without an organization to organization setup", async () => {
+    stubFetch(
+      workspace({
+        organization: null,
+        establishments: [],
+        activeEstablishmentId: null,
+        onboardingStatus: "ORGANIZATION_PENDING",
+      }),
+      billingSubscription(),
+    );
+
+    const response = await proxy(requestWithSession("access-token", "refresh-token", "/"));
+
+    expect(response.status).toBe(307);
+    expect(response.headers.get("location")).toBe("http://localhost/organizations/new");
+  });
+
   it("should clear the session and redirect to login when refresh is rejected", async () => {
     mocks.resolveSession.mockResolvedValue({ status: "unauthenticated" });
 
@@ -174,7 +241,7 @@ describe("IAM session proxy", () => {
     expect(response.cookies.get("takodu.access_token")?.value).toBe("");
   });
 
-  it.each(["/organization", "/establishments"])(
+  it.each(["/organization", "/establishments", "/profile"])(
     "should protect the business route %s",
     async (pathname) => {
       mocks.resolveSession.mockResolvedValue({ status: "unauthenticated" });
@@ -278,6 +345,13 @@ describe("IAM session proxy", () => {
 
   it("should keep the upgrade page available for authenticated users", async () => {
     const response = await proxy(requestWithSession("access-token", "refresh-token", "/upgrade"));
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get("location")).toBeNull();
+  });
+
+  it("should keep the profile page available before workspace onboarding", async () => {
+    const response = await proxy(requestWithSession("access-token", "refresh-token", "/profile"));
 
     expect(response.status).toBe(200);
     expect(response.headers.get("location")).toBeNull();

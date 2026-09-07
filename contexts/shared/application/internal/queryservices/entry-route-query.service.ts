@@ -1,16 +1,32 @@
 import "server-only";
 
+import { hasActiveSubscription } from "@/contexts/billing/domain/services/subscription-access.policy";
+import type { SubscriptionAccessSnapshot } from "@/contexts/billing/domain/services/subscription-access.policy";
+import { createCurrentSubscriptionQueryService } from "@/contexts/billing/application/internal/queryservices/current-subscription-query.service";
 import { ApiError } from "@/contexts/shared/infrastructure/http/api-client";
 import { createBusinessWorkspaceOutboundService } from "../outboundservices/business-workspace.outbound.service";
-import type { BusinessWorkspaceOutboundService } from "../outboundservices/business-workspace.outbound.service";
-import type { EntryRouteInput, EntryRouteResolution } from "../../model/entry-route.view-models";
+import type { WorkspaceAccountType } from "@/contexts/business/application/model/business-workspace.view-models";
+import {
+  type EntryRouteInput,
+  type EntryRouteResolution,
+  type EntryRouteSubscriptionState,
+} from "../../model/entry-route.view-models";
+import { resolveEntryRoutePolicy } from "../../services/entry-route.policy";
+
+type SubscriptionReader = Readonly<{
+  getCurrentSubscription: (accessToken: string) => Promise<SubscriptionAccessSnapshot>;
+}>;
 
 /**
- * Resolves where an authenticated account lands from the business workspace
- * alone. Billing is optional enrichment, never the bootstrap gate.
+ * Resolves the authenticated entry route from the workspace and Billing. The
+ * policy itself is pure; this service only coordinates the two bounded
+ * contexts and translates transport failures into a safe route result.
  */
 export class EntryRouteQueryService {
-  constructor(private readonly workspace = createBusinessWorkspaceOutboundService()) {}
+  constructor(
+    private readonly workspace = createBusinessWorkspaceOutboundService(),
+    private readonly billing: SubscriptionReader = createCurrentSubscriptionQueryService(),
+  ) {}
 
   async resolveRoute({ accessToken, organizationId, establishmentId }: EntryRouteInput): Promise<EntryRouteResolution> {
     const resolved = await this.tryGet(() =>
@@ -22,52 +38,27 @@ export class EntryRouteQueryService {
     }
 
     const workspace = resolved.data;
+    const subscription = await this.resolveSubscriptionState(workspace.accountType, accessToken);
 
-    if (workspace.accountType === "PENDING_INVITATION") {
-      return {
-        status: "invitation-pending",
-        setupHref: "/invitations/pending",
-        allowedPaths: ["/invitations/pending"],
-      };
+    return resolveEntryRoutePolicy(workspace, subscription);
+  }
+
+  private async resolveSubscriptionState(
+    accountType: WorkspaceAccountType,
+    accessToken: string,
+  ): Promise<EntryRouteSubscriptionState> {
+    if (accountType !== "OWNER") return "not-required";
+
+    try {
+      const subscription = await this.billing.getCurrentSubscription(accessToken);
+      return hasActiveSubscription(subscription) ? "active" : "inactive";
+    } catch (error) {
+      // Billing uses 404 for an owner that has not selected a plan yet. Any
+      // other failure is infrastructure/auth failure and must not masquerade
+      // as a missing subscription.
+      if (getErrorStatus(error) === 404) return "inactive";
+      return "unavailable";
     }
-
-    if (workspace.onboardingStatus === "ORGANIZATION_PENDING") {
-      return {
-        status: "organization-required",
-        setupHref: "/organizations/new",
-        allowedPaths: ["/organizations/new"],
-      };
-    }
-
-    if (workspace.onboardingStatus === "ESTABLISHMENT_PENDING") {
-      return {
-        status: "establishment-required",
-        setupHref: "/establishments/new",
-        allowedPaths: ["/establishments/new"],
-      };
-    }
-
-    const ownEstablishments = workspace.organization
-      ? workspace.establishments.filter(
-          (establishment) =>
-            !establishment.organizationId || establishment.organizationId === workspace.organization!.id,
-        )
-      : workspace.establishments;
-
-    if (ownEstablishments.length === 0) {
-      return workspace.canCreateEstablishment
-        ? {
-            status: "establishment-required",
-            setupHref: "/establishments/new",
-            allowedPaths: ["/establishments/new"],
-          }
-        : { status: "ready", homeHref: "/access-denied" };
-    }
-
-    return {
-      status: "ready",
-      homeHref: resolveAccessPolicyEntryPath(workspace),
-    };
   }
 
   private async tryGet<T>(load: () => Promise<T>): Promise<
@@ -84,47 +75,21 @@ export class EntryRouteQueryService {
   }
 }
 
-function resolveAccessPolicyEntryPath(
-  workspace: Awaited<ReturnType<BusinessWorkspaceOutboundService["getWorkspace"]>>,
-) {
-  const accessPolicy = workspace.accessPolicy;
-  if (!accessPolicy) return "/access-denied" as const;
-  if (accessPolicy.canUseAssistant) return "/chat" as const;
-  if (accessPolicy.canOpenScheduling) return "/schedule" as const;
-  if (accessPolicy.canOpenCatalog) return "/catalog" as const;
-  if (accessPolicy.canOpenCrm) return "/crm" as const;
-  if (accessPolicy.canOpenTeam) return "/team" as const;
-  if (accessPolicy.canOpenAnalytics) return "/analytics" as const;
-  // No module is openable, but the account may still manage the establishment
-  // profile (`establishment:update`), which lives on the establishments page.
-  // Anything else without a module is denied explicitly, on a screen that has
-  // the sidebar, instead of being stranded on the read-only organization page.
-  if (
-    workspace.canReadEstablishments &&
-    workspace.establishments.some((establishment) => establishment.canUpdate === true)
-  ) {
-    return "/establishments" as const;
-  }
-  // A member with no roles or only roles without permissions is in the
-  // restricted state; the backend flags it with `canOpenModules: false`. Show
-  // the "Sin acceso aún" screen instead of the generic denied page.
-  if (workspace.authorization?.capabilities?.canOpenModules === false) {
-    return "/no-access" as const;
-  }
-  return "/access-denied" as const;
-}
-
 function classifyApiError(error: unknown):
   | { status: "not-found" }
   | { status: "unauthenticated" }
   | { status: "unavailable" } {
-  if (error instanceof ApiError && error.status === 401) {
-    return { status: "unauthenticated" };
-  }
-  if (error instanceof ApiError && error.status === 404) {
-    return { status: "not-found" };
-  }
+  const status = getErrorStatus(error);
+  if (status === 401) return { status: "unauthenticated" };
+  if (status === 404) return { status: "not-found" };
   return { status: "unavailable" };
+}
+
+function getErrorStatus(error: unknown): number | undefined {
+  if (error instanceof ApiError) return error.status;
+  if (!error || typeof error !== "object") return undefined;
+  const status = (error as { status?: unknown }).status;
+  return typeof status === "number" ? status : undefined;
 }
 
 export function createEntryRouteQueryService() {

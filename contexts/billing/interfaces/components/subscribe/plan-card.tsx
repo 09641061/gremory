@@ -5,7 +5,6 @@ import { Check, Loader2 } from "lucide-react";
 import type { BillingCycleType } from "../../../domain/model/value-objects/billing-cycle";
 import { getCurrencySymbol, type CurrencyCode } from "../../../domain/model/value-objects/currency";
 import { createSubscriptionAction } from "../../actions/create-subscription.action";
-import { FreeIcon } from "../icons/free";
 import { StandardIcon } from "../icons/standart";
 import { PremiumIcon } from "../icons/premium";
 import { cn } from "@/lib/utils";
@@ -57,7 +56,7 @@ export function PlanCard({
 
   const defaultButtonText =
     buttonLabel ??
-    (planId === 0 ? t.subscribe.getFreePlan : planId === 2 ? t.subscribe.getPremiumPlan : t.subscribe.getStandardPlan);
+    (planId === 2 ? t.subscribe.getPremiumPlan : t.subscribe.getStandardPlan);
 
   const executeSubscriptionChange = () => {
     startTransition(async () => {
@@ -92,9 +91,7 @@ export function PlanCard({
       <div>
         {/* Custom Plan SVG Icon */}
         <div className="mb-4 flex h-10 w-10 items-center justify-center text-foreground">
-          {planId === 0 ? (
-            <FreeIcon className="text-foreground" />
-          ) : planId === 2 ? (
+          {planId === 2 ? (
             <PremiumIcon className="text-foreground" />
           ) : (
             <StandardIcon className="text-foreground" />

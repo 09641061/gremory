@@ -88,22 +88,43 @@ export async function acceptInvitationNotificationAction(notificationId: string,
   try {
     const commandService = createNotificationCommandService();
     const result = await commandService.acceptInvitation({ notificationId, invitationToken }, token);
-
-    try {
-      const cookieStore = await cookies();
-      if (result?.organizationId) {
-        cookieStore.set(workspaceSelectionCookies.organizationId, result.organizationId, workspaceSelectionCookieOptions);
-      }
-      if (result?.establishmentId) {
-        cookieStore.set(workspaceSelectionCookies.establishmentId, result.establishmentId, workspaceSelectionCookieOptions);
-      }
-    } catch {
-    }
+    await persistAcceptedWorkspace(result);
 
     revalidatePath("/", "layout");
     return { success: true };
   } catch (error) {
     console.error("acceptInvitationNotificationAction error:", error);
     return { success: false, error: error instanceof Error ? error.message : "Failed to accept invitation" };
+  }
+}
+
+/** Accepts the account's pending invitation when no notification token exists. */
+export async function acceptPendingInvitationAction() {
+  const token = await getAccessToken();
+  if (!token) return { success: false, error: "Authentication required" };
+
+  try {
+    const result = await createNotificationCommandService().acceptPendingInvitation(token);
+    await persistAcceptedWorkspace(result);
+    revalidatePath("/", "layout");
+    return { success: true };
+  } catch (error) {
+    console.error("acceptPendingInvitationAction error:", error);
+    return { success: false, error: error instanceof Error ? error.message : "Failed to accept invitation" };
+  }
+}
+
+async function persistAcceptedWorkspace(result: { organizationId?: string; establishmentId?: string }) {
+  try {
+    const cookieStore = await cookies();
+    if (result.organizationId) {
+      cookieStore.set(workspaceSelectionCookies.organizationId, result.organizationId, workspaceSelectionCookieOptions);
+    }
+    if (result.establishmentId) {
+      cookieStore.set(workspaceSelectionCookies.establishmentId, result.establishmentId, workspaceSelectionCookieOptions);
+    }
+  } catch {
+    // Cookie persistence is best effort; the next workspace lookup remains the
+    // source of truth after the invitation is accepted.
   }
 }

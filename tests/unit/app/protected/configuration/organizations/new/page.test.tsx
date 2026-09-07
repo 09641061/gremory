@@ -26,7 +26,7 @@ vi.mock("@/contexts/business/interfaces/components/organization/create-organizat
   },
 }));
 
-import NewOrganizationPage from "@/app/(protected)/(configuration)/organizations/new/page";
+import NewOrganizationPage from "@/app/(protected)/(onboarding)/organizations/new/page";
 
 function renderFullyResolved(element: ReactElement): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -67,19 +67,9 @@ describe("NewOrganizationPage guard", () => {
     vi.resetAllMocks();
   });
 
-  it("hides New organization link when the account already owns an organization, by redirecting away", async () => {
+  it("keeps the create form visible while onboarding requires an organization", async () => {
     mocks.workspace.getHeaderViewModel.mockResolvedValue(
-      baseWorkspace({ canCreateOrganization: false }),
-    );
-
-    await expect(renderFullyResolved(NewOrganizationPage())).rejects.toThrow(
-      "REDIRECT:/",
-    );
-  });
-
-  it("renders the create form for an account that owns no organization yet", async () => {
-    mocks.workspace.getHeaderViewModel.mockResolvedValue(
-      baseWorkspace({ canCreateOrganization: true }),
+      baseWorkspace({ canCreateOrganization: false, onboardingStatus: "ORGANIZATION_PENDING" }),
     );
 
     await renderFullyResolved(NewOrganizationPage());

@@ -8,6 +8,9 @@ import {
   apiClient,
   extractApiErrorMessage,
 } from "@/contexts/shared/infrastructure/http/api-client";
+import { buildApiRequestHeaders } from "@/contexts/shared/infrastructure/http/request-context";
+import type { PageResponse } from "@/contexts/shared/application/model/page-response";
+export type { PageResponse } from "@/contexts/shared/application/model/page-response";
 import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-session-cookie";
 import {
   assistantConversationPageResponseSchema,
@@ -35,18 +38,6 @@ export interface AssistantMessageResponse {
 export interface AssistantConversationResponse
   extends AssistantConversationSummaryResponse {
   messages: AssistantMessageResponse[];
-}
-
-export interface PageResponse<T> {
-  content: T[];
-  pageable: {
-    pageNumber: number;
-    pageSize: number;
-  };
-  totalElements: number;
-  totalPages: number;
-  first: boolean;
-  last: boolean;
 }
 
 export interface CreateConversationRequest {
@@ -83,10 +74,6 @@ async function resolveAccessToken(providedToken?: string): Promise<string | unde
 export class AssistantApiGateway {
   constructor(private readonly organizationId?: string) {}
 
-  private tenantHeaders() {
-    return this.organizationId ? { "X-Organization-Id": this.organizationId } : undefined;
-  }
-
   async listConversations(
     params: ListConversationsParams = {},
     token?: string,
@@ -102,7 +89,7 @@ export class AssistantApiGateway {
       `${apiConfig.routes.assistantConversations}?${query.toString()}`,
       {
         token: authToken,
-        headers: this.tenantHeaders(),
+        tenantId: this.organizationId,
         errorMessage: "Failed to fetch assistant conversations",
       },
     );
@@ -119,7 +106,7 @@ export class AssistantApiGateway {
       `${apiConfig.routes.assistantConversations}/${encodeURIComponent(id)}`,
       {
         token: authToken,
-        headers: this.tenantHeaders(),
+        tenantId: this.organizationId,
         errorMessage: "Failed to fetch assistant conversation",
       },
     );
@@ -137,7 +124,7 @@ export class AssistantApiGateway {
       command,
       {
         token: authToken,
-        headers: this.tenantHeaders(),
+        tenantId: this.organizationId,
         errorMessage: "Failed to create assistant conversation",
       },
     );
@@ -156,7 +143,7 @@ export class AssistantApiGateway {
       command,
       {
         token: authToken,
-        headers: this.tenantHeaders(),
+        tenantId: this.organizationId,
         errorMessage: "Failed to send assistant message",
       },
     );
@@ -174,12 +161,13 @@ export class AssistantApiGateway {
       `${apiClient.buildUrl(apiConfig.routes.assistantConversations)}/${encodeURIComponent(id)}/messages/stream`,
       {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Accept": "text/event-stream",
-          "Authorization": authToken ? `Bearer ${authToken}` : "",
-          ...(this.tenantHeaders() ?? {}),
-        },
+        headers: buildApiRequestHeaders(
+          { token: authToken, tenantId: this.organizationId },
+          {
+            "Content-Type": "application/json",
+            Accept: "text/event-stream",
+          },
+        ),
         body: JSON.stringify(command),
       },
     );
@@ -209,7 +197,7 @@ export class AssistantApiGateway {
       command,
       {
         token: authToken,
-        headers: this.tenantHeaders(),
+        tenantId: this.organizationId,
         errorMessage: "Failed to rename assistant conversation",
       },
     );
@@ -222,7 +210,7 @@ export class AssistantApiGateway {
       `${apiConfig.routes.assistantConversations}/${encodeURIComponent(id)}`,
       {
         token: authToken,
-        headers: this.tenantHeaders(),
+        tenantId: this.organizationId,
         errorMessage: "Failed to delete assistant conversation",
       },
     );

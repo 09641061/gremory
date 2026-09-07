@@ -22,7 +22,6 @@ export function hasActiveSubscription(
 
 /**
  * Assistant access is only available on paid plans.
- * Free subscriptions can still be active for the core product.
  */
 export function hasAssistantSubscriptionAccess(
   subscription: SubscriptionAccessSnapshot | null | undefined,
@@ -32,14 +31,12 @@ export function hasAssistantSubscriptionAccess(
 
 /**
  * Whether the assistant permission should render locked in the role editor.
- * The subscription always describes the owner's plan, so a Free plan means
- * the owner cannot enable the AI assistant and the permission is shown but
- * not assignable (an upsell gate instead of a surprise rejection).
+ * With no free plan, the assistant is always available on active subscriptions.
  */
 export function isAssistantPermissionLocked(
   subscription: SubscriptionAccessSnapshot | null | undefined,
 ): boolean {
-  return (subscription?.planName ?? "").trim().toUpperCase() === "FREE";
+  return !hasActiveSubscription(subscription);
 }
 
 export function getApplicationHomePath(

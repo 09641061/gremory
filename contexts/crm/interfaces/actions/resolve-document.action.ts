@@ -4,7 +4,7 @@ import { createCrmCommandService } from "../../application/internal/commandservi
 import { createBusinessWorkspaceQueryService } from "@/contexts/business/application/internal/queryservices/business-workspace-query.service";
 import { getWorkspaceEstablishment } from "@/contexts/shared/application/services/workspace-establishment-permissions";
 import { ResolvedCustomerData } from "../../domain/model/entities/customer";
-import { ActionState } from "./register-customer.action";
+import { createActionErrorId, type ActionState } from "./action-state";
 
 export async function resolveDocumentAction(
   type: "dni" | "ruc",
@@ -13,7 +13,13 @@ export async function resolveDocumentAction(
 ): Promise<ActionState<ResolvedCustomerData>> {
   const workspace = await createBusinessWorkspaceQueryService().getHeaderViewModel({ establishmentId });
   if (!getWorkspaceEstablishment(workspace, establishmentId)?.canRead) {
-    return { status: "error", data: null, error: "You are not authorized to verify documents." };
+    return {
+      status: "error",
+      data: null,
+      error: "You are not authorized to verify documents.",
+      errorId: createActionErrorId(),
+      fieldErrors: null,
+    };
   }
 
   try {
@@ -24,13 +30,15 @@ export async function resolveDocumentAction(
       type === "dni" ? number : undefined,
       type === "ruc" ? number : undefined
     );
-    return { status: "success", data: result, error: null };
+    return { status: "success", data: result, error: null, errorId: null, fieldErrors: null };
   } catch (error: unknown) {
     console.error("Error resolving identity document:", error);
     return {
       status: "error",
       data: null,
       error: "Identity document not found or invalid.",
+      errorId: createActionErrorId(),
+      fieldErrors: null,
     };
   }
 }

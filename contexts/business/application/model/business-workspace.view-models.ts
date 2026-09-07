@@ -3,6 +3,7 @@ export type WorkspaceAccountType = "OWNER" | "MEMBER" | "PENDING_INVITATION";
 export type WorkspaceOnboardingStatus =
   | "ORGANIZATION_PENDING"
   | "ESTABLISHMENT_PENDING"
+  | "PAYMENT_PENDING"
   | "COMPLETED";
 
 export type WorkspaceHeaderEstablishment = Readonly<{
@@ -90,8 +91,9 @@ export type WorkspacePendingInvitation = Readonly<{
 }>;
 
 /**
- * The header renders from `accountType`, `effectivePermissions` and
- * `subscription.active`. It never infers the role from the session token.
+ * The header renders from `accountType`, `effectivePermissions` and the
+ * workspace subscription snapshot. Entry gating confirms the owner's status
+ * with Billing and never infers the role from the session token.
  */
 export type WorkspaceHeaderViewModel = Readonly<{
   accountType: WorkspaceAccountType;
