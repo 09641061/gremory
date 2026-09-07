@@ -13,6 +13,7 @@ import { getMyProfileServerQuery } from "@/contexts/profiles/interfaces/queries/
 import { ApiError } from "@/contexts/shared/infrastructure/http/api-client";
 import { createAppShellQueryService } from "@/contexts/shared/application/internal/queryservices/app-shell-query.service";
 import { AppSidebarFallback } from "@/contexts/shared/interfaces/components/app-sidebar-fallback";
+import { PageLoading } from "@/contexts/shared/interfaces/components/page-loading";
 import {
   SidebarProvider,
   SidebarTrigger,
@@ -34,7 +35,12 @@ export default function ProtectedAppShell({
 
       <main className="flex min-w-0 flex-1 flex-col p-6">
         <SidebarTrigger className="mb-4 md:hidden" />
-        {children}
+        {/*
+          Safety-net Suspense: each page is expected to wrap its own dynamic
+          reads, but if a sibling forgets, this boundary keeps the navigation
+          instant under Cache Components.
+        */}
+        <Suspense fallback={<PageLoading />}>{children}</Suspense>
       </main>
     </SidebarProvider>
   );

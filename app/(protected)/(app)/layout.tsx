@@ -1,7 +1,9 @@
 import type { ReactNode } from "react";
+import { Suspense } from "react";
 import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import ProtectedAppShell from "@/contexts/shared/interfaces/components/protected-app-shell";
+import { PageLoading } from "@/contexts/shared/interfaces/components/page-loading";
 import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-session-cookie";
 import { workspaceSelectionCookies } from "@/contexts/business/infrastructure/session/workspace-selection-cookie";
 import { createEntryRouteQueryService } from "@/contexts/shared/application/internal/queryservices/entry-route-query.service";
@@ -17,9 +19,24 @@ import { EntryRouteUnavailable } from "@/contexts/shared/interfaces/components/e
  * be a second, competing way out.
  *
  * The sidebar streams behind its own boundary so the workspace lookup never
- * delays the page underneath it.
+ * delays the page underneath it. This layout also wraps every entry-guard read
+ * (cookies, headers, entry-route resolution, server dictionary) in a Suspense
+ * subtree so the App Shell can render instantly under Cache Components
+ * (`blocking-prerender-dynamic`).
  */
-export default async function AppLayout({
+export default function AppLayout({
+  children,
+}: {
+  children: ReactNode;
+}) {
+  return (
+    <Suspense fallback={<PageLoading />}>
+      <AppLayoutContent>{children}</AppLayoutContent>
+    </Suspense>
+  );
+}
+
+async function AppLayoutContent({
   children,
 }: {
   children: ReactNode;
@@ -58,11 +75,13 @@ export default async function AppLayout({
   if (landing.status === "unavailable") {
     const dictionary = await getServerDictionary();
     return (
-      <EntryRouteUnavailable
-        title={dictionary.onboarding.serviceUnavailableTitle}
-        description={dictionary.onboarding.unavailableDescription}
-        retryLabel={dictionary.onboarding.retry}
-      />
+      <ProtectedAppShell>
+        <EntryRouteUnavailable
+          title={dictionary.onboarding.serviceUnavailableTitle}
+          description={dictionary.onboarding.unavailableDescription}
+          retryLabel={dictionary.onboarding.retry}
+        />
+      </ProtectedAppShell>
     );
   }
 

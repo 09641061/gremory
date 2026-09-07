@@ -42,10 +42,10 @@ export async function proxy(request: NextRequest) {
     rotatedHeaders = rotated.headers;
   }
 
-  // Explicit billing screens remain reachable so an owner can activate or
-  // inspect a subscription. `/welcome` is resolved by the same entry policy as
+  // Explicit account and billing screens remain reachable independently of
+  // workspace onboarding. `/welcome` is resolved by the same entry policy as
   // every other route and is only reachable while activation is required.
-  if (pathname === "/upgrade" || pathname === "/invoice") {
+  if (pathname === "/upgrade" || pathname === "/invoice" || pathname === "/profile") {
     return continueWithWorkspaceContext(request, response, rotatedHeaders);
   }
 
@@ -105,6 +105,7 @@ function isPrivateRoute(pathname: string) {
     // Lives under app/(protected): plans are shown to signed-in users only.
     "/upgrade",
     "/invoice",
+    "/profile",
   ].some((route) => pathname === route || pathname.startsWith(`${route}/`));
 }
 
@@ -138,7 +139,10 @@ function resolveOrganizationSelection(request: NextRequest): string | undefined 
 function redirectWithCookies(request: NextRequest, path: string, response: NextResponse | null) {
   const redirectUrl = new URL(path, request.url);
   const targetIsOnboarding = isOnboardingPath(redirectUrl.pathname);
-  const organizationId = resolveOrganizationSelection(request);
+  const isSubscriptionWelcome = redirectUrl.pathname === "/welcome";
+  const organizationId = isSubscriptionWelcome
+    ? undefined
+    : resolveOrganizationSelection(request);
   const establishmentId = resolveEstablishmentSelection(
     request,
     !isOnboardingPath(request.nextUrl.pathname) && !targetIsOnboarding,
@@ -243,5 +247,6 @@ export const config = {
     "/establishments/:path*",
     "/access-denied/:path*",
     "/no-access/:path*",
+    "/profile",
   ],
 };

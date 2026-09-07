@@ -241,7 +241,7 @@ describe("IAM session proxy", () => {
     expect(response.cookies.get("takodu.access_token")?.value).toBe("");
   });
 
-  it.each(["/organization", "/establishments"])(
+  it.each(["/organization", "/establishments", "/profile"])(
     "should protect the business route %s",
     async (pathname) => {
       mocks.resolveSession.mockResolvedValue({ status: "unauthenticated" });
@@ -345,6 +345,13 @@ describe("IAM session proxy", () => {
 
   it("should keep the upgrade page available for authenticated users", async () => {
     const response = await proxy(requestWithSession("access-token", "refresh-token", "/upgrade"));
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get("location")).toBeNull();
+  });
+
+  it("should keep the profile page available before workspace onboarding", async () => {
+    const response = await proxy(requestWithSession("access-token", "refresh-token", "/profile"));
 
     expect(response.status).toBe(200);
     expect(response.headers.get("location")).toBeNull();

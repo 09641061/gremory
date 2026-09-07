@@ -207,7 +207,9 @@ Content-Type: application/json
 Y la UI debe usar:
 
 - `GET /api/business/workspace` para decidir acceso al chat
-- `GET /api/billing/subscriptions` solo para enriquecer pantallas de billing o plan
+- `GET /api/billing/subscriptions` para pantallas de billing o plan y para
+  confirmar el gate de entrada del owner; nunca para sustituir
+  `business/workspace` en permisos de módulos
 - `GET /api/assistant/conversations` para sidebar
 - `GET /api/assistant/conversations/{id}` para chat completo
 - `POST /api/assistant/conversations/{id}/messages` para enviar mensajes

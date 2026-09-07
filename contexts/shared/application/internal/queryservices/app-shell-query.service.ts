@@ -1,7 +1,13 @@
 import "server-only";
 
-import { hasActiveSubscription } from "@/contexts/billing/domain/services/subscription-access.policy";
+import { cookies } from "next/headers";
+import { createCurrentSubscriptionQueryService } from "@/contexts/billing/application/internal/queryservices/current-subscription-query.service";
+import {
+  hasActiveSubscription,
+  type SubscriptionAccessSnapshot,
+} from "@/contexts/billing/domain/services/subscription-access.policy";
 import { createBusinessWorkspaceQueryService } from "@/contexts/business/application/internal/queryservices/business-workspace-query.service";
+import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-session-cookie";
 import type {
   AppShellHomeHref,
   AppShellViewModel,
@@ -9,6 +15,11 @@ import type {
 } from "@/contexts/shared/application/model/app-shell.view-models";
 import type { EntryRouteSubscriptionState } from "@/contexts/shared/application/model/entry-route.view-models";
 import { resolveEntryRoutePolicy } from "@/contexts/shared/application/services/entry-route.policy";
+import { ApiError } from "@/contexts/shared/infrastructure/http/api-client";
+
+type SubscriptionReader = Readonly<{
+  getCurrentSubscription: (accessToken: string) => Promise<SubscriptionAccessSnapshot>;
+}>;
 
 export interface AppShellQueryInput {
   workspace?: Readonly<{
@@ -18,10 +29,15 @@ export interface AppShellQueryInput {
 }
 
 export class AppShellQueryService {
+  constructor(
+    private readonly workspaceQuery = createBusinessWorkspaceQueryService(),
+    private readonly billing: SubscriptionReader = createCurrentSubscriptionQueryService(),
+  ) {}
+
   async resolve({ workspace: workspaceSelection }: AppShellQueryInput = {}): Promise<AppShellViewModel> {
-    const workspace = await createBusinessWorkspaceQueryService().getHeaderViewModel(workspaceSelection);
+    const workspace = await this.workspaceQuery.getHeaderViewModel(workspaceSelection);
     const accessPolicy = workspace.accessPolicy;
-    const hasAssistantAccess = accessPolicy?.canUseAssistant ?? false;
+    const hasAssistantPolicy = accessPolicy?.canUseAssistant ?? false;
     const canReadScheduling =
       accessPolicy?.canOpenScheduling ?? workspace.capabilities?.canReadAppointments ?? false;
     const canReadCatalog =
@@ -38,16 +54,21 @@ export class AppShellQueryService {
       canReadCrm,
       canReadTeam,
       canReadAnalytics,
-      hasAssistantAccess,
+      hasAssistantPolicy,
     );
 
-    const entry = resolveEntryRoutePolicy(workspace, resolveWorkspaceSubscriptionState(workspace));
+    const entry = resolveEntryRoutePolicy(
+      workspace,
+      await resolveWorkspaceSubscriptionState(workspace, this.billing),
+    );
+    const isApplicationReady = entry.status === "ready";
+    const hasAssistantAccess = isApplicationReady && (accessPolicy?.canUseAssistant ?? false);
 
     return {
       workspace,
       hasAssistantAccess,
       homeHref: resolveShellHomeHref(entry),
-      visibleSidebarRoutes,
+      visibleSidebarRoutes: isApplicationReady ? visibleSidebarRoutes : [],
     };
   }
 }
@@ -88,13 +109,34 @@ function resolveVisibleSidebarRoutes(
   return routes;
 }
 
-function resolveWorkspaceSubscriptionState(
+async function resolveWorkspaceSubscriptionState(
   workspace: AppShellViewModel["workspace"],
-): EntryRouteSubscriptionState {
+  billing: SubscriptionReader,
+): Promise<EntryRouteSubscriptionState> {
   if (workspace.accountType !== "OWNER") return "not-required";
-  return workspace.subscription && hasActiveSubscription(workspace.subscription)
-    ? "active"
-    : "inactive";
+
+  try {
+    return hasActiveSubscription(await billing.getCurrentSubscription(await getAccessToken()))
+      ? "active"
+      : "inactive";
+  } catch (error) {
+    // Keep the shell conservative when Billing is unavailable. This is distinct
+    // from a 404, which is the normal "no plan selected" state.
+    return getErrorStatus(error) === 404 ? "inactive" : "unavailable";
+  }
+}
+
+async function getAccessToken(): Promise<string> {
+  const token = (await cookies()).get(iamSessionCookies.accessToken)?.value;
+  if (!token) throw new ApiError("Authentication is required", 401);
+  return token;
+}
+
+function getErrorStatus(error: unknown): number | undefined {
+  if (error instanceof ApiError) return error.status;
+  if (!error || typeof error !== "object") return undefined;
+  const status = (error as { status?: unknown }).status;
+  return typeof status === "number" ? status : undefined;
 }
 
 function resolveShellHomeHref(

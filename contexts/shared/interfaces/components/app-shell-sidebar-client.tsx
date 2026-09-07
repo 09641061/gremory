@@ -32,9 +32,9 @@ export function AppShellSidebarClient({
   // Welcome intentionally keeps the application sidebar: users must retain
   // profile, invoice and sign-out controls while activating their account.
   const isWelcomeRoute = pathname === "/welcome";
+  const isSetupRoute = isWelcomeRoute || pathname === "/organizations/new";
   const isAccountStateRoute =
-    isWelcomeRoute ||
-    pathname === "/organizations/new" ||
+    isSetupRoute ||
     pathname === "/invitations/pending" ||
     pathname === "/access-denied" ||
     pathname === "/no-access";
@@ -49,7 +49,7 @@ export function AppShellSidebarClient({
       visibleRoutes={visibleRoutes}
       showAssistantSection={showAssistantSection}
       showAssistantNavigation={showAssistantNavigation}
-      showWorkspaceSwitcher={showWorkspaceSwitcher && !isWelcomeRoute}
+      showWorkspaceSwitcher={showWorkspaceSwitcher && !isSetupRoute}
       pathname={pathname}
       showBillingMenu={showBillingMenu}
     />

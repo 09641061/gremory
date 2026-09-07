@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { Suspense } from "react";
 import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 
@@ -6,14 +7,27 @@ import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-ses
 import { createEntryRouteQueryService } from "@/contexts/shared/application/internal/queryservices/entry-route-query.service";
 import { getServerDictionary } from "@/contexts/shared/infrastructure/i18n/server";
 import { EntryRouteUnavailable } from "@/contexts/shared/interfaces/components/entry-route-unavailable";
+import { PageLoading } from "@/contexts/shared/interfaces/components/page-loading";
 import ProtectedAppShell from "@/contexts/shared/interfaces/components/protected-app-shell";
 
 /**
  * Onboarding keeps the application sidebar so account-level controls remain
  * available. The entry guard still prevents opening workspace modules before
  * the required setup is complete.
+ *
+ * The entry-guard reads (cookies, headers, resolveRoute, server dictionary)
+ * are wrapped in a Suspense subtree so the App Shell can render instantly
+ * under Cache Components (`blocking-prerender-dynamic`).
  */
-export default async function OnboardingLayout({ children }: { children: ReactNode }) {
+export default function OnboardingLayout({ children }: { children: ReactNode }) {
+  return (
+    <Suspense fallback={<PageLoading />}>
+      <OnboardingLayoutContent>{children}</OnboardingLayoutContent>
+    </Suspense>
+  );
+}
+
+async function OnboardingLayoutContent({ children }: { children: ReactNode }) {
   const accessToken = (await cookies()).get(iamSessionCookies.accessToken)?.value;
   if (!accessToken) redirect("/login");
 
@@ -38,11 +52,13 @@ export default async function OnboardingLayout({ children }: { children: ReactNo
   if (landing.status === "unavailable") {
     const dictionary = await getServerDictionary();
     return (
-      <EntryRouteUnavailable
-        title={dictionary.onboarding.serviceUnavailableTitle}
-        description={dictionary.onboarding.unavailableDescription}
-        retryLabel={dictionary.onboarding.retry}
-      />
+      <ProtectedAppShell>
+        <EntryRouteUnavailable
+          title={dictionary.onboarding.serviceUnavailableTitle}
+          description={dictionary.onboarding.unavailableDescription}
+          retryLabel={dictionary.onboarding.retry}
+        />
+      </ProtectedAppShell>
     );
   }
 

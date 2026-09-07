@@ -1,6 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
+  cookies: vi.fn(),
+  getCurrentSubscription: vi.fn(),
   shell: {
     workspace: {
       organization: {
@@ -64,6 +66,16 @@ const mocks = vi.hoisted(() => ({
   },
 }));
 
+vi.mock("next/headers", () => ({
+  cookies: mocks.cookies,
+}));
+
+vi.mock("@/contexts/billing/application/internal/queryservices/current-subscription-query.service", () => ({
+  createCurrentSubscriptionQueryService: () => ({
+    getCurrentSubscription: mocks.getCurrentSubscription,
+  }),
+}));
+
 vi.mock(
   "@/contexts/business/application/internal/queryservices/business-workspace-query.service",
   () => ({
@@ -104,6 +116,14 @@ import { createAppShellQueryService } from "@/contexts/shared/application/intern
 describe("app shell query service", () => {
   beforeEach(() => {
     vi.resetAllMocks();
+    mocks.cookies.mockResolvedValue({
+      get: () => ({ value: "access-token" }),
+    });
+    mocks.getCurrentSubscription.mockResolvedValue({
+      active: true,
+      status: "ACTIVE",
+      planId: 1,
+    });
     mocks.shell.workspace.accessPolicy = {
       canUseAssistant: true,
       canOpenAnalytics: true,
@@ -236,5 +256,19 @@ describe("app shell query service", () => {
     const shell = await createAppShellQueryService().resolve();
 
     expect(shell.homeHref).toBe("/establishments/new");
+  });
+
+  it("routes an owner without an active subscription to welcome and hides module navigation", async () => {
+    mocks.getCurrentSubscription.mockResolvedValue({
+      active: false,
+      status: "PAST_DUE",
+      planId: 1,
+    });
+
+    const shell = await createAppShellQueryService().resolve();
+
+    expect(shell.homeHref).toBe("/welcome");
+    expect(shell.visibleSidebarRoutes).toEqual([]);
+    expect(shell.hasAssistantAccess).toBe(false);
   });
 });

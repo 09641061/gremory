@@ -25,6 +25,10 @@ export default async function HomePage({ searchParams }: HomePageProps) {
     })
     .catch(() => ({ status: "unavailable" as const }));
 
+  if (landing.status === "unauthenticated") {
+    redirect("/login");
+  }
+
   if (landing.status === "ready") {
     redirect(appendWorkspaceSelection(landing.homeHref, query));
   }
@@ -35,7 +39,13 @@ export default async function HomePage({ searchParams }: HomePageProps) {
     landing.status === "organization-required" ||
     landing.status === "establishment-required"
   ) {
-    redirect(appendWorkspaceSelection(landing.setupHref, query));
+    // Welcome is account-level activation, not a workspace context. Do not
+    // carry a stale organization selection into the subscription gate.
+    redirect(
+      landing.status === "subscription-required"
+        ? landing.setupHref
+        : appendWorkspaceSelection(landing.setupHref, query),
+    );
   }
 
   const dictionary = await getServerDictionary();

@@ -8,6 +8,7 @@ import { workspaceSelectionCookies } from "@/contexts/business/infrastructure/se
 import { createEntryRouteQueryService } from "@/contexts/shared/application/internal/queryservices/entry-route-query.service";
 import { getServerDictionary } from "@/contexts/shared/infrastructure/i18n/server";
 import { EntryRouteUnavailable } from "@/contexts/shared/interfaces/components/entry-route-unavailable";
+import { PageLoading } from "@/contexts/shared/interfaces/components/page-loading";
 import { createPlanHomeRouteQueryService } from "@/contexts/shared/application/internal/queryservices/plan-home-route-query.service";
 import { createBusinessWorkspaceQueryService } from "@/contexts/business/application/internal/queryservices/business-workspace-query.service";
 import { hasSomewhereToCancelTo } from "@/contexts/business/domain/services/workspace-navigation.policy";
@@ -20,8 +21,20 @@ import { BackNavigationButton } from "@/contexts/shared/interfaces/components/ba
  * These are settings reached from the app and left again, so the back arrow is
  * their only chrome, exactly as on `/upgrade`. It streams behind its own
  * boundary so resolving the plan never delays the page underneath it.
+ *
+ * The entry-guard reads (cookies, headers, resolveRoute, server dictionary)
+ * are wrapped in a Suspense subtree so the App Shell can render instantly
+ * under Cache Components (`blocking-prerender-dynamic`).
  */
-export default async function ConfigurationLayout({ children }: { children: ReactNode }) {
+export default function ConfigurationLayout({ children }: { children: ReactNode }) {
+  return (
+    <Suspense fallback={<PageLoading />}>
+      <ConfigurationLayoutContent>{children}</ConfigurationLayoutContent>
+    </Suspense>
+  );
+}
+
+async function ConfigurationLayoutContent({ children }: { children: ReactNode }) {
   const cookieStore = await cookies();
   const accessToken = cookieStore.get(iamSessionCookies.accessToken)?.value;
   if (!accessToken) redirect("/login");
@@ -29,34 +42,39 @@ export default async function ConfigurationLayout({ children }: { children: Reac
   const requestHeaders = await headers();
   const pathname =
     requestHeaders.get("x-takodu-pathname") ?? requestHeaders.get("x-invoke-path") ?? "";
-  const landing = await createEntryRouteQueryService()
-    .resolveRoute({
-      accessToken,
-      organizationId: cookieStore.get(workspaceSelectionCookies.organizationId)?.value ?? undefined,
-      establishmentId: requestHeaders.get("x-takodu-establishment-id") ?? undefined,
-    })
-    .catch(() => ({ status: "unavailable" as const }));
 
-  if (landing.status === "unauthenticated") redirect("/login");
-  if (
-    landing.status === "subscription-required" ||
-    landing.status === "invitation-pending" ||
-    landing.status === "organization-required" ||
-    landing.status === "establishment-required"
-  ) {
-    if (!pathname || !landing.allowedPaths.includes(pathname)) {
-      redirect(landing.setupHref);
+  // Profile is an account-level screen. It must remain reachable from the
+  // sidebar even before an owner activates Billing or creates a workspace.
+  if (pathname !== "/profile") {
+    const landing = await createEntryRouteQueryService()
+      .resolveRoute({
+        accessToken,
+        organizationId: cookieStore.get(workspaceSelectionCookies.organizationId)?.value ?? undefined,
+        establishmentId: requestHeaders.get("x-takodu-establishment-id") ?? undefined,
+      })
+      .catch(() => ({ status: "unavailable" as const }));
+
+    if (landing.status === "unauthenticated") redirect("/login");
+    if (
+      landing.status === "subscription-required" ||
+      landing.status === "invitation-pending" ||
+      landing.status === "organization-required" ||
+      landing.status === "establishment-required"
+    ) {
+      if (!landing.allowedPaths.includes(pathname)) {
+        redirect(landing.setupHref);
+      }
     }
-  }
-  if (landing.status === "unavailable") {
-    const dictionary = await getServerDictionary();
-    return (
-      <EntryRouteUnavailable
-        title={dictionary.onboarding.serviceUnavailableTitle}
-        description={dictionary.onboarding.unavailableDescription}
-        retryLabel={dictionary.onboarding.retry}
-      />
-    );
+    if (landing.status === "unavailable") {
+      const dictionary = await getServerDictionary();
+      return (
+        <EntryRouteUnavailable
+          title={dictionary.onboarding.serviceUnavailableTitle}
+          description={dictionary.onboarding.unavailableDescription}
+          retryLabel={dictionary.onboarding.retry}
+        />
+      );
+    }
   }
 
   return (
