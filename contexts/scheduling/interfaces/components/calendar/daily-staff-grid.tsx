@@ -52,7 +52,7 @@ export function DailyStaffGrid({
         : "auto-cols-fr grid-flow-col";
 
   return (
-    <div className="flex flex-1 bg-background rounded-b-xl border border-t-0 w-full">
+    <div className="flex min-h-0 flex-1 bg-background rounded-b-xl border border-t-0 w-full">
       <div className="flex w-full h-full flex-col min-w-0">
         {hours.map((hour) => (
           <div key={hour} className="flex border-b last:border-b-0 min-h-[80px]">
