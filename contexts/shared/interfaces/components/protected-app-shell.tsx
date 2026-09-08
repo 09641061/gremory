@@ -22,6 +22,8 @@ import { workspaceSelectionCookies } from "@/contexts/business/infrastructure/se
 import type { WorkspaceHeaderOrganization } from "@/contexts/business/application/model/business-workspace.view-models";
 import { AppShellSidebarClient } from "./app-shell-sidebar-client";
 
+import { PushNotificationRegister } from "@/contexts/notifications/interfaces/components/push-notification-register";
+
 export default function ProtectedAppShell({
   children,
 }: {
@@ -42,8 +44,17 @@ export default function ProtectedAppShell({
         */}
         <Suspense fallback={<PageLoading />}>{children}</Suspense>
       </main>
+      <Suspense fallback={null}>
+        <PushNotificationRegisterServer />
+      </Suspense>
     </SidebarProvider>
   );
+}
+
+async function PushNotificationRegisterServer() {
+  const cookieStore = await cookies();
+  const accessToken = cookieStore.get(iamSessionCookies.accessToken)?.value;
+  return <PushNotificationRegister accessToken={accessToken} />;
 }
 
 async function AppShellSidebarServer() {
