@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { pageResponseSchema } from "@/contexts/shared/interfaces/rest/schemas/page-response.schema";
 
 export const appointmentResponseSchema = z.object({
   id: z.string().min(1), title: z.string(), startsAt: z.string(), endsAt: z.string(),
@@ -8,11 +9,7 @@ export const appointmentResponseSchema = z.object({
   createdAt: z.string(), updatedAt: z.string(),
 });
 
-export const appointmentPageResponseSchema = z.object({
-  content: z.array(appointmentResponseSchema),
-  pageable: z.object({ pageNumber: z.number().int(), pageSize: z.number().int() }),
-  totalPages: z.number().int().nonnegative(), totalElements: z.number().int().nonnegative(), last: z.boolean(),
-});
+export const appointmentPageResponseSchema = pageResponseSchema(appointmentResponseSchema);
 
 export const createAppointmentSchema = z.object({
   title: z

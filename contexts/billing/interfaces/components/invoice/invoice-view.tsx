@@ -39,8 +39,8 @@ export function InvoiceView({ currentSubscription, initialInvoices }: InvoiceVie
   const [selectedInvoiceId, setSelectedInvoiceId] = useState<string | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [invoicesData, setInvoicesData] = useState<PageResponse<InvoiceResponse>>(initialInvoices);
-  const totalPages = invoicesData.totalPages ?? invoicesData.page?.totalPages ?? 0;
-  const [currentPage, setCurrentPage] = useState(initialInvoices.pageable?.pageNumber ?? 0);
+  const totalPages = invoicesData.totalPages;
+  const [currentPage, setCurrentPage] = useState(initialInvoices.page);
   const [loading, setLoading] = useState(false);
 
   const fetchPage = async (page: number) => {

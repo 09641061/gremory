@@ -148,7 +148,7 @@ export function NotificationDropdown({ variant = "default" }: NotificationDropdo
           <div className="flex items-center justify-between border-t border-border/60 px-3 py-2 text-xs text-muted-foreground">
             <span>
               {t.notifications.page
-                .replace("{page}", String(paginatedData.number + 1))
+                .replace("{page}", String(paginatedData.page + 1))
                 .replace("{totalPages}", String(paginatedData.totalPages))}
             </span>
             <div className="flex items-center gap-1">
@@ -156,7 +156,7 @@ export function NotificationDropdown({ variant = "default" }: NotificationDropdo
                 variant="ghost"
                 size="icon"
                 className="size-7"
-                disabled={paginatedData.first || isPending}
+                disabled={paginatedData.page === 0 || isPending}
                 onClick={() => loadNotifications(currentPage - 1)}
               >
                 <ChevronLeft className="size-3.5" />
@@ -165,7 +165,7 @@ export function NotificationDropdown({ variant = "default" }: NotificationDropdo
                 variant="ghost"
                 size="icon"
                 className="size-7"
-                disabled={paginatedData.last || isPending}
+                disabled={paginatedData.page >= paginatedData.totalPages - 1 || isPending}
                 onClick={() => loadNotifications(currentPage + 1)}
               >
                 <ChevronRight className="size-3.5" />

@@ -23,7 +23,7 @@ vi.mock("@/contexts/scheduling/interfaces/actions/list-appointments.action", () 
     (mocks.listAppointmentsAction as (...a: unknown[]) => unknown)(...args),
 }));
 
-import { render } from "@testing-library/react";
+import { render, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { DailyStaffCalendar } from "@/contexts/scheduling/interfaces/components/calendar/daily-staff-calendar";
@@ -86,7 +86,7 @@ const customers: SchedulingCustomerViewModel[] = [
  * flex-fill classes) fails loudly here.
  */
 describe("DailyStaffCalendar layout invariant", () => {
-  it("fills its parent via flex instead of a viewport-derived calc", () => {
+  it("fills its parent via flex instead of a viewport-derived calc", async () => {
     // Given the schedule route's flex chain: the protected layout owns the
     // viewport, the schedule `<main>` supplies the available column height,
     // and the calendar is the only child of that column.
@@ -106,6 +106,16 @@ describe("DailyStaffCalendar layout invariant", () => {
         </div>
       </div>,
     );
+
+    // Drain pending updates from the calendar's useEffect →
+    // startTransition → setAppointments cycle, plus the
+    // useSyncExternalStore snapshot inside useNow(). waitFor wraps
+    // each poll in act(...) so React does not warn about untracked
+    // state updates. The assertion itself documents the contract:
+    // "by the time we check layout classes, the fetch has happened".
+    await waitFor(() => {
+      expect(mocks.listAppointmentsAction).toHaveBeenCalled();
+    });
 
     const main = container.querySelector('[data-testid="main"]');
     expect(main).not.toBeNull();
@@ -144,7 +154,7 @@ describe("DailyStaffCalendar layout invariant", () => {
     expect(calendarContainer).toHaveClass("overflow-y-auto");
   });
 
-  it("remains free of viewport-derived classes in any descendant element", () => {
+  it("remains free of viewport-derived classes in any descendant element", async () => {
     // Belt-and-braces: the original regression lived on the calendar's outer
     // wrapper, but a future regression that moves the calc onto a deeper
     // descendant would still produce the same scroll bug. Scan the full
@@ -168,6 +178,11 @@ describe("DailyStaffCalendar layout invariant", () => {
         </div>
       </div>,
     );
+
+    // Same drain as the sibling test — see the comment above.
+    await waitFor(() => {
+      expect(mocks.listAppointmentsAction).toHaveBeenCalled();
+    });
 
     const calendarTree = container.querySelector(
       '[data-testid="main"] > div',
