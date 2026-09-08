@@ -144,6 +144,9 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --spacing-control-h: 2.25rem;
+  /* Height of the pinned columns header in the schedule calendar.
+     Source of truth: contexts/scheduling/interfaces/components/calendar/staff-columns-header.tsx */
+  --app-calendar-column-header-height: 4rem;
 }
 
 @layer base {
