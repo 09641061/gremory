@@ -3,11 +3,13 @@
 import { usePathname } from "next/navigation";
 import type { AssistantConversationSummaryReadModel } from "@/contexts/assistant/application/internal/transforms/assistant.read-models";
 import type { WorkspaceHeaderViewModel } from "@/contexts/business/application/model/business-workspace.view-models";
+import type { ProfileViewModel } from "@/contexts/profiles/application/services/profile.view-model";
 import type { SidebarRouteId } from "@/contexts/shared/application/model/app-shell.view-models";
 import { AppSidebar } from "./app-sidebar";
 
 interface AppShellSidebarClientProps {
   initialAssistantConversations: AssistantConversationSummaryReadModel[];
+  currentProfile: Pick<ProfileViewModel, "username" | "imageUrl"> | null;
   workspace: WorkspaceHeaderViewModel;
   visibleRoutes: ReadonlyArray<SidebarRouteId>;
   showAssistantSection: boolean;
