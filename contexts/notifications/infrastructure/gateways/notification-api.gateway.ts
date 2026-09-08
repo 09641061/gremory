@@ -80,6 +80,15 @@ export class NotificationApiGateway {
       });
     }
   }
+
+  async registerDeviceToken(accessToken: string, deviceToken: string, platform = "WEB"): Promise<void> {
+    const url = `${apiConfig.routes.notifications}/device-tokens`;
+    return apiClient.post<void>(url, { deviceToken, platform }, {
+      token: accessToken,
+      errorMessage: "Failed to register device token",
+      errorType: NotificationApiError,
+    });
+  }
 }
 
 export const notificationApiGateway = new NotificationApiGateway();
