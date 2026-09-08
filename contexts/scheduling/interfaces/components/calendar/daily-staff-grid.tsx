@@ -52,13 +52,13 @@ export function DailyStaffGrid({
         : "auto-cols-fr grid-flow-col";
 
   return (
-    <div className="flex flex-1 bg-background rounded-b-xl border border-t-0 w-full">
+    <div className="flex min-h-0 flex-1 bg-background rounded-b-xl border border-t-0 w-full">
       <div className="flex w-full h-full flex-col min-w-0">
         {hours.map((hour) => (
           <div key={hour} className="flex border-b last:border-b-0 min-h-[80px]">
             {/* Time label */}
             <div className="w-16 flex-shrink-0 border-r py-2 pr-2 text-right relative bg-muted/5">
-              <span className="text-xs text-muted-foreground font-medium sticky top-2">
+              <span className="text-xs text-muted-foreground font-medium sticky top-[var(--app-calendar-column-header-height)]">
                 {hour === 12 ? "12 PM" : hour > 12 ? `${hour - 12} PM` : `${hour} AM`}
               </span>
             </div>

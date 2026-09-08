@@ -44,7 +44,7 @@ async function ConfigurationLayoutContent({ children }: { children: ReactNode })
     requestHeaders.get("x-takodu-pathname") ?? requestHeaders.get("x-invoke-path") ?? "";
 
   // Profile is an account-level screen. It must remain reachable from the
-  // sidebar even before an owner activates Billing or creates a workspace.
+  // header even before an owner activates Billing or creates a workspace.
   if (pathname !== "/profile") {
     const landing = await createEntryRouteQueryService()
       .resolveRoute({
@@ -82,6 +82,9 @@ async function ConfigurationLayoutContent({ children }: { children: ReactNode })
       className="flex min-w-0 flex-1 flex-col p-6"
       // The back bar takes room the app routes do not spend, so the columns
       // that size themselves against the viewport have to discount it too.
+      // The variable is owned by this layout; it is only read by configuration
+      // routes, and removing the `:root` default from `globals.css` means this
+      // inline value is the only place the constant is defined.
       style={{ "--app-page-viewport-height": "calc(100vh - 9.5rem)" } as CSSProperties}
     >
       <div className="absolute left-6 top-6 z-20 sm:left-8">

@@ -25,7 +25,7 @@ describe("Notification server actions", () => {
 
   it("should return notifications when the query service succeeds", async () => {
     // Arrange
-    const notifications = { content: [], totalElements: 0, totalPages: 0, number: 0, size: 5, first: true, last: true };
+    const notifications = { content: [], page: 0, size: 5, totalElements: 0, totalPages: 0 };
     mocks.queryService.getNotifications.mockResolvedValue(notifications);
 
     // Act

@@ -21,10 +21,10 @@ describe("Scheduling gateway contract", () => {
   it("validates appointment pages returned by search", async () => {
     const page = {
       content: [appointment],
-      pageable: { pageNumber: 0, pageSize: 20 },
+      page: 0,
+      size: 20,
       totalPages: 1,
       totalElements: 1,
-      last: true,
     };
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(response(page)));
     const result = await new SchedulingApiGateway().searchAppointments({ from: "2026-01-01", to: "2026-01-02" }, "token");

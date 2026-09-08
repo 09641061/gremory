@@ -26,22 +26,18 @@ import {
 } from "@/contexts/shared/interfaces/components/ui/sidebar";
 import { AssistantChatsSection } from "@/contexts/assistant/interfaces/components/sidebar/assistant-chats-section";
 import type { AssistantConversationSummaryReadModel } from "@/contexts/assistant/application/internal/transforms/assistant.read-models";
-import type { ProfileViewModel } from "@/contexts/profiles/application/services/profile.view-model";
-import { SidebarProfile } from "@/contexts/profiles/interfaces/components/profile/sidebar-profile";
 import type { SidebarRouteId } from "@/contexts/shared/application/model/app-shell.view-models";
 import { hasActiveSubscription } from "@/contexts/billing/domain/services/subscription-access.policy";
 import type { WorkspaceHeaderViewModel } from "@/contexts/business/application/model/business-workspace.view-models";
 import { WorkspaceSwitcher } from "@/contexts/business/interfaces/components/workspace/workspace-switcher/workspace-switcher";
 
-import { useI18n, LocaleSync } from "@/contexts/shared/interfaces/i18n";
+import { useI18n } from "@/contexts/shared/interfaces/i18n";
 
 /**
- * The application's only chrome: workspace, navigation and account all live in
- * this one column, so the content area starts at the top of the viewport.
+ * Workspace and application navigation. Account controls live in AppHeader.
  */
 export function AppSidebar({
   initialAssistantConversations,
-  currentProfile,
   workspace,
   visibleRoutes,
   showAssistantSection,
@@ -51,7 +47,6 @@ export function AppSidebar({
   showBillingMenu,
 }: {
   initialAssistantConversations: AssistantConversationSummaryReadModel[];
-  currentProfile: Pick<ProfileViewModel, "username" | "imageUrl"> & { language?: "ES" | "EN" } | null;
   workspace: WorkspaceHeaderViewModel;
   visibleRoutes: ReadonlyArray<SidebarRouteId>;
   showAssistantSection: boolean;
@@ -95,8 +90,7 @@ export function AppSidebar({
     return visibleRouteSet.has(item.href as SidebarRouteId);
   });
   return (
-    <ShadcnSidebar collapsible="offcanvas">
-      <LocaleSync profileLanguage={currentProfile?.language} />
+    <ShadcnSidebar collapsible="offcanvas" className="top-16 h-[calc(100svh-4rem)]">
       {showWorkspaceSwitcher && (
         <SidebarHeader className="border-b border-border/60 p-3">
           <WorkspaceSwitcher workspace={workspace} />
@@ -163,18 +157,6 @@ export function AppSidebar({
           </Link>
         ) : null}
 
-        <SidebarProfile
-          profile={currentProfile}
-          profileHref="/profile"
-          canManageBilling={canManageBilling}
-          invoiceHref={establishmentId ? `/invoice?establishmentId=${establishmentId}` : "/invoice"}
-          active={
-            pathname === "/profile" ||
-            pathname.startsWith("/profile/") ||
-            pathname === "/invoice" ||
-            pathname.startsWith("/invoice/")
-          }
-        />
       </SidebarFooter>
     </ShadcnSidebar>
   );

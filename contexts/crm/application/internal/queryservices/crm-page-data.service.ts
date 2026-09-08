@@ -7,12 +7,10 @@ import { CustomerResponse } from "../../../domain/model/entities/customer";
 
 const EMPTY_PAGE: PageResponse<CustomerResponse> = {
   content: [],
-  pageable: { pageNumber: 0, pageSize: 20 },
-  page: { size: 20, number: 0, totalElements: 0, totalPages: 0 },
-  totalPages: 0,
+  page: 0,
+  size: 20,
   totalElements: 0,
-  last: true,
-  first: true,
+  totalPages: 0,
 };
 
 export interface CrmPageData {

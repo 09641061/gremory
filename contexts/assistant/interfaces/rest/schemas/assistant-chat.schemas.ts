@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { pageResponseSchema } from "@/contexts/shared/interfaces/rest/schemas/page-response.schema";
 
 export const submitAssistantMessageSchema = z.object({
   conversationId: z.string().min(1).optional().nullable(),
@@ -72,13 +73,4 @@ export const assistantConversationResponseSchema = assistantConversationSummaryR
   messages: z.array(assistantMessageResponseSchema),
 });
 
-export const assistantConversationPageResponseSchema = z.object({
-  content: z.array(assistantConversationSummaryResponseSchema),
-  // Spring's `VIA_DTO` page serialization uses `PagedModel`, which flattens
-  // pagination into top-level scalar fields rather than a `pageable` object.
-  page: z.object({ size: z.number().int(), number: z.number().int(), totalElements: z.number().int().nonnegative(), totalPages: z.number().int().nonnegative() }).optional(),
-  totalElements: z.number().int().nonnegative().optional(),
-  totalPages: z.number().int().nonnegative().optional(),
-  first: z.boolean().optional(),
-  last: z.boolean().optional(),
-});
+export const assistantConversationPageResponseSchema = pageResponseSchema(assistantConversationSummaryResponseSchema);

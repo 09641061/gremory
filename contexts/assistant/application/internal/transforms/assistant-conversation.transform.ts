@@ -112,10 +112,10 @@ function normalizeSummary(
 export function toConversationPageReadModel(
   page: PageResponse<AssistantConversationSummaryResponse>,
 ): AssistantConversationPageReadModel {
-  const pageNumber = page.page?.number ?? page.pageable?.pageNumber ?? 0;
-  const pageSize = page.page?.size ?? page.pageable?.pageSize ?? page.content.length;
-  const totalElements = page.totalElements ?? page.page?.totalElements ?? page.content.length;
-  const totalPages = page.totalPages ?? page.page?.totalPages ?? 1;
+  const pageNumber = page.page;
+  const pageSize = page.size;
+  const totalElements = page.totalElements;
+  const totalPages = page.totalPages;
   const contentLength = page.content.length;
   return {
     content: page.content.map(normalizeSummary),
@@ -127,8 +127,8 @@ export function toConversationPageReadModel(
     },
     totalElements,
     totalPages,
-    first: page.first ?? pageNumber === 0,
-    last: page.last ?? (pageNumber >= totalPages - 1 || contentLength === 0),
+    first: pageNumber === 0,
+    last: pageNumber >= totalPages - 1 || contentLength === 0,
   };
 }
 

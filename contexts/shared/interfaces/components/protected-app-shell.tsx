@@ -1,156 +1,65 @@
 import type { ReactNode } from "react";
 import { Suspense } from "react";
-import { cookies } from "next/headers";
-import { headers } from "next/headers";
 
-import { ListConversationsQueryService } from "@/contexts/assistant/application/internal/queryservices/list-conversations-query.service";
-import { createAssistantConversationsAdapter } from "@/contexts/assistant/infrastructure/adapters/assistant-conversations.adapter";
-import type { AssistantConversationSummaryReadModel } from "@/contexts/assistant/application/internal/transforms/assistant.read-models";
-import { createOrganizationQueryService } from "@/contexts/business/application/internal/queryservices/organization-query.service";
-import type { WorkspaceHeaderViewModel } from "@/contexts/business/application/model/business-workspace.view-models";
-import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-session-cookie";
-import { getMyProfileServerQuery } from "@/contexts/profiles/interfaces/queries/get-my-profile.query-handler";
-import { ApiError } from "@/contexts/shared/infrastructure/http/api-client";
-import { createAppShellQueryService } from "@/contexts/shared/application/internal/queryservices/app-shell-query.service";
-import { AppSidebarFallback } from "@/contexts/shared/interfaces/components/app-sidebar-fallback";
-import { PageLoading } from "@/contexts/shared/interfaces/components/page-loading";
-import {
-  SidebarProvider,
-  SidebarTrigger,
-} from "@/contexts/shared/interfaces/components/ui/sidebar";
-import { workspaceSelectionCookies } from "@/contexts/business/infrastructure/session/workspace-selection-cookie";
-import type { WorkspaceHeaderOrganization } from "@/contexts/business/application/model/business-workspace.view-models";
-import { AppShellSidebarClient } from "./app-shell-sidebar-client";
+import { AppHeaderServer } from "./header/app-header-server";
+import { AppHeaderFallback } from "./header/app-header-fallback";
+import { AppShellSidebarServer } from "./sidebar/app-sidebar-shell-server";
+import { AppSidebarFallback } from "./sidebar/app-sidebar-fallback";
+import { PageLoading } from "./page-loading";
+import { SidebarProvider, SidebarTrigger, SidebarInset } from "./ui/sidebar";
 
-import { PushNotificationRegister } from "@/contexts/notifications/interfaces/components/push-notification-register";
+import { PushNotificationRegisterServer } from "@/contexts/notifications/interfaces/components/push-notification-register-server";
 
-export default function ProtectedAppShell({
-  children,
-}: {
-  children: ReactNode;
-}) {
+/**
+ * Route shell for all authenticated routes (app, onboarding, status, welcome).
+ *
+ * Layout chain (top to bottom):
+ *   body (min-h-svh from globals.css)
+ *   <div flex min-h-svh flex-col>          - viewport owner
+ *     header (sticky top-0 h-16)           - 64px, AppHeaderServer
+ *     SidebarProvider (flex-1)             - fills the remaining column
+ *       AppShellSidebarServer
+ *       SidebarInset (main, flex flex-1 flex-col)
+ *         SidebarTrigger (md:hidden)
+ *         Suspense {children}
+ *     <Suspense fallback={null}>            - background side-effect
+ *       PushNotificationRegisterServer     - does not render visible UI
+ *
+ * The <div flex min-h-svh flex-col> wrapper is load-bearing: it owns the viewport so
+ * the sticky header and the sidebar provider share exactly one viewport height. Do
+ * NOT replace `min-h-0 flex-1` on the provider with a viewport-derived calc.
+ */
+export default function ProtectedAppShell({ children }: { children: ReactNode }) {
   return (
-    <SidebarProvider className="bg-background text-foreground">
-      <Suspense fallback={<AppSidebarFallback />}>
-        <AppShellSidebarServer />
+    <div className="flex min-h-svh flex-col bg-background text-foreground">
+      <Suspense fallback={<AppHeaderFallback />}>
+        <AppHeaderServer />
       </Suspense>
 
-      <main className="flex min-w-0 flex-1 flex-col p-6">
-        <SidebarTrigger className="mb-4 md:hidden" />
-        {/*
-          Safety-net Suspense: each page is expected to wrap its own dynamic
-          reads, but if a sibling forgets, this boundary keeps the navigation
-          instant under Cache Components.
-        */}
-        <Suspense fallback={<PageLoading />}>{children}</Suspense>
-      </main>
+      <SidebarProvider className="flex-1 bg-background text-foreground">
+        <Suspense fallback={<AppSidebarFallback />}>
+          <AppShellSidebarServer />
+        </Suspense>
+        <SidebarInset>
+          <SidebarTrigger className="mb-4 md:hidden" />
+          {/*
+            Safety-net Suspense: each page is expected to wrap its own dynamic
+            reads, but if a sibling forgets, this boundary keeps the navigation
+            instant under Cache Components.
+          */}
+          <Suspense fallback={<PageLoading />}>{children}</Suspense>
+        </SidebarInset>
+      </SidebarProvider>
+
+      {/*
+        Push-notification registration is a global side effect. It renders no
+        visible UI, so a null fallback keeps the route shell layout untouched.
+        Placed as the last flex-column child so it cannot displace header or
+        sidebar height.
+      */}
       <Suspense fallback={null}>
         <PushNotificationRegisterServer />
       </Suspense>
-    </SidebarProvider>
+    </div>
   );
-}
-
-async function PushNotificationRegisterServer() {
-  const cookieStore = await cookies();
-  const accessToken = cookieStore.get(iamSessionCookies.accessToken)?.value;
-  return <PushNotificationRegister accessToken={accessToken} />;
-}
-
-async function AppShellSidebarServer() {
-  const cookieStore = await cookies();
-  const accessToken = cookieStore.get(iamSessionCookies.accessToken)?.value;
-  const requestHeaders = await headers();
-  const establishmentId = requestHeaders.get("x-takodu-establishment-id") ?? undefined;
-  const activeOrganizationId = cookieStore.get(workspaceSelectionCookies.organizationId)?.value ?? null;
-  const shell = accessToken
-    ? await createAppShellQueryService()
-        .resolve({ workspace: { establishmentId } })
-        .catch((error) => {
-          logAppShellError("app shell resolve", error);
-          return null;
-        })
-    : null;
-
-  if (!shell) {
-    return null;
-  }
-
-  const workspace = await resolveSidebarWorkspace(shell.workspace, activeOrganizationId);
-  const [currentProfile, assistantConversations] = await Promise.all([
-    getMyProfileServerQuery(),
-    shell.hasAssistantAccess
-      ? new ListConversationsQueryService(
-          createAssistantConversationsAdapter(workspace.organization?.id),
-        )
-          .handle({ page: 0, size: 20 })
-          .catch((error) => {
-            logAppShellError("list assistant conversations", error);
-            return { content: [] as AssistantConversationSummaryReadModel[] };
-          })
-      : Promise.resolve({ content: [] as AssistantConversationSummaryReadModel[] }),
-  ]);
-
-  return (
-    <AppShellSidebarClient
-      initialAssistantConversations={assistantConversations.content}
-      currentProfile={currentProfile}
-      workspace={workspace}
-      visibleRoutes={shell.visibleSidebarRoutes}
-      showAssistantSection={shell.hasAssistantAccess}
-      showAssistantNavigation={shell.hasAssistantAccess}
-      showWorkspaceSwitcher={true}
-    />
-  );
-}
-
-function logAppShellError(context: string, error: unknown): void {
-  if (error instanceof ApiError && error.status === 401) {
-    console.error(
-      `[protected-app-shell] ${context} failed: unauthorized — access token may be stale`,
-      error,
-    );
-    return;
-  }
-  console.error(`[protected-app-shell] ${context} failed: unexpected error`, error);
-}
-
-async function resolveSidebarWorkspace(
-  workspace: WorkspaceHeaderViewModel,
-  activeOrganizationId: string | null,
-): Promise<WorkspaceHeaderViewModel> {
-  if (!activeOrganizationId || !workspace.organization || workspace.organization.id === activeOrganizationId) {
-    return workspace;
-  }
-
-  const activeOrganization = await createOrganizationQueryService().getById({ id: activeOrganizationId }).catch(() => null);
-  if (!activeOrganization) {
-    return workspace;
-  }
-
-  const isOwnedOrganization = workspace.ownedOrganizationId === activeOrganizationId;
-  const selectedOrganization: WorkspaceHeaderOrganization = {
-    id: activeOrganization.id,
-    name: activeOrganization.name,
-    imageUrl: activeOrganization.imageUrl,
-    canRead: isOwnedOrganization || workspace.organization.canRead === true,
-    canUpdate: isOwnedOrganization || workspace.organization.canUpdate === true,
-    canReadEstablishments: isOwnedOrganization ? true : workspace.organization.canReadEstablishments === true,
-    canCreateEstablishment: isOwnedOrganization ? true : workspace.organization.canCreateEstablishment === true,
-  };
-
-  return {
-    ...workspace,
-    organization: selectedOrganization,
-    establishments: workspace.establishments.filter(
-      (establishment) => !establishment.organizationId || establishment.organizationId === activeOrganizationId,
-    ),
-    activeEstablishmentId: workspace.establishments.some(
-      (establishment) =>
-        establishment.id === workspace.activeEstablishmentId &&
-        (!establishment.organizationId || establishment.organizationId === activeOrganizationId),
-    )
-      ? workspace.activeEstablishmentId
-      : undefined,
-  };
 }

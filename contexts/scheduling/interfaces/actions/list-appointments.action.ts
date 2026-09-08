@@ -31,10 +31,10 @@ export async function listAppointmentsAction(
     console.error("List appointments action failed:", error);
     return {
       content: [],
-      pageable: { pageNumber: 0, pageSize: size },
+      page: 0,
+      size,
       totalPages: 0,
       totalElements: 0,
-      last: true,
     };
   }
 }

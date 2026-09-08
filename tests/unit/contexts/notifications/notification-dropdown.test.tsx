@@ -5,12 +5,10 @@ import userEvent from "@testing-library/user-event";
 const mocks = vi.hoisted(() => ({
   fetchNotificationsAction: vi.fn().mockResolvedValue({
     content: [],
+    page: 0,
+    size: 5,
     totalElements: 0,
     totalPages: 0,
-    number: 0,
-    size: 5,
-    first: true,
-    last: true,
   }),
   fetchUnreadNotificationsCountAction: vi.fn().mockResolvedValue(3),
   markNotificationAsReadAction: vi.fn(),

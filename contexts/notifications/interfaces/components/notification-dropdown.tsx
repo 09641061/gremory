@@ -38,7 +38,7 @@ export function NotificationDropdown({ variant = "default" }: NotificationDropdo
       const data = await fetchNotificationsAction(page, 5);
       if (data) {
         setPaginatedData(data);
-        setCurrentPage(data.number);
+        setCurrentPage(data.page);
       }
     });
   };
@@ -112,7 +112,7 @@ export function NotificationDropdown({ variant = "default" }: NotificationDropdo
         )}
       </DropdownMenuTrigger>
 
-      <DropdownMenuContent side="top" align="end" className="w-80 p-0 shadow-lg">
+      <DropdownMenuContent side="bottom" align="end" className="w-80 max-w-[calc(100vw-2rem)] p-0 shadow-lg">
         <div className="flex items-center justify-between border-b border-border/60 px-4 py-3">
           <h4 className="text-sm font-semibold text-foreground">{t.notifications.title}</h4>
           {unreadCount > 0 && (
@@ -148,7 +148,7 @@ export function NotificationDropdown({ variant = "default" }: NotificationDropdo
           <div className="flex items-center justify-between border-t border-border/60 px-3 py-2 text-xs text-muted-foreground">
             <span>
               {t.notifications.page
-                .replace("{page}", String(paginatedData.number + 1))
+                .replace("{page}", String(paginatedData.page + 1))
                 .replace("{totalPages}", String(paginatedData.totalPages))}
             </span>
             <div className="flex items-center gap-1">
@@ -156,7 +156,7 @@ export function NotificationDropdown({ variant = "default" }: NotificationDropdo
                 variant="ghost"
                 size="icon"
                 className="size-7"
-                disabled={paginatedData.first || isPending}
+                disabled={paginatedData.page === 0 || isPending}
                 onClick={() => loadNotifications(currentPage - 1)}
               >
                 <ChevronLeft className="size-3.5" />
@@ -165,7 +165,7 @@ export function NotificationDropdown({ variant = "default" }: NotificationDropdo
                 variant="ghost"
                 size="icon"
                 className="size-7"
-                disabled={paginatedData.last || isPending}
+                disabled={paginatedData.page >= paginatedData.totalPages - 1 || isPending}
                 onClick={() => loadNotifications(currentPage + 1)}
               >
                 <ChevronRight className="size-3.5" />

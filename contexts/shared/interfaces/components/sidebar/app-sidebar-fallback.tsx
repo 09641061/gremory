@@ -3,7 +3,6 @@
 import {
   Sidebar as ShadcnSidebar,
   SidebarContent,
-  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
   SidebarHeader,
@@ -20,11 +19,11 @@ const PLACEHOLDER_ROWS = [0, 1, 2, 3, 4, 5];
  * Streaming placeholder for {@link AppSidebar}.
  *
  * It reserves the same column so the content area never reflows once the
- * workspace resolves, which matters more now that the sidebar is the only chrome.
+ * workspace resolves below the shared Header.
  */
 export function AppSidebarFallback() {
   return (
-    <ShadcnSidebar collapsible="offcanvas">
+    <ShadcnSidebar collapsible="offcanvas" className="top-16 h-[calc(100svh-4rem)]">
       <SidebarHeader className="border-b border-border/60 p-3">
         <Skeleton className="h-(--app-sidebar-profile-height) w-full rounded-(--app-sidebar-item-radius)" />
       </SidebarHeader>
@@ -44,9 +43,6 @@ export function AppSidebarFallback() {
         <SidebarSeparator className="mx-0 my-2" />
       </SidebarContent>
 
-      <SidebarFooter className="gap-2 px-3 pb-3">
-        <Skeleton className="h-(--app-sidebar-profile-height) w-full rounded-(--app-sidebar-item-radius)" />
-      </SidebarFooter>
     </ShadcnSidebar>
   );
 }

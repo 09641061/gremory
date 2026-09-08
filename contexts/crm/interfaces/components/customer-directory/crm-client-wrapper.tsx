@@ -99,13 +99,9 @@ export function CrmClientWrapper({
   };
 
   const customers = initialCustomers.content;
-  const currentPage =
-    initialCustomers.page?.number ?? initialCustomers.pageable?.pageNumber ?? 0;
-  const pageSize = initialCustomers.page?.size ?? initialCustomers.pageable?.pageSize ?? 20;
-  const totalElements =
-    initialCustomers.totalElements ?? initialCustomers.page?.totalElements ?? customers.length;
-  const totalPages =
-    initialCustomers.totalPages ?? initialCustomers.page?.totalPages ?? Math.max(1, Math.ceil(totalElements / pageSize));
+  const currentPage = initialCustomers.page;
+  const totalElements = initialCustomers.totalElements;
+  const totalPages = initialCustomers.totalPages;
 
   return (
     <>
