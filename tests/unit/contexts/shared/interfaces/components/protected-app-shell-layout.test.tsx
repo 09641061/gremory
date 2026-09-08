@@ -26,6 +26,10 @@ vi.mock("@/contexts/shared/interfaces/i18n", () => ({
   useI18n: () => ({ t: new Proxy({}, { get: () => (k: string) => k }) }),
 }));
 
+vi.mock("@/contexts/notifications/interfaces/components/push-notification-register-server", () => ({
+  PushNotificationRegisterServer: () => null,
+}));
+
 vi.mock("@/contexts/shared/interfaces/components/header/app-header", () => ({
   AppHeader: () => <header role="banner" data-testid="app-header-stub">Header</header>,
 }));
@@ -230,5 +234,20 @@ describe("ProtectedAppShell layout invariant", () => {
     expect(
       banner.compareDocumentPosition(sidebarWrapper!) & Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
+  });
+
+  it("renders the push-notification register as a non-visual last child of the viewport-owning wrapper", () => {
+    const { container } = render(
+      <ProtectedAppShell>
+        <h1>Chat</h1>
+      </ProtectedAppShell>,
+    );
+    const sidebarWrapper = container.querySelector('[data-slot="sidebar-wrapper"]');
+    const wrapper = sidebarWrapper!.parentElement;
+    const lastChild = wrapper!.lastElementChild;
+    expect(lastChild).not.toBeNull();
+    // It must NOT be inside SidebarInset (otherwise it would participate in the main content flex column).
+    const inset = container.querySelector('[data-slot="sidebar-inset"]');
+    expect(inset!.contains(lastChild!)).toBe(false);
   });
 });

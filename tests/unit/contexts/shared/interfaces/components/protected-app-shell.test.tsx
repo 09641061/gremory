@@ -41,6 +41,10 @@ vi.mock("@/contexts/profiles/interfaces/queries/get-my-profile.query-handler", (
   getMyProfileServerQuery: mocks.getMyProfileServerQuery,
 }));
 
+vi.mock("@/contexts/notifications/interfaces/components/push-notification-register-server", () => ({
+  PushNotificationRegisterServer: () => null,
+}));
+
 vi.mock("@/contexts/shared/interfaces/components/sidebar/app-sidebar", () => ({
   AppSidebar: () => null,
 }));
