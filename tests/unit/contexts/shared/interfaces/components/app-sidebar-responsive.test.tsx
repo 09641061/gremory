@@ -5,7 +5,7 @@ import type { WorkspaceHeaderViewModel } from "@/contexts/business/application/m
 vi.mock("next/navigation", () => ({ usePathname: () => "/schedule", useSearchParams: () => new URLSearchParams() }));
 vi.mock("@/contexts/assistant/interfaces/components/sidebar/assistant-chats-section", () => ({ AssistantChatsSection: () => null }));
 vi.mock("@/contexts/business/interfaces/components/workspace/workspace-switcher/workspace-switcher", () => ({ WorkspaceSwitcher: () => null }));
-import { AppSidebar } from "@/contexts/shared/interfaces/components/app-sidebar";
+import { AppSidebar } from "@/contexts/shared/interfaces/components/sidebar/app-sidebar";
 import { SidebarProvider, SidebarTrigger } from "@/contexts/shared/interfaces/components/ui/sidebar";
 
 function mountSidebar(width: number) {

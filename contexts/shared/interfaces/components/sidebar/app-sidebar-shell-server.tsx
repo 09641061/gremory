@@ -1,7 +1,7 @@
 import { ListConversationsQueryService } from "@/contexts/assistant/application/internal/queryservices/list-conversations-query.service";
 import { createAssistantConversationsAdapter } from "@/contexts/assistant/infrastructure/adapters/assistant-conversations.adapter";
-import { AppShellSidebarClient } from "./app-shell-sidebar-client";
-import { getAppShellData, logAppShellError } from "./app-shell-data";
+import { AppShellSidebarClient } from "./app-sidebar-shell-client";
+import { getAppShellData, logAppShellError } from "../app-shell-data";
 
 export async function AppShellSidebarServer() {
   const data = await getAppShellData();

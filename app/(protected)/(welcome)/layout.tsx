@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { Suspense } from "react";
-import { AppHeaderServer } from "@/contexts/shared/interfaces/components/app-header-server";
+import { AppHeaderServer } from "@/contexts/shared/interfaces/components/header/app-header-server";
 import { PageLoading } from "@/contexts/shared/interfaces/components/page-loading";
 
 // Welcome's page owns the existing entry guard. This shell never mounts app navigation.

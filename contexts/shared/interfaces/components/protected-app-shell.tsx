@@ -1,29 +1,30 @@
 import type { CSSProperties, ReactNode } from "react";
 import { Suspense } from "react";
-import { AppHeaderServer } from "./app-header-server";
-import { AppShellSidebarServer } from "./app-shell-sidebar-server";
-import { AppSidebarFallback } from "./app-sidebar-fallback";
+import { AppHeaderServer } from "./header/app-header-server";
+import { AppHeaderFallback } from "./header/app-header-fallback";
+import { AppShellSidebarServer } from "./sidebar/app-sidebar-shell-server";
+import { AppSidebarFallback } from "./sidebar/app-sidebar-fallback";
 import { PageLoading } from "./page-loading";
-import { SidebarProvider, SidebarTrigger } from "./ui/sidebar";
+import { SidebarProvider, SidebarTrigger, SidebarInset } from "./ui/sidebar";
 
 export default function ProtectedAppShell({ children }: { children: ReactNode }) {
   return (
-    <SidebarProvider
-      className="flex-col bg-background text-foreground"
-      style={{ "--app-page-viewport-height": "calc(100vh - 10.5rem)" } as CSSProperties}
-    >
-      <Suspense fallback={<div className="h-16 shrink-0" />}>
+    <>
+      <Suspense fallback={<AppHeaderFallback />}>
         <AppHeaderServer />
       </Suspense>
-      <div className="flex min-w-0 flex-1">
+      <SidebarProvider
+        className="bg-background text-foreground"
+        style={{ "--app-page-viewport-height": "calc(100vh - 10.5rem)" } as CSSProperties}
+      >
         <Suspense fallback={<AppSidebarFallback />}>
           <AppShellSidebarServer />
         </Suspense>
-        <main className="flex min-w-0 flex-1 flex-col p-6">
+        <SidebarInset>
           <SidebarTrigger className="mb-4 md:hidden" />
           <Suspense fallback={<PageLoading />}>{children}</Suspense>
-        </main>
-      </div>
-    </SidebarProvider>
+        </SidebarInset>
+      </SidebarProvider>
+    </>
   );
 }
