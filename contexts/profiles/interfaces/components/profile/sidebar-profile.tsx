@@ -14,12 +14,12 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuGroup,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/contexts/shared/interfaces/components/ui/dropdown-menu";
 import type { ProfileViewModel } from "@/contexts/profiles/application/services/profile.view-model";
 import { signOutAction } from "@/contexts/iam/interfaces/actions/sign-out.action";
-import { NotificationDropdown } from "@/contexts/notifications/interfaces/components/notification-dropdown";
 import { cn } from "@/lib/utils";
 import { useI18n } from "@/contexts/shared/interfaces/i18n";
 
@@ -34,10 +34,8 @@ type SidebarProfileProps = {
 };
 
 /**
- * Sidebar footer account control.
- *
- * The `ChevronsUpDown` affordance promises a menu, so the trigger opens one
- * instead of navigating straight to the profile page.
+ * Existing account control, now hosted by the shared Header.
+ * It deliberately has no SidebarProvider dependency.
  */
 export function SidebarProfile({
   profile,
@@ -64,9 +62,9 @@ export function SidebarProfile({
 
   return (
     <div
-      data-slot="sidebar-profile-card"
+      data-slot="profile-menu-card"
       className={cn(
-        "flex w-full items-center justify-between gap-1 rounded-(--app-sidebar-item-radius) border border-border/60 bg-card p-1 shadow-xs transition-colors",
+        "flex w-40 max-w-full items-center justify-between gap-1 rounded-(--app-sidebar-item-radius) border border-border/60 bg-card p-1 shadow-xs transition-colors",
         active && "border-accent/40 bg-accent/30",
       )}
     >
@@ -104,12 +102,12 @@ export function SidebarProfile({
           </span>
         </DropdownMenuTrigger>
 
-        {/* Opens upward: the trigger sits in the sidebar footer. */}
         <DropdownMenuContent
-          side="top"
-          align="start"
+          side="bottom"
+          align="end"
           className="w-(--anchor-width) min-w-56"
         >
+          <DropdownMenuGroup>
           <DropdownMenuItem render={<Link href={profileHref} />}>
             <UserRound aria-hidden="true" />
             {t.sidebarProfile.profile}
@@ -138,10 +136,10 @@ export function SidebarProfile({
             <LogOut aria-hidden="true" />
             {pending ? t.sidebarProfile.signingOut : t.sidebarProfile.logOut}
           </DropdownMenuItem>
+          </DropdownMenuGroup>
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <NotificationDropdown variant="compact" />
     </div>
   );
 }

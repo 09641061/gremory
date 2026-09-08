@@ -57,6 +57,7 @@ vi.mock("@/contexts/shared/interfaces/components/ui/sidebar", () => ({
 // AppShellSidebar is not exported directly; render the default export and
 // let its internal Suspense boundary resolve the async server component.
 import ProtectedAppShell from "@/contexts/shared/interfaces/components/protected-app-shell";
+import { AppHeaderServer } from "@/contexts/shared/interfaces/components/app-header-server";
 import { renderToStaticMarkup } from "react-dom/server";
 
 describe("ProtectedAppShell sidebar conversations", () => {
@@ -94,6 +95,16 @@ describe("ProtectedAppShell sidebar conversations", () => {
 
     expect(mocks.createAssistantConversationsAdapter).toHaveBeenCalledWith(organizationId);
     expect(mocks.conversationsQueryServiceCtor).toHaveBeenCalledWith({ id: organizationId });
+  });
+
+  it("should resolve account data for the Welcome header without loading app conversations", async () => {
+    mocks.getMyProfileServerQuery.mockResolvedValue({ username: "Ada", imageUrl: null });
+    const header = await AppHeaderServer();
+    expect(header.props.profile).toEqual({ username: "Ada", imageUrl: null });
+    expect(header.props.workspace.organization.id).toBe(organizationId);
+    expect(mocks.appShellResolve).toHaveBeenCalledTimes(1);
+    expect(mocks.createAssistantConversationsAdapter).not.toHaveBeenCalled();
+    expect(mocks.conversationsHandle).not.toHaveBeenCalled();
   });
 
   async function resolveShellTree() {

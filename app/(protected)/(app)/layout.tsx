@@ -11,8 +11,7 @@ import { getServerDictionary } from "@/contexts/shared/infrastructure/i18n/serve
 import { EntryRouteUnavailable } from "@/contexts/shared/interfaces/components/entry-route-unavailable";
 
 /**
- * Shell for work routes and the welcome account state. The sidebar remains
- * available on welcome so account controls never disappear during activation.
+ * Shell for work routes. Welcome has a separate header-only route group.
  *
  * Configuration screens and `/upgrade` are entered from here and leave through
  * their own back link, so they render outside this group: a sidebar there would
@@ -46,8 +45,6 @@ async function AppLayoutContent({
   if (!accessToken) redirect("/login");
 
   const requestHeaders = await headers();
-  const pathname =
-    requestHeaders.get("x-takodu-pathname") ?? requestHeaders.get("x-invoke-path") ?? "";
   const establishmentId = requestHeaders.get("x-takodu-establishment-id") ?? undefined;
   const organizationId = cookieStore.get(workspaceSelectionCookies.organizationId)?.value ?? undefined;
   const landing = await createEntryRouteQueryService()
@@ -59,12 +56,6 @@ async function AppLayoutContent({
   // subscription and workspace onboarding are complete.
   if (landing.status === "unauthenticated") redirect("/login");
   if (
-    landing.status === "subscription-required" &&
-    pathname === "/welcome"
-  ) {
-    // Welcome intentionally stays inside the application shell so the account
-    // menu (profile, invoices and sign-out) remains available during setup.
-  } else if (
     landing.status === "subscription-required" ||
     landing.status === "invitation-pending" ||
     landing.status === "organization-required" ||

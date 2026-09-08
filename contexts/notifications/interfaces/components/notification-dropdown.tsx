@@ -112,7 +112,7 @@ export function NotificationDropdown({ variant = "default" }: NotificationDropdo
         )}
       </DropdownMenuTrigger>
 
-      <DropdownMenuContent side="top" align="end" className="w-80 p-0 shadow-lg">
+      <DropdownMenuContent side="bottom" align="end" className="w-80 max-w-[calc(100vw-2rem)] p-0 shadow-lg">
         <div className="flex items-center justify-between border-b border-border/60 px-4 py-3">
           <h4 className="text-sm font-semibold text-foreground">{t.notifications.title}</h4>
           {unreadCount > 0 && (

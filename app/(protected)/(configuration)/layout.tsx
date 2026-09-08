@@ -44,7 +44,7 @@ async function ConfigurationLayoutContent({ children }: { children: ReactNode })
     requestHeaders.get("x-takodu-pathname") ?? requestHeaders.get("x-invoke-path") ?? "";
 
   // Profile is an account-level screen. It must remain reachable from the
-  // sidebar even before an owner activates Billing or creates a workspace.
+  // header even before an owner activates Billing or creates a workspace.
   if (pathname !== "/profile") {
     const landing = await createEntryRouteQueryService()
       .resolveRoute({
