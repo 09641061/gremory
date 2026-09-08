@@ -22,6 +22,10 @@ export const requestPushPermission = async (): Promise<string | null> => {
       return null;
     }
 
+    if (Notification.permission === "denied") {
+      return null;
+    }
+
     const permission = await Notification.requestPermission();
     if (permission === "granted") {
       const messaging = getMessaging(app);
@@ -30,7 +34,7 @@ export const requestPushPermission = async (): Promise<string | null> => {
       return token;
     }
   } catch (error) {
-    console.error("Error al obtener permiso o token de Notificaciones Push:", error);
+    console.warn("Permiso de notificaciones o servicio push no completado:", error);
   }
   return null;
 };

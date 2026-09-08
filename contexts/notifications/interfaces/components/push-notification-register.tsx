@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { requestPushPermission } from "@/lib/firebase";
 
 interface PushNotificationRegisterProps {
@@ -8,14 +8,16 @@ interface PushNotificationRegisterProps {
 }
 
 export function PushNotificationRegister({ accessToken }: PushNotificationRegisterProps) {
-  useEffect(() => {
-    if (!accessToken) return;
+  const registeredRef = useRef(false);
 
-    // Solicitar permiso al usuario y registrar el token en el backend
+  useEffect(() => {
+    if (!accessToken || registeredRef.current) return;
+    registeredRef.current = true;
+
     requestPushPermission().then(async (token) => {
       if (token) {
         try {
-          await fetch("/api/notifications/device-tokens", {
+          await fetch("/api/v1/notifications/device-tokens", {
             method: "POST",
             headers: {
               "Content-Type": "application/json",

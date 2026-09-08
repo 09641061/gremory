@@ -6,8 +6,8 @@ firebase.initializeApp({
   authDomain: "takodu-notification.firebaseapp.com",
   projectId: "takodu-notification",
   storageBucket: "takodu-notification.firebasestorage.app",
-  messagingSenderId: "640713668079",
-  appId: "1:640713668079:web:19ce5db17e24507a7f721a"
+  messagingSenderId: "101834015644726211533",
+  appId: "1:101834015644726211533:web:19ce5db17e24507a7f721a"
 });
 
 const messaging = firebase.messaging();
