@@ -38,7 +38,7 @@ export function NotificationDropdown({ variant = "default" }: NotificationDropdo
       const data = await fetchNotificationsAction(page, 5);
       if (data) {
         setPaginatedData(data);
-        setCurrentPage(data.number);
+        setCurrentPage(data.page);
       }
     });
   };
