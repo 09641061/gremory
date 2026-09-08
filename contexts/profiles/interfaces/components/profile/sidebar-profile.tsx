@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTransition } from "react";
-import { CircleArrowUp, LogOut, MoreHorizontal, Receipt, User, UserRound } from "lucide-react";
+import { ChevronDown, CircleArrowUp, LogOut, Receipt, User, UserRound } from "lucide-react";
 
 import {
   Avatar,
@@ -61,85 +61,72 @@ export function SidebarProfile({
   const imageUrl = profile?.imageUrl;
 
   return (
-    <div
-      data-slot="profile-menu-card"
-      className={cn(
-        "flex w-40 max-w-full items-center justify-between gap-1 rounded-(--app-sidebar-item-radius) border border-border/60 bg-card p-1 shadow-xs transition-colors",
-        active && "border-accent/40 bg-accent/30",
-      )}
-    >
-      <DropdownMenu>
-        <DropdownMenuTrigger
-          className={cn(
-            "group/profile flex min-w-0 flex-1 items-center gap-(--app-sidebar-control-gap) rounded-[calc(var(--app-sidebar-item-radius)-2px)] px-1.5 py-1 text-left outline-none transition-colors",
-            "focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/50",
-          )}
-          title={username}
+    <DropdownMenu>
+      <DropdownMenuTrigger
+        className={cn(
+          "group/profile flex h-8 items-center gap-1 rounded-md px-1.5 py-1 text-left outline-none transition-colors",
+          "hover:bg-accent hover:text-accent-foreground",
+          "focus-visible:ring-2 focus-visible:ring-ring/50",
+          "data-popup-open:bg-accent data-popup-open:text-accent-foreground",
+          active && "bg-accent text-accent-foreground",
+        )}
+        title={username}
+        aria-label={username}
+      >
+        <Avatar className="size-7 shrink-0 bg-muted">
+          {/* Above the fold on every route, so it competes for bandwidth. */}
+          <AvatarImage src={imageUrl ?? undefined} alt={username} fetchPriority="high" />
+          <AvatarFallback className="bg-muted text-muted-foreground">
+            <User className="size-3.5 text-muted-foreground" aria-hidden="true" />
+          </AvatarFallback>
+        </Avatar>
+
+        <span className="hidden max-w-[8rem] truncate text-xs font-medium text-foreground sm:inline">
+          {username}
+        </span>
+
+        <ChevronDown
+          className="size-3.5 shrink-0 text-muted-foreground transition-transform group-data-popup-open/profile:rotate-180"
+          aria-hidden="true"
+        />
+      </DropdownMenuTrigger>
+
+      <DropdownMenuContent
+        side="bottom"
+        align="end"
+        className="w-(--anchor-width) min-w-56"
+      >
+        <DropdownMenuGroup>
+        <DropdownMenuItem render={<Link href={profileHref} />}>
+          <UserRound aria-hidden="true" />
+          {t.sidebarProfile.profile}
+        </DropdownMenuItem>
+
+        {canManageBilling ? (
+          <>
+            <DropdownMenuItem render={<Link href={upgradeHref} />}>
+              <CircleArrowUp aria-hidden="true" />
+              {t.sidebarProfile.upgradePlan}
+            </DropdownMenuItem>
+
+            <DropdownMenuItem render={<Link href={invoiceHref} />}>
+              <Receipt aria-hidden="true" />
+              {t.sidebarProfile.invoices}
+            </DropdownMenuItem>
+          </>
+        ) : null}
+
+        <DropdownMenuSeparator />
+        <DropdownMenuItem
+          variant="destructive"
+          disabled={pending}
+          onClick={handleLogout}
         >
-          <Avatar className="size-(--app-sidebar-avatar-size) shrink-0 border border-border/60 bg-muted">
-            {/* Above the fold on every route, so it competes for bandwidth. */}
-            <AvatarImage src={imageUrl ?? undefined} alt={username} fetchPriority="high" />
-            <AvatarFallback className="bg-muted text-muted-foreground">
-              <User className="size-4 text-muted-foreground" aria-hidden="true" />
-            </AvatarFallback>
-          </Avatar>
-
-          <span className="min-w-0 flex-1 truncate text-xs font-medium text-foreground">
-            {username}
-          </span>
-
-          <span
-            className={cn(
-              "flex size-7 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors",
-              "group-hover/profile:bg-accent group-hover/profile:text-accent-foreground",
-              "group-data-[popup-open]/profile:bg-accent group-data-[popup-open]/profile:text-accent-foreground",
-              "group-aria-expanded/profile:bg-accent group-aria-expanded/profile:text-accent-foreground",
-              active && "text-accent-foreground",
-            )}
-            aria-hidden="true"
-          >
-            <MoreHorizontal className="size-4" />
-          </span>
-        </DropdownMenuTrigger>
-
-        <DropdownMenuContent
-          side="bottom"
-          align="end"
-          className="w-(--anchor-width) min-w-56"
-        >
-          <DropdownMenuGroup>
-          <DropdownMenuItem render={<Link href={profileHref} />}>
-            <UserRound aria-hidden="true" />
-            {t.sidebarProfile.profile}
-          </DropdownMenuItem>
-
-          {canManageBilling ? (
-            <>
-              <DropdownMenuItem render={<Link href={upgradeHref} />}>
-                <CircleArrowUp aria-hidden="true" />
-                {t.sidebarProfile.upgradePlan}
-              </DropdownMenuItem>
-
-              <DropdownMenuItem render={<Link href={invoiceHref} />}>
-                <Receipt aria-hidden="true" />
-                {t.sidebarProfile.invoices}
-              </DropdownMenuItem>
-            </>
-          ) : null}
-
-          <DropdownMenuSeparator />
-          <DropdownMenuItem
-            variant="destructive"
-            disabled={pending}
-            onClick={handleLogout}
-          >
-            <LogOut aria-hidden="true" />
-            {pending ? t.sidebarProfile.signingOut : t.sidebarProfile.logOut}
-          </DropdownMenuItem>
-          </DropdownMenuGroup>
-        </DropdownMenuContent>
-      </DropdownMenu>
-
-    </div>
+          <LogOut aria-hidden="true" />
+          {pending ? t.sidebarProfile.signingOut : t.sidebarProfile.logOut}
+        </DropdownMenuItem>
+        </DropdownMenuGroup>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }

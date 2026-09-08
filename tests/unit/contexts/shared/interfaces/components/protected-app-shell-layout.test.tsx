@@ -189,4 +189,46 @@ describe("ProtectedAppShell layout invariant", () => {
     expect(banner.compareDocumentPosition(aside) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(banner.compareDocumentPosition(inset!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
+
+  it("should wrap the header and SidebarProvider in a flex column that owns the viewport", () => {
+    // Regression for the redundant vertical scroll on app routes. The fix
+    // moved the viewport-fill responsibility up: a `flex min-h-svh flex-col`
+    // wrapper now encloses both the sticky header AND the sidebar provider,
+    // and the provider itself grows with `flex-1` instead of claiming 100svh
+    // on its own. The page total must therefore stay at 100svh.
+    const { container } = render(
+      <ProtectedAppShell>
+        <h1>Chat</h1>
+      </ProtectedAppShell>,
+    );
+
+    const banner = screen.getByRole("banner");
+    const sidebarWrapper = container.querySelector('[data-slot="sidebar-wrapper"]');
+    expect(sidebarWrapper).not.toBeNull();
+
+    // The banner and the sidebar wrapper share a single flex-column parent.
+    const wrapper = banner.parentElement;
+    expect(wrapper).not.toBeNull();
+    expect(wrapper).toBe(sidebarWrapper!.parentElement);
+
+    // The shared wrapper is a `flex min-h-svh flex-col` viewport-owning
+    // column. The exact token list may grow over time, but the load-bearing
+    // three must stay present so the chain resolves to exactly 100svh.
+    expect(wrapper).toHaveClass("flex");
+    expect(wrapper).toHaveClass("flex-col");
+    expect(wrapper).toHaveClass("min-h-svh");
+
+    // The wrapper is the viewport-owner, NOT the sidebar provider: the
+    // provider no longer carries `min-h-svh` (otherwise the column would
+    // resolve to 100svh + 64px header = scrollbar). The provider must carry
+    // `flex-1` so it grows to fill the remaining column space instead.
+    expect(sidebarWrapper).not.toHaveClass("min-h-svh");
+    expect(sidebarWrapper).toHaveClass("flex-1");
+
+    // Banner precedes sidebar wrapper in document order (carried forward from
+    // the original invariant — the header is the first column child).
+    expect(
+      banner.compareDocumentPosition(sidebarWrapper!) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+  });
 });

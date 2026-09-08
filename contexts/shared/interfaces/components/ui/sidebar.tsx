@@ -138,7 +138,12 @@ function SidebarProvider({
           } as React.CSSProperties
         }
         className={cn(
-          "group/sidebar-wrapper flex min-h-svh w-full has-data-[variant=inset]:bg-sidebar",
+          // The wrapper is intentionally NOT `min-h-svh` so it composes inside a
+          // viewport-owning parent (e.g. a `flex min-h-svh flex-col` layout
+          // that already includes a sticky header above the provider).
+          // Consumers that use SidebarProvider as the page root must size
+          // their own viewport-owning wrapper or apply `min-h-svh` explicitly.
+          "group/sidebar-wrapper flex w-full has-data-[variant=inset]:bg-sidebar",
           className
         )}
         {...props}
