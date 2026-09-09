@@ -50,7 +50,7 @@ export function CreateAppointmentForm({
     initialActionState
   );
   const [isNavigating, startTransition] = useTransition();
-  const hasSucceeded = useRef(false);
+  const handledAppointmentIdRef = useRef<string | null>(null);
 
   const [values, setValues] = useState<AppointmentFormValues>(EMPTY_APPOINTMENT_FORM_VALUES);
 
@@ -69,14 +69,19 @@ export function CreateAppointmentForm({
   });
 
   useEffect(() => {
-    if (state.status === "success" && !hasSucceeded.current) {
-      hasSucceeded.current = true;
+    if (
+      state.status === "success" &&
+      state.data?.id &&
+      handledAppointmentIdRef.current !== state.data.id
+    ) {
+      handledAppointmentIdRef.current = state.data.id;
+      setValues(EMPTY_APPOINTMENT_FORM_VALUES);
       startTransition(() => {
         router.push("/schedule");
         router.refresh();
       });
     }
-  }, [state.status, router]);
+  }, [state.status, state.data?.id, router]);
 
   const isWorking = isSubmitting || isNavigating;
 

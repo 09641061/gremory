@@ -60,7 +60,7 @@ export function AppointmentFormModal({
     createAppointmentAction,
     initialActionState
   );
-  const hasSucceeded = useRef(false);
+  const handledAppointmentIdRef = useRef<string | null>(null);
 
   const [selectedServiceId, setSelectedServiceId] = useState("");
   const [selectedCustomerId, setSelectedCustomerId] = useState("");
@@ -75,13 +75,35 @@ export function AppointmentFormModal({
   const customerOptions = useMemo(() => createCustomerOptions(customers), [customers]);
   const employeeOptions = useMemo(() => createEmployeeOptions(members), [members]);
 
+  const handleOpenChange = (open: boolean) => {
+    if (open) {
+      setSelectedServiceId("");
+      setSelectedCustomerId("");
+      setSelectedEmployeeId("");
+      setTitle("");
+      setStartDate("");
+      setStartTime("");
+    }
+    onOpenChange(open);
+  };
+
   useEffect(() => {
-    if (state.status === "success" && !hasSucceeded.current) {
-      hasSucceeded.current = true;
+    if (
+      state.status === "success" &&
+      state.data?.id &&
+      handledAppointmentIdRef.current !== state.data.id
+    ) {
+      handledAppointmentIdRef.current = state.data.id;
+      setSelectedServiceId("");
+      setSelectedCustomerId("");
+      setSelectedEmployeeId("");
+      setTitle("");
+      setStartDate("");
+      setStartTime("");
       onSuccess();
       onOpenChange(false);
     }
-  }, [state.status, onSuccess, onOpenChange]);
+  }, [state.status, state.data?.id, onSuccess, onOpenChange]);
 
   const { startsAt, endsAt, formattedEnd } = computeAppointmentTimes({
     startDate,
@@ -92,7 +114,7 @@ export function AppointmentFormModal({
 
   return (
     <>
-      <Dialog open={isOpen} onOpenChange={onOpenChange}>
+      <Dialog open={isOpen} onOpenChange={handleOpenChange}>
         <DialogContent className="max-w-md">
           <ErrorAlert
             key={(state.status === "error" ? state.errorId : null) ?? "scheduling-error"}
@@ -186,7 +208,7 @@ export function AppointmentFormModal({
             </div>
 
             <DialogFooter>
-              <Button type="button" variant="outline" disabled={isPending} onClick={() => onOpenChange(false)}>
+              <Button type="button" variant="outline" disabled={isPending} onClick={() => handleOpenChange(false)}>
                 {t.form.cancel}
               </Button>
               <Button type="submit" disabled={isPending || !startsAt || !endsAt}>

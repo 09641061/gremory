@@ -5,7 +5,6 @@ import { usePathname, useSearchParams } from "next/navigation";
 import {
   BarChart3,
   CalendarDays,
-  CircleArrowUp,
   ContactRound,
   MessageCircle,
   Package,
@@ -15,7 +14,6 @@ import {
 import {
   Sidebar as ShadcnSidebar,
   SidebarContent,
-  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
   SidebarHeader,
@@ -27,7 +25,6 @@ import {
 import { AssistantChatsSection } from "@/contexts/assistant/interfaces/components/sidebar/assistant-chats-section";
 import type { AssistantConversationSummaryReadModel } from "@/contexts/assistant/application/internal/transforms/assistant.read-models";
 import type { SidebarRouteId } from "@/contexts/shared/application/model/app-shell.view-models";
-import { hasActiveSubscription } from "@/contexts/billing/domain/services/subscription-access.policy";
 import type { WorkspaceHeaderViewModel } from "@/contexts/business/application/model/business-workspace.view-models";
 import { WorkspaceSwitcher } from "@/contexts/business/interfaces/components/workspace/workspace-switcher/workspace-switcher";
 
@@ -44,7 +41,6 @@ export function AppSidebar({
   showAssistantNavigation,
   showWorkspaceSwitcher = true,
   pathname: pathnameProp,
-  showBillingMenu,
 }: {
   initialAssistantConversations: AssistantConversationSummaryReadModel[];
   workspace: WorkspaceHeaderViewModel;
@@ -53,7 +49,6 @@ export function AppSidebar({
   showAssistantNavigation: boolean;
   showWorkspaceSwitcher?: boolean;
   pathname?: string;
-  showBillingMenu?: boolean;
 }) {
   const { t } = useI18n();
   const currentPathname = usePathname();
@@ -68,7 +63,6 @@ export function AppSidebar({
     workspace.establishments.some((item) => item.id === requestedEstablishmentId)
       ? requestedEstablishmentId
       : workspace.activeEstablishmentId ?? null;
-  const canManageBilling = showBillingMenu ?? workspace.accessPolicy?.canManageBilling ?? false;
   const assistantChatsSectionKey = initialAssistantConversations
     .map((conversation) => `${conversation.id}:${conversation.updatedAt}:${conversation.title ?? ""}`)
     .join("|");
@@ -145,19 +139,6 @@ export function AppSidebar({
           </>
         ) : null}
       </SidebarContent>
-
-      <SidebarFooter className="gap-2 px-3 pb-3">
-        {canManageBilling ? (
-          <Link
-            href="/upgrade"
-            className="flex h-(--app-sidebar-control-height) items-center gap-(--app-sidebar-control-gap) rounded-(--app-sidebar-item-radius) px-(--app-sidebar-control-padding-x) text-xs font-medium text-muted-foreground transition-colors hover:bg-accent/70 hover:text-accent-foreground"
-          >
-            <CircleArrowUp className="size-(--app-sidebar-icon-size) shrink-0" />
-            <span>{hasActiveSubscription(workspace.subscription) ? "Upgrade" : "Get Started"}</span>
-          </Link>
-        ) : null}
-
-      </SidebarFooter>
     </ShadcnSidebar>
   );
 }
