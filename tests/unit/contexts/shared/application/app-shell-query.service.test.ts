@@ -151,6 +151,7 @@ describe("app shell query service", () => {
     expect(shell.hasAssistantAccess).toBe(true);
     expect(shell.visibleSidebarRoutes).toEqual([
       "/chat",
+      "/branches",
       "/schedule",
       "/crm",
       "/catalog",
@@ -197,6 +198,7 @@ describe("app shell query service", () => {
 
     expect(shell.visibleSidebarRoutes).toEqual([
       "/chat",
+      "/branches",
       "/crm",
       "/catalog",
       "/analytics",
@@ -210,6 +212,7 @@ describe("app shell query service", () => {
 
     expect(shell.visibleSidebarRoutes).toEqual([
       "/chat",
+      "/branches",
       "/schedule",
       "/crm",
       "/catalog",

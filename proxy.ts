@@ -89,6 +89,7 @@ export async function proxy(request: NextRequest) {
 function isPrivateRoute(pathname: string) {
   return [
     "/chat",
+    "/branches",
     "/analytics",
     "/schedule",
     "/crm",
@@ -235,6 +236,7 @@ export const config = {
     "/welcome",
     "/invoice",
     "/chat/:path*",
+    "/branches/:path*",
     "/analytics/:path*",
     "/schedule/:path*",
     "/crm/:path*",

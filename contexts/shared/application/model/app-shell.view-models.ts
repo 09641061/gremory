@@ -2,6 +2,7 @@ import type { WorkspaceHeaderViewModel } from "@/contexts/business/application/m
 
 export type SidebarRouteId =
   | "/chat"
+  | "/branches"
   | "/schedule"
   | "/crm"
   | "/catalog"

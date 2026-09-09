@@ -89,6 +89,7 @@ function resolveVisibleSidebarRoutes(
 
   if (hasAssistantAccess) {
     routes.push("/chat");
+    routes.push("/branches");
   }
   if (canReadScheduling) {
     routes.push("/schedule");

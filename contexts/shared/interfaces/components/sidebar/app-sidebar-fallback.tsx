@@ -13,7 +13,7 @@ import {
 } from "@/contexts/shared/interfaces/components/ui/sidebar";
 import { Skeleton } from "@/contexts/shared/interfaces/components/ui/skeleton";
 
-const PLACEHOLDER_ROWS = [0, 1, 2, 3, 4, 5];
+const PLACEHOLDER_ROWS = [0, 1, 2, 3, 4, 5, 6];
 
 /**
  * Streaming placeholder for {@link AppSidebar}.

@@ -4,12 +4,13 @@ import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import {
   BarChart3,
+  BookOpenText,
   CalendarDays,
+  GitBranch,
   CircleArrowUp,
   ContactRound,
-  MessageCircle,
-  Package,
-  Users,
+  SquarePen,
+  UsersRound,
 } from "lucide-react";
 
 import {
@@ -74,11 +75,12 @@ export function AppSidebar({
     .join("|");
 
   const navigation = [
-    { label: t.navigation.newChat, href: "/chat", icon: MessageCircle },
+    { label: t.navigation.newChat, href: "/chat", icon: SquarePen },
+    { label: t.navigation.branches, href: "/branches", icon: GitBranch },
     { label: t.navigation.schedule, href: "/schedule", icon: CalendarDays },
     { label: t.navigation.crm, href: "/crm", icon: ContactRound },
-    { label: t.navigation.catalog, href: "/catalog", icon: Package },
-    { label: t.navigation.team, href: "/team", icon: Users },
+    { label: t.navigation.catalog, href: "/catalog", icon: BookOpenText },
+    { label: t.navigation.team, href: "/team", icon: UsersRound },
     { label: t.navigation.analytics, href: "/analytics", icon: BarChart3 },
   ];
 

@@ -19,6 +19,7 @@ export const es: LocaleDictionary = {
   },
   navigation: {
     newChat: "Nuevo Chat",
+    branches: "Sucursales",
     schedule: "Agenda",
     crm: "CRM",
     catalog: "Catálogo",

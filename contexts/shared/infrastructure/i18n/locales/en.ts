@@ -17,6 +17,7 @@ export const en = {
   },
   navigation: {
     newChat: "New Chat",
+    branches: "Branches",
     schedule: "Schedule",
     crm: "CRM",
     catalog: "Catalog",
