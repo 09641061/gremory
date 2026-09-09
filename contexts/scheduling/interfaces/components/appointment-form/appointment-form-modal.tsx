@@ -60,7 +60,7 @@ export function AppointmentFormModal({
     createAppointmentAction,
     initialActionState
   );
-  const hasSucceeded = useRef(false);
+  const handledAppointmentIdRef = useRef<string | null>(null);
 
   const [selectedServiceId, setSelectedServiceId] = useState("");
   const [selectedCustomerId, setSelectedCustomerId] = useState("");
@@ -83,13 +83,16 @@ export function AppointmentFormModal({
       setTitle("");
       setStartDate("");
       setStartTime("");
-      hasSucceeded.current = false;
     }
   }, [isOpen]);
 
   useEffect(() => {
-    if (state.status === "success" && !hasSucceeded.current) {
-      hasSucceeded.current = true;
+    if (
+      state.status === "success" &&
+      state.data?.id &&
+      handledAppointmentIdRef.current !== state.data.id
+    ) {
+      handledAppointmentIdRef.current = state.data.id;
       setSelectedServiceId("");
       setSelectedCustomerId("");
       setSelectedEmployeeId("");
@@ -99,7 +102,7 @@ export function AppointmentFormModal({
       onSuccess();
       onOpenChange(false);
     }
-  }, [state.status, onSuccess, onOpenChange]);
+  }, [state.status, state.data?.id, onSuccess, onOpenChange]);
 
   const { startsAt, endsAt, formattedEnd } = computeAppointmentTimes({
     startDate,
