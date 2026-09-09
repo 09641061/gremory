@@ -69,8 +69,14 @@ export function CreateAppointmentForm({
   });
 
   useEffect(() => {
+    setValues(EMPTY_APPOINTMENT_FORM_VALUES);
+    hasSucceeded.current = false;
+  }, []);
+
+  useEffect(() => {
     if (state.status === "success" && !hasSucceeded.current) {
       hasSucceeded.current = true;
+      setValues(EMPTY_APPOINTMENT_FORM_VALUES);
       startTransition(() => {
         router.push("/schedule");
         router.refresh();

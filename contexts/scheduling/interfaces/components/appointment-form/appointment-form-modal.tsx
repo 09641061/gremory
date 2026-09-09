@@ -76,8 +76,26 @@ export function AppointmentFormModal({
   const employeeOptions = useMemo(() => createEmployeeOptions(members), [members]);
 
   useEffect(() => {
+    if (isOpen) {
+      setSelectedServiceId("");
+      setSelectedCustomerId("");
+      setSelectedEmployeeId("");
+      setTitle("");
+      setStartDate("");
+      setStartTime("");
+      hasSucceeded.current = false;
+    }
+  }, [isOpen]);
+
+  useEffect(() => {
     if (state.status === "success" && !hasSucceeded.current) {
       hasSucceeded.current = true;
+      setSelectedServiceId("");
+      setSelectedCustomerId("");
+      setSelectedEmployeeId("");
+      setTitle("");
+      setStartDate("");
+      setStartTime("");
       onSuccess();
       onOpenChange(false);
     }
