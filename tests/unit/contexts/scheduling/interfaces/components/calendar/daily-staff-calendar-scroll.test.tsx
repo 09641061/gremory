@@ -98,19 +98,17 @@ const customers: SchedulingCustomerViewModel[] = [
 /**
  * Regression test for the daily-staff-calendar scroll container fix.
  *
- * Bug: the columns header (avatars + names) used to scroll out of view
- * because the `<div className="sticky top-0 z-20 …">` wrapper contained
- * BOTH the toolbar and the columns header. `position: sticky` only pins
- * the top edge, so the whole wrapper scrolled away as soon as the user
- * scrolled past the toolbar.
+ * Layout chain:
+ *   - calendar shell (flex column, overflow-hidden)
+ *   - toolbar (fixed outside the scroll region)
+ *   - columns header (fixed outside the scroll region)
+ *   - scroll container (only the hour grid; overflow-y-auto and scrollbar-hide)
  *
- * Fix: split the wrapper. The toolbar is no longer sticky (it scrolls
- * away naturally). The columns header is its own `sticky top-0 z-20`
- * element. Time labels now use `sticky top-[var(--app-calendar-column-
- * header-height)]` so they sit *below* the pinned columns header.
+ * Keeping the fixed controls as siblings of the scroll container avoids
+ * fragile sticky offsets and ensures only the hour rows move.
  *
- * This file locks that layout contract in place: each it() block targets
- * a specific class assertion that would break if the fix regresses.
+ * Each it() block locks a specific class assertion that would break if
+ * the layout chain regresses.
  */
 describe("DailyStaffCalendar scroll container", () => {
   it("renders the outer scroll container with the correct flex/scroll classes (assertion a)", async () => {
@@ -136,20 +134,18 @@ describe("DailyStaffCalendar scroll container", () => {
     });
 
     const scrollContainer = screen.getByTestId("schedule-calendar-scroll-container");
-    // The wrapper must own the scroll context: `overflow-y-auto` establishes
-    // the scrolling ancestor that makes the columns-header sticky work;
-    // `flex min-h-0 flex-1 flex-col` is the canonical flex-fill chain.
+    // Only this region scrolls; the toolbar and members header are siblings
+    // outside it and therefore remain fixed without sticky positioning.
     expect(scrollContainer).toHaveClass("overflow-y-auto");
-    expect(scrollContainer).toHaveClass("flex");
+    expect(scrollContainer).toHaveClass("scrollbar-hide");
     expect(scrollContainer).toHaveClass("min-h-0");
     expect(scrollContainer).toHaveClass("flex-1");
-    expect(scrollContainer).toHaveClass("flex-col");
 
     // Container should also have been mounted into the rendered tree.
     expect(container).toContainElement(scrollContainer);
   });
 
-  it("renders the columns header with its own sticky positioning (assertion b)", async () => {
+  it("renders the toolbar as its own sticky element at the top of the scroll container (assertion b)", async () => {
     render(
       <DailyStaffCalendar
         establishmentId="est-1"
@@ -168,15 +164,15 @@ describe("DailyStaffCalendar scroll container", () => {
     });
 
     const columnsHeader = screen.getByTestId("schedule-calendar-columns-header");
-    // The columns header is the *only* sticky element in the calendar; it
-    // owns `top-0` and `z-20` so it pins to the scroll container's top edge
-    // and paints above the grid rows below.
-    expect(columnsHeader).toHaveClass("sticky");
-    expect(columnsHeader).toHaveClass("top-0");
-    expect(columnsHeader).toHaveClass("z-20");
+    const toolbarWrapper = columnsHeader.previousElementSibling;
+    const scrollContainer = screen.getByTestId("schedule-calendar-scroll-container");
+    expect(toolbarWrapper).not.toBeNull();
+    expect(toolbarWrapper).toHaveClass("shrink-0");
+    expect(toolbarWrapper).not.toHaveClass("sticky");
+    expect(scrollContainer.previousElementSibling).toBe(columnsHeader);
   });
 
-  it("treats the toolbar and columns header as siblings (NOT inside one sticky wrapper) (assertion c)", async () => {
+  it("stacks the columns header below the toolbar with its own sticky positioning (assertion c)", async () => {
     const { container } = render(
       <DailyStaffCalendar
         establishmentId="est-1"
@@ -203,18 +199,13 @@ describe("DailyStaffCalendar scroll container", () => {
     const toolbarWrapper = columnsHeader.previousElementSibling;
     expect(toolbarWrapper).not.toBeNull();
     expect(toolbarWrapper!.querySelector("button")).not.toBeNull();
-    // Critically, the toolbar wrapper must NOT be sticky — that's the
-    // whole point of the fix. If a future PR re-wraps the toolbar with a
-    // sticky class, the columns header starts scrolling away again.
-    expect(toolbarWrapper).not.toHaveClass("sticky");
 
-    // Belt-and-braces: the columns-header wrapper is the ONLY sticky
-    // direct child of the scroll container. Two sticky children would mean
-    // a regression that re-introduces the original bug or accidentally
-    // double-sticks the toolbar.
-    const stickyChildren = scrollContainer.querySelectorAll(":scope > .sticky");
-    expect(stickyChildren.length).toBe(1);
-    expect(stickyChildren[0]).toBe(columnsHeader);
+    expect(columnsHeader).toHaveClass("shrink-0");
+    expect(columnsHeader).not.toHaveClass("sticky");
+
+    // Neither fixed section belongs to the hour-grid scroll container.
+    expect(scrollContainer.contains(toolbarWrapper)).toBe(false);
+    expect(scrollContainer.contains(columnsHeader)).toBe(false);
 
     // Sanity: the toolbar wrapper exists and contains the toolbar's
     // signature interactive elements (the prev/next day buttons and the
@@ -240,20 +231,11 @@ describe("DailyStaffCalendar scroll container", () => {
       expect(mocks.listAppointmentsAction).toHaveBeenCalled();
     });
 
-    // Every hour row renders a `<span>` time label that is `sticky`. jsdom
-    // does not compute layout, so a class-list assertion is the right
-    // grain: the label must reference the
-    // `--app-calendar-column-header-height` design token instead of a
-    // hard-coded `top-2` (which used to collide with the pinned columns
-    // header).
-    const timeLabels = container.querySelectorAll("span.sticky");
+    // Time labels belong to the hour rows and must move with them.
+    const scrollContainer = screen.getByTestId("schedule-calendar-scroll-container");
+    const timeLabels = scrollContainer.querySelectorAll("span.text-xs");
     expect(timeLabels.length).toBeGreaterThan(0);
-
-    const firstLabel = timeLabels[0];
-    expect(firstLabel).not.toBeNull();
-    expect(firstLabel.className).toMatch(
-      /sticky\s+top-\[var\(--app-calendar-column-header-height\)\]/,
-    );
+    expect(container.querySelector("span.sticky")).toBeNull();
   });
 
   it("fills its column through the flex chain (assertion e)", async () => {

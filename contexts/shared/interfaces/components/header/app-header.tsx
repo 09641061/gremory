@@ -40,7 +40,7 @@ export function AppHeader({
   const isHomeActive = pathname === resolvedHomeHref;
 
   return (
-    <header className="sticky top-0 z-20 flex h-16 shrink-0 items-center justify-between gap-3 border-b border-border/60 bg-background px-4 sm:px-6">
+    <header className="sticky top-0 z-30 flex h-16 shrink-0 items-center justify-between gap-3 border-b border-border/60 bg-background px-4 sm:px-6">
       <LocaleSync profileLanguage={profile?.language} />
 
       <Link

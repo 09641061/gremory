@@ -92,19 +92,12 @@ export function DailyStaffCalendar({
 
   return (
     <div
-      data-testid="schedule-calendar-scroll-container"
-      className="flex min-h-0 flex-1 w-full flex-col overflow-y-auto rounded-xl border border-border bg-background text-foreground shadow-sm"
+      data-testid="schedule-calendar"
+      className="flex min-h-0 flex-1 w-full flex-col overflow-hidden rounded-xl border border-border bg-background text-foreground shadow-sm"
     >
-      {/* Outer scroll container. The flex-1 + min-h-0 chain is load-bearing:
-          - flex-1 grows into the column space supplied by the protected layout.
-          - min-h-0 removes the default min-height: auto so this flex item can
-            scroll inside its own overflow-y-auto instead of pushing the page taller.
-          - overflow-y-auto establishes the scrolling context that makes the
-            StaffColumnsHeader sticky behaviour work.
-          Do NOT replace min-h-0 with a viewport-derived calc (e.g. min-h-svh);
-          that breaks position: sticky in flex columns. */}
-      {/* Toolbar — NOT sticky. Scrolls away naturally. */}
-      <div className="bg-background rounded-t-xl">
+      {/* Toolbar and member columns live outside the scroll region. Only the
+          hour grid below is allowed to scroll. */}
+      <div className="shrink-0 bg-background rounded-t-xl">
         <div className="px-4 border-b">
           <CalendarToolbar
             currentDate={currentDate}
@@ -123,10 +116,9 @@ export function DailyStaffCalendar({
         </div>
       </div>
 
-      {/* Columns header — OWN sticky element. Survives the toolbar scrolling away. */}
       <div
         data-testid="schedule-calendar-columns-header"
-        className="sticky top-0 z-20 bg-background border-b"
+        className="shrink-0 bg-background border-b"
       >
         <StaffColumnsHeader
           employees={members}
@@ -138,21 +130,26 @@ export function DailyStaffCalendar({
         />
       </div>
 
-      <DailyStaffGrid
-        currentDate={currentDate}
-        visibleEmployees={visibleEmployees}
-        appointments={appointments}
-        timeZone={timeZone}
-        maxColumns={maxColumns}
-        now={now}
-        onAppointmentClick={setSelectedAppointment}
-        onTimeSlotClick={(employeeId) => {
-          if (!canCreateAppointment) return;
-          router.push(
-            `/schedule/new?establishmentId=${encodeURIComponent(establishmentId)}&employeeId=${encodeURIComponent(employeeId)}`,
-          );
-        }}
-      />
+      <div
+        data-testid="schedule-calendar-scroll-container"
+        className="scrollbar-hide min-h-0 flex-1 overflow-y-auto overscroll-contain"
+      >
+        <DailyStaffGrid
+          currentDate={currentDate}
+          visibleEmployees={visibleEmployees}
+          appointments={appointments}
+          timeZone={timeZone}
+          maxColumns={maxColumns}
+          now={now}
+          onAppointmentClick={setSelectedAppointment}
+          onTimeSlotClick={(employeeId) => {
+            if (!canCreateAppointment) return;
+            router.push(
+              `/schedule/new?establishmentId=${encodeURIComponent(establishmentId)}&employeeId=${encodeURIComponent(employeeId)}`,
+            );
+          }}
+        />
+      </div>
 
       {selectedAppointment && (
         <AppointmentDetailModal
