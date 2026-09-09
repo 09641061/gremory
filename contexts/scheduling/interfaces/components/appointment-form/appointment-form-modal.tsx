@@ -75,8 +75,8 @@ export function AppointmentFormModal({
   const customerOptions = useMemo(() => createCustomerOptions(customers), [customers]);
   const employeeOptions = useMemo(() => createEmployeeOptions(members), [members]);
 
-  useEffect(() => {
-    if (isOpen) {
+  const handleOpenChange = (open: boolean) => {
+    if (open) {
       setSelectedServiceId("");
       setSelectedCustomerId("");
       setSelectedEmployeeId("");
@@ -84,7 +84,8 @@ export function AppointmentFormModal({
       setStartDate("");
       setStartTime("");
     }
-  }, [isOpen]);
+    onOpenChange(open);
+  };
 
   useEffect(() => {
     if (
@@ -113,7 +114,7 @@ export function AppointmentFormModal({
 
   return (
     <>
-      <Dialog open={isOpen} onOpenChange={onOpenChange}>
+      <Dialog open={isOpen} onOpenChange={handleOpenChange}>
         <DialogContent className="max-w-md">
           <ErrorAlert
             key={(state.status === "error" ? state.errorId : null) ?? "scheduling-error"}
@@ -207,7 +208,7 @@ export function AppointmentFormModal({
             </div>
 
             <DialogFooter>
-              <Button type="button" variant="outline" disabled={isPending} onClick={() => onOpenChange(false)}>
+              <Button type="button" variant="outline" disabled={isPending} onClick={() => handleOpenChange(false)}>
                 {t.form.cancel}
               </Button>
               <Button type="submit" disabled={isPending || !startsAt || !endsAt}>
