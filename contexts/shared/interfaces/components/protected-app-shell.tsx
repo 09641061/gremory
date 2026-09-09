@@ -15,7 +15,7 @@ import { PushNotificationRegisterServer } from "@/contexts/notifications/interfa
  *
  * Layout chain (top to bottom):
  *   body (min-h-svh from globals.css)
- *   <div flex min-h-svh flex-col>          - viewport owner
+ *   <div flex h-svh overflow-hidden>       - fixed viewport owner
  *     header (sticky top-0 h-16)           - 64px, AppHeaderServer
  *     SidebarProvider (flex-1)             - fills the remaining column
  *       AppShellSidebarServer
@@ -25,22 +25,22 @@ import { PushNotificationRegisterServer } from "@/contexts/notifications/interfa
  *     <Suspense fallback={null}>            - background side-effect
  *       PushNotificationRegisterServer     - does not render visible UI
  *
- * The <div flex min-h-svh flex-col> wrapper is load-bearing: it owns the viewport so
- * the sticky header and the sidebar provider share exactly one viewport height. Do
- * NOT replace `min-h-0 flex-1` on the provider with a viewport-derived calc.
+ * The fixed-height, overflow-hidden wrapper is load-bearing: it prevents the document
+ * from becoming the scroll owner. The active page must provide its own scroll region.
+ * Do NOT replace `min-h-0 flex-1` on the provider with a viewport-derived calc.
  */
 export default function ProtectedAppShell({ children }: { children: ReactNode }) {
   return (
-    <div className="flex min-h-svh flex-col bg-background text-foreground">
+    <div className="flex h-svh overflow-hidden flex-col bg-background text-foreground">
       <Suspense fallback={<AppHeaderFallback />}>
         <AppHeaderServer />
       </Suspense>
 
-      <SidebarProvider className="flex-1 bg-background text-foreground">
+      <SidebarProvider className="flex min-h-0 flex-1 bg-background text-foreground">
         <Suspense fallback={<AppSidebarFallback />}>
           <AppShellSidebarServer />
         </Suspense>
-        <SidebarInset>
+        <SidebarInset className="min-h-0">
           <SidebarTrigger className="mb-4 md:hidden" />
           {/*
             Safety-net Suspense: each page is expected to wrap its own dynamic

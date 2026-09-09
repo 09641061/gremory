@@ -196,10 +196,10 @@ describe("ProtectedAppShell layout invariant", () => {
 
   it("should wrap the header and SidebarProvider in a flex column that owns the viewport", () => {
     // Regression for the redundant vertical scroll on app routes. The fix
-    // moved the viewport-fill responsibility up: a `flex min-h-svh flex-col`
-    // wrapper now encloses both the sticky header AND the sidebar provider,
-    // and the provider itself grows with `flex-1` instead of claiming 100svh
-    // on its own. The page total must therefore stay at 100svh.
+    // moved the viewport-fill responsibility up: a `flex h-svh overflow-hidden
+    // flex-col` wrapper now encloses both the sticky header AND the sidebar
+    // provider, and the provider itself grows with `flex-1` instead of
+    // claiming 100svh on its own. The page total must therefore stay at 100svh.
     const { container } = render(
       <ProtectedAppShell>
         <h1>Chat</h1>
@@ -215,12 +215,13 @@ describe("ProtectedAppShell layout invariant", () => {
     expect(wrapper).not.toBeNull();
     expect(wrapper).toBe(sidebarWrapper!.parentElement);
 
-    // The shared wrapper is a `flex min-h-svh flex-col` viewport-owning
-    // column. The exact token list may grow over time, but the load-bearing
-    // three must stay present so the chain resolves to exactly 100svh.
+    // The shared wrapper is a fixed `flex h-svh overflow-hidden flex-col`
+    // viewport-owning column. The exact token list may grow over time, but
+    // these classes prevent the document from becoming the scroll owner.
     expect(wrapper).toHaveClass("flex");
     expect(wrapper).toHaveClass("flex-col");
-    expect(wrapper).toHaveClass("min-h-svh");
+    expect(wrapper).toHaveClass("h-svh");
+    expect(wrapper).toHaveClass("overflow-hidden");
 
     // The wrapper is the viewport-owner, NOT the sidebar provider: the
     // provider no longer carries `min-h-svh` (otherwise the column would

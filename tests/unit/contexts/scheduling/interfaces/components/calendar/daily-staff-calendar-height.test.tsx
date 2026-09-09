@@ -148,10 +148,16 @@ describe("DailyStaffCalendar layout invariant", () => {
     expect(calendarContainer).toHaveClass("flex");
     expect(calendarContainer).toHaveClass("flex-col");
 
-    // The inner scroller that handles long appointment lists stays inside
-    // the calendar — the outer container must not attempt to clip or scroll
-    // the page itself.
-    expect(calendarContainer).toHaveClass("overflow-y-auto");
+    // The outer calendar owns the frame and clips overflow; the nested
+    // scroll container is the only element allowed to scroll the hour grid.
+    expect(calendarContainer).toHaveClass("overflow-hidden");
+    const scrollContainer = calendarContainer!.querySelector(
+      '[data-testid="schedule-calendar-scroll-container"]',
+    );
+    expect(scrollContainer).not.toBeNull();
+    expect(scrollContainer).toHaveClass("overflow-y-auto");
+    expect(scrollContainer).toHaveClass("min-h-0");
+    expect(scrollContainer).toHaveClass("flex-1");
   });
 
   it("remains free of viewport-derived classes in any descendant element", async () => {
