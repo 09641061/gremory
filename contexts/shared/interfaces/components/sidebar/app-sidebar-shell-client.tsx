@@ -29,13 +29,6 @@ export function AppShellSidebarClient({
   const pathname = usePathname();
 
   const isSetupRoute = pathname === "/organizations/new";
-  const isAccountStateRoute =
-    isSetupRoute ||
-    pathname === "/invitations/pending" ||
-    pathname === "/access-denied" ||
-    pathname === "/no-access";
-  const showBillingMenu =
-    isAccountStateRoute || workspace.accessPolicy?.canManageBilling === true;
 
   return (
     <AppSidebar
@@ -46,7 +39,6 @@ export function AppShellSidebarClient({
       showAssistantNavigation={showAssistantNavigation}
       showWorkspaceSwitcher={showWorkspaceSwitcher && !isSetupRoute}
       pathname={pathname}
-      showBillingMenu={showBillingMenu}
     />
   );
 }
