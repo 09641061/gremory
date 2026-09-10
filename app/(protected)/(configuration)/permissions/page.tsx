@@ -3,7 +3,10 @@ import { PageHeader, PageShell } from "@/contexts/shared/interfaces/components/p
 export default function PermissionsPage() {
   return (
     <PageShell>
-      <PageHeader title="Permissions" />
+      <PageHeader
+        title="Permissions"
+        description="The workforce permissions module is currently under maintenance."
+      />
     </PageShell>
   );
 }

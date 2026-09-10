@@ -3,7 +3,10 @@ import { PageHeader, PageShell } from "@/contexts/shared/interfaces/components/p
 export default function TeamPage() {
   return (
     <PageShell>
-      <PageHeader title="Team" />
+      <PageHeader
+        title="Team"
+        description="The workforce module is currently under maintenance."
+      />
     </PageShell>
   );
 }
