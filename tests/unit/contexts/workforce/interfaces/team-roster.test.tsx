@@ -395,4 +395,35 @@ describe("TeamRoster", () => {
     expect(screen.queryByRole("button", { name: /Remove .* role/ })).toBeNull();
     expect(screen.queryByRole("button", { name: "Add role" })).toBeNull();
   });
+
+  it("shows the Permissions & Roles tab only with workforce:manage_roles", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(emptyRosterResponse()));
+
+    renderRoster([...authorization.effectivePermissions, "workforce:manage_roles"]);
+
+    expect(await screen.findByRole("tab", { name: "Permissions & Roles" })).toBeVisible();
+  });
+
+  it("hides the Permissions & Roles tab without workforce:manage_roles", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(emptyRosterResponse()));
+
+    renderRoster();
+
+    expect(await screen.findByRole("tab", { name: "Members" })).toBeVisible();
+    expect(screen.queryByRole("tab", { name: "Permissions & Roles" })).toBeNull();
+  });
+
+  it("mounts the role management view when the Permissions & Roles tab is selected", async () => {
+    vi.stubGlobal("fetch", vi.fn((url: string) => {
+      if (url.startsWith("/api/workforce/roles")) {
+        return Promise.resolve(new Response("[]", { status: 200 }));
+      }
+      return Promise.resolve(emptyRosterResponse());
+    }));
+
+    renderRoster([...authorization.effectivePermissions, "workforce:manage_roles"]);
+    await userEvent.click(await screen.findByRole("tab", { name: "Permissions & Roles" }));
+
+    expect(await screen.findByText("Organization roles")).toBeVisible();
+  });
 });

@@ -50,6 +50,7 @@ import { usePermissions } from "@/contexts/workforce/interfaces/hooks/usePermiss
 import { InviteMemberButton } from "@/contexts/workforce/interfaces/components/invite-member-button";
 import { InviteMembersDialog } from "@/contexts/workforce/interfaces/components/invite-members-dialog";
 import { PendingInvitationsList } from "@/contexts/workforce/interfaces/components/pending-invitations-list";
+import { RoleManagement } from "@/contexts/workforce/interfaces/components/role-management";
 
 const pageSize = 20;
 
@@ -62,6 +63,7 @@ export function TeamRoster({ establishmentId = null }: { establishmentId?: strin
   const canInvite = hasPermission("workforce:invite");
   const canAssignRoles = hasPermission("workforce:assign_roles");
   const canManageMembers = hasPermission("workforce:manage_members");
+  const canManageRoles = hasPermission("workforce:manage_roles");
   const [roster, setRoster] = useState<PageResponse<WorkforceMemberResource> | null>(null);
   const [page, setPage] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -71,7 +73,7 @@ export function TeamRoster({ establishmentId = null }: { establishmentId?: strin
   const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false);
   const [memberToRemove, setMemberToRemove] = useState<WorkforceMemberResource | null>(null);
   const isRemoveConfirmOpen = memberToRemove !== null;
-  const [activeTab, setActiveTab] = useState<"members" | "pending">("members");
+  const [activeTab, setActiveTab] = useState<"members" | "pending" | "roles">("members");
 
   const logCurrentPermissions = useEffectEvent(() => {
     console.log("Current permissions:", effectivePermissions);
@@ -239,7 +241,7 @@ export function TeamRoster({ establishmentId = null }: { establishmentId?: strin
 
       <Tabs
         value={activeTab}
-        onValueChange={(value) => setActiveTab(value as "members" | "pending")}
+        onValueChange={(value) => setActiveTab(value as "members" | "pending" | "roles")}
         className="w-full"
       >
         <TabsList
@@ -258,6 +260,14 @@ export function TeamRoster({ establishmentId = null }: { establishmentId?: strin
           >
             Pending Invitations ({pendingInvitations.length})
           </TabsTrigger>
+          {canManageRoles ? (
+            <TabsTrigger
+              value="roles"
+              className="flex-none rounded-none border-b-2 border-transparent px-0 pt-2 pb-3 text-sm font-medium text-muted-foreground transition-colors after:hidden hover:text-foreground data-active:border-b-foreground data-active:text-foreground"
+            >
+              Permissions &amp; Roles
+            </TabsTrigger>
+          ) : null}
         </TabsList>
 
         <TabsContent value="members">
@@ -365,6 +375,12 @@ export function TeamRoster({ establishmentId = null }: { establishmentId?: strin
         <TabsContent value="pending">
           <PendingInvitationsList invitations={pendingInvitations} />
         </TabsContent>
+
+        {canManageRoles ? (
+          <TabsContent value="roles">
+            <RoleManagement embedded />
+          </TabsContent>
+        ) : null}
       </Tabs>
 
       <InviteMembersDialog
