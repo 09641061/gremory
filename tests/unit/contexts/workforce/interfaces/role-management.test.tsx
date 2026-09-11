@@ -1,6 +1,6 @@
 /** @vitest-environment jsdom */
 
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
@@ -161,6 +161,33 @@ describe("RoleManagement", () => {
       ),
     ).toBeVisible();
     expect(screen.queryAllByRole("checkbox")).toHaveLength(0);
+  });
+
+  it("deletes a role only after confirming in the custom modal", async () => {
+    const fetchMock = mockApi({ roles: [workerRole], members: [] });
+    vi.stubGlobal("fetch", fetchMock);
+
+    renderManagement();
+
+    await userEvent.click(await screen.findByRole("button", { name: `Delete ${workerRole.name}` }));
+
+    const description = await screen.findByText(
+      /Are you sure you want to delete the "Worker" role\? This action cannot be undone and will affect any custom permission flows\./,
+    );
+    const dialog = description.closest("[data-slot='alert-dialog-content']") as HTMLElement;
+    expect(dialog).not.toBeNull();
+    expect(
+      fetchMock.mock.calls.some(([, init]) => (init as RequestInit | undefined)?.method === "DELETE"),
+    ).toBe(false);
+
+    await userEvent.click(within(dialog).getByRole("button", { name: "Delete" }));
+
+    await waitFor(() =>
+      expect(fetchMock).toHaveBeenCalledWith(
+        `/api/workforce/roles/${workerRole.id}`,
+        expect.objectContaining({ method: "DELETE" }),
+      ),
+    );
   });
 
   it("shows how many members hold each role", async () => {

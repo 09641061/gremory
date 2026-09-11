@@ -5,6 +5,16 @@ import { Pencil, Plus, ShieldCheck, Trash2, UserMinus } from "lucide-react";
 import { z } from "zod";
 
 import { SearchableOptions } from "@/contexts/shared/interfaces/components/searchable-options";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/contexts/shared/interfaces/components/ui/alert-dialog";
 import { Badge } from "@/contexts/shared/interfaces/components/ui/badge";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/contexts/shared/interfaces/components/ui/card";
@@ -59,6 +69,8 @@ export function RoleManagement({ embedded = false }: { embedded?: boolean } = {}
   const [members, setMembers] = useState<WorkforceMemberResource[]>([]);
   const [editingRole, setEditingRole] = useState<WorkforceRoleResource | null>(null);
   const [isCreating, setIsCreating] = useState(false);
+  const [roleToDelete, setRoleToDelete] = useState<WorkforceRoleResource | null>(null);
+  const isDeleteOpen = roleToDelete !== null;
   const [editorTab, setEditorTab] = useState<EditorTab>("permissions");
   const [form, setForm] = useState<FormState>({ name: "", permissions: [] });
   const [loading, setLoading] = useState(false);
@@ -206,9 +218,9 @@ export function RoleManagement({ embedded = false }: { embedded?: boolean } = {}
     }
   }
 
-  async function deleteRole(role: WorkforceRoleResource) {
-    if (!organizationId || role.systemRole) return;
-    if (!window.confirm(`Delete the ${role.name} role?`)) return;
+  async function confirmDeleteRole() {
+    const role = roleToDelete;
+    if (!organizationId || !role || role.systemRole) return;
 
     setLoading(true);
     setError(null);
@@ -223,7 +235,9 @@ export function RoleManagement({ embedded = false }: { embedded?: boolean } = {}
         setEditingRole(null);
         setIsCreating(false);
       }
+      setRoleToDelete(null);
     } catch (reason) {
+      setRoleToDelete(null);
       setError(reason instanceof Error ? reason.message : "Unable to delete the role.");
     } finally {
       setLoading(false);
@@ -333,8 +347,8 @@ export function RoleManagement({ embedded = false }: { embedded?: boolean } = {}
     <>
       {error ? <p role="alert" className="rounded-lg border border-destructive/40 bg-destructive/5 px-4 py-3 text-sm text-destructive">{error}</p> : null}
 
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_24rem]">
-        <Card>
+      <div className="grid gap-6 lg:grid-cols-5">
+        <Card className="lg:col-span-2">
           <CardHeader className="border-b border-border/70">
             <CardTitle className="flex items-center justify-between gap-4">
               <span>Organization roles</span>
@@ -371,7 +385,7 @@ export function RoleManagement({ embedded = false }: { embedded?: boolean } = {}
                           variant="destructive"
                           size="icon-sm"
                           disabled={role.systemRole}
-                          onClick={() => void deleteRole(role)}
+                          onClick={() => setRoleToDelete(role)}
                           aria-label={`Delete ${role.name}`}
                           title={role.systemRole ? "System roles cannot be deleted" : "Delete role"}
                         >
@@ -387,7 +401,7 @@ export function RoleManagement({ embedded = false }: { embedded?: boolean } = {}
           </CardContent>
         </Card>
 
-        <Card className="h-fit">
+        <Card className="lg:col-span-3">
           {editingRole || isCreating ? (
             <CardHeader className="border-b border-border/70">
               <CardTitle>{editingRole ? `${editingRole.systemRole ? "View" : "Edit"} role` : "Create role"}</CardTitle>
@@ -503,6 +517,31 @@ export function RoleManagement({ embedded = false }: { embedded?: boolean } = {}
           </CardContent>
         </Card>
       </div>
+
+      <AlertDialog
+        open={isDeleteOpen}
+        onOpenChange={(open) => !open && setRoleToDelete(null)}
+      >
+        <AlertDialogContent className="rounded-xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Role</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete the &quot;{roleToDelete?.name}&quot; role? This action
+              cannot be undone and will affect any custom permission flows.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={loading}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              variant="destructive"
+              disabled={loading}
+              onClick={() => void confirmDeleteRole()}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 
