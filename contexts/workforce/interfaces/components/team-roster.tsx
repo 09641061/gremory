@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useEffectEvent, useState } from "react";
-import { ChevronLeft, ChevronRight, ShieldAlert, UserRoundCog } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus, ShieldAlert, X } from "lucide-react";
 
 import type { PageResponse } from "@/contexts/shared/application/model/page-response";
 import { PageHeader, PageShell } from "@/contexts/shared/interfaces/components/page-shell";
@@ -19,13 +19,13 @@ import {
   AlertDialogTitle,
 } from "@/contexts/shared/interfaces/components/ui/alert-dialog";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/contexts/shared/interfaces/components/ui/dialog";
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from "@/contexts/shared/interfaces/components/ui/dropdown-menu";
 import {
   Table,
   TableBody,
@@ -66,10 +66,8 @@ export function TeamRoster({ establishmentId = null }: { establishmentId?: strin
   const [page, setPage] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [selectedMember, setSelectedMember] = useState<WorkforceMemberResource | null>(null);
   const [roles, setRoles] = useState<WorkforceRoleResource[]>([]);
-  const [selectedRoleId, setSelectedRoleId] = useState("");
-  const [savingRole, setSavingRole] = useState(false);
+  const [roleMutationKey, setRoleMutationKey] = useState<string | null>(null);
   const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false);
   const [memberToRemove, setMemberToRemove] = useState<WorkforceMemberResource | null>(null);
   const isRemoveConfirmOpen = memberToRemove !== null;
@@ -118,12 +116,9 @@ export function TeamRoster({ establishmentId = null }: { establishmentId?: strin
     return () => window.clearTimeout(timer);
   }, [canRead, organizationId]);
 
-  async function openRoleManager(member: WorkforceMemberResource) {
-    if (!organizationId || !canAssignRoles || isOwner(member)) return;
+  const loadRoles = useEffectEvent(async () => {
+    if (!organizationId || !canAssignRoles) return;
 
-    setSelectedMember(member);
-    setSelectedRoleId("");
-    setError(null);
     try {
       const response = await fetch("/api/workforce/roles", {
         headers: { "X-Organization-Id": organizationId },
@@ -134,26 +129,51 @@ export function TeamRoster({ establishmentId = null }: { establishmentId?: strin
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "Unable to load roles.");
     }
-  }
+  });
 
-  async function assignRole() {
-    if (!organizationId || !selectedMember?.memberId || !selectedRoleId) return;
+  useEffect(() => {
+    if (!canAssignRoles || !organizationId) return;
 
-    setSavingRole(true);
+    const timer = window.setTimeout(loadRoles, 0);
+    return () => window.clearTimeout(timer);
+  }, [canAssignRoles, organizationId]);
+
+  async function assignRoleToMember(member: WorkforceMemberResource, roleId: string) {
+    if (!organizationId || !member.memberId) return;
+
+    setRoleMutationKey(`${member.memberId}:${roleId}`);
+    setError(null);
     try {
-      const response = await fetch(`/api/workforce/roles/members/${selectedMember.memberId}`, {
+      const response = await fetch(`/api/workforce/roles/members/${member.memberId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json", "X-Organization-Id": organizationId },
-        body: JSON.stringify({ roleId: selectedRoleId }),
+        body: JSON.stringify({ roleId }),
       });
-      if (!response.ok) throw new Error(readErrorMessage(await response.json()));
-
-      setSelectedMember(null);
+      if (!response.ok) throw new Error(readErrorMessage(await response.json().catch(() => undefined)));
       await loadRoster(page);
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "Unable to assign the role.");
     } finally {
-      setSavingRole(false);
+      setRoleMutationKey(null);
+    }
+  }
+
+  async function removeRoleFromMember(member: WorkforceMemberResource, roleId: string) {
+    if (!organizationId || !member.memberId) return;
+
+    setRoleMutationKey(`${member.memberId}:${roleId}`);
+    setError(null);
+    try {
+      const response = await fetch(
+        `/api/workforce/roles/members/${member.memberId}/${roleId}`,
+        { method: "DELETE", headers: { "X-Organization-Id": organizationId } },
+      );
+      if (!response.ok) throw new Error(readErrorMessage(await response.json().catch(() => undefined)));
+      await loadRoster(page);
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "Unable to remove the role.");
+    } finally {
+      setRoleMutationKey(null);
     }
   }
 
@@ -267,6 +287,7 @@ export function TeamRoster({ establishmentId = null }: { establishmentId?: strin
                   {roster?.content.map((member) => {
                     const owner = isOwner(member);
                     const canEditMember = member.memberId !== null && member.status === "ACTIVE" && !owner;
+                    const canMutateRoles = canEditMember && canAssignRoles;
                     return (
                       <TableRow key={member.invitationId}>
                         <TableCell className="px-5 py-4 whitespace-normal">
@@ -274,10 +295,32 @@ export function TeamRoster({ establishmentId = null }: { establishmentId?: strin
                           <div className="mt-0.5 text-xs text-muted-foreground">{member.email}</div>
                         </TableCell>
                         <TableCell className="whitespace-normal">
-                          <div className="flex flex-wrap gap-1.5">
+                          <div className="flex flex-wrap items-center gap-1.5">
                             {owner ? <Badge variant="secondary">Owner</Badge> : null}
-                            {member.roles.map((role) => <Badge key={role.id} variant="outline">{role.name}</Badge>)}
+                            {member.roles.map((role) =>
+                              canMutateRoles ? (
+                                <RoleTag
+                                  key={role.id}
+                                  role={role}
+                                  busy={roleMutationKey === `${member.memberId}:${role.id}`}
+                                  onRemove={() => void removeRoleFromMember(member, role.id)}
+                                />
+                              ) : (
+                                <Badge key={role.id} variant="outline">
+                                  {role.name}
+                                </Badge>
+                              ),
+                            )}
                             {!owner && member.roles.length === 0 ? <span className="text-sm text-muted-foreground">No role</span> : null}
+                            {canMutateRoles ? (
+                              <AddRoleMenu
+                                roles={roles.filter(
+                                  (role) => !member.roles.some((assigned) => assigned.id === role.id),
+                                )}
+                                busy={roleMutationKey?.startsWith(`${member.memberId}:`) ?? false}
+                                onAdd={(roleId) => void assignRoleToMember(member, roleId)}
+                              />
+                            ) : null}
                           </div>
                         </TableCell>
                         <TableCell><StatusBadge status={member.status} /></TableCell>
@@ -287,20 +330,10 @@ export function TeamRoster({ establishmentId = null }: { establishmentId?: strin
                         </TableCell>
                         <TableCell className="px-5 text-right">
                           {owner ? <span className="text-xs text-muted-foreground">Protected</span> : null}
-                          {!owner && canEditMember && (canAssignRoles || canManageMembers) ? (
-                            <div className="flex justify-end gap-2">
-                              {canAssignRoles ? (
-                                <Button variant="outline" size="sm" onClick={() => void openRoleManager(member)}>
-                                  <UserRoundCog className="size-4" aria-hidden="true" />
-                                  Roles
-                                </Button>
-                              ) : null}
-                              {canManageMembers ? (
-                                <Button variant="destructive" size="sm" onClick={() => setMemberToRemove(member)}>
-                                  Remove
-                                </Button>
-                              ) : null}
-                            </div>
+                          {!owner && canEditMember && canManageMembers ? (
+                            <Button variant="destructive" size="sm" onClick={() => setMemberToRemove(member)}>
+                              Remove
+                            </Button>
                           ) : null}
                         </TableCell>
                       </TableRow>
@@ -333,31 +366,6 @@ export function TeamRoster({ establishmentId = null }: { establishmentId?: strin
           <PendingInvitationsList invitations={pendingInvitations} />
         </TabsContent>
       </Tabs>
-
-      <Dialog open={selectedMember !== null} onOpenChange={(open) => !open && setSelectedMember(null)}>
-        <DialogContent showCloseButton>
-          <DialogHeader>
-            <DialogTitle>Assign role</DialogTitle>
-            <DialogDescription>
-              Add a role to {selectedMember?.username ?? selectedMember?.email}.
-            </DialogDescription>
-          </DialogHeader>
-          <label className="grid gap-2 text-sm font-medium">
-            Available role
-            <select className="h-9 rounded-lg border border-input bg-transparent px-2 text-sm" value={selectedRoleId} onChange={(event) => setSelectedRoleId(event.target.value)}>
-              <option value="">Select a role</option>
-              {roles.filter((role) => !selectedMember?.roles.some((assigned) => assigned.id === role.id)).map((role) => (
-                <option key={role.id} value={role.id}>{role.name}</option>
-              ))}
-            </select>
-          </label>
-          <DialogFooter>
-            <Button type="button" onClick={() => void assignRole()} disabled={!selectedRoleId || savingRole}>
-              {savingRole ? "Assigning..." : "Assign role"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
       <InviteMembersDialog
         isOpen={isInviteDialogOpen}
@@ -393,6 +401,74 @@ export function TeamRoster({ establishmentId = null }: { establishmentId?: strin
         </AlertDialogContent>
       </AlertDialog>
     </PageShell>
+  );
+}
+
+function RoleTag({
+  role,
+  busy,
+  onRemove,
+}: {
+  role: WorkforceRoleResource;
+  busy: boolean;
+  onRemove: () => void;
+}) {
+  return (
+    <Badge variant="outline" className="gap-1 pr-1">
+      {role.name}
+      <button
+        type="button"
+        onClick={onRemove}
+        disabled={busy}
+        aria-label={`Remove ${role.name} role`}
+        className="rounded-full p-0.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
+      >
+        <X className="size-3" aria-hidden="true" />
+      </button>
+    </Badge>
+  );
+}
+
+function AddRoleMenu({
+  roles,
+  busy,
+  onAdd,
+}: {
+  roles: WorkforceRoleResource[];
+  busy: boolean;
+  onAdd: (roleId: string) => void;
+}) {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger
+        disabled={busy}
+        render={
+          <Button
+            type="button"
+            variant="outline"
+            size="icon-sm"
+            aria-label="Add role"
+            title="Add role"
+          />
+        }
+      >
+        <Plus className="size-4" aria-hidden="true" />
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start" className="min-w-40">
+        <DropdownMenuGroup>
+          <DropdownMenuLabel>Add role</DropdownMenuLabel>
+          {roles.length === 0 ? (
+            <DropdownMenuItem disabled>All roles assigned</DropdownMenuItem>
+          ) : (
+            roles.map((role) => (
+              <DropdownMenuItem key={role.id} onClick={() => onAdd(role.id)}>
+                {role.name}
+              </DropdownMenuItem>
+            ))
+          )}
+        </DropdownMenuGroup>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
 

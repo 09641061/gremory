@@ -115,6 +115,17 @@ export class WorkforceApiGateway {
     );
   }
 
+  async removeRoleAssignment(organizationId: string, memberId: string, roleId: string): Promise<void> {
+    await apiClient.delete(
+      `${apiConfig.routes.workforce.roles}/members/${encodeURIComponent(memberId)}/${encodeURIComponent(roleId)}`,
+      {
+        token: await this.accessToken(),
+        headers: this.organizationHeader(organizationId),
+        errorMessage: "Failed to remove workforce role assignment",
+      },
+    );
+  }
+
   async removeMember(organizationId: string, memberId: string): Promise<void> {
     await apiClient.delete(
       `${apiConfig.routes.workforce.members}/${encodeURIComponent(memberId)}`,

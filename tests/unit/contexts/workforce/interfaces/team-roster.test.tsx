@@ -283,4 +283,116 @@ describe("TeamRoster", () => {
       }),
     );
   });
+
+  const managerRole = {
+    id: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+    name: "Manager",
+    position: 1,
+    systemRole: false,
+    permissions: [],
+  };
+  const workerRole = {
+    id: "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",
+    name: "Worker",
+    position: 2,
+    systemRole: false,
+    permissions: [],
+  };
+  const activeMemberId = "33333333-3333-4333-8333-333333333333";
+
+  function rosterWithMember(overrides: Record<string, unknown> = {}) {
+    return {
+      invitationId: "99999999-9999-4999-8999-999999999999",
+      memberId: activeMemberId,
+      userId: "44444444-4444-4444-8444-444444444444",
+      email: "member@example.com",
+      username: "Member User",
+      imageUrl: null,
+      organizationId,
+      organizationName: "Takodu",
+      establishmentId,
+      establishmentName: "Main",
+      status: "ACTIVE",
+      roles: [managerRole],
+      invitedAt: "2026-01-01T00:00:00Z",
+      invitationExpiresAt: "2026-02-01T00:00:00Z",
+      acceptedAt: "2026-01-01T00:00:00Z",
+      joinedAt: "2026-01-01T00:00:00Z",
+      removedAt: null,
+      isOwner: false,
+      ...overrides,
+    };
+  }
+
+  function mockRolesFetch(member: Record<string, unknown>, roles: unknown[]) {
+    return vi.fn((url: string, init?: RequestInit) => {
+      if (init?.method === "DELETE") return Promise.resolve(new Response(null, { status: 204 }));
+      if (init?.method === "PUT") return Promise.resolve(new Response(null, { status: 204 }));
+      if (url === "/api/workforce/roles") {
+        return Promise.resolve(new Response(JSON.stringify(roles), { status: 200 }));
+      }
+      return Promise.resolve(new Response(JSON.stringify({
+        content: [member],
+        page: 0,
+        size: 20,
+        totalElements: 1,
+        totalPages: 1,
+      }), { status: 200 }));
+    });
+  }
+
+  it("removes an assigned role from a member via the badge control", async () => {
+    const fetchMock = mockRolesFetch(rosterWithMember(), [managerRole, workerRole]);
+    vi.stubGlobal("fetch", fetchMock);
+
+    renderRoster();
+    await userEvent.click(await screen.findByRole("button", { name: "Remove Manager role" }));
+
+    await waitFor(() =>
+      expect(fetchMock).toHaveBeenCalledWith(
+        `/api/workforce/roles/members/${activeMemberId}/${managerRole.id}`,
+        expect.objectContaining({ method: "DELETE" }),
+      ),
+    );
+  });
+
+  it("adds an unassigned role from the compact add menu", async () => {
+    const fetchMock = mockRolesFetch(rosterWithMember(), [managerRole, workerRole]);
+    vi.stubGlobal("fetch", fetchMock);
+
+    renderRoster();
+    await userEvent.click(await screen.findByRole("button", { name: "Add role" }));
+    await userEvent.click(await screen.findByRole("menuitem", { name: "Worker" }));
+
+    await waitFor(() =>
+      expect(fetchMock).toHaveBeenCalledWith(
+        `/api/workforce/roles/members/${activeMemberId}`,
+        expect.objectContaining({
+          method: "PUT",
+          body: JSON.stringify({ roleId: workerRole.id }),
+        }),
+      ),
+    );
+  });
+
+  it("keeps the Owner role tags static without remove or add controls", async () => {
+    const ownerMember = rosterWithMember({
+      username: "Organization Owner",
+      isOwner: true,
+      roles: [{
+        id: "cccccccc-cccc-4ccc-8ccc-cccccccccccc",
+        name: "Owner",
+        position: 0,
+        systemRole: true,
+        permissions: ["*"],
+      }],
+    });
+    vi.stubGlobal("fetch", mockRolesFetch(ownerMember, []));
+
+    renderRoster();
+
+    expect(await screen.findByText("Organization Owner")).toBeVisible();
+    expect(screen.queryByRole("button", { name: /Remove .* role/ })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Add role" })).toBeNull();
+  });
 });
