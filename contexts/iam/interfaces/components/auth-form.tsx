@@ -31,7 +31,23 @@ function GoogleSubmitButton() {
   );
 }
 
-export function AuthForm({ returnTo = null }: { returnTo?: string | null }) {
+export function AuthForm({
+  returnTo = null,
+  initialEmail,
+  lockEmail = false,
+  heading,
+  description,
+  submitLabel,
+  hideGoogle = false,
+}: {
+  returnTo?: string | null;
+  initialEmail?: string;
+  lockEmail?: boolean;
+  heading?: string;
+  description?: string;
+  submitLabel?: string;
+  hideGoogle?: boolean;
+}) {
   const { t } = useI18n();
   const [state, formAction, pending] = useActionState(requestEmailSignInAction, {
     status: "idle",
@@ -48,18 +64,22 @@ export function AuthForm({ returnTo = null }: { returnTo?: string | null }) {
       <PageShell className="min-h-svh max-w-none justify-center">
         <section className="mx-auto w-full max-w-[440px]">
           <header className="mb-5 space-y-2 text-center">
-            <h1 className="page-title">{t.auth.continueToTakodu}</h1>
-            <p className="page-description">{t.auth.authDescription}</p>
+            <h1 className="page-title">{heading ?? t.auth.continueToTakodu}</h1>
+            <p className="page-description">{description ?? t.auth.authDescription}</p>
           </header>
 
           <Card>
             <CardContent className="space-y-4 p-6 pt-0">
-              <form action={startGoogleAuthAction}>
-                {returnTo ? <input type="hidden" name="returnTo" value={returnTo} /> : null}
-                <GoogleSubmitButton />
-              </form>
+              {hideGoogle ? null : (
+                <>
+                  <form action={startGoogleAuthAction}>
+                    {returnTo ? <input type="hidden" name="returnTo" value={returnTo} /> : null}
+                    <GoogleSubmitButton />
+                  </form>
 
-              <Separator className="my-4" />
+                  <Separator className="my-4" />
+                </>
+              )}
 
               <form action={formAction} className="space-y-4 text-left">
                 {returnTo ? <input type="hidden" name="returnTo" value={returnTo} /> : null}
@@ -67,16 +87,27 @@ export function AuthForm({ returnTo = null }: { returnTo?: string | null }) {
                   <Label htmlFor="email">{t.auth.emailAddress}</Label>
                   <Input
                     id="email"
-                    name="email"
+                    name={lockEmail ? undefined : "email"}
                     type="email"
                     placeholder={t.auth.enterEmail}
                     autoComplete="email"
+                    defaultValue={initialEmail}
+                    disabled={lockEmail}
+                    readOnly={lockEmail}
                   />
+                  {lockEmail && initialEmail ? (
+                    <input type="hidden" name="email" defaultValue={initialEmail} />
+                  ) : null}
+                  {lockEmail ? (
+                    <p className="text-xs leading-4 text-muted-foreground">
+                      {t.auth.invitationLockedEmailHint}
+                    </p>
+                  ) : null}
                 </div>
 
                 <Button type="submit" disabled={pending} className="w-full gap-2">
                   {pending ? <Spinner data-icon="inline-start" /> : null}
-                  {pending ? t.auth.sending : t.auth.continueWithEmail}
+                  {pending ? t.auth.sending : submitLabel ?? t.auth.continueWithEmail}
                 </Button>
               </form>
 

@@ -87,6 +87,11 @@ export const en = {
     logOut: "Log out",
     signingOut: "Signing out...",
     unableToLogOut: "Unable to log out",
+    invitationWelcomeTitle: "Hi! You have been invited to join the organization {organization} on Takodu.",
+    invitationWelcomeDescription: "Create your account with the email that received the invitation to accept it and join the workspace.",
+    invitationLockedEmailHint: "You will sign up strictly with the invited email.",
+    registerAndAcceptInvitation: "Sign up and accept invitation",
+    registeringInvitation: "Preparing your sign-up...",
   },
   shared: {
     accessDenied: "Access denied",

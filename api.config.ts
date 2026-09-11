@@ -37,6 +37,8 @@ export const apiConfig = Object.freeze({
     catalogServices: "/api/catalog/services",
     workforce: Object.freeze({
       invitations: "/api/workforce/invitations",
+      members: "/api/workforce/members",
+      roles: "/api/workforce/roles",
     }),
     scheduling: Object.freeze({
       appointments: "/api/scheduling/appointments",

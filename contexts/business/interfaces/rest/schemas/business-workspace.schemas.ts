@@ -25,7 +25,7 @@ const workspaceAccessPolicySchema = z
   })
   .optional();
 
-const workspaceAuthorizationSchema = z
+const currentWorkspaceAuthorizationSchema = z
   .object({
     role: z.enum(["OWNER", "MANAGER", "WORKER"]),
     scope: z.object({
@@ -42,6 +42,31 @@ const workspaceAuthorizationSchema = z
       canInviteUsers: z.boolean(),
     }),
   })
+  .nullable()
+  .optional();
+
+const hierarchicalWorkspaceAuthorizationSchema = z
+  .object({
+    accountType: z.enum(["OWNER", "MEMBER", "PENDING_INVITATION"]),
+    scope: z.object({
+      type: z.enum(["ORGANIZATION", "ESTABLISHMENT", "NONE"]),
+      organizationId: uuidSchema.nullable(),
+      establishmentId: uuidSchema.nullable(),
+    }),
+    roles: z.array(
+      z.object({
+        id: uuidSchema,
+        name: z.string().trim().min(1),
+        systemRole: z.boolean(),
+        position: z.number().int(),
+        permissions: z.array(z.string()),
+      }),
+    ),
+    effectivePermissions: z.array(z.string()),
+  });
+
+const workspaceAuthorizationSchema = z
+  .union([hierarchicalWorkspaceAuthorizationSchema, currentWorkspaceAuthorizationSchema.unwrap()])
   .nullable()
   .optional();
 

@@ -9,6 +9,8 @@ import { PageLoading } from "./page-loading";
 import { SidebarProvider, SidebarTrigger, SidebarInset } from "./ui/sidebar";
 
 import { PushNotificationRegisterServer } from "@/contexts/notifications/interfaces/components/push-notification-register-server";
+import type { AuthorizationResource } from "@/contexts/workforce/application/model/user-session";
+import { WorkspaceAuthProvider } from "@/contexts/workforce/interfaces/context/WorkspaceAuthContext";
 
 /**
  * Route shell for all authenticated routes (app, onboarding, status, welcome).
@@ -29,37 +31,45 @@ import { PushNotificationRegisterServer } from "@/contexts/notifications/interfa
  * from becoming the scroll owner. The active page must provide its own scroll region.
  * Do NOT replace `min-h-0 flex-1` on the provider with a viewport-derived calc.
  */
-export default function ProtectedAppShell({ children }: { children: ReactNode }) {
+export default function ProtectedAppShell({
+  children,
+  initialAuthorization,
+}: {
+  children: ReactNode;
+  initialAuthorization?: AuthorizationResource | null;
+}) {
   return (
-    <div className="flex h-svh overflow-hidden flex-col bg-background text-foreground">
-      <Suspense fallback={<AppHeaderFallback />}>
-        <AppHeaderServer />
-      </Suspense>
-
-      <SidebarProvider className="flex min-h-0 flex-1 bg-background text-foreground">
-        <Suspense fallback={<AppSidebarFallback />}>
-          <AppShellSidebarServer />
+    <WorkspaceAuthProvider authorization={initialAuthorization}>
+      <div className="flex h-svh overflow-hidden flex-col bg-background text-foreground">
+        <Suspense fallback={<AppHeaderFallback />}>
+          <AppHeaderServer />
         </Suspense>
-        <SidebarInset className="min-h-0">
-          <SidebarTrigger className="mb-4 md:hidden" />
-          {/*
-            Safety-net Suspense: each page is expected to wrap its own dynamic
-            reads, but if a sibling forgets, this boundary keeps the navigation
-            instant under Cache Components.
-          */}
-          <Suspense fallback={<PageLoading />}>{children}</Suspense>
-        </SidebarInset>
-      </SidebarProvider>
 
-      {/*
-        Push-notification registration is a global side effect. It renders no
-        visible UI, so a null fallback keeps the route shell layout untouched.
-        Placed as the last flex-column child so it cannot displace header or
-        sidebar height.
-      */}
-      <Suspense fallback={null}>
-        <PushNotificationRegisterServer />
-      </Suspense>
-    </div>
+        <SidebarProvider className="flex min-h-0 flex-1 bg-background text-foreground">
+          <Suspense fallback={<AppSidebarFallback />}>
+            <AppShellSidebarServer />
+          </Suspense>
+          <SidebarInset className="min-h-0">
+            <SidebarTrigger className="mb-4 md:hidden" />
+            {/*
+              Safety-net Suspense: each page is expected to wrap its own dynamic
+              reads, but if a sibling forgets, this boundary keeps the navigation
+              instant under Cache Components.
+            */}
+            <Suspense fallback={<PageLoading />}>{children}</Suspense>
+          </SidebarInset>
+        </SidebarProvider>
+
+        {/*
+          Push-notification registration is a global side effect. It renders no
+          visible UI, so a null fallback keeps the route shell layout untouched.
+          Placed as the last flex-column child so it cannot displace header or
+          sidebar height.
+        */}
+        <Suspense fallback={null}>
+          <PushNotificationRegisterServer />
+        </Suspense>
+      </div>
+    </WorkspaceAuthProvider>
   );
 }

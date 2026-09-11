@@ -1,3 +1,5 @@
+import type { AuthorizationResource } from "@/contexts/workforce/application/model/user-session";
+
 export type WorkspaceAccountType = "OWNER" | "MEMBER" | "PENDING_INVITATION";
 
 export type WorkspaceOnboardingStatus =
@@ -109,6 +111,7 @@ export type WorkspaceHeaderViewModel = Readonly<{
   activeEstablishmentId?: string;
   capabilities?: WorkspaceCapabilities;
   authorization?: WorkspaceAuthorization;
+  workforceAuthorization?: AuthorizationResource;
   accessPolicy?: WorkspaceAccessPolicy;
   canReadOrganization: boolean;
   canReadEstablishments: boolean;
