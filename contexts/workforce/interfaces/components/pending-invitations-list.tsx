@@ -2,7 +2,7 @@
 
 import { Mail } from "lucide-react";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/contexts/shared/interfaces/components/ui/card";
+import { Card, CardContent } from "@/contexts/shared/interfaces/components/ui/card";
 import type { WorkforceMemberResource } from "@/contexts/workforce/interfaces/rest/schemas/workforce-member.schemas";
 
 export function PendingInvitationsList({
@@ -12,9 +12,6 @@ export function PendingInvitationsList({
 }) {
   return (
     <Card>
-      <CardHeader className="border-b border-border/70">
-        <CardTitle>Pending Invitations</CardTitle>
-      </CardHeader>
       <CardContent className="p-0">
         {invitations.length === 0 ? (
           <p className="px-5 py-6 text-sm text-muted-foreground">

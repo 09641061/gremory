@@ -35,6 +35,12 @@ import {
   TableRow,
 } from "@/contexts/shared/interfaces/components/ui/table";
 import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/contexts/shared/interfaces/components/ui/tabs";
+import {
   workforceMemberPageSchema,
   type WorkforceMemberResource,
   type WorkforceRoleResource,
@@ -67,6 +73,7 @@ export function TeamRoster({ establishmentId = null }: { establishmentId?: strin
   const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false);
   const [memberToRemove, setMemberToRemove] = useState<WorkforceMemberResource | null>(null);
   const isRemoveConfirmOpen = memberToRemove !== null;
+  const [activeTab, setActiveTab] = useState<"members" | "pending">("members");
 
   const logCurrentPermissions = useEffectEvent(() => {
     console.log("Current permissions:", effectivePermissions);
@@ -210,94 +217,122 @@ export function TeamRoster({ establishmentId = null }: { establishmentId?: strin
         </Card>
       ) : null}
 
-      <Card>
-        <CardContent className="p-0">
-          <div className="flex items-center justify-between border-b border-border/70 bg-muted/30 px-5 py-3">
-            <div>
-              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Roster</p>
-              <p className="mt-1 text-sm text-muted-foreground">
-                {roster ? `${roster.totalElements} people in this organization` : "Loading team members..."}
-              </p>
-            </div>
-            {loading ? <span className="text-xs text-muted-foreground">Updating...</span> : null}
-          </div>
+      <Tabs
+        value={activeTab}
+        onValueChange={(value) => setActiveTab(value as "members" | "pending")}
+        className="w-full"
+      >
+        <TabsList
+          variant="line"
+          className="w-full flex-row justify-start gap-6 border-b border-border"
+        >
+          <TabsTrigger
+            value="members"
+            className="flex-none rounded-none border-b-2 border-transparent px-0 pt-2 pb-3 text-sm font-medium text-muted-foreground transition-colors after:hidden hover:text-foreground data-active:border-b-foreground data-active:text-foreground"
+          >
+            Members
+          </TabsTrigger>
+          <TabsTrigger
+            value="pending"
+            className="flex-none rounded-none border-b-2 border-transparent px-0 pt-2 pb-3 text-sm font-medium text-muted-foreground transition-colors after:hidden hover:text-foreground data-active:border-b-foreground data-active:text-foreground"
+          >
+            Pending Invitations ({pendingInvitations.length})
+          </TabsTrigger>
+        </TabsList>
 
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="px-5">Person</TableHead>
-                <TableHead>Roles</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Dates</TableHead>
-                <TableHead className="px-5 text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {roster?.content.map((member) => {
-                const owner = isOwner(member);
-                const canEditMember = member.memberId !== null && member.status === "ACTIVE" && !owner;
-                return (
-                  <TableRow key={member.invitationId}>
-                    <TableCell className="px-5 py-4 whitespace-normal">
-                      <div className="font-medium text-foreground">{member.username ?? member.email}</div>
-                      <div className="mt-0.5 text-xs text-muted-foreground">{member.email}</div>
-                    </TableCell>
-                    <TableCell className="whitespace-normal">
-                      <div className="flex flex-wrap gap-1.5">
-                        {owner ? <Badge variant="secondary">Owner</Badge> : null}
-                        {member.roles.map((role) => <Badge key={role.id} variant="outline">{role.name}</Badge>)}
-                        {!owner && member.roles.length === 0 ? <span className="text-sm text-muted-foreground">No role</span> : null}
-                      </div>
-                    </TableCell>
-                    <TableCell><StatusBadge status={member.status} /></TableCell>
-                    <TableCell className="text-xs leading-5 whitespace-normal text-muted-foreground">
-                      <div>Invited {formatDate(member.invitedAt)}</div>
-                      {member.joinedAt ? <div>Joined {formatDate(member.joinedAt)}</div> : null}
-                    </TableCell>
-                    <TableCell className="px-5 text-right">
-                      {owner ? <span className="text-xs text-muted-foreground">Protected</span> : null}
-                      {!owner && canEditMember && (canAssignRoles || canManageMembers) ? (
-                        <div className="flex justify-end gap-2">
-                          {canAssignRoles ? (
-                            <Button variant="outline" size="sm" onClick={() => void openRoleManager(member)}>
-                              <UserRoundCog className="size-4" aria-hidden="true" />
-                              Roles
-                            </Button>
-                          ) : null}
-                          {canManageMembers ? (
-                            <Button variant="destructive" size="sm" onClick={() => setMemberToRemove(member)}>
-                              Remove
-                            </Button>
-                          ) : null}
-                        </div>
-                      ) : null}
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-              {!loading && roster?.content.length === 0 ? (
-                <TableRow><TableCell colSpan={5} className="px-5 py-12 text-center text-muted-foreground">No members found.</TableCell></TableRow>
-              ) : null}
-            </TableBody>
-          </Table>
-
-          {roster && roster.totalPages > 1 ? (
-            <div className="flex items-center justify-between border-t border-border/70 bg-muted/20 px-5 py-4">
-              <span className="text-xs text-muted-foreground">Page {page + 1} of {roster.totalPages}</span>
-              <div className="flex gap-2">
-                <Button variant="outline" size="icon-sm" disabled={loading || page === 0} onClick={() => void loadRoster(page - 1)} aria-label="Previous page">
-                  <ChevronLeft className="size-4" />
-                </Button>
-                <Button variant="outline" size="icon-sm" disabled={loading || page >= roster.totalPages - 1} onClick={() => void loadRoster(page + 1)} aria-label="Next page">
-                  <ChevronRight className="size-4" />
-                </Button>
+        <TabsContent value="members">
+          <Card>
+            <CardContent className="p-0">
+              <div className="flex items-center justify-between border-b border-border/70 bg-muted/30 px-5 py-3">
+                <div>
+                  <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Roster</p>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    {roster ? `${roster.totalElements} people in this organization` : "Loading team members..."}
+                  </p>
+                </div>
+                {loading ? <span className="text-xs text-muted-foreground">Updating...</span> : null}
               </div>
-            </div>
-          ) : null}
-        </CardContent>
-      </Card>
 
-      <PendingInvitationsList invitations={pendingInvitations} />
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="px-5">Person</TableHead>
+                    <TableHead>Roles</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Dates</TableHead>
+                    <TableHead className="px-5 text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {roster?.content.map((member) => {
+                    const owner = isOwner(member);
+                    const canEditMember = member.memberId !== null && member.status === "ACTIVE" && !owner;
+                    return (
+                      <TableRow key={member.invitationId}>
+                        <TableCell className="px-5 py-4 whitespace-normal">
+                          <div className="font-medium text-foreground">{member.username ?? member.email}</div>
+                          <div className="mt-0.5 text-xs text-muted-foreground">{member.email}</div>
+                        </TableCell>
+                        <TableCell className="whitespace-normal">
+                          <div className="flex flex-wrap gap-1.5">
+                            {owner ? <Badge variant="secondary">Owner</Badge> : null}
+                            {member.roles.map((role) => <Badge key={role.id} variant="outline">{role.name}</Badge>)}
+                            {!owner && member.roles.length === 0 ? <span className="text-sm text-muted-foreground">No role</span> : null}
+                          </div>
+                        </TableCell>
+                        <TableCell><StatusBadge status={member.status} /></TableCell>
+                        <TableCell className="text-xs leading-5 whitespace-normal text-muted-foreground">
+                          <div>Invited {formatDate(member.invitedAt)}</div>
+                          {member.joinedAt ? <div>Joined {formatDate(member.joinedAt)}</div> : null}
+                        </TableCell>
+                        <TableCell className="px-5 text-right">
+                          {owner ? <span className="text-xs text-muted-foreground">Protected</span> : null}
+                          {!owner && canEditMember && (canAssignRoles || canManageMembers) ? (
+                            <div className="flex justify-end gap-2">
+                              {canAssignRoles ? (
+                                <Button variant="outline" size="sm" onClick={() => void openRoleManager(member)}>
+                                  <UserRoundCog className="size-4" aria-hidden="true" />
+                                  Roles
+                                </Button>
+                              ) : null}
+                              {canManageMembers ? (
+                                <Button variant="destructive" size="sm" onClick={() => setMemberToRemove(member)}>
+                                  Remove
+                                </Button>
+                              ) : null}
+                            </div>
+                          ) : null}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                  {!loading && roster?.content.length === 0 ? (
+                    <TableRow><TableCell colSpan={5} className="px-5 py-12 text-center text-muted-foreground">No members found.</TableCell></TableRow>
+                  ) : null}
+                </TableBody>
+              </Table>
+
+              {roster && roster.totalPages > 1 ? (
+                <div className="flex items-center justify-between border-t border-border/70 bg-muted/20 px-5 py-4">
+                  <span className="text-xs text-muted-foreground">Page {page + 1} of {roster.totalPages}</span>
+                  <div className="flex gap-2">
+                    <Button variant="outline" size="icon-sm" disabled={loading || page === 0} onClick={() => void loadRoster(page - 1)} aria-label="Previous page">
+                      <ChevronLeft className="size-4" />
+                    </Button>
+                    <Button variant="outline" size="icon-sm" disabled={loading || page >= roster.totalPages - 1} onClick={() => void loadRoster(page + 1)} aria-label="Next page">
+                      <ChevronRight className="size-4" />
+                    </Button>
+                  </div>
+                </div>
+              ) : null}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="pending">
+          <PendingInvitationsList invitations={pendingInvitations} />
+        </TabsContent>
+      </Tabs>
 
       <Dialog open={selectedMember !== null} onOpenChange={(open) => !open && setSelectedMember(null)}>
         <DialogContent showCloseButton>

@@ -128,10 +128,50 @@ describe("TeamRoster", () => {
 
     renderRoster();
 
-    const title = await screen.findByText("Pending Invitations");
-    const section = title.closest("[data-slot='card']") as HTMLElement;
-    expect(await within(section).findByText("pending@example.com")).toBeVisible();
-    expect(within(section).getByText(/Sent/)).toBeVisible();
+    await userEvent.click(await screen.findByRole("tab", { name: "Pending Invitations (1)" }));
+
+    expect(await screen.findByText("pending@example.com")).toBeVisible();
+    expect(screen.getByText(/Sent/)).toBeVisible();
+  });
+
+  it("shows the pending invitations count on the tab and unmounts the members table", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(JSON.stringify({
+      content: [{
+        invitationId: "99999999-9999-4999-8999-999999999999",
+        memberId: "33333333-3333-4333-8333-333333333333",
+        userId: "44444444-4444-4444-8444-444444444444",
+        email: "member@example.com",
+        username: "Member User",
+        imageUrl: null,
+        organizationId,
+        organizationName: "Takodu",
+        establishmentId,
+        establishmentName: "Main",
+        status: "ACTIVE",
+        roles: [],
+        invitedAt: "2026-01-01T00:00:00Z",
+        invitationExpiresAt: "2026-02-01T00:00:00Z",
+        acceptedAt: "2026-01-01T00:00:00Z",
+        joinedAt: "2026-01-01T00:00:00Z",
+        removedAt: null,
+        isOwner: false,
+      }],
+      page: 0,
+      size: 20,
+      totalElements: 1,
+      totalPages: 1,
+    }), { status: 200 })));
+
+    renderRoster();
+
+    expect(await screen.findByRole("tab", { name: "Members" })).toBeVisible();
+    const pendingTab = await screen.findByRole("tab", { name: "Pending Invitations (0)" });
+    expect(screen.getByText("Member User")).toBeVisible();
+
+    await userEvent.click(pendingTab);
+
+    expect(screen.queryByText("Member User")).toBeNull();
+    expect(screen.getByText("No pending invitations.")).toBeVisible();
   });
 
   it("only deletes a member after confirming in the custom modal", async () => {
