@@ -46,7 +46,6 @@ export function StandardAnalyticsView({
   initialData,
   organizationId,
   establishmentId,
-  establishmentName,
   onPresetChange,
   activePreset = "30d",
 }: StandardAnalyticsViewProps) {
@@ -55,10 +54,6 @@ export function StandardAnalyticsView({
   const [currentPreset, setCurrentPreset] = useState<AnalyticsPreset>(activePreset);
   const [isPending, startTransition] = useTransition();
   const [isExporting, setIsExporting] = useState(false);
-
-  useEffect(() => {
-    setData(initialData);
-  }, [initialData]);
 
   const handlePresetChange = (preset: AnalyticsPreset) => {
     setCurrentPreset(preset);

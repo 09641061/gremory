@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useTransition, useEffect } from "react";
+import React, { useState, useTransition } from "react";
 import type { MaxAnalyticsDashboardResponse } from "../../rest/schemas/max-analytics.schemas";
 import type { AnalyticsPreset } from "../../../domain/model/value-objects/analytics-date-range";
 import { AnalyticsExportService } from "../../../domain/services/analytics-export.service";
@@ -15,15 +15,11 @@ import { Badge } from "@/contexts/shared/interfaces/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/contexts/shared/interfaces/components/ui/tabs";
 import {
   CalendarDays,
-  CheckCircle2,
   DollarSign,
   TrendingUp,
   AlertTriangle,
   Bot,
   Users,
-  Award,
-  Sparkles,
-  ArrowUpRight,
   ShieldAlert,
   Activity,
 } from "lucide-react";
@@ -35,15 +31,12 @@ import {
   YAxis,
   Tooltip,
   CartesianGrid,
-  BarChart,
-  Bar,
 } from "recharts";
 
 export interface MaxAnalyticsViewProps {
   initialData: MaxAnalyticsDashboardResponse;
   organizationId?: string;
   establishmentId?: string;
-  establishmentName?: string;
   onPresetChange?: (preset: AnalyticsPreset) => void;
   activePreset?: AnalyticsPreset;
 }
@@ -52,7 +45,6 @@ export function MaxAnalyticsView({
   initialData,
   organizationId,
   establishmentId,
-  establishmentName,
   onPresetChange,
   activePreset = "30d",
 }: MaxAnalyticsViewProps) {
@@ -61,10 +53,6 @@ export function MaxAnalyticsView({
   const [currentPreset, setCurrentPreset] = useState<AnalyticsPreset>(activePreset);
   const [isPending, startTransition] = useTransition();
   const [isExporting, setIsExporting] = useState(false);
-
-  useEffect(() => {
-    setData(initialData);
-  }, [initialData]);
 
   const handlePresetChange = (preset: AnalyticsPreset) => {
     setCurrentPreset(preset);
@@ -228,7 +216,7 @@ export function MaxAnalyticsView({
                   className="text-[10px] text-muted-foreground"
                 />
                 <Tooltip
-                  formatter={(value: any) => [formatCurrency(Number(value) || 0), t.subtitles.billing]}
+                  formatter={(value: unknown) => [formatCurrency(Number(value) || 0), t.subtitles.billing]}
                   contentStyle={{
                     backgroundColor: "var(--card)",
                     borderColor: "var(--border)",

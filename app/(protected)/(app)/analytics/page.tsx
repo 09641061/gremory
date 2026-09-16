@@ -10,6 +10,8 @@ import { workspaceSelectionCookies } from "@/contexts/business/infrastructure/se
 import { BusinessWorkspaceApiGateway } from "@/contexts/business/infrastructure/gateways/business-workspace-api.gateway";
 import { createGetStandardAnalyticsQueryService } from "@/contexts/analytics/application/internal/queryservices/get-standard-analytics-query.service";
 import { createGetMaxAnalyticsQueryService } from "@/contexts/analytics/application/internal/queryservices/get-max-analytics-query.service";
+import type { StandardAnalyticsDashboardResponse } from "@/contexts/analytics/interfaces/rest/schemas/standard-analytics.schemas";
+import type { MaxAnalyticsDashboardResponse } from "@/contexts/analytics/interfaces/rest/schemas/max-analytics.schemas";
 import { AnalyticsDateRange } from "@/contexts/analytics/domain/model/value-objects/analytics-date-range";
 import { StandardAnalyticsView } from "@/contexts/analytics/interfaces/components/standard/standard-analytics-view";
 import { MaxAnalyticsView } from "@/contexts/analytics/interfaces/components/max/max-analytics-view";
@@ -56,11 +58,15 @@ async function AnalyticsPageContent({ searchParams }: AnalyticsPageProps) {
   const dictionary = await getAnalyticsDictionary(serverLocale);
   const dateRange = AnalyticsDateRange.fromPreset("30d", isMaxPlan ? 90 : 30);
 
+  let maxData: MaxAnalyticsDashboardResponse | null = null;
+  let standardData: StandardAnalyticsDashboardResponse | null = null;
+  let fetchError: unknown = null;
+
   try {
     if (isMaxPlan) {
       try {
         const maxService = createGetMaxAnalyticsQueryService();
-        const maxData = await maxService.execute(
+        maxData = await maxService.execute(
           {
             establishmentId,
             from: dateRange.from,
@@ -69,25 +75,12 @@ async function AnalyticsPageContent({ searchParams }: AnalyticsPageProps) {
           },
           accessToken
         );
-
-        return (
-          <PageShell>
-            <PageHeader
-              title={dictionary.dashboards.max.title}
-              description={dictionary.dashboards.max.description}
-            />
-            <MaxAnalyticsView
-              initialData={maxData}
-              organizationId={activeOrganizationId}
-              establishmentId={establishmentId}
-            />
-          </PageShell>
-        );
-      } catch (maxError: any) {
-        if (maxError?.status === 403) {
+      } catch (maxError: unknown) {
+        const status = (maxError as { status?: number })?.status;
+        if (status === 403) {
           console.warn("Max analytics not authorized yet (403), falling back to standard view.");
           const standardService = createGetStandardAnalyticsQueryService();
-          const standardData = await standardService.execute(
+          standardData = await standardService.execute(
             {
               establishmentId,
               from: dateRange.from,
@@ -96,25 +89,13 @@ async function AnalyticsPageContent({ searchParams }: AnalyticsPageProps) {
             },
             accessToken
           );
-          return (
-            <PageShell>
-              <PageHeader
-                title={dictionary.dashboards.standard.title}
-                description={dictionary.dashboards.standard.description}
-              />
-              <StandardAnalyticsView
-                initialData={standardData}
-                organizationId={activeOrganizationId}
-                establishmentId={establishmentId}
-              />
-            </PageShell>
-          );
+        } else {
+          throw maxError;
         }
-        throw maxError;
       }
     } else {
       const standardService = createGetStandardAnalyticsQueryService();
-      const standardData = await standardService.execute(
+      standardData = await standardService.execute(
         {
           establishmentId,
           from: dateRange.from,
@@ -123,23 +104,13 @@ async function AnalyticsPageContent({ searchParams }: AnalyticsPageProps) {
         },
         accessToken
       );
-
-      return (
-        <PageShell>
-          <PageHeader
-            title={dictionary.dashboards.standard.title}
-            description={dictionary.dashboards.standard.description}
-          />
-          <StandardAnalyticsView
-            initialData={standardData}
-            organizationId={activeOrganizationId}
-            establishmentId={establishmentId}
-          />
-        </PageShell>
-      );
     }
   } catch (error) {
     console.error("Failed to load analytics dashboard data:", error);
+    fetchError = error;
+  }
+
+  if (fetchError || (!maxData && !standardData)) {
     return (
       <PageShell>
         <PageHeader
@@ -152,4 +123,34 @@ async function AnalyticsPageContent({ searchParams }: AnalyticsPageProps) {
       </PageShell>
     );
   }
+
+  if (maxData) {
+    return (
+      <PageShell>
+        <PageHeader
+          title={dictionary.dashboards.max.title}
+          description={dictionary.dashboards.max.description}
+        />
+        <MaxAnalyticsView
+          initialData={maxData}
+          organizationId={activeOrganizationId}
+          establishmentId={establishmentId}
+        />
+      </PageShell>
+    );
+  }
+
+  return (
+    <PageShell>
+      <PageHeader
+        title={dictionary.dashboards.standard.title}
+        description={dictionary.dashboards.standard.description}
+      />
+      <StandardAnalyticsView
+        initialData={standardData!}
+        organizationId={activeOrganizationId}
+        establishmentId={establishmentId}
+      />
+    </PageShell>
+  );
 }

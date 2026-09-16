@@ -22,8 +22,17 @@ export function KpiCard({
   growthPercentage,
   highlightVariant = "default",
 }: KpiCardProps) {
+  const variantBorder =
+    highlightVariant === "destructive"
+      ? "hover:border-destructive/40"
+      : highlightVariant === "success"
+      ? "hover:border-emerald-500/40"
+      : highlightVariant === "warning"
+      ? "hover:border-amber-500/40"
+      : "hover:border-border";
+
   return (
-    <Card className="relative overflow-hidden border border-border/70 bg-card/60 backdrop-blur-xs transition-all hover:border-border hover:shadow-xs">
+    <Card className={cn("relative overflow-hidden border border-border/70 bg-card/60 backdrop-blur-xs transition-all hover:shadow-xs", variantBorder)}>
       <CardContent className="p-5">
         <div className="flex items-center justify-between gap-2">
           <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
