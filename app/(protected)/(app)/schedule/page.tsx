@@ -40,10 +40,11 @@ async function SchedulePageContent({ searchParams }: SchedulePageProps) {
   }
 
   const establishment = getWorkspaceEstablishment(workspace, establishmentId);
-  const canManageScheduling = hasEstablishmentPermission(establishment, "scheduling:manage");
+  const canManageScheduling = hasEstablishmentPermission(establishment, "scheduling:appointment:manage");
+  const canCancelAppointment = hasEstablishmentPermission(establishment, "scheduling:appointment:cancel");
+  const canDeleteAppointment = hasEstablishmentPermission(establishment, "scheduling:appointment:delete");
   const canCreateAppointment = canManageScheduling;
   const canUpdateAppointment = canManageScheduling;
-  const canDeleteAppointment = canManageScheduling;
 
   const establishmentDetails = await createEstablishmentQueryService().getById({ id: establishmentId });
   const timeZone = establishmentDetails?.timeZone ?? "UTC";
@@ -63,6 +64,7 @@ async function SchedulePageContent({ searchParams }: SchedulePageProps) {
         customers={customers}
         canCreateAppointment={canCreateAppointment}
         canUpdateAppointment={canUpdateAppointment}
+        canCancelAppointment={canCancelAppointment}
         canDeleteAppointment={canDeleteAppointment}
         timeZone={timeZone}
       />

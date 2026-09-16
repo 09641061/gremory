@@ -43,7 +43,7 @@ export async function createAppointmentAction(
   const establishment = getWorkspaceEstablishment(workspace, parsed.data.establishmentId);
   if (
     !establishment?.canRead ||
-    !hasEstablishmentPermission(establishment, "scheduling:manage")
+    !hasEstablishmentPermission(establishment, "scheduling:appointment:manage")
   ) {
     return {
       status: "error",

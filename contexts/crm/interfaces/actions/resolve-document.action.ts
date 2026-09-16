@@ -2,7 +2,7 @@
 
 import { createCrmCommandService } from "../../application/internal/commandservices/crm-command.service";
 import { createBusinessWorkspaceQueryService } from "@/contexts/business/application/internal/queryservices/business-workspace-query.service";
-import { getWorkspaceEstablishment } from "@/contexts/shared/application/services/workspace-establishment-permissions";
+import { getWorkspaceEstablishment, hasEstablishmentPermission } from "@/contexts/shared/application/services/workspace-establishment-permissions";
 import { ResolvedCustomerData } from "../../domain/model/entities/customer";
 import { createActionErrorId, type ActionState } from "./action-state";
 
@@ -12,7 +12,7 @@ export async function resolveDocumentAction(
   establishmentId: string
 ): Promise<ActionState<ResolvedCustomerData>> {
   const workspace = await createBusinessWorkspaceQueryService().getHeaderViewModel({ establishmentId });
-  if (!getWorkspaceEstablishment(workspace, establishmentId)?.canRead) {
+  if (!hasEstablishmentPermission(getWorkspaceEstablishment(workspace, establishmentId), "crm:customer:resolve-document")) {
     return {
       status: "error",
       data: null,

@@ -140,12 +140,12 @@ export const workforceRolePermissionCatalog = [
   "workforce:manage_members",
   "catalog:manage",
   "catalog:delete",
-  "crm:read",
-  "crm:write",
-  "crm:delete",
-  "schedule:view",
-  "schedule:operator",
-  "schedule:manager",
+  "crm:customer:manage",
+  "crm:customer:delete",
+  "crm:customer:resolve-document",
+  "scheduling:appointment:manage",
+  "scheduling:appointment:cancel",
+  "scheduling:appointment:delete",
   "assistant:chat",
   "assistant:manage_chats",
 ] as const;
@@ -187,17 +187,47 @@ export const workforceRolePermissionGroups: ReadonlyArray<{
   {
     title: "CRM Permissions",
     permissions: [
-      { code: "crm:read", label: "View customers" },
-      { code: "crm:write", label: "Write customer records" },
-      { code: "crm:delete", label: "Delete customers" },
+      {
+        code: "crm:customer:manage",
+        label: "Manage customer directory",
+        description:
+          "Full management packet: Search customers, view history/profile, create new records, and edit contact data.",
+      },
+      {
+        code: "crm:customer:delete",
+        label: "Delete customers",
+        description:
+          "Destructive action: Permanently delete customer profiles from the system database.",
+      },
+      {
+        code: "crm:customer:resolve-document",
+        label: "Autofill identity data",
+        description:
+          "API Consumption: Enable the automatic data backfill button using DNI/RUC queries.",
+      },
     ],
   },
   {
     title: "Schedule Permissions",
     permissions: [
-      { code: "schedule:view", label: "View calendar shifts" },
-      { code: "schedule:operator", label: "Operate appointments" },
-      { code: "schedule:manager", label: "Manage schedule settings" },
+      {
+        code: "scheduling:appointment:manage",
+        label: "Manage schedule & appointments",
+        description:
+          "Full operational packet: View calendar grid, book appointments, reschedule/edit fields, and trigger status updates (Start, Complete, No-show).",
+      },
+      {
+        code: "scheduling:appointment:cancel",
+        label: "Cancel appointments",
+        description:
+          "Operational annulment: Cancel appointments while registering a required reason, keeping the data history intact for metrics.",
+      },
+      {
+        code: "scheduling:appointment:delete",
+        label: "Delete appointments",
+        description:
+          "Destructive action: Permanently delete appointment records from the system database.",
+      },
     ],
   },
   {

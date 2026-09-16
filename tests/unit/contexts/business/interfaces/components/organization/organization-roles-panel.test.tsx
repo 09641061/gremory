@@ -135,6 +135,85 @@ describe("OrganizationRolesPanel", () => {
     expect(screen.queryByText("Write catalog entries")).toBeNull();
   });
 
+  it("renders exactly the three balanced CRM permission rows", async () => {
+    vi.stubGlobal("fetch", mockApi());
+
+    render(<OrganizationRolesPanel organizationId={organizationId} />);
+
+    const select = await screen.findByRole("combobox", { name: "Select role" });
+    await within(select).findByRole("option", { name: /Cashier/ });
+    await userEvent.click(screen.getByRole("button", { name: /CRM & Customers/ }));
+
+    expect(screen.getByText("Manage customer directory")).toBeVisible();
+    expect(screen.getByText("crm:customer:manage")).toBeVisible();
+    expect(
+      screen.getByText(
+        "- Full management packet: Search customers, view history/profile, create new records, and edit contact data.",
+      ),
+    ).toBeVisible();
+
+    expect(screen.getByText("Delete customers")).toBeVisible();
+    expect(screen.getByText("crm:customer:delete")).toBeVisible();
+    expect(
+      screen.getByText(
+        "- Destructive action: Permanently delete customer profiles from the system database.",
+      ),
+    ).toBeVisible();
+
+    expect(screen.getByText("Autofill identity data")).toBeVisible();
+    expect(screen.getByText("crm:customer:resolve-document")).toBeVisible();
+    expect(
+      screen.getByText(
+        "- API Consumption: Enable the automatic data backfill button using DNI/RUC queries.",
+      ),
+    ).toBeVisible();
+
+    expect(screen.getByRole("checkbox", { name: /Manage customer directory/ })).toBeVisible();
+    expect(screen.getByRole("checkbox", { name: /Delete customers/ })).toBeVisible();
+    expect(screen.getByRole("checkbox", { name: /Autofill identity data/ })).toBeVisible();
+    expect(screen.queryByText("View customers")).toBeNull();
+    expect(screen.queryByText("Write customer records")).toBeNull();
+  });
+
+  it("renders exactly the three robust Schedule permission rows", async () => {
+    vi.stubGlobal("fetch", mockApi());
+
+    render(<OrganizationRolesPanel organizationId={organizationId} />);
+
+    const select = await screen.findByRole("combobox", { name: "Select role" });
+    await within(select).findByRole("option", { name: /Cashier/ });
+    await userEvent.click(screen.getByRole("button", { name: /Appointments \/ Schedule/ }));
+
+    expect(screen.getByText("Manage schedule & appointments")).toBeVisible();
+    expect(screen.getByText("scheduling:appointment:manage")).toBeVisible();
+    expect(
+      screen.getByText(
+        "- Full operational packet: View calendar grid, book appointments, reschedule/edit fields, and trigger status updates (Start, Complete, No-show).",
+      ),
+    ).toBeVisible();
+
+    expect(screen.getByText("Cancel appointments")).toBeVisible();
+    expect(screen.getByText("scheduling:appointment:cancel")).toBeVisible();
+    expect(
+      screen.getByText(
+        "- Operational annulment: Cancel appointments while registering a required reason, keeping the data history intact for metrics.",
+      ),
+    ).toBeVisible();
+
+    expect(screen.getByText("Delete appointments")).toBeVisible();
+    expect(screen.getByText("scheduling:appointment:delete")).toBeVisible();
+    expect(
+      screen.getByText(
+        "- Destructive action: Permanently delete appointment records from the system database.",
+      ),
+    ).toBeVisible();
+
+    expect(screen.getByRole("checkbox", { name: /Manage schedule & appointments/ })).toBeVisible();
+    expect(screen.getByRole("checkbox", { name: /Cancel appointments/ })).toBeVisible();
+    expect(screen.getByRole("checkbox", { name: /Delete appointments/ })).toBeVisible();
+    expect(screen.queryByText("View calendar")).toBeNull();
+  });
+
   it("clears the form when creating a custom role", async () => {
     vi.stubGlobal("fetch", mockApi());
 

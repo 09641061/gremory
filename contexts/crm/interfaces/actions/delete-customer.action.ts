@@ -11,7 +11,7 @@ export async function deleteCustomerAction(
   establishmentId: string
 ): Promise<ActionState<void>> {
   const workspace = await createBusinessWorkspaceQueryService().getHeaderViewModel({ establishmentId });
-  if (!hasEstablishmentPermission(getWorkspaceEstablishment(workspace, establishmentId), "crm:manage")) {
+  if (!hasEstablishmentPermission(getWorkspaceEstablishment(workspace, establishmentId), "crm:customer:delete")) {
     return {
       status: "error",
       data: null,

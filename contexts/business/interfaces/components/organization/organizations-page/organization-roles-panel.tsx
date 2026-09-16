@@ -58,17 +58,47 @@ const permissionModules: ReadonlyArray<PermissionModule> = [
   {
     title: "CRM & Customers",
     permissions: [
-      { code: "crm:read", label: "View customers", description: "View customers and their history" },
-      { code: "crm:write", label: "Manage customers", description: "Create and edit customer records" },
-      { code: "crm:delete", label: "Delete customers", description: "Delete customer records" },
+      {
+        code: "crm:customer:manage",
+        label: "Manage customer directory",
+        description:
+          "Full management packet: Search customers, view history/profile, create new records, and edit contact data.",
+      },
+      {
+        code: "crm:customer:delete",
+        label: "Delete customers",
+        description:
+          "Destructive action: Permanently delete customer profiles from the system database.",
+      },
+      {
+        code: "crm:customer:resolve-document",
+        label: "Autofill identity data",
+        description:
+          "API Consumption: Enable the automatic data backfill button using DNI/RUC queries.",
+      },
     ],
   },
   {
     title: "Appointments / Schedule",
     permissions: [
-      { code: "schedule:view", label: "View calendar", description: "View the appointment calendar" },
-      { code: "schedule:operator", label: "Manage appointments", description: "Book, reschedule and update appointments" },
-      { code: "schedule:manager", label: "Manage schedule settings", description: "Manage schedules and staff availability" },
+      {
+        code: "scheduling:appointment:manage",
+        label: "Manage schedule & appointments",
+        description:
+          "Full operational packet: View calendar grid, book appointments, reschedule/edit fields, and trigger status updates (Start, Complete, No-show).",
+      },
+      {
+        code: "scheduling:appointment:cancel",
+        label: "Cancel appointments",
+        description:
+          "Operational annulment: Cancel appointments while registering a required reason, keeping the data history intact for metrics.",
+      },
+      {
+        code: "scheduling:appointment:delete",
+        label: "Delete appointments",
+        description:
+          "Destructive action: Permanently delete appointment records from the system database.",
+      },
     ],
   },
   {

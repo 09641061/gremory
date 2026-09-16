@@ -147,7 +147,7 @@ describe("IAM session proxy", () => {
     });
     stubFetch(workspace({
       accountType: "MEMBER",
-      establishments: [establishment(establishmentId, ["scheduling:read"])],
+      establishments: [establishment(establishmentId, ["scheduling:appointment:manage"])],
     }));
 
     const response = await proxy(
@@ -361,7 +361,7 @@ describe("IAM session proxy", () => {
     const fetchMock = stubFetch(
       workspace({
         accountType: "MEMBER",
-        establishments: [establishment(establishmentId, ["scheduling:read"])],
+        establishments: [establishment(establishmentId, ["scheduling:appointment:manage"])],
       }),
     );
 
@@ -386,7 +386,7 @@ describe("IAM session proxy", () => {
     const fetchMock = stubFetch(
       workspace({
         accountType: "MEMBER",
-        establishments: [establishment(establishmentId, ["scheduling:read"])],
+        establishments: [establishment(establishmentId, ["scheduling:appointment:manage"])],
       }),
     );
 
@@ -410,7 +410,7 @@ describe("IAM session proxy", () => {
   it("should redirect a member to the module its permissions allow", async () => {
     stubFetch(workspace({
       accountType: "MEMBER",
-      establishments: [establishment(establishmentId, ["scheduling:read"])],
+      establishments: [establishment(establishmentId, ["scheduling:appointment:manage"])],
     }));
 
     const response = await proxy(requestWithSession("access-token", "refresh-token", "/"));
@@ -472,7 +472,7 @@ describe("IAM session proxy", () => {
   it("should persist an explicit establishment selection into a cookie", async () => {
     stubFetch(workspace({
       accountType: "MEMBER",
-      establishments: [establishment(establishmentId, ["scheduling:read"])],
+      establishments: [establishment(establishmentId, ["scheduling:appointment:manage"])],
     }));
 
     const response = await proxy(
@@ -485,7 +485,7 @@ describe("IAM session proxy", () => {
   it("should fall back to the persisted establishment when the url carries no selection", async () => {
     stubFetch(workspace({
       accountType: "MEMBER",
-      establishments: [establishment(establishmentId, ["scheduling:read"])],
+      establishments: [establishment(establishmentId, ["scheduling:appointment:manage"])],
     }));
 
     const response = await proxy(
@@ -503,7 +503,7 @@ describe("IAM session proxy", () => {
   it("should not rewrite when the url already carries its own establishment selection", async () => {
     stubFetch(workspace({
       accountType: "MEMBER",
-      establishments: [establishment(establishmentId, ["scheduling:read"])],
+      establishments: [establishment(establishmentId, ["scheduling:appointment:manage"])],
     }));
     const otherEstablishmentId = "55555555-5555-4555-8555-555555555555";
 
@@ -531,7 +531,7 @@ describe("IAM session proxy", () => {
       // organization has no establishment of its own yet.
       establishments: [
         {
-          ...establishment(foreignEstablishmentId, ["scheduling:read"]),
+          ...establishment(foreignEstablishmentId, ["scheduling:appointment:manage"]),
           organizationId: foreignOrganizationId,
           organizationName: "Host Org",
         },

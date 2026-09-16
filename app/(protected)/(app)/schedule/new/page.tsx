@@ -29,7 +29,7 @@ async function NewAppointmentPageContent({ searchParams }: NewAppointmentPagePro
 
   const establishmentId = query.establishmentId ?? workspace.activeEstablishmentId;
   const workspaceEstablishment = getWorkspaceEstablishment(workspace, establishmentId);
-  const canCreateAppointment = hasEstablishmentPermission(workspaceEstablishment, "scheduling:manage");
+  const canCreateAppointment = hasEstablishmentPermission(workspaceEstablishment, "scheduling:appointment:manage");
 
   if (!canCreateAppointment || !establishmentId || !workspace.organization) {
     redirect("/access-denied");

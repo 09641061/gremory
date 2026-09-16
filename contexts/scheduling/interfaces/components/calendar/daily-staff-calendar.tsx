@@ -28,6 +28,7 @@ interface DailyStaffCalendarProps {
   customers: SchedulingCustomerViewModel[];
   canCreateAppointment: boolean;
   canUpdateAppointment: boolean;
+  canCancelAppointment: boolean;
   canDeleteAppointment: boolean;
   timeZone: string;
 }
@@ -39,6 +40,7 @@ export function DailyStaffCalendar({
   customers,
   canCreateAppointment,
   canUpdateAppointment,
+  canCancelAppointment,
   canDeleteAppointment,
   timeZone,
 }: DailyStaffCalendarProps) {
@@ -167,6 +169,7 @@ export function DailyStaffCalendar({
             fetchAppointments();
           }}
           canUpdateAppointment={canUpdateAppointment}
+          canCancelAppointment={canCancelAppointment}
           canDeleteAppointment={canDeleteAppointment}
           timeZone={timeZone}
         />
