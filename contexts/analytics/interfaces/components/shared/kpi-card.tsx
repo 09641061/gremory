@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { cn } from "@/lib/utils";
 import { Card, CardContent } from "@/contexts/shared/interfaces/components/ui/card";
 import { Badge } from "@/contexts/shared/interfaces/components/ui/badge";
 import { LucideIcon, TrendingUp, TrendingDown, Minus } from "lucide-react";
