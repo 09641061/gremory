@@ -214,6 +214,37 @@ describe("OrganizationRolesPanel", () => {
     expect(screen.queryByText("View calendar")).toBeNull();
   });
 
+  it("renders exactly the two streamlined Assistant permission rows", async () => {
+    vi.stubGlobal("fetch", mockApi());
+
+    render(<OrganizationRolesPanel organizationId={organizationId} />);
+
+    const select = await screen.findByRole("combobox", { name: "Select role" });
+    await within(select).findByRole("option", { name: /Cashier/ });
+    await userEvent.click(screen.getByRole("button", { name: /Assistant/ }));
+
+    expect(screen.getByText("Use AI assistant")).toBeVisible();
+    expect(screen.getByText("assistant:use")).toBeVisible();
+    expect(
+      screen.getByText(
+        "- Full interaction packet: Open AI interface, send prompts, create conversations, view sidebar history, and rename chats.",
+      ),
+    ).toBeVisible();
+
+    expect(screen.getByText("Delete conversations")).toBeVisible();
+    expect(screen.getByText("assistant:delete")).toBeVisible();
+    expect(
+      screen.getByText(
+        "- Destructive action: Permanently delete chat threads or conversation history from the database.",
+      ),
+    ).toBeVisible();
+
+    expect(screen.getByRole("checkbox", { name: /Use AI assistant/ })).toBeVisible();
+    expect(screen.getByRole("checkbox", { name: /Delete conversations/ })).toBeVisible();
+    expect(screen.queryByText("Interact with AI Assistant")).toBeNull();
+    expect(screen.queryByText("Manage AI conversations")).toBeNull();
+  });
+
   it("clears the form when creating a custom role", async () => {
     vi.stubGlobal("fetch", mockApi());
 

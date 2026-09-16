@@ -104,8 +104,18 @@ const permissionModules: ReadonlyArray<PermissionModule> = [
   {
     title: "Assistant",
     permissions: [
-      { code: "assistant:chat", label: "Chat with assistant", description: "Chat with the AI assistant" },
-      { code: "assistant:manage_chats", label: "Manage conversations", description: "Manage and delete AI conversations" },
+      {
+        code: "assistant:use",
+        label: "Use AI assistant",
+        description:
+          "Full interaction packet: Open AI interface, send prompts, create conversations, view sidebar history, and rename chats.",
+      },
+      {
+        code: "assistant:delete",
+        label: "Delete conversations",
+        description:
+          "Destructive action: Permanently delete chat threads or conversation history from the database.",
+      },
     ],
   },
 ];

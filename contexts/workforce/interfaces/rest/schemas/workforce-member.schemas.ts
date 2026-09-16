@@ -146,8 +146,8 @@ export const workforceRolePermissionCatalog = [
   "scheduling:appointment:manage",
   "scheduling:appointment:cancel",
   "scheduling:appointment:delete",
-  "assistant:chat",
-  "assistant:manage_chats",
+  "assistant:use",
+  "assistant:delete",
 ] as const;
 
 export type WorkforceRolePermission = (typeof workforceRolePermissionCatalog)[number];
@@ -233,8 +233,18 @@ export const workforceRolePermissionGroups: ReadonlyArray<{
   {
     title: "Assistant Permissions",
     permissions: [
-      { code: "assistant:chat", label: "Interact with AI Assistant" },
-      { code: "assistant:manage_chats", label: "Manage AI conversations" },
+      {
+        code: "assistant:use",
+        label: "Use AI assistant",
+        description:
+          "Full interaction packet: Open AI interface, send prompts, create conversations, view sidebar history, and rename chats.",
+      },
+      {
+        code: "assistant:delete",
+        label: "Delete conversations",
+        description:
+          "Destructive action: Permanently delete chat threads or conversation history from the database.",
+      },
     ],
   },
 ];
