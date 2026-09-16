@@ -16,6 +16,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useBusinessTranslations } from "@/contexts/business/interfaces/i18n";
 
+import { OrganizationEstablishmentsPanel } from "./organization-establishments-panel";
 import { OrganizationMembersPanel } from "./organization-members-panel";
 import { OrganizationRolesPanel } from "./organization-roles-panel";
 import type { OrganizationListItem } from "./organizations-page";
@@ -121,44 +122,17 @@ export function OrganizationDetailCard({
           </TabsContent>
 
           <TabsContent value="establishments" className="flex min-h-0 flex-1 flex-col">
-            <PlaceholderPanel
-              title="Sedes / Establishments Management"
-              description="Create and organize the establishments that belong to this organization."
-              blocks={["Establishments list"]}
+            <OrganizationEstablishmentsPanel
+              organizationId={organization.organizationId}
+              canUpdate={organization.canUpdate ?? organization.organizationId === ownedOrganizationId}
+              canCreate={
+                organization.canCreateEstablishment ??
+                organization.organizationId === ownedOrganizationId
+              }
             />
           </TabsContent>
         </Tabs>
       </Card>
-    </div>
-  );
-}
-
-function PlaceholderPanel({
-  title,
-  description,
-  blocks,
-}: {
-  title: string;
-  description: string;
-  blocks: string[];
-}) {
-  return (
-    <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-6">
-      <div className="space-y-1">
-        <h3 className="text-base font-semibold text-foreground">{title}</h3>
-        <p className="text-sm text-muted-foreground">{description}</p>
-      </div>
-
-      <div className="grid gap-3">
-        {blocks.map((block) => (
-          <div
-            key={block}
-            className="flex min-h-20 items-center justify-center rounded-lg border border-dashed border-border/70 bg-muted/20 px-4 py-6 text-sm text-muted-foreground"
-          >
-            {block}
-          </div>
-        ))}
-      </div>
     </div>
   );
 }

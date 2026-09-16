@@ -58,6 +58,12 @@ export async function createEstablishmentAction(
     return actionError(error);
   }
 
+  // In-app panels (e.g. the organization Establishments tab) stay on the page
+  // and refresh their own list instead of being redirected to the workspace.
+  if (formData.get("redirect") === "false") {
+    return { status: "success", data: { id: establishmentId }, error: null };
+  }
+
   redirect(`/?establishmentId=${encodeURIComponent(establishmentId)}`);
 }
 

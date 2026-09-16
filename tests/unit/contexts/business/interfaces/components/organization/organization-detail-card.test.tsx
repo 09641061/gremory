@@ -8,6 +8,11 @@ vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
 vi.mock("@/contexts/business/interfaces/actions/organization.actions", () => ({
   updateOrganizationAction: vi.fn(),
 }));
+vi.mock("@/contexts/business/interfaces/actions/establishment.actions", () => ({
+  createEstablishmentAction: vi.fn(),
+  updateEstablishmentAction: vi.fn(),
+  deleteEstablishmentAction: vi.fn(),
+}));
 
 import { OrganizationDetailCard } from "@/contexts/business/interfaces/components/organization/organizations-page/organization-detail-card";
 
@@ -70,8 +75,6 @@ describe("OrganizationDetailCard tabs", () => {
     ).toBeVisible();
 
     await userEvent.click(screen.getByRole("tab", { name: "Establishments" }));
-    expect(
-      screen.getByRole("heading", { name: "Sedes / Establishments Management" }),
-    ).toBeVisible();
+    expect(await screen.findByRole("button", { name: /Create establishment/ })).toBeVisible();
   });
 });
