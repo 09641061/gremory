@@ -138,8 +138,7 @@ export const workforceRolePermissionCatalog = [
   "workforce:revoke_invitation",
   "workforce:assign_roles",
   "workforce:manage_members",
-  "catalog:read",
-  "catalog:write",
+  "catalog:manage",
   "catalog:delete",
   "crm:read",
   "crm:write",
@@ -156,7 +155,7 @@ export type WorkforceRolePermission = (typeof workforceRolePermissionCatalog)[nu
 /** Grouped, human-friendly matrix rendered by the role editor. */
 export const workforceRolePermissionGroups: ReadonlyArray<{
   title: string;
-  permissions: ReadonlyArray<{ code: WorkforceRolePermission; label: string }>;
+  permissions: ReadonlyArray<{ code: WorkforceRolePermission; label: string; description?: string }>;
 }> = [
   {
     title: "Workforce permissions",
@@ -171,9 +170,18 @@ export const workforceRolePermissionGroups: ReadonlyArray<{
   {
     title: "Catalog Permissions",
     permissions: [
-      { code: "catalog:read", label: "View catalog" },
-      { code: "catalog:write", label: "Write catalog entries" },
-      { code: "catalog:delete", label: "Delete catalog entries" },
+      {
+        code: "catalog:manage",
+        label: "Manage catalog",
+        description:
+          "Full management packet: View catalog, create and edit services, activate/deactivate, move categories, and create/edit categories.",
+      },
+      {
+        code: "catalog:delete",
+        label: "Delete catalog entries",
+        description:
+          "Destructive action: Permanently delete services or categories from the system.",
+      },
     ],
   },
   {

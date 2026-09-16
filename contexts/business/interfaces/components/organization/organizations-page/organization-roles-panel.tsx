@@ -34,39 +34,48 @@ import {
 
 type PermissionModule = {
   title: string;
-  permissions: ReadonlyArray<{ code: WorkforceRolePermission; description: string }>;
+  permissions: ReadonlyArray<{ code: WorkforceRolePermission; label: string; description: string }>;
 };
 
 const permissionModules: ReadonlyArray<PermissionModule> = [
   {
     title: "Catalog",
     permissions: [
-      { code: "catalog:read", description: "View catalog items" },
-      { code: "catalog:write", description: "Create and edit catalog items" },
-      { code: "catalog:delete", description: "Delete catalog items" },
+      {
+        code: "catalog:manage",
+        label: "Manage catalog",
+        description:
+          "Full management packet: View catalog, create and edit services, activate/deactivate, move categories, and create/edit categories.",
+      },
+      {
+        code: "catalog:delete",
+        label: "Delete catalog entries",
+        description:
+          "Destructive action: Permanently delete services or categories from the system.",
+      },
     ],
   },
   {
     title: "CRM & Customers",
     permissions: [
-      { code: "crm:read", description: "View customers and their history" },
-      { code: "crm:write", description: "Create and edit customer records" },
-      { code: "crm:delete", description: "Delete customer records" },
+      { code: "crm:read", label: "View customers", description: "View customers and their history" },
+      { code: "crm:write", label: "Manage customers", description: "Create and edit customer records" },
+      { code: "crm:delete", label: "Delete customers", description: "Delete customer records" },
     ],
   },
   {
     title: "Appointments / Schedule",
     permissions: [
-      { code: "schedule:view", description: "View the appointment calendar" },
-      { code: "schedule:operator", description: "Book, reschedule and update appointments" },
-      { code: "schedule:manager", description: "Manage schedules and staff availability" },
+      { code: "schedule:view", label: "View calendar", description: "View the appointment calendar" },
+      { code: "schedule:operator", label: "Manage appointments", description: "Book, reschedule and update appointments" },
+      { code: "schedule:manager", label: "Manage schedule settings", description: "Manage schedules and staff availability" },
     ],
   },
   {
     title: "Assistant",
     permissions: [
-      { code: "assistant:chat", description: "Chat with the AI assistant" },
-      { code: "assistant:manage_chats", description: "Manage and delete AI conversations" },
+      { code: "assistant:chat", label: "Chat with assistant", description: "Chat with the AI assistant" },
+      { code: "assistant:manage_chats", label: "Manage conversations", description: "Manage and delete AI conversations" },
     ],
   },
 ];
@@ -370,7 +379,7 @@ export function OrganizationRolesPanel({ organizationId }: { organizationId: str
               </div>
               <AccordionContent>
                 <div className="grid gap-2 pb-2">
-                  {module.permissions.map(({ code, description }) => (
+                  {module.permissions.map(({ code, label, description }) => (
                     <label
                       key={code}
                       className="flex cursor-pointer items-start gap-3 rounded-lg border border-border/70 px-3 py-2.5 text-sm transition-colors hover:bg-muted/40 has-[:disabled]:cursor-not-allowed has-[:disabled]:opacity-60"
@@ -383,7 +392,10 @@ export function OrganizationRolesPanel({ organizationId }: { organizationId: str
                         className="mt-0.5 size-4 accent-primary"
                       />
                       <span className="grid gap-0.5">
-                        <span className="text-foreground">{code}</span>
+                        <span className="flex flex-wrap items-center gap-2 text-foreground">
+                          {label}
+                          <code className="text-[0.65rem] text-muted-foreground">{code}</code>
+                        </span>
                         <span className="text-xs text-muted-foreground">- {description}</span>
                       </span>
                     </label>

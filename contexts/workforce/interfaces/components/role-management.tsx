@@ -331,18 +331,23 @@ export function RoleManagement({ embedded = false }: { embedded?: boolean } = {}
                 </AccordionTrigger>
                 <AccordionContent>
                   <div className="grid gap-2">
-                    {group.permissions.map(({ code, label }) => {
+                    {group.permissions.map(({ code, label, description }) => {
                       const checked = forceAllPermissions || form.permissions.includes(code);
                       return (
-                        <label key={code} className="flex cursor-pointer items-center gap-3 rounded-lg border border-border/70 px-3 py-2.5 text-sm transition-colors hover:bg-muted/40 has-[:disabled]:cursor-not-allowed has-[:disabled]:opacity-60">
+                        <label key={code} className="flex cursor-pointer items-start gap-3 rounded-lg border border-border/70 px-3 py-2.5 text-sm transition-colors hover:bg-muted/40 has-[:disabled]:cursor-not-allowed has-[:disabled]:opacity-60">
                           <input
                             type="checkbox"
                             checked={checked}
                             onChange={() => togglePermission(code)}
                             disabled={editingRole?.systemRole || saving || forceAllPermissions}
-                            className="size-4 accent-primary"
+                            className="mt-0.5 size-4 accent-primary"
                           />
-                          <span>{label}</span>
+                          <span className="grid gap-0.5">
+                            <span className="text-foreground">{label}</span>
+                            {description ? (
+                              <span className="text-xs text-muted-foreground">- {description}</span>
+                            ) : null}
+                          </span>
                           <code className="ml-auto text-[0.65rem] text-muted-foreground">{code}</code>
                         </label>
                       );

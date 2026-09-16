@@ -22,7 +22,7 @@ const customRole = {
   name: "Cashier",
   position: 1,
   systemRole: false,
-  permissions: ["catalog:read"],
+  permissions: ["catalog:manage"],
 };
 
 const member = {
@@ -102,6 +102,37 @@ describe("OrganizationRolesPanel", () => {
     expect(screen.getByRole("textbox", { name: "Role Name" })).toHaveValue("Cashier");
     expect(screen.getByRole("button", { name: /Delete Role/ })).toBeVisible();
     expect(screen.getByRole("button", { name: "Save Changes" })).toBeDisabled();
+  });
+
+  it("renders exactly the two streamlined Catalog permission rows", async () => {
+    vi.stubGlobal("fetch", mockApi());
+
+    render(<OrganizationRolesPanel organizationId={organizationId} />);
+
+    const select = await screen.findByRole("combobox", { name: "Select role" });
+    await within(select).findByRole("option", { name: /Cashier/ });
+    await userEvent.click(screen.getByRole("button", { name: /Catalog/ }));
+
+    expect(screen.getByText("Manage catalog")).toBeVisible();
+    expect(screen.getByText("catalog:manage")).toBeVisible();
+    expect(
+      screen.getByText(
+        "- Full management packet: View catalog, create and edit services, activate/deactivate, move categories, and create/edit categories.",
+      ),
+    ).toBeVisible();
+
+    expect(screen.getByText("Delete catalog entries")).toBeVisible();
+    expect(screen.getByText("catalog:delete")).toBeVisible();
+    expect(
+      screen.getByText(
+        "- Destructive action: Permanently delete services or categories from the system.",
+      ),
+    ).toBeVisible();
+
+    expect(screen.getByRole("checkbox", { name: /Manage catalog/ })).toBeVisible();
+    expect(screen.getByRole("checkbox", { name: /Delete catalog entries/ })).toBeVisible();
+    expect(screen.queryByText("View catalog")).toBeNull();
+    expect(screen.queryByText("Write catalog entries")).toBeNull();
   });
 
   it("clears the form when creating a custom role", async () => {
