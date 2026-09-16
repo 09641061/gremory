@@ -1,0 +1,653 @@
+"use client";
+
+import { useEffect, useEffectEvent, useState } from "react";
+import { MapPin, MoreVertical, Plus, Search, X } from "lucide-react";
+import { z } from "zod";
+
+import { Badge } from "@/contexts/shared/interfaces/components/ui/badge";
+import { Button } from "@/contexts/shared/interfaces/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/contexts/shared/interfaces/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/contexts/shared/interfaces/components/ui/dropdown-menu";
+import { Input } from "@/contexts/shared/interfaces/components/ui/input";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/contexts/shared/interfaces/components/ui/table";
+import { cn } from "@/lib/utils";
+import {
+  createWorkforceInvitationSchema,
+  workforceMemberPageSchema,
+  workforceRoleSchema,
+  type WorkforceMemberResource,
+  type WorkforceRoleResource,
+} from "@/contexts/workforce/interfaces/rest/schemas/workforce-member.schemas";
+
+export type EstablishmentOption = { id: string; name: string };
+
+const ALL_ESTABLISHMENTS = "all";
+
+export function OrganizationMembersPanel({
+  organizationId,
+  establishments,
+}: {
+  organizationId: string;
+  establishments: ReadonlyArray<EstablishmentOption>;
+}) {
+  const [members, setMembers] = useState<WorkforceMemberResource[]>([]);
+  const [roles, setRoles] = useState<WorkforceRoleResource[]>([]);
+  const [search, setSearch] = useState("");
+  const [establishmentFilter, setEstablishmentFilter] = useState<string>(ALL_ESTABLISHMENTS);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [roleMutationKey, setRoleMutationKey] = useState<string | null>(null);
+  const [scopeMember, setScopeMember] = useState<WorkforceMemberResource | null>(null);
+  const [inviteOpen, setInviteOpen] = useState(false);
+
+  async function loadData() {
+    setLoading(true);
+    setError(null);
+    try {
+      const [membersResponse, rolesResponse] = await Promise.all([
+        fetch("/api/workforce/members?page=0&size=100", {
+          headers: { "X-Organization-Id": organizationId },
+        }),
+        fetch("/api/workforce/roles", { headers: { "X-Organization-Id": organizationId } }),
+      ]);
+      const membersBody: unknown = await membersResponse.json();
+      const rolesBody: unknown = await rolesResponse.json();
+      if (!membersResponse.ok) throw new Error(readErrorMessage(membersBody));
+      if (!rolesResponse.ok) throw new Error(readErrorMessage(rolesBody));
+
+      setMembers(workforceMemberPageSchema.parse(membersBody).content);
+      setRoles(z.array(workforceRoleSchema).parse(rolesBody));
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "Unable to load the team.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const loadInitial = useEffectEvent(() => {
+    void loadData();
+  });
+
+  useEffect(() => {
+    const timer = window.setTimeout(loadInitial, 0);
+    return () => window.clearTimeout(timer);
+  }, [organizationId]);
+
+  function scopeFor(member: WorkforceMemberResource): string[] {
+    const scope = member.establishments.map((establishment) => establishment.id);
+    return scope.length > 0 ? scope : [member.establishmentId];
+  }
+
+  async function assignRole(member: WorkforceMemberResource, roleId: string) {
+    if (!member.memberId) return;
+    setRoleMutationKey(`${member.memberId}:${roleId}`);
+    setError(null);
+    try {
+      const response = await fetch(`/api/workforce/roles/members/${member.memberId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", "X-Organization-Id": organizationId },
+        body: JSON.stringify({ roleId }),
+      });
+      if (!response.ok) throw new Error(readErrorMessage(await response.json().catch(() => undefined)));
+      await loadData();
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "Unable to assign the role.");
+    } finally {
+      setRoleMutationKey(null);
+    }
+  }
+
+  async function removeRole(member: WorkforceMemberResource, roleId: string) {
+    if (!member.memberId) return;
+    setRoleMutationKey(`${member.memberId}:${roleId}`);
+    setError(null);
+    try {
+      const response = await fetch(
+        `/api/workforce/roles/members/${member.memberId}/${roleId}`,
+        { method: "DELETE", headers: { "X-Organization-Id": organizationId } },
+      );
+      if (!response.ok) throw new Error(readErrorMessage(await response.json().catch(() => undefined)));
+      await loadData();
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "Unable to remove the role.");
+    } finally {
+      setRoleMutationKey(null);
+    }
+  }
+
+  async function resendInvitation(member: WorkforceMemberResource) {
+    setError(null);
+    try {
+      const response = await fetch(`/api/workforce/invitations/${member.invitationId}/resend`, {
+        method: "POST",
+        headers: { "X-Organization-Id": organizationId },
+      });
+      if (!response.ok) throw new Error(readErrorMessage(await response.json().catch(() => undefined)));
+      await loadData();
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "Unable to resend the invitation.");
+    }
+  }
+
+  async function removeMember(member: WorkforceMemberResource) {
+    if (!member.memberId || member.isOwner) return;
+    if (!window.confirm(`Remove ${member.username ?? member.email} from the organization?`)) return;
+
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await fetch(`/api/workforce/members/${member.memberId}`, {
+        method: "DELETE",
+        headers: { "X-Organization-Id": organizationId },
+      });
+      if (!response.ok) throw new Error(readErrorMessage(await response.json().catch(() => undefined)));
+      await loadData();
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "Unable to remove the member.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function saveScope(member: WorkforceMemberResource, ids: string[]) {
+    if (!member.memberId) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await fetch(`/api/workforce/members/${member.memberId}/scope`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", "X-Organization-Id": organizationId },
+        body: JSON.stringify({ establishmentIds: ids }),
+      });
+      if (!response.ok) throw new Error(readErrorMessage(await response.json().catch(() => undefined)));
+      setScopeMember(null);
+      await loadData();
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "Unable to update the scope.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const normalizedSearch = search.trim().toLowerCase();
+  const visibleMembers = members.filter((member) => {
+    const matchesSearch =
+      normalizedSearch.length === 0 ||
+      member.email.toLowerCase().includes(normalizedSearch) ||
+      (member.username ?? "").toLowerCase().includes(normalizedSearch);
+    const matchesEstablishment =
+      establishmentFilter === ALL_ESTABLISHMENTS ||
+      scopeFor(member).includes(establishmentFilter);
+    return matchesSearch && matchesEstablishment;
+  });
+
+  return (
+    <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-6">
+      {error ? (
+        <p role="alert" className="rounded-lg border border-destructive/40 bg-destructive/5 px-4 py-3 text-sm text-destructive">
+          {error}
+        </p>
+      ) : null}
+
+      {/* Toolbar */}
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
+        <div className="relative w-full lg:max-w-xs">
+          <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
+          <Input
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            placeholder="Search members..."
+            aria-label="Search members"
+            className="pl-9"
+          />
+        </div>
+
+        <select
+          aria-label="Filter by Establishment"
+          value={establishmentFilter}
+          onChange={(event) => setEstablishmentFilter(event.target.value)}
+          className="h-(--app-control-height) w-full rounded-lg border border-input bg-background px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/50 lg:max-w-xs"
+        >
+          <option value={ALL_ESTABLISHMENTS}>Filter by Establishment: All</option>
+          {establishments.map((establishment) => (
+            <option key={establishment.id} value={establishment.id}>{establishment.name}</option>
+          ))}
+        </select>
+
+        <Button type="button" onClick={() => setInviteOpen(true)} className="gap-2 bg-emerald-600 text-white hover:bg-emerald-700 lg:ml-auto">
+          <Plus className="size-4" aria-hidden="true" />
+          Invite member
+        </Button>
+      </div>
+
+      {/* Unified staff table */}
+      <div className="rounded-lg border border-border/70">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="px-4">Person / Email</TableHead>
+              <TableHead>Assigned Roles</TableHead>
+              <TableHead>Establishments Scope</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead className="px-4 text-right">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {visibleMembers.map((member) => {
+              const owner = member.isOwner;
+              const active = member.status === "ACTIVE" && member.memberId !== null;
+              const assignedRoleIds = member.roles.map((role) => role.id);
+              const assignableRoles = roles.filter((role) => !assignedRoleIds.includes(role.id));
+              return (
+                <TableRow key={rowKey(member)} className="group/row">
+                  <TableCell className="px-4 py-4 whitespace-normal">
+                    <div className="font-medium text-foreground">{member.username ?? member.email}</div>
+                    <div className="mt-0.5 text-xs text-muted-foreground">{member.email}</div>
+                  </TableCell>
+
+                  <TableCell className="whitespace-normal">
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      {member.roles.map((role) =>
+                        owner || !active ? (
+                          <Badge key={role.id} variant="outline">{role.name}</Badge>
+                        ) : (
+                          <Badge key={role.id} variant="outline" className="gap-1 pr-1">
+                            {role.name}
+                            <button
+                              type="button"
+                              onClick={() => void removeRole(member, role.id)}
+                              disabled={roleMutationKey === `${member.memberId}:${role.id}`}
+                              aria-label={`Remove ${role.name} role`}
+                              className="rounded-full p-0.5 text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-50"
+                            >
+                              <X className="size-3" aria-hidden="true" />
+                            </button>
+                          </Badge>
+                        ),
+                      )}
+                      {owner || !active ? null : (
+                        <DropdownMenu>
+                          <DropdownMenuTrigger
+                            render={<Button type="button" variant="outline" size="icon-xs" aria-label="Add role" />}
+                          >
+                            <Plus className="size-3" aria-hidden="true" />
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="start" className="min-w-40">
+                            {assignableRoles.length === 0 ? (
+                              <DropdownMenuItem disabled>All roles assigned</DropdownMenuItem>
+                            ) : (
+                              assignableRoles.map((role) => (
+                                <DropdownMenuItem key={role.id} onClick={() => void assignRole(member, role.id)}>
+                                  {role.name}
+                                </DropdownMenuItem>
+                              ))
+                            )}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      )}
+                    </div>
+                  </TableCell>
+
+                  <TableCell className="whitespace-normal">
+                    <button
+                      type="button"
+                      onClick={() => !owner && member.memberId && setScopeMember(member)}
+                      disabled={owner || !member.memberId}
+                      className={cn(
+                        "inline-flex items-center gap-1.5 rounded-full border border-border px-2.5 py-1 text-xs text-foreground",
+                        !owner && member.memberId && "hover:bg-muted/60",
+                      )}
+                    >
+                      <MapPin className="size-3.5 text-muted-foreground" aria-hidden="true" />
+                      {owner ? (
+                        "All Establishments"
+                      ) : (
+                        scopeFor(member)
+                          .map(
+                            (id) =>
+                              member.establishments.find((establishment) => establishment.id === id)?.name ??
+                              establishments.find((establishment) => establishment.id === id)?.name ??
+                              member.establishmentName ??
+                              "Establishment",
+                          )
+                          .join(", ")
+                      )}
+                    </button>
+                  </TableCell>
+
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <Badge
+                        variant="outline"
+                        className={
+                          active
+                            ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-600"
+                            : "border-amber-500/40 bg-amber-500/10 text-amber-600"
+                        }
+                      >
+                        {active ? "ACTIVE" : member.status}
+                      </Badge>
+                      {member.status === "PENDING" ? (
+                        <button
+                          type="button"
+                          onClick={() => void resendInvitation(member)}
+                          className="hidden text-xs font-medium text-primary underline-offset-4 hover:underline group-hover/row:inline"
+                        >
+                          Resend
+                        </button>
+                      ) : null}
+                    </div>
+                  </TableCell>
+
+                  <TableCell className="px-4 text-right">
+                    {owner ? (
+                      <span className="text-xs text-muted-foreground">Protected</span>
+                    ) : (
+                      <DropdownMenu>
+                        <DropdownMenuTrigger
+                          render={<Button type="button" variant="ghost" size="icon-sm" aria-label={`Actions for ${member.username ?? member.email}`} />}
+                        >
+                          <MoreVertical className="size-4" aria-hidden="true" />
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="min-w-52">
+                          <DropdownMenuItem
+                            disabled={!member.memberId}
+                            onClick={() => setScopeMember(member)}
+                          >
+                            Edit Establishment Scope
+                          </DropdownMenuItem>
+                          {member.status === "PENDING" ? (
+                            <DropdownMenuItem onClick={() => void resendInvitation(member)}>
+                              Resend Invitation
+                            </DropdownMenuItem>
+                          ) : null}
+                          <DropdownMenuItem
+                            variant="destructive"
+                            disabled={!member.memberId}
+                            onClick={() => void removeMember(member)}
+                          >
+                            Remove from Organization
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    )}
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+            {!loading && visibleMembers.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={5} className="px-4 py-12 text-center text-muted-foreground">
+                  No members found.
+                </TableCell>
+              </TableRow>
+            ) : null}
+          </TableBody>
+        </Table>
+      </div>
+
+      <MemberScopeDialog
+        key={scopeMember?.invitationId ?? "scope-none"}
+        member={scopeMember}
+        establishments={establishments}
+        initialScope={scopeMember ? scopeFor(scopeMember) : []}
+        onClose={() => setScopeMember(null)}
+        onSave={saveScope}
+      />
+
+      <InviteMemberDialog
+        isOpen={inviteOpen}
+        onClose={() => setInviteOpen(false)}
+        organizationId={organizationId}
+        establishments={establishments}
+        roles={roles}
+        onInvited={() => void loadData()}
+      />
+    </div>
+  );
+}
+
+function MemberScopeDialog({
+  member,
+  establishments,
+  initialScope,
+  onClose,
+  onSave,
+}: {
+  member: WorkforceMemberResource | null;
+  establishments: ReadonlyArray<EstablishmentOption>;
+  initialScope: string[];
+  onClose: () => void;
+  onSave: (member: WorkforceMemberResource, ids: string[]) => void;
+}) {
+  const [selected, setSelected] = useState<string[]>(initialScope);
+
+  return (
+    <Dialog open={member !== null} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent showCloseButton>
+        <DialogHeader>
+          <DialogTitle>Edit Establishment Scope</DialogTitle>
+          <DialogDescription>
+            Choose where {member?.username ?? member?.email} can operate.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="grid gap-2">
+          {establishments.map((establishment) => {
+            const checked = selected.includes(establishment.id);
+            return (
+              <label key={establishment.id} className="flex cursor-pointer items-center gap-3 rounded-lg border border-border/70 px-3 py-2.5 text-sm">
+                <input
+                  type="checkbox"
+                  checked={checked}
+                  onChange={() =>
+                    setSelected((current) =>
+                      current.includes(establishment.id)
+                        ? current.filter((id) => id !== establishment.id)
+                        : [...current, establishment.id],
+                    )
+                  }
+                  className="size-4 accent-primary"
+                />
+                {establishment.name}
+              </label>
+            );
+          })}
+        </div>
+        <DialogFooter>
+          <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
+          <Button type="button" onClick={() => member && onSave(member, selected)}>Save Scope</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function InviteMemberDialog({
+  isOpen,
+  onClose,
+  organizationId,
+  establishments,
+  roles,
+  onInvited,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  organizationId: string;
+  establishments: ReadonlyArray<EstablishmentOption>;
+  roles: ReadonlyArray<WorkforceRoleResource>;
+  onInvited: () => void;
+}) {
+  const [email, setEmail] = useState("");
+  const [roleId, setRoleId] = useState("");
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [allEstablishments, setAllEstablishments] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const defaultRole = roles.find((role) => role.name === "Member" && role.systemRole)?.id ?? roles[0]?.id ?? "";
+
+  function reset() {
+    setEmail("");
+    setRoleId(defaultRole);
+    setSelectedIds([]);
+    setAllEstablishments(true);
+    setError(null);
+  }
+
+  function close() {
+    reset();
+    onClose();
+  }
+
+  async function submit() {
+    const targetEstablishments = allEstablishments
+      ? establishments.map((establishment) => establishment.id)
+      : selectedIds;
+    const parsed = createWorkforceInvitationSchema.safeParse({
+      establishmentIds: targetEstablishments,
+      email: email.trim(),
+      roleIds: roleId ? [roleId] : [],
+    });
+    if (!parsed.success) {
+      setError(parsed.error.issues[0]?.message ?? "Please check the invite details.");
+      return;
+    }
+
+    setSubmitting(true);
+    setError(null);
+    try {
+      const response = await fetch("/api/workforce/invitations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-Organization-Id": organizationId },
+        body: JSON.stringify(parsed.data),
+      });
+      if (!response.ok) throw new Error(readErrorMessage(await response.json().catch(() => undefined)));
+      onInvited();
+      close();
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "Unable to create the invitation.");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <Dialog
+      open={isOpen}
+      onOpenChange={(open) => {
+        if (!open) close();
+        else reset();
+      }}
+    >
+      <DialogContent showCloseButton>
+        <DialogHeader>
+          <DialogTitle>Invite member</DialogTitle>
+          <DialogDescription>Send an invitation to join this organization.</DialogDescription>
+        </DialogHeader>
+
+        <div className="grid gap-4">
+          <label className="grid gap-2 text-sm font-medium" htmlFor="invite-email">
+            Email
+            <Input
+              id="invite-email"
+              type="email"
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              placeholder="member@example.com"
+              disabled={submitting}
+            />
+          </label>
+
+          <label className="grid gap-2 text-sm font-medium" htmlFor="invite-role">
+            Role
+            <select
+              id="invite-role"
+              value={roleId || defaultRole}
+              onChange={(event) => setRoleId(event.target.value)}
+              disabled={submitting}
+              className="h-(--app-control-height) w-full rounded-lg border border-input bg-background px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/50"
+            >
+              {roles.map((role) => (
+                <option key={role.id} value={role.id}>
+                  {role.name} [{role.systemRole ? "System" : "Custom"}]
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <fieldset className="grid gap-2">
+            <legend className="text-sm font-medium">Establishment Access</legend>
+            <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-border/70 px-3 py-2.5 text-sm">
+              <input
+                type="checkbox"
+                checked={allEstablishments}
+                onChange={() => setAllEstablishments((current) => !current)}
+                disabled={submitting}
+                className="size-4 accent-primary"
+              />
+              All establishments
+            </label>
+            {!allEstablishments
+              ? establishments.map((establishment) => (
+                  <label key={establishment.id} className="flex cursor-pointer items-center gap-3 rounded-lg border border-border/70 px-3 py-2.5 text-sm">
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.includes(establishment.id)}
+                      onChange={() =>
+                        setSelectedIds((current) =>
+                          current.includes(establishment.id)
+                            ? current.filter((id) => id !== establishment.id)
+                            : [...current, establishment.id],
+                        )
+                      }
+                      disabled={submitting}
+                      className="size-4 accent-primary"
+                    />
+                    {establishment.name}
+                  </label>
+                ))
+              : null}
+          </fieldset>
+
+          {error ? <p role="alert" className="text-sm text-destructive">{error}</p> : null}
+        </div>
+
+        <DialogFooter>
+          <Button type="button" variant="outline" onClick={close} disabled={submitting}>Cancel</Button>
+          <Button type="button" onClick={() => void submit()} disabled={submitting} className="bg-emerald-600 text-white hover:bg-emerald-700">
+            {submitting ? "Sending..." : "Send invitation"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function rowKey(member: WorkforceMemberResource): string {
+  return member.memberId ?? member.invitationId;
+}
+
+function readErrorMessage(value: unknown): string {
+  return typeof value === "object" && value !== null && "message" in value && typeof value.message === "string"
+    ? value.message
+    : "Unable to complete the request.";
+}

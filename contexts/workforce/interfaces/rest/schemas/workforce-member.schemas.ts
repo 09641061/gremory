@@ -35,6 +35,11 @@ export const workforceRoleSchema = z.object({
   permissions: z.array(z.string()),
 });
 
+export const workforceMemberEstablishmentSchema = z.object({
+  id: z.string(),
+  name: z.string().nullable(),
+});
+
 export const workforceMemberSchema = z.object({
   invitationId: z.string().uuid(),
   memberId: z.string().uuid().nullable(),
@@ -46,6 +51,7 @@ export const workforceMemberSchema = z.object({
   organizationName: z.string().nullable(),
   establishmentId: z.string(),
   establishmentName: z.string().nullable(),
+  establishments: z.array(workforceMemberEstablishmentSchema).optional().default([]),
   status: z.enum(["PENDING", "ACTIVE", "REMOVED", "EXPIRED"]),
   roles: z.array(workforceRoleSchema),
   invitedAt: z.string(),
@@ -61,12 +67,23 @@ export const workforceRolePageSchema = pageResponseSchema(workforceRoleSchema);
 
 export const createWorkforceInvitationSchema = z
   .object({
-    establishmentId: z.string().uuid("A valid establishment is required"),
+    establishmentIds: z
+      .array(z.string().uuid("A valid establishment is required"))
+      .min(1, "Select at least one establishment"),
     email: z
       .string()
       .trim()
       .min(1, "Email is required")
       .email("Enter a valid email address"),
+    roleIds: z.array(z.string().uuid()).max(50).optional().default([]),
+  })
+  .strict();
+
+export const updateMemberScopeSchema = z
+  .object({
+    establishmentIds: z
+      .array(z.string().uuid("A valid establishment is required"))
+      .min(1, "Select at least one establishment"),
   })
   .strict();
 
@@ -197,6 +214,7 @@ export const createWorkforceRoleSchema = z.object({
 export const updateWorkforceRoleSchema = createWorkforceRoleSchema;
 
 export type WorkforceMemberResource = z.infer<typeof workforceMemberSchema>;
+export type WorkforceMemberEstablishmentResource = z.infer<typeof workforceMemberEstablishmentSchema>;
 export type WorkforceRoleResource = z.infer<typeof workforceRoleSchema>;
 export type WorkforceInvitationResource = z.infer<typeof workforceInvitationSchema>;
 export type WorkforceMembershipResource = z.infer<typeof workforceMembershipSchema>;

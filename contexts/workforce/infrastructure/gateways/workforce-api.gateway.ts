@@ -90,6 +90,38 @@ export class WorkforceApiGateway {
     return workforceInvitationSchema.parse(response);
   }
 
+  async resendInvitation(
+    organizationId: string,
+    invitationId: string,
+  ): Promise<WorkforceInvitationResource> {
+    const response = await apiClient.post<unknown>(
+      `${apiConfig.routes.workforce.invitations}/${encodeURIComponent(invitationId)}/resend`,
+      undefined,
+      {
+        token: await this.accessToken(),
+        headers: this.organizationHeader(organizationId),
+        errorMessage: "Failed to resend workforce invitation",
+      },
+    );
+    return workforceInvitationSchema.parse(response);
+  }
+
+  async updateMemberScope(
+    organizationId: string,
+    memberId: string,
+    establishmentIds: string[],
+  ): Promise<void> {
+    await apiClient.put(
+      `${apiConfig.routes.workforce.members}/${encodeURIComponent(memberId)}/scope`,
+      { establishmentIds },
+      {
+        token: await this.accessToken(),
+        headers: this.organizationHeader(organizationId),
+        errorMessage: "Failed to update member scope",
+      },
+    );
+  }
+
   /** Public, non-consuming preview. No session is required and the raw token never leaves the server. */
   async previewInvitation(token: string): Promise<WorkforceInvitationPreviewResource> {
     const response = await apiClient.get<unknown>(

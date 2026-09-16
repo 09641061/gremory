@@ -16,6 +16,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useBusinessTranslations } from "@/contexts/business/interfaces/i18n";
 
+import { OrganizationMembersPanel } from "./organization-members-panel";
 import { OrganizationRolesPanel } from "./organization-roles-panel";
 import type { OrganizationListItem } from "./organizations-page";
 
@@ -106,10 +107,12 @@ export function OrganizationDetailCard({
           </TabsContent>
 
           <TabsContent value="members" className="flex min-h-0 flex-1 flex-col">
-            <PlaceholderPanel
-              title="Unified Staff Management"
-              description="Invite people, filter by establishment and manage every member from one place."
-              blocks={["Establishment filter", "Invite member", "Staff grid"]}
+            <OrganizationMembersPanel
+              organizationId={organization.organizationId}
+              establishments={organization.establishments.map((establishment) => ({
+                id: establishment.id,
+                name: establishment.name,
+              }))}
             />
           </TabsContent>
 

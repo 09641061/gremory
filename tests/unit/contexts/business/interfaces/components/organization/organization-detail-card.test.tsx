@@ -62,7 +62,7 @@ describe("OrganizationDetailCard tabs", () => {
     );
 
     await userEvent.click(screen.getByRole("tab", { name: "Members" }));
-    expect(screen.getByRole("heading", { name: "Unified Staff Management" })).toBeVisible();
+    expect(await screen.findByRole("button", { name: /Invite member/ })).toBeVisible();
 
     await userEvent.click(screen.getByRole("tab", { name: "Roles" }));
     expect(

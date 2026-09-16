@@ -279,7 +279,7 @@ describe("TeamRoster", () => {
       expect.objectContaining({
         method: "POST",
         headers: expect.objectContaining({ "X-Organization-Id": organizationId }),
-        body: JSON.stringify({ establishmentId, email: "new@example.com" }),
+        body: JSON.stringify({ establishmentIds: [establishmentId], email: "new@example.com", roleIds: [] }),
       }),
     );
   });

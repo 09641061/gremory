@@ -40,7 +40,7 @@ export function InviteMembersDialog({
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    const data = { establishmentId: establishmentId ?? "", email };
+    const data = { establishmentIds: establishmentId ? [establishmentId] : [], email };
     console.log("Form data submitted:", data);
 
     const parsed = createWorkforceInvitationSchema.safeParse(data);
