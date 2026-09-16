@@ -2,8 +2,33 @@ import { z } from "zod";
 
 import { pageResponseSchema } from "@/contexts/shared/interfaces/rest/schemas/page-response.schema";
 
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const ZERO_UUID = "00000000-0000-0000-0000-000000000000";
+
+/** Core injects a semantic Owner role whose id is UUID.nameUUIDFromBytes("semantic-role:owner"). */
+export const SEMANTIC_OWNER_ROLE_ID = "270363ca-3cdb-31fa-9707-8b71b52c1d4b";
+
+const SEMANTIC_ROLE_IDS: Record<string, string> = {
+  "semantic-role:owner": SEMANTIC_OWNER_ROLE_ID,
+};
+
+export function isUuid(value: unknown): value is string {
+  return typeof value === "string" && UUID_PATTERN.test(value);
+}
+
+/** Guards scope ids that may start empty/invalid before the session is hydrated. */
+export function normalizeUuidOrNull(value: unknown): string | null {
+  return isUuid(value) ? value : null;
+}
+
+/** Accepts a canonical UUID or a semantic id and returns a valid 36-char UUID. */
+export function normalizeRoleId(value: string): string {
+  if (isUuid(value)) return value;
+  return SEMANTIC_ROLE_IDS[value] ?? ZERO_UUID;
+}
+
 export const workforceRoleSchema = z.object({
-  id: z.string().uuid(),
+  id: z.string(),
   name: z.string(),
   position: z.number().int(),
   systemRole: z.boolean(),
@@ -17,9 +42,9 @@ export const workforceMemberSchema = z.object({
   email: z.string().email(),
   username: z.string().nullable(),
   imageUrl: z.string().nullable(),
-  organizationId: z.string().uuid(),
+  organizationId: z.string(),
   organizationName: z.string().nullable(),
-  establishmentId: z.string().uuid(),
+  establishmentId: z.string(),
   establishmentName: z.string().nullable(),
   status: z.enum(["PENDING", "ACTIVE", "REMOVED", "EXPIRED"]),
   roles: z.array(workforceRoleSchema),
@@ -96,7 +121,68 @@ export const workforceRolePermissionCatalog = [
   "workforce:revoke_invitation",
   "workforce:assign_roles",
   "workforce:manage_members",
+  "catalog:read",
+  "catalog:write",
+  "catalog:delete",
+  "crm:read",
+  "crm:write",
+  "crm:delete",
+  "schedule:view",
+  "schedule:operator",
+  "schedule:manager",
+  "assistant:chat",
+  "assistant:manage_chats",
 ] as const;
+
+export type WorkforceRolePermission = (typeof workforceRolePermissionCatalog)[number];
+
+/** Grouped, human-friendly matrix rendered by the role editor. */
+export const workforceRolePermissionGroups: ReadonlyArray<{
+  title: string;
+  permissions: ReadonlyArray<{ code: WorkforceRolePermission; label: string }>;
+}> = [
+  {
+    title: "Workforce permissions",
+    permissions: [
+      { code: "workforce:read_members", label: "View team members" },
+      { code: "workforce:invite", label: "Invite members" },
+      { code: "workforce:revoke_invitation", label: "Revoke invitations" },
+      { code: "workforce:assign_roles", label: "Assign roles" },
+      { code: "workforce:manage_members", label: "Manage members" },
+    ],
+  },
+  {
+    title: "Catalog Permissions",
+    permissions: [
+      { code: "catalog:read", label: "View catalog" },
+      { code: "catalog:write", label: "Write catalog entries" },
+      { code: "catalog:delete", label: "Delete catalog entries" },
+    ],
+  },
+  {
+    title: "CRM Permissions",
+    permissions: [
+      { code: "crm:read", label: "View customers" },
+      { code: "crm:write", label: "Write customer records" },
+      { code: "crm:delete", label: "Delete customers" },
+    ],
+  },
+  {
+    title: "Schedule Permissions",
+    permissions: [
+      { code: "schedule:view", label: "View calendar shifts" },
+      { code: "schedule:operator", label: "Operate appointments" },
+      { code: "schedule:manager", label: "Manage schedule settings" },
+    ],
+  },
+  {
+    title: "Assistant Permissions",
+    permissions: [
+      { code: "assistant:chat", label: "Interact with AI Assistant" },
+      { code: "assistant:manage_chats", label: "Manage AI conversations" },
+    ],
+  },
+];
 
 const rolePermissionSchema = z.enum(workforceRolePermissionCatalog);
 

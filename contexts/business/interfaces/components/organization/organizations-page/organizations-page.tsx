@@ -75,9 +75,13 @@ export function OrganizationsPage({
   };
 
   return (
-    <section className="mx-auto flex w-full max-w-7xl flex-col gap-6 lg:flex-row">
+    <section
+      className={`mx-auto grid w-full max-w-7xl gap-6 ${
+        previewOrg ? "lg:grid-cols-[minmax(0,28%)_minmax(0,72%)]" : ""
+      }`}
+    >
       <div
-        className={`w-full space-y-6 lg:flex lg:h-(--app-page-viewport-height) lg:flex-1 lg:flex-col ${
+        className={`w-full space-y-6 lg:flex lg:h-(--app-page-viewport-height) lg:flex-col ${
           previewOrg ? "hidden lg:flex" : ""
         }`}
       >

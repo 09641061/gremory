@@ -41,6 +41,7 @@ import {
   TabsTrigger,
 } from "@/contexts/shared/interfaces/components/ui/tabs";
 import {
+  normalizeUuidOrNull,
   workforceMemberPageSchema,
   type WorkforceMemberResource,
   type WorkforceRoleResource,
@@ -57,7 +58,7 @@ const pageSize = 20;
 export function TeamRoster({ establishmentId = null }: { establishmentId?: string | null }) {
   const authorization = useWorkspaceAuth();
   const { hasPermission } = usePermissions();
-  const organizationId = authorization?.scope.organizationId;
+  const organizationId = normalizeUuidOrNull(authorization?.scope.organizationId);
   const effectivePermissions = authorization?.effectivePermissions ?? [];
   const canRead = hasPermission("workforce:read_members");
   const canInvite = hasPermission("workforce:invite");

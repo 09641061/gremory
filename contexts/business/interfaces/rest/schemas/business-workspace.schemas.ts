@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { normalizeRoleId } from "@/contexts/workforce/interfaces/rest/schemas/workforce-member.schemas";
+
 const uuidSchema = z.string().uuid();
 
 const workspaceCapabilitiesSchema = z
@@ -55,7 +57,7 @@ const hierarchicalWorkspaceAuthorizationSchema = z
     }),
     roles: z.array(
       z.object({
-        id: uuidSchema,
+        id: z.string().transform(normalizeRoleId),
         name: z.string().trim().min(1),
         systemRole: z.boolean(),
         position: z.number().int(),

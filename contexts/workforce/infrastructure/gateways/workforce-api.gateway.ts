@@ -7,6 +7,7 @@ import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-ses
 import type { PageResponse } from "@/contexts/shared/application/model/page-response";
 import { apiClient } from "@/contexts/shared/infrastructure/http/api-client";
 import {
+  normalizeRoleId,
   workforceInvitationAcceptanceSchema,
   workforceInvitationPreviewSchema,
   workforceInvitationSchema,
@@ -40,7 +41,7 @@ export class WorkforceApiGateway {
       { token: await this.accessToken(), headers: this.organizationHeader(organizationId) },
     );
     const parsed = workforceRolePageSchema.parse(response);
-    return parsed.content;
+    return parsed.content.map((role) => ({ ...role, id: normalizeRoleId(role.id) }));
   }
 
   async createRole(organizationId: string, name: string): Promise<WorkforceRoleResource> {

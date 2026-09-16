@@ -6,6 +6,12 @@ import { z } from "zod";
 
 import { SearchableOptions } from "@/contexts/shared/interfaces/components/searchable-options";
 import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/contexts/shared/interfaces/components/ui/accordion";
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -38,8 +44,10 @@ import { usePermissions } from "@/contexts/workforce/interfaces/hooks/usePermiss
 import { useWorkspaceAuth } from "@/contexts/workforce/interfaces/context/WorkspaceAuthContext";
 import {
   createWorkforceRoleSchema,
+  normalizeUuidOrNull,
   workforceMemberPageSchema,
   workforceRolePermissionCatalog,
+  workforceRolePermissionGroups,
   workforceRoleSchema,
   type WorkforceMemberResource,
   type WorkforceRoleResource,
@@ -52,18 +60,10 @@ type FormState = {
 
 type EditorTab = "permissions" | "members";
 
-const permissionLabels: Record<(typeof workforceRolePermissionCatalog)[number], string> = {
-  "workforce:read_members": "View team members",
-  "workforce:invite": "Invite members",
-  "workforce:revoke_invitation": "Revoke invitations",
-  "workforce:assign_roles": "Assign roles",
-  "workforce:manage_members": "Manage members",
-};
-
 export function RoleManagement({ embedded = false }: { embedded?: boolean } = {}) {
   const { hasPermission } = usePermissions();
   const authorization = useWorkspaceAuth();
-  const organizationId = authorization?.scope.organizationId;
+  const organizationId = normalizeUuidOrNull(authorization?.scope.organizationId);
   const canManageRoles = hasPermission("workforce:manage_roles");
   const [roles, setRoles] = useState<WorkforceRoleResource[]>([]);
   const [members, setMembers] = useState<WorkforceMemberResource[]>([]);
@@ -292,6 +292,12 @@ export function RoleManagement({ embedded = false }: { embedded?: boolean } = {}
       )
     : [];
 
+  // The Owner (and any role carrying the "*" wildcard) has implicit full access,
+  // so every checkbox is shown checked and immutable.
+  const hasWildcardPermissions = editingRole?.permissions.includes("*") ?? false;
+  const isOwnerRole = editingRole?.systemRole === true && editingRole.name === "Owner";
+  const forceAllPermissions = hasWildcardPermissions || isOwnerRole;
+
   const permissionsForm = (
     <form className="space-y-6" onSubmit={(event) => void saveRole(event)}>
       <label className="grid gap-2 text-sm font-medium" htmlFor="role-name">
@@ -306,28 +312,48 @@ export function RoleManagement({ embedded = false }: { embedded?: boolean } = {}
         />
       </label>
 
-      <fieldset disabled={editingRole?.systemRole || saving} className="space-y-3">
-        <legend className="text-sm font-medium">Workforce permissions</legend>
+      <div className="space-y-4">
         <p className="text-xs leading-5 text-muted-foreground">Choose only the access this role requires.</p>
-        <div className="grid gap-2">
-          {workforceRolePermissionCatalog.map((permission) => {
-            const checked = form.permissions.includes(permission);
+        <Accordion multiple className="rounded-lg border border-border/70 px-3">
+          {workforceRolePermissionGroups.map((group) => {
+            const selectedCount = group.permissions.filter(
+              (permission) => forceAllPermissions || form.permissions.includes(permission.code),
+            ).length;
             return (
-              <label key={permission} className="flex cursor-pointer items-center gap-3 rounded-lg border border-border/70 px-3 py-2.5 text-sm transition-colors hover:bg-muted/40 has-[:disabled]:cursor-not-allowed has-[:disabled]:opacity-60">
-                <input
-                  type="checkbox"
-                  checked={checked}
-                  onChange={() => togglePermission(permission)}
-                  disabled={editingRole?.systemRole || saving}
-                  className="size-4 accent-primary"
-                />
-                <span>{permissionLabels[permission]}</span>
-                <code className="ml-auto text-[0.65rem] text-muted-foreground">{permission}</code>
-              </label>
+              <AccordionItem key={group.title} value={group.title}>
+                <AccordionTrigger className="items-center">
+                  <span className="flex items-center gap-2">
+                    {group.title}
+                    <span className="text-xs font-normal text-muted-foreground">
+                      ({selectedCount}/{group.permissions.length})
+                    </span>
+                  </span>
+                </AccordionTrigger>
+                <AccordionContent>
+                  <div className="grid gap-2">
+                    {group.permissions.map(({ code, label }) => {
+                      const checked = forceAllPermissions || form.permissions.includes(code);
+                      return (
+                        <label key={code} className="flex cursor-pointer items-center gap-3 rounded-lg border border-border/70 px-3 py-2.5 text-sm transition-colors hover:bg-muted/40 has-[:disabled]:cursor-not-allowed has-[:disabled]:opacity-60">
+                          <input
+                            type="checkbox"
+                            checked={checked}
+                            onChange={() => togglePermission(code)}
+                            disabled={editingRole?.systemRole || saving || forceAllPermissions}
+                            className="size-4 accent-primary"
+                          />
+                          <span>{label}</span>
+                          <code className="ml-auto text-[0.65rem] text-muted-foreground">{code}</code>
+                        </label>
+                      );
+                    })}
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
             );
           })}
-        </div>
-      </fieldset>
+        </Accordion>
+      </div>
 
       {editingRole?.systemRole ? <p className="rounded-lg bg-muted/50 px-3 py-2 text-xs leading-5 text-muted-foreground">System roles are protected and cannot be changed.</p> : null}
       <div className="flex gap-2 border-t border-border/70 pt-4">
@@ -407,7 +433,7 @@ export function RoleManagement({ embedded = false }: { embedded?: boolean } = {}
               <CardTitle>{editingRole ? `${editingRole.systemRole ? "View" : "Edit"} role` : "Create role"}</CardTitle>
             </CardHeader>
           ) : null}
-          <CardContent>
+          <CardContent className="max-h-[600px] overflow-y-auto">
             {editingRole ? (
               <Tabs
                 value={editorTab}

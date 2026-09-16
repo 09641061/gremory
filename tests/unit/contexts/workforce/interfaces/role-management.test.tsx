@@ -82,6 +82,20 @@ function renderManagement(permissions = authorization.effectivePermissions) {
   );
 }
 
+const permissionModuleTitles = [
+  "Workforce permissions",
+  "Catalog Permissions",
+  "CRM Permissions",
+  "Schedule Permissions",
+  "Assistant Permissions",
+];
+
+async function expandAllPermissionModules() {
+  for (const title of permissionModuleTitles) {
+    await userEvent.click(screen.getByRole("button", { name: new RegExp(`^${title}`) }));
+  }
+}
+
 describe("RoleManagement", () => {
   afterEach(() => vi.unstubAllGlobals());
 
@@ -108,6 +122,14 @@ describe("RoleManagement", () => {
     expect(screen.queryAllByRole("checkbox")).toHaveLength(0);
 
     await userEvent.click(screen.getByRole("button", { name: "Create new role" }));
+
+    // Every module starts collapsed: headers visible, checks unmounted.
+    for (const title of permissionModuleTitles) {
+      expect(screen.getByRole("button", { name: new RegExp(`^${title}`) })).toBeVisible();
+    }
+    expect(screen.queryAllByRole("checkbox")).toHaveLength(0);
+
+    await expandAllPermissionModules();
 
     expect(screen.getAllByRole("checkbox")).toHaveLength(workforceRolePermissionCatalog.length);
     for (const permission of workforceRolePermissionCatalog) {
@@ -151,7 +173,7 @@ describe("RoleManagement", () => {
     renderManagement();
 
     await userEvent.click(await screen.findByRole("button", { name: "Create new role" }));
-    expect(screen.getAllByRole("checkbox")).toHaveLength(workforceRolePermissionCatalog.length);
+    expect(screen.getByRole("button", { name: /^Workforce permissions/ })).toBeVisible();
 
     await userEvent.click(screen.getByRole("button", { name: "Cancel" }));
 
@@ -251,6 +273,29 @@ describe("RoleManagement", () => {
     );
   });
 
+  it("forces every permission checked for the Owner role", async () => {
+    vi.stubGlobal("fetch", mockApi({
+      roles: [{
+        id: "00000000-0000-0000-0000-000000000000",
+        name: "Owner",
+        permissions: ["workforce:read_members"],
+        systemRole: true,
+        position: 0,
+      }],
+      members: [],
+    }));
+
+    renderManagement();
+
+    await userEvent.click(await screen.findByRole("button", { name: "View" }));
+    await expandAllPermissionModules();
+
+    const checkboxes = screen.getAllByRole("checkbox");
+    expect(checkboxes).toHaveLength(workforceRolePermissionCatalog.length);
+    expect(checkboxes.every((checkbox) => (checkbox as HTMLInputElement).checked)).toBe(true);
+    expect(checkboxes.every((checkbox) => (checkbox as HTMLInputElement).disabled)).toBe(true);
+  });
+
   it("disables every mutation control when editing a system role", async () => {
     vi.stubGlobal("fetch", mockApi({
       roles: [{
@@ -270,6 +315,7 @@ describe("RoleManagement", () => {
     expect(screen.getByRole("button", { name: "Delete Admin" })).toBeDisabled();
     await userEvent.click(screen.getByRole("button", { name: "View" }));
     expect(await screen.findByRole("textbox", { name: "Role name" })).toBeDisabled();
+    await expandAllPermissionModules();
     expect(screen.getAllByRole("checkbox")).toHaveLength(workforceRolePermissionCatalog.length);
     expect(screen.getAllByRole("checkbox").every((checkbox) => (checkbox as HTMLInputElement).disabled)).toBe(true);
     expect(screen.getByRole("button", { name: "Save changes" })).toBeDisabled();
