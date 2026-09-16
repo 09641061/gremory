@@ -20,7 +20,7 @@ export type LocalTranslationResult<T> = T & {
 export function createLocalTranslationHook<T extends object>(locales: ContextLocales<T>) {
   return function useTranslations(): LocalTranslationResult<T> {
     const { locale } = useI18n();
-    const dict = locales[locale] ?? locales.en;
+    const dict = locales[locale] ?? locales.es ?? locales.en;
     return Object.assign(Object.create(dict), dict, {
       t: dict,
       locale,
@@ -30,7 +30,7 @@ export function createLocalTranslationHook<T extends object>(locales: ContextLoc
 
 export function createLocalDictionaryGetter<T>(locales: ContextLocales<T>) {
   return function getDictionary(locale?: Locale | null): T {
-    if (!locale) return locales.en;
-    return locales[locale] ?? locales.en;
+    if (!locale) return locales.es ?? locales.en;
+    return locales[locale] ?? locales.es ?? locales.en;
   };
 }
