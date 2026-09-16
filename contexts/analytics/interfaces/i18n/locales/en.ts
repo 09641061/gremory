@@ -69,7 +69,7 @@ export const en = {
   workforce: {
     title: "Workforce & Specialist Productivity",
     description: "Revenue and booking completion rates per team member.",
-    specialist: "Specialist / Member",
+    specialist: "Specialist",
     completed: "Completed",
     cancelled: "Cancelled",
     revenue: "Generated revenue",

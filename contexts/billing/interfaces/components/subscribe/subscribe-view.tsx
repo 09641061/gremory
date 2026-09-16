@@ -180,17 +180,43 @@ export function SubscribeView({ backHref, plansByCurrency, currentSubscription }
               ? "Reintentar pago"
               : t.subscribe.getPlan.replace("{name}", plan.name);
 
+            const localizedMetadata =
+              plan.id === 2
+                ? {
+                    description: t.subscribe.metadata.premiumDescription,
+                    features: [
+                      t.subscribe.metadata.premiumFeature1,
+                      t.subscribe.metadata.premiumFeature2,
+                      t.subscribe.metadata.premiumFeature3,
+                      t.subscribe.metadata.premiumFeature4,
+                      t.subscribe.metadata.premiumFeature5,
+                      t.subscribe.metadata.premiumFeature6,
+                      t.subscribe.metadata.premiumFeature7,
+                    ].filter(Boolean),
+                  }
+                : {
+                    description: t.subscribe.metadata.standardDescription,
+                    features: [
+                      t.subscribe.metadata.standardFeature1,
+                      t.subscribe.metadata.standardFeature2,
+                      t.subscribe.metadata.standardFeature3,
+                      t.subscribe.metadata.standardFeature4,
+                      t.subscribe.metadata.standardFeature5,
+                      t.subscribe.metadata.standardFeature6,
+                    ].filter(Boolean),
+                  };
+
             return (
               <PlanCard
                 key={plan.id}
                 planId={plan.id}
                 name={plan.name}
-                description={plan.description}
+                description={localizedMetadata.description || plan.description}
                 monthlyPrice={plan.monthlyPriceAmount}
                 annualPricePerMonth={plan.annualPriceAmount / 12}
                 currency={currency}
                 billingCycle={billingCycle}
-                features={[...plan.features]}
+                features={localizedMetadata.features.length > 0 ? localizedMetadata.features : [...plan.features]}
                 isPopular={plan.isPopular}
                 buttonLabel={buttonLabel}
                 buttonDisabled={isCurrent}

@@ -25,6 +25,7 @@ import {
   Sparkles,
   ArrowUpRight,
   ShieldAlert,
+  Activity,
 } from "lucide-react";
 import {
   ResponsiveContainer,
@@ -143,10 +144,59 @@ export function MaxAnalyticsView({
         />
       </div>
 
-      {/* Charts Section */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+      {/* Charts Section: Daily Appointments Flow & Daily Revenue Trend */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        {/* Daily Appointments Trend */}
+        <Card>
+          <CardHeader className="pb-2">
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="text-base font-semibold">
+                  {t.charts.dailyFlow}
+                </CardTitle>
+                <CardDescription className="text-xs">
+                  {t.charts.appointmentTrend}
+                </CardDescription>
+              </div>
+              <Activity className="size-4 text-muted-foreground" />
+            </div>
+          </CardHeader>
+          <CardContent className="h-[280px] pt-4">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={data.appointmentsTrend} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="maxAppointmentsGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="var(--primary)" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="var(--primary)" stopOpacity={0.0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} className="stroke-border/40" />
+                <XAxis dataKey="date" tickLine={false} axisLine={false} className="text-[10px] text-muted-foreground" />
+                <YAxis allowDecimals={false} tickLine={false} axisLine={false} className="text-[10px] text-muted-foreground" />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: "var(--card)",
+                    borderColor: "var(--border)",
+                    borderRadius: "0.5rem",
+                    fontSize: "12px",
+                  }}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="value"
+                  name={t.metrics.totalAppointments}
+                  stroke="var(--primary)"
+                  strokeWidth={2}
+                  fillOpacity={1}
+                  fill="url(#maxAppointmentsGrad)"
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+
         {/* Revenue Trend Chart */}
-        <Card className="lg:col-span-2">
+        <Card>
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
               <div>
@@ -160,7 +210,7 @@ export function MaxAnalyticsView({
               <TrendingUp className="size-4 text-emerald-500" />
             </div>
           </CardHeader>
-          <CardContent className="h-[300px] pt-4">
+          <CardContent className="h-[280px] pt-4">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={data.revenueTrend} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                 <defs>
@@ -198,6 +248,64 @@ export function MaxAnalyticsView({
             </ResponsiveContainer>
           </CardContent>
         </Card>
+      </div>
+
+      {/* Top Services & Customer Loyalty */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        {/* Top Services */}
+        <Card className="lg:col-span-2">
+          <CardHeader>
+            <CardTitle className="text-base font-semibold">
+              {t.charts.topServices}
+            </CardTitle>
+            <CardDescription className="text-xs">
+              {t.subtitles.topServicesSubtitle}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-[40%]">{t.frictionMatrix.serviceName}</TableHead>
+                  <TableHead>{t.frictionMatrix.categoryName}</TableHead>
+                  <TableHead className="text-center">{t.metrics.completedAppointments}</TableHead>
+                  <TableHead className="text-right">{t.metrics.grossRevenue}</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {data.topServices.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={4} className="h-24 text-center text-sm text-muted-foreground">
+                      {t.state.emptyTitle}
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  data.topServices.map((service, idx) => (
+                    <TableRow key={service.serviceId}>
+                      <TableCell className="font-medium">
+                        <div className="flex items-center gap-2">
+                          <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-semibold text-muted-foreground">
+                            {idx + 1}
+                          </span>
+                          <span className="truncate">{service.serviceName}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-xs text-muted-foreground">
+                        {service.categoryName || "—"}
+                      </TableCell>
+                      <TableCell className="text-center font-semibold">
+                        {service.completedCount}
+                      </TableCell>
+                      <TableCell className="text-right font-medium">
+                        {formatCurrency(service.grossRevenue)}
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
 
         {/* Customer Loyalty & Retention Card */}
         <Card>
@@ -209,25 +317,25 @@ export function MaxAnalyticsView({
               {t.loyalty.description}
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-5 pt-2">
-            <div className="flex items-center justify-between border-b pb-3">
+          <CardContent className="space-y-4 pt-2">
+            <div className="flex items-center justify-between border-b pb-2.5">
               <span className="text-xs text-muted-foreground">{t.loyalty.newCustomers}</span>
               <span className="text-sm font-bold text-foreground">{data.customerRetention.newCustomersCount}</span>
             </div>
-            <div className="flex items-center justify-between border-b pb-3">
+            <div className="flex items-center justify-between border-b pb-2.5">
               <span className="text-xs text-muted-foreground">{t.loyalty.recurringCustomers}</span>
               <span className="text-sm font-bold text-foreground">{data.customerRetention.recurringCustomersCount}</span>
             </div>
-            <div className="flex items-center justify-between rounded-lg bg-primary/10 p-3">
+            <div className="flex items-center justify-between rounded-lg bg-primary/10 p-2.5">
               <span className="text-xs font-semibold text-primary">{t.subtitles.retentionRate}</span>
               <span className="text-base font-bold text-primary">{data.customerRetention.retentionRate.toFixed(1)}%</span>
             </div>
 
-            <div className="space-y-2 pt-2">
+            <div className="space-y-2 pt-1">
               <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 {t.loyalty.topCustomers}
               </span>
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 {data.topCustomersBySpend.slice(0, 3).map((c) => (
                   <div key={c.customerId} className="flex items-center justify-between text-xs">
                     <span className="truncate font-medium">{c.customerName}</span>

@@ -71,7 +71,7 @@ export const es: AnalyticsDictionary = {
   workforce: {
     title: "Productividad del personal y especialistas",
     description: "Ingresos y tasa de completitud de citas por miembro del equipo.",
-    specialist: "Especialista / Miembro",
+    specialist: "Especialista",
     completed: "Completadas",
     cancelled: "Canceladas",
     revenue: "Ingresos generados",

@@ -78,6 +78,40 @@ describe("Analytics Schemas Validation", () => {
     expect(parsed.topServices).toHaveLength(1);
   });
 
+  it("should validate standard analytics with backend DTO topServices fields", () => {
+    const mockBackendPayload = {
+      from: "2026-01-01",
+      to: "2026-01-31",
+      totalAppointments: 1,
+      completedAppointments: 1,
+      cancelledAppointments: 0,
+      noShowAppointments: 0,
+      inProgressAppointments: 0,
+      grossRevenue: 50,
+      appointmentsTrend: [],
+      topServices: [
+        {
+          rank: 1,
+          serviceId: "123e4567-e89b-12d3-a456-426614174000",
+          serviceName: "Corte de Cabello",
+          appointmentsCount: 1,
+          completedAppointmentsCount: 1,
+          cancelledAppointmentsCount: 0,
+          noShowAppointmentsCount: 0,
+          lastBookedAt: "2026-09-16T19:03:13Z",
+        },
+      ],
+      completionVsCancellationTrend: [],
+      leadTimeTrend: [],
+      cancellationReasons: [],
+    };
+
+    const parsed = standardAnalyticsDashboardResponseSchema.parse(mockBackendPayload);
+    expect(parsed.topServices[0].completedCount).toBe(1);
+    expect(parsed.topServices[0].grossRevenue).toBe(0);
+    expect(parsed.topServices[0].serviceName).toBe("Corte de Cabello");
+  });
+
   it("should validate max analytics dashboard payload", () => {
     const mockMaxPayload = {
       from: "2026-01-01",

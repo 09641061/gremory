@@ -6,7 +6,6 @@ import type { AnalyticsPreset } from "../../../domain/model/value-objects/analyt
 import { AnalyticsExportService } from "../../../domain/services/analytics-export.service";
 import { fetchStandardAnalyticsAction } from "../../actions/get-analytics-dashboard.action";
 import { AnalyticsDatePicker } from "../shared/analytics-date-picker";
-import { AnalyticsPlanGate } from "../shared/analytics-plan-gate";
 import { KpiCard } from "../shared/kpi-card";
 import { useAnalyticsTranslations } from "../../i18n";
 import { cn } from "@/lib/utils";
@@ -156,7 +155,7 @@ export function StandardAnalyticsView({
           </CardHeader>
           <CardContent className="h-[280px] pt-4">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={initialData.appointmentsTrend} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+              <AreaChart data={data.appointmentsTrend} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <defs>
                   <linearGradient id="appointmentsGrad" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="var(--primary)" stopOpacity={0.3} />
@@ -205,7 +204,7 @@ export function StandardAnalyticsView({
           </CardHeader>
           <CardContent className="h-[280px] pt-4">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={initialData.completionVsCancellationTrend} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+              <BarChart data={data.completionVsCancellationTrend} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} className="stroke-border/40" />
                 <XAxis dataKey="date" tickLine={false} axisLine={false} className="text-[10px] text-muted-foreground" />
                 <YAxis allowDecimals={false} tickLine={false} axisLine={false} className="text-[10px] text-muted-foreground" />
@@ -248,14 +247,14 @@ export function StandardAnalyticsView({
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {initialData.topServices.length === 0 ? (
+                {data.topServices.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={4} className="h-24 text-center text-sm text-muted-foreground">
                       {t.state.emptyTitle}
                     </TableCell>
                   </TableRow>
                 ) : (
-                  initialData.topServices.map((service, idx) => (
+                  data.topServices.map((service, idx) => (
                     <TableRow key={service.serviceId}>
                       <TableCell className="font-medium">
                         <div className="flex items-center gap-2">
@@ -298,11 +297,11 @@ export function StandardAnalyticsView({
             <CardContent className="space-y-4 pt-2">
               <div className="flex items-center justify-between rounded-lg bg-muted/40 p-3">
                 <span className="text-xs text-muted-foreground">{t.botRoi.conversationsHandled}</span>
-                <span className="text-base font-bold text-foreground">{initialData.assistantChatsCount}</span>
+                <span className="text-base font-bold text-foreground">{data.assistantChatsCount}</span>
               </div>
               <div className="flex items-center justify-between rounded-lg bg-muted/40 p-3">
                 <span className="text-xs text-muted-foreground">{t.botRoi.appointmentsGenerated}</span>
-                <span className="text-base font-bold text-emerald-600">{initialData.assistantAppointmentsCreatedCount}</span>
+                <span className="text-base font-bold text-emerald-600">{data.assistantAppointmentsCreatedCount}</span>
               </div>
             </CardContent>
           </Card>
@@ -315,10 +314,10 @@ export function StandardAnalyticsView({
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-2 pt-2">
-              {initialData.cancellationReasons.length === 0 ? (
+              {data.cancellationReasons.length === 0 ? (
                 <p className="text-xs text-muted-foreground text-center py-4">{t.subtitles.noCancellations}</p>
               ) : (
-                initialData.cancellationReasons.map((item) => (
+                data.cancellationReasons.map((item) => (
                   <div key={item.reason} className="flex items-center justify-between text-xs">
                     <span className="truncate text-muted-foreground max-w-[160px]">{item.reason}</span>
                     <span className="font-semibold text-foreground">{item.count} ({item.percentage.toFixed(0)}%)</span>
@@ -329,9 +328,6 @@ export function StandardAnalyticsView({
           </Card>
         </div>
       </div>
-
-      {/* Plan Max Upsell Gate */}
-      <AnalyticsPlanGate />
     </div>
   );
 }

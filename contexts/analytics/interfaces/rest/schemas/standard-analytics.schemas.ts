@@ -26,13 +26,34 @@ export const analyticsDailyComparisonPointSchema = z
     secondaryValue: data.secondaryValue ?? data.cancelled ?? 0,
   }));
 
-export const analyticsServiceRankingItemSchema = z.object({
-  serviceId: z.string(),
-  serviceName: z.string(),
-  categoryName: z.string().nullable().optional(),
-  completedCount: z.number(),
-  grossRevenue: z.number(),
-});
+export const analyticsServiceRankingItemSchema = z
+  .object({
+    rank: z.number().optional(),
+    serviceId: z.string(),
+    serviceName: z.string(),
+    categoryName: z.string().nullable().optional(),
+    completedCount: z.number().optional(),
+    completedAppointmentsCount: z.number().optional(),
+    appointmentsCount: z.number().optional(),
+    cancelledAppointmentsCount: z.number().optional(),
+    noShowAppointmentsCount: z.number().optional(),
+    grossRevenue: z.number().optional(),
+    totalRevenue: z.number().optional(),
+    lastBookedAt: z.string().nullable().optional(),
+  })
+  .transform((data) => ({
+    rank: data.rank ?? 1,
+    serviceId: data.serviceId,
+    serviceName: data.serviceName,
+    categoryName: data.categoryName ?? null,
+    completedCount: data.completedCount ?? data.completedAppointmentsCount ?? data.appointmentsCount ?? 0,
+    completedAppointmentsCount: data.completedAppointmentsCount ?? data.completedCount ?? 0,
+    appointmentsCount: data.appointmentsCount ?? data.completedCount ?? 0,
+    cancelledAppointmentsCount: data.cancelledAppointmentsCount ?? 0,
+    noShowAppointmentsCount: data.noShowAppointmentsCount ?? 0,
+    grossRevenue: data.grossRevenue ?? data.totalRevenue ?? 0,
+    lastBookedAt: data.lastBookedAt ?? null,
+  }));
 
 export const analyticsCancellationReasonItemSchema = z.object({
   reason: z.string(),
