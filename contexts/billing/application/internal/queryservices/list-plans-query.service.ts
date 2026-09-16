@@ -29,28 +29,32 @@ export class ListPlansQueryService {
     const standardPlan = new Plan(
       createPlanId(1),
       "Standard",
-      "Perfect for startups and local shops.",
+      "Everything you need to manage your business and schedule bookings in one place.",
       1,
       [
         "1 establishment included",
-        "Core billing tools",
-        "Standard API access",
-        "Email support",
+        "Real-time calendar & appointment scheduling",
+        "Service catalog & team member assignment",
+        "Customer database (CRM)",
+        "Standard analytics dashboard (30-day window)",
+        "AI Virtual Assistant",
       ],
       false
     );
 
     const premiumPlan = new Plan(
       createPlanId(2),
-      "Premium",
-      "For growing enterprises with complex needs.",
+      "Max",
+      "Multi-location management and advanced business intelligence to maximize revenue.",
       -1,
       [
-        "Unlimited establishments",
-        "Advanced analytics dashboard",
-        "Custom domain integration",
-        "24/7 Priority support",
-        "Bulk invoice management",
+        "Unlimited establishments (multi-location)",
+        "Everything in Standard plan",
+        "Business Intelligence & growth trends (90-day window)",
+        "Service friction matrix & lost revenue calculation",
+        "Workforce productivity & revenue by specialist",
+        "AI Virtual Assistant conversion & ROI tracking",
+        "Priority support",
       ],
       true
     );
