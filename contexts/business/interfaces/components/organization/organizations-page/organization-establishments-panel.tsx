@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useEffectEvent, useRef, useState, useActionState } from "react";
-import { ChevronDown, Plus, Store, Trash2 } from "lucide-react";
+import { Plus, Store, Trash2 } from "lucide-react";
 import { z } from "zod";
 
 import {
@@ -28,6 +28,13 @@ import {
 } from "@/contexts/shared/interfaces/components/ui/alert-dialog";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import { Input } from "@/contexts/shared/interfaces/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/contexts/shared/interfaces/components/ui/select";
 import { Spinner } from "@/contexts/shared/interfaces/components/ui/spinner";
 import { ErrorAlert } from "@/contexts/shared/interfaces/components/error";
 import { ImageUploadAvatar } from "@/contexts/shared/interfaces/components/image-upload-avatar";
@@ -203,6 +210,11 @@ export function OrganizationEstablishmentsPanel({
           ? deleteState.error
           : null;
 
+  const establishmentOptions = list.map((establishment) => ({
+    value: establishment.id,
+    label: establishment.name,
+  }));
+
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto p-6">
       {error || actionError ? (
@@ -214,39 +226,44 @@ export function OrganizationEstablishmentsPanel({
 
       {/* ZONE 1 - navigation */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-        <div className="relative w-full">
-          <Store
-            className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground"
-            aria-hidden="true"
-          />
-          {creating ? (
-            <div
-              aria-label="Establishment"
-              className="flex h-(--app-control-height) items-center rounded-lg border border-input bg-muted/40 pr-3 pl-9 text-sm font-medium text-foreground"
-            >
-              New Establishment
-            </div>
-          ) : (
-            <select
-              aria-label="Establishment"
-              value={selectedId}
-              onChange={(event) => selectEstablishment(event.target.value)}
-              disabled={pending || loading || list.length === 0}
-              className="h-(--app-control-height) w-full appearance-none rounded-lg border border-input bg-background pr-8 pl-9 text-sm outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {list.map((establishment, index) => (
-                <option key={establishment.id} value={establishment.id}>
-                  {`Establishment: 🏬 ${establishment.name} (${index === 0 ? "Main" : "Branch"})`}
-                </option>
-              ))}
-            </select>
-          )}
-          {!creating ? (
-            <ChevronDown
-              className="pointer-events-none absolute top-1/2 right-3 size-4 -translate-y-1/2 text-muted-foreground"
-              aria-hidden="true"
-            />
-          ) : null}
+        <div className="flex w-full items-center gap-2">
+          <span className="shrink-0 text-sm font-medium text-foreground">Establishment:</span>
+          <div className="min-w-0 flex-1">
+            {creating ? (
+              <div
+                aria-label="Establishment"
+                className="flex h-(--app-control-height) w-full items-center gap-2 rounded-lg border border-input bg-muted/40 px-3 text-sm font-medium text-foreground"
+              >
+                <Store className="size-4 text-muted-foreground" aria-hidden="true" />
+                New Establishment
+              </div>
+            ) : (
+              <Select
+                items={establishmentOptions}
+                value={selectedId || null}
+                onValueChange={(next) => selectEstablishment(typeof next === "string" ? next : "")}
+                disabled={pending || loading || list.length === 0}
+              >
+                <SelectTrigger aria-label="Establishment" className="w-full">
+                  <Store className="size-4 text-muted-foreground" aria-hidden="true" />
+                  <SelectValue placeholder="Select establishment">
+                    {(value: string | null) => (
+                      <span className="truncate font-medium text-foreground">
+                        {value ? optionLabel(establishmentOptions, value) : "Select establishment"}
+                      </span>
+                    )}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  {establishmentOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value} label={option.label}>
+                      {`🏬 ${option.label}`}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+          </div>
         </div>
 
         {canCreate ? (
@@ -418,6 +435,12 @@ export function OrganizationEstablishmentsPanel({
       </AlertDialog>
     </div>
   );
+}
+
+type EstablishmentOption = { value: string; label: string };
+
+function optionLabel(options: ReadonlyArray<EstablishmentOption>, value: string): string {
+  return options.find((option) => option.value === value)?.label ?? value;
 }
 
 function readErrorMessage(value: unknown): string {

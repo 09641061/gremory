@@ -1,6 +1,6 @@
 /** @vitest-environment jsdom */
 
-import { render, screen, within } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
@@ -51,11 +51,20 @@ describe("OrganizationEstablishmentsPanel", () => {
       <OrganizationEstablishmentsPanel organizationId={organizationId} canUpdate canCreate />,
     );
 
-    expect(await screen.findByDisplayValue("LOCALOne")).toBeVisible();
+    // The label lives outside the trigger; the trigger only shows icon + name.
+    expect(await screen.findByText("LOCALOne")).toBeVisible();
+    expect(screen.getByText("Establishment:")).toBeVisible();
 
     const select = screen.getByRole("combobox", { name: "Establishment" });
-    expect(within(select).getByRole("option", { name: /LOCALOne \(Main\)/ })).toBeInTheDocument();
-    expect(within(select).getByRole("option", { name: /LOCALTwo \(Branch\)/ })).toBeInTheDocument();
+    expect(select).toHaveTextContent("LOCALOne");
+
+    await userEvent.click(select);
+    const firstOption = await screen.findByRole("option", { name: /LOCALOne/ });
+    const secondOption = screen.getByRole("option", { name: /LOCALTwo/ });
+    expect(firstOption).toHaveTextContent("🏬 LOCALOne");
+    expect(secondOption).toHaveTextContent("🏬 LOCALTwo");
+    expect(firstOption).not.toHaveTextContent("Main");
+    expect(secondOption).not.toHaveTextContent("Branch");
 
     expect(screen.getByText("Time zone")).toBeVisible();
     expect(screen.getByPlaceholderText("Street address...")).toBeVisible();
