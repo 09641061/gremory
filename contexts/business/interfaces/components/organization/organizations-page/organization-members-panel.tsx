@@ -1,9 +1,19 @@
 "use client";
 
 import { useEffect, useEffectEvent, useState } from "react";
-import { MapPin, MoreVertical, Plus, Search, X } from "lucide-react";
+import { MapPin, MoreVertical, Plus, Search, ShieldCheck } from "lucide-react";
 import { z } from "zod";
 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/contexts/shared/interfaces/components/ui/alert-dialog";
 import { Badge } from "@/contexts/shared/interfaces/components/ui/badge";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import {
@@ -17,7 +27,10 @@ import {
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/contexts/shared/interfaces/components/ui/dropdown-menu";
 import { Input } from "@/contexts/shared/interfaces/components/ui/input";
@@ -57,6 +70,7 @@ export function OrganizationMembersPanel({
   const [error, setError] = useState<string | null>(null);
   const [roleMutationKey, setRoleMutationKey] = useState<string | null>(null);
   const [scopeMember, setScopeMember] = useState<WorkforceMemberResource | null>(null);
+  const [removeTarget, setRemoveTarget] = useState<WorkforceMemberResource | null>(null);
   const [inviteOpen, setInviteOpen] = useState(false);
 
   async function loadData() {
@@ -95,6 +109,51 @@ export function OrganizationMembersPanel({
   function scopeFor(member: WorkforceMemberResource): string[] {
     const scope = member.establishments.map((establishment) => establishment.id);
     return scope.length > 0 ? scope : [member.establishmentId];
+  }
+
+  /** Exactly one mandatory system role per staff row (Owner, Admin or Member). */
+  function primarySystemRole(member: WorkforceMemberResource): WorkforceRoleResource | null {
+    const systemRoles = member.roles.filter((role) => role.systemRole);
+    if (systemRoles.length === 0) return null;
+    return [...systemRoles].sort((a, b) => a.position - b.position)[0];
+  }
+
+  function customRoles(member: WorkforceMemberResource): WorkforceRoleResource[] {
+    return member.roles.filter((role) => !role.systemRole);
+  }
+
+  const swappableSystemRoles = roles
+    .filter((role) => role.systemRole && role.name !== "Owner")
+    .sort((a, b) => a.position - b.position);
+  const assignableCustomRoles = roles.filter((role) => !role.systemRole);
+
+  async function swapSystemRole(member: WorkforceMemberResource, roleId: string) {
+    if (!member.memberId) return;
+    const current = member.roles.find((role) => role.systemRole && role.name !== "Owner");
+    if (current?.id === roleId) return;
+
+    setRoleMutationKey(`${member.memberId}:system`);
+    setError(null);
+    try {
+      if (current) {
+        const removal = await fetch(
+          `/api/workforce/roles/members/${member.memberId}/${current.id}`,
+          { method: "DELETE", headers: { "X-Organization-Id": organizationId } },
+        );
+        if (!removal.ok) throw new Error(readErrorMessage(await removal.json().catch(() => undefined)));
+      }
+      const assignment = await fetch(`/api/workforce/roles/members/${member.memberId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", "X-Organization-Id": organizationId },
+        body: JSON.stringify({ roleId }),
+      });
+      if (!assignment.ok) throw new Error(readErrorMessage(await assignment.json().catch(() => undefined)));
+      await loadData();
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "Unable to update the system role.");
+    } finally {
+      setRoleMutationKey(null);
+    }
   }
 
   async function assignRole(member: WorkforceMemberResource, roleId: string) {
@@ -148,9 +207,9 @@ export function OrganizationMembersPanel({
     }
   }
 
-  async function removeMember(member: WorkforceMemberResource) {
-    if (!member.memberId || member.isOwner) return;
-    if (!window.confirm(`Remove ${member.username ?? member.email} from the organization?`)) return;
+  async function confirmRemoveMember() {
+    const member = removeTarget;
+    if (!member?.memberId || member.isOwner) return;
 
     setLoading(true);
     setError(null);
@@ -160,8 +219,10 @@ export function OrganizationMembersPanel({
         headers: { "X-Organization-Id": organizationId },
       });
       if (!response.ok) throw new Error(readErrorMessage(await response.json().catch(() => undefined)));
+      setRemoveTarget(null);
       await loadData();
     } catch (reason) {
+      setRemoveTarget(null);
       setError(reason instanceof Error ? reason.message : "Unable to remove the member.");
     } finally {
       setLoading(false);
@@ -255,8 +316,9 @@ export function OrganizationMembersPanel({
             {visibleMembers.map((member) => {
               const owner = member.isOwner;
               const active = member.status === "ACTIVE" && member.memberId !== null;
-              const assignedRoleIds = member.roles.map((role) => role.id);
-              const assignableRoles = roles.filter((role) => !assignedRoleIds.includes(role.id));
+              const systemRole = primarySystemRole(member);
+              const customs = customRoles(member);
+              const busy = roleMutationKey !== null;
               return (
                 <TableRow key={rowKey(member)} className="group/row">
                   <TableCell className="px-4 py-4 whitespace-normal">
@@ -264,74 +326,98 @@ export function OrganizationMembersPanel({
                     <div className="mt-0.5 text-xs text-muted-foreground">{member.email}</div>
                   </TableCell>
 
+                  {/* Organization Roles: 1 mandatory system role + optional custom roles. */}
                   <TableCell className="whitespace-normal">
-                    <div className="flex flex-wrap items-center gap-1.5">
-                      {member.roles.map((role) =>
-                        owner || !active ? (
-                          <Badge key={role.id} variant="outline">{role.name}</Badge>
-                        ) : (
-                          <Badge key={role.id} variant="outline" className="gap-1 pr-1">
-                            {role.name}
+                    {!active ? (
+                      <span className="text-xs text-muted-foreground">Awaiting acceptance</span>
+                    ) : (
+                      <DropdownMenu>
+                        <DropdownMenuTrigger
+                          disabled={owner}
+                          render={
                             <button
                               type="button"
-                              onClick={() => void removeRole(member, role.id)}
-                              disabled={roleMutationKey === `${member.memberId}:${role.id}`}
-                              aria-label={`Remove ${role.name} role`}
-                              className="rounded-full p-0.5 text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-50"
-                            >
-                              <X className="size-3" aria-hidden="true" />
-                            </button>
-                          </Badge>
-                        ),
-                      )}
-                      {owner || !active ? null : (
-                        <DropdownMenu>
-                          <DropdownMenuTrigger
-                            render={<Button type="button" variant="outline" size="icon-xs" aria-label="Add role" />}
-                          >
-                            <Plus className="size-3" aria-hidden="true" />
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="start" className="min-w-40">
-                            {assignableRoles.length === 0 ? (
-                              <DropdownMenuItem disabled>All roles assigned</DropdownMenuItem>
+                              aria-label={`Edit organization roles for ${member.username ?? member.email}`}
+                              className={cn(
+                                "flex flex-wrap items-center gap-1.5 rounded-lg border border-transparent px-1 py-0.5 transition-colors",
+                                !owner && "hover:border-border/70 hover:bg-muted/40",
+                              )}
+                            />
+                          }
+                        >
+                          {systemRole ? (
+                            <Badge variant={owner ? "default" : "secondary"} className="gap-1">
+                              <ShieldCheck className="size-3" aria-hidden="true" />
+                              {systemRole.name}
+                            </Badge>
+                          ) : null}
+                          {customs.map((role) => (
+                            <Badge key={role.id} variant="outline">{role.name}</Badge>
+                          ))}
+                          {!owner ? <Plus className="size-3 text-muted-foreground" aria-hidden="true" /> : null}
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="start" className="min-w-56">
+                          <DropdownMenuGroup>
+                            <DropdownMenuLabel>System role</DropdownMenuLabel>
+                            {swappableSystemRoles.map((role) => (
+                              <DropdownMenuItem
+                                key={role.id}
+                                disabled={busy}
+                                onClick={() => void swapSystemRole(member, role.id)}
+                              >
+                                {systemRole?.id === role.id ? "✓ " : ""}
+                                {role.name}
+                              </DropdownMenuItem>
+                            ))}
+                          </DropdownMenuGroup>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuGroup>
+                            <DropdownMenuLabel>Custom roles</DropdownMenuLabel>
+                            {assignableCustomRoles.length === 0 ? (
+                              <DropdownMenuItem disabled>No custom roles yet</DropdownMenuItem>
                             ) : (
-                              assignableRoles.map((role) => (
-                                <DropdownMenuItem key={role.id} onClick={() => void assignRole(member, role.id)}>
-                                  {role.name}
-                                </DropdownMenuItem>
-                              ))
+                              assignableCustomRoles.map((role) => {
+                                const assigned = member.roles.some((assignedRole) => assignedRole.id === role.id);
+                                return (
+                                  <DropdownMenuItem
+                                    key={role.id}
+                                    disabled={busy}
+                                    onClick={() =>
+                                      assigned ? void removeRole(member, role.id) : void assignRole(member, role.id)
+                                    }
+                                  >
+                                    {assigned ? "✓ " : ""}
+                                    {role.name}
+                                  </DropdownMenuItem>
+                                );
+                              })
                             )}
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      )}
-                    </div>
+                          </DropdownMenuGroup>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    )}
                   </TableCell>
 
+                  {/* Establishments Scope: read-only location tags; editing lives in the ⋮ menu. */}
                   <TableCell className="whitespace-normal">
-                    <button
-                      type="button"
-                      onClick={() => !owner && member.memberId && setScopeMember(member)}
-                      disabled={owner || !member.memberId}
-                      className={cn(
-                        "inline-flex items-center gap-1.5 rounded-full border border-border px-2.5 py-1 text-xs text-foreground",
-                        !owner && member.memberId && "hover:bg-muted/60",
-                      )}
-                    >
-                      <MapPin className="size-3.5 text-muted-foreground" aria-hidden="true" />
+                    <div className="flex flex-wrap items-center gap-1.5">
                       {owner ? (
-                        "All Establishments"
+                        <Badge variant="outline" className="gap-1">
+                          <MapPin className="size-3" aria-hidden="true" />
+                          All Establishments
+                        </Badge>
                       ) : (
-                        scopeFor(member)
-                          .map(
-                            (id) =>
-                              member.establishments.find((establishment) => establishment.id === id)?.name ??
+                        scopeFor(member).map((id) => (
+                          <Badge key={id} variant="outline" className="gap-1">
+                            <MapPin className="size-3" aria-hidden="true" />
+                            {member.establishments.find((establishment) => establishment.id === id)?.name ??
                               establishments.find((establishment) => establishment.id === id)?.name ??
                               member.establishmentName ??
-                              "Establishment",
-                          )
-                          .join(", ")
+                              "Establishment"}
+                          </Badge>
+                        ))
                       )}
-                    </button>
+                    </div>
                   </TableCell>
 
                   <TableCell>
@@ -358,38 +444,40 @@ export function OrganizationMembersPanel({
                     </div>
                   </TableCell>
 
+                  {/* Standardized ⋮ actions: scope editing and total revocation only. */}
                   <TableCell className="px-4 text-right">
-                    {owner ? (
-                      <span className="text-xs text-muted-foreground">Protected</span>
-                    ) : (
-                      <DropdownMenu>
-                        <DropdownMenuTrigger
-                          render={<Button type="button" variant="ghost" size="icon-sm" aria-label={`Actions for ${member.username ?? member.email}`} />}
+                    <DropdownMenu>
+                      <DropdownMenuTrigger
+                        disabled={owner || !member.memberId}
+                        render={
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon-sm"
+                            aria-label={`Actions for ${member.username ?? member.email}`}
+                            title={owner ? "Owner is protected" : undefined}
+                          />
+                        }
+                      >
+                        <MoreVertical className="size-4" aria-hidden="true" />
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="min-w-52">
+                        <DropdownMenuItem
+                          disabled={owner || !member.memberId}
+                          onClick={() => setScopeMember(member)}
                         >
-                          <MoreVertical className="size-4" aria-hidden="true" />
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="min-w-52">
-                          <DropdownMenuItem
-                            disabled={!member.memberId}
-                            onClick={() => setScopeMember(member)}
-                          >
-                            Edit Establishment Scope
-                          </DropdownMenuItem>
-                          {member.status === "PENDING" ? (
-                            <DropdownMenuItem onClick={() => void resendInvitation(member)}>
-                              Resend Invitation
-                            </DropdownMenuItem>
-                          ) : null}
-                          <DropdownMenuItem
-                            variant="destructive"
-                            disabled={!member.memberId}
-                            onClick={() => void removeMember(member)}
-                          >
-                            Remove from Organization
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    )}
+                          Edit Establishment Scope
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          variant="destructive"
+                          className="text-red-600 focus:text-red-600"
+                          disabled={owner || !member.memberId}
+                          onClick={() => setRemoveTarget(member)}
+                        >
+                          Remove from Organization
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </TableCell>
                 </TableRow>
               );
@@ -422,6 +510,31 @@ export function OrganizationMembersPanel({
         roles={roles}
         onInvited={() => void loadData()}
       />
+
+      <AlertDialog
+        open={removeTarget !== null}
+        onOpenChange={(open) => !open && setRemoveTarget(null)}
+      >
+        <AlertDialogContent className="rounded-xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove member</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to remove {removeTarget?.username ?? removeTarget?.email} from the
+              organization? Every role and establishment access is revoked. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={loading}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              variant="destructive"
+              disabled={loading}
+              onClick={() => void confirmRemoveMember()}
+            >
+              Remove
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

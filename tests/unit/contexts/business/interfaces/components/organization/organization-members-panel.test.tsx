@@ -11,6 +11,8 @@ const establishmentId = "55555555-5555-4555-8555-555555555555";
 
 const establishments = [{ id: establishmentId, name: "LOCALOne" }];
 
+const ownerRole = { id: "cccccccc-cccc-4ccc-8ccc-cccccccccccc", name: "Owner", position: 0, systemRole: true, permissions: ["*"] };
+const adminRole = { id: "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb", name: "Admin", position: 1, systemRole: true, permissions: [] };
 const memberRole = { id: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa", name: "Member", position: 2, systemRole: true, permissions: [] };
 
 function rosterEntry(overrides: Record<string, unknown>) {
@@ -39,8 +41,11 @@ function rosterEntry(overrides: Record<string, unknown>) {
 
 function mockApi() {
   return vi.fn((url: string) => {
+    if (url.startsWith("/api/workforce/roles/members")) {
+      return Promise.resolve(new Response(null, { status: 204 }));
+    }
     if (url.startsWith("/api/workforce/roles")) {
-      return Promise.resolve(new Response(JSON.stringify([memberRole]), { status: 200 }));
+      return Promise.resolve(new Response(JSON.stringify([ownerRole, adminRole, memberRole]), { status: 200 }));
     }
     return Promise.resolve(new Response(JSON.stringify({
       content: [
@@ -49,8 +54,15 @@ function mockApi() {
           isOwner: true,
           status: "ACTIVE",
           memberId: "33333333-3333-4333-8333-333333333333",
+          roles: [ownerRole],
         }),
-        rosterEntry({ email: "active@example.com", username: "Active User", status: "ACTIVE", memberId: "44444444-4444-4444-8444-444444444444" }),
+        rosterEntry({
+          email: "active@example.com",
+          username: "Active User",
+          status: "ACTIVE",
+          memberId: "44444444-4444-4444-8444-444444444444",
+          roles: [memberRole],
+        }),
         rosterEntry({ email: "pending@example.com", status: "PENDING" }),
       ],
       page: 0,
@@ -73,7 +85,12 @@ describe("OrganizationMembersPanel", () => {
     expect(screen.getAllByText("pending@example.com").length).toBeGreaterThan(0);
     expect(screen.getAllByText("ACTIVE").length).toBeGreaterThan(0);
     expect(screen.getByText("PENDING")).toBeVisible();
-    expect(screen.getByText("Protected")).toBeVisible();
+    // Exactly one mandatory system role badge per active row.
+    expect(screen.getByText("Owner")).toBeVisible();
+    expect(screen.getByText("Member")).toBeVisible();
+    // Owner row is fully frozen: its ⋮ actions trigger is disabled.
+    expect(screen.getByRole("button", { name: "Actions for Organization Owner" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Actions for Active User" })).toBeEnabled();
     expect(screen.getByPlaceholderText("Search members...")).toBeVisible();
     expect(screen.getByRole("combobox", { name: "Filter by Establishment" })).toBeVisible();
     expect(screen.getByRole("button", { name: /Invite member/ })).toBeVisible();
@@ -121,7 +138,10 @@ describe("OrganizationMembersPanel", () => {
     );
 
     await screen.findByText("Active User");
-    await userEvent.click(screen.getAllByRole("button", { name: "LOCALOne" })[0]);
+    const activeRow = screen.getByText("Active User").closest("tr");
+    expect(activeRow).not.toBeNull();
+    await userEvent.click(within(activeRow!).getByRole("button", { name: "Actions for Active User" }));
+    await userEvent.click(await screen.findByRole("menuitem", { name: "Edit Establishment Scope" }));
     await userEvent.click(screen.getByRole("checkbox", { name: "Second Site" }));
     await userEvent.click(screen.getByRole("button", { name: "Save Scope" }));
 
@@ -132,6 +152,30 @@ describe("OrganizationMembersPanel", () => {
         body: JSON.stringify({
           establishmentIds: [establishmentId, "66666666-6666-4666-8666-666666666666"],
         }),
+      }),
+    );
+  });
+
+  it("swaps the system role from the inline role popover", async () => {
+    const fetchMock = mockApi();
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(<OrganizationMembersPanel organizationId={organizationId} establishments={establishments} />);
+
+    await screen.findByText("Active User");
+    await userEvent.click(screen.getByRole("button", { name: "Edit organization roles for Active User" }));
+    await userEvent.click(await screen.findByRole("menuitem", { name: "Admin" }));
+
+    const memberId = "44444444-4444-4444-8444-444444444444";
+    expect(fetchMock).toHaveBeenCalledWith(
+      `/api/workforce/roles/members/${memberId}/${memberRole.id}`,
+      expect.objectContaining({ method: "DELETE" }),
+    );
+    expect(fetchMock).toHaveBeenCalledWith(
+      `/api/workforce/roles/members/${memberId}`,
+      expect.objectContaining({
+        method: "PUT",
+        body: JSON.stringify({ roleId: adminRole.id }),
       }),
     );
   });
