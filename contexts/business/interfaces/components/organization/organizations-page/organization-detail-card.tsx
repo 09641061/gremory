@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { Building2 } from "lucide-react";
 
-import { canManageOrganization } from "@/contexts/business/domain/services/workspace-navigation.policy";
 import { updateOrganizationAction } from "@/contexts/business/interfaces/actions/organization.actions";
 import { EntityProfileCard } from "@/contexts/business/interfaces/components/entity-profile-card/entity-profile-card";
 import { Card } from "@/contexts/shared/interfaces/components/ui/card";
@@ -54,6 +53,21 @@ export function OrganizationDetailCard({
   const { t } = useBusinessTranslations();
   const [activeTab, setActiveTab] = useState<OrganizationTab>("general");
 
+  const ownsOrganization = organization?.organizationId === ownedOrganizationId;
+  const effectivePermissions = new Set(
+    (organization?.establishments ?? []).flatMap(
+      (establishment) => establishment.effectivePermissions ?? [],
+    ),
+  );
+  const hasPermission = (code: string) => ownsOrganization || effectivePermissions.has(code);
+  const canReadRoles = hasPermission("governance:role:read");
+  const canManageOrganization = hasPermission("organization:update");
+  const canManageEstablishments =
+    hasPermission("establishment:update") || hasPermission("establishment:create");
+  const canInviteMembers = hasPermission("workforce:member:invite");
+  const canManageMembers = hasPermission("workforce:member:manage");
+  const visibleTabs = tabs.filter((tab) => tab.value !== "roles" || canReadRoles);
+
   if (!organization) {
     return (
       <div className={cn("flex-1", className)}>
@@ -80,7 +94,7 @@ export function OrganizationDetailCard({
         >
           <div className="shrink-0 border-b border-border px-6">
             <TabsList variant="line" className="w-full justify-start gap-6">
-              {tabs.map((tab) => (
+              {visibleTabs.map((tab) => (
                 <TabsTrigger
                   key={tab.value}
                   value={tab.value}
@@ -102,7 +116,7 @@ export function OrganizationDetailCard({
               entityName={organization.organizationName}
               photoUrl={organization.organizationImageUrl}
               updateAction={updateOrganizationAction}
-              canUpdate={canManageOrganization(organization, ownedOrganizationId)}
+              canUpdate={canManageOrganization}
               className="min-h-0 flex-1 rounded-none border-0 shadow-none"
             />
           </TabsContent>
@@ -114,6 +128,11 @@ export function OrganizationDetailCard({
                 id: establishment.id,
                 name: establishment.name,
               }))}
+              canInvite={canInviteMembers}
+              canManageMembers={canManageMembers}
+              lockedEstablishmentId={
+                canManageMembers ? null : organization.establishments[0]?.id ?? null
+              }
             />
           </TabsContent>
 
@@ -124,11 +143,8 @@ export function OrganizationDetailCard({
           <TabsContent value="establishments" className="flex min-h-0 flex-1 flex-col">
             <OrganizationEstablishmentsPanel
               organizationId={organization.organizationId}
-              canUpdate={organization.canUpdate ?? organization.organizationId === ownedOrganizationId}
-              canCreate={
-                organization.canCreateEstablishment ??
-                organization.organizationId === ownedOrganizationId
-              }
+              canUpdate={canManageEstablishments}
+              canCreate={hasPermission("establishment:create")}
             />
           </TabsContent>
         </Tabs>

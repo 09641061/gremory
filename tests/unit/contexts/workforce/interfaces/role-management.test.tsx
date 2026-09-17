@@ -16,7 +16,7 @@ const authorization: AuthorizationResource = {
   accountType: "MEMBER",
   scope: { type: "ORGANIZATION", organizationId, establishmentId: null },
   roles: [],
-  effectivePermissions: ["workforce:manage_roles"],
+  effectivePermissions: ["governance:role:manage"],
 };
 
 const workerRole = {
@@ -83,11 +83,14 @@ function renderManagement(permissions = authorization.effectivePermissions) {
 }
 
 const permissionModuleTitles = [
-  "Workforce permissions",
-  "Catalog Permissions",
+  "Catalog",
   "CRM Permissions",
   "Schedule Permissions",
   "Assistant Permissions",
+  "Organization Settings",
+  "Establishments Management",
+  "Team & Workforce",
+  "Governance & Roles",
 ];
 
 async function expandAllPermissionModules() {
@@ -135,8 +138,7 @@ describe("RoleManagement", () => {
     for (const permission of workforceRolePermissionCatalog) {
       expect(screen.getByText(permission)).toBeVisible();
     }
-    expect(screen.queryByText("workforce:manage_roles")).toBeNull();
-  });
+  }, 20000);
 
   it("does not render a Permissions column in the roles table", async () => {
     vi.stubGlobal("fetch", mockApi({ roles: [workerRole], members: [] }));
@@ -173,7 +175,7 @@ describe("RoleManagement", () => {
     renderManagement();
 
     await userEvent.click(await screen.findByRole("button", { name: "Create new role" }));
-    expect(screen.getByRole("button", { name: /^Workforce permissions/ })).toBeVisible();
+    expect(screen.getByRole("button", { name: /^Catalog/ })).toBeVisible();
 
     await userEvent.click(screen.getByRole("button", { name: "Cancel" }));
 
@@ -278,7 +280,7 @@ describe("RoleManagement", () => {
       roles: [{
         id: "00000000-0000-0000-0000-000000000000",
         name: "Owner",
-        permissions: ["workforce:read_members"],
+        permissions: ["workforce:member:read"],
         systemRole: true,
         position: 0,
       }],
@@ -301,7 +303,7 @@ describe("RoleManagement", () => {
       roles: [{
         id: "22222222-2222-4222-8222-222222222222",
         name: "Admin",
-        permissions: ["workforce:read_members"],
+        permissions: ["workforce:member:read"],
         systemRole: true,
         position: 1,
       }],

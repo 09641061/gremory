@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useEffectEvent, useState } from "react";
-import { ChevronRight, Plus, Trash2 } from "lucide-react";
+import { Fragment, useEffect, useEffectEvent, useState } from "react";
+import { ChevronRight, Cog, Crown, Plus, Shield, Sparkles, Trash2, User } from "lucide-react";
 import { z } from "zod";
 
 import {
@@ -40,14 +40,47 @@ import {
   type WorkforceRoleResource,
 } from "@/contexts/workforce/interfaces/rest/schemas/workforce-member.schemas";
 
+type PermissionEntry = { code: WorkforceRolePermission; label: string; description: string };
+type PermissionSection = { title: string; permissions: ReadonlyArray<PermissionEntry> };
 type PermissionModule = {
   title: string;
-  permissions: ReadonlyArray<{ code: WorkforceRolePermission; label: string; description: string }>;
+  section: "core" | "governance";
+  permissions?: ReadonlyArray<PermissionEntry>;
+  sections?: ReadonlyArray<PermissionSection>;
 };
+
+/** Flattens a module's direct rows and its optional sub-sections. */
+function moduleEntries(module: PermissionModule): ReadonlyArray<PermissionEntry> {
+  if (module.sections) return module.sections.flatMap((section) => section.permissions);
+  return module.permissions ?? [];
+}
+
+/** System roles render in descending authority: Owner, Manager, Admin, Member. */
+const SYSTEM_ROLE_ORDER = ["Owner", "Manager", "Admin", "Member"] as const;
+
+function systemRoleRank(name: string): number {
+  const rank = SYSTEM_ROLE_ORDER.indexOf(name as (typeof SYSTEM_ROLE_ORDER)[number]);
+  return rank === -1 ? SYSTEM_ROLE_ORDER.length : rank;
+}
+
+function RoleIcon({ name, className }: { name: string; className?: string }) {
+  const Icon =
+    name === "Owner"
+      ? Crown
+      : name === "Manager"
+        ? Sparkles
+        : name === "Admin"
+          ? Shield
+          : name === "Member"
+            ? User
+            : Cog;
+  return <Icon className={className} aria-hidden="true" />;
+}
 
 const permissionModules: ReadonlyArray<PermissionModule> = [
   {
     title: "Catalog",
+    section: "core",
     permissions: [
       {
         code: "catalog:manage",
@@ -65,6 +98,7 @@ const permissionModules: ReadonlyArray<PermissionModule> = [
   },
   {
     title: "CRM & Customers",
+    section: "core",
     permissions: [
       {
         code: "crm:customer:manage",
@@ -88,6 +122,7 @@ const permissionModules: ReadonlyArray<PermissionModule> = [
   },
   {
     title: "Appointments / Schedule",
+    section: "core",
     permissions: [
       {
         code: "scheduling:appointment:manage",
@@ -111,6 +146,7 @@ const permissionModules: ReadonlyArray<PermissionModule> = [
   },
   {
     title: "Assistant",
+    section: "core",
     permissions: [
       {
         code: "assistant:use",
@@ -124,6 +160,42 @@ const permissionModules: ReadonlyArray<PermissionModule> = [
         description:
           "Destructive action: Permanently delete chat threads or conversation history from the database.",
       },
+    ],
+  },
+  // Organization & governance.
+  {
+    title: "Organization Settings",
+    section: "governance",
+    permissions: [
+      { code: "organization:read", label: "View organization details", description: "Access and view core corporate metadata." },
+      { code: "organization:update", label: "Update organization info", description: "Edit company profile, legal headers, and global logos." },
+    ],
+  },
+  {
+    title: "Establishments Management",
+    section: "governance",
+    permissions: [
+      { code: "establishment:read", label: "View establishments", description: "List and browse all physical business locations." },
+      { code: "establishment:create", label: "Create new establishments", description: "Provision and open new store profiles under the brand." },
+      { code: "establishment:update", label: "Update establishment fields", description: "Edit local time zones, addresses, and individual branch imagery." },
+      { code: "establishment:delete", label: "Delete establishments", description: "Destructive action: Permanently delete physical branch profiles from the system." },
+    ],
+  },
+  {
+    title: "Team & Workforce",
+    section: "governance",
+    permissions: [
+      { code: "workforce:member:read", label: "View staff directory", description: "Browse the unified team roster and view colleague statuses." },
+      { code: "workforce:member:invite", label: "Invite new staff members", description: "Access invitation forms and dispatch new employee clearance setup tokens." },
+      { code: "workforce:member:manage", label: "Manage staff status & assignments", description: "In-row fast role assignment, toggle scopes, and revoke active memberships." },
+    ],
+  },
+  {
+    title: "Governance & Roles",
+    section: "governance",
+    permissions: [
+      { code: "governance:role:read", label: "View custom roles configuration", description: "Browse organization-specific permission structures and matrices." },
+      { code: "governance:role:manage", label: "Manage security matrices & roles", description: "Destructive/Critical action: Create, update checkboxes, and permanently delete system security clearance profiles." },
     ],
   },
 ];
@@ -196,7 +268,9 @@ export function OrganizationRolesPanel({ organizationId }: { organizationId: str
     return () => window.clearTimeout(timer);
   }, [organizationId]);
 
-  const systemRoles = roles.filter((role) => role.systemRole);
+  const systemRoles = roles
+    .filter((role) => role.systemRole)
+    .sort((a, b) => systemRoleRank(a.name) - systemRoleRank(b.name));
   const customRoles = roles.filter((role) => !role.systemRole);
   const roleOptions = roles.map((role) => ({
     value: role.id,
@@ -226,7 +300,7 @@ export function OrganizationRolesPanel({ organizationId }: { organizationId: str
   }
 
   function toggleModule(module: PermissionModule) {
-    const codes = module.permissions.map((permission) => permission.code);
+    const codes = moduleEntries(module).map((permission) => permission.code);
     const allSelected = codes.every((code) => form.permissions.includes(code));
     setForm((current) => ({
       ...current,
@@ -357,7 +431,10 @@ export function OrganizationRolesPanel({ organizationId }: { organizationId: str
               </SelectLabel>
               {systemRoles.map((role) => (
                 <SelectItem key={role.id} value={role.id} label={roleOptionLabel(role.id)}>
-                  <span>{`🛡️ ${role.name}`}</span>
+                  <span className="flex items-center gap-2">
+                    <RoleIcon name={role.name} className="size-4 text-muted-foreground" />
+                    {role.name}
+                  </span>
                 </SelectItem>
               ))}
             </SelectGroup>
@@ -371,7 +448,10 @@ export function OrganizationRolesPanel({ organizationId }: { organizationId: str
               ) : (
                 customRoles.map((role) => (
                   <SelectItem key={role.id} value={role.id} label={roleOptionLabel(role.id)}>
-                    <span>{`👤 ${role.name}`}</span>
+                    <span className="flex items-center gap-2">
+                      <RoleIcon name={role.name} className="size-4 text-muted-foreground" />
+                      {role.name}
+                    </span>
                   </SelectItem>
                 ))
               )}
@@ -423,12 +503,47 @@ export function OrganizationRolesPanel({ organizationId }: { organizationId: str
         onValueChange={(value) => setOpenModules(value as string[])}
         className="w-full rounded-lg border border-border/70 px-4"
       >
-        {permissionModules.map((module) => {
-          const codes = module.permissions.map((permission) => permission.code);
+        {permissionModules.map((module, index) => {
+          const startsGovernance =
+            module.section === "governance" && permissionModules[index - 1]?.section !== "governance";
+          const entries = moduleEntries(module);
+          const codes = entries.map((permission) => permission.code);
           const selectedCount = codes.filter((code) => form.permissions.includes(code)).length;
           const isOpen = openModules.includes(module.title);
+          const renderPermissionRow = ({ code, label, description }: PermissionEntry) => (
+            <label
+              key={code}
+              className="flex cursor-pointer items-start gap-3 rounded-lg border border-border/70 px-3 py-2.5 text-sm transition-colors hover:bg-muted/40 has-[:disabled]:cursor-not-allowed has-[:disabled]:opacity-60"
+            >
+              <input
+                type="checkbox"
+                checked={form.permissions.includes(code)}
+                onChange={() => togglePermission(code)}
+                disabled={isReadOnly || saving || loading}
+                className="mt-0.5 size-4 accent-primary"
+              />
+              <span className="grid gap-0.5">
+                <span className="flex flex-wrap items-center gap-2 text-foreground">
+                  {label}
+                  <code className="text-[0.65rem] text-muted-foreground">{code}</code>
+                </span>
+                <span className="text-xs text-muted-foreground">- {description}</span>
+              </span>
+            </label>
+          );
           return (
-            <AccordionItem key={module.title} value={module.title}>
+            <Fragment key={module.title}>
+              {index === 0 ? (
+                <p className="pt-3 pb-1 text-[0.7rem] font-semibold tracking-wide text-muted-foreground uppercase">
+                  Suite Core Modules
+                </p>
+              ) : null}
+              {startsGovernance ? (
+                <p className="mt-2 border-t border-border/70 pt-3 pb-1 text-[0.7rem] font-semibold tracking-wide text-muted-foreground uppercase">
+                  Organization &amp; Governance
+                </p>
+              ) : null}
+              <AccordionItem value={module.title}>
               <div className="flex items-center justify-between gap-2">
                 <button
                   type="button"
@@ -457,30 +572,23 @@ export function OrganizationRolesPanel({ organizationId }: { organizationId: str
               </div>
               <AccordionContent>
                 <div className="grid gap-2 pb-2">
-                  {module.permissions.map(({ code, label, description }) => (
-                    <label
-                      key={code}
-                      className="flex cursor-pointer items-start gap-3 rounded-lg border border-border/70 px-3 py-2.5 text-sm transition-colors hover:bg-muted/40 has-[:disabled]:cursor-not-allowed has-[:disabled]:opacity-60"
-                    >
-                      <input
-                        type="checkbox"
-                        checked={form.permissions.includes(code)}
-                        onChange={() => togglePermission(code)}
-                        disabled={isReadOnly || saving || loading}
-                        className="mt-0.5 size-4 accent-primary"
-                      />
-                      <span className="grid gap-0.5">
-                        <span className="flex flex-wrap items-center gap-2 text-foreground">
-                          {label}
-                          <code className="text-[0.65rem] text-muted-foreground">{code}</code>
-                        </span>
-                        <span className="text-xs text-muted-foreground">- {description}</span>
-                      </span>
-                    </label>
-                  ))}
+                  {module.sections
+                    ? module.sections.map((section, index) => (
+                        <div
+                          key={section.title}
+                          className={cn("grid gap-2", index > 0 && "border-t border-border/70 pt-3")}
+                        >
+                          <p className="text-[0.7rem] font-semibold tracking-wide text-muted-foreground uppercase">
+                            {section.title}
+                          </p>
+                          {section.permissions.map(renderPermissionRow)}
+                        </div>
+                      ))
+                    : (module.permissions ?? []).map(renderPermissionRow)}
                 </div>
               </AccordionContent>
-            </AccordionItem>
+              </AccordionItem>
+            </Fragment>
           );
         })}
       </Accordion>

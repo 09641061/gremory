@@ -17,6 +17,27 @@ const ownerRole = {
   systemRole: true,
   permissions: ["*"],
 };
+const adminRole = {
+  id: "cccccccc-cccc-4ccc-8ccc-cccccccccccc",
+  name: "Admin",
+  position: 1,
+  systemRole: true,
+  permissions: [],
+};
+const managerRole = {
+  id: "dddddddd-dddd-4ddd-8ddd-dddddddddddd",
+  name: "Manager",
+  position: 2,
+  systemRole: true,
+  permissions: [],
+};
+const memberSystemRole = {
+  id: "eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee",
+  name: "Member",
+  position: 3,
+  systemRole: true,
+  permissions: [],
+};
 const customRole = {
   id: customRoleId,
   name: "Cashier",
@@ -49,7 +70,13 @@ const member = {
 function mockApi() {
   return vi.fn((url: string) => {
     if (url.startsWith("/api/workforce/roles")) {
-      return Promise.resolve(new Response(JSON.stringify([ownerRole, customRole]), { status: 200 }));
+      return Promise.resolve(new Response(JSON.stringify([
+        ownerRole,
+        adminRole,
+        memberSystemRole,
+        managerRole,
+        customRole,
+      ]), { status: 200 }));
     }
     return Promise.resolve(new Response(JSON.stringify({
       content: [member],
@@ -84,6 +111,26 @@ describe("OrganizationRolesPanel", () => {
     expect(screen.queryByRole("option", { name: /New Role/ })).toBeNull();
     expect(screen.queryByText("[System]")).toBeNull();
     expect(screen.queryByText("[Custom]")).toBeNull();
+  });
+
+  it("orders system roles by descending authority and maps the approved icons", async () => {
+    vi.stubGlobal("fetch", mockApi());
+
+    render(<OrganizationRolesPanel organizationId={organizationId} />);
+
+    await screen.findByDisplayValue("Owner");
+    await userEvent.click(screen.getByRole("combobox", { name: "Select role" }));
+
+    const systemOrder = ["Owner", "Manager", "Admin", "Member"].map(
+      (name) => screen.getByRole("option", { name }).textContent?.trim(),
+    );
+    expect(systemOrder).toEqual(["Owner", "Manager", "Admin", "Member"]);
+
+    expect(screen.getByRole("option", { name: "Owner" }).querySelector(".lucide-crown")).not.toBeNull();
+    expect(screen.getByRole("option", { name: "Manager" }).querySelector(".lucide-sparkles")).not.toBeNull();
+    expect(screen.getByRole("option", { name: "Admin" }).querySelector(".lucide-shield")).not.toBeNull();
+    expect(screen.getByRole("option", { name: "Member" }).querySelector(".lucide-user")).not.toBeNull();
+    expect(screen.getByRole("option", { name: "Cashier" }).querySelector(".lucide-cog")).not.toBeNull();
   });
 
   it("freezes every control for a system role", async () => {
@@ -249,6 +296,35 @@ describe("OrganizationRolesPanel", () => {
     expect(screen.getByRole("checkbox", { name: /Delete conversations/ })).toBeVisible();
     expect(screen.queryByText("Interact with AI Assistant")).toBeNull();
     expect(screen.queryByText("Manage AI conversations")).toBeNull();
+  });
+
+  it("lists core modules first and keeps governance as four selectable accordions", async () => {
+    vi.stubGlobal("fetch", mockApi());
+
+    render(<OrganizationRolesPanel organizationId={organizationId} />);
+
+    await screen.findByDisplayValue("Owner");
+    await userEvent.click(screen.getByRole("button", { name: /Create custom role/ }));
+
+    // Core modules are rendered first under their own section header.
+    expect(screen.getByText("Suite Core Modules")).toBeVisible();
+    expect(screen.getByRole("button", { name: /^Catalog/ })).toBeVisible();
+    expect(screen.getByRole("button", { name: /^Assistant/ })).toBeVisible();
+
+    // Governance follows, split into four independent accordions.
+    expect(screen.getByText("Organization & Governance")).toBeVisible();
+    expect(screen.getByRole("button", { name: /^Organization Settings/ })).toBeVisible();
+    expect(screen.getByRole("button", { name: /^Establishments Management/ })).toBeVisible();
+    expect(screen.getByRole("button", { name: /^Team & Workforce/ })).toBeVisible();
+    expect(screen.getByRole("button", { name: /^Governance & Roles/ })).toBeVisible();
+
+    await userEvent.click(screen.getByRole("button", { name: /^Organization Settings/ }));
+    expect(screen.getByText("View organization details")).toBeVisible();
+
+    // Its own Select All selects the two keys of that accordion.
+    await userEvent.click(screen.getAllByRole("button", { name: "Select All" })[4]);
+    expect(screen.getByRole("checkbox", { name: /View organization details/ })).toBeChecked();
+    expect(screen.getByRole("checkbox", { name: /Update organization info/ })).toBeChecked();
   });
 
   it("clears the form when creating a custom role", async () => {

@@ -14,7 +14,7 @@ const authorization: AuthorizationResource = {
   accountType: "MEMBER",
   scope: { type: "ORGANIZATION", organizationId, establishmentId: null },
   roles: [],
-  effectivePermissions: ["workforce:read_members", "workforce:assign_roles", "workforce:manage_members"],
+  effectivePermissions: ["workforce:member:read", "workforce:member:manage"],
 };
 
 function renderRoster(
@@ -41,7 +41,7 @@ function emptyRosterResponse() {
 describe("TeamRoster", () => {
   afterEach(() => vi.unstubAllGlobals());
 
-  it("does not request roster data without workforce:read_members", () => {
+  it("does not request roster data without workforce:member:read", () => {
     const fetchMock = vi.fn();
     vi.stubGlobal("fetch", fetchMock);
 
@@ -237,7 +237,7 @@ describe("TeamRoster", () => {
   it("opens the invite dialog from the roster header", async () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(emptyRosterResponse()));
 
-    renderRoster([...authorization.effectivePermissions, "workforce:invite"]);
+    renderRoster([...authorization.effectivePermissions, "workforce:member:invite"]);
 
     await userEvent.click(await screen.findByRole("button", { name: "Invite member" }));
 
@@ -268,7 +268,7 @@ describe("TeamRoster", () => {
     });
     vi.stubGlobal("fetch", fetchMock);
 
-    renderRoster([...authorization.effectivePermissions, "workforce:invite"]);
+    renderRoster([...authorization.effectivePermissions, "workforce:member:invite"]);
 
     await userEvent.click(await screen.findByRole("button", { name: "Invite member" }));
     await userEvent.type(screen.getByRole("textbox", { name: "Email address" }), "new@example.com");
@@ -399,7 +399,7 @@ describe("TeamRoster", () => {
   it("shows the Permissions & Roles tab only with workforce:manage_roles", async () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(emptyRosterResponse()));
 
-    renderRoster([...authorization.effectivePermissions, "workforce:manage_roles"]);
+    renderRoster([...authorization.effectivePermissions, "governance:role:manage"]);
 
     expect(await screen.findByRole("tab", { name: "Permissions & Roles" })).toBeVisible();
   });
@@ -421,7 +421,7 @@ describe("TeamRoster", () => {
       return Promise.resolve(emptyRosterResponse());
     }));
 
-    renderRoster([...authorization.effectivePermissions, "workforce:manage_roles"]);
+    renderRoster([...authorization.effectivePermissions, "governance:role:manage"]);
     await userEvent.click(await screen.findByRole("tab", { name: "Permissions & Roles" }));
 
     expect(await screen.findByText("Organization roles")).toBeVisible();

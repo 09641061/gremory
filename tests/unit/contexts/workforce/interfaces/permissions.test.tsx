@@ -20,7 +20,7 @@ const authorization: AuthorizationResource = {
       name: "Supervisor",
       systemRole: false,
       position: 2,
-      permissions: ["workforce:invite"],
+      permissions: ["workforce:member:invite"],
     },
     {
       id: "44444444-4444-4444-8444-444444444444",
@@ -30,7 +30,7 @@ const authorization: AuthorizationResource = {
       permissions: ["organization:read"],
     },
   ],
-  effectivePermissions: ["workforce:invite"],
+  effectivePermissions: ["workforce:member:invite"],
 };
 
 function PermissionProbe() {
@@ -39,8 +39,8 @@ function PermissionProbe() {
   return (
     <output>
       {JSON.stringify({
-        invite: hasPermission("workforce:invite"),
-        remove: hasPermission("workforce:remove_members"),
+        invite: hasPermission("workforce:member:invite"),
+        remove: hasPermission("workforce:member:manage"),
         everyone: isSystemRole("Everyone"),
         supervisor: isSystemRole("Supervisor"),
       })}
@@ -73,7 +73,7 @@ describe("workforce permission engine", () => {
     );
   });
 
-  it("does not render the invite action without workforce:invite", () => {
+  it("does not render the invite action without workforce:member:invite", () => {
     render(
       <WorkspaceAuthProvider authorization={{ ...authorization, effectivePermissions: [] }}>
         <InviteMemberButton onClick={() => {}} />

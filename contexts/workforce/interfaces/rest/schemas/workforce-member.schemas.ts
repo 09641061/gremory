@@ -133,11 +133,17 @@ export const workforceInvitationPreviewSchema = z.object({
 });
 
 export const workforceRolePermissionCatalog = [
-  "workforce:read_members",
-  "workforce:invite",
-  "workforce:revoke_invitation",
-  "workforce:assign_roles",
-  "workforce:manage_members",
+  "organization:read",
+  "organization:update",
+  "establishment:read",
+  "establishment:create",
+  "establishment:update",
+  "establishment:delete",
+  "workforce:member:read",
+  "workforce:member:invite",
+  "workforce:member:manage",
+  "governance:role:read",
+  "governance:role:manage",
   "catalog:manage",
   "catalog:delete",
   "crm:customer:manage",
@@ -153,22 +159,26 @@ export const workforceRolePermissionCatalog = [
 export type WorkforceRolePermission = (typeof workforceRolePermissionCatalog)[number];
 
 /** Grouped, human-friendly matrix rendered by the role editor. */
+export type WorkforceRolePermissionEntry = {
+  code: WorkforceRolePermission;
+  label: string;
+  description?: string;
+};
+
+export type WorkforceRolePermissionSection = {
+  title: string;
+  permissions: ReadonlyArray<WorkforceRolePermissionEntry>;
+};
+
 export const workforceRolePermissionGroups: ReadonlyArray<{
   title: string;
-  permissions: ReadonlyArray<{ code: WorkforceRolePermission; label: string; description?: string }>;
+  section: "core" | "governance";
+  permissions?: ReadonlyArray<WorkforceRolePermissionEntry>;
+  sections?: ReadonlyArray<WorkforceRolePermissionSection>;
 }> = [
   {
-    title: "Workforce permissions",
-    permissions: [
-      { code: "workforce:read_members", label: "View team members" },
-      { code: "workforce:invite", label: "Invite members" },
-      { code: "workforce:revoke_invitation", label: "Revoke invitations" },
-      { code: "workforce:assign_roles", label: "Assign roles" },
-      { code: "workforce:manage_members", label: "Manage members" },
-    ],
-  },
-  {
-    title: "Catalog Permissions",
+    title: "Catalog",
+    section: "core",
     permissions: [
       {
         code: "catalog:manage",
@@ -186,6 +196,7 @@ export const workforceRolePermissionGroups: ReadonlyArray<{
   },
   {
     title: "CRM Permissions",
+    section: "core",
     permissions: [
       {
         code: "crm:customer:manage",
@@ -209,6 +220,7 @@ export const workforceRolePermissionGroups: ReadonlyArray<{
   },
   {
     title: "Schedule Permissions",
+    section: "core",
     permissions: [
       {
         code: "scheduling:appointment:manage",
@@ -232,6 +244,7 @@ export const workforceRolePermissionGroups: ReadonlyArray<{
   },
   {
     title: "Assistant Permissions",
+    section: "core",
     permissions: [
       {
         code: "assistant:use",
@@ -245,6 +258,41 @@ export const workforceRolePermissionGroups: ReadonlyArray<{
         description:
           "Destructive action: Permanently delete chat threads or conversation history from the database.",
       },
+    ],
+  },
+  {
+    title: "Organization Settings",
+    section: "governance",
+    permissions: [
+      { code: "organization:read", label: "View organization details", description: "Access and view core corporate metadata." },
+      { code: "organization:update", label: "Update organization info", description: "Edit company profile, legal headers, and global logos." },
+    ],
+  },
+  {
+    title: "Establishments Management",
+    section: "governance",
+    permissions: [
+      { code: "establishment:read", label: "View establishments", description: "List and browse all physical business locations." },
+      { code: "establishment:create", label: "Create new establishments", description: "Provision and open new store profiles under the brand." },
+      { code: "establishment:update", label: "Update establishment fields", description: "Edit local time zones, addresses, and individual branch imagery." },
+      { code: "establishment:delete", label: "Delete establishments", description: "Destructive action: Permanently delete physical branch profiles from the system." },
+    ],
+  },
+  {
+    title: "Team & Workforce",
+    section: "governance",
+    permissions: [
+      { code: "workforce:member:read", label: "View staff directory", description: "Browse the unified team roster and view colleague statuses." },
+      { code: "workforce:member:invite", label: "Invite new staff members", description: "Access invitation forms and dispatch new employee clearance setup tokens." },
+      { code: "workforce:member:manage", label: "Manage staff status & assignments", description: "In-row fast role assignment, toggle scopes, and revoke active memberships." },
+    ],
+  },
+  {
+    title: "Governance & Roles",
+    section: "governance",
+    permissions: [
+      { code: "governance:role:read", label: "View custom roles configuration", description: "Browse organization-specific permission structures and matrices." },
+      { code: "governance:role:manage", label: "Manage security matrices & roles", description: "Destructive/Critical action: Create, update checkboxes, and permanently delete system security clearance profiles." },
     ],
   },
 ];

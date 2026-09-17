@@ -8,7 +8,7 @@ import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 export function InviteMemberButton({ onClick }: { onClick: () => void }) {
   const { hasPermission } = usePermissions();
 
-  if (!hasPermission("workforce:invite")) {
+  if (!hasPermission("workforce:member:invite")) {
     return null;
   }
 

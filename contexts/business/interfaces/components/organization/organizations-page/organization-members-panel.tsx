@@ -65,9 +65,15 @@ const ALL_ESTABLISHMENTS = "all";
 export function OrganizationMembersPanel({
   organizationId,
   establishments,
+  canInvite = true,
+  canManageMembers = true,
+  lockedEstablishmentId = null,
 }: {
   organizationId: string;
   establishments: ReadonlyArray<EstablishmentOption>;
+  canInvite?: boolean;
+  canManageMembers?: boolean;
+  lockedEstablishmentId?: string | null;
 }) {
   const [members, setMembers] = useState<WorkforceMemberResource[]>([]);
   const [roles, setRoles] = useState<WorkforceRoleResource[]>([]);
@@ -257,14 +263,17 @@ export function OrganizationMembersPanel({
   }
 
   const normalizedSearch = search.trim().toLowerCase();
+  // Establishment-scoped viewers are locked to their own store: the filter is hidden
+  // and every row is restricted to that location.
+  const activeEstablishmentFilter = lockedEstablishmentId ?? establishmentFilter;
   const visibleMembers = members.filter((member) => {
     const matchesSearch =
       normalizedSearch.length === 0 ||
       member.email.toLowerCase().includes(normalizedSearch) ||
       (member.username ?? "").toLowerCase().includes(normalizedSearch);
     const matchesEstablishment =
-      establishmentFilter === ALL_ESTABLISHMENTS ||
-      scopeFor(member).includes(establishmentFilter);
+      activeEstablishmentFilter === ALL_ESTABLISHMENTS ||
+      scopeFor(member).includes(activeEstablishmentFilter);
     return matchesSearch && matchesEstablishment;
   });
 
@@ -299,6 +308,7 @@ export function OrganizationMembersPanel({
           />
         </div>
 
+        {lockedEstablishmentId ? null : (
         <div className="flex w-full items-center gap-2 lg:max-w-xs">
           <span className="shrink-0 text-sm font-medium text-foreground">Establishment:</span>
           <Select
@@ -326,11 +336,14 @@ export function OrganizationMembersPanel({
             </SelectContent>
           </Select>
         </div>
+        )}
 
-        <Button type="button" onClick={() => setInviteOpen(true)} className="gap-2 bg-emerald-600 text-white hover:bg-emerald-700 lg:ml-auto">
-          <Plus className="size-4" aria-hidden="true" />
-          Invite member
-        </Button>
+        {canInvite ? (
+          <Button type="button" onClick={() => setInviteOpen(true)} className="gap-2 bg-emerald-600 text-white hover:bg-emerald-700 lg:ml-auto">
+            <Plus className="size-4" aria-hidden="true" />
+            Invite member
+          </Button>
+        ) : null}
       </div>
 
       {/* Unified staff table */}
@@ -366,7 +379,7 @@ export function OrganizationMembersPanel({
                     ) : (
                       <DropdownMenu>
                         <DropdownMenuTrigger
-                          disabled={owner}
+                          disabled={owner || !canManageMembers}
                           render={
                             <button
                               type="button"
@@ -477,8 +490,10 @@ export function OrganizationMembersPanel({
                     </div>
                   </TableCell>
 
-                  {/* Standardized ⋮ actions: scope editing and total revocation only. */}
+                  {/* Standardized ⋮ actions: scope editing and total revocation only.
+                      Hidden for establishment-scoped members without member management. */}
                   <TableCell className="px-4 text-right">
+                    {canManageMembers ? (
                     <DropdownMenu>
                       <DropdownMenuTrigger
                         disabled={owner || !member.memberId}
@@ -511,6 +526,7 @@ export function OrganizationMembersPanel({
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
+                    ) : null}
                   </TableCell>
                 </TableRow>
               );

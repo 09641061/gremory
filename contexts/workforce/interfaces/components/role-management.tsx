@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useEffectEvent, useState } from "react";
-import { Pencil, Plus, ShieldCheck, Trash2, UserMinus } from "lucide-react";
+import { Fragment, useEffect, useEffectEvent, useState } from "react";
+import { Cog, Crown, Pencil, Plus, Shield, ShieldCheck, Sparkles, Trash2, User, UserMinus } from "lucide-react";
 import { z } from "zod";
 
 import { SearchableOptions } from "@/contexts/shared/interfaces/components/searchable-options";
@@ -50,8 +50,31 @@ import {
   workforceRolePermissionGroups,
   workforceRoleSchema,
   type WorkforceMemberResource,
+  type WorkforceRolePermissionEntry,
   type WorkforceRoleResource,
 } from "@/contexts/workforce/interfaces/rest/schemas/workforce-member.schemas";
+
+/** System roles render in descending authority: Owner, Manager, Admin, Member. */
+const SYSTEM_ROLE_ORDER = ["Owner", "Manager", "Admin", "Member"] as const;
+
+function systemRoleRank(name: string): number {
+  const rank = SYSTEM_ROLE_ORDER.indexOf(name as (typeof SYSTEM_ROLE_ORDER)[number]);
+  return rank === -1 ? SYSTEM_ROLE_ORDER.length : rank;
+}
+
+function RoleIcon({ name, className }: { name: string; className?: string }) {
+  const Icon =
+    name === "Owner"
+      ? Crown
+      : name === "Manager"
+        ? Sparkles
+        : name === "Admin"
+          ? Shield
+          : name === "Member"
+            ? User
+            : Cog;
+  return <Icon className={className} aria-hidden="true" />;
+}
 
 type FormState = {
   name: string;
@@ -64,7 +87,7 @@ export function RoleManagement({ embedded = false }: { embedded?: boolean } = {}
   const { hasPermission } = usePermissions();
   const authorization = useWorkspaceAuth();
   const organizationId = normalizeUuidOrNull(authorization?.scope.organizationId);
-  const canManageRoles = hasPermission("workforce:manage_roles");
+  const canManageRoles = hasPermission("governance:role:manage");
   const [roles, setRoles] = useState<WorkforceRoleResource[]>([]);
   const [members, setMembers] = useState<WorkforceMemberResource[]>([]);
   const [editingRole, setEditingRole] = useState<WorkforceRoleResource | null>(null);
@@ -315,46 +338,79 @@ export function RoleManagement({ embedded = false }: { embedded?: boolean } = {}
       <div className="space-y-4">
         <p className="text-xs leading-5 text-muted-foreground">Choose only the access this role requires.</p>
         <Accordion multiple className="rounded-lg border border-border/70 px-3">
-          {workforceRolePermissionGroups.map((group) => {
-            const selectedCount = group.permissions.filter(
+          {workforceRolePermissionGroups.map((group, index) => {
+            const startsGovernance =
+              group.section === "governance" &&
+              workforceRolePermissionGroups[index - 1]?.section !== "governance";
+            const entries = group.sections
+              ? group.sections.flatMap((section) => section.permissions)
+              : group.permissions ?? [];
+            const selectedCount = entries.filter(
               (permission) => forceAllPermissions || form.permissions.includes(permission.code),
             ).length;
+            const renderRow = ({ code, label, description }: WorkforceRolePermissionEntry) => {
+              const checked = forceAllPermissions || form.permissions.includes(code);
+              return (
+                <label key={code} className="flex cursor-pointer items-start gap-3 rounded-lg border border-border/70 px-3 py-2.5 text-sm transition-colors hover:bg-muted/40 has-[:disabled]:cursor-not-allowed has-[:disabled]:opacity-60">
+                  <input
+                    type="checkbox"
+                    checked={checked}
+                    onChange={() => togglePermission(code)}
+                    disabled={editingRole?.systemRole || saving || forceAllPermissions}
+                    className="mt-0.5 size-4 accent-primary"
+                  />
+                  <span className="grid gap-0.5">
+                    <span className="text-foreground">{label}</span>
+                    {description ? (
+                      <span className="text-xs text-muted-foreground">- {description}</span>
+                    ) : null}
+                  </span>
+                  <code className="ml-auto text-[0.65rem] text-muted-foreground">{code}</code>
+                </label>
+              );
+            };
             return (
-              <AccordionItem key={group.title} value={group.title}>
+              <Fragment key={group.title}>
+                {index === 0 ? (
+                  <p className="pt-3 pb-1 text-[0.7rem] font-semibold tracking-wide text-muted-foreground uppercase">
+                    Suite Core Modules
+                  </p>
+                ) : null}
+                {startsGovernance ? (
+                  <p className="mt-2 border-t border-border/70 pt-3 pb-1 text-[0.7rem] font-semibold tracking-wide text-muted-foreground uppercase">
+                    Organization &amp; Governance
+                  </p>
+                ) : null}
+                <AccordionItem value={group.title}>
                 <AccordionTrigger className="items-center">
                   <span className="flex items-center gap-2">
                     {group.title}
                     <span className="text-xs font-normal text-muted-foreground">
-                      ({selectedCount}/{group.permissions.length})
+                      ({selectedCount}/{entries.length})
                     </span>
                   </span>
                 </AccordionTrigger>
                 <AccordionContent>
                   <div className="grid gap-2">
-                    {group.permissions.map(({ code, label, description }) => {
-                      const checked = forceAllPermissions || form.permissions.includes(code);
-                      return (
-                        <label key={code} className="flex cursor-pointer items-start gap-3 rounded-lg border border-border/70 px-3 py-2.5 text-sm transition-colors hover:bg-muted/40 has-[:disabled]:cursor-not-allowed has-[:disabled]:opacity-60">
-                          <input
-                            type="checkbox"
-                            checked={checked}
-                            onChange={() => togglePermission(code)}
-                            disabled={editingRole?.systemRole || saving || forceAllPermissions}
-                            className="mt-0.5 size-4 accent-primary"
-                          />
-                          <span className="grid gap-0.5">
-                            <span className="text-foreground">{label}</span>
-                            {description ? (
-                              <span className="text-xs text-muted-foreground">- {description}</span>
-                            ) : null}
-                          </span>
-                          <code className="ml-auto text-[0.65rem] text-muted-foreground">{code}</code>
-                        </label>
-                      );
-                    })}
+                    {group.sections
+                      ? group.sections.map((section, index) => (
+                          <div
+                            key={section.title}
+                            className={
+                              index > 0 ? "grid gap-2 border-t border-border/70 pt-3" : "grid gap-2"
+                            }
+                          >
+                            <p className="text-[0.7rem] font-semibold tracking-wide text-muted-foreground uppercase">
+                              {section.title}
+                            </p>
+                            {section.permissions.map(renderRow)}
+                          </div>
+                        ))
+                      : entries.map(renderRow)}
                   </div>
                 </AccordionContent>
-              </AccordionItem>
+                </AccordionItem>
+              </Fragment>
             );
           })}
         </Accordion>
@@ -373,6 +429,13 @@ export function RoleManagement({ embedded = false }: { embedded?: boolean } = {}
       </div>
     </form>
   );
+
+  const orderedRoles = [...roles].sort((a, b) => {
+    if (a.systemRole && b.systemRole) return systemRoleRank(a.name) - systemRoleRank(b.name);
+    if (a.systemRole) return -1;
+    if (b.systemRole) return 1;
+    return a.position - b.position;
+  });
 
   const body = (
     <>
@@ -395,11 +458,11 @@ export function RoleManagement({ embedded = false }: { embedded?: boolean } = {}
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {roles.map((role) => (
+                {orderedRoles.map((role) => (
                   <TableRow key={role.id}>
                     <TableCell className="px-5 py-4">
                       <div className="flex items-center gap-2 font-medium">
-                        {role.systemRole ? <ShieldCheck className="size-4 text-muted-foreground" aria-label="System role" /> : null}
+                        <RoleIcon name={role.name} className="size-4 text-muted-foreground" />
                         <span>{role.name}</span>
                         <span className="text-xs font-normal text-muted-foreground">({countMembersForRole(role.id)})</span>
                         {role.systemRole ? <Badge variant="secondary">System</Badge> : null}
@@ -438,7 +501,7 @@ export function RoleManagement({ embedded = false }: { embedded?: boolean } = {}
               <CardTitle>{editingRole ? `${editingRole.systemRole ? "View" : "Edit"} role` : "Create role"}</CardTitle>
             </CardHeader>
           ) : null}
-          <CardContent className="max-h-[600px] overflow-y-auto">
+          <CardContent className="max-h-[600px] overflow-y-auto [scrollbar-width:thin] [scrollbar-color:#e5e7eb_transparent] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar]:bg-transparent [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-gray-200 hover:[&::-webkit-scrollbar-thumb]:bg-gray-300">
             {editingRole ? (
               <Tabs
                 value={editorTab}
