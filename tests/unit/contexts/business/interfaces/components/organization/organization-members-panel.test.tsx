@@ -108,6 +108,26 @@ describe("OrganizationMembersPanel", () => {
     expect(screen.queryByText("Active User")).toBeNull();
   });
 
+  it("filters by establishment through the styled dropdown with clean options", async () => {
+    vi.stubGlobal("fetch", mockApi());
+
+    render(<OrganizationMembersPanel organizationId={organizationId} establishments={establishments} />);
+
+    expect(await screen.findByText("Establishment:")).toBeVisible();
+    const filter = screen.getByRole("combobox", { name: "Filter by Establishment" });
+    await userEvent.click(filter);
+
+    const allOption = await screen.findByRole("option", { name: "All" });
+    const localOption = screen.getByRole("option", { name: "LOCALOne" });
+    expect(allOption).toBeInTheDocument();
+    expect(localOption).toBeInTheDocument();
+    expect(allOption).not.toHaveTextContent("Filter by Establishment");
+    expect(localOption).not.toHaveTextContent("Filter by Establishment");
+
+    await userEvent.click(localOption);
+    expect(filter).toHaveTextContent("LOCALOne");
+  });
+
   it("resends a pending invitation through the dedicated endpoint", async () => {
     const fetchMock = mockApi();
     vi.stubGlobal("fetch", fetchMock);

@@ -257,7 +257,7 @@ export function OrganizationEstablishmentsPanel({
                 <SelectContent>
                   {establishmentOptions.map((option) => (
                     <SelectItem key={option.value} value={option.value} label={option.label}>
-                      {`🏬 ${option.label}`}
+                      {option.label}
                     </SelectItem>
                   ))}
                 </SelectContent>

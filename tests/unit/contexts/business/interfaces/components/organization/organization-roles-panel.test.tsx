@@ -1,6 +1,6 @@
 /** @vitest-environment jsdom */
 
-import { render, screen, within } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
@@ -64,15 +64,26 @@ function mockApi() {
 describe("OrganizationRolesPanel", () => {
   afterEach(() => vi.unstubAllGlobals());
 
-  it("lists roles in the selector with counters and system/custom tags", async () => {
+  it("groups system and custom roles with clean, counter-free names", async () => {
     vi.stubGlobal("fetch", mockApi());
 
     render(<OrganizationRolesPanel organizationId={organizationId} />);
 
     const select = await screen.findByRole("combobox", { name: "Select role" });
-    expect(await within(select).findByRole("option", { name: /Owner \(1\) \[System\]/ })).toBeInTheDocument();
-    expect(within(select).getByRole("option", { name: /Cashier \(0\) \[Custom\]/ })).toBeInTheDocument();
-    expect(within(select).getByRole("option", { name: /New Role/ })).toBeInTheDocument();
+    await userEvent.click(select);
+
+    expect(await screen.findByText("System roles")).toBeVisible();
+    expect(screen.getByText("Custom roles")).toBeVisible();
+
+    const ownerOption = screen.getByRole("option", { name: /Owner/ });
+    const cashierOption = screen.getByRole("option", { name: /Cashier/ });
+    expect(ownerOption).not.toHaveTextContent(/\(\d+\)/);
+    expect(cashierOption).not.toHaveTextContent(/\(\d+\)/);
+    expect(screen.queryByText("Built-in")).toBeNull();
+
+    expect(screen.queryByRole("option", { name: /New Role/ })).toBeNull();
+    expect(screen.queryByText("[System]")).toBeNull();
+    expect(screen.queryByText("[Custom]")).toBeNull();
   });
 
   it("freezes every control for a system role", async () => {
@@ -80,8 +91,7 @@ describe("OrganizationRolesPanel", () => {
 
     render(<OrganizationRolesPanel organizationId={organizationId} />);
 
-    const select = await screen.findByRole("combobox", { name: "Select role" });
-    await within(select).findByRole("option", { name: /Owner/ });
+    await screen.findByDisplayValue("Owner");
 
     expect(screen.getByRole("textbox", { name: "Role Name" })).toBeDisabled();
     expect(screen.getByRole("combobox", { name: "Badge Color" })).toBeDisabled();
@@ -95,8 +105,8 @@ describe("OrganizationRolesPanel", () => {
     render(<OrganizationRolesPanel organizationId={organizationId} />);
 
     const select = await screen.findByRole("combobox", { name: "Select role" });
-    await within(select).findByRole("option", { name: /Cashier/ });
-    await userEvent.selectOptions(select, customRoleId);
+    await userEvent.click(select);
+    await userEvent.click(await screen.findByRole("option", { name: /Cashier/ }));
 
     expect(screen.getByRole("textbox", { name: "Role Name" })).toBeEnabled();
     expect(screen.getByRole("textbox", { name: "Role Name" })).toHaveValue("Cashier");
@@ -109,8 +119,7 @@ describe("OrganizationRolesPanel", () => {
 
     render(<OrganizationRolesPanel organizationId={organizationId} />);
 
-    const select = await screen.findByRole("combobox", { name: "Select role" });
-    await within(select).findByRole("option", { name: /Cashier/ });
+    await screen.findByDisplayValue("Owner");
     await userEvent.click(screen.getByRole("button", { name: /Catalog/ }));
 
     expect(screen.getByText("Manage catalog")).toBeVisible();
@@ -140,8 +149,7 @@ describe("OrganizationRolesPanel", () => {
 
     render(<OrganizationRolesPanel organizationId={organizationId} />);
 
-    const select = await screen.findByRole("combobox", { name: "Select role" });
-    await within(select).findByRole("option", { name: /Cashier/ });
+    await screen.findByDisplayValue("Owner");
     await userEvent.click(screen.getByRole("button", { name: /CRM & Customers/ }));
 
     expect(screen.getByText("Manage customer directory")).toBeVisible();
@@ -180,8 +188,7 @@ describe("OrganizationRolesPanel", () => {
 
     render(<OrganizationRolesPanel organizationId={organizationId} />);
 
-    const select = await screen.findByRole("combobox", { name: "Select role" });
-    await within(select).findByRole("option", { name: /Cashier/ });
+    await screen.findByDisplayValue("Owner");
     await userEvent.click(screen.getByRole("button", { name: /Appointments \/ Schedule/ }));
 
     expect(screen.getByText("Manage schedule & appointments")).toBeVisible();
@@ -219,8 +226,7 @@ describe("OrganizationRolesPanel", () => {
 
     render(<OrganizationRolesPanel organizationId={organizationId} />);
 
-    const select = await screen.findByRole("combobox", { name: "Select role" });
-    await within(select).findByRole("option", { name: /Cashier/ });
+    await screen.findByDisplayValue("Owner");
     await userEvent.click(screen.getByRole("button", { name: /Assistant/ }));
 
     expect(screen.getByText("Use AI assistant")).toBeVisible();
@@ -250,8 +256,7 @@ describe("OrganizationRolesPanel", () => {
 
     render(<OrganizationRolesPanel organizationId={organizationId} />);
 
-    const select = await screen.findByRole("combobox", { name: "Select role" });
-    await within(select).findByRole("option", { name: /Owner/ });
+    await screen.findByDisplayValue("Owner");
     await userEvent.click(screen.getByRole("button", { name: /Create custom role/ }));
 
     expect(screen.getByRole("textbox", { name: "Role Name" })).toHaveValue("");

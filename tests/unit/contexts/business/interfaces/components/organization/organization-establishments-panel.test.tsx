@@ -61,8 +61,10 @@ describe("OrganizationEstablishmentsPanel", () => {
     await userEvent.click(select);
     const firstOption = await screen.findByRole("option", { name: /LOCALOne/ });
     const secondOption = screen.getByRole("option", { name: /LOCALTwo/ });
-    expect(firstOption).toHaveTextContent("🏬 LOCALOne");
-    expect(secondOption).toHaveTextContent("🏬 LOCALTwo");
+    expect(firstOption).toHaveTextContent("LOCALOne");
+    expect(secondOption).toHaveTextContent("LOCALTwo");
+    expect(firstOption).not.toHaveTextContent("🏬");
+    expect(secondOption).not.toHaveTextContent("🏬");
     expect(firstOption).not.toHaveTextContent("Main");
     expect(secondOption).not.toHaveTextContent("Branch");
 

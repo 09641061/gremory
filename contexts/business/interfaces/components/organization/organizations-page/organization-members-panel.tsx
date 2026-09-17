@@ -35,6 +35,13 @@ import {
 } from "@/contexts/shared/interfaces/components/ui/dropdown-menu";
 import { Input } from "@/contexts/shared/interfaces/components/ui/input";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/contexts/shared/interfaces/components/ui/select";
+import {
   Table,
   TableBody,
   TableCell,
@@ -261,6 +268,16 @@ export function OrganizationMembersPanel({
     return matchesSearch && matchesEstablishment;
   });
 
+  const establishmentFilterOptions = [
+    { value: ALL_ESTABLISHMENTS, label: "All" },
+    ...establishments.map((establishment) => ({
+      value: establishment.id,
+      label: establishment.name,
+    })),
+  ];
+  const establishmentFilterLabel = (value: string) =>
+    establishmentFilterOptions.find((option) => option.value === value)?.label ?? value;
+
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-6">
       {error ? (
@@ -282,17 +299,33 @@ export function OrganizationMembersPanel({
           />
         </div>
 
-        <select
-          aria-label="Filter by Establishment"
-          value={establishmentFilter}
-          onChange={(event) => setEstablishmentFilter(event.target.value)}
-          className="h-(--app-control-height) w-full rounded-lg border border-input bg-background px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/50 lg:max-w-xs"
-        >
-          <option value={ALL_ESTABLISHMENTS}>Filter by Establishment: All</option>
-          {establishments.map((establishment) => (
-            <option key={establishment.id} value={establishment.id}>{establishment.name}</option>
-          ))}
-        </select>
+        <div className="flex w-full items-center gap-2 lg:max-w-xs">
+          <span className="shrink-0 text-sm font-medium text-foreground">Establishment:</span>
+          <Select
+            items={establishmentFilterOptions}
+            value={establishmentFilter}
+            onValueChange={(next) =>
+              setEstablishmentFilter(typeof next === "string" ? next : ALL_ESTABLISHMENTS)
+            }
+          >
+            <SelectTrigger aria-label="Filter by Establishment" className="w-full">
+              <SelectValue placeholder="All">
+                {(value: string | null) => (
+                  <span className="truncate font-medium text-foreground">
+                    {establishmentFilterLabel(value ?? ALL_ESTABLISHMENTS)}
+                  </span>
+                )}
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              {establishmentFilterOptions.map((option) => (
+                <SelectItem key={option.value} value={option.value} label={option.label}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
 
         <Button type="button" onClick={() => setInviteOpen(true)} className="gap-2 bg-emerald-600 text-white hover:bg-emerald-700 lg:ml-auto">
           <Plus className="size-4" aria-hidden="true" />

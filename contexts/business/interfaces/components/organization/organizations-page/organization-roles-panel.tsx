@@ -21,13 +21,21 @@ import {
 } from "@/contexts/shared/interfaces/components/ui/alert-dialog";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import { Input } from "@/contexts/shared/interfaces/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectSeparator,
+  SelectTrigger,
+  SelectValue,
+} from "@/contexts/shared/interfaces/components/ui/select";
 import { cn } from "@/lib/utils";
 import {
   createWorkforceRoleSchema,
-  workforceMemberPageSchema,
   workforceRolePermissionCatalog,
   workforceRoleSchema,
-  type WorkforceMemberResource,
   type WorkforceRolePermission,
   type WorkforceRoleResource,
 } from "@/contexts/workforce/interfaces/rest/schemas/workforce-member.schemas";
@@ -141,7 +149,6 @@ function formForSelection(id: string, roleList: WorkforceRoleResource[]): FormSt
 
 export function OrganizationRolesPanel({ organizationId }: { organizationId: string }) {
   const [roles, setRoles] = useState<WorkforceRoleResource[]>([]);
-  const [members, setMembers] = useState<WorkforceMemberResource[]>([]);
   const [selectedRoleId, setSelectedRoleId] = useState<string>("");
   const [form, setForm] = useState<FormState>(emptyForm);
   const [openModules, setOpenModules] = useState<string[]>([]);
@@ -158,20 +165,14 @@ export function OrganizationRolesPanel({ organizationId }: { organizationId: str
     setLoading(true);
     setError(null);
     try {
-      const [rolesResponse, membersResponse] = await Promise.all([
-        fetch("/api/workforce/roles", { headers: { "X-Organization-Id": organizationId } }),
-        fetch("/api/workforce/members?page=0&size=100", {
-          headers: { "X-Organization-Id": organizationId },
-        }),
-      ]);
+      const rolesResponse = await fetch("/api/workforce/roles", {
+        headers: { "X-Organization-Id": organizationId },
+      });
       const rolesBody: unknown = await rolesResponse.json();
-      const membersBody: unknown = await membersResponse.json();
       if (!rolesResponse.ok) throw new Error(readErrorMessage(rolesBody));
-      if (!membersResponse.ok) throw new Error(readErrorMessage(membersBody));
 
       const parsedRoles = z.array(workforceRoleSchema).parse(rolesBody);
       setRoles(parsedRoles);
-      setMembers(workforceMemberPageSchema.parse(membersBody).content);
 
       const keepCurrent =
         selectedRoleId.length > 0 &&
@@ -195,9 +196,14 @@ export function OrganizationRolesPanel({ organizationId }: { organizationId: str
     return () => window.clearTimeout(timer);
   }, [organizationId]);
 
-  function countMembers(roleId: string): number {
-    return members.filter((member) => member.roles.some((role) => role.id === roleId)).length;
-  }
+  const systemRoles = roles.filter((role) => role.systemRole);
+  const customRoles = roles.filter((role) => !role.systemRole);
+  const roleOptions = roles.map((role) => ({
+    value: role.id,
+    label: role.name,
+  }));
+  const roleOptionLabel = (roleId: string) =>
+    roleOptions.find((option) => option.value === roleId)?.label ?? roleId;
 
   function selectRole(id: string) {
     setSelectedRoleId(id);
@@ -325,21 +331,53 @@ export function OrganizationRolesPanel({ organizationId }: { organizationId: str
 
       {/* ZONE 1 — selector + primary action */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-        <select
-          aria-label="Select role"
-          value={selectedRoleId}
-          onChange={(event) => selectRole(event.target.value)}
-          className="h-(--app-control-height) w-full rounded-lg border border-input bg-background px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/50 sm:max-w-md"
+        <Select
+          items={roleOptions}
+          value={isCreating ? null : selectedRoleId || null}
+          onValueChange={(next) => selectRole(typeof next === "string" ? next : "")}
+          disabled={loading || saving}
         >
-          {roles.map((role) => (
-            <option key={role.id} value={role.id}>
-              {`${role.systemRole ? "🛡️" : "👤"} ${role.name} (${countMembers(role.id)}) [${
-                role.systemRole ? "System" : "Custom"
-              }]`}
-            </option>
-          ))}
-          <option value={NEW_ROLE}>➕ New Role</option>
-        </select>
+          <SelectTrigger aria-label="Select role" className="w-full sm:max-w-md">
+            <SelectValue placeholder="Select a role">
+              {(value: string | null) => (
+                <span className="truncate font-medium text-foreground">
+                  {isCreating
+                    ? "New Role"
+                    : value
+                      ? roleOptionLabel(value)
+                      : "Select a role"}
+                </span>
+              )}
+            </SelectValue>
+          </SelectTrigger>
+          <SelectContent>
+            <SelectGroup>
+              <SelectLabel className="font-semibold tracking-wide text-muted-foreground uppercase">
+                System roles
+              </SelectLabel>
+              {systemRoles.map((role) => (
+                <SelectItem key={role.id} value={role.id} label={roleOptionLabel(role.id)}>
+                  <span>{`🛡️ ${role.name}`}</span>
+                </SelectItem>
+              ))}
+            </SelectGroup>
+            <SelectSeparator />
+            <SelectGroup>
+              <SelectLabel className="font-semibold tracking-wide text-muted-foreground uppercase">
+                Custom roles
+              </SelectLabel>
+              {customRoles.length === 0 ? (
+                <div className="px-2 py-1.5 text-sm text-muted-foreground">No custom roles yet</div>
+              ) : (
+                customRoles.map((role) => (
+                  <SelectItem key={role.id} value={role.id} label={roleOptionLabel(role.id)}>
+                    <span>{`👤 ${role.name}`}</span>
+                  </SelectItem>
+                ))
+              )}
+            </SelectGroup>
+          </SelectContent>
+        </Select>
 
         <Button type="button" onClick={startCreate} className="gap-2 sm:ml-auto">
           <Plus className="size-4" aria-hidden="true" />
