@@ -17,6 +17,11 @@ import {
 } from "@/contexts/business/domain/model/valueobjects/establishment-name.vo";
 import { establishmentResponseSchema } from "@/contexts/business/interfaces/rest/schemas/establishment.schemas";
 import {
+  isForbidden,
+  isUnauthenticated,
+  redirectToLogin,
+} from "@/contexts/shared/infrastructure/http/resource-lifecycle";
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -106,7 +111,14 @@ export function OrganizationEstablishmentsPanel({
         `/api/business/establishments/organization/${organizationId}?page=0&size=100`,
       );
       const body: unknown = await response.json();
-      if (!response.ok) throw new Error(readErrorMessage(body));
+      if (isUnauthenticated(response.status)) {
+        redirectToLogin();
+        return;
+      }
+      if (!response.ok) {
+        if (isForbidden(response.status)) return;
+        throw new Error(readErrorMessage(body));
+      }
       const content = establishmentListSchema.parse(body).content;
       setList(content);
 

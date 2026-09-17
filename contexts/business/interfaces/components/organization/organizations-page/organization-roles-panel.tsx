@@ -39,6 +39,11 @@ import {
   type WorkforceRolePermission,
   type WorkforceRoleResource,
 } from "@/contexts/workforce/interfaces/rest/schemas/workforce-member.schemas";
+import {
+  isForbidden,
+  isUnauthenticated,
+  redirectToLogin,
+} from "@/contexts/shared/infrastructure/http/resource-lifecycle";
 
 type PermissionEntry = { code: WorkforceRolePermission; label: string; description: string };
 type PermissionSection = { title: string; permissions: ReadonlyArray<PermissionEntry> };
@@ -241,7 +246,14 @@ export function OrganizationRolesPanel({ organizationId }: { organizationId: str
         headers: { "X-Organization-Id": organizationId },
       });
       const rolesBody: unknown = await rolesResponse.json();
-      if (!rolesResponse.ok) throw new Error(readErrorMessage(rolesBody));
+      if (isUnauthenticated(rolesResponse.status)) {
+        redirectToLogin();
+        return;
+      }
+      if (!rolesResponse.ok) {
+        if (isForbidden(rolesResponse.status)) return;
+        throw new Error(readErrorMessage(rolesBody));
+      }
 
       const parsedRoles = z.array(workforceRoleSchema).parse(rolesBody);
       setRoles(parsedRoles);

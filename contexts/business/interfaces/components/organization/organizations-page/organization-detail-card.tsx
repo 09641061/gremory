@@ -106,7 +106,7 @@ export function OrganizationDetailCard({
             </TabsList>
           </div>
 
-          <TabsContent value="general" className="flex min-h-0 flex-1 flex-col">
+          <TabsContent value="general" keepMounted className="flex min-h-0 flex-1 flex-col">
             <EntityProfileCard
               key={organization.organizationId}
               entityLabel="Organization"
@@ -121,7 +121,7 @@ export function OrganizationDetailCard({
             />
           </TabsContent>
 
-          <TabsContent value="members" className="flex min-h-0 flex-1 flex-col">
+          <TabsContent value="members" keepMounted className="flex min-h-0 flex-1 flex-col">
             <OrganizationMembersPanel
               organizationId={organization.organizationId}
               establishments={organization.establishments.map((establishment) => ({
@@ -136,11 +136,11 @@ export function OrganizationDetailCard({
             />
           </TabsContent>
 
-          <TabsContent value="roles" className="flex min-h-0 flex-1 flex-col">
+          <TabsContent value="roles" keepMounted className="flex min-h-0 flex-1 flex-col">
             <OrganizationRolesPanel organizationId={organization.organizationId} />
           </TabsContent>
 
-          <TabsContent value="establishments" className="flex min-h-0 flex-1 flex-col">
+          <TabsContent value="establishments" keepMounted className="flex min-h-0 flex-1 flex-col">
             <OrganizationEstablishmentsPanel
               organizationId={organization.organizationId}
               canUpdate={canManageEstablishments}

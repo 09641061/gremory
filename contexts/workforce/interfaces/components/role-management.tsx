@@ -53,6 +53,11 @@ import {
   type WorkforceRolePermissionEntry,
   type WorkforceRoleResource,
 } from "@/contexts/workforce/interfaces/rest/schemas/workforce-member.schemas";
+import {
+  isForbidden,
+  isUnauthenticated,
+  redirectToLogin,
+} from "@/contexts/shared/infrastructure/http/resource-lifecycle";
 
 /** System roles render in descending authority: Owner, Manager, Admin, Member. */
 const SYSTEM_ROLE_ORDER = ["Owner", "Manager", "Admin", "Member"] as const;
@@ -115,8 +120,18 @@ export function RoleManagement({ embedded = false }: { embedded?: boolean } = {}
       ]);
       const rolesBody: unknown = await rolesResponse.json();
       const membersBody: unknown = await membersResponse.json();
-      if (!rolesResponse.ok) throw new Error(readErrorMessage(rolesBody));
-      if (!membersResponse.ok) throw new Error(readErrorMessage(membersBody));
+      if (isUnauthenticated(rolesResponse.status) || isUnauthenticated(membersResponse.status)) {
+        redirectToLogin();
+        return;
+      }
+      if (!rolesResponse.ok) {
+        if (isForbidden(rolesResponse.status)) return;
+        throw new Error(readErrorMessage(rolesBody));
+      }
+      if (!membersResponse.ok) {
+        if (isForbidden(membersResponse.status)) return;
+        throw new Error(readErrorMessage(membersBody));
+      }
 
       setRoles(z.array(workforceRoleSchema).parse(rolesBody));
       setMembers(workforceMemberPageSchema.parse(membersBody).content);

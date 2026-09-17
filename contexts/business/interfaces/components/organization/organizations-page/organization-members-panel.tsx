@@ -57,6 +57,11 @@ import {
   type WorkforceMemberResource,
   type WorkforceRoleResource,
 } from "@/contexts/workforce/interfaces/rest/schemas/workforce-member.schemas";
+import {
+  isForbidden,
+  isUnauthenticated,
+  redirectToLogin,
+} from "@/contexts/shared/infrastructure/http/resource-lifecycle";
 
 export type EstablishmentOption = { id: string; name: string };
 
@@ -98,8 +103,19 @@ export function OrganizationMembersPanel({
       ]);
       const membersBody: unknown = await membersResponse.json();
       const rolesBody: unknown = await rolesResponse.json();
-      if (!membersResponse.ok) throw new Error(readErrorMessage(membersBody));
-      if (!rolesResponse.ok) throw new Error(readErrorMessage(rolesBody));
+      // A refreshed/expired session is handled silently; only real errors surface.
+      if (isUnauthenticated(membersResponse.status) || isUnauthenticated(rolesResponse.status)) {
+        redirectToLogin();
+        return;
+      }
+      if (!membersResponse.ok) {
+        if (isForbidden(membersResponse.status)) return;
+        throw new Error(readErrorMessage(membersBody));
+      }
+      if (!rolesResponse.ok) {
+        if (isForbidden(rolesResponse.status)) return;
+        throw new Error(readErrorMessage(rolesBody));
+      }
 
       setMembers(workforceMemberPageSchema.parse(membersBody).content);
       setRoles(z.array(workforceRoleSchema).parse(rolesBody));
