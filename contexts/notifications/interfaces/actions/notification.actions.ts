@@ -114,6 +114,19 @@ export async function acceptPendingInvitationAction() {
   }
 }
 
+export async function registerDeviceTokenAction(deviceToken: string, platform = "WEB") {
+  const token = await getAccessToken();
+  if (!token) return { success: false, error: "Authentication required" };
+  try {
+    const { notificationApiGateway } = await import("../../infrastructure/gateways/notification-api.gateway");
+    await notificationApiGateway.registerDeviceToken(token, deviceToken, platform);
+    return { success: true };
+  } catch (error) {
+    console.error("registerDeviceTokenAction error:", error);
+    return { success: false, error: error instanceof Error ? error.message : "Failed to register device token" };
+  }
+}
+
 async function persistAcceptedWorkspace(result: { organizationId?: string; establishmentId?: string }) {
   try {
     const cookieStore = await cookies();
@@ -128,3 +141,4 @@ async function persistAcceptedWorkspace(result: { organizationId?: string; estab
     // source of truth after the invitation is accepted.
   }
 }
+
