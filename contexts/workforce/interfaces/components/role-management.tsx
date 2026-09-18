@@ -44,6 +44,7 @@ import { usePermissions } from "@/contexts/workforce/interfaces/hooks/usePermiss
 import { useWorkspaceAuth } from "@/contexts/workforce/interfaces/context/WorkspaceAuthContext";
 import {
   createWorkforceRoleSchema,
+  isUuid,
   normalizeUuidOrNull,
   workforceMemberPageSchema,
   workforceRolePermissionCatalog,
@@ -283,8 +284,16 @@ export function RoleManagement({ embedded = false }: { embedded?: boolean } = {}
   }
 
   async function assignMemberToRole(member: WorkforceMemberResource) {
-    if (!organizationId || !editingRole || !member.memberId) return;
+    if (!organizationId || !editingRole || !isUuid(member.memberId) || !isUuid(editingRole.id)) {
+      setError("This role can no longer be updated. Refresh the page and try again.");
+      return;
+    }
 
+    console.log("Submitting role change payload:", {
+      organizationId,
+      memberId: member.memberId,
+      roleId: editingRole.id,
+    });
     setMemberMutationId(member.memberId);
     setError(null);
     try {
@@ -303,8 +312,16 @@ export function RoleManagement({ embedded = false }: { embedded?: boolean } = {}
   }
 
   async function removeMemberFromRole(member: WorkforceMemberResource) {
-    if (!organizationId || !editingRole || !member.memberId) return;
+    if (!organizationId || !editingRole || !isUuid(member.memberId) || !isUuid(editingRole.id)) {
+      setError("This role can no longer be updated. Refresh the page and try again.");
+      return;
+    }
 
+    console.log("Submitting role change payload:", {
+      organizationId,
+      memberId: member.memberId,
+      roleId: editingRole.id,
+    });
     setMemberMutationId(member.memberId);
     setError(null);
     try {

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useEffectEvent, useState } from "react";
-import { MapPin, MoreVertical, Plus, Search, ShieldCheck } from "lucide-react";
+import { MapPin, MoreVertical, Plus, Search, ShieldCheck, X } from "lucide-react";
 import { z } from "zod";
 
 import {
@@ -52,6 +52,7 @@ import {
 import { cn } from "@/lib/utils";
 import {
   createWorkforceInvitationSchema,
+  isUuid,
   workforceMemberPageSchema,
   workforceRoleSchema,
   type WorkforceMemberResource,
@@ -156,15 +157,30 @@ export function OrganizationMembersPanel({
     .sort((a, b) => a.position - b.position);
   const assignableCustomRoles = roles.filter((role) => !role.systemRole);
 
+  /**
+   * Guards a role mutation against a missing row/member id or a stale synthetic
+   * role id (for example a legacy placeholder) before it reaches the proxy, which
+   * would otherwise answer with a raw 400.
+   */
+  function canMutateRole(member: WorkforceMemberResource, roleId: string): boolean {
+    return Boolean(member.memberId) && isUuid(organizationId) && isUuid(roleId);
+  }
+
+  const ROLE_MUTATION_BLOCKED = "This role can no longer be updated. Refresh the page and try again.";
+
   async function swapSystemRole(member: WorkforceMemberResource, roleId: string) {
-    if (!member.memberId) return;
+    if (!canMutateRole(member, roleId)) {
+      setError(ROLE_MUTATION_BLOCKED);
+      return;
+    }
     const current = member.roles.find((role) => role.systemRole && role.name !== "Owner");
     if (current?.id === roleId) return;
 
+    console.log("Submitting role change payload:", { organizationId, memberId: member.memberId, roleId });
     setRoleMutationKey(`${member.memberId}:system`);
     setError(null);
     try {
-      if (current) {
+      if (current && isUuid(current.id)) {
         const removal = await fetch(
           `/api/workforce/roles/members/${member.memberId}/${current.id}`,
           { method: "DELETE", headers: { "X-Organization-Id": organizationId } },
@@ -186,7 +202,11 @@ export function OrganizationMembersPanel({
   }
 
   async function assignRole(member: WorkforceMemberResource, roleId: string) {
-    if (!member.memberId) return;
+    if (!canMutateRole(member, roleId)) {
+      setError(ROLE_MUTATION_BLOCKED);
+      return;
+    }
+    console.log("Submitting role change payload:", { organizationId, memberId: member.memberId, roleId });
     setRoleMutationKey(`${member.memberId}:${roleId}`);
     setError(null);
     try {
@@ -205,7 +225,11 @@ export function OrganizationMembersPanel({
   }
 
   async function removeRole(member: WorkforceMemberResource, roleId: string) {
-    if (!member.memberId) return;
+    if (!canMutateRole(member, roleId)) {
+      setError(ROLE_MUTATION_BLOCKED);
+      return;
+    }
+    console.log("Submitting role change payload:", { organizationId, memberId: member.memberId, roleId });
     setRoleMutationKey(`${member.memberId}:${roleId}`);
     setError(null);
     try {
@@ -213,8 +237,20 @@ export function OrganizationMembersPanel({
         `/api/workforce/roles/members/${member.memberId}/${roleId}`,
         { method: "DELETE", headers: { "X-Organization-Id": organizationId } },
       );
+      if (isUnauthenticated(response.status)) {
+        redirectToLogin();
+        return;
+      }
+      if (isForbidden(response.status)) return;
       if (!response.ok) throw new Error(readErrorMessage(await response.json().catch(() => undefined)));
-      await loadData();
+      // Optimistically drop the tag from the row so the UI updates instantly.
+      setMembers((current) =>
+        current.map((entry) =>
+          rowKey(entry) === rowKey(member)
+            ? { ...entry, roles: entry.roles.filter((role) => role.id !== roleId) }
+            : entry,
+        ),
+      );
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "Unable to remove the role.");
     } finally {
@@ -388,75 +424,98 @@ export function OrganizationMembersPanel({
                     <div className="mt-0.5 text-xs text-muted-foreground">{member.email}</div>
                   </TableCell>
 
-                  {/* Organization Roles: 1 mandatory system role + optional custom roles. */}
+                  {/* Organization Roles: removable inline tags plus a trailing add popover. */}
                   <TableCell className="whitespace-normal">
                     {!active ? (
                       <span className="text-xs text-muted-foreground">Awaiting acceptance</span>
                     ) : (
-                      <DropdownMenu>
-                        <DropdownMenuTrigger
-                          disabled={owner || !canManageMembers}
-                          render={
-                            <button
-                              type="button"
-                              aria-label={`Edit organization roles for ${member.username ?? member.email}`}
-                              className={cn(
-                                "flex flex-wrap items-center gap-1.5 rounded-lg border border-transparent px-1 py-0.5 transition-colors",
-                                !owner && "hover:border-border/70 hover:bg-muted/40",
-                              )}
-                            />
-                          }
-                        >
-                          {systemRole ? (
-                            <Badge variant={owner ? "default" : "secondary"} className="gap-1">
-                              <ShieldCheck className="size-3" aria-hidden="true" />
-                              {systemRole.name}
-                            </Badge>
-                          ) : null}
-                          {customs.map((role) => (
-                            <Badge key={role.id} variant="outline">{role.name}</Badge>
-                          ))}
-                          {!owner ? <Plus className="size-3 text-muted-foreground" aria-hidden="true" /> : null}
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="start" className="min-w-56">
-                          <DropdownMenuGroup>
-                            <DropdownMenuLabel>System role</DropdownMenuLabel>
-                            {swappableSystemRoles.map((role) => (
-                              <DropdownMenuItem
-                                key={role.id}
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        {systemRole ? (
+                          // System roles (Owner/Admin/Member) are the protected base clearance:
+                          // they swap through the add popover, never through an inline removal.
+                          <Badge variant={owner ? "default" : "secondary"} className="gap-1">
+                            <ShieldCheck className="size-3" aria-hidden="true" />
+                            {systemRole.name}
+                          </Badge>
+                        ) : null}
+                        {customs.map((role) => (
+                          <Badge
+                            key={role.id}
+                            variant="outline"
+                            className={cn("gap-1", canManageMembers && "pr-1")}
+                          >
+                            {role.name}
+                            {canManageMembers ? (
+                              <button
+                                type="button"
                                 disabled={busy}
-                                onClick={() => void swapSystemRole(member, role.id)}
+                                onClick={() => void removeRole(member, role.id)}
+                                aria-label={`Remove ${role.name} role`}
+                                title={`Remove ${role.name} role`}
+                                className="rounded-full p-0.5 text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-50"
                               >
-                                {systemRole?.id === role.id ? "✓ " : ""}
-                                {role.name}
-                              </DropdownMenuItem>
-                            ))}
-                          </DropdownMenuGroup>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuGroup>
-                            <DropdownMenuLabel>Custom roles</DropdownMenuLabel>
-                            {assignableCustomRoles.length === 0 ? (
-                              <DropdownMenuItem disabled>No custom roles yet</DropdownMenuItem>
-                            ) : (
-                              assignableCustomRoles.map((role) => {
-                                const assigned = member.roles.some((assignedRole) => assignedRole.id === role.id);
-                                return (
+                                <X className="size-3" aria-hidden="true" />
+                              </button>
+                            ) : null}
+                          </Badge>
+                        ))}
+                        {!owner && canManageMembers ? (
+                          <DropdownMenu onOpenChange={(open) => { if (!open) setError(null); }}>
+                            <DropdownMenuTrigger
+                              render={
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="icon-xs"
+                                  aria-label="Add role"
+                                  title="Add role"
+                                  disabled={busy}
+                                />
+                              }
+                            >
+                              <Plus className="size-3" aria-hidden="true" />
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="start" className="min-w-56">
+                              <DropdownMenuGroup>
+                                <DropdownMenuLabel>System role</DropdownMenuLabel>
+                                {swappableSystemRoles.map((role) => (
                                   <DropdownMenuItem
                                     key={role.id}
-                                    disabled={busy}
-                                    onClick={() =>
-                                      assigned ? void removeRole(member, role.id) : void assignRole(member, role.id)
-                                    }
+                                    disabled={busy || !isUuid(role.id)}
+                                    onClick={() => void swapSystemRole(member, role.id)}
                                   >
-                                    {assigned ? "✓ " : ""}
+                                    {systemRole?.id === role.id ? "✓ " : ""}
                                     {role.name}
                                   </DropdownMenuItem>
-                                );
-                              })
-                            )}
-                          </DropdownMenuGroup>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                                ))}
+                              </DropdownMenuGroup>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuGroup>
+                                <DropdownMenuLabel>Custom roles</DropdownMenuLabel>
+                                {assignableCustomRoles.length === 0 ? (
+                                  <DropdownMenuItem disabled>No custom roles yet</DropdownMenuItem>
+                                ) : (
+                                  assignableCustomRoles.map((role) => {
+                                    const assigned = member.roles.some((assignedRole) => assignedRole.id === role.id);
+                                    return (
+                                      <DropdownMenuItem
+                                        key={role.id}
+                                        disabled={busy || !isUuid(role.id)}
+                                        onClick={() =>
+                                          assigned ? void removeRole(member, role.id) : void assignRole(member, role.id)
+                                        }
+                                      >
+                                        {assigned ? "✓ " : ""}
+                                        {role.name}
+                                      </DropdownMenuItem>
+                                    );
+                                  })
+                                )}
+                              </DropdownMenuGroup>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        ) : null}
+                      </div>
                     )}
                   </TableCell>
 

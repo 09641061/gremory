@@ -14,6 +14,7 @@ const establishments = [{ id: establishmentId, name: "LOCALOne" }];
 const ownerRole = { id: "cccccccc-cccc-4ccc-8ccc-cccccccccccc", name: "Owner", position: 0, systemRole: true, permissions: ["*"] };
 const adminRole = { id: "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb", name: "Admin", position: 1, systemRole: true, permissions: [] };
 const memberRole = { id: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa", name: "Member", position: 2, systemRole: true, permissions: [] };
+const cashierRole = { id: "dddddddd-dddd-4ddd-8ddd-dddddddddddd", name: "Cashier", position: 3, systemRole: false, permissions: [] };
 
 function rosterEntry(overrides: Record<string, unknown>) {
   return {
@@ -45,7 +46,7 @@ function mockApi() {
       return Promise.resolve(new Response(null, { status: 204 }));
     }
     if (url.startsWith("/api/workforce/roles")) {
-      return Promise.resolve(new Response(JSON.stringify([ownerRole, adminRole, memberRole]), { status: 200 }));
+      return Promise.resolve(new Response(JSON.stringify([ownerRole, adminRole, memberRole, cashierRole]), { status: 200 }));
     }
     return Promise.resolve(new Response(JSON.stringify({
       content: [
@@ -61,7 +62,7 @@ function mockApi() {
           username: "Active User",
           status: "ACTIVE",
           memberId: "44444444-4444-4444-8444-444444444444",
-          roles: [memberRole],
+          roles: [memberRole, cashierRole],
         }),
         rosterEntry({ email: "pending@example.com", status: "PENDING" }),
       ],
@@ -183,7 +184,7 @@ describe("OrganizationMembersPanel", () => {
     render(<OrganizationMembersPanel organizationId={organizationId} establishments={establishments} />);
 
     await screen.findByText("Active User");
-    await userEvent.click(screen.getByRole("button", { name: "Edit organization roles for Active User" }));
+    await userEvent.click(screen.getByRole("button", { name: "Add role" }));
     await userEvent.click(await screen.findByRole("menuitem", { name: "Admin" }));
 
     const memberId = "44444444-4444-4444-8444-444444444444";
@@ -198,6 +199,28 @@ describe("OrganizationMembersPanel", () => {
         body: JSON.stringify({ roleId: adminRole.id }),
       }),
     );
+  });
+
+  it("keeps system roles solid and only removes custom roles inline", async () => {
+    const fetchMock = mockApi();
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(<OrganizationMembersPanel organizationId={organizationId} establishments={establishments} />);
+
+    await screen.findByText("Active User");
+    const memberId = "44444444-4444-4444-8444-444444444444";
+
+    // System roles (Owner/Admin/Member) never expose an inline removal.
+    expect(screen.queryByRole("button", { name: "Remove Member role" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Remove Owner role" })).toBeNull();
+
+    await userEvent.click(screen.getByRole("button", { name: "Remove Cashier role" }));
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      `/api/workforce/roles/members/${memberId}/${cashierRole.id}`,
+      expect.objectContaining({ method: "DELETE" }),
+    );
+    expect(screen.queryByRole("button", { name: "Remove Cashier role" })).toBeNull();
   });
 
   it("opens the single-step invite dialog with the three fields", async () => {

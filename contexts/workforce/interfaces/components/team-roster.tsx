@@ -41,6 +41,7 @@ import {
   TabsTrigger,
 } from "@/contexts/shared/interfaces/components/ui/tabs";
 import {
+  isUuid,
   normalizeUuidOrNull,
   workforceMemberPageSchema,
   type WorkforceMemberResource,
@@ -142,8 +143,12 @@ export function TeamRoster({ establishmentId = null }: { establishmentId?: strin
   }, [canAssignRoles, organizationId]);
 
   async function assignRoleToMember(member: WorkforceMemberResource, roleId: string) {
-    if (!organizationId || !member.memberId) return;
+    if (!organizationId || !isUuid(member.memberId) || !isUuid(roleId)) {
+      setError("This role can no longer be updated. Refresh the page and try again.");
+      return;
+    }
 
+    console.log("Submitting role change payload:", { organizationId, memberId: member.memberId, roleId });
     setRoleMutationKey(`${member.memberId}:${roleId}`);
     setError(null);
     try {
@@ -162,8 +167,12 @@ export function TeamRoster({ establishmentId = null }: { establishmentId?: strin
   }
 
   async function removeRoleFromMember(member: WorkforceMemberResource, roleId: string) {
-    if (!organizationId || !member.memberId) return;
+    if (!organizationId || !isUuid(member.memberId) || !isUuid(roleId)) {
+      setError("This role can no longer be updated. Refresh the page and try again.");
+      return;
+    }
 
+    console.log("Submitting role change payload:", { organizationId, memberId: member.memberId, roleId });
     setRoleMutationKey(`${member.memberId}:${roleId}`);
     setError(null);
     try {
@@ -478,7 +487,7 @@ function AddRoleMenu({
             <DropdownMenuItem disabled>All roles assigned</DropdownMenuItem>
           ) : (
             roles.map((role) => (
-              <DropdownMenuItem key={role.id} onClick={() => onAdd(role.id)}>
+              <DropdownMenuItem key={role.id} disabled={!isUuid(role.id)} onClick={() => onAdd(role.id)}>
                 {role.name}
               </DropdownMenuItem>
             ))
