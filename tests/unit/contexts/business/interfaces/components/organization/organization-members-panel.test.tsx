@@ -1,6 +1,6 @@
 /** @vitest-environment jsdom */
 
-import { render, screen, within } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
@@ -73,6 +73,94 @@ function mockApi() {
     }), { status: 200 }));
   });
 }
+
+function mockBulkApi() {
+  return vi.fn((url: string) => {
+    if (url.startsWith("/api/workforce/roles/members")) {
+      return Promise.resolve(new Response(null, { status: 204 }));
+    }
+    if (url.startsWith("/api/workforce/roles")) {
+      return Promise.resolve(new Response(JSON.stringify([ownerRole, adminRole, memberRole, cashierRole]), { status: 200 }));
+    }
+    return Promise.resolve(new Response(JSON.stringify({
+      content: [
+        rosterEntry({
+          username: "Organization Owner",
+          isOwner: true,
+          status: "ACTIVE",
+          memberId: "33333333-3333-4333-8333-333333333333",
+          roles: [ownerRole],
+        }),
+        rosterEntry({
+          email: "alpha@example.com",
+          username: "Alpha User",
+          status: "ACTIVE",
+          memberId: "44444444-4444-4444-8444-444444444444",
+          roles: [memberRole],
+        }),
+        rosterEntry({
+          email: "beta@example.com",
+          username: "Beta User",
+          status: "ACTIVE",
+          memberId: "77777777-7777-4777-8777-777777777777",
+          roles: [memberRole],
+        }),
+      ],
+      page: 0,
+      size: 100,
+      totalElements: 3,
+      totalPages: 1,
+    }), { status: 200 }));
+  });
+}
+
+function mockPendingBulkApi() {
+  return vi.fn((url: string) => {
+    if (url.startsWith("/api/workforce/roles/members")) {
+      return Promise.resolve(new Response(null, { status: 204 }));
+    }
+    if (url.startsWith("/api/workforce/invitations/")) {
+      return Promise.resolve(new Response(null, { status: 204 }));
+    }
+    if (url.startsWith("/api/workforce/roles")) {
+      return Promise.resolve(new Response(JSON.stringify([ownerRole, adminRole, memberRole, cashierRole]), { status: 200 }));
+    }
+    return Promise.resolve(new Response(JSON.stringify({
+      content: [
+        rosterEntry({
+          username: "Organization Owner",
+          isOwner: true,
+          status: "ACTIVE",
+          memberId: "33333333-3333-4333-8333-333333333333",
+          roles: [ownerRole],
+        }),
+        rosterEntry({
+          email: "guest1@example.com",
+          username: "Guest One",
+          status: "PENDING",
+          memberId: null,
+          invitationId: "88888888-8888-4888-8888-888888888888",
+          roles: [memberRole],
+        }),
+        rosterEntry({
+          email: "guest2@example.com",
+          username: "Guest Two",
+          status: "PENDING",
+          memberId: null,
+          invitationId: "99999999-9999-4999-8999-999999999998",
+          roles: [memberRole],
+        }),
+      ],
+      page: 0,
+      size: 100,
+      totalElements: 3,
+      totalPages: 1,
+    }), { status: 200 }));
+  });
+}
+
+const alphaId = "44444444-4444-4444-8444-444444444444";
+const betaId = "77777777-7777-4777-8777-777777777777";
 
 describe("OrganizationMembersPanel", () => {
   afterEach(() => vi.unstubAllGlobals());
@@ -236,5 +324,129 @@ describe("OrganizationMembersPanel", () => {
     expect(screen.getByRole("combobox", { name: "Role" })).toBeVisible();
     expect(screen.getByText("All establishments")).toBeVisible();
     expect(screen.getByRole("button", { name: "Send invitation" })).toBeVisible();
+  });
+
+  it("excludes the Owner from bulk selection and reveals the bar only from two picks", async () => {
+    vi.stubGlobal("fetch", mockBulkApi());
+
+    render(<OrganizationMembersPanel organizationId={organizationId} establishments={establishments} />);
+
+    await screen.findByText("Alpha User");
+    expect(screen.getByRole("checkbox", { name: "Select Organization Owner" })).toBeDisabled();
+    expect(screen.getByRole("checkbox", { name: "Select all members" })).toBeEnabled();
+
+    await userEvent.click(screen.getByRole("checkbox", { name: "Select Alpha User" }));
+    expect(screen.queryByText(/members selected/)).toBeNull();
+  });
+
+  it("toggles every selectable row from the header checkbox", async () => {
+    vi.stubGlobal("fetch", mockBulkApi());
+
+    render(<OrganizationMembersPanel organizationId={organizationId} establishments={establishments} />);
+
+    await screen.findByText("Alpha User");
+    await userEvent.click(screen.getByRole("checkbox", { name: "Select all members" }));
+
+    expect(await screen.findByText("2 members selected")).toBeVisible();
+    expect(screen.getByRole("checkbox", { name: "Select Organization Owner" })).toBeDisabled();
+    expect(screen.getByRole("checkbox", { name: "Select Alpha User" })).toBeChecked();
+    expect(screen.getByRole("checkbox", { name: "Select Beta User" })).toBeChecked();
+  });
+
+  it("batch-changes the base role for every selected member", async () => {
+    const fetchMock = mockBulkApi();
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(<OrganizationMembersPanel organizationId={organizationId} establishments={establishments} />);
+
+    await screen.findByText("Alpha User");
+    await userEvent.click(screen.getByRole("checkbox", { name: "Select Alpha User" }));
+    await userEvent.click(screen.getByRole("checkbox", { name: "Select Beta User" }));
+
+    expect(await screen.findByText("2 members selected")).toBeVisible();
+    await userEvent.click(screen.getByRole("button", { name: /Change Base Role/ }));
+    await userEvent.click(await screen.findByRole("button", { name: "Admin" }));
+
+    await waitFor(() => {
+      for (const memberId of [alphaId, betaId]) {
+        expect(fetchMock).toHaveBeenCalledWith(
+          `/api/workforce/roles/members/${memberId}/${memberRole.id}`,
+          expect.objectContaining({ method: "DELETE" }),
+        );
+        expect(fetchMock).toHaveBeenCalledWith(
+          `/api/workforce/roles/members/${memberId}`,
+          expect.objectContaining({ method: "PUT", body: JSON.stringify({ roleId: adminRole.id }) }),
+        );
+      }
+    });
+    // A single clean reload clears the selection and hides the bar.
+    await waitFor(() => expect(screen.queryByText(/members selected/)).toBeNull());
+  });
+
+  it("batch-appends a custom role to every selected member", async () => {
+    const fetchMock = mockBulkApi();
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(<OrganizationMembersPanel organizationId={organizationId} establishments={establishments} />);
+
+    await screen.findByText("Alpha User");
+    await userEvent.click(screen.getByRole("checkbox", { name: "Select Alpha User" }));
+    await userEvent.click(screen.getByRole("checkbox", { name: "Select Beta User" }));
+    await userEvent.click(screen.getByRole("button", { name: /Add Custom Role/ }));
+    await userEvent.click(await screen.findByRole("button", { name: "Cashier" }));
+
+    await waitFor(() => {
+      for (const memberId of [alphaId, betaId]) {
+        expect(fetchMock).toHaveBeenCalledWith(
+          `/api/workforce/roles/members/${memberId}`,
+          expect.objectContaining({ method: "PUT", body: JSON.stringify({ roleId: cashierRole.id }) }),
+        );
+      }
+    });
+  });
+
+  it("selects pending invitations and batch-remaps their acceptance roles", async () => {
+    const fetchMock = mockPendingBulkApi();
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(<OrganizationMembersPanel organizationId={organizationId} establishments={establishments} />);
+
+    await screen.findByText("Guest One");
+    // Pending invitations are selectable; only the Owner is frozen.
+    expect(screen.getByRole("checkbox", { name: "Select Guest One" })).toBeEnabled();
+    expect(screen.getByRole("checkbox", { name: "Select Guest Two" })).toBeEnabled();
+
+    await userEvent.click(screen.getByRole("checkbox", { name: "Select Guest One" }));
+    await userEvent.click(screen.getByRole("checkbox", { name: "Select Guest Two" }));
+    expect(await screen.findByText("2 members selected")).toBeVisible();
+
+    await userEvent.click(screen.getByRole("button", { name: /Change Base Role/ }));
+    await userEvent.click(await screen.findByRole("button", { name: "Admin" }));
+
+    await waitFor(() => {
+      for (const invitationId of [
+        "88888888-8888-4888-8888-888888888888",
+        "99999999-9999-4999-8999-999999999998",
+      ]) {
+        expect(fetchMock).toHaveBeenCalledWith(
+          `/api/workforce/invitations/${invitationId}/roles`,
+          expect.objectContaining({ method: "PUT", body: JSON.stringify({ roleIds: [adminRole.id] }) }),
+        );
+      }
+    });
+  });
+
+  it("clears the selection from the bulk bar cancel action", async () => {
+    vi.stubGlobal("fetch", mockBulkApi());
+
+    render(<OrganizationMembersPanel organizationId={organizationId} establishments={establishments} />);
+
+    await screen.findByText("Alpha User");
+    await userEvent.click(screen.getByRole("checkbox", { name: "Select Alpha User" }));
+    await userEvent.click(screen.getByRole("checkbox", { name: "Select Beta User" }));
+    expect(await screen.findByText("2 members selected")).toBeVisible();
+
+    await userEvent.click(screen.getByRole("button", { name: "Cancel" }));
+    expect(screen.queryByText(/members selected/)).toBeNull();
   });
 });

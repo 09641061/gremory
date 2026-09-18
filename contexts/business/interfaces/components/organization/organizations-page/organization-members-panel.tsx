@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useEffectEvent, useState } from "react";
-import { MapPin, MoreVertical, Plus, Search, ShieldCheck, X } from "lucide-react";
+import { ChevronDown, MapPin, MoreVertical, Plus, Search, ShieldCheck, Users, X } from "lucide-react";
 import { z } from "zod";
 
 import {
@@ -16,6 +16,7 @@ import {
 } from "@/contexts/shared/interfaces/components/ui/alert-dialog";
 import { Badge } from "@/contexts/shared/interfaces/components/ui/badge";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
+import { Checkbox } from "@/contexts/shared/interfaces/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -34,6 +35,11 @@ import {
   DropdownMenuTrigger,
 } from "@/contexts/shared/interfaces/components/ui/dropdown-menu";
 import { Input } from "@/contexts/shared/interfaces/components/ui/input";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/contexts/shared/interfaces/components/ui/popover";
 import {
   Select,
   SelectContent,
@@ -91,6 +97,8 @@ export function OrganizationMembersPanel({
   const [scopeMember, setScopeMember] = useState<WorkforceMemberResource | null>(null);
   const [removeTarget, setRemoveTarget] = useState<WorkforceMemberResource | null>(null);
   const [inviteOpen, setInviteOpen] = useState(false);
+  const [selectedRowIds, setSelectedRowIds] = useState<string[]>([]);
+  const [bulkBusy, setBulkBusy] = useState(false);
 
   async function loadData() {
     setLoading(true);
@@ -118,7 +126,12 @@ export function OrganizationMembersPanel({
         throw new Error(readErrorMessage(rolesBody));
       }
 
-      setMembers(workforceMemberPageSchema.parse(membersBody).content);
+      const refreshedMembers = workforceMemberPageSchema.parse(membersBody).content;
+      setMembers(refreshedMembers);
+      // Drop selections that no longer resolve to a visible row after a reload.
+      setSelectedRowIds((current) =>
+        current.filter((id) => refreshedMembers.some((member) => rowKey(member) === id)),
+      );
       setRoles(z.array(workforceRoleSchema).parse(rolesBody));
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "Unable to load the team.");
@@ -339,6 +352,137 @@ export function OrganizationMembersPanel({
   const establishmentFilterLabel = (value: string) =>
     establishmentFilterOptions.find((option) => option.value === value)?.label ?? value;
 
+  // Bulk selection spans every operational row (active memberships and pending
+  // invitations). Only the system Owner is excluded, so the root proprietor profile
+  // can never be mutated in a batch.
+  const selectableRowIds = visibleMembers
+    .filter((member) => !member.isOwner)
+    .map((member) => rowKey(member));
+  const allSelectableSelected =
+    selectableRowIds.length > 0 && selectableRowIds.every((id) => selectedRowIds.includes(id));
+  const someSelectableSelected =
+    !allSelectableSelected && selectableRowIds.some((id) => selectedRowIds.includes(id));
+  const selectedRows = members.filter((member) => selectedRowIds.includes(rowKey(member)));
+  const bulkSelectionActive = selectedRowIds.length >= 2;
+
+  function toggleRowSelection(rowId: string) {
+    setSelectedRowIds((current) =>
+      current.includes(rowId) ? current.filter((id) => id !== rowId) : [...current, rowId],
+    );
+  }
+
+  function toggleAllSelection() {
+    setSelectedRowIds((current) => {
+      if (selectableRowIds.length === 0) return current;
+      if (selectableRowIds.every((id) => current.includes(id))) {
+        return current.filter((id) => !selectableRowIds.includes(id));
+      }
+      return Array.from(new Set([...current, ...selectableRowIds]));
+    });
+  }
+
+  /** Replaces a pending invitation's base system role while keeping its custom roles. */
+  function invitationRolesWithBase(member: WorkforceMemberResource, baseRoleId: string): string[] {
+    const customRoleIds = member.roles.filter((role) => !role.systemRole).map((role) => role.id);
+    return Array.from(new Set([...customRoleIds, baseRoleId]));
+  }
+
+  /** Appends a role to a pending invitation's existing role mapping. */
+  function invitationRolesWithAdded(member: WorkforceMemberResource, roleId: string): string[] {
+    return Array.from(new Set([...member.roles.map((role) => role.id), roleId]));
+  }
+
+  async function updateInvitationRoleMapping(member: WorkforceMemberResource, roleIds: string[]) {
+    const response = await fetch(`/api/workforce/invitations/${member.invitationId}/roles`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json", "X-Organization-Id": organizationId },
+      body: JSON.stringify({ roleIds: roleIds.filter((id) => isUuid(id)) }),
+    });
+    if (!response.ok) {
+      throw new Error(readErrorMessage(await response.json().catch(() => undefined)));
+    }
+  }
+
+  /**
+   * Batch-swaps the base system role for every selected row. Active memberships swap the
+   * persisted assignment; pending invitations re-map the roles granted on acceptance.
+   * One reactive reload runs after the whole batch settles, then the checkboxes clear.
+   */
+  async function changeBaseRoleForSelection(roleId: string) {
+    if (bulkBusy || !isUuid(organizationId) || !isUuid(roleId) || selectedRows.length === 0) return;
+    setBulkBusy(true);
+    setError(null);
+    try {
+      await Promise.all(
+        selectedRows.map(async (member) => {
+          if (!member.memberId) {
+            // Pending invitation: swap the base role, keep any custom roles.
+            await updateInvitationRoleMapping(member, invitationRolesWithBase(member, roleId));
+            return;
+          }
+          const current = member.roles.find((role) => role.systemRole && role.name !== "Owner");
+          if (current?.id === roleId) return;
+          if (current && isUuid(current.id)) {
+            const removal = await fetch(
+              `/api/workforce/roles/members/${member.memberId}/${current.id}`,
+              { method: "DELETE", headers: { "X-Organization-Id": organizationId } },
+            );
+            if (!removal.ok) {
+              throw new Error(readErrorMessage(await removal.json().catch(() => undefined)));
+            }
+          }
+          const assignment = await fetch(`/api/workforce/roles/members/${member.memberId}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json", "X-Organization-Id": organizationId },
+            body: JSON.stringify({ roleId }),
+          });
+          if (!assignment.ok) {
+            throw new Error(readErrorMessage(await assignment.json().catch(() => undefined)));
+          }
+        }),
+      );
+      setSelectedRowIds([]);
+      await loadData();
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "Unable to change the base role.");
+    } finally {
+      setBulkBusy(false);
+    }
+  }
+
+  /** Appends a custom role to every selected row that does not already hold it. */
+  async function addCustomRoleToSelection(roleId: string) {
+    if (bulkBusy || !isUuid(organizationId) || !isUuid(roleId) || selectedRows.length === 0) return;
+    setBulkBusy(true);
+    setError(null);
+    try {
+      await Promise.all(
+        selectedRows.map(async (member) => {
+          if (member.roles.some((role) => role.id === roleId)) return;
+          if (!member.memberId) {
+            // Pending invitation: append to the roles granted on acceptance.
+            await updateInvitationRoleMapping(member, invitationRolesWithAdded(member, roleId));
+            return;
+          }
+          const response = await fetch(`/api/workforce/roles/members/${member.memberId}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json", "X-Organization-Id": organizationId },
+            body: JSON.stringify({ roleId }),
+          });
+          if (!response.ok) {
+            throw new Error(readErrorMessage(await response.json().catch(() => undefined)));
+          }
+        }),
+      );
+      setSelectedRowIds([]);
+      await loadData();
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "Unable to add the custom role.");
+    } finally {
+      setBulkBusy(false);
+    }
+  }
+
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-6">
       {error ? (
@@ -403,6 +547,15 @@ export function OrganizationMembersPanel({
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead className="w-10 pl-4">
+                <Checkbox
+                  checked={allSelectableSelected}
+                  indeterminate={someSelectableSelected}
+                  onCheckedChange={toggleAllSelection}
+                  disabled={selectableRowIds.length === 0 || bulkBusy || !canManageMembers}
+                  aria-label="Select all members"
+                />
+              </TableHead>
               <TableHead className="px-4">Person / Email</TableHead>
               <TableHead>Assigned Roles</TableHead>
               <TableHead>Establishments Scope</TableHead>
@@ -419,6 +572,14 @@ export function OrganizationMembersPanel({
               const busy = roleMutationKey !== null;
               return (
                 <TableRow key={rowKey(member)} className="group/row">
+                  <TableCell className="w-10 pl-4">
+                    <Checkbox
+                      checked={selectedRowIds.includes(rowKey(member))}
+                      onCheckedChange={() => toggleRowSelection(rowKey(member))}
+                      disabled={owner || bulkBusy || !canManageMembers}
+                      aria-label={`Select ${member.username ?? member.email}`}
+                    />
+                  </TableCell>
                   <TableCell className="px-4 py-4 whitespace-normal">
                     <div className="font-medium text-foreground">{member.username ?? member.email}</div>
                     <div className="mt-0.5 text-xs text-muted-foreground">{member.email}</div>
@@ -426,9 +587,7 @@ export function OrganizationMembersPanel({
 
                   {/* Organization Roles: removable inline tags plus a trailing add popover. */}
                   <TableCell className="whitespace-normal">
-                    {!active ? (
-                      <span className="text-xs text-muted-foreground">Awaiting acceptance</span>
-                    ) : (
+                    {systemRole || customs.length > 0 ? (
                       <div className="flex flex-wrap items-center gap-1.5">
                         {systemRole ? (
                           // System roles (Owner/Admin/Member) are the protected base clearance:
@@ -442,10 +601,10 @@ export function OrganizationMembersPanel({
                           <Badge
                             key={role.id}
                             variant="outline"
-                            className={cn("gap-1", canManageMembers && "pr-1")}
+                            className={cn("gap-1", active && canManageMembers && "pr-1")}
                           >
                             {role.name}
-                            {canManageMembers ? (
+                            {active && canManageMembers ? (
                               <button
                                 type="button"
                                 disabled={busy}
@@ -459,7 +618,7 @@ export function OrganizationMembersPanel({
                             ) : null}
                           </Badge>
                         ))}
-                        {!owner && canManageMembers ? (
+                        {!owner && active && canManageMembers ? (
                           <DropdownMenu onOpenChange={(open) => { if (!open) setError(null); }}>
                             <DropdownMenuTrigger
                               render={
@@ -516,6 +675,10 @@ export function OrganizationMembersPanel({
                           </DropdownMenu>
                         ) : null}
                       </div>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">
+                        {active ? "No role" : "Awaiting acceptance"}
+                      </span>
                     )}
                   </TableCell>
 
@@ -608,7 +771,7 @@ export function OrganizationMembersPanel({
             })}
             {!loading && visibleMembers.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={5} className="px-4 py-12 text-center text-muted-foreground">
+                <TableCell colSpan={6} className="px-4 py-12 text-center text-muted-foreground">
                   No members found.
                 </TableCell>
               </TableRow>
@@ -659,7 +822,102 @@ export function OrganizationMembersPanel({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {canManageMembers && bulkSelectionActive ? (
+        <div className="pointer-events-none fixed inset-x-0 bottom-6 z-50 flex justify-center px-4">
+          <div className="pointer-events-auto flex items-center gap-1 rounded-full border border-border/70 bg-background/95 py-1.5 pr-1.5 pl-4 shadow-lg ring-1 ring-foreground/5 backdrop-blur">
+            <span className="flex items-center gap-2 text-sm font-medium text-foreground">
+              <Users className="size-4 text-muted-foreground" aria-hidden="true" />
+              {selectedRowIds.length} members selected
+            </span>
+            <div className="mx-1 h-5 w-px bg-border" aria-hidden="true" />
+
+            <Popover>
+              <PopoverTrigger
+                render={
+                  <Button type="button" variant="ghost" size="sm" disabled={bulkBusy} className="gap-1" />
+                }
+              >
+                Change Base Role
+                <ChevronDown className="size-3.5 opacity-60" aria-hidden="true" />
+              </PopoverTrigger>
+              <PopoverContent align="center" side="top" className="w-56 gap-0.5 p-1.5">
+                {swappableSystemRoles.length === 0 ? (
+                  <p className="px-2.5 py-2 text-sm text-muted-foreground">No assignable system roles</p>
+                ) : (
+                  swappableSystemRoles.map((role) => (
+                    <BulkRoleOption
+                      key={role.id}
+                      label={role.name}
+                      disabled={bulkBusy || !isUuid(role.id)}
+                      onSelect={() => void changeBaseRoleForSelection(role.id)}
+                    />
+                  ))
+                )}
+              </PopoverContent>
+            </Popover>
+
+            <Popover>
+              <PopoverTrigger
+                render={
+                  <Button type="button" variant="ghost" size="sm" disabled={bulkBusy} className="gap-1" />
+                }
+              >
+                Add Custom Role
+                <ChevronDown className="size-3.5 opacity-60" aria-hidden="true" />
+              </PopoverTrigger>
+              <PopoverContent align="center" side="top" className="w-56 gap-0.5 p-1.5">
+                {assignableCustomRoles.length === 0 ? (
+                  <p className="px-2.5 py-2 text-sm text-muted-foreground">No custom roles yet</p>
+                ) : (
+                  assignableCustomRoles.map((role) => (
+                    <BulkRoleOption
+                      key={role.id}
+                      label={role.name}
+                      disabled={bulkBusy || !isUuid(role.id)}
+                      onSelect={() => void addCustomRoleToSelection(role.id)}
+                    />
+                  ))
+                )}
+              </PopoverContent>
+            </Popover>
+
+            <div className="mx-1 h-5 w-px bg-border" aria-hidden="true" />
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => setSelectedRowIds([])}
+              disabled={bulkBusy}
+              className="text-muted-foreground hover:text-foreground"
+            >
+              Cancel
+            </Button>
+          </div>
+        </div>
+      ) : null}
     </div>
+  );
+}
+
+function BulkRoleOption({
+  label,
+  disabled,
+  onSelect,
+}: {
+  label: string;
+  disabled: boolean;
+  onSelect: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      disabled={disabled}
+      onClick={onSelect}
+      className="w-full rounded-md px-2.5 py-2 text-left text-sm font-medium text-foreground transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
+    >
+      {label}
+    </button>
   );
 }
 

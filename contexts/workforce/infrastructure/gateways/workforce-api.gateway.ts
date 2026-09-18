@@ -106,6 +106,23 @@ export class WorkforceApiGateway {
     return workforceInvitationSchema.parse(response);
   }
 
+  /** Replaces the role mapping a still-pending invitation grants on acceptance. */
+  async updateInvitationRoles(
+    organizationId: string,
+    invitationId: string,
+    roleIds: string[],
+  ): Promise<void> {
+    await apiClient.put(
+      `${apiConfig.routes.workforce.invitations}/${encodeURIComponent(invitationId)}/roles`,
+      { roleIds },
+      {
+        token: await this.accessToken(),
+        headers: this.organizationHeader(organizationId),
+        errorMessage: "Failed to update invitation roles",
+      },
+    );
+  }
+
   async updateMemberScope(
     organizationId: string,
     memberId: string,
