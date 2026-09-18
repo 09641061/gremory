@@ -1,6 +1,6 @@
 /** @vitest-environment jsdom */
 
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
@@ -131,17 +131,47 @@ describe("OrganizationRolesPanel", () => {
     expect(screen.getByRole("button", { name: "Cashier" }).querySelector(".lucide-cog")).not.toBeNull();
   });
 
-  it("freezes every control for a system role", async () => {
+  it("keeps the Member baseline editable while locking only its factory name and deletion", async () => {
     vi.stubGlobal("fetch", mockApi());
 
     render(<OrganizationRolesPanel organizationId={organizationId} />);
 
     await screen.findByDisplayValue("Member");
 
+    // Factory name is immutable and the role can never be deleted...
     expect(screen.getByRole("textbox", { name: "Role Name" })).toBeDisabled();
-    expect(screen.getByRole("combobox", { name: "Badge Color" })).toBeDisabled();
-    expect(screen.getByText("System roles cannot be modified")).toBeVisible();
     expect(screen.queryByRole("button", { name: /Delete Role/ })).toBeNull();
+    // ...but the permission matrix is editable and no blocking label is shown.
+    expect(screen.getByRole("combobox", { name: "Badge Color" })).toBeEnabled();
+    expect(screen.queryByText("System roles cannot be modified")).toBeNull();
+
+    await userEvent.click(screen.getByRole("button", { name: /Catalog/ }));
+    const save = screen.getByRole("button", { name: "Save Changes" });
+    expect(save).toBeDisabled();
+    await userEvent.click(screen.getByRole("checkbox", { name: /Manage catalog/ }));
+    expect(save).toBeEnabled();
+  });
+
+  it("saves Member permissions without sending a rename", async () => {
+    const fetchMock = mockApi();
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(<OrganizationRolesPanel organizationId={organizationId} />);
+
+    await screen.findByDisplayValue("Member");
+    await userEvent.click(screen.getByRole("button", { name: /Catalog/ }));
+    await userEvent.click(screen.getByRole("checkbox", { name: /Manage catalog/ }));
+    await userEvent.click(screen.getByRole("button", { name: "Save Changes" }));
+
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenCalledWith(
+        `/api/workforce/roles/${memberSystemRole.id}`,
+        expect.objectContaining({
+          method: "PATCH",
+          body: JSON.stringify({ permissions: ["catalog:manage"] }),
+        }),
+      );
+    });
   });
 
   it("makes a custom role fully editable and offers Delete Role", async () => {

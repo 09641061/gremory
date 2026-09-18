@@ -309,6 +309,32 @@ export const createWorkforceRoleSchema = z.object({
 
 export const updateWorkforceRoleSchema = createWorkforceRoleSchema;
 
+/**
+ * PATCH payload where every field is optional, so a protected system role (Member) can
+ * have only its permissions updated without attempting to rename it.
+ */
+export const patchWorkforceRoleSchema = z
+  .object({
+    name: z
+      .string()
+      .trim()
+      .min(1, "Role name is required")
+      .max(100, "Role name cannot exceed 100 characters")
+      .optional(),
+    permissions: z
+      .array(rolePermissionSchema)
+      .max(workforceRolePermissionCatalog.length)
+      .refine(
+        (permissions) => new Set(permissions).size === permissions.length,
+        "Role permissions cannot contain duplicates",
+      )
+      .optional(),
+  })
+  .strict()
+  .refine((value) => value.name !== undefined || value.permissions !== undefined, {
+    message: "At least one field is required",
+  });
+
 export type WorkforceMemberResource = z.infer<typeof workforceMemberSchema>;
 export type WorkforceMemberEstablishmentResource = z.infer<typeof workforceMemberEstablishmentSchema>;
 export type WorkforceRoleResource = z.infer<typeof workforceRoleSchema>;

@@ -236,7 +236,13 @@ export function OrganizationRolesPanel({ organizationId }: { organizationId: str
 
   const isCreating = selectedRoleId === NEW_ROLE;
   const selectedRole = roles.find((role) => role.id === selectedRoleId) ?? null;
-  const isReadOnly = selectedRole?.systemRole === true;
+  // Owner stays fully frozen. Member is a protected-but-editable baseline: its permission
+  // matrix is editable, yet it remains a system role and can never be deleted.
+  const isOwnerSelected = selectedRole !== null && isOwnerRole(selectedRole);
+  const isSystemRole = selectedRole?.systemRole === true;
+  const isReadOnly = isOwnerSelected;
+  // Factory system-role names are immutable on the backend, so only the name stays locked.
+  const isNameLocked = isSystemRole;
 
   async function loadData() {
     setLoading(true);
@@ -345,6 +351,12 @@ export function OrganizationRolesPanel({ organizationId }: { organizationId: str
       return;
     }
 
+    // A protected system role (Member) may only change its permissions: the backend
+    // forbids renaming factory roles, so the name is omitted from the PATCH payload.
+    const payload = !isCreating && isSystemRole
+      ? { permissions: parsed.data.permissions }
+      : parsed.data;
+
     setSaving(true);
     setError(null);
     try {
@@ -353,7 +365,7 @@ export function OrganizationRolesPanel({ organizationId }: { organizationId: str
         {
           method: isCreating ? "POST" : "PATCH",
           headers: { "Content-Type": "application/json", "X-Organization-Id": organizationId },
-          body: JSON.stringify(parsed.data),
+          body: JSON.stringify(payload),
         },
       );
       const body: unknown = response.status === 204 ? undefined : await response.json();
@@ -501,7 +513,7 @@ export function OrganizationRolesPanel({ organizationId }: { organizationId: str
             onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))}
             placeholder="e.g. Front desk"
             maxLength={100}
-            disabled={isReadOnly || saving || loading}
+            disabled={isNameLocked || saving || loading}
           />
         </label>
 
@@ -624,7 +636,7 @@ export function OrganizationRolesPanel({ organizationId }: { organizationId: str
       {/* ZONE 3 — bottom action bar */}
       <div className="flex flex-col gap-3 border-t border-border pt-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          {!isReadOnly && !isCreating && selectedRole ? (
+          {!isSystemRole && !isCreating && selectedRole ? (
             <Button
               type="button"
               variant="destructive"

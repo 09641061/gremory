@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { WorkforceApiGateway } from "@/contexts/workforce/infrastructure/gateways/workforce-api.gateway";
-import { updateWorkforceRoleSchema } from "@/contexts/workforce/interfaces/rest/schemas/workforce-member.schemas";
+import { patchWorkforceRoleSchema } from "@/contexts/workforce/interfaces/rest/schemas/workforce-member.schemas";
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ roleId: string }> }) {
   const organizationId = request.headers.get("X-Organization-Id");
@@ -11,7 +11,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ ro
     return NextResponse.json({ message: "A valid organization and role are required" }, { status: 400 });
   }
 
-  const parsed = updateWorkforceRoleSchema.safeParse(await request.json().catch(() => undefined));
+  const parsed = patchWorkforceRoleSchema.safeParse(await request.json().catch(() => undefined));
   if (!parsed.success) return NextResponse.json({ message: parsed.error.issues[0]?.message ?? "Invalid request" }, { status: 400 });
 
   try {
