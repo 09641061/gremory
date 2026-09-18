@@ -96,6 +96,7 @@ export function OrganizationMembersPanel({
   const [roleMutationKey, setRoleMutationKey] = useState<string | null>(null);
   const [scopeMember, setScopeMember] = useState<WorkforceMemberResource | null>(null);
   const [removeTarget, setRemoveTarget] = useState<WorkforceMemberResource | null>(null);
+  const [revokeTarget, setRevokeTarget] = useState<WorkforceMemberResource | null>(null);
   const [inviteOpen, setInviteOpen] = useState(false);
   const [selectedRowIds, setSelectedRowIds] = useState<string[]>([]);
   const [bulkBusy, setBulkBusy] = useState(false);
@@ -307,6 +308,30 @@ export function OrganizationMembersPanel({
     }
   }
 
+  /** Revokes one pending invitation (DELETE proxy), then removes the row reactively. */
+  async function confirmRevokeInvitation() {
+    const member = revokeTarget;
+    if (!member || !isUuid(organizationId) || !isUuid(member.invitationId)) return;
+
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await fetch(`/api/workforce/invitations/${member.invitationId}`, {
+        method: "DELETE",
+        headers: { "X-Organization-Id": organizationId },
+      });
+      if (!response.ok) throw new Error(readErrorMessage(await response.json().catch(() => undefined)));
+      setRevokeTarget(null);
+      setSelectedRowIds((current) => current.filter((id) => id !== rowKey(member)));
+      await loadData();
+    } catch (reason) {
+      setRevokeTarget(null);
+      setError(reason instanceof Error ? reason.message : "Unable to revoke the invitation.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
   async function saveScope(member: WorkforceMemberResource, ids: string[]) {
     if (!member.memberId) return;
     setLoading(true);
@@ -363,6 +388,7 @@ export function OrganizationMembersPanel({
   const someSelectableSelected =
     !allSelectableSelected && selectableRowIds.some((id) => selectedRowIds.includes(id));
   const selectedRows = members.filter((member) => selectedRowIds.includes(rowKey(member)));
+  const selectedPendingRows = selectedRows.filter((member) => member.status === "PENDING");
   const bulkSelectionActive = selectedRowIds.length >= 2;
 
   function toggleRowSelection(rowId: string) {
@@ -483,6 +509,33 @@ export function OrganizationMembersPanel({
     }
   }
 
+  /** Revokes every selected pending invitation token in one batch, then reloads once. */
+  async function revokeSelectedInvitations() {
+    const targets = selectedPendingRows.filter((member) => isUuid(member.invitationId));
+    if (bulkBusy || !isUuid(organizationId) || targets.length === 0) return;
+    setBulkBusy(true);
+    setError(null);
+    try {
+      await Promise.all(
+        targets.map(async (member) => {
+          const response = await fetch(`/api/workforce/invitations/${member.invitationId}`, {
+            method: "DELETE",
+            headers: { "X-Organization-Id": organizationId },
+          });
+          if (!response.ok) {
+            throw new Error(readErrorMessage(await response.json().catch(() => undefined)));
+          }
+        }),
+      );
+      setSelectedRowIds([]);
+      await loadData();
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "Unable to revoke the selected invitations.");
+    } finally {
+      setBulkBusy(false);
+    }
+  }
+
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-6">
       {error ? (
@@ -567,6 +620,7 @@ export function OrganizationMembersPanel({
             {visibleMembers.map((member) => {
               const owner = member.isOwner;
               const active = member.status === "ACTIVE" && member.memberId !== null;
+              const isPending = member.status === "PENDING";
               const systemRole = primarySystemRole(member);
               const customs = customRoles(member);
               const busy = roleMutationKey !== null;
@@ -734,7 +788,7 @@ export function OrganizationMembersPanel({
                     {canManageMembers ? (
                     <DropdownMenu>
                       <DropdownMenuTrigger
-                        disabled={owner || !member.memberId}
+                        disabled={owner || (!member.memberId && !isPending)}
                         render={
                           <Button
                             type="button"
@@ -762,6 +816,15 @@ export function OrganizationMembersPanel({
                         >
                           Remove from Organization
                         </DropdownMenuItem>
+                        {isPending ? (
+                          <DropdownMenuItem
+                            variant="destructive"
+                            className="text-red-600 focus:text-red-600"
+                            onClick={() => setRevokeTarget(member)}
+                          >
+                            Revoke Invitation
+                          </DropdownMenuItem>
+                        ) : null}
                       </DropdownMenuContent>
                     </DropdownMenu>
                     ) : null}
@@ -797,6 +860,32 @@ export function OrganizationMembersPanel({
         roles={roles}
         onInvited={() => void loadData()}
       />
+
+      <AlertDialog
+        open={revokeTarget !== null}
+        onOpenChange={(open) => !open && setRevokeTarget(null)}
+      >
+        <AlertDialogContent className="rounded-xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Revoke invitation</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to revoke the invitation sent to{" "}
+              {revokeTarget?.email}? The invitation link stops working immediately and the guest can no
+              longer join with it. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={loading}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              variant="destructive"
+              disabled={loading}
+              onClick={() => void confirmRevokeInvitation()}
+            >
+              Revoke Invitation
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <AlertDialog
         open={removeTarget !== null}
@@ -881,6 +970,19 @@ export function OrganizationMembersPanel({
                 )}
               </PopoverContent>
             </Popover>
+
+            {selectedPendingRows.length > 0 ? (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                disabled={bulkBusy}
+                onClick={() => void revokeSelectedInvitations()}
+                className="text-red-600 hover:bg-red-500/10 hover:text-red-700 focus-visible:text-red-700"
+              >
+                Revoke Selected
+              </Button>
+            ) : null}
 
             <div className="mx-1 h-5 w-px bg-border" aria-hidden="true" />
             <Button

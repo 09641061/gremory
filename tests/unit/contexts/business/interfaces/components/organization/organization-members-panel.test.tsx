@@ -436,6 +436,56 @@ describe("OrganizationMembersPanel", () => {
     });
   });
 
+  it("revokes a pending invitation from the row actions menu", async () => {
+    const fetchMock = mockPendingBulkApi();
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(<OrganizationMembersPanel organizationId={organizationId} establishments={establishments} />);
+
+    await screen.findByText("Guest One");
+    const row = screen.getByText("Guest One").closest("tr");
+    expect(row).not.toBeNull();
+
+    await userEvent.click(within(row!).getByRole("button", { name: "Actions for Guest One" }));
+    await userEvent.click(await screen.findByRole("menuitem", { name: "Revoke Invitation" }));
+    // Confirmation modal fires the DELETE proxy.
+    await userEvent.click(await screen.findByRole("button", { name: "Revoke Invitation" }));
+
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenCalledWith(
+        "/api/workforce/invitations/88888888-8888-4888-8888-888888888888",
+        expect.objectContaining({ method: "DELETE" }),
+      );
+    });
+  });
+
+  it("revokes every selected pending invitation from the bulk bar", async () => {
+    const fetchMock = mockPendingBulkApi();
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(<OrganizationMembersPanel organizationId={organizationId} establishments={establishments} />);
+
+    await screen.findByText("Guest One");
+    await userEvent.click(screen.getByRole("checkbox", { name: "Select Guest One" }));
+    await userEvent.click(screen.getByRole("checkbox", { name: "Select Guest Two" }));
+    expect(await screen.findByText("2 members selected")).toBeVisible();
+
+    await userEvent.click(screen.getByRole("button", { name: "Revoke Selected" }));
+
+    await waitFor(() => {
+      for (const invitationId of [
+        "88888888-8888-4888-8888-888888888888",
+        "99999999-9999-4999-8999-999999999998",
+      ]) {
+        expect(fetchMock).toHaveBeenCalledWith(
+          `/api/workforce/invitations/${invitationId}`,
+          expect.objectContaining({ method: "DELETE" }),
+        );
+      }
+    });
+    await waitFor(() => expect(screen.queryByText(/members selected/)).toBeNull());
+  });
+
   it("clears the selection from the bulk bar cancel action", async () => {
     vi.stubGlobal("fetch", mockBulkApi());
 

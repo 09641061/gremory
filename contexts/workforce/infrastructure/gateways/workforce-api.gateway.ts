@@ -123,6 +123,18 @@ export class WorkforceApiGateway {
     );
   }
 
+  /** Revokes a pending invitation; the token stops resolving immediately. */
+  async revokeInvitation(organizationId: string, invitationId: string): Promise<void> {
+    await apiClient.delete(
+      `${apiConfig.routes.workforce.invitations}/${encodeURIComponent(invitationId)}`,
+      {
+        token: await this.accessToken(),
+        headers: this.organizationHeader(organizationId),
+        errorMessage: "Failed to revoke workforce invitation",
+      },
+    );
+  }
+
   async updateMemberScope(
     organizationId: string,
     memberId: string,
