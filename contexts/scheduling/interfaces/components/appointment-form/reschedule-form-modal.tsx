@@ -61,6 +61,8 @@ function toFormValues(appointment: Appointment, timeZone: string): AppointmentFo
   };
 }
 
+import { useSchedulingTranslations } from "../../i18n";
+
 export function RescheduleFormModal({
   isOpen,
   onOpenChange,
@@ -72,6 +74,7 @@ export function RescheduleFormModal({
   onDeleteSuccess,
   timeZone,
 }: RescheduleFormModalProps) {
+  const { t } = useSchedulingTranslations();
   const appointmentIdRef = useRef(appointment.id);
 
   useEffect(() => {
@@ -120,7 +123,7 @@ export function RescheduleFormModal({
     <>
       <ErrorAlert
         key={(state.status === "error" ? state.errorId : null) ?? "update-error"}
-        title="Update failed"
+        title={t.form.updateFailed}
         message={state.error ?? undefined}
       />
 
@@ -129,10 +132,10 @@ export function RescheduleFormModal({
           <DialogHeader>
             <div className="flex items-center gap-2">
               <CalendarClock className="size-5 text-primary" />
-              <DialogTitle>Edit appointment</DialogTitle>
+              <DialogTitle>{t.form.editAppointmentTitle}</DialogTitle>
             </div>
             <DialogDescription>
-              Modify the details, assignee, customer and schedule in one place.
+              {t.form.editAppointmentSubtitle}
             </DialogDescription>
           </DialogHeader>
 
@@ -159,7 +162,7 @@ export function RescheduleFormModal({
                 onClick={() => setIsDeleteOpen(true)}
               >
                 <Trash2 className="size-4" />
-                Delete
+                {t.form.delete}
               </Button>
               <div className="flex flex-col justify-end gap-2 sm:flex-row">
                 <Button
@@ -168,11 +171,11 @@ export function RescheduleFormModal({
                   disabled={isPending}
                   onClick={() => onOpenChange(false)}
                 >
-                  Cancel
+                  {t.form.cancel}
                 </Button>
                 <Button type="submit" disabled={isPending || !startsAt} className="gap-2">
                   {isPending && <Spinner className="size-4" />}
-                  {isPending ? "Saving..." : "Confirm changes"}
+                  {isPending ? t.form.saving : t.form.confirmChanges}
                 </Button>
               </div>
             </DialogFooter>

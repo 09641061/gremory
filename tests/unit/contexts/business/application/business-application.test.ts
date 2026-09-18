@@ -35,7 +35,7 @@ describe("Business command services", () => {
       organizationImageStorage(),
     ).update({
       id: organizationId,
-      name: "Acme Group",
+      name: "Acme",
     });
 
     expect(save).toHaveBeenCalled();
@@ -61,18 +61,18 @@ describe("Business command services", () => {
   });
 
   it("stores a new photo before the establishment records its reference", async () => {
-    const current = establishment("Old shop", null);
+    const current = establishment("OldShop", null);
     const repository = establishmentRepository();
     vi.spyOn(repository, "findById").mockResolvedValue(current);
     vi.spyOn(repository, "save").mockImplementation(async (value) => value);
     const photos = establishmentPhotoStorage();
     const upload = vi.spyOn(photos, "upload").mockResolvedValue(
-      createEstablishmentPhoto("https://cdn.example.com/stored.png"),
+      createEstablishmentPhoto("https://picsum.photos/seed/replik-test/800/600"),
     );
 
     await new EstablishmentCommandServiceImpl(repository, photos).update({
       id: establishmentId,
-      name: "New shop",
+      name: "NewShop",
       photoFile: new File(["photo"], "photo.png", { type: "image/png" }),
     });
 
@@ -80,11 +80,11 @@ describe("Business command services", () => {
       expect.any(File),
       expect.objectContaining({ value: organizationId }),
     );
-    expect(current.photoUrl.value).toBe("https://cdn.example.com/stored.png");
+    expect(current.photoUrl.value).toBe("https://picsum.photos/seed/replik-test/800/600");
   });
 
   it("drops the stored photo when the account removes it", async () => {
-    const current = establishment("Shop", "https://example.com/old.png");
+    const current = establishment("Shop", "https://picsum.photos/seed/replik-test/800/600");
     const repository = establishmentRepository();
     vi.spyOn(repository, "findById").mockResolvedValue(current);
     vi.spyOn(repository, "save").mockImplementation(async (value) => value);
@@ -102,7 +102,7 @@ describe("Business command services", () => {
   });
 
   it("loads the establishment and applies domain behavior before saving", async () => {
-    const current = establishment("Old shop", null);
+    const current = establishment("OldShop", null);
     const repository = establishmentRepository();
     vi.spyOn(repository, "findById").mockResolvedValue(current);
     const save = vi
@@ -114,18 +114,18 @@ describe("Business command services", () => {
       establishmentPhotoStorage(),
     ).update({
       id: establishmentId,
-      name: "New shop",
-      photoUrl: "https://example.com/shop.png",
+      name: "NewShop",
+      photoUrl: "https://picsum.photos/seed/replik-test/800/600",
     });
 
     expect(save).toHaveBeenCalledWith(current);
-    expect(current.name.value).toBe("New shop");
-    expect(current.photoUrl.value).toBe("https://example.com/shop.png");
+    expect(current.name.value).toBe("NewShop");
+    expect(current.photoUrl.value).toBe("https://picsum.photos/seed/replik-test/800/600");
     expect(id.value).toBe(establishmentId);
   });
 
   it("resolves the owning organization before deleting an establishment", async () => {
-    const current = establishment("Old shop", null);
+    const current = establishment("OldShop", null);
     const repository = establishmentRepository();
     vi.spyOn(repository, "findById").mockResolvedValue(current);
     const remove = vi.spyOn(repository, "delete").mockResolvedValue(undefined);
@@ -163,7 +163,7 @@ describe("Business query services", () => {
   it("returns paginated serializable establishment read models", async () => {
     const repository = establishmentRepository();
     vi.spyOn(repository, "findByOrganization").mockResolvedValue({
-      content: [establishment("Main store", null)],
+      content: [establishment("MainStore", null)],
       number: 0,
       size: 20,
       totalElements: 1,
@@ -182,7 +182,7 @@ describe("Business query services", () => {
       {
         id: establishmentId,
         organizationId,
-        name: "Main store",
+        name: "MainStore",
         photoUrl: null,
         timeZone: "UTC",
         ownerAvailableForScheduling: true,
@@ -238,9 +238,9 @@ function establishmentRepository(): EstablishmentRepository {
     create: vi.fn(async (_organizationId, name, photoUrl, timeZone) =>
       establishment(name.value, photoUrl.value, timeZone),
     ),
-    findById: vi.fn(async () => establishment("Main store", null)),
+    findById: vi.fn(async () => establishment("MainStore", null)),
     findByOrganization: vi.fn(async () => ({
-      content: [establishment("Main store", null)],
+      content: [establishment("MainStore", null)],
       number: 0,
       size: 20,
       totalElements: 1,

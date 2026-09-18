@@ -51,7 +51,7 @@ describe("EstablishmentsRoutePage", () => {
         {
           id: "est-1",
           name: "Miraflores",
-          photoUrl: "https://cdn.test/miraflores.png",
+          photoUrl: "https://picsum.photos/seed/replik-test/800/600",
           timeZone: "America/Lima",
           canRead: true,
           canUpdate: false,
@@ -69,7 +69,7 @@ describe("EstablishmentsRoutePage", () => {
         selectedEstablishment: {
           id: "est-1",
           name: "Miraflores",
-          photoUrl: "https://cdn.test/miraflores.png",
+          photoUrl: "https://picsum.photos/seed/replik-test/800/600",
           timeZone: "America/Lima",
         },
       }),

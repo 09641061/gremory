@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import { I18nProvider } from "@/contexts/shared/interfaces/i18n";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -18,10 +19,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es">
+    <html lang="en" suppressHydrationWarning>
       <body className={inter.variable}>
-        {children}
+        <I18nProvider initialLocale="en">
+          {children}
+        </I18nProvider>
       </body>
     </html>
   );
 }
+

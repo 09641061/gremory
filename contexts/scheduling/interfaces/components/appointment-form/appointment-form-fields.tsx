@@ -44,6 +44,8 @@ function FieldError({ id, messages }: { id: string; messages?: string[] }) {
   );
 }
 
+import { useSchedulingTranslations } from "../../i18n";
+
 /**
  * The field set shared by the create and reschedule flows.
  *
@@ -61,6 +63,7 @@ export function AppointmentFormFields({
   formattedEnd,
   minDate,
 }: AppointmentFormFieldsProps) {
+  const { t } = useSchedulingTranslations();
   const serviceOptions = useMemo(() => createServiceOptions(services), [services]);
   const customerOptions = useMemo(() => createCustomerOptions(customers), [customers]);
   const employeeOptions = useMemo(() => createEmployeeOptions(members), [members]);
@@ -68,11 +71,11 @@ export function AppointmentFormFields({
   return (
     <div className="space-y-4">
       <div className="space-y-1.5">
-        <Label htmlFor={`${idPrefix}-title`}>Appointment title</Label>
+        <Label htmlFor={`${idPrefix}-title`}>{t.form.appointmentTitleLabel}</Label>
         <Input
           id={`${idPrefix}-title`}
           name="title"
-          placeholder="e.g. Haircut & Beard Trim"
+          placeholder={t.form.appointmentTitlePlaceholder}
           required
           value={values.title}
           onChange={(event) => onChange("title", event.target.value)}
@@ -83,53 +86,53 @@ export function AppointmentFormFields({
       </div>
 
       <div className="space-y-1.5">
-        <Label htmlFor={`${idPrefix}-service`}>Service</Label>
+        <Label htmlFor={`${idPrefix}-service`}>{t.form.serviceLabel}</Label>
         <DropdownField
           id={`${idPrefix}-service`}
           name="serviceId"
-          placeholder="Select a service..."
+          placeholder={t.form.selectServicePlaceholder}
           value={values.serviceId}
           onChange={(value) => onChange("serviceId", value)}
           options={serviceOptions}
-          emptyMessage="No services available"
+          emptyMessage={t.form.noServicesAvailable}
         />
         <FieldError id={`${idPrefix}-service-error`} messages={fieldErrors?.serviceId} />
       </div>
 
       <div className="space-y-1.5">
-        <Label htmlFor={`${idPrefix}-customer`}>Customer</Label>
+        <Label htmlFor={`${idPrefix}-customer`}>{t.form.customerLabel}</Label>
         <DropdownField
           id={`${idPrefix}-customer`}
           name="customerId"
-          placeholder="Select a customer..."
+          placeholder={t.form.selectCustomerPlaceholder}
           value={values.customerId}
           onChange={(value) => onChange("customerId", value)}
           options={customerOptions}
-          emptyMessage="No customers available"
+          emptyMessage={t.form.noCustomersAvailable}
         />
         <FieldError id={`${idPrefix}-customer-error`} messages={fieldErrors?.customerId} />
       </div>
 
       <div className="space-y-1.5">
-        <Label htmlFor={`${idPrefix}-employee`}>Employee / specialist</Label>
+        <Label htmlFor={`${idPrefix}-employee`}>{t.form.employeeLabel}</Label>
         <DropdownField
           id={`${idPrefix}-employee`}
           name="employeeId"
-          placeholder="Select an employee..."
+          placeholder={t.form.selectEmployeePlaceholder}
           value={values.employeeId}
           onChange={(value) => onChange("employeeId", value)}
           options={employeeOptions}
-          emptyMessage="No employees available"
+          emptyMessage={t.form.noEmployeesAvailable}
         />
         <FieldError id={`${idPrefix}-employee-error`} messages={fieldErrors?.employeeId} />
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div className="space-y-1.5">
-          <Label htmlFor={`${idPrefix}-start-date`}>Date</Label>
+          <Label htmlFor={`${idPrefix}-start-date`}>{t.form.dateLabel}</Label>
           <DateField
             id={`${idPrefix}-start-date`}
-            placeholder="Select date..."
+            placeholder={t.form.selectDatePlaceholder}
             value={values.startDate}
             onChange={(value) => onChange("startDate", value)}
             min={minDate}
@@ -137,7 +140,7 @@ export function AppointmentFormFields({
         </div>
 
         <div className="space-y-1.5">
-          <Label htmlFor={`${idPrefix}-start-time`}>Time</Label>
+          <Label htmlFor={`${idPrefix}-start-time`}>{t.form.timeLabel}</Label>
           <TimePickerField
             id={`${idPrefix}-start-time`}
             value={values.startTime}
@@ -147,9 +150,9 @@ export function AppointmentFormFields({
       </div>
 
       <div className="space-y-1 rounded-lg border border-border bg-muted/40 p-3">
-        <p className="text-xs font-semibold text-muted-foreground">Calculated end time</p>
+        <p className="text-xs font-semibold text-muted-foreground">{t.form.calculatedEndTime}</p>
         <p aria-live="polite" className="text-sm font-medium text-foreground">
-          {formattedEnd || "Pick a service, date and time"}
+          {formattedEnd || t.form.pickServiceDateTime}
         </p>
       </div>
     </div>

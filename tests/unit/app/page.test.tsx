@@ -5,9 +5,6 @@ const mocks = vi.hoisted(() => ({
     throw new Error(`REDIRECT:${href}`);
   }),
   cookies: vi.fn(),
-  shell: {
-    resolve: vi.fn(),
-  },
   landing: {
     resolveRoute: vi.fn(),
   },
@@ -19,10 +16,6 @@ vi.mock("next/navigation", () => ({
 
 vi.mock("next/headers", () => ({
   cookies: mocks.cookies,
-}));
-
-vi.mock("@/contexts/shared/application/internal/queryservices/app-shell-query.service", () => ({
-  createAppShellQueryService: () => mocks.shell,
 }));
 
 vi.mock("@/contexts/shared/application/internal/queryservices/entry-route-query.service", () => ({
@@ -39,8 +32,19 @@ describe("HomePage", () => {
     });
   });
 
-  it("redirects a new authenticated user to organization onboarding instead of access denied", async () => {
-    mocks.shell.resolve.mockResolvedValue(null);
+  it("sends an authenticated owner without a subscription to welcome", async () => {
+    mocks.landing.resolveRoute.mockResolvedValue({
+      status: "subscription-required",
+      setupHref: "/welcome",
+      allowedPaths: ["/welcome"],
+    });
+
+    await expect(
+      HomePage({ searchParams: Promise.resolve({}) }),
+    ).rejects.toThrow("REDIRECT:/welcome");
+  });
+
+  it("sends an active owner without an organization to organization onboarding", async () => {
     mocks.landing.resolveRoute.mockResolvedValue({
       status: "organization-required",
       setupHref: "/organizations/new",
@@ -52,8 +56,9 @@ describe("HomePage", () => {
     ).rejects.toThrow("REDIRECT:/organizations/new");
   });
 
-  it("uses the shell home when the workspace is ready", async () => {
-    mocks.shell.resolve.mockResolvedValue({
+  it("uses the resolved workspace home when the account is ready", async () => {
+    mocks.landing.resolveRoute.mockResolvedValue({
+      status: "ready",
       homeHref: "/chat",
     });
 

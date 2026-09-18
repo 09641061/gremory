@@ -4,6 +4,8 @@ import { useEffect } from "react";
 import { useDeleteCatalogService } from "../../hooks/use-delete-catalog-service";
 import { DeleteConfirmDialog } from "@/contexts/shared/interfaces/components/delete-confirm-dialog";
 
+import { useCatalogTranslations } from "../../i18n";
+
 interface DeleteServiceDialogProps {
   serviceId: string;
   serviceName: string;
@@ -19,6 +21,7 @@ export function DeleteServiceDialog({
   onOpenChange,
   onSuccess,
 }: DeleteServiceDialogProps) {
+  const { t } = useCatalogTranslations();
   const { deleteService, pending, state } = useDeleteCatalogService(() => {
     onOpenChange(false);
     if (onSuccess) {
@@ -39,7 +42,7 @@ export function DeleteServiceDialog({
     <DeleteConfirmDialog
       open={open && state.status !== "success"}
       onOpenChange={onOpenChange}
-      entityLabel="service"
+      entityLabel={t.dialogs.deleteServiceEntityLabel}
       entityName={serviceName}
       pending={pending}
       error={state.status === "error" ? state.error : null}

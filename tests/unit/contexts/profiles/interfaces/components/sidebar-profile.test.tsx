@@ -1,93 +1,137 @@
 /** @vitest-environment jsdom */
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+
+const mocks = vi.hoisted(() => ({
+  replace: vi.fn(),
+  signOutAction: vi.fn().mockResolvedValue({ status: "success" }),
+}));
+
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ replace: mocks.replace }),
+}));
+vi.mock("@/contexts/iam/interfaces/actions/sign-out.action", () => ({
+  signOutAction: mocks.signOutAction,
+}));
+
 import { SidebarProfile } from "@/contexts/profiles/interfaces/components/profile/sidebar-profile";
 
-const profile = { username: "mateo", imageUrl: null };
+const profile = { username: "user", imageUrl: null };
+
+function renderSidebarProfile(overrides: Partial<React.ComponentProps<typeof SidebarProfile>> = {}) {
+  return render(<SidebarProfile profile={profile} profileHref="/profile" {...overrides} />);
+}
 
 describe("SidebarProfile", () => {
-  it("should render the username on a trigger that announces a menu", () => {
-    render(<SidebarProfile profile={profile} settingsHref="/settings" />);
+  beforeEach(() => {
+    mocks.replace.mockReset();
+    mocks.signOutAction.mockReset();
+    mocks.signOutAction.mockResolvedValue({ status: "success" });
+  });
 
-    const trigger = screen.getByRole("button", { name: /mateo/i });
+  it("should render the username in a button that announces a menu", () => {
+    renderSidebarProfile();
+
+    const trigger = screen.getByRole("button", { name: /user/i });
     expect(trigger).toBeVisible();
     expect(trigger).toHaveAttribute("aria-haspopup", "menu");
+    expect(trigger).toHaveAttribute("data-slot", "dropdown-menu-trigger");
   });
 
-  it("should fall back to a generic label when there is no profile", () => {
-    render(<SidebarProfile profile={null} settingsHref="/settings" />);
+  it("should keep the menu closed before the trigger is clicked", () => {
+    renderSidebarProfile();
 
-    expect(screen.getByRole("button", { name: /profile/i })).toBeVisible();
+    expect(screen.queryByRole("menu")).toBeNull();
+    expect(screen.queryByRole("menuitem", { name: "Profile" })).toBeNull();
   });
 
-  it("should keep the menu closed until the trigger is clicked", () => {
-    render(<SidebarProfile profile={profile} settingsHref="/settings" />);
-
-    expect(screen.queryByRole("menuitem", { name: "Settings" })).toBeNull();
-  });
-
-  // The menu body lives in a portal, so a context misuse inside it is invisible
-  // to the type checker and to the build. Only opening the menu proves it works.
-  it("should open a menu with Settings and Upgrade plan when clicked", async () => {
+  it("should open profile and billing links when the trigger is clicked", async () => {
     const user = userEvent.setup();
-    render(
-      <SidebarProfile profile={profile} settingsHref="/settings?establishmentId=abc" />
-    );
+    renderSidebarProfile({ profileHref: "/profile?establishmentId=abc" });
 
-    await user.click(screen.getByRole("button", { name: /mateo/i }));
+    await user.click(screen.getByRole("button", { name: /user/i }));
 
-    // The popup mounts into a portal a tick later, so this must be awaited.
-    expect(await screen.findByRole("menuitem", { name: "Settings" })).toHaveAttribute(
+    expect(await screen.findByRole("menuitem", { name: "Profile" })).toHaveAttribute(
       "href",
-      "/settings?establishmentId=abc"
+      "/profile?establishmentId=abc",
     );
     expect(screen.getByRole("menuitem", { name: "Upgrade plan" })).toHaveAttribute(
       "href",
-      "/upgrade"
+      "/upgrade",
     );
   });
 
-  it("should list only Settings, Upgrade plan and Invoices, without an account header", async () => {
+  it("should list billing links and log out without an account header", async () => {
     const user = userEvent.setup();
-    render(<SidebarProfile profile={profile} settingsHref="/settings" />);
+    renderSidebarProfile();
 
-    await user.click(screen.getByRole("button", { name: /mateo/i }));
-    await screen.findByRole("menu");
+    await user.click(screen.getByRole("button", { name: /user/i }));
+    const menu = await screen.findByRole("menu");
 
     expect(screen.getAllByRole("menuitem").map((item) => item.textContent)).toEqual([
-      "Settings",
+      "Profile",
       "Upgrade plan",
       "Invoices",
+      "Log out",
     ]);
-    // The username belongs to the trigger only; it must not repeat in the menu.
-    expect(screen.getByRole("menu")).not.toHaveTextContent("mateo");
+    expect(menu).not.toHaveTextContent("user");
   });
 
-  it("should point Upgrade plan at a caller-supplied route", async () => {
+  it("should point the upgrade link at a caller-supplied route", async () => {
     const user = userEvent.setup();
-    render(
-      <SidebarProfile profile={profile} settingsHref="/settings" upgradeHref="/billing" />
-    );
+    renderSidebarProfile({ upgradeHref: "/billing" });
 
-    await user.click(screen.getByRole("button", { name: /mateo/i }));
+    await user.click(screen.getByRole("button", { name: /user/i }));
 
     expect(await screen.findByRole("menuitem", { name: "Upgrade plan" })).toHaveAttribute(
       "href",
-      "/billing"
+      "/billing",
     );
   });
 
   it("should hide billing links when the account cannot manage billing", async () => {
     const user = userEvent.setup();
-    render(<SidebarProfile profile={profile} settingsHref="/settings" canManageBilling={false} />);
+    renderSidebarProfile({ canManageBilling: false });
 
-    await user.click(screen.getByRole("button", { name: /mateo/i }));
+    await user.click(screen.getByRole("button", { name: /user/i }));
 
-    expect(await screen.findByRole("menuitem", { name: "Settings" })).toHaveAttribute(
+    expect(await screen.findByRole("menuitem", { name: "Profile" })).toHaveAttribute(
       "href",
-      "/settings"
+      "/profile",
     );
     expect(screen.queryByRole("menuitem", { name: "Upgrade plan" })).toBeNull();
     expect(screen.queryByRole("menuitem", { name: "Invoices" })).toBeNull();
+    expect(screen.getByRole("menuitem", { name: "Log out" })).toBeVisible();
+  });
+
+  it("should sign out and redirect to the login page when Log out is clicked", async () => {
+    const user = userEvent.setup();
+    renderSidebarProfile();
+
+    await user.click(screen.getByRole("button", { name: /user/i }));
+    await user.click(await screen.findByRole("menuitem", { name: "Log out" }));
+
+    expect(mocks.signOutAction).toHaveBeenCalledTimes(1);
+    expect(mocks.replace).toHaveBeenCalledWith("/login");
+  });
+
+  it("should keep the avatar fallback visible when there is no image", () => {
+    const { container } = renderSidebarProfile();
+
+    expect(container.querySelector("svg.lucide-user")).toBeInTheDocument();
+  });
+
+  it("should update the visible username when the profile changes", () => {
+    const { rerender } = render(
+      <SidebarProfile profile={{ username: "user", imageUrl: null }} profileHref="/profile" />,
+    );
+
+    expect(screen.getByRole("button", { name: /user/i })).toBeVisible();
+
+    rerender(
+      <SidebarProfile profile={{ username: "carlos", imageUrl: null }} profileHref="/profile" />,
+    );
+
+    expect(screen.getByRole("button", { name: /carlos/i })).toBeVisible();
   });
 });

@@ -34,6 +34,8 @@ const initialActionState: ActionState<Appointment> = {
   fieldErrors: null,
 };
 
+import { useSchedulingTranslations } from "../../i18n";
+
 export function CreateAppointmentForm({
   establishmentId,
   services,
@@ -41,13 +43,14 @@ export function CreateAppointmentForm({
   customers,
   timeZone,
 }: CreateAppointmentFormProps) {
+  const { t } = useSchedulingTranslations();
   const router = useRouter();
   const [state, formAction, isSubmitting] = useActionState(
     createAppointmentAction,
     initialActionState
   );
   const [isNavigating, startTransition] = useTransition();
-  const hasSucceeded = useRef(false);
+  const handledAppointmentIdRef = useRef<string | null>(null);
 
   const [values, setValues] = useState<AppointmentFormValues>(EMPTY_APPOINTMENT_FORM_VALUES);
 
@@ -66,14 +69,19 @@ export function CreateAppointmentForm({
   });
 
   useEffect(() => {
-    if (state.status === "success" && !hasSucceeded.current) {
-      hasSucceeded.current = true;
+    if (
+      state.status === "success" &&
+      state.data?.id &&
+      handledAppointmentIdRef.current !== state.data.id
+    ) {
+      handledAppointmentIdRef.current = state.data.id;
+      setValues(EMPTY_APPOINTMENT_FORM_VALUES);
       startTransition(() => {
         router.push("/schedule");
         router.refresh();
       });
     }
-  }, [state.status, router]);
+  }, [state.status, state.data?.id, router]);
 
   const isWorking = isSubmitting || isNavigating;
 
@@ -81,15 +89,15 @@ export function CreateAppointmentForm({
     <>
       <ErrorAlert
         key={(state.status === "error" ? state.errorId : null) ?? "scheduling-error"}
-        title="Scheduling failed"
+        title={t.form.schedulingFailed}
         message={state.error ?? undefined}
       />
 
       <div className="rounded-lg border border-border bg-card p-6">
         <div className="border-b border-border pb-4">
-          <h1 className="text-xl font-bold text-foreground">New appointment</h1>
+          <h1 className="text-xl font-bold text-foreground">{t.form.newAppointmentTitle}</h1>
           <p className="mt-1.5 text-sm text-muted-foreground">
-            Fill in the details to schedule a new appointment.
+            {t.form.newAppointmentSubtitle}
           </p>
         </div>
 
@@ -117,11 +125,11 @@ export function CreateAppointmentForm({
               disabled={isWorking}
               onClick={() => router.back()}
             >
-              Cancel
+              {t.form.cancel}
             </Button>
             <Button type="submit" disabled={isWorking || !startsAt} className="gap-2">
               {isWorking && <Spinner className="size-4" />}
-              {isWorking ? "Scheduling..." : "Create appointment"}
+              {isWorking ? t.form.scheduling : t.form.createAppointment}
             </Button>
           </div>
         </form>

@@ -120,14 +120,14 @@ describe("groupEstablishmentsByOrganization", () => {
       [{ id: "est-1", name: "Main" }],
       "org-1",
       "Acme",
-      "https://cdn.test/acme.png",
+      "https://picsum.photos/seed/replik-test/800/600",
     );
 
     expect(groups).toEqual([
       {
         organizationId: "org-1",
         organizationName: "Acme",
-        organizationImageUrl: "https://cdn.test/acme.png",
+        organizationImageUrl: "https://picsum.photos/seed/replik-test/800/600",
         establishments: [{ id: "est-1", name: "Main" }],
       },
     ]);
@@ -142,7 +142,7 @@ describe("groupEstablishmentsByOrganization", () => {
       [{ id: "est-1", name: "Main", organizationId: "org-2", organizationName: "Host Org" }],
       "org-1",
       "Acme",
-      "https://cdn.test/acme.png",
+      "https://picsum.photos/seed/replik-test/800/600",
     );
 
     expect(groups[0]?.organizationImageUrl).toBeNull();
@@ -157,11 +157,11 @@ describe("groupEstablishmentsByOrganization", () => {
         name: "Main",
         organizationId: "org-2",
         organizationName: "Host Org",
-        organizationImageUrl: "https://cdn.test/host.png",
+        organizationImageUrl: "https://picsum.photos/seed/replik-test/800/600",
       },
     ]);
 
-    expect(groups[0]?.organizationImageUrl).toBe("https://cdn.test/host.png");
+    expect(groups[0]?.organizationImageUrl).toBe("https://picsum.photos/seed/replik-test/800/600");
   });
 });
 

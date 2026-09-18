@@ -8,6 +8,7 @@ import { Label } from "@/contexts/shared/interfaces/components/ui/label";
 import { Spinner } from "@/contexts/shared/interfaces/components/ui/spinner";
 import { Dialog, DialogContent, DialogTitle } from "@/contexts/shared/interfaces/components/ui/dialog";
 import { useCreateServiceCategory } from "../../hooks/use-create-service-category";
+import { useCatalogTranslations } from "../../i18n";
 
 interface CreateCategoryModalProps {
   isOpen: boolean;
@@ -20,28 +21,29 @@ export function CreateCategoryModal({
   onClose,
   establishmentId,
 }: CreateCategoryModalProps) {
+  const { t } = useCatalogTranslations();
   const { state, formAction, pending } = useCreateServiceCategory(onClose);
 
   return (
     <>
       <ErrorAlert
-        title="Failed to create category"
+        title={t.dialogs.failedToCreateCategory}
         message={state.status === "error" && !pending ? (state.error ?? undefined) : undefined}
       />
 
       <Dialog open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
         <DialogContent>
-          <DialogTitle>New Category</DialogTitle>
+          <DialogTitle>{t.dialogs.newCategoryTitle}</DialogTitle>
 
           <form action={formAction} className="space-y-6 mt-4">
             <input type="hidden" name="establishmentId" value={establishmentId ?? ""} />
 
             <div className="space-y-2">
-              <Label htmlFor="category-name">Category Name</Label>
+              <Label htmlFor="category-name">{t.dialogs.categoryNameLabel}</Label>
               <Input
                 id="category-name"
                 name="name"
-                placeholder="e.g. Barbering & Haircut"
+                placeholder={t.dialogs.categoryNamePlaceholder}
                 required
                 className="bg-card border-border"
               />
@@ -49,7 +51,7 @@ export function CreateCategoryModal({
 
             <div className="flex justify-end gap-3 pt-2">
               <Button type="button" variant="ghost" onClick={onClose} disabled={pending}>
-                Cancel
+                {t.dialogs.cancel}
               </Button>
               <Button
                 type="submit"
@@ -57,7 +59,7 @@ export function CreateCategoryModal({
                 className="gap-2"
               >
                 {pending ? <Spinner className="size-4" /> : <Save className="size-4" />}
-                {pending ? "Saving..." : "Save"}
+                {pending ? t.dialogs.saving : t.dialogs.save}
               </Button>
             </div>
           </form>

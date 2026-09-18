@@ -17,5 +17,5 @@ export function createProfilePreferences(
 }
 
 export function defaultProfilePreferences(): ProfilePreferences {
-  return createProfilePreferences(createLanguage("ES"), createTheme("SYSTEM"));
+  return createProfilePreferences(createLanguage("ES"), createTheme("LIGHT"));
 }

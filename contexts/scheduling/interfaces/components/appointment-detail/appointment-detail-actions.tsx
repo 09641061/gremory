@@ -3,6 +3,8 @@
 import { CalendarClock, Ban, Check, Play, UserX } from "lucide-react";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 
+import { useSchedulingTranslations } from "../../i18n";
+
 interface AppointmentDetailActionsProps {
   status: string;
   onReschedule: () => void;
@@ -24,6 +26,7 @@ export function AppointmentDetailActions({
   canUpdateAppointment,
   canDeleteAppointment,
 }: AppointmentDetailActionsProps) {
+  const { t } = useSchedulingTranslations();
   const isConfirmed = status === "CONFIRMED";
   const isInProgress = status === "IN_PROGRESS";
   const isActive = isConfirmed || isInProgress;
@@ -35,7 +38,7 @@ export function AppointmentDetailActions({
       {canEdit && (
         <Button type="button" size="sm" className="gap-1" onClick={onStart}>
           <Play className="size-4" />
-          Start
+          {t.appointmentDetail.start}
         </Button>
       )}
       {canEdit && (
@@ -47,13 +50,13 @@ export function AppointmentDetailActions({
           onClick={onMarkNoShow}
         >
           <UserX className="size-4" />
-          No show
+          {t.appointmentDetail.noShow}
         </Button>
       )}
       {canUpdateAppointment && isInProgress && (
         <Button type="button" size="sm" className="gap-1" onClick={onComplete}>
           <Check className="size-4" />
-          Complete
+          {t.appointmentDetail.complete}
         </Button>
       )}
       {canEdit && (
@@ -65,7 +68,7 @@ export function AppointmentDetailActions({
           onClick={onReschedule}
         >
           <CalendarClock className="size-4" />
-          Reschedule
+          {t.appointmentDetail.reschedule}
         </Button>
       )}
       {canDeleteAppointment && isActive && (
@@ -77,7 +80,7 @@ export function AppointmentDetailActions({
           onClick={onCancel}
         >
           <Ban className="size-4" />
-          Cancel
+          {t.appointmentDetail.cancel}
         </Button>
       )}
     </div>

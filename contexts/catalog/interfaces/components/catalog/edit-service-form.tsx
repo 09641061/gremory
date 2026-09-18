@@ -16,6 +16,7 @@ import { useUpdateCatalogService } from "../../hooks/use-update-catalog-service"
 import { useChangeCatalogServiceStatus } from "../../hooks/use-change-catalog-service-status";
 import { DeleteServiceDialog } from "./delete-service-dialog";
 import type { DetailedServiceDTO } from "./service-detail-view";
+import { useCatalogTranslations } from "../../i18n";
 
 interface EditServiceFormProps {
   service: DetailedServiceDTO;
@@ -33,6 +34,7 @@ export function EditServiceForm({
   canUpdateService,
   canDeleteService,
 }: EditServiceFormProps) {
+  const { t } = useCatalogTranslations();
   const router = useRouter();
   const [resetKey, setResetKey] = useState(0);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -68,7 +70,7 @@ export function EditServiceForm({
   return (
     <>
       <ErrorAlert
-        title="Failed to process service request"
+        title={t.serviceForm.failedToUpdateService}
         message={errorState && !isActionPending ? (errorState.error ?? undefined) : undefined}
       />
 
@@ -79,7 +81,7 @@ export function EditServiceForm({
             <Card className="rounded-lg border-border bg-card p-6">
               <CardContent className="p-0 space-y-6">
                 <div className="flex justify-between items-center border-b border-border pb-4">
-                  <h1 className="text-xl font-bold text-foreground">Service Settings</h1>
+                  <h1 className="text-xl font-bold text-foreground">{t.serviceForm.editTitle}</h1>
 
                   <div className="flex items-center gap-3">
                     <Badge
@@ -93,24 +95,24 @@ export function EditServiceForm({
                       <span
                         className={`size-1.5 rounded-full ${isActive ? "bg-primary" : "bg-muted-foreground"}`}
                       />
-                      {isActive ? "Active" : service.status === "DELETED" ? "Deleted" : "Inactive"}
+                      {isActive ? t.serviceForm.active : service.status === "DELETED" ? t.serviceForm.deleted : t.serviceForm.inactive}
                     </Badge>
 
                     {(canUpdateService || canDeleteService) && (
                       <EntityActionsMenu
-                        label={`More actions for ${service.name}`}
+                        label={t.serviceForm.moreActionsForService.replace("{name}", service.name)}
                         size="icon-sm"
                         disabled={statusPending || isActionPending}
                         actions={[
                           {
-                            label: isActive ? "Deactivate" : "Activate",
+                            label: isActive ? t.serviceForm.deactivate : t.serviceForm.activate,
                             icon: isActive ? EyeOffIcon : EyeIcon,
                             hidden: !canUpdateService,
                             disabled: statusPending,
                             onSelect: () => changeStatus(service.id, !isActive),
                           },
                           {
-                            label: "Delete",
+                            label: t.serviceForm.delete,
                             icon: Trash2,
                             variant: "destructive",
                             hidden: !canDeleteService,
@@ -170,7 +172,7 @@ export function EditServiceForm({
                       }
                     }}
                   >
-                    Cancel
+                    {t.serviceForm.cancel}
                   </Button>
 
                   {canUpdateService && (
@@ -180,7 +182,7 @@ export function EditServiceForm({
                       className="gap-2"
                     >
                       {updatePending ? <Spinner className="size-4" /> : <Save className="size-4" />}
-                      {updatePending ? "Saving..." : "Save"}
+                      {updatePending ? t.serviceForm.saving : t.serviceForm.save}
                     </Button>
                   )}
                 </div>

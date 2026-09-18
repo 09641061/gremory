@@ -1,7 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { ChevronsUpDown, CircleArrowUp, Settings, Receipt } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useTransition } from "react";
+import { ChevronDown, CircleArrowUp, LogOut, Receipt, User, UserRound } from "lucide-react";
 
 import {
   Avatar,
@@ -12,14 +14,18 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuGroup,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/contexts/shared/interfaces/components/ui/dropdown-menu";
 import type { ProfileViewModel } from "@/contexts/profiles/application/services/profile.view-model";
+import { signOutAction } from "@/contexts/iam/interfaces/actions/sign-out.action";
 import { cn } from "@/lib/utils";
+import { useI18n } from "@/contexts/shared/interfaces/i18n";
 
 type SidebarProfileProps = {
   profile: Pick<ProfileViewModel, "username" | "imageUrl"> | null;
-  settingsHref: string;
+  profileHref: string;
   upgradeHref?: string;
   invoiceHref?: string;
   canManageBilling?: boolean;
@@ -27,86 +33,99 @@ type SidebarProfileProps = {
   active?: boolean;
 };
 
-function getProfileFallback(username: string) {
-  const trimmedUsername = username.trim();
-  if (!trimmedUsername) {
-    return "P";
-  }
-
-  return trimmedUsername.slice(0, 2).toUpperCase();
-}
-
 /**
- * Sidebar footer account control.
- *
- * The `ChevronsUpDown` affordance promises a menu, so the trigger opens one
- * instead of navigating straight to settings.
+ * Existing account control, now hosted by the shared Header.
+ * It deliberately has no SidebarProvider dependency.
  */
 export function SidebarProfile({
   profile,
-  settingsHref,
+  profileHref,
   upgradeHref = "/upgrade",
   invoiceHref = "/invoice",
   canManageBilling = true,
   active = false,
 }: SidebarProfileProps) {
-  const username = profile?.username?.trim() || "Profile";
+  const router = useRouter();
+  const { t } = useI18n();
+  const [pending, startTransition] = useTransition();
+  const username = profile?.username?.trim() || t.sidebarProfile.profile;
+
+  function handleLogout() {
+    startTransition(async () => {
+      const result = await signOutAction();
+      if (result.status === "success") {
+        router.replace("/login");
+      }
+    });
+  }
   const imageUrl = profile?.imageUrl;
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
         className={cn(
-          "group flex h-(--app-sidebar-profile-height) w-full items-center gap-(--app-sidebar-control-gap) rounded-(--app-sidebar-item-radius) border border-border/60 bg-card px-(--app-sidebar-control-padding-x) text-left transition-colors outline-none",
-          "hover:bg-accent/70 hover:text-accent-foreground",
-          "focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50",
-          "data-popup-open:bg-accent/70 data-popup-open:text-accent-foreground",
-          active && "border-accent/40 bg-accent text-accent-foreground",
+          "group/profile flex h-8 items-center gap-1 rounded-md px-1.5 py-1 text-left outline-none transition-colors",
+          "hover:bg-accent hover:text-accent-foreground",
+          "focus-visible:ring-2 focus-visible:ring-ring/50",
+          "data-popup-open:bg-accent data-popup-open:text-accent-foreground",
+          active && "bg-accent text-accent-foreground",
         )}
+        title={username}
+        aria-label={username}
       >
-        <Avatar className="size-(--app-sidebar-avatar-size) shrink-0 border border-border/60 bg-muted">
+        <Avatar className="size-7 shrink-0 bg-muted">
           {/* Above the fold on every route, so it competes for bandwidth. */}
-          <AvatarImage src={imageUrl ?? undefined} alt="" fetchPriority="high" />
-          <AvatarFallback className="bg-muted text-[0.7rem] font-semibold text-muted-foreground">
-            {getProfileFallback(username)}
+          <AvatarImage src={imageUrl ?? undefined} alt={username} fetchPriority="high" />
+          <AvatarFallback className="bg-muted text-muted-foreground">
+            <User className="size-3.5 text-muted-foreground" aria-hidden="true" />
           </AvatarFallback>
         </Avatar>
 
-        <span className="min-w-0 flex-1 truncate text-sm font-medium">{username}</span>
+        <span className="hidden max-w-[8rem] truncate text-xs font-medium text-foreground sm:inline">
+          {username}
+        </span>
 
-        <ChevronsUpDown
-          className={cn(
-            "size-(--app-sidebar-icon-size) shrink-0 text-muted-foreground transition-colors group-hover:text-accent-foreground",
-            active && "text-accent-foreground",
-          )}
+        <ChevronDown
+          className="size-3.5 shrink-0 text-muted-foreground transition-transform group-data-popup-open/profile:rotate-180"
           aria-hidden="true"
         />
       </DropdownMenuTrigger>
 
-      {/* Opens upward: the trigger sits in the sidebar footer. */}
       <DropdownMenuContent
-        side="top"
-        align="start"
+        side="bottom"
+        align="end"
         className="w-(--anchor-width) min-w-56"
       >
-        <DropdownMenuItem render={<Link href={settingsHref} />}>
-          <Settings aria-hidden="true" />
-          Settings
+        <DropdownMenuGroup>
+        <DropdownMenuItem render={<Link href={profileHref} />}>
+          <UserRound aria-hidden="true" />
+          {t.sidebarProfile.profile}
         </DropdownMenuItem>
 
         {canManageBilling ? (
           <>
             <DropdownMenuItem render={<Link href={upgradeHref} />}>
               <CircleArrowUp aria-hidden="true" />
-              Upgrade plan
+              {t.sidebarProfile.upgradePlan}
             </DropdownMenuItem>
 
             <DropdownMenuItem render={<Link href={invoiceHref} />}>
               <Receipt aria-hidden="true" />
-              Invoices
+              {t.sidebarProfile.invoices}
             </DropdownMenuItem>
           </>
         ) : null}
+
+        <DropdownMenuSeparator />
+        <DropdownMenuItem
+          variant="destructive"
+          disabled={pending}
+          onClick={handleLogout}
+        >
+          <LogOut aria-hidden="true" />
+          {pending ? t.sidebarProfile.signingOut : t.sidebarProfile.logOut}
+        </DropdownMenuItem>
+        </DropdownMenuGroup>
       </DropdownMenuContent>
     </DropdownMenu>
   );

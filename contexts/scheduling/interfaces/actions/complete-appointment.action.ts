@@ -15,7 +15,7 @@ export async function completeAppointmentAction(
     const commandService = createSchedulingCommandService(workspace.organization?.id);
     const result = await commandService.completeAppointment(appointmentId);
     revalidatePath("/schedule");
-    return { status: "success", data: result, error: null, fieldErrors: null };
+    return { status: "success", data: result, error: null, errorId: null, fieldErrors: null };
   } catch (error: unknown) {
     console.error("Complete appointment action failed:", error);
     let message = "We could not complete this appointment. Please try again.";

@@ -52,25 +52,25 @@ describe("subscription access policy", () => {
     ).toBe(false);
   });
 
-  it("should lock the assistant permission on the Free plan", () => {
+  it("should lock the assistant permission without an active subscription", () => {
     expect(
       isAssistantPermissionLocked({
-        active: true,
+        active: false,
         status: "ACTIVE",
-        planName: "Free",
+        planName: "Standard",
       }),
     ).toBe(true);
 
     expect(
       isAssistantPermissionLocked({
         active: true,
-        status: "ACTIVE",
-        planName: "free",
+        status: "SUSPENDED",
+        planName: "Standard",
       }),
     ).toBe(true);
   });
 
-  it("should not lock the assistant permission on paid plans", () => {
+  it("should not lock the assistant permission on paid active plans", () => {
     expect(
       isAssistantPermissionLocked({
         active: true,
@@ -83,13 +83,13 @@ describe("subscription access policy", () => {
       isAssistantPermissionLocked({
         active: true,
         status: "ACTIVE",
-        planName: "Premium",
+        planName: "Max",
       }),
     ).toBe(false);
   });
 
-  it("should not lock the assistant permission without subscription data", () => {
-    expect(isAssistantPermissionLocked(null)).toBe(false);
-    expect(isAssistantPermissionLocked(undefined)).toBe(false);
+  it("should lock the assistant permission without subscription data", () => {
+    expect(isAssistantPermissionLocked(null)).toBe(true);
+    expect(isAssistantPermissionLocked(undefined)).toBe(true);
   });
 });

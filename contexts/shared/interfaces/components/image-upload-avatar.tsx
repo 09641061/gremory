@@ -17,6 +17,8 @@ interface ImageUploadAvatarProps {
   /** Icon shown while no file has been chosen. */
   fallbackIcon: ReactNode;
   className?: string;
+  initialUrl?: string | null;
+  onFileSelect?: (file: File | null) => void;
 }
 
 /**
@@ -25,13 +27,39 @@ interface ImageUploadAvatarProps {
  * Owns the object URL lifecycle (create on choose, revoke on change/unmount)
  * so callers only need to supply the field name and the empty-state icon.
  */
-export function ImageUploadAvatar({ name, alt, fallbackIcon, className }: ImageUploadAvatarProps) {
+export function ImageUploadAvatar({
+  name,
+  alt,
+  fallbackIcon,
+  className,
+  initialUrl = null,
+  onFileSelect,
+}: ImageUploadAvatarProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(() => initialUrl);
+
+  useEffect(() => {
+    const input = fileInputRef.current;
+    if (!input?.form) return;
+
+    const handleFormReset = () => {
+      setPreviewUrl(initialUrl);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+      onFileSelect?.(null);
+    };
+
+    const form = input.form;
+    form.addEventListener("reset", handleFormReset);
+    return () => {
+      form.removeEventListener("reset", handleFormReset);
+    };
+  }, [initialUrl, onFileSelect]);
 
   useEffect(() => {
     return () => {
-      if (previewUrl) {
+      if (previewUrl?.startsWith("blob:")) {
         URL.revokeObjectURL(previewUrl);
       }
     };
@@ -44,11 +72,12 @@ export function ImageUploadAvatar({ name, alt, fallbackIcon, className }: ImageU
   const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0] ?? null;
 
-    if (previewUrl) {
+    if (previewUrl?.startsWith("blob:")) {
       URL.revokeObjectURL(previewUrl);
     }
 
     setPreviewUrl(file ? URL.createObjectURL(file) : null);
+    onFileSelect?.(file);
   };
 
   return (
@@ -58,22 +87,26 @@ export function ImageUploadAvatar({ name, alt, fallbackIcon, className }: ImageU
         type="file"
         name={name}
         accept="image/*"
+        aria-label={`Upload ${name.replace(/File$/, "").replace(/([A-Z])/g, " $1").toLowerCase()}`}
         className="hidden"
         onChange={handleChange}
       />
-      <Avatar
-        className={cn(
-          "size-16 cursor-pointer border border-border transition-opacity hover:opacity-80",
-          className,
-        )}
+      <button
+        type="button"
+        aria-label={`Choose ${alt.toLowerCase()}`}
         onClick={handleClick}
+        className="rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       >
-        {previewUrl ? (
-          <AvatarImage src={previewUrl} alt={alt} />
-        ) : (
+        <Avatar
+          className={cn(
+            "size-16 cursor-pointer border border-border transition-opacity hover:opacity-80",
+            className,
+          )}
+        >
+          <AvatarImage src={previewUrl ?? undefined} alt={alt} />
           <AvatarFallback className="bg-muted">{fallbackIcon}</AvatarFallback>
-        )}
-      </Avatar>
+        </Avatar>
+      </button>
     </>
   );
 }

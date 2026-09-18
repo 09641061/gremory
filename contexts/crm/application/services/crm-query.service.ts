@@ -1,12 +1,6 @@
 import { CustomerResponse } from "../../domain/model/entities/customer";
-
-export interface PageResponse<T> {
-  content: T[];
-  pageable: { pageNumber: number; pageSize: number };
-  totalPages: number;
-  totalElements: number;
-  last: boolean;
-}
+import type { PageResponse } from "@/contexts/shared/application/model/page-response";
+export type { PageResponse } from "@/contexts/shared/application/model/page-response";
 
 export interface CrmQueryService {
   search(

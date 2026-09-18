@@ -57,19 +57,25 @@ export function getTimeZoneOffsetMinutes(date: Date, timeZone: string) {
 export function formatDateInTimeZone(
   date: Date,
   timeZone: string,
-  options: Intl.DateTimeFormatOptions
+  options: Intl.DateTimeFormatOptions,
+  locale = "en-US"
 ) {
-  return new Intl.DateTimeFormat("en-US", {
+  return new Intl.DateTimeFormat(locale, {
     ...options,
     timeZone,
   }).format(date);
 }
 
-export function formatTimeInTimeZone(date: Date, timeZone: string) {
-  return formatDateInTimeZone(date, timeZone, {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+export function formatTimeInTimeZone(date: Date, timeZone: string, locale = "en-US") {
+  return formatDateInTimeZone(
+    date,
+    timeZone,
+    {
+      hour: "2-digit",
+      minute: "2-digit",
+    },
+    locale
+  );
 }
 
 export function toTimeZoneDayKey(date: Date, timeZone: string) {

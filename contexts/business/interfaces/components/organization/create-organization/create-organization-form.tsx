@@ -11,6 +11,7 @@ import { Button, buttonVariants } from "@/contexts/shared/interfaces/components/
 import { ErrorAlert } from "@/contexts/shared/interfaces/components/error";
 import { Spinner } from "@/contexts/shared/interfaces/components/ui/spinner";
 import { ImageUploadAvatar } from "@/contexts/shared/interfaces/components/image-upload-avatar";
+import { useBusinessTranslations } from "@/contexts/business/interfaces/i18n";
 
 /**
  * Onboarding step 1: the owner names their organization before anything else
@@ -23,12 +24,20 @@ import { ImageUploadAvatar } from "@/contexts/shared/interfaces/components/image
  * the voluntary path, where the account already has a complete workspace to
  * return to (a member starting a second, separate business).
  */
+import {
+  MAX_ORGANIZATION_NAME_LENGTH,
+  MIN_ORGANIZATION_NAME_LENGTH,
+} from "@/contexts/business/domain/model/valueobjects/organization-name.vo";
+
 export function CreateOrganizationForm({
   showCancel = false,
 }: {
   showCancel?: boolean;
 }) {
+  const { t } = useBusinessTranslations();
   const nameHeadingId = useId();
+  const nameHintId = useId();
+  const nameErrorId = useId();
 
   const [name, setName] = useState("");
 
@@ -47,17 +56,25 @@ export function CreateOrganizationForm({
     }
   }, [state.status]);
 
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const sanitized = e.target.value.replace(/[^a-zA-Z]/g, "").slice(0, MAX_ORGANIZATION_NAME_LENGTH);
+    setName(sanitized);
+  };
+
+  const isTooShort = name.length > 0 && name.length < MIN_ORGANIZATION_NAME_LENGTH;
+  const isValid = name.length >= MIN_ORGANIZATION_NAME_LENGTH && name.length <= MAX_ORGANIZATION_NAME_LENGTH;
+
   return (
     <>
       <ErrorAlert
-        title="Unable to create organization"
+        title={t.organizations.createErrorTitle}
         message={state.status === "error" && !pending ? state.error : undefined}
       />
       <div className="mx-auto w-full max-w-2xl space-y-6">
         <div>
-          <h1 className="page-title">Create your organization</h1>
+          <h1 className="page-title">{t.organizations.createYourOrganization}</h1>
           <p className="page-description mt-2">
-            This is the business that owns your establishments.
+            {t.organizations.createYourOrganizationDescription}
           </p>
         </div>
 
@@ -68,10 +85,9 @@ export function CreateOrganizationForm({
               <div className="flex flex-col border-b border-border">
                 <div className="flex items-center justify-between p-6">
                   <div className="space-y-1">
-                    <h3 className="text-base font-semibold text-foreground">Organization Logo</h3>
+                    <h3 className="text-base font-semibold text-foreground">{t.organizations.logoTitle}</h3>
                     <p className="text-sm text-muted-foreground">
-                      This is your organization logo.<br />
-                      Click on the logo to upload a custom one from your files.
+                      {t.organizations.logoDescription}
                     </p>
                   </div>
                   <ImageUploadAvatar
@@ -86,24 +102,43 @@ export function CreateOrganizationForm({
               <div className="flex flex-col">
                 <div className="space-y-4 p-6">
                   <div className="space-y-1">
-                    {/* The section heading names the only field, so it labels it. */}
-                    <h3 id={nameHeadingId} className="text-base font-semibold text-foreground">
-                      Organization Name
-                    </h3>
-                    <p className="text-sm text-muted-foreground">
-                      Please enter the official name for your organization.
+                    <div className="flex items-center justify-between">
+                      <h3 id={nameHeadingId} className="text-base font-semibold text-foreground">
+                        {t.organizations.nameLabel}
+                      </h3>
+                      <span className="text-xs text-muted-foreground" aria-live="polite">
+                        {name.length}/{MAX_ORGANIZATION_NAME_LENGTH}
+                      </span>
+                    </div>
+                    <p id={nameHintId} className="text-sm text-muted-foreground">
+                      {t.organizations.nameHint
+                        .replace("{min}", String(MIN_ORGANIZATION_NAME_LENGTH))
+                        .replace("{max}", String(MAX_ORGANIZATION_NAME_LENGTH))}
                     </p>
                   </div>
                   <div className="max-w-xs">
                     <Input
                       name="name"
                       aria-labelledby={nameHeadingId}
+                      aria-describedby={`${nameHintId}${isTooShort ? ` ${nameErrorId}` : ""}`}
+                      aria-invalid={isTooShort}
                       value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      placeholder="Organization name"
-                      maxLength={150}
+                      onChange={handleNameChange}
+                      placeholder={t.organizations.namePlaceholder}
+                      maxLength={MAX_ORGANIZATION_NAME_LENGTH}
+                      minLength={MIN_ORGANIZATION_NAME_LENGTH}
+                      pattern="^[a-zA-Z]+$"
+                      autoComplete="organization"
+                      autoCapitalize="none"
+                      spellCheck={false}
+                      disabled={pending}
                       required
                     />
+                    {isTooShort ? (
+                      <p id={nameErrorId} role="alert" className="mt-1 text-xs font-medium text-destructive">
+                        {t.organizations.nameMinError.replace("{min}", String(MIN_ORGANIZATION_NAME_LENGTH))}
+                      </p>
+                    ) : null}
                   </div>
                 </div>
               </div>
@@ -112,12 +147,12 @@ export function CreateOrganizationForm({
             <CardFooter className="justify-end gap-2 rounded-b-xl border-t border-border bg-card px-6 py-5">
               {showCancel && (
                 <Link href="/" className={buttonVariants({ variant: "ghost" })}>
-                  Cancel
+                  {t.organizations.cancelButton}
                 </Link>
               )}
-              <Button type="submit" disabled={pending} className="gap-2">
+              <Button type="submit" disabled={pending || !isValid} className="gap-2">
                 {pending ? <Spinner className="size-4" /> : <Plus className="size-4" />}
-                {pending ? "Creating..." : "Continue"}
+                {pending ? t.organizations.creatingButton : t.organizations.continueButton}
               </Button>
             </CardFooter>
           </form>

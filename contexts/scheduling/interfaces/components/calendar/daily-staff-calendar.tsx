@@ -91,8 +91,13 @@ export function DailyStaffCalendar({
   }
 
   return (
-    <div className="flex h-[calc(100dvh-6rem)] w-full flex-col overflow-y-auto rounded-xl border border-border bg-background text-foreground shadow-sm">
-      <div className="sticky top-0 z-20 bg-background rounded-t-xl">
+    <div
+      data-testid="schedule-calendar"
+      className="flex min-h-0 flex-1 w-full flex-col overflow-hidden rounded-xl border border-border bg-background text-foreground shadow-sm"
+    >
+      {/* Toolbar and member columns live outside the scroll region. Only the
+          hour grid below is allowed to scroll. */}
+      <div className="shrink-0 bg-background rounded-t-xl">
         <div className="px-4 border-b">
           <CalendarToolbar
             currentDate={currentDate}
@@ -109,7 +114,12 @@ export function DailyStaffCalendar({
             canCreateAppointment={canCreateAppointment}
           />
         </div>
+      </div>
 
+      <div
+        data-testid="schedule-calendar-columns-header"
+        className="shrink-0 bg-background border-b"
+      >
         <StaffColumnsHeader
           employees={members}
           visibleEmployees={visibleEmployees}
@@ -120,21 +130,26 @@ export function DailyStaffCalendar({
         />
       </div>
 
-      <DailyStaffGrid
-        currentDate={currentDate}
-        visibleEmployees={visibleEmployees}
-        appointments={appointments}
-        timeZone={timeZone}
-        maxColumns={maxColumns}
-        now={now}
-        onAppointmentClick={setSelectedAppointment}
-        onTimeSlotClick={(employeeId) => {
-          if (!canCreateAppointment) return;
-          router.push(
-            `/schedule/new?establishmentId=${encodeURIComponent(establishmentId)}&employeeId=${encodeURIComponent(employeeId)}`,
-          );
-        }}
-      />
+      <div
+        data-testid="schedule-calendar-scroll-container"
+        className="scrollbar-hide min-h-0 flex-1 overflow-y-auto overscroll-contain"
+      >
+        <DailyStaffGrid
+          currentDate={currentDate}
+          visibleEmployees={visibleEmployees}
+          appointments={appointments}
+          timeZone={timeZone}
+          maxColumns={maxColumns}
+          now={now}
+          onAppointmentClick={setSelectedAppointment}
+          onTimeSlotClick={(employeeId) => {
+            if (!canCreateAppointment) return;
+            router.push(
+              `/schedule/new?establishmentId=${encodeURIComponent(establishmentId)}&employeeId=${encodeURIComponent(employeeId)}`,
+            );
+          }}
+        />
+      </div>
 
       {selectedAppointment && (
         <AppointmentDetailModal

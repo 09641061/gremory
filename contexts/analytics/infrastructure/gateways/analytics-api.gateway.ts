@@ -1,37 +1,69 @@
 import "server-only";
 
-import { apiConfig } from "@/api.config";
-import type { FreeAnalyticsDashboard } from "@/contexts/analytics/domain/model/free-analytics-dashboard";
-import type { StandardAnalyticsDashboard } from "@/contexts/analytics/domain/model/standard-analytics-dashboard";
-import type { FreeAnalyticsRepository } from "@/contexts/analytics/domain/services/free-analytics.repository";
-import {
-  freeAnalyticsDashboardSchema,
-  standardAnalyticsDashboardSchema,
-} from "@/contexts/analytics/interfaces/rest/schemas/free-analytics-dashboard.schema";
 import { apiClient } from "@/contexts/shared/infrastructure/http/api-client";
+import { apiConfig } from "@/api.config";
+import {
+  standardAnalyticsDashboardResponseSchema,
+  type StandardAnalyticsDashboardResponse,
+} from "../../interfaces/rest/schemas/standard-analytics.schemas";
+import {
+  maxAnalyticsDashboardResponseSchema,
+  type MaxAnalyticsDashboardResponse,
+} from "../../interfaces/rest/schemas/max-analytics.schemas";
 
-export class AnalyticsApiGateway implements FreeAnalyticsRepository {
-  async getFreeDashboard(accessToken: string): Promise<FreeAnalyticsDashboard> {
-    const response = await apiClient.get<unknown>(apiConfig.routes.analytics.free, {
-      token: accessToken,
-      errorMessage: "Failed to fetch free analytics dashboard",
-    });
+export interface AnalyticsQueryParams {
+  establishmentId?: string;
+  from: string;
+  to: string;
+  organizationId?: string;
+}
 
-    return freeAnalyticsDashboardSchema.parse(response) as FreeAnalyticsDashboard;
-  }
+export class AnalyticsApiGateway {
+  static async getStandardDashboard(
+    query: AnalyticsQueryParams,
+    token?: string
+  ): Promise<StandardAnalyticsDashboardResponse> {
+    const headers: Record<string, string> = {};
+    if (query.organizationId) {
+      headers["X-Organization-Id"] = query.organizationId;
+    }
 
-  async getStandardDashboard(
-    accessToken: string,
-    range?: { from?: string; to?: string },
-  ): Promise<StandardAnalyticsDashboard> {
     const params = new URLSearchParams();
-    if (range?.from) params.set("from", range.from);
-    if (range?.to) params.set("to", range.to);
-    const path = params.size > 0 ? `${apiConfig.routes.analytics.standard}?${params}` : apiConfig.routes.analytics.standard;
-    const response = await apiClient.get<unknown>(path, {
-      token: accessToken,
+    if (query.establishmentId) params.set("establishmentId", query.establishmentId);
+    params.set("from", query.from);
+    params.set("to", query.to);
+
+    const endpoint = `${apiConfig.routes.analytics.standard}?${params.toString()}`;
+    const response = await apiClient.get<unknown>(endpoint, {
+      token,
+      headers,
       errorMessage: "Failed to fetch standard analytics dashboard",
     });
-    return standardAnalyticsDashboardSchema.parse(response) as StandardAnalyticsDashboard;
+
+    return standardAnalyticsDashboardResponseSchema.parse(response);
+  }
+
+  static async getMaxDashboard(
+    query: AnalyticsQueryParams,
+    token?: string
+  ): Promise<MaxAnalyticsDashboardResponse> {
+    const headers: Record<string, string> = {};
+    if (query.organizationId) {
+      headers["X-Organization-Id"] = query.organizationId;
+    }
+
+    const params = new URLSearchParams();
+    if (query.establishmentId) params.set("establishmentId", query.establishmentId);
+    params.set("from", query.from);
+    params.set("to", query.to);
+
+    const endpoint = `${apiConfig.routes.analytics.max}?${params.toString()}`;
+    const response = await apiClient.get<unknown>(endpoint, {
+      token,
+      headers,
+      errorMessage: "Failed to fetch max analytics dashboard",
+    });
+
+    return maxAnalyticsDashboardResponseSchema.parse(response);
   }
 }

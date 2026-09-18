@@ -59,11 +59,8 @@ export function EntityListRow({
         className="flex min-w-0 flex-1 cursor-pointer items-center gap-3 text-left outline-none focus-visible:bg-muted/40"
       >
         <Avatar>
-          {avatarSrc ? (
-            <AvatarImage src={avatarSrc} alt={name} />
-          ) : (
-            <AvatarFallback>{avatarFallbackIcon}</AvatarFallback>
-          )}
+          <AvatarImage src={avatarSrc ?? undefined} alt={name} />
+          <AvatarFallback>{avatarFallbackIcon}</AvatarFallback>
         </Avatar>
         <div className="flex min-w-0 flex-1 items-center gap-2">
           <p className="truncate text-sm font-medium text-foreground">{name}</p>

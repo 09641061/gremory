@@ -1,6 +1,7 @@
 "use client";
 
 import { DeleteConfirmDialog } from "@/contexts/shared/interfaces/components/delete-confirm-dialog";
+import { useAssistantTranslations } from "@/contexts/assistant/interfaces/i18n";
 
 type AssistantConversationDeleteDialogProps = {
   open: boolean;
@@ -19,11 +20,12 @@ export function AssistantConversationDeleteDialog({
   onOpenChange,
   onConfirm,
 }: AssistantConversationDeleteDialogProps) {
+  const { t } = useAssistantTranslations();
   return (
     <DeleteConfirmDialog
       open={open}
       onOpenChange={onOpenChange}
-      entityLabel="conversation"
+      entityLabel={t.chat.deleteEntityLabel}
       entityName={title}
       pending={isSaving}
       error={error}

@@ -21,7 +21,7 @@ describe("Business value objects", () => {
   });
 
   it("shouldRejectEstablishmentNameWhenNameExceedsTheLimit", () => {
-    expect(() => createEstablishmentName("a".repeat(101))).toThrow("100 characters");
+    expect(() => createEstablishmentName("a".repeat(21))).toThrow("between 3 and 20 characters");
   });
 
   it("shouldAcceptNullPhotoWhenEstablishmentHasNoPhoto", () => {
@@ -29,7 +29,7 @@ describe("Business value objects", () => {
   });
 
   it("shouldCreateOrganizationImageWhenUrlIsValid", () => {
-    expect(createOrganizationImage("  https://example.com/logo.png  ").value).toBe("https://example.com/logo.png");
+    expect(createOrganizationImage("  https://picsum.photos/seed/replik-test/800/600  ").value).toBe("https://picsum.photos/seed/replik-test/800/600");
   });
 
   it("shouldRejectOrganizationImageWhenUrlExceedsTheLimit", () => {
@@ -42,43 +42,43 @@ describe("Business entities", () => {
     const organization = Organization.create({
       id: createOrganizationId(organizationId),
       ownerId: organizationId,
-      name: createOrganizationName("Old name"),
+      name: createOrganizationName("OldName"),
       imageUrl: createOrganizationImage(null),
       active: true,
     });
 
-    organization.rename("New name");
+    organization.rename("NewName");
 
-    expect(organization.name.value).toBe("New name");
+    expect(organization.name.value).toBe("NewName");
   });
 
   it("shouldUpdateOrganizationDetailsWhenValuesAreValid", () => {
     const organization = Organization.create({
       id: createOrganizationId(organizationId),
       ownerId: organizationId,
-      name: createOrganizationName("Old name"),
+      name: createOrganizationName("OldName"),
       imageUrl: createOrganizationImage(null),
       active: true,
     });
 
-    organization.update("New name", "https://example.com/logo.png");
+    organization.update("NewName", "https://picsum.photos/seed/replik-test/800/600");
 
-    expect(organization.name.value).toBe("New name");
-    expect(organization.imageUrl.value).toBe("https://example.com/logo.png");
+    expect(organization.name.value).toBe("NewName");
+    expect(organization.imageUrl.value).toBe("https://picsum.photos/seed/replik-test/800/600");
   });
 
   it("shouldUpdateEstablishmentDetailsWhenValuesAreValid", () => {
     const establishment = Establishment.create({
       id: createEstablishmentId(establishmentId),
       organizationId: createOrganizationId(organizationId),
-      name: createEstablishmentName("Old shop"),
+      name: createEstablishmentName("OldShop"),
       photoUrl: createEstablishmentPhoto(null),
       active: true,
     });
 
-    establishment.update("New shop", "https://example.com/shop.png");
+    establishment.update("NewShop", "https://picsum.photos/seed/replik-test/800/600");
 
-    expect(establishment.name.value).toBe("New shop");
-    expect(establishment.photoUrl.value).toBe("https://example.com/shop.png");
+    expect(establishment.name.value).toBe("NewShop");
+    expect(establishment.photoUrl.value).toBe("https://picsum.photos/seed/replik-test/800/600");
   });
 });

@@ -37,12 +37,21 @@ describe("UpgradePage", () => {
     mocks.workspace.resolve.mockResolvedValue({ homeHref: "/chat" });
     mocks.businessWorkspace.getHeaderViewModel.mockResolvedValue({
       accessPolicy: { canManageBilling: false },
+      organization: { id: "org-1" },
     });
   });
 
-  it("redirects from the dynamic content when the workspace does not allow billing", async () => {
+  it("renders SubscribeView when billing is managed by the owner", async () => {
+    mocks.businessWorkspace.getHeaderViewModel.mockResolvedValue({
+      accessPolicy: { canManageBilling: true },
+      organization: { id: "org-1" },
+    });
+    mocks.subscription.getCurrentSubscriptionSnapshot.mockResolvedValue(null);
+    mocks.plans.mockResolvedValue({});
+
     const page = UpgradePage();
-    await expect(page.props.children.type()).rejects.toThrow("REDIRECT:/chat");
-    expect(mocks.plans).not.toHaveBeenCalled();
+    const rendered = await page.props.children.type({ params: {} });
+    expect(mocks.plans).toHaveBeenCalled();
+    expect(rendered).toBeTruthy();
   });
 });

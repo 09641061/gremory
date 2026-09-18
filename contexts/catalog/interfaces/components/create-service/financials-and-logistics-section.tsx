@@ -19,13 +19,17 @@ function numberFieldValue(value?: number) {
   return value ? String(value) : "";
 }
 
+import { useCatalogTranslations } from "../../i18n";
+
 export function FinancialsAndLogisticsSection({ defaultValues, disabled }: FinancialsAndLogisticsSectionProps) {
+  const { t } = useCatalogTranslations();
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
       {/* Financials */}
       <div className="space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="price">Price ($)</Label>
+          <Label htmlFor="price">{t.serviceForm.priceLabel}</Label>
           <div className="relative">
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
               $
@@ -50,12 +54,12 @@ export function FinancialsAndLogisticsSection({ defaultValues, disabled }: Finan
 
         <div className="grid grid-cols-3 gap-3">
           <div className="space-y-1.5">
-            <Label htmlFor="durationMinutes" className="text-xs">Duration (min)</Label>
+            <Label htmlFor="durationMinutes" className="text-xs">{t.serviceForm.durationLabel}</Label>
             <Input
               id="durationMinutes"
               name="durationMinutes"
               type="number"
-              placeholder="30"
+              placeholder={t.serviceForm.durationPlaceholder}
               defaultValue={numberFieldValue(defaultValues?.durationMinutes)}
               required
               className="bg-card border-border text-xs px-2"
@@ -63,24 +67,24 @@ export function FinancialsAndLogisticsSection({ defaultValues, disabled }: Finan
             />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="preparationMinutes" className="text-xs">Prep. (min)</Label>
+            <Label htmlFor="preparationMinutes" className="text-xs">{t.serviceForm.prepLabel}</Label>
             <Input
               id="preparationMinutes"
               name="preparationMinutes"
               type="number"
-              placeholder="0"
+              placeholder={t.serviceForm.prepPlaceholder}
               defaultValue={numberFieldValue(defaultValues?.preparationMinutes)}
               className="bg-card border-border text-xs px-2"
               disabled={disabled}
             />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="cleanupMinutes" className="text-xs">Clean. (min)</Label>
+            <Label htmlFor="cleanupMinutes" className="text-xs">{t.serviceForm.cleanLabel}</Label>
             <Input
               id="cleanupMinutes"
               name="cleanupMinutes"
               type="number"
-              placeholder="0"
+              placeholder={t.serviceForm.cleanPlaceholder}
               defaultValue={numberFieldValue(defaultValues?.cleanupMinutes)}
               className="bg-card border-border text-xs px-2"
               disabled={disabled}

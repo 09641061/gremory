@@ -37,13 +37,25 @@ vi.mock("@/contexts/business/interfaces/components/organization/organizations-pa
   },
 }));
 
-import OrganizationsRoutePage from "@/app/(protected)/(configuration)/organizations/page";
+import OrganizationsRoutePage, {
+  OrganizationsRoutePageContent,
+} from "@/app/(protected)/(configuration)/organizations/page";
 
 describe("OrganizationsRoutePage", () => {
   beforeEach(() => {
     vi.resetAllMocks();
     mocks.cookies.mockResolvedValue({
       get: vi.fn(() => null),
+    });
+  });
+
+  it("wraps the organizations content in Suspense", () => {
+    const element = OrganizationsRoutePage({ searchParams: Promise.resolve({}) });
+
+    expect(element).toMatchObject({
+      props: expect.objectContaining({
+        fallback: expect.any(Object),
+      }),
     });
   });
 
@@ -96,7 +108,7 @@ describe("OrganizationsRoutePage", () => {
       },
     ]);
 
-    const element = await OrganizationsRoutePage({
+    const element = await OrganizationsRoutePageContent({
       searchParams: Promise.resolve({ organizationId: "own-org" }),
     });
 
@@ -158,7 +170,7 @@ describe("OrganizationsRoutePage", () => {
       },
     ]);
 
-    const element = await OrganizationsRoutePage({
+    const element = await OrganizationsRoutePageContent({
       searchParams: Promise.resolve({
         organizationId: "host-org",
         previewOrganizationId: "own-org",

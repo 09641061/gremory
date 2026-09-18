@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { pageResponseSchema } from "@/contexts/shared/interfaces/rest/schemas/page-response.schema";
 
 export const submitAssistantMessageSchema = z.object({
   conversationId: z.string().min(1).optional().nullable(),
@@ -72,11 +73,4 @@ export const assistantConversationResponseSchema = assistantConversationSummaryR
   messages: z.array(assistantMessageResponseSchema),
 });
 
-export const assistantConversationPageResponseSchema = z.object({
-  content: z.array(assistantConversationSummaryResponseSchema),
-  pageable: z.object({ pageNumber: z.number().int(), pageSize: z.number().int() }),
-  totalElements: z.number().int().nonnegative(),
-  totalPages: z.number().int().nonnegative(),
-  first: z.boolean(),
-  last: z.boolean(),
-});
+export const assistantConversationPageResponseSchema = pageResponseSchema(assistantConversationSummaryResponseSchema);

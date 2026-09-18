@@ -1,15 +1,44 @@
 import { z } from "zod";
+import {
+  MAX_ESTABLISHMENT_NAME_LENGTH,
+  MIN_ESTABLISHMENT_NAME_LENGTH,
+  ESTABLISHMENT_NAME_REGEX,
+} from "@/contexts/business/domain/model/valueobjects/establishment-name.vo";
 
 export const createEstablishmentSchema = z.object({
   organizationId: z.string().uuid("Invalid organization ID"),
-  name: z.string().trim().min(1, "Establishment name is required").max(100),
+  name: z
+    .string()
+    .trim()
+    .min(1, "Establishment name is required")
+    .min(
+      MIN_ESTABLISHMENT_NAME_LENGTH,
+      `Establishment name must be at least ${MIN_ESTABLISHMENT_NAME_LENGTH} characters`
+    )
+    .max(
+      MAX_ESTABLISHMENT_NAME_LENGTH,
+      `Establishment name must be at most ${MAX_ESTABLISHMENT_NAME_LENGTH} characters`
+    )
+    .regex(ESTABLISHMENT_NAME_REGEX, "Establishment name must contain only letters (A-Z, a-z)"),
   photoUrl: z.string().trim().max(500).optional().nullable(),
   timeZone: z.string().trim().min(1, "Time zone is required").max(100),
 });
 
 export const updateEstablishmentSchema = z.object({
   id: z.string().uuid("Invalid establishment ID"),
-  name: z.string().trim().min(1, "Establishment name is required").max(100),
+  name: z
+    .string()
+    .trim()
+    .min(1, "Establishment name is required")
+    .min(
+      MIN_ESTABLISHMENT_NAME_LENGTH,
+      `Establishment name must be at least ${MIN_ESTABLISHMENT_NAME_LENGTH} characters`
+    )
+    .max(
+      MAX_ESTABLISHMENT_NAME_LENGTH,
+      `Establishment name must be at most ${MAX_ESTABLISHMENT_NAME_LENGTH} characters`
+    )
+    .regex(ESTABLISHMENT_NAME_REGEX, "Establishment name must contain only letters (A-Z, a-z)"),
   photoUrl: z.string().trim().max(500).optional().nullable(),
   timeZone: z.string().trim().min(1, "Time zone is required").max(100).optional().nullable(),
   ownerAvailableForScheduling: z.boolean().optional(),

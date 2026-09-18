@@ -6,6 +6,7 @@ import { StatusBadge } from "@/contexts/shared/interfaces/components/ui/status-b
 import { Card, CardContent } from "@/contexts/shared/interfaces/components/ui/card";
 import { EntityListRow } from "@/contexts/shared/interfaces/components/entity-list-row";
 import type { OrganizationListItem } from "./organizations-page";
+import { useBusinessTranslations } from "@/contexts/business/interfaces/i18n";
 
 interface OrganizationListCardProps {
   filteredOrganizations: ReadonlyArray<OrganizationListItem>;
@@ -20,6 +21,8 @@ export function OrganizationListCard({
   activeOrganizationId,
   onPreview,
 }: OrganizationListCardProps) {
+  const { t } = useBusinessTranslations();
+
   return (
     <Card className="lg:flex lg:min-h-0 lg:flex-1 lg:flex-col">
       <CardContent className="p-0 lg:flex lg:min-h-0 lg:flex-1 lg:flex-col">
@@ -27,7 +30,7 @@ export function OrganizationListCard({
           {filteredOrganizations.length === 0 ? (
             <div className="flex flex-col items-center gap-3 px-5 py-12 text-center text-sm text-muted-foreground">
               <Building2 className="size-8" aria-hidden="true" />
-              <span>No organizations found.</span>
+              <span>{t.organizations.noOrganizationsFound}</span>
             </div>
           ) : (
             filteredOrganizations.map((org) => {
@@ -42,7 +45,7 @@ export function OrganizationListCard({
                   selected={previewing}
                   onSelect={() => onPreview(org.organizationId)}
                   badges={
-                    active ? <StatusBadge tone="success">Selected</StatusBadge> : null
+                    active ? <StatusBadge tone="success">{t.organizations.selected}</StatusBadge> : null
                   }
                 />
               );

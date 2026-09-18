@@ -28,8 +28,7 @@ export function AuthCallback({ returnTo = null }: { returnTo?: string | null }) 
       void (async () => {
         try {
           await createSessionAction({ accessToken, refreshToken });
-          // Let the proxy resolve the best landing page for the new session.
-          router.replace(returnTo ?? "/");
+          router.replace(returnTo ?? "/welcome");
         } catch {
           redirectToLogin();
         }
@@ -41,7 +40,7 @@ export function AuthCallback({ returnTo = null }: { returnTo?: string | null }) 
       void (async () => {
         try {
           await exchangeGoogleCodeAction(code);
-          router.replace(returnTo ?? "/");
+          router.replace(returnTo ?? "/welcome");
         } catch {
           redirectToLogin();
         }
@@ -49,7 +48,7 @@ export function AuthCallback({ returnTo = null }: { returnTo?: string | null }) 
       return;
     }
 
-    router.replace("/");
+    router.replace("/welcome");
   }, [returnTo, router]);
 
   return (

@@ -10,6 +10,7 @@ import {
 } from "@/contexts/business/domain/services/workspace-navigation.policy";
 import { OrganizationBadge } from "@/contexts/business/interfaces/components/workspace/organization-badge/organization-badge";
 import { WorkspaceAvatar } from "@/contexts/business/interfaces/components/workspace/workspace-avatar/workspace-avatar";
+import { useBusinessTranslations } from "@/contexts/business/interfaces/i18n";
 
 /**
  * The sidebar answers one question only: which establishment am I working in?
@@ -26,6 +27,7 @@ export function WorkspaceSwitcher({
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const { t } = useBusinessTranslations();
 
   const { organization, establishments, accountType } = workspace;
   const requestedEstablishmentId = searchParams.get("establishmentId");
@@ -71,10 +73,10 @@ export function WorkspaceSwitcher({
               )
           : undefined
       }
-      allLabel="All Establishments"
-      searchPlaceholder="Find establishment..."
-      emptyMessage="No establishments found"
-      newLabel="New establishment"
+      allLabel={t.workspace.allEstablishments}
+      searchPlaceholder={t.workspace.findEstablishment}
+      emptyMessage={t.workspace.noEstablishmentsFound}
+      newLabel={t.workspace.newEstablishment}
       onNew={
         workspace.canCreateEstablishment
           ? () => router.push("/establishments/new")
@@ -111,7 +113,7 @@ export function WorkspaceSwitcher({
           </span>
         )}
         <span className="w-full truncate text-sm font-medium">
-          {activeEstablishment?.name ?? "Select establishment"}
+          {activeEstablishment?.name ?? t.workspace.selectEstablishment}
         </span>
       </span>
     </SearchableOptions>

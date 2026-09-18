@@ -12,6 +12,7 @@ import { ErrorAlert } from "@/contexts/shared/interfaces/components/error";
 import { Spinner } from "@/contexts/shared/interfaces/components/ui/spinner";
 import { ImageUploadAvatar } from "@/contexts/shared/interfaces/components/image-upload-avatar";
 import { TimeZoneField } from "../time-zone-field";
+import { useBusinessTranslations } from "@/contexts/business/interfaces/i18n";
 
 /**
  * `showCancel` must stay false during mandatory onboarding (`ESTABLISHMENT_PENDING`):
@@ -20,6 +21,11 @@ import { TimeZoneField } from "../time-zone-field";
  * account right back here. It is true once onboarding is already completed,
  * e.g. an owner adding another establishment to an org that already has one.
  */
+import {
+  MAX_ESTABLISHMENT_NAME_LENGTH,
+  MIN_ESTABLISHMENT_NAME_LENGTH,
+} from "@/contexts/business/domain/model/valueobjects/establishment-name.vo";
+
 export function CreateEstablishmentForm({
   organizationId,
   showCancel = false,
@@ -27,7 +33,10 @@ export function CreateEstablishmentForm({
   organizationId: string;
   showCancel?: boolean;
 }) {
+  const { t } = useBusinessTranslations();
   const nameHeadingId = useId();
+  const nameHintId = useId();
+  const nameErrorId = useId();
 
   const [name, setName] = useState("");
   const [timeZone, setTimeZone] = useState("America/Lima");
@@ -48,17 +57,25 @@ export function CreateEstablishmentForm({
     }
   }, [state.error, state.status]);
 
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const sanitized = e.target.value.replace(/[^a-zA-Z]/g, "").slice(0, MAX_ESTABLISHMENT_NAME_LENGTH);
+    setName(sanitized);
+  };
+
+  const isTooShort = name.length > 0 && name.length < MIN_ESTABLISHMENT_NAME_LENGTH;
+  const isValid = name.length >= MIN_ESTABLISHMENT_NAME_LENGTH && name.length <= MAX_ESTABLISHMENT_NAME_LENGTH;
+
   return (
     <>
       <ErrorAlert
-        title="Unable to create establishment"
+        title={t.establishments.createErrorTitle}
         message={state.status === "error" && !pending ? state.error : undefined}
       />
       <div className="mx-auto w-full max-w-2xl space-y-6">
         <div>
-          <h1 className="page-title">New establishment</h1>
+          <h1 className="page-title">{t.establishments.newTitle}</h1>
           <p className="page-description mt-2">
-            Add a location for your organization.
+            {t.establishments.newDescription}
           </p>
         </div>
 
@@ -71,10 +88,9 @@ export function CreateEstablishmentForm({
               <div className="flex flex-col border-b border-border">
                 <div className="flex items-center justify-between p-6">
                   <div className="space-y-1">
-                    <h3 className="text-base font-semibold text-foreground">Establishment Photo</h3>
+                    <h3 className="text-base font-semibold text-foreground">{t.establishments.photoTitle}</h3>
                     <p className="text-sm text-muted-foreground">
-                      This is your establishment photo.<br />
-                      Click on the photo to upload a custom one from your files.
+                      {t.establishments.photoDescription}
                     </p>
                   </div>
                   <ImageUploadAvatar
@@ -89,24 +105,43 @@ export function CreateEstablishmentForm({
               <div className="flex flex-col">
                 <div className="space-y-4 p-6">
                   <div className="space-y-1">
-                    {/* The section heading names the only field, so it labels it. */}
-                    <h3 id={nameHeadingId} className="text-base font-semibold text-foreground">
-                      Establishment Name
-                    </h3>
-                    <p className="text-sm text-muted-foreground">
-                      Please enter the official name for your establishment.
+                    <div className="flex items-center justify-between">
+                      <h3 id={nameHeadingId} className="text-base font-semibold text-foreground">
+                        {t.establishments.nameLabel}
+                      </h3>
+                      <span className="text-xs text-muted-foreground" aria-live="polite">
+                        {name.length}/{MAX_ESTABLISHMENT_NAME_LENGTH}
+                      </span>
+                    </div>
+                    <p id={nameHintId} className="text-sm text-muted-foreground">
+                      {t.establishments.nameHint
+                        .replace("{min}", String(MIN_ESTABLISHMENT_NAME_LENGTH))
+                        .replace("{max}", String(MAX_ESTABLISHMENT_NAME_LENGTH))}
                     </p>
                   </div>
                   <div className="max-w-xs">
                     <Input
                       name="name"
                       aria-labelledby={nameHeadingId}
+                      aria-describedby={`${nameHintId}${isTooShort ? ` ${nameErrorId}` : ""}`}
+                      aria-invalid={isTooShort}
                       value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      placeholder="Establishment name"
-                      maxLength={32}
+                      onChange={handleNameChange}
+                      placeholder={t.establishments.namePlaceholder}
+                      maxLength={MAX_ESTABLISHMENT_NAME_LENGTH}
+                      minLength={MIN_ESTABLISHMENT_NAME_LENGTH}
+                      pattern="^[a-zA-Z]+$"
+                      autoComplete="organization"
+                      autoCapitalize="none"
+                      spellCheck={false}
+                      disabled={pending}
                       required
                     />
+                    {isTooShort ? (
+                      <p id={nameErrorId} role="alert" className="mt-1 text-xs font-medium text-destructive">
+                        {t.establishments.nameMinError.replace("{min}", String(MIN_ESTABLISHMENT_NAME_LENGTH))}
+                      </p>
+                    ) : null}
                   </div>
                 </div>
               </div>
@@ -114,9 +149,9 @@ export function CreateEstablishmentForm({
               <div className="flex flex-col border-t border-border">
                 <div className="space-y-4 p-6">
                   <div className="space-y-1">
-                    <h3 className="text-base font-semibold text-foreground">Time zone</h3>
+                    <h3 className="text-base font-semibold text-foreground">{t.establishments.timeZoneTitle}</h3>
                     <p className="text-sm text-muted-foreground">
-                      Use an IANA zone like America/Lima. This is used for local scheduling and analytics.
+                      {t.establishments.timeZoneDescription}
                     </p>
                   </div>
                   <div className="max-w-xs">
@@ -136,12 +171,12 @@ export function CreateEstablishmentForm({
                   href="/establishments"
                   className={buttonVariants({ variant: "ghost" })}
                 >
-                  Cancel
+                  {t.establishments.cancelButton}
                 </Link>
               )}
-              <Button type="submit" disabled={pending} className="gap-2">
+              <Button type="submit" disabled={pending || !isValid} className="gap-2">
                 {pending ? <Spinner className="size-4" /> : <Plus className="size-4" />}
-                {pending ? "Creating..." : "Create"}
+                {pending ? t.establishments.creatingButton : t.establishments.createButton}
               </Button>
             </CardFooter>
           </form>

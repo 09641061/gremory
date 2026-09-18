@@ -27,19 +27,30 @@ export function findAppointmentEmployee(
   return members.find((member) => member.userId === appointment.employeeId);
 }
 
-export function formatAppointmentDate(startsAt: string, timeZone: string) {
-  return formatDateInTimeZone(new Date(startsAt), timeZone, {
-    weekday: "long",
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
+export function formatAppointmentDate(startsAt: string, timeZone: string, locale = "en-US") {
+  return formatDateInTimeZone(
+    new Date(startsAt),
+    timeZone,
+    {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    },
+    locale
+  );
 }
 
-export function formatAppointmentTime(startsAt: string, endsAt: string, timeZone: string) {
-  return `${formatTimeInTimeZone(new Date(startsAt), timeZone)} - ${formatTimeInTimeZone(
+export function formatAppointmentTime(
+  startsAt: string,
+  endsAt: string,
+  timeZone: string,
+  locale = "en-US"
+) {
+  return `${formatTimeInTimeZone(new Date(startsAt), timeZone, locale)} - ${formatTimeInTimeZone(
     new Date(endsAt),
-    timeZone
+    timeZone,
+    locale
   )}`;
 }
 
@@ -66,7 +77,32 @@ export function getAppointmentStatusClasses(status: string) {
   }
 }
 
-export function getAppointmentStatusLabel(status: string) {
+export function getAppointmentStatusLabel(
+  status: string,
+  statusTranslations?: {
+    confirmed?: string;
+    inProgress?: string;
+    completed?: string;
+    cancelled?: string;
+    noShow?: string;
+  }
+) {
+  if (statusTranslations) {
+    switch (status) {
+      case "CANCELLED":
+        return statusTranslations.cancelled ?? "Cancelled";
+      case "CONFIRMED":
+        return statusTranslations.confirmed ?? "Confirmed";
+      case "IN_PROGRESS":
+        return statusTranslations.inProgress ?? "In Progress";
+      case "COMPLETED":
+        return statusTranslations.completed ?? "Completed";
+      case "NO_SHOW":
+        return statusTranslations.noShow ?? "No Show";
+      default:
+        return status;
+    }
+  }
   switch (status) {
     case "CANCELLED":
       return "Cancelled";

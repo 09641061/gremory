@@ -1,19 +1,30 @@
-import { redirect } from "next/navigation";
+import { Suspense } from "react";
 import { cookies } from "next/headers";
-import { OrganizationsPage } from "@/contexts/business/interfaces/components/organization/organizations-page/organizations-page";
+import { redirect } from "next/navigation";
+
 import { createBusinessWorkspaceQueryService } from "@/contexts/business/application/internal/queryservices/business-workspace-query.service";
 import { createOrganizationQueryService } from "@/contexts/business/application/internal/queryservices/organization-query.service";
+import { OrganizationsPage } from "@/contexts/business/interfaces/components/organization/organizations-page/organizations-page";
 import {
   canCreateOrganization,
   type WorkspaceNavigationOrganizationGroup,
 } from "@/contexts/business/domain/services/workspace-navigation.policy";
 import { workspaceSelectionCookies } from "@/contexts/business/infrastructure/session/workspace-selection-cookie";
+import { PageLoading } from "@/contexts/shared/interfaces/components/page-loading";
 
 interface OrganizationsRoutePageProps {
   searchParams: Promise<{ establishmentId?: string; organizationId?: string; previewOrganizationId?: string }>;
 }
 
-export default async function OrganizationsRoutePage({ searchParams }: OrganizationsRoutePageProps) {
+export default function OrganizationsRoutePage({ searchParams }: OrganizationsRoutePageProps) {
+  return (
+    <Suspense fallback={<PageLoading />}>
+      <OrganizationsRoutePageContent searchParams={searchParams} />
+    </Suspense>
+  );
+}
+
+export async function OrganizationsRoutePageContent({ searchParams }: OrganizationsRoutePageProps) {
   const query = await searchParams;
   const cookieStore = await cookies();
   // The organizations index must load the complete accessible workspace. The
@@ -27,10 +38,10 @@ export default async function OrganizationsRoutePage({ searchParams }: Organizat
   const requestedPreviewOrganizationId = query.previewOrganizationId;
   const rememberedPreviewOrganizationId =
     cookieStore.get(workspaceSelectionCookies.previewOrganizationId)?.value ?? null;
-  const activeOrganizationId = cookieStore.get(workspaceSelectionCookies.organizationId)?.value ?? workspace.organization?.id ?? null;
+  const activeOrganizationId =
+    cookieStore.get(workspaceSelectionCookies.organizationId)?.value ?? workspace.organization?.id ?? null;
   const ownedOrganizationId =
-    accessibleOrganizations.find((organization) => organization.isOwned)?.id ??
-    workspace.ownedOrganizationId;
+    accessibleOrganizations.find((organization) => organization.isOwned)?.id ?? workspace.ownedOrganizationId;
 
   // An account without an organization has an invitation to accept first.
   if (workspace.accountType === "PENDING_INVITATION") {

@@ -19,7 +19,7 @@ export default function PermissionsError({
       title="Could not load permissions"
       message="We hit a problem while loading the roles list. Please try again."
       reset={reset}
-      mainClassName="flex min-h-[calc(100vh-4rem)] flex-1 items-center justify-center px-4 text-foreground"
+      mainClassName="flex min-h-0 flex-1 items-center justify-center px-4 text-foreground"
     />
   );
 }

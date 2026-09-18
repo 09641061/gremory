@@ -6,6 +6,7 @@ import { useTransition } from "react";
 
 import { Button, buttonVariants } from "@/contexts/shared/interfaces/components/ui/button";
 import { Spinner } from "@/contexts/shared/interfaces/components/ui/spinner";
+import { useI18n } from "@/contexts/shared/interfaces/i18n";
 
 /**
  * This page is also reached transiently mid-onboarding (e.g. right after
@@ -21,12 +22,13 @@ import { Spinner } from "@/contexts/shared/interfaces/components/ui/spinner";
  */
 export function AccessDeniedActions() {
   const router = useRouter();
+  const { t } = useI18n();
   const [isPending, startTransition] = useTransition();
 
   return (
     <div className="flex flex-col items-center justify-center gap-2 sm:flex-row">
       <Link href="/organizations" className={buttonVariants({ variant: "outline" })}>
-        Manage organizations
+        {t.shared.manageOrganizations}
       </Link>
       <Button
         type="button"
@@ -40,7 +42,7 @@ export function AccessDeniedActions() {
         className="gap-2"
       >
         {isPending ? <Spinner className="size-4" /> : null}
-        {isPending ? "Retrying..." : "Try again"}
+        {isPending ? t.shared.retrying : t.shared.tryAgain}
       </Button>
     </div>
   );

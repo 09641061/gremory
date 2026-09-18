@@ -5,12 +5,12 @@ import { Check, Loader2 } from "lucide-react";
 import type { BillingCycleType } from "../../../domain/model/value-objects/billing-cycle";
 import { getCurrencySymbol, type CurrencyCode } from "../../../domain/model/value-objects/currency";
 import { createSubscriptionAction } from "../../actions/create-subscription.action";
-import { FreeIcon } from "../icons/free";
 import { StandardIcon } from "../icons/standart";
 import { PremiumIcon } from "../icons/premium";
 import { cn } from "@/lib/utils";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import { Card } from "@/contexts/shared/interfaces/components/ui/card";
+import { useBillingTranslations } from "@/contexts/billing/interfaces/i18n";
 
 interface PlanCardProps {
   planId: number;
@@ -47,6 +47,7 @@ export function PlanCard({
   onError,
   onSelect,
 }: PlanCardProps) {
+  const { t } = useBillingTranslations();
   const [isPending, startTransition] = useTransition();
 
   const isAnnual = billingCycle === "ANNUAL";
@@ -55,7 +56,7 @@ export function PlanCard({
 
   const defaultButtonText =
     buttonLabel ??
-    (planId === 0 ? "Get Free plan" : planId === 2 ? "Get Premium plan" : "Get Standart plan");
+    (planId === 2 ? t.subscribe.getPremiumPlan : t.subscribe.getStandardPlan);
 
   const executeSubscriptionChange = () => {
     startTransition(async () => {
@@ -90,9 +91,7 @@ export function PlanCard({
       <div>
         {/* Custom Plan SVG Icon */}
         <div className="mb-4 flex h-10 w-10 items-center justify-center text-foreground">
-          {planId === 0 ? (
-            <FreeIcon className="text-foreground" />
-          ) : planId === 2 ? (
+          {planId === 2 ? (
             <PremiumIcon className="text-foreground" />
           ) : (
             <StandardIcon className="text-foreground" />
@@ -112,12 +111,15 @@ export function PlanCard({
               {currencySymbol}{displayPrice.toFixed(0)}
             </span>
             <span className="text-xs font-medium text-muted-foreground">
-              {currency} / month
+              {t.subscribe.perMonth.replace("{currency}", currency)}
             </span>
           </div>
           {isAnnual && (
             <p className="text-xs text-primary font-semibold mt-1">
-              Billed annually ({currencySymbol}{(displayPrice * 12).toFixed(0)} {currency}/yr)
+              {t.subscribe.billedAnnually
+                .replace("{symbol}", currencySymbol)
+                .replace("{total}", (displayPrice * 12).toFixed(0))
+                .replace("{currency}", currency)}
             </p>
           )}
         </div>
@@ -147,7 +149,7 @@ export function PlanCard({
         {/* Features Header */}
         <div className="mb-4">
           <span className="text-sm font-medium text-muted-foreground">
-            Includes
+            {t.subscribe.includes}
           </span>
         </div>
 

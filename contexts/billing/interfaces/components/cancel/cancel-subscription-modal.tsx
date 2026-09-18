@@ -10,6 +10,7 @@ import {
   DialogTitle,
 } from "@/contexts/shared/interfaces/components/ui/dialog";
 import { cancelSubscriptionAction } from "../../actions/cancel-subscription.action";
+import { useBillingTranslations } from "@/contexts/billing/interfaces/i18n";
 
 interface CancelSubscriptionModalProps {
   isOpen: boolean;
@@ -24,6 +25,7 @@ export function CancelSubscriptionModal({
   planName,
   onCancelled,
 }: CancelSubscriptionModalProps) {
+  const { t } = useBillingTranslations();
   const [isPending, startTransition] = useTransition();
 
   const handleCancel = () => {
@@ -45,20 +47,20 @@ export function CancelSubscriptionModal({
           <div>
             <DialogTitle className="text-xl font-bold text-foreground flex items-center gap-2">
               <AlertTriangle className="size-5 text-destructive shrink-0" />
-              Cancel Subscription
+              {t.cancelModal.title}
             </DialogTitle>
             <DialogDescription className="text-xs text-muted-foreground mt-0.5">
-              Confirm plan cancellation.
+              {t.cancelModal.confirmDescription}
             </DialogDescription>
           </div>
         </div>
 
         <div className="space-y-4">
           <p className="text-sm text-foreground leading-relaxed">
-            Are you sure you want to cancel your <span className="font-semibold text-primary">{planName}</span> plan?
+            {t.cancelModal.questionPrefix} <span className="font-semibold text-primary">{planName}</span> {t.cancelModal.planSuffix}
           </p>
           <p className="text-sm text-muted-foreground leading-relaxed">
-            You will retain access to your premium features, including the AI assistant and unlimited establishments, until the end of your current billing period. After this date, you will automatically downgrade to the Free plan.
+            {t.cancelModal.retentionNotice}
           </p>
         </div>
 
@@ -70,7 +72,7 @@ export function CancelSubscriptionModal({
             onClick={onClose}
             className="min-w-24"
           >
-            Keep plan
+            {t.cancelModal.keepPlan}
           </Button>
           <Button
             type="button"
@@ -82,7 +84,7 @@ export function CancelSubscriptionModal({
             {isPending ? (
               <Loader2 className="size-4 animate-spin" />
             ) : (
-              "Cancel subscription"
+              t.cancelModal.cancelSubscription
             )}
           </Button>
         </div>

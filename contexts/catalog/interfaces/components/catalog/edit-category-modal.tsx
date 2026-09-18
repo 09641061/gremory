@@ -8,6 +8,7 @@ import { Label } from "@/contexts/shared/interfaces/components/ui/label";
 import { Spinner } from "@/contexts/shared/interfaces/components/ui/spinner";
 import { Dialog, DialogContent, DialogTitle } from "@/contexts/shared/interfaces/components/ui/dialog";
 import { useUpdateServiceCategory } from "../../hooks/use-update-service-category";
+import { useCatalogTranslations } from "../../i18n";
 
 interface EditCategoryModalProps {
   isOpen: boolean;
@@ -20,6 +21,7 @@ export function EditCategoryModal({
   onClose,
   category,
 }: EditCategoryModalProps) {
+  const { t } = useCatalogTranslations();
   const { state: updateState, formAction, pending: updatePending } = useUpdateServiceCategory(onClose);
 
   // Combined error states to display in the modal
@@ -29,20 +31,20 @@ export function EditCategoryModal({
   return (
     <>
       <ErrorAlert
-        title="Failed to process category request"
+        title={t.dialogs.failedToUpdateCategory}
         message={errorState && !isActionPending ? (errorState.error ?? undefined) : undefined}
       />
 
       <Dialog open={isOpen && !!category} onOpenChange={(open) => { if (!open) onClose(); }}>
         <DialogContent>
-          <DialogTitle>Edit Category</DialogTitle>
+          <DialogTitle>{t.dialogs.editCategoryTitle}</DialogTitle>
 
           {category && (
             <form action={formAction} key={category.id} className="space-y-6 mt-4">
               <input type="hidden" name="id" value={category.id} />
 
               <div className="space-y-2">
-                <Label htmlFor="edit-category-name">Category Name</Label>
+                <Label htmlFor="edit-category-name">{t.dialogs.categoryNameLabel}</Label>
                 <Input
                   id="edit-category-name"
                   name="name"
@@ -54,7 +56,7 @@ export function EditCategoryModal({
 
               <div className="flex justify-end gap-3 pt-2 mt-4">
                 <Button type="button" variant="ghost" onClick={onClose} disabled={isActionPending}>
-                  Cancel
+                  {t.dialogs.cancel}
                 </Button>
                 <Button
                   type="submit"
@@ -62,7 +64,7 @@ export function EditCategoryModal({
                   className="gap-2"
                 >
                   {updatePending ? <Spinner className="size-4" /> : <Save className="size-4" />}
-                  {updatePending ? "Saving..." : "Save"}
+                  {updatePending ? t.dialogs.saving : t.dialogs.save}
                 </Button>
               </div>
             </form>

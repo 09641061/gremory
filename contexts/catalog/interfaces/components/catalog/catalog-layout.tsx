@@ -9,6 +9,7 @@ import { CreateCategoryModal } from "./create-category-modal";
 import { EditCategoryModal } from "./edit-category-modal";
 import { CreateServiceForm } from "../create-service/create-service-form";
 import { updateCatalogServiceAction } from "../../actions/manage-catalog-service.actions";
+import { useCatalogTranslations } from "../../i18n";
 
 interface CatalogLayoutProps {
   categories: CategoryDTO[];
@@ -35,6 +36,7 @@ export function CatalogLayout({
   canUpdateService,
   canDeleteService,
 }: CatalogLayoutProps) {
+  const { t } = useCatalogTranslations();
   const router = useRouter();
   const selectedCategoryIdFallback = categories[0]?.id;
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | undefined>(selectedCategoryIdFallback);
@@ -199,7 +201,7 @@ export function CatalogLayout({
             />
           ) : (
             <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
-              Select a service from the sidebar to view or edit its settings.
+              {t.emptyState.selectServicePrompt}
             </div>
           )}
         </main>

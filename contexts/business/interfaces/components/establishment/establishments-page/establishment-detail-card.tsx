@@ -7,6 +7,7 @@ import { updateEstablishmentAction } from "@/contexts/business/interfaces/action
 import { EntityProfileCard } from "@/contexts/business/interfaces/components/entity-profile-card/entity-profile-card";
 import { TimeZoneField } from "../time-zone-field";
 import { cn } from "@/lib/utils";
+import { useBusinessTranslations } from "@/contexts/business/interfaces/i18n";
 
 interface EstablishmentDetailCardProps {
   establishment: EstablishmentListItem | null;
@@ -21,6 +22,7 @@ export function EstablishmentDetailCard({
   onCancel,
   className,
 }: EstablishmentDetailCardProps) {
+  const { t } = useBusinessTranslations();
   const [timeZone, setTimeZone] = useState(establishment?.timeZone ?? "America/Lima");
   const [prevEstablishmentId, setPrevEstablishmentId] = useState(establishment?.id ?? null);
 
@@ -35,9 +37,9 @@ export function EstablishmentDetailCard({
         <div className="flex min-h-(--app-page-viewport-height) items-center justify-center rounded-xl border border-border bg-card p-8 text-center shadow-sm lg:ml-3">
           <div className="max-w-xs">
             <Store className="mx-auto size-10 text-muted-foreground/50" />
-            <p className="mt-4 text-sm font-medium text-foreground">Select an establishment</p>
+            <p className="mt-4 text-sm font-medium text-foreground">{t.establishments.selectPromptTitle}</p>
             <p className="mt-1 text-sm text-muted-foreground">
-              Choose an establishment to view its details.
+              {t.establishments.selectPromptDescription}
             </p>
           </div>
         </div>
@@ -63,9 +65,9 @@ export function EstablishmentDetailCard({
           <div className="flex flex-col border-t border-border">
             <div className="space-y-4 p-6">
               <div className="space-y-1">
-                <h3 className="text-base font-semibold text-foreground">Time zone</h3>
+                <h3 className="text-base font-semibold text-foreground">{t.establishments.timeZoneTitle}</h3>
                 <p className="text-sm text-muted-foreground">
-                  Used for scheduling and analytics in local time.
+                  {t.establishments.timeZoneDescription}
                 </p>
               </div>
               <div className="max-w-xs">

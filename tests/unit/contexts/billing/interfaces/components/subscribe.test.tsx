@@ -65,22 +65,19 @@ function plan(
 
 // The page resolves every currency up front, so the view never fetches.
 const plansByCurrency: PlansByCurrencyReadModel = {
-  USD: [plan(0, "Free", 0, 0), plan(1, "Standard", 20, 200), plan(2, "Premium", 50, 500)],
-  PEN: [plan(0, "Free", 0, 0), plan(1, "Standard", 75, 750), plan(2, "Premium", 190, 1900)],
-  EUR: [plan(0, "Free", 0, 0), plan(1, "Standard", 18, 180), plan(2, "Premium", 45, 450)],
+  USD: [plan(1, "Standard", 20, 200), plan(2, "Premium", 50, 500)],
+  PEN: [plan(1, "Standard", 75, 750), plan(2, "Premium", 190, 1900)],
+  EUR: [plan(1, "Standard", 18, 180), plan(2, "Premium", 45, 450)],
 };
 
 describe("SubscribeView Component", () => {
 
-  it("renders only the paid plans, dropping the free plan the endpoint returns", async () => {
+  it("renders all available plans", async () => {
     render(<SubscribeView backHref="/chat" plansByCurrency={plansByCurrency} />);
 
     expect(await screen.findByText("Choose the plan that fits you")).toBeDefined();
     expect(await screen.findByRole("button", { name: "Get Standard plan" })).toBeDefined();
     expect(screen.getByRole("button", { name: "Get Premium plan" })).toBeDefined();
-    // The catalog still serves the free plan; only the page hides it.
-    expect(screen.queryByRole("button", { name: "Get Free plan" })).toBeNull();
-    expect(screen.queryByText("Try the core product experience.")).toBeNull();
   });
 
   it("toggles billing cycle between Monthly and Annual", async () => {

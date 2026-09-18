@@ -11,6 +11,7 @@ import { FinancialsAndLogisticsSection } from "./financials-and-logistics-sectio
 import { InstructionsSection } from "./instructions-section";
 import { useCreateCatalogService } from "../../hooks/use-create-catalog-service";
 import type { DetailedServiceDTO } from "@/contexts/catalog/application/model/catalog-view.models";
+import { useCatalogTranslations } from "../../i18n";
 
 interface CreateServiceFormProps {
   establishmentId: string;
@@ -20,6 +21,7 @@ interface CreateServiceFormProps {
 }
 
 export function CreateServiceForm({ establishmentId, categoryId, onSuccess, onCancel }: CreateServiceFormProps) {
+  const { t } = useCatalogTranslations();
   const router = useRouter();
   const { state, formAction, pending } = useCreateCatalogService((service) => {
     if (onSuccess) {
@@ -36,7 +38,7 @@ export function CreateServiceForm({ establishmentId, categoryId, onSuccess, onCa
   return (
     <>
       <ErrorAlert
-        title="Failed to create service"
+        title={t.serviceForm.failedToCreateService}
         message={state.status === "error" && !pending ? (state.error ?? undefined) : undefined}
       />
 
@@ -46,9 +48,9 @@ export function CreateServiceForm({ establishmentId, categoryId, onSuccess, onCa
             <Card className="rounded-lg border-border bg-card p-6">
               <CardContent className="p-0 space-y-6">
                 <div className="border-b border-border pb-4">
-                  <h1 className="text-xl font-bold text-foreground">Create New Service</h1>
+                  <h1 className="text-xl font-bold text-foreground">{t.serviceForm.createTitle}</h1>
                   <p className="text-sm text-muted-foreground mt-1.5">
-                    Add a new service to your catalog. Configure its details, pricing, logistics, and preparation times to start accepting bookings.
+                    {t.serviceForm.createSubtitle}
                   </p>
                 </div>
 
@@ -73,7 +75,7 @@ export function CreateServiceForm({ establishmentId, categoryId, onSuccess, onCa
                       }
                     }}
                   >
-                    Cancel
+                    {t.serviceForm.cancel}
                   </Button>
 
                   <Button
@@ -82,7 +84,7 @@ export function CreateServiceForm({ establishmentId, categoryId, onSuccess, onCa
                     className="gap-2"
                   >
                     {pending ? <Spinner className="size-4" /> : <Save className="size-4" />}
-                    {pending ? "Saving..." : "Save"}
+                    {pending ? t.serviceForm.saving : t.serviceForm.save}
                   </Button>
                 </div>
               </CardContent>

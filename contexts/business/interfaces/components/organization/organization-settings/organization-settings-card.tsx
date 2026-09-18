@@ -3,6 +3,7 @@
 import { Building2 } from "lucide-react";
 import { updateOrganizationAction } from "@/contexts/business/interfaces/actions/organization.actions";
 import { EntityProfileCard } from "@/contexts/business/interfaces/components/entity-profile-card/entity-profile-card";
+import { useBusinessTranslations } from "@/contexts/business/interfaces/i18n";
 
 type OrganizationDetails = Readonly<{
   id: string;
@@ -19,12 +20,14 @@ export function OrganizationSettingsCard({
   organization,
   canUpdate = true,
 }: OrganizationSettingsCardProps) {
+  const { t } = useBusinessTranslations();
+
   return (
     <div className="mx-auto w-full max-w-3xl space-y-6">
       <div>
-        <h1 className="page-title">Organization</h1>
+        <h1 className="page-title">{t.organizations.settingsTitle}</h1>
         <p className="page-description mt-2">
-          Manage the name and the logo your customers see.
+          {t.organizations.settingsDescription}
         </p>
       </div>
 
