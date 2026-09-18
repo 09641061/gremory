@@ -72,6 +72,18 @@ import {
 
 export type EstablishmentOption = { id: string; name: string };
 
+export type OrganizationRosterMode = "members" | "invites";
+
+export interface OrganizationRosterPanelProps {
+  organizationId: string;
+  establishments: ReadonlyArray<EstablishmentOption>;
+  canInvite?: boolean;
+  canManageMembers?: boolean;
+  lockedEstablishmentId?: string | null;
+  /** "members" lists active members; "invites" lists pending invitations. */
+  mode?: OrganizationRosterMode;
+}
+
 const ALL_ESTABLISHMENTS = "all";
 
 export function OrganizationMembersPanel({
@@ -80,13 +92,9 @@ export function OrganizationMembersPanel({
   canInvite = true,
   canManageMembers = true,
   lockedEstablishmentId = null,
-}: {
-  organizationId: string;
-  establishments: ReadonlyArray<EstablishmentOption>;
-  canInvite?: boolean;
-  canManageMembers?: boolean;
-  lockedEstablishmentId?: string | null;
-}) {
+  mode = "members",
+}: OrganizationRosterPanelProps) {
+  const isInvites = mode === "invites";
   const [members, setMembers] = useState<WorkforceMemberResource[]>([]);
   const [roles, setRoles] = useState<WorkforceRoleResource[]>([]);
   const [search, setSearch] = useState("");
@@ -358,7 +366,10 @@ export function OrganizationMembersPanel({
   // Establishment-scoped viewers are locked to their own store: the filter is hidden
   // and every row is restricted to that location.
   const activeEstablishmentFilter = lockedEstablishmentId ?? establishmentFilter;
+  // The two roster views are strictly disjoint: active members vs pending invitations.
+  const requiredStatus = isInvites ? "PENDING" : "ACTIVE";
   const visibleMembers = members.filter((member) => {
+    const matchesStatus = member.status === requiredStatus;
     const matchesSearch =
       normalizedSearch.length === 0 ||
       member.email.toLowerCase().includes(normalizedSearch) ||
@@ -366,7 +377,7 @@ export function OrganizationMembersPanel({
     const matchesEstablishment =
       activeEstablishmentFilter === ALL_ESTABLISHMENTS ||
       scopeFor(member).includes(activeEstablishmentFilter);
-    return matchesSearch && matchesEstablishment;
+    return matchesStatus && matchesSearch && matchesEstablishment;
   });
 
   const establishmentFilterOptions = [
@@ -553,8 +564,8 @@ export function OrganizationMembersPanel({
           <Input
             value={search}
             onChange={(event) => setSearch(event.target.value)}
-            placeholder="Search members..."
-            aria-label="Search members"
+            placeholder={isInvites ? "Search invitations..." : "Search members..."}
+            aria-label={isInvites ? "Search invitations" : "Search members"}
             className="pl-9"
           />
         </div>
@@ -589,7 +600,7 @@ export function OrganizationMembersPanel({
         </div>
         )}
 
-        {canInvite ? (
+        {isInvites && canInvite ? (
           <Button type="button" onClick={() => setInviteOpen(true)} className="gap-2 bg-emerald-600 text-white hover:bg-emerald-700 lg:ml-auto">
             <Plus className="size-4" aria-hidden="true" />
             Invite member
@@ -784,8 +795,7 @@ export function OrganizationMembersPanel({
                     </div>
                   </TableCell>
 
-                  {/* Standardized ⋮ actions: scope editing and total revocation only.
-                      Hidden for establishment-scoped members without member management. */}
+                  {/* ⋮ actions: invitations expose resend/revoke; members expose scope/eviction. */}
                   <TableCell className="px-4 text-right">
                     {canManageMembers ? (
                     <DropdownMenu>
@@ -804,29 +814,37 @@ export function OrganizationMembersPanel({
                         <MoreVertical className="size-4" aria-hidden="true" />
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="min-w-52">
-                        <DropdownMenuItem
-                          disabled={owner || !member.memberId}
-                          onClick={() => setScopeMember(member)}
-                        >
-                          Edit Establishment Scope
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          variant="destructive"
-                          className="text-red-600 focus:text-red-600"
-                          disabled={owner || !member.userId}
-                          onClick={() => setRemoveTarget(member)}
-                        >
-                          Remove from Organization
-                        </DropdownMenuItem>
-                        {isPending ? (
-                          <DropdownMenuItem
-                            variant="destructive"
-                            className="text-red-600 focus:text-red-600"
-                            onClick={() => setRevokeTarget(member)}
-                          >
-                            Revoke Invitation
-                          </DropdownMenuItem>
-                        ) : null}
+                        {isInvites ? (
+                          <>
+                            <DropdownMenuItem onClick={() => void resendInvitation(member)}>
+                              Resend Invitation
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              variant="destructive"
+                              className="text-red-600 focus:text-red-600"
+                              onClick={() => setRevokeTarget(member)}
+                            >
+                              Revoke Invitation
+                            </DropdownMenuItem>
+                          </>
+                        ) : (
+                          <>
+                            <DropdownMenuItem
+                              disabled={owner || !member.memberId}
+                              onClick={() => setScopeMember(member)}
+                            >
+                              Edit Establishment Scope
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              variant="destructive"
+                              className="text-red-600 focus:text-red-600"
+                              disabled={owner || !member.userId}
+                              onClick={() => setRemoveTarget(member)}
+                            >
+                              Remove from Organization
+                            </DropdownMenuItem>
+                          </>
+                        )}
                       </DropdownMenuContent>
                     </DropdownMenu>
                     ) : null}
@@ -837,7 +855,7 @@ export function OrganizationMembersPanel({
             {!loading && visibleMembers.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={6} className="px-4 py-12 text-center text-muted-foreground">
-                  No members found.
+                  {isInvites ? "No invitations found." : "No members found."}
                 </TableCell>
               </TableRow>
             ) : null}

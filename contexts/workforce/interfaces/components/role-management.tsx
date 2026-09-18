@@ -1,7 +1,7 @@
 "use client";
 
 import { Fragment, useEffect, useEffectEvent, useState } from "react";
-import { Cog, Crown, Pencil, Plus, Shield, ShieldCheck, Sparkles, Trash2, User, UserMinus } from "lucide-react";
+import { Cog, Crown, Pencil, Plus, ShieldCheck, Trash2, User, UserMinus } from "lucide-react";
 import { z } from "zod";
 
 import { SearchableOptions } from "@/contexts/shared/interfaces/components/searchable-options";
@@ -60,8 +60,8 @@ import {
   redirectToLogin,
 } from "@/contexts/shared/infrastructure/http/resource-lifecycle";
 
-/** System roles render in descending authority: Owner, Manager, Admin, Member. */
-const SYSTEM_ROLE_ORDER = ["Owner", "Manager", "Admin", "Member"] as const;
+/** Only Owner and Member remain factory system roles; render them owner-first. */
+const SYSTEM_ROLE_ORDER = ["Owner", "Member"] as const;
 
 function systemRoleRank(name: string): number {
   const rank = SYSTEM_ROLE_ORDER.indexOf(name as (typeof SYSTEM_ROLE_ORDER)[number]);
@@ -69,16 +69,7 @@ function systemRoleRank(name: string): number {
 }
 
 function RoleIcon({ name, className }: { name: string; className?: string }) {
-  const Icon =
-    name === "Owner"
-      ? Crown
-      : name === "Manager"
-        ? Sparkles
-        : name === "Admin"
-          ? Shield
-          : name === "Member"
-            ? User
-            : Cog;
+  const Icon = name === "Owner" ? Crown : name === "Member" ? User : Cog;
   return <Icon className={className} aria-hidden="true" />;
 }
 

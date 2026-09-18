@@ -166,15 +166,16 @@ const betaId = "77777777-7777-4777-8777-777777777777";
 describe("OrganizationMembersPanel", () => {
   afterEach(() => vi.unstubAllGlobals());
 
-  it("renders the unified roster with toolbar and owner protection", async () => {
+  it("renders only active members with the toolbar and owner protection", async () => {
     vi.stubGlobal("fetch", mockApi());
 
     render(<OrganizationMembersPanel organizationId={organizationId} establishments={establishments} />);
 
     expect(await screen.findByText("Active User")).toBeVisible();
-    expect(screen.getAllByText("pending@example.com").length).toBeGreaterThan(0);
     expect(screen.getAllByText("ACTIVE").length).toBeGreaterThan(0);
-    expect(screen.getByText("PENDING")).toBeVisible();
+    // Pending invitations are isolated in the Invites view.
+    expect(screen.queryByText("pending@example.com")).toBeNull();
+    expect(screen.queryByText("PENDING")).toBeNull();
     // Exactly one mandatory system role badge per active row.
     expect(screen.getByText("Owner")).toBeVisible();
     expect(screen.getByText("Member")).toBeVisible();
@@ -183,6 +184,24 @@ describe("OrganizationMembersPanel", () => {
     expect(screen.getByRole("button", { name: "Actions for Active User" })).toBeEnabled();
     expect(screen.getByPlaceholderText("Search members...")).toBeVisible();
     expect(screen.getByRole("combobox", { name: "Filter by Establishment" })).toBeVisible();
+    // The invite action now lives in the Invites view.
+    expect(screen.queryByRole("button", { name: /Invite member/ })).toBeNull();
+  });
+
+  it("isolates the Invites view to pending invitations only", async () => {
+    vi.stubGlobal("fetch", mockApi());
+
+    render(
+      <OrganizationMembersPanel
+        organizationId={organizationId}
+        establishments={establishments}
+        mode="invites"
+      />,
+    );
+
+    expect((await screen.findAllByText("pending@example.com")).length).toBeGreaterThan(0);
+    expect(screen.queryByText("Active User")).toBeNull();
+    expect(screen.getByPlaceholderText("Search invitations...")).toBeVisible();
     expect(screen.getByRole("button", { name: /Invite member/ })).toBeVisible();
   });
 
@@ -192,10 +211,10 @@ describe("OrganizationMembersPanel", () => {
     render(<OrganizationMembersPanel organizationId={organizationId} establishments={establishments} />);
 
     await screen.findByText("Active User");
-    await userEvent.type(screen.getByPlaceholderText("Search members..."), "pending");
+    await userEvent.type(screen.getByPlaceholderText("Search members..."), "active@example.com");
 
-    expect(screen.getAllByText("pending@example.com").length).toBeGreaterThan(0);
-    expect(screen.queryByText("Active User")).toBeNull();
+    expect(screen.getByText("Active User")).toBeVisible();
+    expect(screen.queryByText("Organization Owner")).toBeNull();
   });
 
   it("filters by establishment through the styled dropdown with clean options", async () => {
@@ -222,7 +241,13 @@ describe("OrganizationMembersPanel", () => {
     const fetchMock = mockApi();
     vi.stubGlobal("fetch", fetchMock);
 
-    render(<OrganizationMembersPanel organizationId={organizationId} establishments={establishments} />);
+    render(
+      <OrganizationMembersPanel
+        organizationId={organizationId}
+        establishments={establishments}
+        mode="invites"
+      />,
+    );
 
     const row = (await screen.findAllByText("pending@example.com"))[0].closest("tr");
     expect(row).not.toBeNull();
@@ -337,9 +362,15 @@ describe("OrganizationMembersPanel", () => {
   it("opens the single-step invite dialog with the three fields", async () => {
     vi.stubGlobal("fetch", mockApi());
 
-    render(<OrganizationMembersPanel organizationId={organizationId} establishments={establishments} />);
+    render(
+      <OrganizationMembersPanel
+        organizationId={organizationId}
+        establishments={establishments}
+        mode="invites"
+      />,
+    );
 
-    await screen.findByText("Active User");
+    await screen.findAllByText("pending@example.com");
     await userEvent.click(screen.getByRole("button", { name: /Invite member/ }));
 
     expect(screen.getByRole("heading", { name: "Invite member" })).toBeVisible();
@@ -432,7 +463,13 @@ describe("OrganizationMembersPanel", () => {
     const fetchMock = mockPendingBulkApi();
     vi.stubGlobal("fetch", fetchMock);
 
-    render(<OrganizationMembersPanel organizationId={organizationId} establishments={establishments} />);
+    render(
+      <OrganizationMembersPanel
+        organizationId={organizationId}
+        establishments={establishments}
+        mode="invites"
+      />,
+    );
 
     await screen.findByText("Guest One");
     // Pending invitations are selectable; only the Owner is frozen.
@@ -463,7 +500,13 @@ describe("OrganizationMembersPanel", () => {
     const fetchMock = mockPendingBulkApi();
     vi.stubGlobal("fetch", fetchMock);
 
-    render(<OrganizationMembersPanel organizationId={organizationId} establishments={establishments} />);
+    render(
+      <OrganizationMembersPanel
+        organizationId={organizationId}
+        establishments={establishments}
+        mode="invites"
+      />,
+    );
 
     await screen.findByText("Guest One");
     const row = screen.getByText("Guest One").closest("tr");
@@ -486,7 +529,13 @@ describe("OrganizationMembersPanel", () => {
     const fetchMock = mockPendingBulkApi();
     vi.stubGlobal("fetch", fetchMock);
 
-    render(<OrganizationMembersPanel organizationId={organizationId} establishments={establishments} />);
+    render(
+      <OrganizationMembersPanel
+        organizationId={organizationId}
+        establishments={establishments}
+        mode="invites"
+      />,
+    );
 
     await screen.findByText("Guest One");
     await userEvent.click(screen.getByRole("checkbox", { name: "Select Guest One" }));

@@ -1,17 +1,36 @@
 "use client";
 
-import { startTransition, useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState } from "react";
+import Link from "next/link";
+import { Building2, Mail, Plus, Shield, Store, Users } from "lucide-react";
 
-import { workspaceSelectionCookies } from "@/contexts/business/infrastructure/session/workspace-selection-cookie";
-import { OrganizationsSearchBar } from "./organizations-search-bar";
-import { OrganizationListCard } from "./organization-list-card";
-import { OrganizationDetailCard } from "./organization-detail-card";
+import { cn } from "@/lib/utils";
+import {
+  OrganizationDetailCard,
+  type OrganizationSection,
+} from "./organization-detail-card";
 import type { WorkspaceNavigationOrganizationGroup } from "@/contexts/business/domain/services/workspace-navigation.policy";
-
 
 export type OrganizationListItem = WorkspaceNavigationOrganizationGroup;
 
+const sections: ReadonlyArray<{
+  id: OrganizationSection;
+  label: string;
+  icon: typeof Building2;
+}> = [
+  { id: "organization", label: "Organization", icon: Building2 },
+  { id: "establishments", label: "Establishments", icon: Store },
+  { id: "members", label: "Members", icon: Users },
+  { id: "invites", label: "Invites", icon: Mail },
+  { id: "roles", label: "Roles", icon: Shield },
+];
+
+/**
+ * Unified settings layout: an internal vertical navigation sidebar on the left and the
+ * section content on the right. The previously separate organization search/list column
+ * is gone; the selected organization is derived from the workspace context and the
+ * sidebar drives which settings panel renders.
+ */
 export function OrganizationsPage({
   organizations,
   ownedOrganizationId,
@@ -25,87 +44,61 @@ export function OrganizationsPage({
   initialPreviewOrganizationId?: string | null;
   canCreateOrganization?: boolean;
 }) {
-  const router = useRouter();
-  const [filter, setFilter] = useState("");
-  const [previewOrgId, setPreviewOrgId] = useState<string | null>(initialPreviewOrganizationId);
-  const [activeOrgId, setActiveOrgId] = useState<string | null>(activeOrganizationId);
+  const [activeSection, setActiveSection] = useState<OrganizationSection>("organization");
 
-  useEffect(() => {
-    startTransition(() => setPreviewOrgId(initialPreviewOrganizationId));
-  }, [initialPreviewOrganizationId]);
-
-  useEffect(() => {
-    startTransition(() => setActiveOrgId(activeOrganizationId));
-  }, [activeOrganizationId]);
-
-  const filteredOrganizations = useMemo(() => {
-    const normalized = filter.trim().toLowerCase();
-    if (!normalized) return organizations;
-    return organizations.filter((org) => org.organizationName.toLowerCase().includes(normalized));
-  }, [filter, organizations]);
-
-  const previewOrg = organizations.find((org) => org.organizationId === previewOrgId) ?? null;
-
-  const handleSelectOrganization = (organizationId: string) => {
-    setPreviewOrgId(organizationId);
-    document.cookie = `${workspaceSelectionCookies.previewOrganizationId}=${encodeURIComponent(
-      organizationId,
-    )}; path=/; max-age=${60 * 60 * 24 * 180}; SameSite=Lax`;
-
-    const confirmed = organizations.find((org) => org.organizationId === organizationId) ?? null;
-    setActiveOrgId(organizationId);
-    if (confirmed) {
-      document.cookie = `takodu.active_organization_id=${encodeURIComponent(organizationId)}; path=/; max-age=${60 * 60 * 24 * 180}; sameSite=lax`;
-      if (confirmed.establishments.length > 0) {
-        document.cookie = `takodu.active_establishment_id=${encodeURIComponent(
-          confirmed.establishments[0].id,
-        )}; path=/; max-age=${60 * 60 * 24 * 180}; sameSite=lax`;
-      } else {
-        document.cookie = "takodu.active_establishment_id=; path=/; max-age=0; sameSite=lax";
-      }
-      if (organizationId === ownedOrganizationId && confirmed.establishments.length === 0) {
-        router.push(`/establishments/setup?organizationId=${encodeURIComponent(organizationId)}`);
-      } else {
-        const params = new URLSearchParams({ organizationId });
-        const establishmentId = confirmed.establishments[0]?.id;
-        if (establishmentId) params.set("establishmentId", establishmentId);
-        router.push(`/?${params.toString()}`);
-      }
-    }
-  };
+  const selectedOrganization =
+    organizations.find((org) => org.organizationId === initialPreviewOrganizationId) ??
+    organizations.find((org) => org.organizationId === activeOrganizationId) ??
+    organizations.find((org) => org.organizationId === ownedOrganizationId) ??
+    organizations[0] ??
+    null;
 
   return (
-    <section
-      className={`mx-auto grid w-full max-w-7xl gap-6 ${
-        previewOrg ? "lg:grid-cols-[minmax(0,28%)_minmax(0,72%)]" : ""
-      }`}
-    >
-      <div
-        className={`w-full space-y-6 lg:flex lg:h-(--app-page-viewport-height) lg:flex-col ${
-          previewOrg ? "hidden lg:flex" : ""
-        }`}
-      >
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between shrink-0">
-          <div>
-            <h1 className="page-title">Organizations</h1>
-            <p className="page-description mt-2">
-              Manage your organization&apos;s identity and the establishments inside it.
-            </p>
-          </div>
-        </div>
-        <OrganizationsSearchBar value={filter} onChange={setFilter} canCreate={canCreateOrganization} />
-        <OrganizationListCard
-          filteredOrganizations={filteredOrganizations}
-          previewOrgId={previewOrgId}
-          activeOrganizationId={activeOrgId}
-          onPreview={handleSelectOrganization}
-        />
-      </div>
+    <section className="mx-auto grid w-full max-w-[110rem] gap-6 lg:grid-cols-[minmax(0,20%)_minmax(0,80%)]">
+      <aside className="flex flex-col gap-4 lg:h-(--app-page-viewport-height)">
+        <p className="text-xs font-semibold tracking-[0.14em] text-muted-foreground uppercase">
+          Organization Settings
+        </p>
+
+        <nav aria-label="Organization settings" className="flex flex-col gap-1">
+          {sections.map((section) => {
+            const Icon = section.icon;
+            const active = section.id === activeSection;
+            return (
+              <button
+                key={section.id}
+                type="button"
+                onClick={() => setActiveSection(section.id)}
+                aria-current={active ? "page" : undefined}
+                className={cn(
+                  "flex items-center gap-3 rounded-lg px-3 py-2 text-left text-sm transition-colors",
+                  active
+                    ? "bg-muted font-medium text-foreground"
+                    : "text-muted-foreground hover:bg-muted/50 hover:text-foreground",
+                )}
+              >
+                <Icon className="size-4" aria-hidden="true" />
+                {section.label}
+              </button>
+            );
+          })}
+        </nav>
+
+        {canCreateOrganization ? (
+          <Link
+            href="/organizations/new"
+            className="mt-auto inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
+          >
+            <Plus className="size-4" aria-hidden="true" />
+            New organization
+          </Link>
+        ) : null}
+      </aside>
 
       <OrganizationDetailCard
-        organization={previewOrg}
+        organization={selectedOrganization}
         ownedOrganizationId={ownedOrganizationId}
-        className={previewOrg ? "" : "hidden lg:block"}
+        activeSection={activeSection}
       />
     </section>
   );

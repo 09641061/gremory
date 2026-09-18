@@ -17,18 +17,19 @@ const ownerRole = {
   systemRole: true,
   permissions: ["*"],
 };
+// Admin and Manager are no longer factory system roles; they are regular custom roles.
 const adminRole = {
   id: "cccccccc-cccc-4ccc-8ccc-cccccccccccc",
   name: "Admin",
   position: 1,
-  systemRole: true,
+  systemRole: false,
   permissions: [],
 };
 const managerRole = {
   id: "dddddddd-dddd-4ddd-8ddd-dddddddddddd",
   name: "Manager",
   position: 2,
-  systemRole: true,
+  systemRole: false,
   permissions: [],
 };
 const memberSystemRole = {
@@ -91,24 +92,23 @@ function mockApi() {
 describe("OrganizationRolesPanel", () => {
   afterEach(() => vi.unstubAllGlobals());
 
-  it("groups system and custom roles with clean, counter-free names", async () => {
+  it("groups system and custom roles in the sub-sidebar with clean, counter-free names", async () => {
     vi.stubGlobal("fetch", mockApi());
 
     render(<OrganizationRolesPanel organizationId={organizationId} />);
 
-    const select = await screen.findByRole("combobox", { name: "Select role" });
-    await userEvent.click(select);
+    await screen.findByDisplayValue("Owner");
+    expect(screen.getByText("System Roles")).toBeVisible();
+    expect(screen.getByText("Custom Roles")).toBeVisible();
 
-    expect(await screen.findByText("System roles")).toBeVisible();
-    expect(screen.getByText("Custom roles")).toBeVisible();
+    // The old top dropdown selector is gone.
+    expect(screen.queryByRole("combobox", { name: "Select role" })).toBeNull();
 
-    const ownerOption = screen.getByRole("option", { name: /Owner/ });
-    const cashierOption = screen.getByRole("option", { name: /Cashier/ });
-    expect(ownerOption).not.toHaveTextContent(/\(\d+\)/);
-    expect(cashierOption).not.toHaveTextContent(/\(\d+\)/);
+    const ownerButton = screen.getByRole("button", { name: "Owner" });
+    const cashierButton = screen.getByRole("button", { name: "Cashier" });
+    expect(ownerButton).not.toHaveTextContent(/\(\d+\)/);
+    expect(cashierButton).not.toHaveTextContent(/\(\d+\)/);
     expect(screen.queryByText("Built-in")).toBeNull();
-
-    expect(screen.queryByRole("option", { name: /New Role/ })).toBeNull();
     expect(screen.queryByText("[System]")).toBeNull();
     expect(screen.queryByText("[Custom]")).toBeNull();
   });
@@ -119,18 +119,19 @@ describe("OrganizationRolesPanel", () => {
     render(<OrganizationRolesPanel organizationId={organizationId} />);
 
     await screen.findByDisplayValue("Owner");
-    await userEvent.click(screen.getByRole("combobox", { name: "Select role" }));
 
-    const systemOrder = ["Owner", "Manager", "Admin", "Member"].map(
-      (name) => screen.getByRole("option", { name }).textContent?.trim(),
+    // Only Owner and Member remain factory system roles, owner-first.
+    const systemOrder = ["Owner", "Member"].map(
+      (name) => screen.getByRole("button", { name }).textContent?.trim(),
     );
-    expect(systemOrder).toEqual(["Owner", "Manager", "Admin", "Member"]);
+    expect(systemOrder).toEqual(["Owner", "Member"]);
 
-    expect(screen.getByRole("option", { name: "Owner" }).querySelector(".lucide-crown")).not.toBeNull();
-    expect(screen.getByRole("option", { name: "Manager" }).querySelector(".lucide-sparkles")).not.toBeNull();
-    expect(screen.getByRole("option", { name: "Admin" }).querySelector(".lucide-shield")).not.toBeNull();
-    expect(screen.getByRole("option", { name: "Member" }).querySelector(".lucide-user")).not.toBeNull();
-    expect(screen.getByRole("option", { name: "Cashier" }).querySelector(".lucide-cog")).not.toBeNull();
+    expect(screen.getByRole("button", { name: "Owner" }).querySelector(".lucide-crown")).not.toBeNull();
+    expect(screen.getByRole("button", { name: "Member" }).querySelector(".lucide-user")).not.toBeNull();
+    // Demoted roles and user-created roles share the custom "Cog" icon.
+    expect(screen.getByRole("button", { name: "Admin" }).querySelector(".lucide-cog")).not.toBeNull();
+    expect(screen.getByRole("button", { name: "Manager" }).querySelector(".lucide-cog")).not.toBeNull();
+    expect(screen.getByRole("button", { name: "Cashier" }).querySelector(".lucide-cog")).not.toBeNull();
   });
 
   it("freezes every control for a system role", async () => {
@@ -151,9 +152,7 @@ describe("OrganizationRolesPanel", () => {
 
     render(<OrganizationRolesPanel organizationId={organizationId} />);
 
-    const select = await screen.findByRole("combobox", { name: "Select role" });
-    await userEvent.click(select);
-    await userEvent.click(await screen.findByRole("option", { name: /Cashier/ }));
+    await userEvent.click(await screen.findByRole("button", { name: "Cashier" }));
 
     expect(screen.getByRole("textbox", { name: "Role Name" })).toBeEnabled();
     expect(screen.getByRole("textbox", { name: "Role Name" })).toHaveValue("Cashier");

@@ -1,7 +1,6 @@
 /** @vitest-environment jsdom */
 
 import { render, screen } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
@@ -24,7 +23,7 @@ const organization = {
   canUpdate: true,
 };
 
-describe("OrganizationDetailCard tabs", () => {
+describe("OrganizationDetailCard sections", () => {
   beforeEach(() => {
     vi.stubGlobal("fetch", vi.fn((url: string) => {
       if (url.startsWith("/api/workforce/roles")) {
@@ -42,39 +41,56 @@ describe("OrganizationDetailCard tabs", () => {
 
   afterEach(() => vi.unstubAllGlobals());
 
-  it("renders the four tabs with General active by default", () => {
+  it("renders no horizontal tab bar and shows the Organization panel by default", () => {
     render(
       <OrganizationDetailCard
         organization={organization}
         ownedOrganizationId={organization.organizationId}
+        activeSection="organization"
       />,
     );
 
-    for (const label of ["General", "Members", "Roles", "Establishments"]) {
-      expect(screen.getByRole("tab", { name: label })).toBeVisible();
-    }
-
-    expect(screen.getByRole("tab", { name: "General" })).toHaveAttribute("data-active");
+    expect(screen.queryByRole("tab")).toBeNull();
     expect(screen.getByDisplayValue("OrganizationOne")).toBeVisible();
+    // Inactive panels stay mounted but hidden from the accessibility tree.
+    expect(screen.queryByRole("button", { name: /Invite member/ })).toBeNull();
   });
 
-  it("swaps the right panel content when a tab is selected", async () => {
-    render(
+  it("renders the panel matching the controlled section", async () => {
+    const { rerender } = render(
       <OrganizationDetailCard
         organization={organization}
         ownedOrganizationId={organization.organizationId}
+        activeSection="members"
       />,
     );
+    expect(await screen.findByPlaceholderText("Search members...")).toBeVisible();
 
-    await userEvent.click(screen.getByRole("tab", { name: "Members" }));
+    rerender(
+      <OrganizationDetailCard
+        organization={organization}
+        ownedOrganizationId={organization.organizationId}
+        activeSection="invites"
+      />,
+    );
     expect(await screen.findByRole("button", { name: /Invite member/ })).toBeVisible();
 
-    await userEvent.click(screen.getByRole("tab", { name: "Roles" }));
-    expect(
-      await screen.findByRole("button", { name: /Create custom role/ }),
-    ).toBeVisible();
+    rerender(
+      <OrganizationDetailCard
+        organization={organization}
+        ownedOrganizationId={organization.organizationId}
+        activeSection="roles"
+      />,
+    );
+    expect(await screen.findByRole("button", { name: /Create custom role/ })).toBeVisible();
 
-    await userEvent.click(screen.getByRole("tab", { name: "Establishments" }));
+    rerender(
+      <OrganizationDetailCard
+        organization={organization}
+        ownedOrganizationId={organization.organizationId}
+        activeSection="establishments"
+      />,
+    );
     expect(await screen.findByRole("button", { name: /Create establishment/ })).toBeVisible();
   });
 });
