@@ -97,16 +97,18 @@ describe("OrganizationRolesPanel", () => {
 
     render(<OrganizationRolesPanel organizationId={organizationId} />);
 
-    await screen.findByDisplayValue("Owner");
+    await screen.findByDisplayValue("Member");
     expect(screen.getByText("System Roles")).toBeVisible();
     expect(screen.getByText("Custom Roles")).toBeVisible();
 
     // The old top dropdown selector is gone.
     expect(screen.queryByRole("combobox", { name: "Select role" })).toBeNull();
 
-    const ownerButton = screen.getByRole("button", { name: "Owner" });
+    // The immutable Owner role is excluded from the editor entirely.
+    expect(screen.queryByRole("button", { name: "Owner" })).toBeNull();
+    const memberButton = screen.getByRole("button", { name: "Member" });
     const cashierButton = screen.getByRole("button", { name: "Cashier" });
-    expect(ownerButton).not.toHaveTextContent(/\(\d+\)/);
+    expect(memberButton).not.toHaveTextContent(/\(\d+\)/);
     expect(cashierButton).not.toHaveTextContent(/\(\d+\)/);
     expect(screen.queryByText("Built-in")).toBeNull();
     expect(screen.queryByText("[System]")).toBeNull();
@@ -118,15 +120,10 @@ describe("OrganizationRolesPanel", () => {
 
     render(<OrganizationRolesPanel organizationId={organizationId} />);
 
-    await screen.findByDisplayValue("Owner");
+    await screen.findByDisplayValue("Member");
 
-    // Only Owner and Member remain factory system roles, owner-first.
-    const systemOrder = ["Owner", "Member"].map(
-      (name) => screen.getByRole("button", { name }).textContent?.trim(),
-    );
-    expect(systemOrder).toEqual(["Owner", "Member"]);
-
-    expect(screen.getByRole("button", { name: "Owner" }).querySelector(".lucide-crown")).not.toBeNull();
+    // SYSTEM ROLES renders only the editable Member role; Owner is hidden.
+    expect(screen.queryByRole("button", { name: "Owner" })).toBeNull();
     expect(screen.getByRole("button", { name: "Member" }).querySelector(".lucide-user")).not.toBeNull();
     // Demoted roles and user-created roles share the custom "Cog" icon.
     expect(screen.getByRole("button", { name: "Admin" }).querySelector(".lucide-cog")).not.toBeNull();
@@ -139,7 +136,7 @@ describe("OrganizationRolesPanel", () => {
 
     render(<OrganizationRolesPanel organizationId={organizationId} />);
 
-    await screen.findByDisplayValue("Owner");
+    await screen.findByDisplayValue("Member");
 
     expect(screen.getByRole("textbox", { name: "Role Name" })).toBeDisabled();
     expect(screen.getByRole("combobox", { name: "Badge Color" })).toBeDisabled();
@@ -165,7 +162,7 @@ describe("OrganizationRolesPanel", () => {
 
     render(<OrganizationRolesPanel organizationId={organizationId} />);
 
-    await screen.findByDisplayValue("Owner");
+    await screen.findByDisplayValue("Member");
     await userEvent.click(screen.getByRole("button", { name: /Catalog/ }));
 
     expect(screen.getByText("Manage catalog")).toBeVisible();
@@ -195,7 +192,7 @@ describe("OrganizationRolesPanel", () => {
 
     render(<OrganizationRolesPanel organizationId={organizationId} />);
 
-    await screen.findByDisplayValue("Owner");
+    await screen.findByDisplayValue("Member");
     await userEvent.click(screen.getByRole("button", { name: /CRM & Customers/ }));
 
     expect(screen.getByText("Manage customer directory")).toBeVisible();
@@ -234,7 +231,7 @@ describe("OrganizationRolesPanel", () => {
 
     render(<OrganizationRolesPanel organizationId={organizationId} />);
 
-    await screen.findByDisplayValue("Owner");
+    await screen.findByDisplayValue("Member");
     await userEvent.click(screen.getByRole("button", { name: /Appointments \/ Schedule/ }));
 
     expect(screen.getByText("Manage schedule & appointments")).toBeVisible();
@@ -272,7 +269,7 @@ describe("OrganizationRolesPanel", () => {
 
     render(<OrganizationRolesPanel organizationId={organizationId} />);
 
-    await screen.findByDisplayValue("Owner");
+    await screen.findByDisplayValue("Member");
     await userEvent.click(screen.getByRole("button", { name: /Assistant/ }));
 
     expect(screen.getByText("Use AI assistant")).toBeVisible();
@@ -302,7 +299,7 @@ describe("OrganizationRolesPanel", () => {
 
     render(<OrganizationRolesPanel organizationId={organizationId} />);
 
-    await screen.findByDisplayValue("Owner");
+    await screen.findByDisplayValue("Member");
     await userEvent.click(screen.getByRole("button", { name: /Create custom role/ }));
 
     // Core modules are rendered first under their own section header.
@@ -331,7 +328,7 @@ describe("OrganizationRolesPanel", () => {
 
     render(<OrganizationRolesPanel organizationId={organizationId} />);
 
-    await screen.findByDisplayValue("Owner");
+    await screen.findByDisplayValue("Member");
     await userEvent.click(screen.getByRole("button", { name: /Create custom role/ }));
 
     expect(screen.getByRole("textbox", { name: "Role Name" })).toHaveValue("");

@@ -23,6 +23,7 @@ import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import { Input } from "@/contexts/shared/interfaces/components/ui/input";
 import { cn } from "@/lib/utils";
 import {
+  SEMANTIC_OWNER_ROLE_ID,
   createWorkforceRoleSchema,
   workforceRolePermissionCatalog,
   workforceRoleSchema,
@@ -50,8 +51,8 @@ function moduleEntries(module: PermissionModule): ReadonlyArray<PermissionEntry>
   return module.permissions ?? [];
 }
 
-/** Only Owner and Member remain factory system roles; render them owner-first. */
-const SYSTEM_ROLE_ORDER = ["Owner", "Member"] as const;
+/** SYSTEM ROLES shows only the editable Member role; Owner is hidden from the editor. */
+const SYSTEM_ROLE_ORDER = ["Member"] as const;
 
 function systemRoleRank(name: string): number {
   const rank = SYSTEM_ROLE_ORDER.indexOf(name as (typeof SYSTEM_ROLE_ORDER)[number]);
@@ -191,6 +192,24 @@ type BadgeColor = (typeof badgeColors)[number];
 
 const NEW_ROLE = "__new__";
 
+/**
+ * The immutable Owner role cannot be edited, so it is hidden from the editor entirely:
+ * by name ("Owner") or by its reserved semantic id.
+ */
+function isOwnerRole(role: WorkforceRoleResource): boolean {
+  return role.name === "Owner" || role.id === SEMANTIC_OWNER_ROLE_ID;
+}
+
+/** Defaults the editor to Member, else the first custom role, never the hidden Owner. */
+function defaultSelectionId(roleList: WorkforceRoleResource[]): string {
+  return (
+    roleList.find((role) => role.systemRole && !isOwnerRole(role))?.id ??
+    roleList.find((role) => !role.systemRole)?.id ??
+    roleList.find((role) => !isOwnerRole(role))?.id ??
+    NEW_ROLE
+  );
+}
+
 type FormState = {
   name: string;
   permissions: string[];
@@ -241,8 +260,9 @@ export function OrganizationRolesPanel({ organizationId }: { organizationId: str
 
       const keepCurrent =
         selectedRoleId.length > 0 &&
-        (selectedRoleId === NEW_ROLE || parsedRoles.some((role) => role.id === selectedRoleId));
-      const nextId = keepCurrent ? selectedRoleId : parsedRoles[0]?.id ?? NEW_ROLE;
+        (selectedRoleId === NEW_ROLE ||
+          parsedRoles.some((role) => role.id === selectedRoleId && !isOwnerRole(role)));
+      const nextId = keepCurrent ? selectedRoleId : defaultSelectionId(parsedRoles);
       setSelectedRoleId(nextId);
       setForm(formForSelection(nextId, parsedRoles));
     } catch (reason) {
@@ -261,8 +281,9 @@ export function OrganizationRolesPanel({ organizationId }: { organizationId: str
     return () => window.clearTimeout(timer);
   }, [organizationId]);
 
+  // SYSTEM ROLES renders only the editable Member role; the immutable Owner is hidden.
   const systemRoles = roles
-    .filter((role) => role.systemRole)
+    .filter((role) => role.systemRole && !isOwnerRole(role))
     .sort((a, b) => systemRoleRank(a.name) - systemRoleRank(b.name));
   const customRoles = roles.filter((role) => !role.systemRole);
 
