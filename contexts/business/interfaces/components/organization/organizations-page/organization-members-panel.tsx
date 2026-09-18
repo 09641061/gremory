@@ -44,6 +44,7 @@ import {
   Select,
   SelectContent,
   SelectItem,
+  SelectSeparator,
   SelectTrigger,
   SelectValue,
 } from "@/contexts/shared/interfaces/components/ui/select";
@@ -85,6 +86,8 @@ export interface OrganizationRosterPanelProps {
 }
 
 const ALL_ESTABLISHMENTS = "all";
+const ALL_ROLES = "all";
+const MEMBER_ROLE_FILTER = "system:member";
 
 export function OrganizationMembersPanel({
   organizationId,
@@ -99,6 +102,7 @@ export function OrganizationMembersPanel({
   const [roles, setRoles] = useState<WorkforceRoleResource[]>([]);
   const [search, setSearch] = useState("");
   const [establishmentFilter, setEstablishmentFilter] = useState<string>(ALL_ESTABLISHMENTS);
+  const [roleFilter, setRoleFilter] = useState<string>(ALL_ROLES);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [roleMutationKey, setRoleMutationKey] = useState<string | null>(null);
@@ -377,7 +381,12 @@ export function OrganizationMembersPanel({
     const matchesEstablishment =
       activeEstablishmentFilter === ALL_ESTABLISHMENTS ||
       scopeFor(member).includes(activeEstablishmentFilter);
-    return matchesStatus && matchesSearch && matchesEstablishment;
+    const matchesRole =
+      roleFilter === ALL_ROLES ||
+      (roleFilter === MEMBER_ROLE_FILTER
+        ? member.roles.some((role) => role.systemRole && role.name === "Member")
+        : member.roles.some((role) => role.id === roleFilter));
+    return matchesStatus && matchesSearch && matchesEstablishment && matchesRole;
   });
 
   const establishmentFilterOptions = [
@@ -389,6 +398,17 @@ export function OrganizationMembersPanel({
   ];
   const establishmentFilterLabel = (value: string) =>
     establishmentFilterOptions.find((option) => option.value === value)?.label ?? value;
+
+  const customRoleFilterOptions = roles
+    .filter((role) => !role.systemRole)
+    .map((role) => ({ value: role.id, label: role.name }));
+  const roleFilterOptions = [
+    { value: ALL_ROLES, label: "All" },
+    { value: MEMBER_ROLE_FILTER, label: "Member" },
+    ...customRoleFilterOptions,
+  ];
+  const roleFilterLabel = (value: string) =>
+    roleFilterOptions.find((option) => option.value === value)?.label ?? value;
 
   // Bulk selection spans every operational row (active memberships and pending
   // invitations). Only the system Owner is excluded, so the root proprietor profile
@@ -558,7 +578,7 @@ export function OrganizationMembersPanel({
       ) : null}
 
       {/* Toolbar */}
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
+      <div className="flex flex-col gap-3 lg:flex-row lg:flex-wrap lg:items-center">
         <div className="relative w-full lg:max-w-xs">
           <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
           <Input
@@ -599,6 +619,41 @@ export function OrganizationMembersPanel({
           </Select>
         </div>
         )}
+
+        {!isInvites ? (
+          <div className="flex w-full items-center gap-2 lg:max-w-xs">
+            <span className="shrink-0 text-sm font-medium text-foreground">Role:</span>
+            <Select
+              items={roleFilterOptions}
+              value={roleFilter}
+              onValueChange={(next) => setRoleFilter(typeof next === "string" ? next : ALL_ROLES)}
+            >
+              <SelectTrigger aria-label="Filter by Role" className="w-full">
+                <SelectValue placeholder="All">
+                  {(value: string | null) => (
+                    <span className="truncate font-medium text-foreground">
+                      {roleFilterLabel(value ?? ALL_ROLES)}
+                    </span>
+                  )}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={ALL_ROLES} label="All">
+                  All
+                </SelectItem>
+                <SelectItem value={MEMBER_ROLE_FILTER} label="Member">
+                  Member
+                </SelectItem>
+                <SelectSeparator />
+                {customRoleFilterOptions.map((option) => (
+                  <SelectItem key={option.value} value={option.value} label={option.label}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        ) : null}
 
         {isInvites && canInvite ? (
           <Button type="button" onClick={() => setInviteOpen(true)} className="gap-2 bg-emerald-600 text-white hover:bg-emerald-700 lg:ml-auto">

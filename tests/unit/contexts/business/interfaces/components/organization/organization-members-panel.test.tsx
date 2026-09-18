@@ -237,6 +237,29 @@ describe("OrganizationMembersPanel", () => {
     expect(filter).toHaveTextContent("LOCALOne");
   });
 
+  it("filters members cumulatively by assigned role with clean options", async () => {
+    vi.stubGlobal("fetch", mockApi());
+
+    render(<OrganizationMembersPanel organizationId={organizationId} establishments={establishments} />);
+
+    await screen.findByText("Active User");
+    // External prefix label, matching the Establishment filter styling.
+    expect(screen.getByText("Role:")).toBeVisible();
+
+    const roleFilter = screen.getByRole("combobox", { name: "Filter by Role" });
+    await userEvent.click(roleFilter);
+
+    expect(await screen.findByRole("option", { name: "All" })).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: "Member" })).toBeInTheDocument();
+    const cashierOption = screen.getByRole("option", { name: "Cashier" });
+    expect(cashierOption.textContent).not.toContain("[");
+
+    await userEvent.click(cashierOption);
+
+    expect(screen.getByText("Active User")).toBeVisible();
+    expect(screen.queryByText("Organization Owner")).toBeNull();
+  });
+
   it("resends a pending invitation through the dedicated endpoint", async () => {
     const fetchMock = mockApi();
     vi.stubGlobal("fetch", fetchMock);
