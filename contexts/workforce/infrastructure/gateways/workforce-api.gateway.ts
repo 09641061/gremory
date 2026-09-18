@@ -188,9 +188,14 @@ export class WorkforceApiGateway {
     );
   }
 
-  async removeMember(organizationId: string, memberId: string): Promise<void> {
+  /**
+   * Evicts a member from the whole organization: every establishment membership of the
+   * user is removed in one backend transaction, keyed by user id rather than a single
+   * establishment membership.
+   */
+  async evictOrganizationMember(organizationId: string, userId: string): Promise<void> {
     await apiClient.delete(
-      `${apiConfig.routes.workforce.members}/${encodeURIComponent(memberId)}`,
+      `${apiConfig.routes.workforce.organizations}/${encodeURIComponent(organizationId)}/members/${encodeURIComponent(userId)}`,
       { token: await this.accessToken(), headers: this.organizationHeader(organizationId) },
     );
   }

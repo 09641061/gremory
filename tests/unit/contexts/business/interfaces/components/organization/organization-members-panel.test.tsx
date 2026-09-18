@@ -62,6 +62,7 @@ function mockApi() {
           username: "Active User",
           status: "ACTIVE",
           memberId: "44444444-4444-4444-8444-444444444444",
+          userId: "44444444-4444-4444-8444-444444444445",
           roles: [memberRole, cashierRole],
         }),
         rosterEntry({ email: "pending@example.com", status: "PENDING" }),
@@ -287,6 +288,28 @@ describe("OrganizationMembersPanel", () => {
         body: JSON.stringify({ roleId: adminRole.id }),
       }),
     );
+  });
+
+  it("evicts a member from the whole organization on confirm", async () => {
+    const fetchMock = mockApi();
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(<OrganizationMembersPanel organizationId={organizationId} establishments={establishments} />);
+
+    await screen.findByText("Active User");
+    const row = screen.getByText("Active User").closest("tr");
+    expect(row).not.toBeNull();
+
+    await userEvent.click(within(row!).getByRole("button", { name: "Actions for Active User" }));
+    await userEvent.click(await screen.findByRole("menuitem", { name: "Remove from Organization" }));
+    await userEvent.click(await screen.findByRole("button", { name: "Remove" }));
+
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenCalledWith(
+        `/api/workforce/organizations/${organizationId}/members/44444444-4444-4444-8444-444444444445`,
+        expect.objectContaining({ method: "DELETE" }),
+      );
+    });
   });
 
   it("keeps system roles solid and only removes custom roles inline", async () => {

@@ -191,15 +191,16 @@ export function TeamRoster({ establishmentId = null }: { establishmentId?: strin
 
   async function confirmRemoveMember() {
     const member = memberToRemove;
-    if (!organizationId || !member?.memberId || isOwner(member)) return;
+    if (!organizationId || !isUuid(member?.userId) || isOwner(member)) return;
 
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch(`/api/workforce/members/${member.memberId}`, {
-        method: "DELETE",
-        headers: { "X-Organization-Id": organizationId },
-      });
+      // Organization-wide eviction: purges every establishment membership at once.
+      const response = await fetch(
+        `/api/workforce/organizations/${organizationId}/members/${member.userId}`,
+        { method: "DELETE", headers: { "X-Organization-Id": organizationId } },
+      );
       if (!response.ok) throw new Error(readErrorMessage(await response.json()));
       setMemberToRemove(null);
       await loadRoster(page);

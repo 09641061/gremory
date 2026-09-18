@@ -3,15 +3,20 @@ import { z } from "zod";
 
 import { WorkforceApiGateway } from "@/contexts/workforce/infrastructure/gateways/workforce-api.gateway";
 
-export async function DELETE(request: Request, { params }: { params: Promise<{ memberId: string }> }) {
-  const organizationId = request.headers.get("X-Organization-Id");
-  const { memberId } = await params;
-  if (!z.string().uuid().safeParse(organizationId).success || !z.string().uuid().safeParse(memberId).success) {
+export async function DELETE(
+  _request: Request,
+  { params }: { params: Promise<{ organizationId: string; userId: string }> },
+) {
+  const { organizationId, userId } = await params;
+  if (
+    !z.string().uuid().safeParse(organizationId).success ||
+    !z.string().uuid().safeParse(userId).success
+  ) {
     return NextResponse.json({ message: "A valid organization and member are required" }, { status: 400 });
   }
 
   try {
-    await new WorkforceApiGateway().removeMember(organizationId!, memberId);
+    await new WorkforceApiGateway().evictOrganizationMember(organizationId, userId);
     return new NextResponse(null, { status: 204 });
   } catch (error) {
     return errorResponse(error);

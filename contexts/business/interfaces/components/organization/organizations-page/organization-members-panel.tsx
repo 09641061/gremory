@@ -288,17 +288,19 @@ export function OrganizationMembersPanel({
 
   async function confirmRemoveMember() {
     const member = removeTarget;
-    if (!member?.memberId || member.isOwner) return;
+    if (!member?.userId || member.isOwner || !isUuid(organizationId)) return;
 
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch(`/api/workforce/members/${member.memberId}`, {
-        method: "DELETE",
-        headers: { "X-Organization-Id": organizationId },
-      });
+      // Organization-wide eviction: purges every establishment membership at once.
+      const response = await fetch(
+        `/api/workforce/organizations/${organizationId}/members/${member.userId}`,
+        { method: "DELETE", headers: { "X-Organization-Id": organizationId } },
+      );
       if (!response.ok) throw new Error(readErrorMessage(await response.json().catch(() => undefined)));
       setRemoveTarget(null);
+      setSelectedRowIds((current) => current.filter((id) => id !== rowKey(member)));
       await loadData();
     } catch (reason) {
       setRemoveTarget(null);
@@ -811,7 +813,7 @@ export function OrganizationMembersPanel({
                         <DropdownMenuItem
                           variant="destructive"
                           className="text-red-600 focus:text-red-600"
-                          disabled={owner || !member.memberId}
+                          disabled={owner || !member.userId}
                           onClick={() => setRemoveTarget(member)}
                         >
                           Remove from Organization

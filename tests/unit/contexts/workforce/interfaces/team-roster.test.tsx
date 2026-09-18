@@ -228,7 +228,7 @@ describe("TeamRoster", () => {
 
     await waitFor(() =>
       expect(fetchMock).toHaveBeenCalledWith(
-        `/api/workforce/members/${member.memberId}`,
+        `/api/workforce/organizations/${organizationId}/members/${member.userId}`,
         expect.objectContaining({ method: "DELETE" }),
       ),
     );
