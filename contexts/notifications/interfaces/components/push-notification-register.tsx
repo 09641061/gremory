@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { requestPushPermission } from "@/lib/firebase";
+import { requestPushPermission, registerForegroundNotificationListener } from "@/lib/firebase";
+import { registerDeviceTokenAction } from "../actions/notification.actions";
 
 interface PushNotificationRegisterProps {
   accessToken?: string;
@@ -17,20 +18,35 @@ export function PushNotificationRegister({ accessToken }: PushNotificationRegist
     requestPushPermission().then(async (token) => {
       if (token) {
         try {
-          await fetch("/api/v1/notifications/device-tokens", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${accessToken}`,
-            },
-            body: JSON.stringify({ deviceToken: token, platform: "WEB" }),
-          });
+          const res = await registerDeviceTokenAction(token, "WEB");
+          if (!res.success) {
+            console.warn("Failed to register device token in backend:", res.error);
+          }
         } catch (error) {
-          console.error("Error al registrar el device token en Haimiya:", error);
+          console.error("Error registering device token in backend:", error);
         }
       }
     });
+
+    // Listen for push notifications when the tab is in the foreground
+    const unsubscribe = registerForegroundNotificationListener((payload) => {
+      console.log("Foreground notification received:", payload);
+      const title = payload.notification?.title || payload.data?.title || "Takodu Notification";
+      const options = {
+        body: payload.notification?.body || payload.data?.message || payload.data?.body || "",
+        icon: "/favicon.ico",
+      };
+
+      if (Notification.permission === "granted") {
+        new Notification(title, options);
+      }
+    });
+
+    return () => {
+      unsubscribe?.();
+    };
   }, [accessToken]);
 
   return null;
 }
+

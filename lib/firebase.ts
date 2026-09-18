@@ -10,31 +10,76 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
+export const defaultVapidKey =
+  process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY;
+
+export const getFirebaseApp = () => {
+  return getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
+};
 
 export const requestPushPermission = async (): Promise<string | null> => {
   try {
-    if (typeof window === "undefined") return null;
+    if (typeof window === "undefined" || !("Notification" in window) || !("serviceWorker" in navigator)) {
+      return null;
+    }
 
     const supported = await isSupported();
     if (!supported) {
-      console.warn("Firebase Messaging no está soportado en este navegador.");
+      console.warn("Firebase Messaging is not supported in this browser.");
       return null;
     }
 
     if (Notification.permission === "denied") {
+      console.warn("Notification permission denied in browser.");
       return null;
     }
 
     const permission = await Notification.requestPermission();
     if (permission === "granted") {
+      const app = getFirebaseApp();
       const messaging = getMessaging(app);
-      const vapidKey = process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY;
-      const token = await getToken(messaging, { vapidKey });
+
+      // Register and wait for service worker to be fully ready
+      const registration = await navigator.serviceWorker.register("/firebase-messaging-sw.js", {
+        scope: "/",
+      });
+      await navigator.serviceWorker.ready;
+
+      const token = await getToken(messaging, {
+        vapidKey: defaultVapidKey,
+        serviceWorkerRegistration: registration,
+      });
+
       return token;
+    } else {
+      console.warn("User did not grant notification permissions:", permission);
+      return null;
     }
   } catch (error) {
-    console.warn("Permiso de notificaciones o servicio push no completado:", error);
+    console.warn("Notification permission or push service failed:", error);
+    if (String(error).includes("push service error") || String(error).includes("AbortError")) {
+      console.warn(
+        "💡 Note: If using Brave Browser, enable 'Use Google services for push messaging' in brave://settings/privacy. Push notifications are not supported in incognito/private mode."
+      );
+    }
   }
   return null;
 };
+
+export const registerForegroundNotificationListener = (
+  onNotificationReceived: (payload: MessagePayload) => void
+) => {
+  if (typeof window === "undefined") return () => {};
+
+  try {
+    const app = getFirebaseApp();
+    const messaging = getMessaging(app);
+    return onMessage(messaging, (payload) => {
+      onNotificationReceived(payload);
+    });
+  } catch (err) {
+    console.warn("Could not register foreground notification listener:", err);
+    return () => {};
+  }
+};
+
