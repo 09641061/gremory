@@ -65,9 +65,9 @@ function plan(
 
 // The page resolves every currency up front, so the view never fetches.
 const plansByCurrency: PlansByCurrencyReadModel = {
-  USD: [plan(1, "Standard", 20, 200), plan(2, "Premium", 50, 500)],
-  PEN: [plan(1, "Standard", 75, 750), plan(2, "Premium", 190, 1900)],
-  EUR: [plan(1, "Standard", 18, 180), plan(2, "Premium", 45, 450)],
+  USD: [plan(1, "Standard", 20, 200), plan(2, "Max", 50, 500)],
+  PEN: [plan(1, "Standard", 75, 750), plan(2, "Max", 190, 1900)],
+  EUR: [plan(1, "Standard", 18, 180), plan(2, "Max", 45, 450)],
 };
 
 describe("SubscribeView Component", () => {
@@ -77,7 +77,7 @@ describe("SubscribeView Component", () => {
 
     expect(await screen.findByText("Choose the plan that fits you")).toBeDefined();
     expect(await screen.findByRole("button", { name: "Get Standard plan" })).toBeDefined();
-    expect(screen.getByRole("button", { name: "Get Premium plan" })).toBeDefined();
+    expect(screen.getByRole("button", { name: "Get Max plan" })).toBeDefined();
   });
 
   it("toggles billing cycle between Monthly and Annual", async () => {

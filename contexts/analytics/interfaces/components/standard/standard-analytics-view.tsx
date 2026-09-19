@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useTransition, useEffect } from "react";
+import React, { useState, useTransition } from "react";
 import type { StandardAnalyticsDashboardResponse } from "../../rest/schemas/standard-analytics.schemas";
 import type { AnalyticsPreset } from "../../../domain/model/value-objects/analytics-date-range";
 import { AnalyticsExportService } from "../../../domain/services/analytics-export.service";
