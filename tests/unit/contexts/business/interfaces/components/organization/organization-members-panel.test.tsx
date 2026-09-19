@@ -557,9 +557,15 @@ describe("OrganizationMembersPanel", () => {
 
     expect(screen.getByRole("heading", { name: "Invite member" })).toBeVisible();
     expect(screen.getByRole("textbox", { name: "Email" })).toBeVisible();
-    expect(screen.getByRole("combobox", { name: "Role" })).toBeVisible();
     expect(screen.getByText("All establishments")).toBeVisible();
     expect(screen.getByRole("button", { name: "Send invitation" })).toBeVisible();
+
+    // The role dropdown never offers Owner and shows clean, bracket-free labels.
+    await userEvent.click(screen.getByRole("combobox", { name: "Role" }));
+    expect(await screen.findByRole("option", { name: "Member" })).toBeInTheDocument();
+    expect(screen.queryByRole("option", { name: /Owner/ })).toBeNull();
+    expect(screen.queryByText("[System]")).toBeNull();
+    expect(screen.queryByText("[Custom]")).toBeNull();
   });
 
   it("excludes the Owner from bulk selection and reveals the bar only from two picks", async () => {

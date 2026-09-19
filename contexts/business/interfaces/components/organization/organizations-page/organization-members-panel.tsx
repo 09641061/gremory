@@ -1435,7 +1435,19 @@ function InviteMemberDialog({
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const defaultRole = roles.find((role) => role.name === "Member" && role.systemRole)?.id ?? roles[0]?.id ?? "";
+  // The Owner role is reserved for the organization proprietor and is never assignable
+  // through invitations; only Member and operational custom roles are offered.
+  const assignableRoles = roles.filter((role) => role.name !== "Owner");
+  const assignableRoleOptions = assignableRoles.map((role) => ({
+    value: role.id,
+    label: role.name,
+  }));
+  const defaultRole =
+    assignableRoles.find((role) => role.name === "Member" && role.systemRole)?.id ??
+    assignableRoles[0]?.id ??
+    "";
+  const roleLabel = (value: string) =>
+    assignableRoleOptions.find((option) => option.value === value)?.label ?? "Member";
 
   function reset() {
     setEmail("");
@@ -1509,22 +1521,32 @@ function InviteMemberDialog({
             />
           </label>
 
-          <label className="grid gap-2 text-sm font-medium" htmlFor="invite-role">
-            Role
-            <select
-              id="invite-role"
+          <div className="grid gap-2">
+            <span className="text-sm font-medium">Role</span>
+            <Select
+              items={assignableRoleOptions}
               value={roleId || defaultRole}
-              onChange={(event) => setRoleId(event.target.value)}
+              onValueChange={(next) => setRoleId(typeof next === "string" ? next : "")}
               disabled={submitting}
-              className="h-(--app-control-height) w-full rounded-lg border border-input bg-background px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/50"
             >
-              {roles.map((role) => (
-                <option key={role.id} value={role.id}>
-                  {role.name} [{role.systemRole ? "System" : "Custom"}]
-                </option>
-              ))}
-            </select>
-          </label>
+              <SelectTrigger aria-label="Role" className="w-full">
+                <SelectValue placeholder="Member">
+                  {(value: string | null) => (
+                    <span className="truncate font-medium text-foreground">
+                      {roleLabel(value ?? defaultRole)}
+                    </span>
+                  )}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                {assignableRoleOptions.map((option) => (
+                  <SelectItem key={option.value} value={option.value} label={option.label}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
           <fieldset className="grid gap-2">
             <legend className="text-sm font-medium">Establishment Access</legend>
