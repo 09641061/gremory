@@ -22,7 +22,6 @@ export const es: LocaleDictionary = {
     schedule: "Agenda",
     crm: "CRM",
     catalog: "Catálogo",
-    team: "Equipo",
     analytics: "Analíticas",
   },
   sidebarProfile: {

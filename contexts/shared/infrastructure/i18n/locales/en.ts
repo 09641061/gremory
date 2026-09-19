@@ -20,7 +20,6 @@ export const en = {
     schedule: "Schedule",
     crm: "CRM",
     catalog: "Catalog",
-    team: "Team",
     analytics: "Analytics",
   },
   sidebarProfile: {
