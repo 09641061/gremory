@@ -70,7 +70,6 @@ export function OrganizationEstablishmentsPanel({
   const [creating, setCreating] = useState(false);
   const [name, setName] = useState("");
   const [timeZone, setTimeZone] = useState(DEFAULT_TIME_ZONE);
-  const [address, setAddress] = useState("");
   const [photoChosen, setPhotoChosen] = useState(false);
   const [formKey, setFormKey] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -98,7 +97,6 @@ export function OrganizationEstablishmentsPanel({
   const hydrate = useCallback((establishment: EstablishmentResource | null) => {
     setName(establishment?.name ?? "");
     setTimeZone(establishment?.timeZone ?? DEFAULT_TIME_ZONE);
-    setAddress("");
     setPhotoChosen(false);
     setFormKey((current) => current + 1);
   }, []);
@@ -361,22 +359,6 @@ export function OrganizationEstablishmentsPanel({
               disabled={disabled}
             />
           </div>
-        </div>
-
-        <div className="grid gap-2">
-          <label htmlFor="establishment-address" className="text-sm font-medium text-foreground">
-            Address / Location <span className="text-muted-foreground">(Optional)</span>
-          </label>
-          <Input
-            id="establishment-address"
-            name="address"
-            value={address}
-            onChange={(event) => setAddress(event.target.value)}
-            placeholder="Street address..."
-            autoComplete="street-address"
-            disabled={disabled}
-            className="max-w-md"
-          />
         </div>
 
         <div className="flex flex-col gap-3 border-t border-border pt-4 sm:flex-row sm:items-center sm:justify-between">

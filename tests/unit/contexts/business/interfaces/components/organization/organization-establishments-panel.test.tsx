@@ -69,7 +69,9 @@ describe("OrganizationEstablishmentsPanel", () => {
     expect(secondOption).not.toHaveTextContent("Branch");
 
     expect(screen.getByText("Time zone")).toBeVisible();
-    expect(screen.getByPlaceholderText("Street address...")).toBeVisible();
+    // The deprecated Address / Location field is gone.
+    expect(screen.queryByPlaceholderText("Street address...")).toBeNull();
+    expect(screen.queryByText(/Address \/ Location/)).toBeNull();
     expect(screen.getByRole("button", { name: /Delete Establishment/ })).toBeEnabled();
   });
 
