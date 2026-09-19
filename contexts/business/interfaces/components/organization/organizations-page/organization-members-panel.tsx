@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useEffectEvent, useState } from "react";
-import { ChevronDown, MapPin, MoreVertical, Plus, Search, ShieldCheck, Users, X } from "lucide-react";
+import { ChevronDown, Link2, MapPin, MoreVertical, Plus, Search, ShieldCheck, Users, X } from "lucide-react";
 import { z } from "zod";
 
 import {
@@ -60,8 +60,10 @@ import { cn } from "@/lib/utils";
 import {
   createWorkforceInvitationSchema,
   isUuid,
+  shareableInvitationLinkSchema,
   workforceMemberPageSchema,
   workforceRoleSchema,
+  type ShareableInvitationLinkResource,
   type WorkforceMemberResource,
   type WorkforceRoleResource,
 } from "@/contexts/workforce/interfaces/rest/schemas/workforce-member.schemas";
@@ -70,6 +72,7 @@ import {
   isUnauthenticated,
   redirectToLogin,
 } from "@/contexts/shared/infrastructure/http/resource-lifecycle";
+import { ShareableLinkDialog } from "./organization-shareable-link-dialog";
 
 export type EstablishmentOption = { id: string; name: string };
 
@@ -100,6 +103,8 @@ export function OrganizationMembersPanel({
   const isInvites = mode === "invites";
   const [members, setMembers] = useState<WorkforceMemberResource[]>([]);
   const [roles, setRoles] = useState<WorkforceRoleResource[]>([]);
+  const [shareableLinks, setShareableLinks] = useState<ShareableInvitationLinkResource[]>([]);
+  const [invitesSubView, setInvitesSubView] = useState<"personal" | "links">("personal");
   const [search, setSearch] = useState("");
   const [establishmentFilter, setEstablishmentFilter] = useState<string>(ALL_ESTABLISHMENTS);
   const [roleFilter, setRoleFilter] = useState<string>(ALL_ROLES);
@@ -110,6 +115,7 @@ export function OrganizationMembersPanel({
   const [removeTarget, setRemoveTarget] = useState<WorkforceMemberResource | null>(null);
   const [revokeTarget, setRevokeTarget] = useState<WorkforceMemberResource | null>(null);
   const [inviteOpen, setInviteOpen] = useState(false);
+  const [shareLinkOpen, setShareLinkOpen] = useState(false);
   const [selectedRowIds, setSelectedRowIds] = useState<string[]>([]);
   const [bulkBusy, setBulkBusy] = useState(false);
 
@@ -162,6 +168,48 @@ export function OrganizationMembersPanel({
     return () => window.clearTimeout(timer);
   }, [organizationId]);
 
+  /**
+   * Shareable links have their own lifecycle so a roster/roles parsing issue can never
+   * short-circuit the links table (and vice versa).
+   */
+  async function loadShareableLinks() {
+    if (!isInvites) {
+      setShareableLinks([]);
+      return;
+    }
+    try {
+      const response = await fetch("/api/workforce/invitations/shareable-links", {
+        headers: { "X-Organization-Id": organizationId },
+      });
+      const body: unknown = await response.json().catch(() => undefined);
+      if (isUnauthenticated(response.status)) {
+        redirectToLogin();
+        return;
+      }
+      console.log("Hydrating Invite Links state with:", body);
+      const candidates = extractShareableLinks(body);
+      // Parse per item so a single malformed row never empties the whole table.
+      const hydrated = candidates.flatMap((candidate) => {
+        const result = shareableInvitationLinkSchema.safeParse(candidate);
+        return result.success ? [result.data] : [];
+      });
+      setShareableLinks(response.ok ? hydrated : []);
+    } catch (reason) {
+      console.error("Unable to load shareable links.", reason);
+      setShareableLinks([]);
+    }
+  }
+
+  const loadInitialLinks = useEffectEvent(() => {
+    void loadShareableLinks();
+  });
+
+  useEffect(() => {
+    if (!isInvites || !organizationId) return;
+    const timer = window.setTimeout(loadInitialLinks, 0);
+    return () => window.clearTimeout(timer);
+  }, [isInvites, organizationId]);
+
   function scopeFor(member: WorkforceMemberResource): string[] {
     const scope = member.establishments.map((establishment) => establishment.id);
     return scope.length > 0 ? scope : [member.establishmentId];
@@ -176,6 +224,25 @@ export function OrganizationMembersPanel({
 
   function customRoles(member: WorkforceMemberResource): WorkforceRoleResource[] {
     return member.roles.filter((role) => !role.systemRole);
+  }
+
+  function rolesForLink(link: ShareableInvitationLinkResource): string[] {
+    return link.roleIds
+      .map((id) => roles.find((role) => role.id === id)?.name)
+      .filter((name): name is string => Boolean(name));
+  }
+
+  function establishmentsForLink(link: ShareableInvitationLinkResource): string[] {
+    return link.establishmentIds
+      .map((id) => establishments.find((establishment) => establishment.id === id)?.name)
+      .filter((name): name is string => Boolean(name));
+  }
+
+  function linkBaselineLabel(link: ShareableInvitationLinkResource): string {
+    const names = rolesForLink(link);
+    // roleName is a direct fallback when the backend sends it instead of role ids.
+    const base = link.roleName ?? names.find((name) => name === "Member") ?? names[0] ?? "Member";
+    return `Role: ${base}`;
   }
 
   const swappableSystemRoles = roles
@@ -410,6 +477,19 @@ export function OrganizationMembersPanel({
   const roleFilterLabel = (value: string) =>
     roleFilterOptions.find((option) => option.value === value)?.label ?? value;
 
+  const visibleLinks = shareableLinks.filter((link) => {
+    const matchesSearch =
+      normalizedSearch.length === 0 ||
+      link.url.toLowerCase().includes(normalizedSearch) ||
+      rolesForLink(link).some((name) => name.toLowerCase().includes(normalizedSearch)) ||
+      establishmentsForLink(link).some((name) => name.toLowerCase().includes(normalizedSearch));
+    const matchesEstablishment =
+      activeEstablishmentFilter === ALL_ESTABLISHMENTS ||
+      link.establishmentIds.length === 0 ||
+      link.establishmentIds.includes(activeEstablishmentFilter);
+    return matchesSearch && matchesEstablishment;
+  });
+
   // Bulk selection spans every operational row (active memberships and pending
   // invitations). Only the system Owner is excluded, so the root proprietor profile
   // can never be mutated in a batch.
@@ -569,6 +649,34 @@ export function OrganizationMembersPanel({
     }
   }
 
+  async function copyShareableLink(link: ShareableInvitationLinkResource) {
+    try {
+      await navigator.clipboard.writeText(link.url);
+    } catch {
+      setError("Copying is not available in this browser.");
+    }
+  }
+
+  async function revokeShareableLink(link: ShareableInvitationLinkResource) {
+    if (bulkBusy || !isUuid(organizationId)) return;
+    setBulkBusy(true);
+    setError(null);
+    try {
+      const response = await fetch(`/api/workforce/invitations/shareable-links/${link.id}`, {
+        method: "DELETE",
+        headers: { "X-Organization-Id": organizationId },
+      });
+      if (!response.ok) throw new Error(readErrorMessage(await response.json().catch(() => undefined)));
+      // Optimistically drop the row, then reconcile with the server.
+      setShareableLinks((current) => current.filter((item) => item.id !== link.id));
+      await loadData();
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "Unable to revoke the link.");
+    } finally {
+      setBulkBusy(false);
+    }
+  }
+
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-6">
       {error ? (
@@ -584,8 +692,20 @@ export function OrganizationMembersPanel({
           <Input
             value={search}
             onChange={(event) => setSearch(event.target.value)}
-            placeholder={isInvites ? "Search invitations..." : "Search members..."}
-            aria-label={isInvites ? "Search invitations" : "Search members"}
+            placeholder={
+              isInvites
+                ? invitesSubView === "links"
+                  ? "Search shareable links..."
+                  : "Search invitations..."
+                : "Search members..."
+            }
+            aria-label={
+              isInvites
+                ? invitesSubView === "links"
+                  ? "Search shareable links"
+                  : "Search invitations"
+                : "Search members"
+            }
             className="pl-9"
           />
         </div>
@@ -656,12 +776,61 @@ export function OrganizationMembersPanel({
         ) : null}
 
         {isInvites && canInvite ? (
-          <Button type="button" onClick={() => setInviteOpen(true)} className="gap-2 bg-emerald-600 text-white hover:bg-emerald-700 lg:ml-auto">
-            <Plus className="size-4" aria-hidden="true" />
-            Invite member
-          </Button>
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center lg:ml-auto">
+            <Button type="button" variant="outline" onClick={() => setShareLinkOpen(true)} className="gap-2">
+              <Link2 className="size-4" aria-hidden="true" />
+              Generate Invite Link
+            </Button>
+            <Button type="button" onClick={() => setInviteOpen(true)} className="gap-2 bg-emerald-600 text-white hover:bg-emerald-700">
+              <Plus className="size-4" aria-hidden="true" />
+              Invite member
+            </Button>
+          </div>
         ) : null}
       </div>
+
+      {isInvites ? (
+        <div
+          role="tablist"
+          aria-label="Invitation view"
+          className="inline-flex w-fit items-center gap-1 rounded-lg border border-border/70 bg-muted/40 p-1"
+        >
+          <button
+            type="button"
+            role="tab"
+            aria-selected={invitesSubView === "personal"}
+            onClick={() => {
+              setInvitesSubView("personal");
+              setSelectedRowIds([]);
+            }}
+            className={cn(
+              "rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
+              invitesSubView === "personal"
+                ? "bg-background text-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground",
+            )}
+          >
+            Personal Invites
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={invitesSubView === "links"}
+            onClick={() => {
+              setInvitesSubView("links");
+              setSelectedRowIds([]);
+            }}
+            className={cn(
+              "rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
+              invitesSubView === "links"
+                ? "bg-background text-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground",
+            )}
+          >
+            Invite Links
+          </button>
+        </div>
+      ) : null}
 
       {/* Unified staff table */}
       <div className="rounded-lg border border-border/70">
@@ -669,13 +838,15 @@ export function OrganizationMembersPanel({
           <TableHeader>
             <TableRow>
               <TableHead className="w-10 pl-4">
-                <Checkbox
-                  checked={allSelectableSelected}
-                  indeterminate={someSelectableSelected}
-                  onCheckedChange={toggleAllSelection}
-                  disabled={selectableRowIds.length === 0 || bulkBusy || !canManageMembers}
-                  aria-label="Select all members"
-                />
+                {isInvites && invitesSubView === "links" ? null : (
+                  <Checkbox
+                    checked={allSelectableSelected}
+                    indeterminate={someSelectableSelected}
+                    onCheckedChange={toggleAllSelection}
+                    disabled={selectableRowIds.length === 0 || bulkBusy || !canManageMembers}
+                    aria-label="Select all members"
+                  />
+                )}
               </TableHead>
               <TableHead className="px-4">Person / Email</TableHead>
               <TableHead>Assigned Roles</TableHead>
@@ -685,7 +856,7 @@ export function OrganizationMembersPanel({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {visibleMembers.map((member) => {
+            {(!isInvites || invitesSubView === "personal" ? visibleMembers : []).map((member) => {
               const owner = member.isOwner;
               const active = member.status === "ACTIVE" && member.memberId !== null;
               const isPending = member.status === "PENDING";
@@ -907,10 +1078,85 @@ export function OrganizationMembersPanel({
                 </TableRow>
               );
             })}
-            {!loading && visibleMembers.length === 0 ? (
+            {isInvites && invitesSubView === "links"
+              ? visibleLinks.map((link) => (
+                  <TableRow key={link.id} className="group/row">
+                    <TableCell className="w-10 pl-4" />
+                    <TableCell className="px-4 py-4 whitespace-normal">
+                      <div className="font-medium text-foreground">🔗 Shareable Link</div>
+                      <div className="mt-0.5 text-xs text-muted-foreground">
+                        {linkBaselineLabel(link)}
+                      </div>
+                    </TableCell>
+                    <TableCell className="whitespace-normal">
+                      <span className="text-xs text-muted-foreground">Multi-use token</span>
+                    </TableCell>
+                    <TableCell className="whitespace-normal">
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        {establishmentsForLink(link).map((name) => (
+                          <Badge key={name} variant="outline" className="gap-1">
+                            <MapPin className="size-3" aria-hidden="true" />
+                            {name}
+                          </Badge>
+                        ))}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge
+                        variant="outline"
+                        className={cn(
+                          linkExpirationState(link.expiresAt) === "active"
+                            ? "border-amber-500/40 bg-amber-500/10 text-amber-600"
+                            : "border-red-500/40 bg-red-500/10 text-red-600",
+                        )}
+                      >
+                        {linkExpirationLabel(link.expiresAt)}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="px-4 text-right">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger
+                          render={
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon-sm"
+                              aria-label="Actions for Shareable Link"
+                            />
+                          }
+                        >
+                          <MoreVertical className="size-4" aria-hidden="true" />
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="min-w-52">
+                          <DropdownMenuItem onClick={() => void copyShareableLink(link)}>
+                            Copy Link URL
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            variant="destructive"
+                            className="text-red-600 focus:text-red-600"
+                            onClick={() => void revokeShareableLink(link)}
+                          >
+                            Revoke Link
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))
+              : null}
+            {!loading &&
+            (isInvites
+              ? invitesSubView === "links"
+                ? visibleLinks.length === 0
+                : visibleMembers.length === 0
+              : visibleMembers.length === 0) ? (
               <TableRow>
                 <TableCell colSpan={6} className="px-4 py-12 text-center text-muted-foreground">
-                  {isInvites ? "No invitations found." : "No members found."}
+                  {isInvites
+                    ? invitesSubView === "links"
+                      ? "No shareable links found."
+                      : "No invitations found."
+                    : "No members found."}
                 </TableCell>
               </TableRow>
             ) : null}
@@ -935,6 +1181,20 @@ export function OrganizationMembersPanel({
         roles={roles}
         onInvited={() => void loadData()}
       />
+
+      {shareLinkOpen ? (
+        <ShareableLinkDialog
+          organizationId={organizationId}
+          establishments={establishments}
+          roles={roles}
+          onClose={() => setShareLinkOpen(false)}
+          onGenerated={() => {
+            // Refresh the links cache so the new row appears in the Invite Links view.
+            void loadShareableLinks();
+            setInvitesSubView("links");
+          }}
+        />
+      ) : null}
 
       <AlertDialog
         open={revokeTarget !== null}
@@ -1316,6 +1576,39 @@ function InviteMemberDialog({
 
 function rowKey(member: WorkforceMemberResource): string {
   return member.memberId ?? member.invitationId;
+}
+
+/**
+ * Accepts the shareable-links payload whether the backend returns a raw array or wraps
+ * it in a container property, so the table never falls back to empty on a shape change.
+ */
+function extractShareableLinks(payload: unknown): unknown[] {
+  if (Array.isArray(payload)) return payload;
+  if (payload && typeof payload === "object") {
+    const record = payload as Record<string, unknown>;
+    for (const key of ["data", "content", "links", "items", "results"]) {
+      if (Array.isArray(record[key])) return record[key] as unknown[];
+    }
+  }
+  return [];
+}
+
+/** Remaining-lifespan countdown label for a shareable link row. */
+function linkExpirationLabel(expiresAt: string): string {
+  const timestamp = new Date(expiresAt).getTime();
+  if (!Number.isFinite(timestamp)) return "NO_EXPIRY";
+  const remainingMs = timestamp - Date.now();
+  if (remainingMs <= 0) return "EXPIRED";
+  const hours = remainingMs / 3_600_000;
+  if (hours <= 24) return `EXP_${Math.max(1, Math.ceil(hours))}_HOURS`;
+  return `EXP_${Math.ceil(hours / 24)}_DAYS`;
+}
+
+/** Expired or nearly-expired links render red; the rest amber. */
+function linkExpirationState(expiresAt: string): "active" | "expiring" {
+  const timestamp = new Date(expiresAt).getTime();
+  if (!Number.isFinite(timestamp)) return "expiring";
+  return timestamp - Date.now() > 6 * 3_600_000 ? "active" : "expiring";
 }
 
 function readErrorMessage(value: unknown): string {

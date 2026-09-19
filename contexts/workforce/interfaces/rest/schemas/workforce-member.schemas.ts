@@ -335,6 +335,44 @@ export const patchWorkforceRoleSchema = z
     message: "At least one field is required",
   });
 
+export const shareableInvitationExpirations = [
+  "ONE_HOUR",
+  "ONE_DAY",
+  "SEVEN_DAYS",
+  "THIRTY_DAYS",
+] as const;
+
+export type ShareableInvitationExpiration = (typeof shareableInvitationExpirations)[number];
+
+export const shareableInvitationLinkSchema = z
+  .object({
+    id: z.string().uuid(),
+    url: z.string().nullish(),
+    expiresAt: z.string().nullish(),
+    expirationTimestamp: z.string().nullish(),
+    establishmentIds: z.array(z.string().uuid()).nullish(),
+    roleIds: z.array(z.string().uuid()).nullish(),
+    roleName: z.string().nullish(),
+  })
+  .transform((value) => ({
+    id: value.id,
+    url: value.url ?? "",
+    expiresAt: value.expiresAt ?? value.expirationTimestamp ?? "",
+    establishmentIds: value.establishmentIds ?? [],
+    roleIds: value.roleIds ?? [],
+    roleName: value.roleName ?? undefined,
+  }));
+
+export type ShareableInvitationLinkResource = z.infer<typeof shareableInvitationLinkSchema>;
+
+export const shareableInvitationPreviewSchema = z.object({
+  organizationName: z.string(),
+  status: z.enum(["PENDING", "EXPIRED"]),
+  expiresAt: z.string().nullish(),
+});
+
+export type ShareableInvitationPreview = z.infer<typeof shareableInvitationPreviewSchema>;
+
 export type WorkforceMemberResource = z.infer<typeof workforceMemberSchema>;
 export type WorkforceMemberEstablishmentResource = z.infer<typeof workforceMemberEstablishmentSchema>;
 export type WorkforceRoleResource = z.infer<typeof workforceRoleSchema>;

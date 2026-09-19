@@ -205,6 +205,165 @@ describe("OrganizationMembersPanel", () => {
     expect(screen.getByRole("button", { name: /Invite member/ })).toBeVisible();
   });
 
+  it("generates a shareable multi-use invitation link from the Invites toolbar", async () => {
+    const fetchMock = vi.fn((url: string, init?: RequestInit) => {
+      if (url.startsWith("/api/workforce/invitations/shareable-links")) {
+        if (init?.method === "POST") {
+          return Promise.resolve(new Response(JSON.stringify({
+            id: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+            url: "http://localhost:3000/invitations/join?token=devtoken",
+            expiresAt: "2026-02-01T00:00:00Z",
+          }), { status: 201 }));
+        }
+        // The persisted link is returned by the list endpoint after creation.
+        return Promise.resolve(new Response(JSON.stringify([{
+          id: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+          url: "http://localhost:3000/invitations/join?token=devtoken",
+          expiresAt: new Date(Date.now() + 86400000).toISOString(),
+          establishmentIds: [establishmentId],
+          roleIds: [memberRole.id],
+        }]), { status: 200 }));
+      }
+      if (url.startsWith("/api/workforce/roles")) {
+        return Promise.resolve(new Response(JSON.stringify([ownerRole, memberRole, cashierRole]), { status: 200 }));
+      }
+      return Promise.resolve(new Response(JSON.stringify({
+        content: [
+          rosterEntry({
+            email: "guest@example.com",
+            username: "Guest One",
+            status: "PENDING",
+            memberId: null,
+            invitationId: "88888888-8888-4888-8888-888888888888",
+            roles: [memberRole],
+          }),
+        ],
+        page: 0,
+        size: 100,
+        totalElements: 1,
+        totalPages: 1,
+      }), { status: 200 }));
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(
+      <OrganizationMembersPanel
+        organizationId={organizationId}
+        establishments={establishments}
+        mode="invites"
+      />,
+    );
+
+    await screen.findByText("Guest One");
+    await userEvent.click(screen.getByRole("button", { name: /Generate Invite Link/ }));
+
+    expect(await screen.findByRole("heading", { name: /Generate Invite Link/ })).toBeVisible();
+    expect(screen.getByRole("combobox", { name: "Base System Role" })).toBeVisible();
+    expect(screen.getByText("Custom Roles")).toBeVisible();
+    expect(screen.getByText("Establishment Access")).toBeVisible();
+    expect(screen.getByRole("combobox", { name: "Link Expiration" })).toBeVisible();
+
+    await userEvent.click(screen.getByRole("button", { name: "Generate Link" }));
+
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenCalledWith(
+        "/api/workforce/invitations/shareable-links",
+        expect.objectContaining({
+          method: "POST",
+          body: JSON.stringify({
+            establishmentIds: [establishmentId],
+            roleIds: [memberRole.id],
+            expiration: "ONE_DAY",
+          }),
+        }),
+      );
+    });
+
+    const linkInput = await screen.findByRole("textbox", { name: "Shareable invitation link" });
+    expect(linkInput).toHaveValue("http://localhost:3000/invitations/join?token=devtoken");
+    expect(screen.getByRole("button", { name: /Copy Link/ })).toBeVisible();
+
+    // The parent reloaded and hydrated the Invite Links table with the new row.
+    await waitFor(() => expect(screen.getByPlaceholderText("Search shareable links...")).toBeVisible());
+    expect(await screen.findByText("🔗 Shareable Link")).toBeVisible();
+  });
+
+  it("lists shareable invite links as rows with expiration badges and link actions", async () => {
+    const linkId = "cccccccc-cccc-4ccc-8ccc-cccccccccccc";
+    const expiresAt = new Date(Date.now() + 3 * 86400000).toISOString();
+    const fetchMock = vi.fn((url: string, init?: RequestInit) => {
+      if (url.startsWith("/api/workforce/invitations/shareable-links")) {
+        // url: null mirrors legacy rows created before the join_url column existed and
+        // must not discard the whole array.
+        return Promise.resolve(new Response(JSON.stringify([{
+          id: linkId,
+          url: null,
+          expiresAt,
+          establishmentIds: [establishmentId],
+          roleIds: [memberRole.id],
+        }]), { status: 200 }));
+      }
+      if (url.startsWith("/api/workforce/roles")) {
+        return Promise.resolve(new Response(JSON.stringify([ownerRole, memberRole, cashierRole]), { status: 200 }));
+      }
+      void init;
+      return Promise.resolve(new Response(JSON.stringify({
+        content: [
+          rosterEntry({
+            email: "guest@example.com",
+            username: "Guest One",
+            status: "PENDING",
+            memberId: null,
+            invitationId: "88888888-8888-4888-8888-888888888888",
+            roles: [memberRole],
+          }),
+        ],
+        page: 0,
+        size: 100,
+        totalElements: 1,
+        totalPages: 1,
+      }), { status: 200 }));
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(
+      <OrganizationMembersPanel
+        organizationId={organizationId}
+        establishments={establishments}
+        mode="invites"
+      />,
+    );
+
+    // Personal Invites is the default sub-view.
+    expect(await screen.findByText("Guest One")).toBeVisible();
+    expect(screen.getByPlaceholderText("Search invitations...")).toBeVisible();
+
+    await userEvent.click(screen.getByRole("tab", { name: "Invite Links" }));
+    expect(screen.getByPlaceholderText("Search shareable links...")).toBeVisible();
+    // Personal invitations are not part of the links sub-view.
+    expect(screen.queryByText("Guest One")).toBeNull();
+
+    expect(await screen.findByText("🔗 Shareable Link")).toBeVisible();
+    expect(screen.getByText("Role: Member")).toBeVisible();
+    expect(screen.getByText("Multi-use token")).toBeVisible();
+    expect(screen.getByText("EXP_3_DAYS")).toBeVisible();
+
+    await userEvent.click(screen.getByRole("button", { name: "Actions for Shareable Link" }));
+    expect(await screen.findByRole("menuitem", { name: "Copy Link URL" })).toBeVisible();
+    await userEvent.click(screen.getByRole("menuitem", { name: "Revoke Link" }));
+
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenCalledWith(
+        `/api/workforce/invitations/shareable-links/${linkId}`,
+        expect.objectContaining({ method: "DELETE" }),
+      );
+    });
+
+    await userEvent.click(screen.getByRole("tab", { name: "Personal Invites" }));
+    expect(screen.getByPlaceholderText("Search invitations...")).toBeVisible();
+    expect(screen.getByText("Guest One")).toBeVisible();
+  });
+
   it("filters the roster locally by search", async () => {
     vi.stubGlobal("fetch", mockApi());
 

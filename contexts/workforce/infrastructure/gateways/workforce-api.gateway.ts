@@ -1,6 +1,7 @@
 import "server-only";
 
 import { cookies } from "next/headers";
+import { z } from "zod";
 
 import { apiConfig } from "@/api.config";
 import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-session-cookie";
@@ -8,6 +9,8 @@ import type { PageResponse } from "@/contexts/shared/application/model/page-resp
 import { apiClient } from "@/contexts/shared/infrastructure/http/api-client";
 import {
   normalizeRoleId,
+  shareableInvitationLinkSchema,
+  shareableInvitationPreviewSchema,
   workforceInvitationAcceptanceSchema,
   workforceInvitationPreviewSchema,
   workforceInvitationSchema,
@@ -15,6 +18,8 @@ import {
   workforceRolePageSchema,
   workforceRoleSchema,
   type CreateWorkforceInvitationInput,
+  type ShareableInvitationLinkResource,
+  type ShareableInvitationPreview,
   type WorkforceInvitationAcceptanceResource,
   type WorkforceInvitationPreviewResource,
   type WorkforceInvitationResource,
@@ -104,6 +109,62 @@ export class WorkforceApiGateway {
       },
     );
     return workforceInvitationSchema.parse(response);
+  }
+
+  /** Creates a shareable, multi-use invitation link and returns its one-time URL. */
+  async createShareableInvitationLink(
+    organizationId: string,
+    body: { establishmentIds: string[]; roleIds: string[]; expiration: string },
+  ): Promise<ShareableInvitationLinkResource> {
+    const response = await apiClient.post<unknown>(
+      `${apiConfig.routes.workforce.invitations}/shareable-links`,
+      body,
+      {
+        token: await this.accessToken(),
+        headers: this.organizationHeader(organizationId),
+        errorMessage: "Failed to create shareable invitation link",
+      },
+    );
+    return shareableInvitationLinkSchema.parse(response);
+  }
+
+  /** Lists an organization's active shareable invitation links. */
+  async listShareableInvitationLinks(organizationId: string): Promise<ShareableInvitationLinkResource[]> {
+    const response = await apiClient.get<unknown>(
+      `${apiConfig.routes.workforce.invitations}/shareable-links`,
+      { token: await this.accessToken(), headers: this.organizationHeader(organizationId) },
+    );
+    return z.array(shareableInvitationLinkSchema).parse(response);
+  }
+
+  /** Revokes a shareable invitation link; its token stops resolving immediately. */
+  async revokeShareableInvitationLink(organizationId: string, linkId: string): Promise<void> {
+    await apiClient.delete(
+      `${apiConfig.routes.workforce.invitations}/shareable-links/${encodeURIComponent(linkId)}`,
+      {
+        token: await this.accessToken(),
+        headers: this.organizationHeader(organizationId),
+        errorMessage: "Failed to revoke shareable invitation link",
+      },
+    );
+  }
+
+  /** Public, non-consuming preview of a shareable link. No session is required. */
+  async previewShareableInvitationLink(token: string): Promise<ShareableInvitationPreview> {
+    const response = await apiClient.get<unknown>(
+      `${apiConfig.routes.workforce.invitations}/shareable-links/preview?${new URLSearchParams({ token })}`,
+      { errorMessage: "Failed to preview invitation link" },
+    );
+    return shareableInvitationPreviewSchema.parse(response);
+  }
+
+  /** Redeems a shareable multi-use link for the authenticated account. */
+  async acceptShareableInvitationLink(token: string): Promise<void> {
+    await apiClient.post<unknown>(
+      `${apiConfig.routes.workforce.invitations}/shareable-links/accept`,
+      { token },
+      { token: await this.accessToken(), errorMessage: "Failed to accept invitation link" },
+    );
   }
 
   /** Replaces the role mapping a still-pending invitation grants on acceptance. */
