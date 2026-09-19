@@ -13,8 +13,8 @@ const establishments = [{ id: establishmentId, name: "LOCALOne" }];
 
 const ownerRole = { id: "cccccccc-cccc-4ccc-8ccc-cccccccccccc", name: "Owner", position: 0, systemRole: true, permissions: ["*"] };
 const adminRole = { id: "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb", name: "Admin", position: 1, systemRole: true, permissions: [] };
-const memberRole = { id: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa", name: "Member", position: 2, systemRole: true, permissions: [] };
-const cashierRole = { id: "dddddddd-dddd-4ddd-8ddd-dddddddddddd", name: "Cashier", position: 3, systemRole: false, permissions: [] };
+const memberRole = { id: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa", name: "Member", position: 2, systemRole: true, permissions: [], color: "#8B5CF6" };
+const cashierRole = { id: "dddddddd-dddd-4ddd-8ddd-dddddddddddd", name: "Cashier", position: 3, systemRole: false, permissions: [], color: "#10B981" };
 
 function rosterEntry(overrides: Record<string, unknown>) {
   return {
@@ -362,6 +362,17 @@ describe("OrganizationMembersPanel", () => {
     await userEvent.click(screen.getByRole("tab", { name: "Personal Invites" }));
     expect(screen.getByPlaceholderText("Search invitations...")).toBeVisible();
     expect(screen.getByText("Guest One")).toBeVisible();
+  });
+
+  it("reflects the saved role color on the assigned role badges", async () => {
+    vi.stubGlobal("fetch", mockApi());
+
+    render(<OrganizationMembersPanel organizationId={organizationId} establishments={establishments} />);
+
+    await screen.findByText("Active User");
+    const memberBadge = screen.getByText("Member").closest("[data-slot='badge']");
+    expect(memberBadge).not.toBeNull();
+    expect(memberBadge!.getAttribute("style") ?? "").toMatch(/background-color/i);
   });
 
   it("filters the roster locally by search", async () => {

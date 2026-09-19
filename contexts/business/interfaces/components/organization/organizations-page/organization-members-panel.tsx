@@ -73,6 +73,7 @@ import {
   redirectToLogin,
 } from "@/contexts/shared/infrastructure/http/resource-lifecycle";
 import { ShareableLinkDialog } from "./organization-shareable-link-dialog";
+import { roleBadgeStyle } from "@/contexts/workforce/interfaces/components/role-color";
 
 export type EstablishmentOption = { id: string; name: string };
 
@@ -885,7 +886,11 @@ export function OrganizationMembersPanel({
                         {systemRole ? (
                           // System roles (Owner/Admin/Member) are the protected base clearance:
                           // they swap through the add popover, never through an inline removal.
-                          <Badge variant={owner ? "default" : "secondary"} className="gap-1">
+                          <Badge
+                            variant={owner ? "default" : "secondary"}
+                            className="gap-1"
+                            style={roleBadgeStyle(systemRole.color)}
+                          >
                             <ShieldCheck className="size-3" aria-hidden="true" />
                             {systemRole.name}
                           </Badge>
@@ -895,6 +900,7 @@ export function OrganizationMembersPanel({
                             key={role.id}
                             variant="outline"
                             className={cn("gap-1", active && canManageMembers && "pr-1")}
+                            style={roleBadgeStyle(role.color)}
                           >
                             {role.name}
                             {active && canManageMembers ? (

@@ -30,6 +30,8 @@ import {
   type WorkforceRolePermission,
   type WorkforceRoleResource,
 } from "@/contexts/workforce/interfaces/rest/schemas/workforce-member.schemas";
+import { RoleColorPicker } from "@/contexts/workforce/interfaces/components/role-color-picker";
+import { DEFAULT_ROLE_COLOR } from "@/contexts/workforce/interfaces/components/role-color";
 import {
   isForbidden,
   isUnauthenticated,
@@ -187,8 +189,7 @@ const permissionModules: ReadonlyArray<PermissionModule> = [
   },
 ];
 
-const badgeColors = ["Sky", "Violet", "Emerald", "Amber", "Rose"] as const;
-type BadgeColor = (typeof badgeColors)[number];
+
 
 const NEW_ROLE = "__new__";
 
@@ -213,15 +214,17 @@ function defaultSelectionId(roleList: WorkforceRoleResource[]): string {
 type FormState = {
   name: string;
   permissions: string[];
-  color: BadgeColor;
+  color: string;
 };
 
-const emptyForm: FormState = { name: "", permissions: [], color: "Sky" };
+const emptyForm: FormState = { name: "", permissions: [], color: DEFAULT_ROLE_COLOR };
 
 function formForSelection(id: string, roleList: WorkforceRoleResource[]): FormState {
   if (id === NEW_ROLE) return emptyForm;
   const role = roleList.find((candidate) => candidate.id === id);
-  return role ? { name: role.name, permissions: [...role.permissions], color: "Sky" } : emptyForm;
+  return role
+    ? { name: role.name, permissions: [...role.permissions], color: role.color ?? DEFAULT_ROLE_COLOR }
+    : emptyForm;
 }
 
 export function OrganizationRolesPanel({ organizationId }: { organizationId: string }) {
@@ -331,11 +334,16 @@ export function OrganizationRolesPanel({ organizationId }: { organizationId: str
   }
 
   const baseline = isCreating || !selectedRole
-    ? { name: "", permissions: [] as string[] }
-    : { name: selectedRole.name, permissions: [...selectedRole.permissions].sort() };
+    ? { name: "", permissions: [] as string[], color: DEFAULT_ROLE_COLOR }
+    : {
+        name: selectedRole.name,
+        permissions: [...selectedRole.permissions].sort(),
+        color: selectedRole.color ?? DEFAULT_ROLE_COLOR,
+      };
   const isDirty =
     form.name.trim() !== baseline.name ||
-    [...form.permissions].sort().join(",") !== baseline.permissions.join(",");
+    [...form.permissions].sort().join(",") !== baseline.permissions.join(",") ||
+    form.color.toUpperCase() !== baseline.color.toUpperCase();
 
   async function saveRole() {
     if (isReadOnly) return;
@@ -345,16 +353,17 @@ export function OrganizationRolesPanel({ organizationId }: { organizationId: str
       permissions: form.permissions.filter((permission) =>
         (workforceRolePermissionCatalog as readonly string[]).includes(permission),
       ),
+      color: form.color,
     });
     if (!parsed.success) {
       setError(parsed.error.issues[0]?.message ?? "Please check the role details.");
       return;
     }
 
-    // A protected system role (Member) may only change its permissions: the backend
-    // forbids renaming factory roles, so the name is omitted from the PATCH payload.
+    // A protected system role (Member) may only change its permissions and color: the
+    // backend forbids renaming factory roles, so the name is omitted from the payload.
     const payload = !isCreating && isSystemRole
-      ? { permissions: parsed.data.permissions }
+      ? { permissions: parsed.data.permissions, color: parsed.data.color }
       : parsed.data;
 
     setSaving(true);
@@ -385,7 +394,11 @@ export function OrganizationRolesPanel({ organizationId }: { organizationId: str
     if (isCreating || !selectedRole) {
       setForm(emptyForm);
     } else {
-      setForm({ name: selectedRole.name, permissions: [...selectedRole.permissions], color: "Sky" });
+      setForm({
+        name: selectedRole.name,
+        permissions: [...selectedRole.permissions],
+        color: selectedRole.color ?? DEFAULT_ROLE_COLOR,
+      });
     }
     setOpenModules([]);
     setError(null);
@@ -517,22 +530,14 @@ export function OrganizationRolesPanel({ organizationId }: { organizationId: str
           />
         </label>
 
-        <label className="grid gap-2 text-sm font-medium" htmlFor="role-color">
-          Badge Color
-          <select
-            id="role-color"
+        <div className="grid gap-2 sm:col-span-2">
+          <span className="text-sm font-medium">Badge Color</span>
+          <RoleColorPicker
             value={form.color}
-            onChange={(event) =>
-              setForm((current) => ({ ...current, color: event.target.value as BadgeColor }))
-            }
+            onChange={(hex) => setForm((current) => ({ ...current, color: hex }))}
             disabled={isReadOnly || saving || loading}
-            className="h-(--app-control-height) w-full rounded-lg border border-input bg-background px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/50 disabled:bg-input/40 disabled:opacity-50"
-          >
-            {badgeColors.map((color) => (
-              <option key={color} value={color}>{color}</option>
-            ))}
-          </select>
-        </label>
+          />
+        </div>
       </div>
 
       <Accordion

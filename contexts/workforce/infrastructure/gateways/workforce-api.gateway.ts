@@ -60,7 +60,7 @@ export class WorkforceApiGateway {
   async updateRole(
     organizationId: string,
     roleId: string,
-    body: { name?: string; permissions?: string[] },
+    body: { name?: string; permissions?: string[]; color?: string },
   ): Promise<WorkforceRoleResource> {
     const response = await apiClient.patch<unknown>(
       `${apiConfig.routes.workforce.roles}/${encodeURIComponent(roleId)}`,

@@ -33,6 +33,7 @@ export const workforceRoleSchema = z.object({
   position: z.number().int(),
   systemRole: z.boolean(),
   permissions: z.array(z.string()),
+  color: z.string().nullish(),
 });
 
 export const workforceMemberEstablishmentSchema = z.object({
@@ -299,12 +300,18 @@ export const workforceRolePermissionGroups: ReadonlyArray<{
 
 const rolePermissionSchema = z.enum(workforceRolePermissionCatalog);
 
+/** Optional role badge color as a #RRGGBB hex string. */
+export const roleColorSchema = z
+  .string()
+  .regex(/^#[0-9A-Fa-f]{6}$/, "Color must be a hex value like #10B981");
+
 export const createWorkforceRoleSchema = z.object({
   name: z.string().trim().min(1, "Role name is required").max(100, "Role name cannot exceed 100 characters"),
   permissions: z.array(rolePermissionSchema).max(workforceRolePermissionCatalog.length).refine(
     (permissions) => new Set(permissions).size === permissions.length,
     "Role permissions cannot contain duplicates",
   ),
+  color: roleColorSchema.optional(),
 }).strict();
 
 export const updateWorkforceRoleSchema = createWorkforceRoleSchema;
@@ -329,11 +336,13 @@ export const patchWorkforceRoleSchema = z
         "Role permissions cannot contain duplicates",
       )
       .optional(),
+    color: roleColorSchema.optional(),
   })
   .strict()
-  .refine((value) => value.name !== undefined || value.permissions !== undefined, {
-    message: "At least one field is required",
-  });
+  .refine(
+    (value) => value.name !== undefined || value.permissions !== undefined || value.color !== undefined,
+    { message: "At least one field is required" },
+  );
 
 export const shareableInvitationExpirations = [
   "ONE_HOUR",

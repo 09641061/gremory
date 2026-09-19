@@ -53,6 +53,7 @@ import { InviteMemberButton } from "@/contexts/workforce/interfaces/components/i
 import { InviteMembersDialog } from "@/contexts/workforce/interfaces/components/invite-members-dialog";
 import { PendingInvitationsList } from "@/contexts/workforce/interfaces/components/pending-invitations-list";
 import { RoleManagement } from "@/contexts/workforce/interfaces/components/role-management";
+import { roleBadgeStyle } from "@/contexts/workforce/interfaces/components/role-color";
 
 const pageSize = 20;
 
@@ -327,7 +328,7 @@ export function TeamRoster({ establishmentId = null }: { establishmentId?: strin
                                   onRemove={() => void removeRoleFromMember(member, role.id)}
                                 />
                               ) : (
-                                <Badge key={role.id} variant="outline">
+                                <Badge key={role.id} variant="outline" style={roleBadgeStyle(role.color)}>
                                   {role.name}
                                 </Badge>
                               ),
@@ -441,7 +442,7 @@ function RoleTag({
   onRemove: () => void;
 }) {
   return (
-    <Badge variant="outline" className="gap-1 pr-1">
+    <Badge variant="outline" className="gap-1 pr-1" style={roleBadgeStyle(role.color)}>
       {role.name}
       <button
         type="button"

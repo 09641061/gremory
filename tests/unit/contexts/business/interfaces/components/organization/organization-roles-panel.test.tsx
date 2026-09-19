@@ -141,8 +141,10 @@ describe("OrganizationRolesPanel", () => {
     // Factory name is immutable and the role can never be deleted...
     expect(screen.getByRole("textbox", { name: "Role Name" })).toBeDisabled();
     expect(screen.queryByRole("button", { name: /Delete Role/ })).toBeNull();
-    // ...but the permission matrix is editable and no blocking label is shown.
-    expect(screen.getByRole("combobox", { name: "Badge Color" })).toBeEnabled();
+    // ...but the permission matrix and color palette are editable, with no blocking label.
+    expect(screen.getByRole("radiogroup", { name: "Role color" })).toBeVisible();
+    expect(screen.getByRole("radio", { name: "Color #10B981" })).toBeEnabled();
+    expect(screen.getByRole("textbox", { name: "Hex color" })).toBeEnabled();
     expect(screen.queryByText("System roles cannot be modified")).toBeNull();
 
     await userEvent.click(screen.getByRole("button", { name: /Catalog/ }));
@@ -168,7 +170,7 @@ describe("OrganizationRolesPanel", () => {
         `/api/workforce/roles/${memberSystemRole.id}`,
         expect.objectContaining({
           method: "PATCH",
-          body: JSON.stringify({ permissions: ["catalog:manage"] }),
+          body: JSON.stringify({ permissions: ["catalog:manage"], color: "#0EA5E9" }),
         }),
       );
     });
