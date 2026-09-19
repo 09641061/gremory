@@ -42,7 +42,7 @@ export function JoinShareableLinkView({
         return;
       }
       setState({ status: "success" });
-      router.replace("/team");
+      router.replace("/organizations");
       router.refresh();
     } catch (reason) {
       setState({

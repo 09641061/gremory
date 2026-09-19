@@ -3,7 +3,7 @@ export type EntryRoutePath =
   | "/schedule"
   | "/catalog"
   | "/crm"
-  | "/team"
+  | "/organizations"
   | "/analytics"
   | "/establishments"
   | "/organization"

@@ -52,7 +52,7 @@ export async function updateProfileAction(
     const profile = await service.updateProfile(command, accessToken);
 
     updateTag("profile");
-    revalidatePath("/team");
+    revalidatePath("/organizations");
     revalidatePath("/profile");
     revalidatePath("/", "layout");
 

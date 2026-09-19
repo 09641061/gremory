@@ -44,15 +44,12 @@ export class AppShellQueryService {
       accessPolicy?.canOpenCatalog ?? workspace.capabilities?.canReadCatalog ?? false;
     const canReadCrm =
       accessPolicy?.canOpenCrm ?? workspace.capabilities?.canReadCustomers ?? false;
-    const canReadTeam =
-      accessPolicy?.canOpenTeam ?? workspace.capabilities?.canReadTeam ?? false;
     const canReadAnalytics =
       accessPolicy?.canOpenAnalytics ?? workspace.capabilities?.canReadAnalytics ?? false;
     const visibleSidebarRoutes = resolveVisibleSidebarRoutes(
       canReadScheduling,
       canReadCatalog,
       canReadCrm,
-      canReadTeam,
       canReadAnalytics,
       hasAssistantPolicy,
     );
@@ -81,7 +78,6 @@ function resolveVisibleSidebarRoutes(
   canReadScheduling: boolean,
   canReadCatalog: boolean,
   canReadCrm: boolean,
-  canReadTeam: boolean,
   canReadAnalytics: boolean,
   hasAssistantAccess: boolean,
 ): ReadonlyArray<SidebarRouteId> {
@@ -98,9 +94,6 @@ function resolveVisibleSidebarRoutes(
   }
   if (canReadCatalog) {
     routes.push("/catalog");
-  }
-  if (canReadTeam) {
-    routes.push("/team");
   }
   if (canReadAnalytics) {
     routes.push("/analytics");

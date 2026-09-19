@@ -45,7 +45,7 @@ export function AcceptInvitationView({ token }: { token: string | null }) {
       }
 
       setState({ status: "success" });
-      router.replace("/team");
+      router.replace("/organizations");
       router.refresh();
     } catch (reason) {
       setState({

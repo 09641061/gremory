@@ -143,7 +143,6 @@ describe("app shell query service", () => {
       "/schedule",
       "/crm",
       "/catalog",
-      "/team",
       "/analytics",
     ]);
   });
@@ -158,7 +157,6 @@ describe("app shell query service", () => {
       "/schedule",
       "/crm",
       "/catalog",
-      "/team",
       "/analytics",
     ]);
   });
@@ -175,7 +173,7 @@ describe("app shell query service", () => {
     expect(shell.visibleSidebarRoutes).not.toContain("/chat");
   });
 
-  it("hides schedule and team when their read capabilities are denied", async () => {
+  it("hides schedule when its read capability is denied", async () => {
     mocks.shell.workspace.accessPolicy = {
       ...mocks.shell.workspace.accessPolicy,
       canOpenScheduling: false,
@@ -202,7 +200,6 @@ describe("app shell query service", () => {
       "/schedule",
       "/crm",
       "/catalog",
-      "/team",
     ]);
   });
 

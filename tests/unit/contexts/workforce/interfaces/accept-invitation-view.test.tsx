@@ -69,7 +69,7 @@ describe("AcceptInvitationView", () => {
     render(<AcceptInvitationView token="raw-token" />);
 
     expect(screen.getByText("Processing your invitation")).toBeVisible();
-    await waitFor(() => expect(mocks.router.replace).toHaveBeenCalledWith("/team"));
+    await waitFor(() => expect(mocks.router.replace).toHaveBeenCalledWith("/organizations"));
     expect(fetchMock).toHaveBeenCalledWith(
       "/api/workforce/invitations/accept",
       expect.objectContaining({
