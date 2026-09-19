@@ -5,6 +5,7 @@ import { Building2 } from "lucide-react";
 import { updateOrganizationAction } from "@/contexts/business/interfaces/actions/organization.actions";
 import { EntityProfileCard } from "@/contexts/business/interfaces/components/entity-profile-card/entity-profile-card";
 import { Card } from "@/contexts/shared/interfaces/components/ui/card";
+import { WorkforceRoleColorProvider } from "@/contexts/workforce/interfaces/components/workforce-role-color-context";
 import { cn } from "@/lib/utils";
 import { useBusinessTranslations } from "@/contexts/business/interfaces/i18n";
 
@@ -73,7 +74,8 @@ export function OrganizationDetailCard({
 
   return (
     <div className={cn("flex-1", className)}>
-      <Card className="flex h-full min-h-0 flex-col gap-0 overflow-hidden rounded-xl border-border bg-card py-0 shadow-sm lg:h-(--app-page-viewport-height)">
+      <WorkforceRoleColorProvider>
+        <Card className="flex h-full min-h-0 flex-col gap-0 overflow-hidden rounded-xl border-border bg-card py-0 shadow-sm lg:h-(--app-page-viewport-height)">
         <div
           className="flex min-h-0 flex-1 flex-col"
           style={{ display: activeSection === "organization" ? undefined : "none" }}
@@ -145,7 +147,8 @@ export function OrganizationDetailCard({
         >
           <OrganizationRolesPanel organizationId={organization.organizationId} />
         </div>
-      </Card>
+        </Card>
+      </WorkforceRoleColorProvider>
     </div>
   );
 }

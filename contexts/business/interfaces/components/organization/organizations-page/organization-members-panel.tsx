@@ -74,6 +74,7 @@ import {
 } from "@/contexts/shared/infrastructure/http/resource-lifecycle";
 import { ShareableLinkDialog } from "./organization-shareable-link-dialog";
 import { roleBadgeStyle } from "@/contexts/workforce/interfaces/components/role-color";
+import { useWorkforceRoleColors } from "@/contexts/workforce/interfaces/components/workforce-role-color-context";
 
 export type EstablishmentOption = { id: string; name: string };
 
@@ -102,6 +103,7 @@ export function OrganizationMembersPanel({
   mode = "members",
 }: OrganizationRosterPanelProps) {
   const isInvites = mode === "invites";
+  const { syncRoleColors, resolveRoleColor } = useWorkforceRoleColors();
   const [members, setMembers] = useState<WorkforceMemberResource[]>([]);
   const [roles, setRoles] = useState<WorkforceRoleResource[]>([]);
   const [shareableLinks, setShareableLinks] = useState<ShareableInvitationLinkResource[]>([]);
@@ -152,7 +154,9 @@ export function OrganizationMembersPanel({
       setSelectedRowIds((current) =>
         current.filter((id) => refreshedMembers.some((member) => rowKey(member) === id)),
       );
-      setRoles(z.array(workforceRoleSchema).parse(rolesBody));
+      const parsedRoles = z.array(workforceRoleSchema).parse(rolesBody);
+      setRoles(parsedRoles);
+      syncRoleColors(parsedRoles);
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "Unable to load the team.");
     } finally {
@@ -889,7 +893,7 @@ export function OrganizationMembersPanel({
                           <Badge
                             variant={owner ? "default" : "secondary"}
                             className="gap-1"
-                            style={roleBadgeStyle(systemRole.color)}
+                            style={roleBadgeStyle(resolveRoleColor(systemRole))}
                           >
                             <ShieldCheck className="size-3" aria-hidden="true" />
                             {systemRole.name}
@@ -900,7 +904,7 @@ export function OrganizationMembersPanel({
                             key={role.id}
                             variant="outline"
                             className={cn("gap-1", active && canManageMembers && "pr-1")}
-                            style={roleBadgeStyle(role.color)}
+                            style={roleBadgeStyle(resolveRoleColor(role))}
                           >
                             {role.name}
                             {active && canManageMembers ? (

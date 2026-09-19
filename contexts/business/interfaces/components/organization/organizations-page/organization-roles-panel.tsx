@@ -32,6 +32,7 @@ import {
 } from "@/contexts/workforce/interfaces/rest/schemas/workforce-member.schemas";
 import { RoleColorPicker } from "@/contexts/workforce/interfaces/components/role-color-picker";
 import { DEFAULT_ROLE_COLOR } from "@/contexts/workforce/interfaces/components/role-color";
+import { useWorkforceRoleColors } from "@/contexts/workforce/interfaces/components/workforce-role-color-context";
 import {
   isForbidden,
   isUnauthenticated,
@@ -228,6 +229,7 @@ function formForSelection(id: string, roleList: WorkforceRoleResource[]): FormSt
 }
 
 export function OrganizationRolesPanel({ organizationId }: { organizationId: string }) {
+  const { syncRoleColors } = useWorkforceRoleColors();
   const [roles, setRoles] = useState<WorkforceRoleResource[]>([]);
   const [selectedRoleId, setSelectedRoleId] = useState<string>("");
   const [form, setForm] = useState<FormState>(emptyForm);
@@ -266,6 +268,7 @@ export function OrganizationRolesPanel({ organizationId }: { organizationId: str
 
       const parsedRoles = z.array(workforceRoleSchema).parse(rolesBody);
       setRoles(parsedRoles);
+      syncRoleColors(parsedRoles);
 
       const keepCurrent =
         selectedRoleId.length > 0 &&
@@ -381,8 +384,28 @@ export function OrganizationRolesPanel({ organizationId }: { organizationId: str
       if (!response.ok) throw new Error(readErrorMessage(body));
 
       const savedRole = workforceRoleSchema.safeParse(body);
-      await loadData();
-      if (savedRole.success) selectRole(savedRole.data.id);
+      if (savedRole.success) {
+        const saved = savedRole.data;
+        // Reconcile from the save response instead of refetching the whole roles
+        // list: the local list and the shared color dictionary update together, so
+        // the members table badges repaint with the new hex color immediately.
+        setRoles((current) =>
+          current.some((role) => role.id === saved.id)
+            ? current.map((role) => (role.id === saved.id ? saved : role))
+            : [...current, saved],
+        );
+        syncRoleColors([saved]);
+        setSelectedRoleId(saved.id);
+        setOpenModules([]);
+        setForm({
+          name: saved.name,
+          permissions: [...saved.permissions],
+          color: saved.color ?? DEFAULT_ROLE_COLOR,
+        });
+      } else {
+        // A 204 or an unexpected payload cannot be reconciled locally; read once.
+        await loadData();
+      }
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "Unable to save the role.");
     } finally {
