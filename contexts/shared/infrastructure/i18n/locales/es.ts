@@ -22,7 +22,6 @@ export const es: LocaleDictionary = {
     schedule: "Agenda",
     crm: "CRM",
     catalog: "Catálogo",
-    team: "Equipo",
     analytics: "Analíticas",
   },
   sidebarProfile: {
@@ -89,6 +88,11 @@ export const es: LocaleDictionary = {
     logOut: "Cerrar sesión",
     signingOut: "Cerrando sesión...",
     unableToLogOut: "No se pudo cerrar sesión",
+    invitationWelcomeTitle: "¡Hola! Has sido invitado a unirte a la organización {organization} en Takodu.",
+    invitationWelcomeDescription: "Crea tu cuenta con el correo donde recibiste la invitación para aceptarla y unirte al espacio de trabajo.",
+    invitationLockedEmailHint: "Te registrarás estrictamente con el correo invitado.",
+    registerAndAcceptInvitation: "Registrarse y Aceptar Invitación",
+    registeringInvitation: "Preparando tu registro...",
   },
   shared: {
     accessDenied: "Acceso denegado",

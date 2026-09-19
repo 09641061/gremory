@@ -37,6 +37,7 @@ interface RescheduleFormModalProps {
   customers: SchedulingCustomerViewModel[];
   onSuccess: (updatedAppointment: Appointment) => void;
   onDeleteSuccess: () => void;
+  canDeleteAppointment: boolean;
   timeZone: string;
 }
 
@@ -72,6 +73,7 @@ export function RescheduleFormModal({
   customers,
   onSuccess,
   onDeleteSuccess,
+  canDeleteAppointment,
   timeZone,
 }: RescheduleFormModalProps) {
   const { t } = useSchedulingTranslations();
@@ -155,15 +157,19 @@ export function RescheduleFormModal({
             />
 
             <DialogFooter className="flex-col items-stretch gap-2 pt-2 sm:flex-row sm:items-center sm:justify-between">
-              <Button
-                type="button"
-                variant="ghost"
-                className="justify-center gap-1.5 text-destructive hover:bg-destructive/10 sm:justify-start"
-                onClick={() => setIsDeleteOpen(true)}
-              >
-                <Trash2 className="size-4" />
-                {t.form.delete}
-              </Button>
+              {canDeleteAppointment ? (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="justify-center gap-1.5 text-destructive hover:bg-destructive/10 sm:justify-start"
+                  onClick={() => setIsDeleteOpen(true)}
+                >
+                  <Trash2 className="size-4" />
+                  {t.form.delete}
+                </Button>
+              ) : (
+                <span />
+              )}
               <div className="flex flex-col justify-end gap-2 sm:flex-row">
                 <Button
                   type="button"

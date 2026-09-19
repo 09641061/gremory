@@ -9,6 +9,7 @@ import { workspaceSelectionCookies } from "@/contexts/business/infrastructure/se
 import { createEntryRouteQueryService } from "@/contexts/shared/application/internal/queryservices/entry-route-query.service";
 import { getServerDictionary } from "@/contexts/shared/infrastructure/i18n/server";
 import { EntryRouteUnavailable } from "@/contexts/shared/interfaces/components/entry-route-unavailable";
+import { createBusinessWorkspaceQueryService } from "@/contexts/business/application/internal/queryservices/business-workspace-query.service";
 
 /**
  * Shell for work routes. Welcome has a separate header-only route group.
@@ -76,5 +77,13 @@ async function AppLayoutContent({
     );
   }
 
-  return <ProtectedAppShell>{children}</ProtectedAppShell>;
+  const workspace = await createBusinessWorkspaceQueryService()
+    .getHeaderViewModel({ organizationId, establishmentId })
+    .catch(() => null);
+
+  return (
+    <ProtectedAppShell initialAuthorization={workspace?.workforceAuthorization}>
+      {children}
+    </ProtectedAppShell>
+  );
 }

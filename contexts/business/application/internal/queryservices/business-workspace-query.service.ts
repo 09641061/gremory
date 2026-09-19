@@ -13,6 +13,7 @@ import type {
   WorkspaceHeaderViewModel,
 } from "@/contexts/business/application/model/business-workspace.view-models";
 import { canCreateOrganization } from "@/contexts/business/domain/services/workspace-navigation.policy";
+import type { AuthorizationResource } from "@/contexts/workforce/application/model/user-session";
 
 export type BusinessWorkspaceQuery = BusinessWorkspaceSelection;
 
@@ -77,6 +78,7 @@ export function toHeaderViewModel(
     activeEstablishmentId,
     capabilities: toWorkspaceCapabilities(resource.capabilities),
     authorization: toWorkspaceAuthorization(resource.authorization),
+    workforceAuthorization: toHierarchicalAuthorization(resource.authorization),
     accessPolicy: toWorkspaceAccessPolicy(resource),
     canReadOrganization: organization?.canRead === true,
     canReadEstablishments: organization?.canReadEstablishments === true,
@@ -153,6 +155,10 @@ function toWorkspaceCapabilities(
 function toWorkspaceAuthorization(
   authorization: BusinessWorkspaceResource["authorization"],
 ): WorkspaceAuthorization | undefined {
+  if (!isLegacyAuthorization(authorization)) {
+    return undefined;
+  }
+
   if (
     !authorization ||
     !authorization.scope ||
@@ -172,6 +178,29 @@ function toWorkspaceAuthorization(
     },
     capabilities: authorization.capabilities,
   };
+}
+
+function toHierarchicalAuthorization(
+  authorization: BusinessWorkspaceResource["authorization"],
+): AuthorizationResource | undefined {
+  return isHierarchicalAuthorization(authorization) ? authorization : undefined;
+}
+
+function isHierarchicalAuthorization(
+  authorization: BusinessWorkspaceResource["authorization"],
+): authorization is AuthorizationResource {
+  return Boolean(
+    authorization &&
+      "accountType" in authorization &&
+      "roles" in authorization &&
+      "effectivePermissions" in authorization,
+  );
+}
+
+function isLegacyAuthorization(
+  authorization: BusinessWorkspaceResource["authorization"],
+): authorization is NonNullable<WorkspaceAuthorization> {
+  return Boolean(authorization && "role" in authorization && "capabilities" in authorization);
 }
 
 function toWorkspaceAccessPolicy(resource: BusinessWorkspaceResource): WorkspaceAccessPolicy {

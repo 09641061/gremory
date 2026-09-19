@@ -31,7 +31,7 @@ async function EditCustomerPageContent({ params, searchParams }: EditCustomerPag
 
   const canUpdateCustomer = hasEstablishmentPermission(
     getWorkspaceEstablishment(workspace, establishmentId),
-    "crm:manage",
+    "crm:customer:manage",
   );
   if (!canUpdateCustomer || !establishmentId) {
     redirect("/access-denied");

@@ -73,7 +73,7 @@ export function InvoiceView({ currentSubscription, initialInvoices }: InvoiceVie
   }, []);
 
   const currentPlanName =
-    currentSubscription?.planId === 2 ? "Premium" : "Standard";
+    currentSubscription?.planId === 2 ? "Max" : "Standard";
   const hasCancellableSubscription =
     hasActiveSubscription(currentSubscription) && (currentSubscription?.planId ?? 0) > 0;
 

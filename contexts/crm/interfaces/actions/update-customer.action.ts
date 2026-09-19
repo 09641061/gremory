@@ -15,7 +15,7 @@ export async function updateCustomerAction(
   establishmentId: string
 ): Promise<ActionState<CustomerResponse>> {
   const workspace = await createBusinessWorkspaceQueryService().getHeaderViewModel({ establishmentId });
-  if (!hasEstablishmentPermission(getWorkspaceEstablishment(workspace, establishmentId), "crm:manage")) {
+  if (!hasEstablishmentPermission(getWorkspaceEstablishment(workspace, establishmentId), "crm:customer:manage")) {
     return {
       status: "error",
       data: null,

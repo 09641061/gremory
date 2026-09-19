@@ -31,7 +31,7 @@ export async function updateEmployeeVisibilityAction(
     establishmentId: parsed.data.establishmentId,
   });
   const establishment = getWorkspaceEstablishment(workspace, parsed.data.establishmentId);
-  if (!hasEstablishmentPermission(establishment, "scheduling:manage")) {
+  if (!hasEstablishmentPermission(establishment, "scheduling:appointment:manage")) {
     return { status: "error", error: "You are not authorized to update scheduling visibility." } as const;
   }
   const organizationId = establishment?.organizationId ?? workspace.organization?.id;

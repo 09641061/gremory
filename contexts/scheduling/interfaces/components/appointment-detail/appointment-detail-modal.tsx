@@ -54,6 +54,7 @@ interface AppointmentDetailModalProps {
   onUpdate: (updated: Appointment) => void;
   onDeleteSuccess: () => void;
   canUpdateAppointment: boolean;
+  canCancelAppointment: boolean;
   canDeleteAppointment: boolean;
   timeZone: string;
 }
@@ -68,6 +69,7 @@ export function AppointmentDetailModal({
   onUpdate,
   onDeleteSuccess,
   canUpdateAppointment,
+  canCancelAppointment,
   canDeleteAppointment,
   timeZone,
 }: AppointmentDetailModalProps) {
@@ -149,7 +151,7 @@ export function AppointmentDetailModal({
               onComplete={() => setOpenFlow("complete")}
               onMarkNoShow={() => setOpenFlow("no-show")}
               canUpdateAppointment={canUpdateAppointment}
-              canDeleteAppointment={canDeleteAppointment}
+              canCancelAppointment={canCancelAppointment}
             />
           </DialogFooter>
         </DialogContent>
@@ -168,6 +170,7 @@ export function AppointmentDetailModal({
             onDeleteSuccess();
             onOpenChange(false);
           }}
+          canDeleteAppointment={canDeleteAppointment}
           timeZone={timeZone}
         />
       )}

@@ -13,7 +13,7 @@ export const es: BillingDictionary = {
     currentPlan: "Plan actual",
     getPlan: "Obtener plan {name}",
     getStandardPlan: "Obtener plan Standard",
-    getPremiumPlan: "Obtener plan Premium",
+    getPremiumPlan: "Obtener plan Max",
     cancelAnytime: "Cancela en cualquier momento. Facturación segura. Los planes pueden cambiarse después.",
     signInRequired: "Inicio de sesión requerido",
     signInRequiredMessage: "Debes iniciar sesión para seleccionar un plan de suscripción.",
@@ -80,6 +80,6 @@ export const es: BillingDictionary = {
   sidebar: {
     upgrade: "Mejorar",
     standardPlan: "Plan Estándar",
-    premiumPlan: "Plan Premium",
+    premiumPlan: "Plan Max",
   },
 };

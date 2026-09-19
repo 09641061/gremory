@@ -45,7 +45,7 @@ describe("resolveEstablishmentEntryPath", () => {
   const establishment = {
     id: "est-1",
     name: "Main branch",
-    effectivePermissions: ["crm:read"],
+    effectivePermissions: ["crm:customer:manage"],
   };
 
   it("keeps an owner on the screen it was already using", () => {
@@ -184,7 +184,7 @@ describe("canManageOrganization", () => {
   it("denies editing a foreign organization without a granted business:manage permission", () => {
     expect(
       canManageOrganization(
-        { organizationId: "org-2", establishments: [{ id: "est-1", name: "Main", effectivePermissions: ["scheduling:read"] }] },
+        { organizationId: "org-2", establishments: [{ id: "est-1", name: "Main", effectivePermissions: ["scheduling:appointment:manage"] }] },
         "org-1",
       ),
     ).toBe(false);

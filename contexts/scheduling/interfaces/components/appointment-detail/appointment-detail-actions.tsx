@@ -13,7 +13,7 @@ interface AppointmentDetailActionsProps {
   onStart: () => void;
   onMarkNoShow: () => void;
   canUpdateAppointment: boolean;
-  canDeleteAppointment: boolean;
+  canCancelAppointment: boolean;
 }
 
 export function AppointmentDetailActions({
@@ -24,7 +24,7 @@ export function AppointmentDetailActions({
   onStart,
   onMarkNoShow,
   canUpdateAppointment,
-  canDeleteAppointment,
+  canCancelAppointment,
 }: AppointmentDetailActionsProps) {
   const { t } = useSchedulingTranslations();
   const isConfirmed = status === "CONFIRMED";
@@ -71,7 +71,7 @@ export function AppointmentDetailActions({
           {t.appointmentDetail.reschedule}
         </Button>
       )}
-      {canDeleteAppointment && isActive && (
+      {canCancelAppointment && isActive && (
         <Button
           type="button"
           variant="destructive"

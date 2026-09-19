@@ -39,12 +39,13 @@ async function CrmPageContent({ searchParams }: CrmPageProps) {
   }
 
   const workspaceEstablishment = getWorkspaceEstablishment(workspace, establishmentId);
-  const canManageCrm = hasEstablishmentPermission(workspaceEstablishment, "crm:manage");
+  const canManageCrm = hasEstablishmentPermission(workspaceEstablishment, "crm:customer:manage");
+  const canDeleteCrm = hasEstablishmentPermission(workspaceEstablishment, "crm:customer:delete");
   const permissions: CrmPermissions = {
     canReadCustomers: true,
     canCreateCustomer: canManageCrm,
     canUpdateCustomer: canManageCrm,
-    canDeleteCustomer: canManageCrm,
+    canDeleteCustomer: canDeleteCrm,
   };
 
   const { establishmentId: resolvedEstablishmentId, permissions: pagePermissions, customersPage, searchFailed } = await getCrmPageData(

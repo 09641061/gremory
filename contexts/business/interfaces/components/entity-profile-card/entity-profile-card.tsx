@@ -207,7 +207,7 @@ export function EntityProfileCard({
                     .replace("{max}", String(MAX_NAME_LENGTH))}
                 </p>
               </div>
-              <div className="max-w-xs">
+              <div className="max-w-md">
                 <Input
                   name="name"
                   aria-labelledby={nameHeadingId}

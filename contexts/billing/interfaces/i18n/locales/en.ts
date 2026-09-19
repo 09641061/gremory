@@ -11,7 +11,7 @@ export const en = {
     currentPlan: "Current plan",
     getPlan: "Get {name} plan",
     getStandardPlan: "Get Standard plan",
-    getPremiumPlan: "Get Premium plan",
+    getPremiumPlan: "Get Max plan",
     cancelAnytime: "Cancel anytime. Secure billing. Plans can be changed later.",
     signInRequired: "Sign-in Required",
     signInRequiredMessage: "You must be signed in to select a subscription plan.",
@@ -78,6 +78,6 @@ export const en = {
   sidebar: {
     upgrade: "Upgrade",
     standardPlan: "Standard plan",
-    premiumPlan: "Premium plan",
+    premiumPlan: "Max plan",
   },
 } as const;

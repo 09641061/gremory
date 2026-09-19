@@ -29,7 +29,7 @@ async function NewCustomerPageContent({ searchParams }: NewCustomerPageProps) {
   const establishmentId = paramEstId ?? workspace.activeEstablishmentId;
   const canCreateCustomer = hasEstablishmentPermission(
     getWorkspaceEstablishment(workspace, establishmentId),
-    "crm:manage",
+    "crm:customer:manage",
   );
 
   if (!canCreateCustomer || !establishmentId) {
