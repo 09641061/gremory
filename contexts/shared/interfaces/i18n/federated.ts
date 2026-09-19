@@ -1,4 +1,4 @@
-import type { Locale } from "@/contexts/shared/domain/model/i18n";
+import { DEFAULT_LOCALE, type Locale } from "@/contexts/shared/domain/model/i18n";
 import { useI18n } from "./i18n-provider";
 
 export type StringLeaf<T> = T extends string
@@ -20,17 +20,18 @@ export type LocalTranslationResult<T> = T & {
 export function createLocalTranslationHook<T extends object>(locales: ContextLocales<T>) {
   return function useTranslations(): LocalTranslationResult<T> {
     const { locale } = useI18n();
-    const dict = locales[locale] ?? locales.en;
+    const resolvedLocale = locale ?? DEFAULT_LOCALE;
+    const dict = locales[resolvedLocale] ?? locales.en ?? locales.es;
     return Object.assign(Object.create(dict), dict, {
       t: dict,
-      locale,
+      locale: resolvedLocale,
     });
   };
 }
 
 export function createLocalDictionaryGetter<T>(locales: ContextLocales<T>) {
   return function getDictionary(locale?: Locale | null): T {
-    if (!locale) return locales.en;
-    return locales[locale] ?? locales.en;
+    if (!locale) return locales.en ?? locales.es;
+    return locales[locale] ?? locales.en ?? locales.es;
   };
 }

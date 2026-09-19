@@ -6,16 +6,17 @@ firebase.initializeApp({
   authDomain: "takodu-notification.firebaseapp.com",
   projectId: "takodu-notification",
   storageBucket: "takodu-notification.firebasestorage.app",
-  messagingSenderId: "101834015644726211533",
-  appId: "1:101834015644726211533:web:19ce5db17e24507a7f721a"
+  messagingSenderId: "640713668079",
+  appId: "1:640713668079:web:19ce5db17e24507a7f721a"
 });
 
 const messaging = firebase.messaging();
 
 messaging.onBackgroundMessage((payload) => {
-  const notificationTitle = payload.notification?.title || "Notificación de Takodu";
+  console.log('[firebase-messaging-sw.js] Background message received:', payload);
+  const notificationTitle = payload.notification?.title || payload.data?.title || "Takodu Notification";
   const notificationOptions = {
-    body: payload.notification?.body || "",
+    body: payload.notification?.body || payload.data?.message || payload.data?.body || "",
     icon: '/favicon.ico',
     data: {
       url: payload.data?.link || '/'
