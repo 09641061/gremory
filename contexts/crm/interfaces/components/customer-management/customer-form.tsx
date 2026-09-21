@@ -65,6 +65,7 @@ export function CustomerForm({
   const { errors, setError, clearError } = useFormValidation();
   const error = errors[FORM_ERROR_FIELD] ?? null;
   const [isResolving, setIsResolving] = React.useState(false);
+  const identityLookupFailedMessage = t.form.errors.identityLookupFailed;
   // `useFormSubmit` centralises the double-submit guard: `guard()` is the
   // synchronous check used at the top of `handleSubmit` so a stale click
   // that races React's commit of `isSaving` still early-returns, and
@@ -78,15 +79,20 @@ export function CustomerForm({
     if (!docNumber) return;
 
     setIsResolving(true);
+    clearError(FORM_ERROR_FIELD);
     try {
       const res = await resolveDocumentAction(docType as "dni" | "ruc", docNumber, establishmentId);
-      if (res.status === "success" && res.data) setName(res.data.name);
+      if (res.status === "success" && res.data) {
+        setName(res.data.name);
+      } else if (res.status === "error") {
+        setError(FORM_ERROR_FIELD, res.error ?? identityLookupFailedMessage);
+      }
     } catch {
-      // Silent error, user can still manually edit
+      setError(FORM_ERROR_FIELD, identityLookupFailedMessage);
     } finally {
       setIsResolving(false);
     }
-  }, [docNumber, docType, establishmentId]);
+  }, [clearError, docNumber, docType, establishmentId, identityLookupFailedMessage, setError]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

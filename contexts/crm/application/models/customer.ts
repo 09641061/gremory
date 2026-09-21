@@ -8,7 +8,10 @@ export interface CustomerViewModel {
   email: string; taxpayerStatus?: string | null; taxpayerCondition?: string | null;
 }
 export interface ResolvedIdentityViewModel {
-  documentNumber: string; name: string; taxpayerStatus: string; taxpayerCondition: string;
+  documentNumber: string;
+  name: string;
+  taxpayerStatus: string | null;
+  taxpayerCondition: string | null;
 }
 export interface CustomerPageViewModel {
   content: CustomerViewModel[]; page: number; size: number; totalElements: number; totalPages: number;

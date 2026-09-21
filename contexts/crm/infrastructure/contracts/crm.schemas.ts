@@ -25,8 +25,9 @@ export const customerSchema = z.object({
 export const resolvedIdentitySchema = z.object({
   documentNumber: z.string().min(1),
   name: z.string().min(1),
-  taxpayerStatus: z.string(),
-  taxpayerCondition: z.string(),
+  // RENIEC/DNI responses do not have SUNAT tax metadata.
+  taxpayerStatus: z.string().nullable(),
+  taxpayerCondition: z.string().nullable(),
 });
 
 export const customerPageResponseSchema = z.object({

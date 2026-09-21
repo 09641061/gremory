@@ -7,6 +7,7 @@ export const es: BusinessTranslations = {
     findEstablishment: "Buscar establecimiento...",
     noEstablishmentsFound: "No se encontraron establecimientos",
     newEstablishment: "Nuevo establecimiento",
+    organizationSettings: "Configuración de la organización",
   },
   establishments: {
     title: "Establecimientos",

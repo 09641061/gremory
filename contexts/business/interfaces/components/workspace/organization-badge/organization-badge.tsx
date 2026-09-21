@@ -7,6 +7,7 @@ import {
   AvatarImage,
 } from "@/contexts/shared/interfaces/components/ui/avatar";
 import type { WorkspaceHeaderOrganization } from "@/contexts/business/application/model/business-workspace.view-models";
+import { useBusinessTranslations } from "@/contexts/business/interfaces/i18n";
 
 /**
  * The organization, as the heading of the establishment menu.
@@ -18,14 +19,19 @@ import type { WorkspaceHeaderOrganization } from "@/contexts/business/applicatio
  */
 export function OrganizationBadge({
   organization,
+  label,
   href,
   onNavigate,
 }: {
   organization: WorkspaceHeaderOrganization;
+  label?: string;
   href?: string;
   /** Called when the link is followed, so the menu around it can close. */
   onNavigate?: () => void;
 }) {
+  const { t } = useBusinessTranslations();
+  const text = label ?? t.workspace.organizationSettings;
+
   const content = (
     <>
       <Avatar className="size-6 shrink-0 border border-border/60 bg-muted">
@@ -34,7 +40,7 @@ export function OrganizationBadge({
           <Building2 className="size-3 text-muted-foreground" aria-hidden="true" />
         </AvatarFallback>
       </Avatar>
-      <span className="min-w-0 flex-1 truncate">{organization.name}</span>
+      <span className="min-w-0 flex-1 truncate">{text}</span>
     </>
   );
 

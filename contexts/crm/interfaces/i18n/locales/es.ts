@@ -82,6 +82,7 @@ export const es: CrmDictionary = {
       updateTitle: "Error al actualizar cliente",
       updateFailed: "No se pudo actualizar el cliente.",
       unexpectedUpdate: "Ocurrió un error inesperado al guardar el cliente.",
+      identityLookupFailed: "No se pudo consultar el documento de identidad.",
     },
     validation: {
       errorTitle: "Error de validación",

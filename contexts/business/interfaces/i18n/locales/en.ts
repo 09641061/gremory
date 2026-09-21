@@ -5,6 +5,7 @@ export const en = {
     findEstablishment: "Find establishment...",
     noEstablishmentsFound: "No establishments found",
     newEstablishment: "New establishment",
+    organizationSettings: "Organization settings",
   },
   establishments: {
     title: "Establishments",

@@ -490,7 +490,12 @@ describe("CustomerForm — autofill", () => {
   it("patches the name field with the resolved customer data", async () => {
     mockResolveDocumentAction.mockResolvedValueOnce({
       status: "success",
-      data: { name: "Resolved Name" },
+      data: {
+        documentNumber: "12345678",
+        name: "Resolved Name",
+        taxpayerStatus: null,
+        taxpayerCondition: null,
+      },
       error: null,
       errorId: null,
       fieldErrors: null,
@@ -505,6 +510,24 @@ describe("CustomerForm — autofill", () => {
     await waitFor(() => {
       expect(screen.getByLabelText(/full name/i)).toHaveValue("Resolved Name");
     });
+  });
+
+  it("shows the lookup error when the document cannot be resolved", async () => {
+    mockResolveDocumentAction.mockResolvedValueOnce({
+      status: "error",
+      data: null,
+      error: "Identity document not found or invalid.",
+      errorId: "lookup-error",
+      fieldErrors: null,
+    });
+
+    renderForm({ initialData: { docType: "dni" } });
+    const user = userEvent.setup();
+
+    await user.type(screen.getByLabelText(/document number/i), "12345678");
+    await user.click(screen.getByRole("button", { name: /autofill/i }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(/identity document not found/i);
   });
 
   it("does not throw when resolveDocumentAction rejects", async () => {

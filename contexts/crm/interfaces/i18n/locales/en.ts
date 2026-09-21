@@ -80,6 +80,7 @@ export const en = {
       updateTitle: "Error updating customer",
       updateFailed: "Failed to update customer.",
       unexpectedUpdate: "An unexpected error occurred while saving the customer.",
+      identityLookupFailed: "The identity document could not be resolved.",
     },
     validation: {
       errorTitle: "Validation error",
