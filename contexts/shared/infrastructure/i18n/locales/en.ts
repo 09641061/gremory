@@ -31,6 +31,7 @@ export const en = {
     members: "Members",
     roles: "Roles",
     invites: "Invites",
+    establishments: "Establishments",
   },
   sidebarProfile: profilesEn.sidebarProfile,
   preferences: profilesEn.preferences,

@@ -27,7 +27,7 @@ vi.mock("@/contexts/business/interfaces/components/establishment/establishments-
   },
 }));
 
-import EstablishmentsRoutePage from "@/app/(protected)/(configuration)/establishments/page";
+import EstablishmentsRoutePage from "@/app/(protected)/(configuration)/(organization-hub)/establishments/page";
 
 describe("EstablishmentsRoutePage", () => {
   beforeEach(() => {

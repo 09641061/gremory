@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import {
   Building2,
   ShieldCheck,
+  Store,
   UserPlus,
   Users,
   type LucideIcon,
@@ -23,18 +24,22 @@ type OrganizationSettingsHref =
   | "/organization"
   | "/organization/members"
   | "/organization/roles"
-  | "/organization/invites";
+  | "/organization/invites"
+  | "/establishments";
 
 /**
  * Navigation for the Organization settings hub.
  *
  * Reuses the shadcn `Sidebar*` primitives so it stays visually consistent with
- * the main app sidebar. Lives only inside the
- * `app/(protected)/(configuration)/organization/` layout, so it never bleeds
- * into other configuration pages (e.g. `/establishments`, `/permissions`).
+ * the main app sidebar. Lives inside the
+ * `app/(protected)/(configuration)/(organization-hub)/` route group, so it
+ * scopes itself to the Organization settings hub (Organization + Members +
+ * Roles + Invites + Establishments) and never bleeds into sibling
+ * configuration pages (`/profile`, `/permissions`, the legacy
+ * `/organizations` redirect).
  *
  * Entries are hardcoded — no permission filtering for now because every owner
- * who reaches `/organization` is expected to manage the four sections. Add
+ * who reaches `/organization` is expected to manage the five sections. Add
  * filtering here if/when granular per-section permissions are introduced.
  */
 export function OrganizationSettingsSidebar() {
@@ -65,6 +70,11 @@ export function OrganizationSettingsSidebar() {
       href: "/organization/invites",
       label: t.organizationSettings.invites,
       icon: UserPlus,
+    },
+    {
+      href: "/establishments",
+      label: t.organizationSettings.establishments,
+      icon: Store,
     },
   ];
 

@@ -31,7 +31,7 @@ vi.mock("@/contexts/business/interfaces/components/establishment/create-establis
   },
 }));
 
-import NewEstablishmentPage from "@/app/(protected)/(configuration)/establishments/new/page";
+import NewEstablishmentPage from "@/app/(protected)/(configuration)/(organization-hub)/establishments/new/page";
 
 describe("NewEstablishmentPage", () => {
   beforeEach(() => {

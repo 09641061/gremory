@@ -32,7 +32,7 @@ vi.mock("@/contexts/business/interfaces/components/organization/organization-set
   },
 }));
 
-import OrganizationRoutePage from "@/app/(protected)/(configuration)/organization/page";
+import OrganizationRoutePage from "@/app/(protected)/(configuration)/(organization-hub)/organization/page";
 
 describe("OrganizationRoutePage", () => {
   beforeEach(() => {

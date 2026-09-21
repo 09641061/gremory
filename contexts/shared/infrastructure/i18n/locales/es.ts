@@ -32,6 +32,7 @@ export const es: LocaleDictionary = {
     members: "Miembros",
     roles: "Roles",
     invites: "Invitaciones",
+    establishments: "Establecimientos",
   },
   sidebarProfile: profilesEs.sidebarProfile,
   preferences: profilesEs.preferences,
