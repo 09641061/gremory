@@ -57,7 +57,7 @@ export function AppointmentBlock({ appointment, now, timeZone, onClick }: Appoin
       onClick={onClick}
       aria-label={`${getStatusLabel(appointment.status)}: ${appointment.title}, ${timeRange}`}
       className={cn(
-        "w-full rounded-lg border p-2 text-left transition-all min-w-0 overflow-hidden",
+        "w-full rounded-lg border p-2 text-left transition-[transform,box-shadow] min-w-0 overflow-hidden",
         "hover:-translate-y-0.5 hover:shadow-md",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50",
         getStatusStyles(appointment, now)

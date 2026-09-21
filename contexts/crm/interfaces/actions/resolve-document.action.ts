@@ -1,6 +1,6 @@
 "use server";
 
-import { createCrmCommandService } from "../../application/internal/commandservices/crm-command.service";
+import { createCrmCommandService } from "../server/crm-composition";
 import { createBusinessWorkspaceQueryService } from "@/contexts/business/application/internal/queryservices/business-workspace-query.service";
 import { getWorkspaceEstablishment } from "@/contexts/shared/application/services/workspace-establishment-permissions";
 import { ResolvedCustomerData } from "../../domain/model/entities/customer";

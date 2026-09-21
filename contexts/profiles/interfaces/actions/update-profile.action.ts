@@ -14,9 +14,15 @@ import { createProfileImageUrl } from "../../domain/model/valueobjects/profile-i
 import { createProfileCommandService } from "../../application/factory";
 import type { ProfileViewModel } from "../../application/services/profile.view-model";
 
-function readImageFile(formData: FormData) {
+async function readImageFile(formData: FormData) {
   const imageFile = formData.get("imageFile");
-  return imageFile instanceof File && imageFile.size > 0 ? imageFile : null;
+  if (!(imageFile instanceof File) || imageFile.size <= 0) return null;
+  return {
+    name: imageFile.name,
+    type: imageFile.type,
+    size: imageFile.size,
+    bytes: new Uint8Array(await imageFile.arrayBuffer()),
+  };
 }
 
 export type UpdateProfileActionState =
@@ -48,16 +54,20 @@ export async function updateProfileAction(
     const command = {
       username: createUsername(input.username),
       imageUrl: createProfileImageUrl(input.imageUrl),
-      imageFile: readImageFile(formData),
+      imageFile: await readImageFile(formData),
     };
 
     const service = createProfileCommandService();
     const profile = await service.updateProfile(command, accessToken);
 
-    updateTag("profile");
-    revalidatePath("/team");
-    revalidatePath("/profile");
-    revalidatePath("/", "layout");
+    try {
+      updateTag("profile");
+      revalidatePath("/team");
+      revalidatePath("/profile");
+      revalidatePath("/", "layout");
+    } catch {
+      // The backend write is already confirmed; invalidation is best effort.
+    }
 
     return {
       status: "success",

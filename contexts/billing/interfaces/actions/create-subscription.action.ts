@@ -4,6 +4,7 @@ import { safePublicError } from "@/contexts/shared/interfaces/actions/safe-error
 
 
 import "server-only";
+import { z } from "zod";
 import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-session-cookie";
@@ -16,11 +17,16 @@ export type CreateSubscriptionActionResult =
   | { status: "success"; data: BillingSubscriptionSnapshot; error: null }
   | { status: "error"; data: null; error: string };
 
-export interface CreateSubscriptionInput {
-  planId: number;
+const createSubscriptionInputSchema = z.object({
+  planId: z.number().int().positive(),
+  billingCycle: z.enum(["MONTHLY", "ANNUAL"]),
+  currency: z.enum(["USD", "PEN", "EUR"]).optional(),
+});
+
+export type CreateSubscriptionInput = z.infer<typeof createSubscriptionInputSchema> & {
   billingCycle: BillingCycleType;
   currency?: CurrencyCode;
-}
+};
 
 /**
  * Server action to initiate plan subscription creation calling the backend API.
@@ -29,6 +35,10 @@ export async function createSubscriptionAction(
   input: CreateSubscriptionInput,
 ): Promise<CreateSubscriptionActionResult> {
   try {
+    const parsed = createSubscriptionInputSchema.safeParse(input);
+    if (!parsed.success) {
+      return { status: "error", data: null, error: "Invalid subscription selection." };
+    }
     const cookieStore = await cookies();
     const accessToken = cookieStore.get(iamSessionCookies.accessToken)?.value;
 
@@ -41,16 +51,20 @@ export async function createSubscriptionAction(
     }
 
     const prepared = new CreateSubscriptionCommandService().handle({
-      planId: input.planId,
-      billingCycle: input.billingCycle,
-      currency: input.currency,
+      planId: parsed.data.planId,
+      billingCycle: parsed.data.billingCycle as BillingCycleType,
+      currency: parsed.data.currency as CurrencyCode | undefined,
     });
     const result = await createBillingSubscriptionAdapter().createSubscription(accessToken, prepared);
 
-    revalidatePath("/upgrade");
-    revalidatePath("/chat");
-    revalidatePath("/schedule");
-    revalidatePath("/invoices");
+    try {
+      revalidatePath("/upgrade");
+      revalidatePath("/chat");
+      revalidatePath("/schedule");
+      revalidatePath("/invoices");
+    } catch {
+      // A confirmed subscription change remains successful if cache invalidation fails.
+    }
 
     return { status: "success", data: result, error: null };
   } catch (error) {

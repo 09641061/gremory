@@ -54,7 +54,7 @@ describe("shared account header and route shells", () => {
     const user = userEvent.setup();
     render(<WelcomeLayout><h1>Welcome</h1></WelcomeLayout>);
     const buttons = within(screen.getByRole("banner")).getAllByRole("button");
-    expect(buttons.map((button) => button.textContent)).toEqual(["en", "Notifications", "Ada"]);
+    expect(buttons.map((button) => button.textContent)).toEqual(["Notifications", "Ada"]);
     await user.click(screen.getByRole("button", { name: "Ada" }));
     expect((await screen.findAllByRole("menuitem")).map((item) => item.textContent)).toEqual(["Profile", "Upgrade plan", "Invoices", "Log out"]);
     expect(screen.getByRole("menuitem", { name: "Invoices" })).toHaveAttribute("href", "/invoice?establishmentId=branch");
@@ -96,7 +96,6 @@ describe("shared account header and route shells", () => {
     // Brand is NOT counted as a button; the banner still owns only
     // notification + profile controls.
     expect(within(screen.getByRole("banner")).getAllByRole("button").map((b) => b.textContent)).toEqual([
-      "en",
       "Notifications",
       "Ada",
     ]);

@@ -64,7 +64,7 @@ export function KoduAvatar({
       className={cn(
         "flex shrink-0 items-center justify-center overflow-visible rounded-full transition-transform duration-150 ease-out",
         variant === "framed" &&
-          "border border-border/50 bg-background shadow-[0_6px_16px_rgba(15,23,42,0.05)] hover:-translate-y-0.5",
+          "border border-border/50 bg-background shadow-(var(--avatar-shadow)) hover:-translate-y-0.5",
         variant === "flat" && "border-transparent bg-transparent shadow-none hover:translate-y-0",
         className,
       )}

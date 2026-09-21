@@ -31,9 +31,13 @@ export async function cancelSubscriptionAction(): Promise<CancelSubscriptionActi
 
     const result = await createBillingSubscriptionAdapter().cancelSubscription(accessToken);
 
-    revalidatePath("/upgrade");
-    revalidatePath("/chat");
-    revalidatePath("/schedule");
+    try {
+      revalidatePath("/upgrade");
+      revalidatePath("/chat");
+      revalidatePath("/schedule");
+    } catch {
+      // A confirmed cancellation remains successful if cache invalidation fails.
+    }
 
     return { status: "success", data: result, error: null };
   } catch (error) {

@@ -1,8 +1,5 @@
-import "server-only";
-
 import { CrmQueryService, PageResponse } from "../../services/crm-query.service";
 import { CustomerResponse } from "../../../domain/model/entities/customer";
-import { CrmApiGateway } from "../../../infrastructure/gateways/crm-api.gateway";
 
 export class CrmQueryServiceImpl implements CrmQueryService {
   constructor(private readonly gateway: CrmQueryService) {}
@@ -11,7 +8,7 @@ export class CrmQueryServiceImpl implements CrmQueryService {
     establishmentId: string,
     search?: string,
     page?: number,
-    size?: number
+    size?: number,
   ): Promise<PageResponse<CustomerResponse>> {
     return this.gateway.search(establishmentId, search, page, size);
   }
@@ -21,6 +18,6 @@ export class CrmQueryServiceImpl implements CrmQueryService {
   }
 }
 
-export function createCrmQueryService(organizationId?: string): CrmQueryService {
-  return new CrmQueryServiceImpl(new CrmApiGateway(organizationId));
+export function createCrmQueryService(gateway: CrmQueryService): CrmQueryService {
+  return new CrmQueryServiceImpl(gateway);
 }

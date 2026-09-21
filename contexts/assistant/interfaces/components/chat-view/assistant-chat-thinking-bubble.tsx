@@ -18,10 +18,9 @@ export function AssistantChatThinkingBubble() {
       <div className="py-1 text-sm leading-6 text-foreground">
         <span className="mt-1 inline-flex items-center gap-2 rounded-full border border-border/60 bg-card px-3 py-1.5 text-muted-foreground shadow-sm">
           <span>{t.chat.koduThinking}</span>
+          {/* Single-dot pulse: replaced three staggered `animate-bounce` dots with one dot using Tailwind's `animate-pulse` (opacity-only, cubic-bezier easing, no bounce/spring/elastic, no color/position changes). */}
           <span className="flex items-center gap-1" aria-hidden="true">
-            <span className="size-1.5 animate-bounce rounded-full bg-muted-foreground/70 [animation-delay:-0.2s]" />
-            <span className="size-1.5 animate-bounce rounded-full bg-muted-foreground/70 [animation-delay:-0.1s]" />
-            <span className="size-1.5 animate-bounce rounded-full bg-muted-foreground/70" />
+            <span className="size-1.5 animate-pulse rounded-full bg-muted-foreground/70" />
           </span>
         </span>
       </div>

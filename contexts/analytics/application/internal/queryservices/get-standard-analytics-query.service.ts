@@ -4,14 +4,15 @@ import {
   AnalyticsApiGateway,
   type AnalyticsQueryParams,
 } from "../../../infrastructure/gateways/analytics-api.gateway";
-import type { StandardAnalyticsDashboardResponse } from "../../../interfaces/rest/schemas/standard-analytics.schemas";
+import type { StandardAnalyticsDashboardResponse } from "../../../infrastructure/contracts/standard-analytics.schemas";
 
 export class GetStandardAnalyticsQueryService {
   async execute(
     query: AnalyticsQueryParams,
-    token?: string
+    token?: string,
+    correlationId?: string,
   ): Promise<StandardAnalyticsDashboardResponse> {
-    return AnalyticsApiGateway.getStandardDashboard(query, token);
+    return AnalyticsApiGateway.getStandardDashboard(query, token, correlationId);
   }
 }
 

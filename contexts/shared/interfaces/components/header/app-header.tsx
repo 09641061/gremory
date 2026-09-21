@@ -6,8 +6,7 @@ import type { ProfileViewModel } from "@/contexts/profiles/application/services/
 import type { WorkspaceHeaderViewModel } from "@/contexts/business/application/model/business-workspace.view-models";
 import { SidebarProfile } from "@/contexts/profiles/interfaces/components/profile/sidebar-profile";
 import { NotificationDropdown } from "@/contexts/notifications/interfaces/components/notification-dropdown";
-import { LocaleSync, useI18n } from "@/contexts/shared/interfaces/i18n";
-import { LanguageSwitcher } from "./language-switcher";
+import { NotificationsProvider } from "@/contexts/notifications/interfaces/components/hooks/use-notifications";
 
 /**
  * Canonical landing route for an unauthenticated / shell-unavailable user.
@@ -21,7 +20,7 @@ export function AppHeader({
   workspace,
   homeHref,
 }: {
-  profile: (Pick<ProfileViewModel, "username" | "imageUrl"> & { language?: "ES" | "EN" }) | null;
+  profile: Pick<ProfileViewModel, "username" | "imageUrl"> | null;
   workspace: WorkspaceHeaderViewModel | null;
   /**
    * Server-resolved landing destination derived from the entry-route policy
@@ -40,33 +39,35 @@ export function AppHeader({
   const resolvedHomeHref = homeHref ?? APP_HEADER_FALLBACK_HOME_HREF;
   const isHomeActive = pathname === resolvedHomeHref;
 
-  const { locale } = useI18n();
-
   return (
-    <header className="sticky top-0 z-30 flex h-16 shrink-0 items-center justify-between gap-3 border-b border-border/60 bg-background px-4 sm:px-6">
-      <LocaleSync profileLanguage={profile?.language} />
+    // The notifications provider centralises unread-count polling and the
+    // cached notifications page. Wrapping the header here means a single
+    // provider instance exists per AppHeader render — the dropdown inside it
+    // (and any future notification consumers) all share the same polling
+    // cadence and cached state.
+    <NotificationsProvider>
+      <header className="sticky top-0 z-30 flex h-16 shrink-0 items-center justify-between gap-3 border-b border-border/60 bg-background px-4 sm:px-6">
+        <Link
+          href={resolvedHomeHref}
+          aria-label="Takodu — go to home"
+          aria-current={isHomeActive ? "page" : undefined}
+          data-testid="app-header-brand-link"
+          className="-mx-2 rounded-md px-2 py-1 text-sm font-semibold tracking-tight text-foreground transition-colors hover:bg-accent/70 hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+        >
+          Takodu
+        </Link>
 
-      <Link
-        href={resolvedHomeHref}
-        aria-label={locale === "es" ? "Takodu — ir al inicio" : "Takodu — go to home"}
-        aria-current={isHomeActive ? "page" : undefined}
-        data-testid="app-header-brand-link"
-        className="-mx-2 rounded-md px-2 py-1 text-sm font-semibold tracking-tight text-foreground transition-colors hover:bg-accent/70 hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-      >
-        Takodu
-      </Link>
-
-      <div className="flex min-w-0 items-center gap-3">
-        <LanguageSwitcher />
-        <NotificationDropdown variant="compact" />
-        <SidebarProfile
-          profile={profile}
-          profileHref="/profile"
-          canManageBilling={canManageBilling}
-          invoiceHref={establishmentId ? `/invoice?establishmentId=${establishmentId}` : "/invoice"}
-          active={pathname === "/profile" || pathname.startsWith("/profile/") || pathname === "/invoice" || pathname.startsWith("/invoice/")}
-        />
-      </div>
-    </header>
+        <div className="flex min-w-0 items-center gap-3">
+          <NotificationDropdown variant="compact" />
+          <SidebarProfile
+            profile={profile}
+            profileHref="/profile"
+            canManageBilling={canManageBilling}
+            invoiceHref={establishmentId ? `/invoice?establishmentId=${establishmentId}` : "/invoice"}
+            active={pathname === "/profile" || pathname.startsWith("/profile/") || pathname === "/invoice" || pathname.startsWith("/invoice/")}
+          />
+        </div>
+      </header>
+    </NotificationsProvider>
   );
 }

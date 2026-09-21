@@ -19,7 +19,7 @@ function ErrorBannerContent() {
   useEffect(() => {
     const denied = searchParams.get("denied");
     if (denied) {
-      setTimeout(() => {
+      const timeoutId = window.setTimeout(() => {
         if (denied === "org") {
           setErrorMsg(t.shared.accessDeniedOrgDetails);
         } else if (denied === "est") {
@@ -27,6 +27,9 @@ function ErrorBannerContent() {
         }
       }, 0);
       router.replace(pathname);
+      return () => {
+        window.clearTimeout(timeoutId);
+      };
     }
   }, [searchParams, router, pathname, t.shared.accessDeniedOrgDetails, t.shared.accessDeniedOrgEstablishments]);
 

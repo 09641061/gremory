@@ -65,10 +65,16 @@ async function resolveAccessToken(providedToken?: string): Promise<string | unde
 export class CatalogServiceApiGateway
   implements CatalogServiceCommandService
 {
-  constructor(private readonly organizationId?: string) {}
+  constructor(
+    private readonly organizationId?: string,
+    private readonly establishmentId?: string,
+  ) {}
 
   private tenantHeaders() {
-    return this.organizationId ? { "X-Organization-Id": this.organizationId } : undefined;
+    const headers: Record<string, string> = {};
+    if (this.organizationId) headers["X-Organization-Id"] = this.organizationId;
+    if (this.establishmentId) headers["X-Establishment-Id"] = this.establishmentId;
+    return Object.keys(headers).length > 0 ? headers : undefined;
   }
 
   async search(

@@ -153,7 +153,7 @@ function ErrorToast({
 
       <div className="absolute right-0 bottom-0 left-0 h-0.5 bg-muted">
         <div
-          className="h-full bg-destructive transition-all duration-75 ease-linear"
+          className="h-full bg-destructive transition-[width] duration-75 ease-linear"
           style={{ width: `${progress}%` }}
         />
       </div>

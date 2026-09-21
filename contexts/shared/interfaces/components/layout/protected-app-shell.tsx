@@ -41,6 +41,7 @@ export default function ProtectedAppShell({ children }: { children: ReactNode })
           <AppShellSidebarServer />
         </Suspense>
         <SidebarInset className="min-h-0 flex-1 overflow-y-auto">
+          <span id="app-main-content" tabIndex={-1} className="sr-only" />
           <SidebarTrigger className="mb-4 md:hidden" />
           {/*
             Safety-net Suspense: each page is expected to wrap its own dynamic

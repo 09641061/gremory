@@ -43,7 +43,7 @@ export class CrmApiGateway implements CrmCommandService, CrmQueryService {
   async updateCustomer(command: UpdateCustomerCommand, token?: string): Promise<CustomerResponse> {
     const authToken = await resolveAccessToken(token);
     return apiClient.put<CustomerResponse>(
-      `/api/crm/customers/${command.id}`,
+      `/api/crm/customers/${encodeURIComponent(command.id)}`,
       command,
       {
         token: authToken,
@@ -56,7 +56,7 @@ export class CrmApiGateway implements CrmCommandService, CrmQueryService {
   async deleteCustomer(command: DeleteCustomerCommand, token?: string): Promise<void> {
     const authToken = await resolveAccessToken(token);
     return apiClient.delete<void>(
-      `/api/crm/customers/${command.id}?establishmentId=${command.establishmentId}`,
+      `/api/crm/customers/${encodeURIComponent(command.id)}?establishmentId=${encodeURIComponent(command.establishmentId)}`,
       {
         token: authToken,
         headers: this.tenantHeaders(),
@@ -99,8 +99,10 @@ export class CrmApiGateway implements CrmCommandService, CrmQueryService {
     const query = new URLSearchParams();
     query.append("establishmentId", establishmentId);
     if (search) query.append("search", search);
-    query.append("page", String(page ?? 0));
-    query.append("size", String(size ?? 20));
+    const safePage = Number.isInteger(page) && (page as number) >= 0 ? Math.min(page as number, 10_000) : 0;
+    const safeSize = Number.isInteger(size) && (size as number) > 0 ? Math.min(size as number, 100) : 20;
+    query.append("page", String(safePage));
+    query.append("size", String(safeSize));
 
     return apiClient.get<PageResponse<CustomerResponse>>(
       `/api/crm/customers?${query.toString()}`,
@@ -115,7 +117,7 @@ export class CrmApiGateway implements CrmCommandService, CrmQueryService {
   async getCustomer(id: string, establishmentId: string, token?: string): Promise<CustomerResponse> {
     const authToken = await resolveAccessToken(token);
     return apiClient.get<CustomerResponse>(
-      `/api/crm/customers/${id}?establishmentId=${establishmentId}`,
+      `/api/crm/customers/${encodeURIComponent(id)}?establishmentId=${encodeURIComponent(establishmentId)}`,
       {
         token: authToken,
         headers: this.tenantHeaders(),

@@ -32,6 +32,6 @@ export class CatalogServiceCommandServiceImpl implements CatalogServiceCommandSe
   }
 }
 
-export function createCatalogServiceCommandService(organizationId?: string) {
-  return new CatalogServiceCommandServiceImpl(new CatalogServiceApiGateway(organizationId));
+export function createCatalogServiceCommandService(organizationId?: string, establishmentId?: string) {
+  return new CatalogServiceCommandServiceImpl(new CatalogServiceApiGateway(organizationId, establishmentId));
 }

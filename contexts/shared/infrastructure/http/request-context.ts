@@ -20,15 +20,18 @@ export function buildApiRequestHeaders(
 ): Record<string, string> {
   const merged = toHeaderRecord(headers);
 
-  if (context.token && !hasHeader(merged, "authorization")) {
+  // Security and tracing context is owned by the caller, not arbitrary per-request
+  // headers.  In particular, do not allow a transport header to replace the
+  // authenticated token, tenant, or request correlation ID.
+  if (context.token) {
     merged.Authorization = `Bearer ${context.token}`;
   }
 
-  if (context.tenantId && !hasHeader(merged, "x-organization-id")) {
+  if (context.tenantId) {
     merged["X-Organization-Id"] = context.tenantId;
   }
 
-  if (context.correlationId && !hasHeader(merged, "x-correlation-id")) {
+  if (context.correlationId) {
     merged["X-Correlation-Id"] = context.correlationId;
   }
 
@@ -42,6 +45,3 @@ function toHeaderRecord(headers?: HeadersInit): Record<string, string> {
   return { ...headers };
 }
 
-function hasHeader(headers: Record<string, string>, name: string): boolean {
-  return Object.keys(headers).some((header) => header.toLowerCase() === name);
-}

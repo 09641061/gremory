@@ -1,8 +1,8 @@
 import { describe, it, expect } from "vitest";
 import { AnalyticsDateRange } from "@/contexts/analytics/domain/model/value-objects/analytics-date-range";
 import { AnalyticsExportService } from "@/contexts/analytics/domain/services/analytics-export.service";
-import { standardAnalyticsDashboardResponseSchema } from "@/contexts/analytics/interfaces/rest/schemas/standard-analytics.schemas";
-import { maxAnalyticsDashboardResponseSchema } from "@/contexts/analytics/interfaces/rest/schemas/max-analytics.schemas";
+import { standardAnalyticsDashboardResponseSchema } from "@/contexts/analytics/infrastructure/contracts/standard-analytics.schemas";
+import { maxAnalyticsDashboardResponseSchema } from "@/contexts/analytics/infrastructure/contracts/max-analytics.schemas";
 
 describe("AnalyticsDateRange", () => {
   it("should create valid date range when from <= to", () => {

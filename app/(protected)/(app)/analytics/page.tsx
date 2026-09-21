@@ -10,8 +10,8 @@ import { workspaceSelectionCookies } from "@/contexts/business/infrastructure/se
 import { BusinessWorkspaceApiGateway } from "@/contexts/business/infrastructure/gateways/business-workspace-api.gateway";
 import { createGetStandardAnalyticsQueryService } from "@/contexts/analytics/application/internal/queryservices/get-standard-analytics-query.service";
 import { createGetMaxAnalyticsQueryService } from "@/contexts/analytics/application/internal/queryservices/get-max-analytics-query.service";
-import type { StandardAnalyticsDashboardResponse } from "@/contexts/analytics/interfaces/rest/schemas/standard-analytics.schemas";
-import type { MaxAnalyticsDashboardResponse } from "@/contexts/analytics/interfaces/rest/schemas/max-analytics.schemas";
+import type { StandardAnalyticsDashboardResponse } from "@/contexts/analytics/infrastructure/contracts/standard-analytics.schemas";
+import type { MaxAnalyticsDashboardResponse } from "@/contexts/analytics/infrastructure/contracts/max-analytics.schemas";
 import { AnalyticsDateRange } from "@/contexts/analytics/domain/model/value-objects/analytics-date-range";
 import { StandardAnalyticsView } from "@/contexts/analytics/interfaces/components/standard/standard-analytics-view";
 import { MaxAnalyticsView } from "@/contexts/analytics/interfaces/components/max/max-analytics-view";

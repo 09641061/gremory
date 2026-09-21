@@ -47,7 +47,11 @@ export class ApiClient {
   constructor(private readonly baseUrl: string) {}
 
   buildUrl(path: string): string {
-    if (/^https?:\/\//i.test(path)) return path;
+    // Gateways own API paths. Accepting arbitrary absolute URLs here turns a
+    // credential-bearing server adapter into an SSRF primitive.
+    if (/^[a-z][a-z\d+.-]*:/i.test(path) || path.startsWith("\\\\")) {
+      throw new TypeError("API paths must be relative");
+    }
     return `${this.baseUrl}${path.startsWith("/") ? path : `/${path}`}`;
   }
 
@@ -155,7 +159,7 @@ export class ApiClient {
           errorMessage ??
           `API request failed with status ${response.status}`,
         response.status,
-        responseBody,
+        undefined,
       );
     }
 
@@ -206,7 +210,7 @@ export function extractApiErrorMessage(body: unknown): string | undefined {
   return extractProblemDetailsMessage(body);
 }
 
-function createCorrelationId(): string {
+export function createCorrelationId(): string {
   return typeof crypto !== "undefined" && "randomUUID" in crypto
     ? crypto.randomUUID()
     : `req-${Date.now()}-${Math.random().toString(36).slice(2)}`;

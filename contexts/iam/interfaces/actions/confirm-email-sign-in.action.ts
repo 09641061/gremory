@@ -32,8 +32,7 @@ export async function confirmEmailSignInAction(
       code: input.code,
     });
     (await cookies()).delete(iamSessionCookies.pendingEmail);
-  } catch (error) {
-    console.error("Confirm email sign-in failed", error);
+  } catch {
     return {
       status: "error",
       error: "Unable to verify the code. Check it and try again.",

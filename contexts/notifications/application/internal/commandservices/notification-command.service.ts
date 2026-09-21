@@ -15,7 +15,8 @@ export class NotificationCommandServiceImpl implements NotificationCommandServic
   }
 
   async deleteNotification(command: DeleteNotificationCommand, accessToken: string): Promise<void> {
-    await this.gateway.markAsRead(accessToken, command.id);
+    // Deletion is a single backend operation. Marking first creates a second
+    // mutation that can fail after the user already requested deletion.
     await this.gateway.deleteNotification(accessToken, command.id);
   }
 

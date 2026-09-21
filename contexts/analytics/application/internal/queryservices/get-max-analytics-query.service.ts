@@ -4,14 +4,15 @@ import {
   AnalyticsApiGateway,
   type AnalyticsQueryParams,
 } from "../../../infrastructure/gateways/analytics-api.gateway";
-import type { MaxAnalyticsDashboardResponse } from "../../../interfaces/rest/schemas/max-analytics.schemas";
+import type { MaxAnalyticsDashboardResponse } from "../../../infrastructure/contracts/max-analytics.schemas";
 
 export class GetMaxAnalyticsQueryService {
   async execute(
     query: AnalyticsQueryParams,
-    token?: string
+    token?: string,
+    correlationId?: string,
   ): Promise<MaxAnalyticsDashboardResponse> {
-    return AnalyticsApiGateway.getMaxDashboard(query, token);
+    return AnalyticsApiGateway.getMaxDashboard(query, token, correlationId);
   }
 }
 

@@ -10,14 +10,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/contexts/shared/interfaces/components/ui/dropdown-menu";
-import type { AppNotification, PaginatedNotifications } from "../../domain/model/entities/notification";
-import {
-  fetchNotificationsAction,
-  fetchUnreadNotificationsCountAction,
-  markNotificationAsReadAction,
-  deleteNotificationAction,
-  acceptInvitationNotificationAction,
-} from "../actions/notification.actions";
+import type { AppNotification } from "../../domain/model/entities/notification";
+import { useNotifications } from "./hooks/use-notifications";
 import { cn } from "@/lib/utils";
 import { useNotificationTranslations } from "@/contexts/notifications/interfaces/i18n";
 
@@ -28,56 +22,57 @@ type NotificationDropdownProps = {
 export function NotificationDropdown({ variant = "default" }: NotificationDropdownProps = {}) {
   const { t, locale } = useNotificationTranslations();
   const [isOpen, setIsOpen] = useState(false);
-  const [unreadCount, setUnreadCount] = useState(0);
-  const [paginatedData, setPaginatedData] = useState<PaginatedNotifications | null>(null);
   const [currentPage, setCurrentPage] = useState(0);
   const [isPending, startTransition] = useTransition();
 
-  const loadNotifications = (page = 0) => {
+  // Subscribe to the shared notifications provider. Polling, unread-count
+  // sync and cached page mutations are owned by the provider so this dropdown
+  // never schedules its own setInterval — multiple instances on the same page
+  // share the same polling cadence.
+  const {
+    unreadCount,
+    notifications: paginatedData,
+    loadNotifications,
+    markAsRead,
+    delete: deleteNotification,
+    acceptInvitation,
+  } = useNotifications();
+
+  // Reload the current page whenever the dropdown opens so the user sees
+  // fresh data without having to dismiss and re-open it manually.
+  useEffect(() => {
+    if (!isOpen) return;
     startTransition(async () => {
-      const data = await fetchNotificationsAction(page, 5);
-      if (data) {
-        setPaginatedData(data);
-        setCurrentPage(data.page);
+      const result = await loadNotifications(currentPage, 5);
+      // Reconcile the requested page with the page the server actually
+      // returned (e.g. clamping past the end to the last available page).
+      if (result && result.page !== currentPage) {
+        setCurrentPage(result.page);
       }
     });
-  };
-
-  const loadUnreadCount = () => {
-    fetchUnreadNotificationsCountAction().then((count) => setUnreadCount(count));
-  };
-
-  useEffect(() => {
-    loadUnreadCount();
-    const interval = setInterval(() => {
-      loadUnreadCount();
-    }, 15000);
-    return () => clearInterval(interval);
-  }, []);
-
-  useEffect(() => {
-    if (isOpen) {
-      loadNotifications(currentPage);
-      loadUnreadCount();
-    }
+    // We intentionally do not depend on `loadNotifications` here: the
+    // function identity is stable for the lifetime of the provider and
+    // re-running on every render would defeat the purpose of the transition.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, currentPage]);
 
-  const handleMarkAsRead = async (id: string) => {
-    await markNotificationAsReadAction(id);
-    loadNotifications(currentPage);
-    loadUnreadCount();
+  const handleLoadPage = (page: number) => {
+    setCurrentPage(page);
   };
 
-  const handleDelete = async (id: string) => {
-    await deleteNotificationAction(id);
-    loadNotifications(currentPage);
-    loadUnreadCount();
+  const handleMarkAsRead = (id: string) => {
+    void markAsRead(id);
+  };
+
+  const handleDelete = (id: string) => {
+    void deleteNotification(id);
   };
 
   const handleAcceptInvitation = async (notificationId: string, token?: string) => {
-    await acceptInvitationNotificationAction(notificationId, token || "");
-    loadNotifications(currentPage);
-    loadUnreadCount();
+    await acceptInvitation(notificationId, token);
+    // The server action persists new workspace cookies; the application shell
+    // needs a hard reload to pick them up so the header re-resolves against
+    // the new workspace.
     window.location.reload();
   };
 
@@ -157,7 +152,8 @@ export function NotificationDropdown({ variant = "default" }: NotificationDropdo
                 size="icon"
                 className="size-7"
                 disabled={paginatedData.page === 0 || isPending}
-                onClick={() => loadNotifications(currentPage - 1)}
+                onClick={() => handleLoadPage(paginatedData.page - 1)}
+                aria-label={t.notifications.previousPage}
               >
                 <ChevronLeft className="size-3.5" />
               </Button>
@@ -166,7 +162,8 @@ export function NotificationDropdown({ variant = "default" }: NotificationDropdo
                 size="icon"
                 className="size-7"
                 disabled={paginatedData.page >= paginatedData.totalPages - 1 || isPending}
-                onClick={() => loadNotifications(currentPage + 1)}
+                onClick={() => handleLoadPage(paginatedData.page + 1)}
+                aria-label={t.notifications.nextPage}
               >
                 <ChevronRight className="size-3.5" />
               </Button>

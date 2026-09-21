@@ -12,6 +12,7 @@ import {
 } from "react";
 
 import {
+  acceptInvitationNotificationAction,
   fetchNotificationsAction,
   fetchUnreadNotificationsCountAction,
   markNotificationAsReadAction,
@@ -44,6 +45,12 @@ export type UseNotificationsApi = Readonly<{
   markAsRead: (id: string) => Promise<void>;
   /** Deletes a notification via the server action and re-syncs the badge. */
   delete: (id: string) => Promise<void>;
+  /**
+   * Accepts a workforce invitation via the server action and re-syncs the
+   * badge. The accepted notification is removed from the cached page so the
+   * UI no longer shows it as actionable.
+   */
+  acceptInvitation: (notificationId: string, invitationToken?: string) => Promise<void>;
   /** True while the initial unread-count fetch is in flight. */
   isLoadingUnread: boolean;
 }>;
@@ -117,7 +124,8 @@ export function NotificationsProvider({
 
   const markAsRead = useCallback(
     async (id: string) => {
-      await markNotificationAsReadAction(id);
+      const result = await markNotificationAsReadAction(id);
+      if (!result.success) return;
       // Re-sync the badge with the server and trim the cached page so the UI
       // does not display a "UNREAD" item after the mutation completes.
       await refresh();
@@ -137,7 +145,8 @@ export function NotificationsProvider({
 
   const deleteNotification = useCallback(
     async (id: string) => {
-      await deleteNotificationAction(id);
+      const result = await deleteNotificationAction(id);
+      if (!result.success) return;
       await refresh();
       if (!isMounted.current) return;
       setNotifications((current) => {
@@ -145,6 +154,28 @@ export function NotificationsProvider({
         return {
           ...current,
           content: current.content.filter((item: AppNotification) => item.id !== id),
+          totalElements: Math.max(0, current.totalElements - 1),
+        };
+      });
+    },
+    [refresh],
+  );
+
+  const acceptInvitation = useCallback(
+    async (notificationId: string, invitationToken?: string) => {
+      // The server action persists workspace cookies on success; consumers may
+      // still need a hard reload afterwards to pick up the new workspace.
+      const result = await acceptInvitationNotificationAction(notificationId, invitationToken ?? "");
+      if (!result.success) return;
+      await refresh();
+      if (!isMounted.current) return;
+      // The accepted invitation is no longer actionable, so drop it from the
+      // cached page so the UI does not show a stale Accept/Decline control.
+      setNotifications((current) => {
+        if (!current) return current;
+        return {
+          ...current,
+          content: current.content.filter((item: AppNotification) => item.id !== notificationId),
           totalElements: Math.max(0, current.totalElements - 1),
         };
       });
@@ -178,9 +209,10 @@ export function NotificationsProvider({
       loadNotifications,
       markAsRead,
       delete: deleteNotification,
+      acceptInvitation,
       isLoadingUnread,
     }),
-    [unreadCount, notifications, refresh, loadNotifications, markAsRead, deleteNotification, isLoadingUnread],
+    [unreadCount, notifications, refresh, loadNotifications, markAsRead, deleteNotification, acceptInvitation, isLoadingUnread],
   );
 
   return <NotificationsContext.Provider value={value}>{children}</NotificationsContext.Provider>;

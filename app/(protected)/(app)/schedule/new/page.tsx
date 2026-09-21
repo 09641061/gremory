@@ -44,7 +44,7 @@ async function NewAppointmentPageContent({ searchParams }: NewAppointmentPagePro
   const timeZone = establishment?.timeZone ?? "UTC";
 
   return (
-    <main className="mx-auto w-full max-w-[800px] px-4 py-8">
+    <main className="mx-auto w-full max-w-3xl px-4 py-8">
       <CreateAppointmentForm
         establishmentId={establishmentId}
         services={services}

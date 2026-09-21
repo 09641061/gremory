@@ -76,7 +76,7 @@ export function EditServiceForm({
 
       <div className="bg-background text-foreground flex flex-col">
         {/* Form Main Canvas */}
-        <main className="flex-1 max-w-[800px] w-full mx-auto px-4 py-8">
+        <main className="flex-1 max-w-3xl w-full mx-auto px-4 py-8">
           <form action={formAction} key={`${service.id}-${service.status}-${defaultsKey}-${resetKey}`} id="edit-service-form">
             <Card className="rounded-lg border-border bg-card p-6">
               <CardContent className="p-0 space-y-6">

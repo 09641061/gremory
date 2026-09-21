@@ -85,7 +85,7 @@ export function PlanCard({
   return (
     <Card
       className={cn(
-        "relative h-full rounded-lg p-7 transition-all duration-300 justify-between border-border shadow-sm hover:shadow-md"
+        "relative h-full rounded-lg p-7 transition-[box-shadow] duration-300 justify-between border-border shadow-sm hover:shadow-md"
       )}
     >
       <div>
@@ -132,7 +132,7 @@ export function PlanCard({
           variant="outline"
           size="lg"
           className={cn(
-            "w-full rounded-md border-border bg-background px-4 text-sm font-semibold text-foreground hover:bg-muted transition-all duration-150 active:scale-[0.99] shadow-xs",
+            "w-full rounded-md border-border bg-background px-4 text-sm font-semibold text-foreground hover:bg-muted transition-[background-color,transform] duration-150 active:scale-[0.99] shadow-xs",
             buttonDisabled && "opacity-50 cursor-not-allowed hover:bg-background text-muted-foreground"
           )}
         >

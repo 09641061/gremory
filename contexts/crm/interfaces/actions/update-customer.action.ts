@@ -3,7 +3,7 @@
 
 
 import { revalidatePath } from "next/cache";
-import { createCrmCommandService } from "../../application/internal/commandservices/crm-command.service";
+import { createCrmCommandService } from "../server/crm-composition";
 import { createBusinessWorkspaceQueryService } from "@/contexts/business/application/internal/queryservices/business-workspace-query.service";
 import { getWorkspaceEstablishment, hasEstablishmentPermission } from "@/contexts/shared/application/services/workspace-establishment-permissions";
 import { UpdateCustomerCommand } from "../../domain/model/commands/update-customer.command";
@@ -46,10 +46,13 @@ export async function updateCustomerAction(
       establishmentId,
     });
 
-    revalidatePath("/crm");
+    try {
+      revalidatePath("/crm");
+    } catch {
+      // The backend write is already confirmed; cache invalidation is best effort.
+    }
     return { status: "success", data: result, error: null, errorId: null, fieldErrors: null };
   } catch (error: unknown) {
-    console.error("Error updating customer:", error);
     let message = "An error occurred while updating the customer.";
     if (error instanceof ApiError) {
       if (error.status === 409) {

@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { createBusinessWorkspaceQueryService } from "@/contexts/business/application/internal/queryservices/business-workspace-query.service";
-import { createCrmQueryService } from "@/contexts/crm/application/internal/queryservices/crm-query.service";
+import { createCrmQueryService } from "@/contexts/crm/interfaces/server/crm-composition";
 import type { CustomerResponse } from "@/contexts/crm/domain/model/entities/customer";
 import { EditCustomerForm } from "@/contexts/crm/interfaces/components/customer-management/edit-customer-form";
 import { resolveModuleAccessFallback } from "@/contexts/shared/application/services/module-access.policy";

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useTransition } from "react";
-import type { MaxAnalyticsDashboardResponse } from "../../rest/schemas/max-analytics.schemas";
+import type { MaxAnalyticsDashboardResponse } from "../../../infrastructure/contracts/max-analytics.schemas";
 import type { AnalyticsPreset } from "../../../domain/model/value-objects/analytics-date-range";
 import { AnalyticsExportService } from "../../../domain/services/analytics-export.service";
 import { fetchMaxAnalyticsAction } from "../../actions/get-analytics-dashboard.action";

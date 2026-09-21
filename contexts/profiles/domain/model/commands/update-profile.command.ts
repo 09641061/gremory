@@ -5,6 +5,7 @@ export type ProfileImageFile = Readonly<{
   name: string;
   type: string;
   size: number;
+  bytes: Uint8Array;
 }>;
 
 export type UpdateProfileCommand = {

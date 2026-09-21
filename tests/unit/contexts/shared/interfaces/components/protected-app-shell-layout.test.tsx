@@ -21,11 +21,6 @@ vi.mock("@/contexts/profiles/interfaces/components/profile/sidebar-profile", () 
   SidebarProfile: () => <button>Profile</button>,
 }));
 
-vi.mock("@/contexts/shared/interfaces/i18n", () => ({
-  LocaleSync: () => null,
-  useI18n: () => ({ t: new Proxy({}, { get: () => (k: string) => k }) }),
-}));
-
 vi.mock("@/contexts/notifications/interfaces/components/push-notification-register-server", () => ({
   PushNotificationRegisterServer: () => null,
 }));

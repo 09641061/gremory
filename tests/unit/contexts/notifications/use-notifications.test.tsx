@@ -8,6 +8,7 @@ const mocks = vi.hoisted(() => ({
   fetchUnreadNotificationsCountAction: vi.fn(),
   markNotificationAsReadAction: vi.fn(),
   deleteNotificationAction: vi.fn(),
+  acceptInvitationNotificationAction: vi.fn(),
 }));
 
 vi.mock("@/contexts/notifications/interfaces/actions/notification.actions", () => ({
@@ -15,6 +16,7 @@ vi.mock("@/contexts/notifications/interfaces/actions/notification.actions", () =
   fetchUnreadNotificationsCountAction: mocks.fetchUnreadNotificationsCountAction,
   markNotificationAsReadAction: mocks.markNotificationAsReadAction,
   deleteNotificationAction: mocks.deleteNotificationAction,
+  acceptInvitationNotificationAction: mocks.acceptInvitationNotificationAction,
 }));
 
 import {
@@ -58,10 +60,12 @@ describe("useNotifications", () => {
     mocks.fetchNotificationsAction.mockReset();
     mocks.markNotificationAsReadAction.mockReset();
     mocks.deleteNotificationAction.mockReset();
+    mocks.acceptInvitationNotificationAction.mockReset();
     mocks.fetchUnreadNotificationsCountAction.mockImplementation(() => makeUnreadResponse(3));
     mocks.fetchNotificationsAction.mockImplementation(() => makeNotificationsResponse());
     mocks.markNotificationAsReadAction.mockResolvedValue({ success: true });
     mocks.deleteNotificationAction.mockResolvedValue({ success: true });
+    mocks.acceptInvitationNotificationAction.mockResolvedValue({ success: true });
   });
 
   it("provides initial state with a zeroed unread count until the first fetch resolves", async () => {
@@ -168,6 +172,36 @@ describe("useNotifications", () => {
     await waitFor(() => {
       expect(result.current.unreadCount).toBe(1);
     });
+    expect(result.current.notifications?.content).toHaveLength(0);
+    expect(result.current.notifications?.totalElements).toBe(0);
+  });
+
+  it("accepts an invitation, refreshes the count, and trims the cached page", async () => {
+    let unread = 4;
+    mocks.fetchUnreadNotificationsCountAction.mockImplementation(() => makeUnreadResponse(unread));
+
+    const { result } = renderHook(() => useNotifications(), { wrapper: defaultWrapper });
+
+    await act(async () => {
+      await result.current.loadNotifications(0, 10);
+    });
+
+    expect(result.current.notifications?.content).toHaveLength(1);
+    expect(result.current.notifications?.totalElements).toBe(1);
+
+    unread = 3;
+    mocks.fetchUnreadNotificationsCountAction.mockImplementation(() => makeUnreadResponse(unread));
+
+    await act(async () => {
+      await result.current.acceptInvitation("n-1", "invite-token");
+    });
+
+    expect(mocks.acceptInvitationNotificationAction).toHaveBeenCalledWith("n-1", "invite-token");
+    await waitFor(() => {
+      expect(result.current.unreadCount).toBe(3);
+    });
+    // The accepted notification is removed from the cached page so the UI no
+    // longer shows it as actionable after the user accepts.
     expect(result.current.notifications?.content).toHaveLength(0);
     expect(result.current.notifications?.totalElements).toBe(0);
   });

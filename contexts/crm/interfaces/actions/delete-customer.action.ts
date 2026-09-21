@@ -4,7 +4,7 @@ import { safePublicError } from "@/contexts/shared/interfaces/actions/safe-error
 
 
 import { revalidatePath } from "next/cache";
-import { createCrmCommandService } from "../../application/internal/commandservices/crm-command.service";
+import { createCrmCommandService } from "../server/crm-composition";
 import { createBusinessWorkspaceQueryService } from "@/contexts/business/application/internal/queryservices/business-workspace-query.service";
 import { getWorkspaceEstablishment, hasEstablishmentPermission } from "@/contexts/shared/application/services/workspace-establishment-permissions";
 import { createActionErrorId, type ActionState } from "./action-state";
@@ -29,10 +29,13 @@ export async function deleteCustomerAction(
     const service = createCrmCommandService(workspace.organization?.id);
     await service.deleteCustomer({ id, establishmentId });
 
-    revalidatePath("/crm");
+    try {
+      revalidatePath("/crm");
+    } catch {
+      // The backend write is already confirmed; cache invalidation is best effort.
+    }
     return { status: "success", data: undefined, error: null, errorId: null, fieldErrors: null };
   } catch (error) {
-    console.error("Error deleting customer:", error);
     return {
       status: "error",
       data: null,

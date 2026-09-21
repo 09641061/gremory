@@ -31,8 +31,7 @@ export async function requestEmailSignInAction(
 
     await sendSignInEmail(input.email, returnTo);
 
-  } catch (error) {
-    console.error("Request email sign-in failed", error);
+  } catch {
     return {
       status: "error",
       error: "Unable to send the sign-in email. Please try again.",

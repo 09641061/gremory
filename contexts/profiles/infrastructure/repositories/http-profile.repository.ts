@@ -54,8 +54,11 @@ export class HttpProfileRepository implements ProfileRepository {
 
   private async updateWithImage(command: UpdateProfileCommand, accessToken: string) {
     const formData = new FormData();
+    const imageFile = command.imageFile;
+    if (!imageFile) throw new ProfileApiError("Invalid profile image", 400);
     formData.set("username", command.username.value);
-    formData.set("photoFile", command.imageFile as File);
+    const imageBlob = new Blob([imageFile.bytes.buffer as ArrayBuffer], { type: imageFile.type || "application/octet-stream" });
+    formData.set("photoFile", imageBlob, imageFile.name);
     if (command.imageUrl?.value) {
       formData.set("imageUrl", command.imageUrl.value);
     }
