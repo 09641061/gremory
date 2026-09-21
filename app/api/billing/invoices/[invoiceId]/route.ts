@@ -4,7 +4,7 @@ import { z } from "zod";
 import { composeBillingAdapters } from "@/contexts/billing/interfaces/server/billing-composition";
 import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-session-cookie";
 import { cookies } from "next/headers";
-import { requireBillingManager } from "@/contexts/billing/interfaces/authorization/billing-authorization";
+import { requireSubscriptionOwnerAccess } from "@/contexts/billing/interfaces/authorization/billing-authorization";
 import { createCorrelationId } from "@/contexts/shared/infrastructure/http/api-client";
 
 const uuidSchema = z.string().uuid();
@@ -33,7 +33,7 @@ export async function GET(
       return NextResponse.json({ message: "Authentication is required" }, { status: 401 });
     }
 
-    const billingContext = await requireBillingManager(_request.headers.get("x-correlation-id") ?? createCorrelationId());
+    const billingContext = await requireSubscriptionOwnerAccess(createCorrelationId());
     const invoice = await composeBillingAdapters().invoiceQueryService.getInvoiceById(
       accessToken,
       parsed.data,

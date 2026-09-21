@@ -5,12 +5,12 @@ import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-ses
 import { safePublicError } from "@/contexts/shared/interfaces/actions/safe-error";
 import { createCorrelationId } from "@/contexts/shared/infrastructure/http/api-client";
 import { composeBillingAdapters } from "../server/billing-composition";
-import { requireBillingManager } from "../authorization/billing-authorization";
+import { requireSubscriptionOwnerAccess } from "../authorization/billing-authorization";
 
 async function contextAndToken() {
   const token = (await cookies()).get(iamSessionCookies.accessToken)?.value;
   if (!token) throw new Error("Authentication is required");
-  return { token, context: await requireBillingManager(createCorrelationId()) };
+  return { token, context: await requireSubscriptionOwnerAccess(createCorrelationId()) };
 }
 
 export async function listInvoicesAction(page = 0, size = 20) {

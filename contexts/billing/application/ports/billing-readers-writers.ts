@@ -2,7 +2,8 @@ import type { CreateSubscriptionCommand } from "../../domain/model/commands/crea
 import type { CurrencyCode } from "../../domain/model/value-objects/currency";
 
 export type BillingRequestContext = Readonly<{
-  tenantId: string;
+  /** Optional for account-level subscription operations before an organization exists. */
+  tenantId?: string;
   correlationId: string;
 }>;
 

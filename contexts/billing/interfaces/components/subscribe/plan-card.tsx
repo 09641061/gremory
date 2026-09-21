@@ -4,7 +4,10 @@ import React, { useTransition } from "react";
 import { Check, Loader2 } from "lucide-react";
 import type { BillingCycleType } from "../../../domain/model/value-objects/billing-cycle";
 import { getCurrencySymbol, type CurrencyCode } from "../../../domain/model/value-objects/currency";
-import { createSubscriptionAction } from "../../actions/create-subscription.action";
+import {
+  createSubscriptionAction,
+  type CreateSubscriptionActionErrorKind,
+} from "../../actions/create-subscription.action";
 import { StandardIcon } from "../icons/standart";
 import { PremiumIcon } from "../icons/premium";
 import { cn } from "@/lib/utils";
@@ -25,7 +28,7 @@ interface PlanCardProps {
   buttonLabel?: string;
   buttonDisabled?: boolean;
   onSuccess?: (data: unknown) => void;
-  onError?: (error: string) => void;
+  onError?: (error: { message: string; kind: CreateSubscriptionActionErrorKind }) => void;
   onSelect?: (execute: () => void) => void;
 }
 
@@ -69,7 +72,7 @@ export function PlanCard({
       if (result.status === "success") {
         onSuccess?.(result.data);
       } else {
-        onError?.(result.error);
+        onError?.({ message: result.error, kind: result.errorKind });
       }
     });
   };

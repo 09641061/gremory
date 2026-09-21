@@ -19,6 +19,8 @@ export const es: BillingDictionary = {
     signInRequired: "Inicio de sesión requerido",
     signInRequiredMessage: "Debes iniciar sesión para seleccionar un plan de suscripción.",
     notification: "Notificación",
+    billingAccessRequired: "Se requiere acceso a facturación",
+    operationError: "No se pudo procesar la solicitud de pago",
     confirmUpgradeTitle: "Confirmar mejora a {planName}",
     confirmUpgradeDescription: "Estás mejorando al Plan {planName}. Se cobrará un monto prorrateado inmediato a tu tarjeta predeterminada en Stripe. ¿Deseas continuar?",
     confirmDowngradeTitle: "Confirmar cambio a {planName}",

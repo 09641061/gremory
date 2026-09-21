@@ -4,7 +4,7 @@ import { z } from "zod";
 import { composeBillingAdapters } from "@/contexts/billing/interfaces/server/billing-composition";
 import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-session-cookie";
 import { cookies } from "next/headers";
-import { requireBillingManager } from "@/contexts/billing/interfaces/authorization/billing-authorization";
+import { requireSubscriptionOwnerAccess } from "@/contexts/billing/interfaces/authorization/billing-authorization";
 import { createCorrelationId } from "@/contexts/shared/infrastructure/http/api-client";
 
 const billingCycleSchema = z.enum(["MONTHLY", "ANNUAL"]);
@@ -28,14 +28,14 @@ async function getAccessToken(): Promise<string | undefined> {
   return cookieStore.get(iamSessionCookies.accessToken)?.value;
 }
 
-export async function GET(request: Request) {
+export async function GET() {
   try {
     const accessToken = await getAccessToken();
     if (!accessToken) {
       return NextResponse.json({ message: "Authentication is required" }, { status: 401 });
     }
 
-    const billingContext = await requireBillingManager(request.headers.get("x-correlation-id") ?? createCorrelationId());
+    const billingContext = await requireSubscriptionOwnerAccess(createCorrelationId());
     const subscription = await composeBillingAdapters().gateway.getCurrentSubscription(accessToken, billingContext);
     return NextResponse.json(subscription);
   } catch (error) {
@@ -76,7 +76,7 @@ export async function POST(request: Request) {
       return validationErrorResponse(parsed.error.issues[0]?.message);
     }
 
-    const billingContext = await requireBillingManager(request.headers.get("x-correlation-id") ?? createCorrelationId());
+    const billingContext = await requireSubscriptionOwnerAccess(createCorrelationId());
     const subscription = await composeBillingAdapters().createSubscriptionService.execute(accessToken, {
       planId: parsed.data.planId,
       billingCycle: parsed.data.billingCycle,
@@ -104,7 +104,7 @@ export async function PUT(request: Request) {
       return validationErrorResponse(parsed.error.issues[0]?.message);
     }
 
-    const billingContext = await requireBillingManager(request.headers.get("x-correlation-id") ?? createCorrelationId());
+    const billingContext = await requireSubscriptionOwnerAccess(createCorrelationId());
     const subscription = await composeBillingAdapters().subscriptionCommandService.renew(accessToken, {
       newPlanId: parsed.data.newPlanId,
       newBillingCycle: parsed.data.newBillingCycle,
@@ -123,7 +123,7 @@ export async function DELETE() {
       return NextResponse.json({ message: "Authentication is required" }, { status: 401 });
     }
 
-    const billingContext = await requireBillingManager(createCorrelationId());
+    const billingContext = await requireSubscriptionOwnerAccess(createCorrelationId());
     const subscription = await composeBillingAdapters().subscriptionCommandService.cancel(accessToken, billingContext);
     return NextResponse.json(subscription);
   } catch (error) {

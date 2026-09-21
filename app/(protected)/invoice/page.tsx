@@ -6,7 +6,7 @@ import { composeBillingAdapters } from "@/contexts/billing/interfaces/server/bil
 import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-session-cookie";
 import { InvoiceView } from "@/contexts/billing/interfaces/components/invoice/invoice-view";
 import { PageLoading } from "@/contexts/shared/interfaces/components/feedback/page-loading";
-import { requireBillingManager } from "@/contexts/billing/interfaces/authorization/billing-authorization";
+import { requireSubscriptionOwnerAccess } from "@/contexts/billing/interfaces/authorization/billing-authorization";
 
 export default function InvoicePage() {
   return (
@@ -27,7 +27,7 @@ async function InvoicePageContent() {
   // scoping, but not the active-subscription gate.
 
   const billing = composeBillingAdapters();
-  const billingContext = await requireBillingManager();
+  const billingContext = await requireSubscriptionOwnerAccess();
   const subscription = await billing.currentSubscriptionService.getCurrentSubscriptionSnapshot(accessToken, billingContext);
   const invoices = await billing.invoiceQueryService.getInvoices(accessToken, 0, 20, billingContext);
 

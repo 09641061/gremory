@@ -1,5 +1,5 @@
 /** @vitest-environment jsdom */
-import { describe, it, expect, vi } from "vitest";
+import { beforeEach, describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 
 import { SubscribeView } from "@/contexts/billing/interfaces/components/subscribe/subscribe-view";
@@ -10,6 +10,7 @@ import type {
 
 const mocks = vi.hoisted(() => ({
   push: vi.fn(),
+  createSubscriptionAction: vi.fn(),
 }));
 
 vi.mock("next/navigation", () => ({
@@ -19,19 +20,7 @@ vi.mock("next/navigation", () => ({
 }));
 
 vi.mock("@/contexts/billing/interfaces/actions/create-subscription.action", () => ({
-  createSubscriptionAction: vi.fn().mockResolvedValue({
-    status: "success",
-    data: {
-      id: "sub_123",
-      ownerId: "owner_123",
-      planId: 1,
-      billingCycle: "ANNUAL",
-      status: "PENDING",
-      clientSecret: "pi_123_secret_456",
-      stripePublicKey: "pk_test_123",
-    },
-    error: null,
-  }),
+  createSubscriptionAction: mocks.createSubscriptionAction,
 }));
 
 vi.mock("@stripe/stripe-js", () => ({
@@ -71,6 +60,23 @@ const plansByCurrency: PlansByCurrencyReadModel = {
 };
 
 describe("SubscribeView Component", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mocks.createSubscriptionAction.mockResolvedValue({
+      status: "success",
+      data: {
+        id: "sub_123",
+        ownerId: "owner_123",
+        planId: 1,
+        billingCycle: "ANNUAL",
+        status: "PENDING",
+        clientSecret: "pi_123_secret_456",
+        stripePublicKey: "pk_test_123",
+      },
+      error: null,
+      errorKind: null,
+    });
+  });
 
   it("renders all available plans", async () => {
     render(<SubscribeView backHref="/chat" plansByCurrency={plansByCurrency} />);
@@ -102,6 +108,24 @@ describe("SubscribeView Component", () => {
     await waitFor(() => {
       expect(screen.getByText("S/.75")).toBeDefined();
     });
+  });
+
+  it("should show a billing authorization message instead of sign-in when checkout is forbidden", async () => {
+    // Arrange
+    mocks.createSubscriptionAction.mockResolvedValue({
+      status: "error",
+      data: null,
+      error: "Operation not permitted",
+      errorKind: "authorization",
+    });
+
+    // Act
+    render(<SubscribeView backHref="/chat" plansByCurrency={plansByCurrency} />);
+    fireEvent.click(await screen.findByRole("button", { name: "Get Standard plan" }));
+
+    // Assert
+    expect(await screen.findByText("Billing access required")).toBeDefined();
+    expect(screen.queryByText("Sign-in Required")).not.toBeInTheDocument();
   });
 
 });

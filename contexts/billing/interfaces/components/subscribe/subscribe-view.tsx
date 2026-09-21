@@ -10,6 +10,7 @@ import type {
   PlansByCurrencyReadModel,
 } from "../../../application/internal/queryservices/list-plans-query.service";
 import type { SubscriptionAccessSnapshot } from "../../../domain/services/subscription-access.policy";
+import type { CreateSubscriptionActionErrorKind } from "../../actions/create-subscription.action";
 import { ErrorAlert } from "@/contexts/shared/interfaces/components/feedback/error";
 import { BackNavigationButton } from "@/contexts/shared/interfaces/components/navigation/back-navigation-button";
 import { SubscribeHero } from "./subscribe-hero";
@@ -35,8 +36,9 @@ interface ActivePaymentState {
 }
 
 interface FeedbackState {
-  type: "success" | "error";
+  type: "error";
   text: string;
+  kind: CreateSubscriptionActionErrorKind;
   id: number;
 }
 
@@ -158,7 +160,13 @@ export function SubscribeView({ backHref, plansByCurrency, currentSubscription }
       {feedbackMessage ? (
         <ErrorAlert
           key={feedbackMessage.id}
-          title={feedbackMessage.type === "error" ? t.subscribe.signInRequired : t.subscribe.notification}
+          title={
+            feedbackMessage.kind === "authentication"
+              ? t.subscribe.signInRequired
+              : feedbackMessage.kind === "authorization"
+              ? t.subscribe.billingAccessRequired
+              : t.subscribe.operationError
+          }
           message={feedbackMessage.text}
         />
       ) : null}
@@ -236,7 +244,8 @@ export function SubscribeView({ backHref, plansByCurrency, currentSubscription }
                 onError={(err) =>
                   setFeedbackMessage({
                     type: "error",
-                    text: err || t.subscribe.signInRequiredMessage,
+                    text: err.message || t.subscribe.operationError,
+                    kind: err.kind,
                     id: Date.now(),
                   })
                 }

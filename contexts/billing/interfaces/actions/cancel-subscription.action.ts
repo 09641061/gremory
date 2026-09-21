@@ -9,7 +9,7 @@ import { revalidatePath } from "next/cache";
 import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-session-cookie";
 import type { BillingSubscriptionReadModel } from "../../application/ports/billing-readers-writers";
 import { composeBillingAdapters } from "../server/billing-composition";
-import { requireBillingManager } from "../authorization/billing-authorization";
+import { requireSubscriptionOwnerAccess } from "../authorization/billing-authorization";
 
 export type CancelSubscriptionActionResult =
   | { status: "success"; data: BillingSubscriptionReadModel; error: null }
@@ -31,7 +31,7 @@ export async function cancelSubscriptionAction(): Promise<CancelSubscriptionActi
       };
     }
 
-    const billingContext = await requireBillingManager();
+    const billingContext = await requireSubscriptionOwnerAccess();
     const result = await composeBillingAdapters().subscriptionCommandService.cancel(accessToken, billingContext);
 
     try {

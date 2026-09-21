@@ -17,6 +17,8 @@ export const en = {
     signInRequired: "Sign-in Required",
     signInRequiredMessage: "You must be signed in to select a subscription plan.",
     notification: "Notification",
+    billingAccessRequired: "Billing access required",
+    operationError: "Payment request failed",
     confirmUpgradeTitle: "Confirm Upgrade to {planName}",
     confirmUpgradeDescription: "You are upgrading to the {planName} Plan. An immediate prorated amount will be charged to your default card in Stripe. Do you want to proceed?",
     confirmDowngradeTitle: "Confirm Downgrade to {planName}",
