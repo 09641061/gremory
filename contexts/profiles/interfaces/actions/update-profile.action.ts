@@ -17,12 +17,7 @@ import type { ProfileViewModel } from "../../application/services/profile.view-m
 async function readImageFile(formData: FormData) {
   const imageFile = formData.get("imageFile");
   if (!(imageFile instanceof File) || imageFile.size <= 0) return null;
-  return {
-    name: imageFile.name,
-    type: imageFile.type,
-    size: imageFile.size,
-    bytes: new Uint8Array(await imageFile.arrayBuffer()),
-  };
+  return imageFile;
 }
 
 export type UpdateProfileActionState =

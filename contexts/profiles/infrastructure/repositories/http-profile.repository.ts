@@ -57,8 +57,9 @@ export class HttpProfileRepository implements ProfileRepository {
     const imageFile = command.imageFile;
     if (!imageFile) throw new ProfileApiError("Invalid profile image", 400);
     formData.set("username", command.username.value);
-    const imageBlob = new Blob([imageFile.bytes.buffer as ArrayBuffer], { type: imageFile.type || "application/octet-stream" });
-    formData.set("photoFile", imageBlob, imageFile.name);
+    // Pass the original File reference without a filename override so
+    // FormData preserves the source File's `lastModified` and identity.
+    formData.set("photoFile", imageFile);
     if (command.imageUrl?.value) {
       formData.set("imageUrl", command.imageUrl.value);
     }
