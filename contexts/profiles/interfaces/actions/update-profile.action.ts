@@ -1,23 +1,55 @@
 "use server";
 
-import { safePublicError } from "@/contexts/shared/interfaces/actions/safe-error";
-
-
 import "server-only";
 import { cookies } from "next/headers";
 import { revalidatePath, updateTag } from "next/cache";
 import { z } from "zod";
+
+import { safePublicError } from "@/contexts/shared/interfaces/actions/safe-error";
 import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-session-cookie";
 import { updateProfileSchema } from "../rest/schemas/profile.schemas";
 import { createUsername } from "../../domain/model/valueobjects/username";
 import { createProfileImageUrl } from "../../domain/model/valueobjects/profile-image-url";
-import { createProfileCommandService } from "../../application/factory";
+import type { ProfileImageInput } from "../../domain/model/commands/update-profile.command";
+import { composeProfileAdapters } from "../server/profile-composition";
 import type { ProfileViewModel } from "../../application/services/profile.view-model";
 
-async function readImageFile(formData: FormData) {
+const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
+const ALLOWED_IMAGE_TYPES = new Set([
+  "image/png",
+  "image/jpeg",
+  "image/webp",
+  "image/gif",
+]);
+
+async function readImageFile(formData: FormData): Promise<ProfileImageInput | null> {
   const imageFile = formData.get("imageFile");
   if (!(imageFile instanceof File) || imageFile.size <= 0) return null;
-  return imageFile;
+  if (imageFile.size > MAX_IMAGE_BYTES) {
+    throw new z.ZodError([
+      {
+        code: "custom",
+        path: ["imageFile"],
+        message: "Image must be 8 MB or smaller",
+      },
+    ]);
+  }
+  if (imageFile.type && !ALLOWED_IMAGE_TYPES.has(imageFile.type)) {
+    throw new z.ZodError([
+      {
+        code: "custom",
+        path: ["imageFile"],
+        message: "Unsupported image format",
+      },
+    ]);
+  }
+  const bytes = new Uint8Array(await imageFile.arrayBuffer());
+  return {
+    name: imageFile.name,
+    type: imageFile.type,
+    size: imageFile.size,
+    bytes,
+  };
 }
 
 export type UpdateProfileActionState =
@@ -52,16 +84,20 @@ export async function updateProfileAction(
       imageFile: await readImageFile(formData),
     };
 
-    const service = createProfileCommandService();
-    const profile = await service.updateProfile(command, accessToken);
+    const profile = await composeProfileAdapters().commandService.updateProfile(
+      command,
+      accessToken,
+    );
 
+    // Invalidation is best effort: a backend-confirmed write must not be
+    // turned into an error by a failed cache update.
     try {
       updateTag("profile");
       revalidatePath("/team");
       revalidatePath("/profile");
       revalidatePath("/", "layout");
     } catch {
-      // The backend write is already confirmed; invalidation is best effort.
+      /* swallow */
     }
 
     return {

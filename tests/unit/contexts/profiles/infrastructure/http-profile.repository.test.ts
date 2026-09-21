@@ -4,6 +4,16 @@ import { ApiError, apiClient } from "@/contexts/shared/infrastructure/http/api-c
 import { createUsername } from "@/contexts/profiles/domain/model/valueobjects/username";
 import { createProfileImageUrl } from "@/contexts/profiles/domain/model/valueobjects/profile-image-url";
 import { defaultProfilePreferences } from "@/contexts/profiles/domain/model/valueobjects/profile-preferences";
+import type { ProfileImageInput } from "@/contexts/profiles/domain/model/commands/update-profile.command";
+
+async function fileToProfileImageInput(file: File): Promise<ProfileImageInput> {
+  return {
+    name: file.name,
+    type: file.type,
+    size: file.size,
+    bytes: new Uint8Array(await file.arrayBuffer()),
+  };
+}
 
 vi.mock("@/contexts/shared/infrastructure/http/api-client", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@/contexts/shared/infrastructure/http/api-client")>();
@@ -111,7 +121,7 @@ describe("HttpProfileRepository", () => {
       const command = {
         username: createUsername("user"),
         imageUrl: createProfileImageUrl(null),
-        imageFile: dummyFile,
+        imageFile: await fileToProfileImageInput(dummyFile),
       };
 
       // Act
@@ -143,7 +153,7 @@ describe("HttpProfileRepository", () => {
       const command = {
         username: createUsername("user"),
         imageUrl: createProfileImageUrl("https://picsum.photos/seed/replik-test/800/600"),
-        imageFile: dummyFile,
+        imageFile: await fileToProfileImageInput(dummyFile),
       };
 
       // Act
@@ -152,7 +162,13 @@ describe("HttpProfileRepository", () => {
       // Assert
       expect(capturedFormData).not.toBeNull();
       expect(capturedFormData!.get("username")).toBe("user");
-      expect(capturedFormData!.get("photoFile")).toBe(dummyFile);
+      // The Domain carries a transport-neutral ProfileImageInput; the
+      // Infrastructure rebuilds a Blob with the same name, type, and bytes.
+      const photoFile = capturedFormData!.get("photoFile");
+      expect(photoFile).toBeInstanceOf(Blob);
+      expect((photoFile as File).name).toBe("photo.png");
+      expect((photoFile as File).type).toBe("image/png");
+      expect((photoFile as Blob).size).toBe(dummyFile.size);
       expect(capturedFormData!.get("imageUrl")).toBe("https://picsum.photos/seed/replik-test/800/600");
     });
 
@@ -164,7 +180,7 @@ describe("HttpProfileRepository", () => {
       const command = {
         username: createUsername("user"),
         imageUrl: createProfileImageUrl(null),
-        imageFile: dummyFile,
+        imageFile: await fileToProfileImageInput(dummyFile),
       };
 
       // Act & Assert

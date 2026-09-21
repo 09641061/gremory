@@ -5,8 +5,8 @@ const mocks = {
   resolveSession: vi.fn(),
 };
 
-vi.mock("@/contexts/iam/application/internal/queryservices/iam-session-query.service", () => ({
-  createIamSessionQueryService: () => mocks,
+vi.mock("@/contexts/iam/interfaces/server/iam-composition", () => ({
+  composeIamAdapters: () => ({ sessionQueryService: mocks }),
 }));
 
 const organizationId = "11111111-1111-4111-8111-111111111111";

@@ -8,8 +8,8 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock("next/headers", () => ({ cookies: vi.fn(() => mocks.cookies) }));
 vi.mock("next/cache", () => ({ updateTag: mocks.updateTag }));
-vi.mock("@/contexts/profiles/application/factory", () => ({
-  createProfileCommandService: () => mocks.commandService,
+vi.mock("@/contexts/profiles/interfaces/server/profile-composition", () => ({
+  composeProfileAdapters: () => ({ commandService: mocks.commandService }),
 }));
 
 import { describe, it, expect, beforeEach, vi } from "vitest";

@@ -12,8 +12,8 @@ vi.mock("next/cache", () => ({
   updateTag: mocks.updateTag,
   revalidatePath: mocks.revalidatePath,
 }));
-vi.mock("@/contexts/profiles/application/factory", () => ({
-  createProfileCommandService: () => mocks.commandService,
+vi.mock("@/contexts/profiles/interfaces/server/profile-composition", () => ({
+  composeProfileAdapters: () => ({ commandService: mocks.commandService }),
 }));
 
 import { describe, it, expect, beforeEach, vi } from "vitest";
@@ -102,7 +102,7 @@ describe("updateProfileAction", () => {
     );
   });
 
-  it("should forward uploaded image file to the command service when provided", async () => {
+  it("should forward uploaded image bytes to the command service when provided", async () => {
     // Arrange
     mocks.cookies.get.mockReturnValue({ value: "test-token" });
     const dummyFile = new File(["test-content"], "avatar.png", { type: "image/png" });
@@ -126,7 +126,11 @@ describe("updateProfileAction", () => {
     expect(result.status).toBe("success");
     expect(mocks.commandService.updateProfile).toHaveBeenCalledWith(
       expect.objectContaining({
-        imageFile: expect.any(File),
+        imageFile: expect.objectContaining({
+          name: "avatar.png",
+          type: "image/png",
+          bytes: expect.any(Uint8Array),
+        }),
       }),
       "test-token"
     );
