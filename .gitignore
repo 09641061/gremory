@@ -52,6 +52,7 @@ test-results
 .github/skills
 
 .impeccable
+.pi
 # subagent worktrees (managed outside the source tree)
 /.worktrees/
 /.pi/subagents/runs/
