@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useLandingI18n } from "@/contexts/landing/interfaces/i18n";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
-import { StatusBadge } from "@/contexts/shared/interfaces/components/ui/status-badge";
 import {
   Avatar,
   AvatarFallback,
@@ -16,8 +15,6 @@ import {
   StarIcon,
   SparklesIcon,
   CheckCircle2Icon,
-  CalendarIcon,
-  BotIcon,
 } from "lucide-react";
 
 export function HeroSection() {
@@ -34,50 +31,39 @@ export function HeroSection() {
   return (
     <section
       id="hero"
-      className="relative overflow-hidden pt-12 pb-20 md:pt-20 md:pb-28 lg:pt-24 lg:pb-32"
+      className="relative overflow-hidden pt-12 pb-16 md:pt-20 md:pb-24 lg:pt-24 lg:pb-28"
     >
-      {/* Background radial glow accents */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute -top-40 left-1/2 -z-10 -translate-x-1/2 h-[500px] w-[800px] max-w-full rounded-full bg-primary/15 blur-[120px] dark:bg-primary/10"
-      />
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute top-1/2 -right-20 -z-10 size-72 rounded-full bg-accent/30 blur-[100px] dark:bg-accent/15"
-      />
-
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
           
           {/* Left Hero Content */}
           <div className="lg:col-span-7 flex flex-col items-start text-left space-y-6">
             {/* Announcement Badge */}
-            <div className="inline-flex items-center gap-2">
-              <StatusBadge tone="success" className="px-3 py-1 text-xs gap-1.5 shadow-xs">
-                <SparklesIcon className="size-3 text-emerald-600 dark:text-emerald-400" />
-                <span>{hero.badge}</span>
-              </StatusBadge>
+            <div className="inline-flex items-center gap-2 rounded-full border border-border/80 bg-muted/40 px-3 py-1 text-xs font-medium text-foreground transition-colors hover:border-border">
+              <SparklesIcon className="size-3 text-primary" />
+              <span>{hero.badge}</span>
             </div>
 
-            {/* Headline */}
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-foreground leading-[1.15]">
+            {/* Headline with crisp solid typography (no gradient text) */}
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-[-0.03em] text-foreground leading-[1.12]">
               {hero.titleStart}
-              <span className="bg-gradient-to-r from-primary to-emerald-600 bg-clip-text text-transparent">
+              <span className="text-primary font-extrabold">
                 {hero.titleHighlight}
               </span>
               {hero.titleEnd}
             </h1>
 
             {/* Subtitle */}
-            <p className="text-lg sm:text-xl text-muted-foreground leading-relaxed max-w-2xl font-normal">
+            <p className="text-base sm:text-lg text-muted-foreground leading-relaxed max-w-2xl font-normal">
               {hero.description}
             </p>
 
             {/* CTA Buttons */}
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3.5 w-full sm:w-auto pt-2">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto pt-2">
               <Button
                 size="lg"
-                className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90 shadow-md text-base px-6 h-12"
+                nativeButton={false}
+                className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90 text-sm font-medium px-6 h-11 shadow-xs"
                 render={<Link href="/login" />}
               >
                 <span>{hero.primaryCta}</span>
@@ -87,7 +73,8 @@ export function HeroSection() {
               <Button
                 variant="outline"
                 size="lg"
-                className="gap-2 border-border/80 text-foreground hover:bg-muted/70 text-base px-6 h-12"
+                nativeButton={false}
+                className="gap-2 border-border/80 text-foreground hover:bg-muted/50 text-sm font-medium px-6 h-11"
                 render={<Link href="#pricing" />}
               >
                 <span>{hero.secondaryCta}</span>
@@ -101,8 +88,8 @@ export function HeroSection() {
             </div>
 
             {/* Social Proof */}
-            <div className="pt-6 border-t border-border/60 w-full flex flex-wrap items-center gap-6">
-              <AvatarGroup className="-space-x-2.5">
+            <div className="pt-6 border-t border-border/40 w-full flex flex-wrap items-center gap-5">
+              <AvatarGroup className="-space-x-2">
                 {demoAvatars.map((user, i) => (
                   <Avatar key={i} size="sm" className="ring-2 ring-background">
                     <AvatarImage src={user.img} alt={user.name} />
@@ -130,46 +117,24 @@ export function HeroSection() {
             </div>
           </div>
 
-          {/* Right Hero Visual / Animated Kodu Mascot Card */}
+          {/* Right Hero Visual / Animated Kodu Mascot Display */}
           <div className="lg:col-span-5 flex justify-center lg:justify-end">
             <div className="relative w-full max-w-md">
-              {/* Outer decorative card frame */}
-              <div className="relative rounded-3xl border border-border/80 bg-gradient-to-b from-card to-card/60 p-6 sm:p-8 shadow-xl backdrop-blur-xs">
-                
-                {/* Floating pill 1: 24/7 AI */}
-                <div className="absolute -top-4 -left-4 z-20 flex items-center gap-2 rounded-full border border-border/70 bg-background/95 px-3 py-1.5 text-xs font-semibold shadow-md backdrop-blur-md">
-                  <div className="flex size-6 items-center justify-center rounded-full bg-primary/20 text-primary">
-                    <BotIcon className="size-3.5" />
-                  </div>
-                  <span className="text-foreground">Kodu AI 24/7</span>
-                </div>
-
-                {/* Floating pill 2: Real-time Schedule */}
-                <div className="absolute -bottom-4 -right-2 z-20 flex items-center gap-2 rounded-full border border-border/70 bg-background/95 px-3.5 py-1.5 text-xs font-semibold shadow-md backdrop-blur-md">
-                  <div className="flex size-6 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-400">
-                    <CalendarIcon className="size-3.5" />
-                  </div>
-                  <span className="text-foreground">100% Sincronizado</span>
-                </div>
-
-                {/* Animated Kodu Centerpiece */}
-                <div className="flex flex-col items-center justify-center py-6">
+              <div className="rounded-2xl border border-border/60 bg-card p-6 sm:p-8 shadow-sm transition-all hover:border-border">
+                {/* Mascot Frame */}
+                <div className="flex flex-col items-center justify-center py-4">
                   <div className="relative group cursor-pointer transition-transform duration-300 hover:scale-105">
-                    {/* Mascot halo */}
-                    <div className="absolute inset-0 rounded-full bg-primary/20 blur-2xl group-hover:bg-primary/30 transition-colors" />
-                    
-                    {/* Animated Kodu SVG */}
-                    <div className="relative z-10 size-48 sm:size-56 flex items-center justify-center">
-                      <KoduBlinkingIcon size={200} className="drop-shadow-lg" />
+                    <div className="relative z-10 size-44 sm:size-52 flex items-center justify-center">
+                      <KoduBlinkingIcon size={190} />
                     </div>
                   </div>
 
-                  <div className="mt-4 text-center">
-                    <div className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 text-xs font-bold text-primary">
-                      <span className="size-2 rounded-full bg-primary animate-pulse" />
+                  <div className="mt-4 text-center space-y-2">
+                    <div className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-0.5 text-xs font-semibold text-primary">
+                      <span className="size-1.5 rounded-full bg-primary animate-pulse" />
                       Kodu Online
                     </div>
-                    <p className="mt-2 text-sm font-medium text-muted-foreground">
+                    <p className="text-xs sm:text-sm font-medium text-muted-foreground max-w-xs">
                       &quot;¡Hola! ¿Qué agendamos hoy para tu negocio?&quot;
                     </p>
                   </div>

@@ -584,4 +584,22 @@ describe("IAM session proxy", () => {
     expect(response.status).toBe(307);
     expect(response.headers.get("location")).toBe("http://localhost/access-denied");
   });
+
+  it("should allow anonymous visitors without account to view the landing page at /", async () => {
+    mocks.resolveSession.mockResolvedValueOnce({ status: "unauthenticated" });
+
+    const response = await proxy(requestWithSession(null, null, "/"));
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get("location")).toBeNull();
+  });
+
+  it("should allow anonymous visitors without account to view the pricing page at /pricing", async () => {
+    mocks.resolveSession.mockResolvedValueOnce({ status: "unauthenticated" });
+
+    const response = await proxy(requestWithSession(null, null, "/pricing"));
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get("location")).toBeNull();
+  });
 });

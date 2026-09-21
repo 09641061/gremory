@@ -41,29 +41,29 @@ export function LandingFooter() {
   ];
 
   return (
-    <footer className="border-t border-border/60 bg-muted/40 text-foreground">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-16 pb-12">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-10 lg:gap-8 pb-12">
+    <footer className="border-t border-border/40 bg-muted/20 text-foreground">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-12 pb-10">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-8 pb-10">
           {/* Brand Col (2 spans) */}
-          <div className="lg:col-span-2 space-y-4">
+          <div className="lg:col-span-2 space-y-3">
             <Link
               href="#hero"
-              className="inline-flex items-center gap-2.5 outline-none rounded-lg"
+              className="inline-flex items-center gap-2 outline-none rounded-lg"
               aria-label={nav.brand}
             >
-              <div className="flex size-9 items-center justify-center rounded-xl bg-primary/10 border border-primary/20 text-primary">
-                <KoduStaIcon size={22} className="text-primary" />
+              <div className="flex size-7 items-center justify-center rounded-lg bg-primary/10 border border-primary/20 text-primary">
+                <KoduStaIcon size={18} className="text-primary" />
               </div>
-              <span className="text-xl font-bold tracking-tight text-foreground">
+              <span className="text-base font-bold tracking-tight text-foreground">
                 {nav.brand}
               </span>
             </Link>
 
-            <p className="text-sm text-muted-foreground leading-relaxed max-w-sm font-normal">
+            <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed max-w-xs font-normal">
               {f.brandDescription}
             </p>
 
-            <div className="flex items-center gap-2 text-xs text-muted-foreground pt-2">
+            <div className="flex items-center gap-2 text-xs text-muted-foreground pt-1">
               <span className="relative flex size-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
                 <span className="relative inline-flex rounded-full size-2 bg-emerald-500" />
@@ -73,11 +73,11 @@ export function LandingFooter() {
           </div>
 
           {/* Product Links */}
-          <div className="space-y-3">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-foreground">
+          <div className="space-y-2.5">
+            <h4 className="text-xs font-semibold uppercase tracking-wider text-foreground">
               {f.sections.product.title}
             </h4>
-            <ul className="space-y-2 text-sm text-muted-foreground">
+            <ul className="space-y-1.5 text-xs sm:text-sm text-muted-foreground">
               {productLinks.map((link, idx) => (
                 <li key={idx}>
                   <Link
@@ -92,11 +92,11 @@ export function LandingFooter() {
           </div>
 
           {/* Company Links */}
-          <div className="space-y-3">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-foreground">
+          <div className="space-y-2.5">
+            <h4 className="text-xs font-semibold uppercase tracking-wider text-foreground">
               {f.sections.company.title}
             </h4>
-            <ul className="space-y-2 text-sm text-muted-foreground">
+            <ul className="space-y-1.5 text-xs sm:text-sm text-muted-foreground">
               {companyLinks.map((link, idx) => (
                 <li key={idx}>
                   <Link
@@ -111,11 +111,11 @@ export function LandingFooter() {
           </div>
 
           {/* Resources Links */}
-          <div className="space-y-3">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-foreground">
+          <div className="space-y-2.5">
+            <h4 className="text-xs font-semibold uppercase tracking-wider text-foreground">
               {f.sections.resources.title}
             </h4>
-            <ul className="space-y-2 text-sm text-muted-foreground">
+            <ul className="space-y-1.5 text-xs sm:text-sm text-muted-foreground">
               {resourcesLinks.map((link, idx) => (
                 <li key={idx}>
                   <Link
@@ -130,11 +130,11 @@ export function LandingFooter() {
           </div>
 
           {/* Legal Links */}
-          <div className="space-y-3">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-foreground">
+          <div className="space-y-2.5">
+            <h4 className="text-xs font-semibold uppercase tracking-wider text-foreground">
               {f.sections.legal.title}
             </h4>
-            <ul className="space-y-2 text-sm text-muted-foreground">
+            <ul className="space-y-1.5 text-xs sm:text-sm text-muted-foreground">
               {legalLinks.map((link, idx) => (
                 <li key={idx}>
                   <Link
@@ -149,12 +149,12 @@ export function LandingFooter() {
           </div>
         </div>
 
-        <Separator className="bg-border/60" />
+        <Separator className="bg-border/40" />
 
         {/* Bottom copyright bar */}
-        <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-muted-foreground">
+        <div className="pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-muted-foreground">
           <p>{f.copyright}</p>
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-5">
             <Link href="#" className="hover:text-foreground transition-colors">
               {f.sections.legal.privacy}
             </Link>

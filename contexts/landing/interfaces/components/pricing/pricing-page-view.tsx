@@ -12,9 +12,6 @@ import {
   CardTitle,
 } from "@/contexts/shared/interfaces/components/ui/card";
 import { Switch } from "@/contexts/shared/interfaces/components/ui/switch";
-import { Badge } from "@/contexts/shared/interfaces/components/ui/badge";
-import { StatusBadge } from "@/contexts/shared/interfaces/components/ui/status-badge";
-import { InfoBadge } from "@/contexts/shared/interfaces/components/ui/info-badge";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import {
   Accordion,
@@ -37,12 +34,6 @@ import {
   SparklesIcon,
   ArrowRightIcon,
   ShieldCheckIcon,
-  HelpCircleIcon,
-  CheckCircle2Icon,
-  CreditCardIcon,
-  ZapIcon,
-  RotateCcwIcon,
-  LockIcon,
 } from "lucide-react";
 
 interface FeatureRow {
@@ -218,8 +209,8 @@ export function PricingPageView() {
         </div>
       ) : (
         <div className="flex justify-center">
-          <div className="flex size-5 items-center justify-center rounded-full bg-muted text-muted-foreground/50">
-            <XIcon className="size-3.5 stroke-[2.5]" />
+          <div className="flex size-5 items-center justify-center rounded-full bg-muted/60 text-muted-foreground/40">
+            <XIcon className="size-3 stroke-[2.5]" />
           </div>
         </div>
       );
@@ -230,25 +221,22 @@ export function PricingPageView() {
   return (
     <div className="relative overflow-hidden">
       {/* Header & Hero */}
-      <section className="pt-12 pb-16 md:pt-16 md:pb-20 relative bg-muted/20 border-b border-border/50">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center space-y-4">
-          <InfoBadge className="mx-auto uppercase tracking-wider text-[10px]">
-            {pricing.tag}
-          </InfoBadge>
+      <section className="pt-12 pb-14 md:pt-16 md:pb-18 relative bg-muted/20 border-b border-border/40">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center space-y-3">
           <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight text-foreground">
             {pricing.title}
           </h1>
-          <p className="text-base sm:text-lg text-muted-foreground leading-relaxed max-w-3xl mx-auto">
+          <p className="text-base sm:text-lg text-muted-foreground leading-relaxed max-w-2xl mx-auto">
             {pricing.description}
           </p>
 
           {/* Toggles (Monthly/Yearly & Currency) */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6 pt-6">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6 pt-5">
             {/* Monthly / Yearly Toggle */}
-            <div className="flex items-center gap-3 bg-card border border-border/80 px-4 py-2 rounded-full shadow-xs">
+            <div className="flex items-center gap-3 bg-card border border-border/60 px-3.5 py-1.5 rounded-full shadow-xs">
               <span
-                className={`text-sm font-medium transition-colors ${
-                  !isYearly ? "text-foreground font-bold" : "text-muted-foreground"
+                className={`text-xs sm:text-sm font-medium transition-colors ${
+                  !isYearly ? "text-foreground font-semibold" : "text-muted-foreground"
                 }`}
               >
                 {pricing.monthly}
@@ -259,25 +247,25 @@ export function PricingPageView() {
                 aria-label="Toggle annual billing"
               />
               <span
-                className={`text-sm font-medium transition-colors ${
-                  isYearly ? "text-foreground font-bold" : "text-muted-foreground"
+                className={`text-xs sm:text-sm font-medium transition-colors ${
+                  isYearly ? "text-foreground font-semibold" : "text-muted-foreground"
                 }`}
               >
                 {pricing.yearly}
               </span>
-              <StatusBadge tone="success" className="text-[10px] py-0 px-2">
+              <span className="inline-flex items-center rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 dark:text-emerald-300">
                 {pricing.saveBadge}
-              </StatusBadge>
+              </span>
             </div>
 
             {/* Currency Toggle (USD / PEN) */}
-            <div className="flex items-center rounded-full border border-border/80 bg-card p-1 text-xs font-semibold shadow-xs">
+            <div className="flex items-center rounded-full border border-border/60 bg-card p-0.5 text-xs font-medium shadow-xs">
               <button
                 type="button"
                 onClick={() => setCurrency("USD")}
                 className={`rounded-full px-3 py-1 transition-all ${
                   currency === "USD"
-                    ? "bg-primary text-primary-foreground shadow-xs"
+                    ? "bg-primary text-primary-foreground font-semibold"
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
@@ -288,7 +276,7 @@ export function PricingPageView() {
                 onClick={() => setCurrency("PEN")}
                 className={`rounded-full px-3 py-1 transition-all ${
                   currency === "PEN"
-                    ? "bg-primary text-primary-foreground shadow-xs"
+                    ? "bg-primary text-primary-foreground font-semibold"
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
@@ -300,29 +288,29 @@ export function PricingPageView() {
       </section>
 
       {/* Plan Cards */}
-      <section className="py-16 md:py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-5xl mx-auto items-stretch">
+      <section className="py-14 md:py-18 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 max-w-4xl mx-auto items-stretch">
           {plans.map((plan) => (
             <Card
               key={plan.id}
-              className={`relative flex flex-col justify-between overflow-hidden transition-all duration-300 rounded-2xl bg-card ${
+              className={`relative flex flex-col justify-between overflow-hidden transition-all duration-200 rounded-2xl bg-card ${
                 plan.popular
-                  ? "border-2 border-primary shadow-xl shadow-primary/10 lg:-translate-y-2"
-                  : "border border-border/80 shadow-md hover:shadow-lg"
+                  ? "border-2 border-primary/80 shadow-md"
+                  : "border border-border/60 shadow-xs hover:border-border"
               }`}
             >
               {plan.popular && (
                 <div className="absolute top-0 right-0">
-                  <div className="bg-primary text-primary-foreground text-[11px] font-bold uppercase tracking-wider py-1 px-4 rounded-bl-xl shadow-xs flex items-center gap-1">
+                  <div className="bg-primary text-primary-foreground text-[10px] font-bold uppercase tracking-wider py-1 px-3.5 rounded-bl-xl shadow-xs flex items-center gap-1">
                     <SparklesIcon className="size-3" />
                     {pricing.popularBadge}
                   </div>
                 </div>
               )}
 
-              <CardHeader className="space-y-3 pt-8 pb-6">
+              <CardHeader className="space-y-2.5 pt-7 pb-5 px-6 sm:px-8">
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-2xl font-extrabold text-foreground">
+                  <CardTitle className="text-xl sm:text-2xl font-extrabold text-foreground">
                     {plan.name}
                   </CardTitle>
                 </div>
@@ -331,11 +319,11 @@ export function PricingPageView() {
                 </CardDescription>
 
                 {/* Price Display */}
-                <div className="pt-4 flex items-baseline gap-1">
-                  <span className="text-4xl sm:text-5xl font-extrabold text-foreground tracking-tight">
+                <div className="pt-2 flex items-baseline gap-1">
+                  <span className="text-3xl sm:text-4xl font-extrabold text-foreground tracking-tight">
                     {plan.price}
                   </span>
-                  <span className="text-sm text-muted-foreground font-medium">
+                  <span className="text-xs sm:text-sm text-muted-foreground font-normal">
                     {plan.period}
                   </span>
                 </div>
@@ -347,37 +335,38 @@ export function PricingPageView() {
                 )}
               </CardHeader>
 
-              <CardContent className="space-y-4 flex-1">
-                <div className="pt-4 border-t border-border/60">
-                  <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-4">
+              <CardContent className="space-y-4 flex-1 px-6 sm:px-8">
+                <div className="pt-3 border-t border-border/40">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
                     Características principales:
                   </p>
-                  <ul className="space-y-3 text-sm text-foreground">
+                  <ul className="space-y-2.5 text-sm text-foreground">
                     {plan.features.map((feature, idx) => (
                       <li key={idx} className="flex items-start gap-2.5">
-                        <div className="flex size-5 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary mt-0.5">
-                          <CheckIcon className="size-3 stroke-[3]" />
+                        <div className="flex size-4 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary mt-0.5">
+                          <CheckIcon className="size-2.5 stroke-[3]" />
                         </div>
-                        <span className="text-sm leading-snug">{feature}</span>
+                        <span className="text-xs sm:text-sm leading-snug text-foreground/90">{feature}</span>
                       </li>
                     ))}
                   </ul>
                 </div>
               </CardContent>
 
-              <CardFooter className="pt-6 pb-8 bg-transparent">
+              <CardFooter className="pt-4 pb-7 px-6 sm:px-8 bg-transparent">
                 <Button
                   variant={plan.buttonVariant}
                   size="lg"
-                  className={`w-full justify-center gap-2 h-12 text-sm font-bold shadow-xs ${
+                  nativeButton={false}
+                  className={`w-full justify-center gap-2 h-11 text-xs sm:text-sm font-semibold shadow-xs ${
                     plan.popular
                       ? "bg-primary text-primary-foreground hover:bg-primary/90"
-                      : ""
+                      : "border-border/80 text-foreground hover:bg-muted/50"
                   }`}
                   render={<Link href={plan.ctaHref} />}
                 >
                   <span>{plan.cta}</span>
-                  <ArrowRightIcon className="size-4" />
+                  <ArrowRightIcon className="size-3.5" />
                 </Button>
               </CardFooter>
             </Card>
@@ -386,31 +375,28 @@ export function PricingPageView() {
       </section>
 
       {/* Full Feature Comparison Table */}
-      <section className="py-16 md:py-24 bg-muted/20 border-y border-border/50">
-        <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
-          <div className="text-center space-y-4 mb-14">
-            <InfoBadge className="mx-auto uppercase tracking-wider text-[10px]">
-              Comparativa Detallada
-            </InfoBadge>
-            <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-foreground">
+      <section className="py-14 md:py-20 bg-muted/20 border-y border-border/40">
+        <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
+          <div className="text-center space-y-3 mb-10">
+            <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground">
               Compara todas las características
             </h2>
-            <p className="text-base text-muted-foreground max-w-2xl mx-auto">
+            <p className="text-sm sm:text-base text-muted-foreground max-w-xl mx-auto">
               Revisa punto por punto qué incluye cada plan y encuentra la solución perfecta para tu negocio.
             </p>
           </div>
 
-          <div className="overflow-hidden rounded-2xl border border-border/80 bg-card shadow-md">
+          <div className="overflow-hidden rounded-2xl border border-border/60 bg-card shadow-xs">
             <Table>
-              <TableHeader className="bg-muted/50">
-                <TableRow className="border-b border-border/80 hover:bg-transparent">
-                  <TableHead className="w-1/2 py-4 px-6 text-sm font-bold text-foreground">
+              <TableHeader className="bg-muted/40">
+                <TableRow className="border-b border-border/60 hover:bg-transparent">
+                  <TableHead className="w-1/2 py-3 px-5 text-xs font-semibold text-foreground">
                     Funcionalidad
                   </TableHead>
-                  <TableHead className="w-1/4 py-4 px-6 text-center text-sm font-bold text-foreground">
+                  <TableHead className="w-1/4 py-3 px-5 text-center text-xs font-semibold text-foreground">
                     <div className="flex flex-col items-center">
                       <span>Standard</span>
-                      <span className="text-xs font-normal text-muted-foreground">
+                      <span className="text-[11px] font-normal text-muted-foreground">
                         {isYearly
                           ? currency === "USD"
                             ? "$15/mes"
@@ -421,13 +407,13 @@ export function PricingPageView() {
                       </span>
                     </div>
                   </TableHead>
-                  <TableHead className="w-1/4 py-4 px-6 text-center text-sm font-bold text-primary">
+                  <TableHead className="w-1/4 py-3 px-5 text-center text-xs font-semibold text-primary">
                     <div className="flex flex-col items-center">
                       <span className="flex items-center gap-1">
                         Max
                         <SparklesIcon className="size-3 text-primary" />
                       </span>
-                      <span className="text-xs font-normal text-muted-foreground">
+                      <span className="text-[11px] font-normal text-muted-foreground">
                         {isYearly
                           ? currency === "USD"
                             ? "$39/mes"
@@ -445,10 +431,10 @@ export function PricingPageView() {
                 {comparisonCategories.map((cat, catIdx) => (
                   <div key={catIdx} className="contents">
                     {/* Category Header Row */}
-                    <TableRow className="bg-muted/30 border-y border-border/60 hover:bg-muted/30">
+                    <TableRow className="bg-muted/20 border-y border-border/40 hover:bg-muted/20">
                       <TableCell
                         colSpan={3}
-                        className="py-3 px-6 text-xs font-extrabold uppercase tracking-wider text-primary"
+                        className="py-2.5 px-5 text-[11px] font-bold uppercase tracking-wider text-primary"
                       >
                         {cat.category}
                       </TableCell>
@@ -458,15 +444,15 @@ export function PricingPageView() {
                     {cat.features.map((row, rowIdx) => (
                       <TableRow
                         key={rowIdx}
-                        className="border-b border-border/40 hover:bg-muted/20 transition-colors"
+                        className="border-b border-border/30 hover:bg-muted/10 transition-colors"
                       >
-                        <TableCell className="py-3.5 px-6 text-sm font-medium text-foreground">
+                        <TableCell className="py-3 px-5 text-xs sm:text-sm font-medium text-foreground">
                           {row.name}
                         </TableCell>
-                        <TableCell className="py-3.5 px-6 text-center">
+                        <TableCell className="py-3 px-5 text-center">
                           {renderCellValue(row.standard)}
                         </TableCell>
-                        <TableCell className="py-3.5 px-6 text-center bg-primary/5">
+                        <TableCell className="py-3 px-5 text-center bg-primary/5">
                           {renderCellValue(row.max)}
                         </TableCell>
                       </TableRow>
@@ -480,34 +466,28 @@ export function PricingPageView() {
       </section>
 
       {/* Billing & Payments FAQ */}
-      <section className="py-16 md:py-24 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center space-y-4 mb-14">
-          <InfoBadge className="mx-auto uppercase tracking-wider text-[10px]">
-            Facturación & Pagos
-          </InfoBadge>
-          <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-foreground">
+      <section className="py-14 md:py-20 max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center space-y-3 mb-10">
+          <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground">
             Preguntas frecuentes sobre pagos
           </h2>
-          <p className="text-base text-muted-foreground max-w-2xl mx-auto">
+          <p className="text-sm sm:text-base text-muted-foreground max-w-xl mx-auto">
             Resolvemos tus dudas sobre suscripciones, ciclos de cobro y cancelaciones.
           </p>
         </div>
 
-        <div className="rounded-2xl border border-border/80 bg-card p-6 sm:p-8 shadow-sm">
-          <Accordion defaultValue={["item-0"]} className="w-full space-y-2">
+        <div className="rounded-2xl border border-border/60 bg-card p-5 sm:p-7 shadow-xs">
+          <Accordion defaultValue={["item-0"]} className="w-full space-y-1">
             {billingFaqs.map((faq, idx) => (
               <AccordionItem
                 key={idx}
                 value={`item-${idx}`}
-                className="border-b border-border/60 pb-3 pt-1 last:border-b-0 last:pb-0"
+                className="border-b border-border/40 pb-2 pt-1 last:border-b-0 last:pb-0"
               >
-                <AccordionTrigger className="text-left text-base sm:text-lg font-bold text-foreground hover:no-underline py-3 px-2 rounded-lg transition-colors hover:bg-muted/40">
-                  <div className="flex items-center gap-3">
-                    <CreditCardIcon className="size-4 text-primary shrink-0" />
-                    <span>{faq.question}</span>
-                  </div>
+                <AccordionTrigger className="text-left text-sm sm:text-base font-semibold text-foreground hover:no-underline py-2.5 px-2 rounded-lg transition-colors hover:bg-muted/30">
+                  {faq.question}
                 </AccordionTrigger>
-                <AccordionContent className="text-sm sm:text-base text-muted-foreground leading-relaxed px-9 pt-1 pb-4">
+                <AccordionContent className="text-xs sm:text-sm text-muted-foreground leading-relaxed px-2 pt-1 pb-3">
                   {faq.answer}
                 </AccordionContent>
               </AccordionItem>
@@ -517,43 +497,45 @@ export function PricingPageView() {
       </section>
 
       {/* Checkout CTA Banner */}
-      <section className="pb-20 lg:pb-28 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="relative rounded-3xl border border-primary/20 bg-gradient-to-br from-primary/10 via-background to-emerald-500/10 p-8 sm:p-12 lg:p-16 shadow-xl text-center overflow-hidden">
-          <div className="relative z-10 max-w-2xl mx-auto space-y-6">
+      <section className="pb-16 lg:pb-24 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="rounded-2xl border border-border/60 bg-card p-8 sm:p-12 text-center shadow-xs">
+          <div className="max-w-xl mx-auto space-y-4">
             <div className="flex justify-center">
-              <KoduAvatar iconSize={26} className="size-12 bg-primary/15 border border-primary/30" />
+              <KoduAvatar iconSize={24} className="size-10 bg-primary/10 border border-primary/20" />
             </div>
 
-            <h3 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight text-foreground">
+            <h3 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground">
               ¿Listo para empezar a automatizar tu negocio?
             </h3>
 
-            <p className="text-sm sm:text-base text-muted-foreground">
+            <p className="text-xs sm:text-sm text-muted-foreground">
               Empieza tu prueba gratuita de 14 días con el plan que elijas. Configuración en minutos.
             </p>
 
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-3.5 pt-2">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
               <Button
                 size="lg"
-                className="w-full sm:w-auto gap-2 bg-primary text-primary-foreground hover:bg-primary/90 font-bold px-8 h-12 shadow-md"
+                nativeButton={false}
+                className="w-full sm:w-auto gap-2 bg-primary text-primary-foreground hover:bg-primary/90 font-semibold px-6 h-11 shadow-xs text-xs sm:text-sm"
                 render={<Link href="/login" />}
               >
                 <span>Comenzar prueba gratis</span>
-                <ArrowRightIcon className="size-4" />
+                <ArrowRightIcon className="size-3.5" />
               </Button>
 
               <Button
                 variant="outline"
                 size="lg"
-                className="w-full sm:w-auto border-border/80 text-foreground hover:bg-muted/60 font-medium px-6 h-12"
+                nativeButton={false}
+                className="w-full sm:w-auto border-border/80 text-foreground hover:bg-muted/50 font-medium px-5 h-11 text-xs sm:text-sm"
                 render={<Link href="/login?next=/upgrade" />}
               >
                 <span>Obtener Plan Max</span>
               </Button>
             </div>
 
-            <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground pt-2">
-              <ShieldCheckIcon className="size-4 text-primary" />
+            <div className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground pt-1">
+              <ShieldCheckIcon className="size-3.5 text-primary shrink-0" />
               <span>Garantía de satisfacción • Cancela cuando quieras sin compromiso</span>
             </div>
           </div>
