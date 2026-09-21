@@ -8,14 +8,14 @@ import { updatePreferencesAction, type UpdatePreferencesActionState } from "../.
 import type { ProfileViewModel } from "../../../application/services/profile.view-model";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/contexts/shared/interfaces/components/ui/card";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
-import { ErrorAlert } from "@/contexts/shared/interfaces/components/error";
+import { ErrorAlert } from "@/contexts/shared/interfaces/components/feedback/error";
 import { Spinner } from "@/contexts/shared/interfaces/components/ui/spinner";
-import { useI18n } from "@/contexts/shared/interfaces/i18n";
+import { useProfilesI18n } from "@/contexts/profiles/interfaces/i18n";
 
 const initialState: UpdatePreferencesActionState = { status: "idle", data: null, error: null };
 
 export function ProfilePreferencesCard({ profile }: { profile: Pick<ProfileViewModel, "language" | "theme"> }) {
-  const { t, setLocale } = useI18n();
+  const { t, setLocale } = useProfilesI18n();
   const router = useRouter();
   const languageId = useId();
   const themeId = useId();

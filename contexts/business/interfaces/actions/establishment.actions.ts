@@ -2,7 +2,6 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { createEstablishmentCommandService } from "../../application/internal/commandservices/establishment-command.service";
 import {
   createEstablishmentCommand,
   deleteEstablishmentCommand,
@@ -15,10 +14,18 @@ import {
   updateEstablishmentSchema,
 } from "../rest/schemas/establishment.schemas";
 import { actionError, type BusinessActionResult } from "./business-action-result";
+import { requireEstablishmentCapability } from "@/contexts/business/interfaces/authorization/business-authorization";
+import { composeBusinessAdapters } from "../server/business-composition";
 
-function readPhotoFileFromFormData(formData: FormData) {
+async function readPhotoFileFromFormData(formData: FormData) {
   const photoFile = formData.get("photoFile");
-  return photoFile instanceof File && photoFile.size > 0 ? photoFile : null;
+  if (!(photoFile instanceof File) || photoFile.size <= 0) return null;
+  return {
+    name: photoFile.name,
+    type: photoFile.type,
+    size: photoFile.size,
+    bytes: new Uint8Array(await photoFile.arrayBuffer()),
+  };
 }
 
 function readBoolFromFormData(formData: FormData, key: string) {
@@ -46,10 +53,11 @@ export async function createEstablishmentAction(
 
   try {
     await requireBusinessAccessToken();
-    const created = await createEstablishmentCommandService().create(
+    const adapters = composeBusinessAdapters();
+    const created = await adapters.establishmentCommandService.create(
       createEstablishmentCommand({
         ...parsed.data,
-        photoFile: readPhotoFileFromFormData(formData),
+        photoFile: await readPhotoFileFromFormData(formData),
       }),
     );
     establishmentId = created.value;
@@ -76,11 +84,12 @@ export async function updateEstablishmentAction(
   if (!parsed.success) return actionError(parsed.error.issues[0]?.message);
 
   try {
-    await requireBusinessAccessToken();
-    const establishmentId = await createEstablishmentCommandService().update(
+    await requireEstablishmentCapability(parsed.data.id, "canUpdate");
+    const adapters = composeBusinessAdapters();
+    const establishmentId = await adapters.establishmentCommandService.update(
       updateEstablishmentCommand({
         ...parsed.data,
-        photoFile: readPhotoFileFromFormData(formData),
+        photoFile: await readPhotoFileFromFormData(formData),
         removePhoto: readBoolFromFormData(formData, "removePhoto"),
       }),
     );
@@ -99,8 +108,9 @@ export async function deleteEstablishmentAction(
   if (!parsed.success) return actionError(parsed.error.issues[0]?.message);
 
   try {
-    await requireBusinessAccessToken();
-    await createEstablishmentCommandService().delete(
+    await requireEstablishmentCapability(parsed.data.id, "canDelete");
+    const adapters = composeBusinessAdapters();
+    await adapters.establishmentCommandService.delete(
       deleteEstablishmentCommand(parsed.data),
     );
     revalidateBusinessViews();
@@ -114,7 +124,7 @@ export async function deleteEstablishmentAction(
 // the catalog is stale too once this list changes.
 function revalidateBusinessViews() {
   revalidatePath("/");
-  revalidatePath("/organizations");
+  revalidatePath("/organization");
   revalidatePath("/catalog");
-  revalidatePath("/establishments");
+  revalidatePath("/configuration/establishments");
 }

@@ -4,16 +4,18 @@ const mocks = vi.hoisted(() => ({
   getWorkspace: vi.fn(),
 }));
 
-vi.mock(
-  "@/contexts/business/infrastructure/gateways/business-workspace-api.gateway",
-  () => ({
-    BusinessWorkspaceApiGateway: class {
-      getWorkspace = mocks.getWorkspace;
-    },
-  }),
-);
+import { BusinessWorkspaceQueryService } from "@/contexts/business/application/internal/queryservices/business-workspace-query.service";
+import { toHeaderViewModel } from "@/contexts/business/infrastructure/mappers/workspace-header.mapper";
 
-import { createBusinessWorkspaceQueryService } from "@/contexts/business/application/internal/queryservices/business-workspace-query.service";
+const workspaceReader = {
+  fetchResource: vi.fn(),
+  getSelection: vi.fn(),
+  getHeaderViewModel: async (selection: { establishmentId?: string } = {}) =>
+    toHeaderViewModel(await mocks.getWorkspace(), selection.establishmentId),
+};
+
+const createBusinessWorkspaceQueryService = () =>
+  new BusinessWorkspaceQueryService(workspaceReader);
 
 const organizationId = "11111111-1111-4111-8111-111111111111";
 const establishmentId = "44444444-4444-4444-8444-444444444444";

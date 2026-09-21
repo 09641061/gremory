@@ -1,23 +1,16 @@
-import "server-only";
-
-import { SchedulingApiGateway } from "@/contexts/scheduling/infrastructure/gateways/scheduling-api.gateway";
+import type { SchedulingRosterReader } from "../../ports/scheduling-roster";
 import type { SchedulingCustomerViewModel } from "../../model/scheduling-page-data.view-model";
 
 export async function loadSchedulingCustomers(
+  reader: SchedulingRosterReader,
   establishmentId: string,
-  organizationId: string,
+  token?: string,
 ): Promise<SchedulingCustomerViewModel[]> {
-  try {
-    const gateway = new SchedulingApiGateway(organizationId);
-    const customers = await gateway.getSchedulingCustomers(establishmentId);
-    return customers.map((customer) => ({
-      id: customer.id,
-      name: customer.name,
-      email: customer.email ?? "",
-      phone: customer.phone ?? "",
-    }));
-  } catch (error) {
-    console.error("Failed to load customers for scheduler:", error);
-    return [];
-  }
+  const customers = await reader.getSchedulingCustomers(establishmentId, undefined, token);
+  return customers.map((customer) => ({
+    id: customer.id,
+    name: customer.name,
+    email: customer.email ?? "",
+    phone: customer.phone ?? "",
+  }));
 }

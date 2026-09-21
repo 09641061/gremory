@@ -4,21 +4,13 @@ import { Appointment } from "../../../domain/model/entities/appointment";
 import { cn } from "@/lib/utils";
 import { formatTimeInTimeZone } from "../scheduling-timezone.utils";
 
+import { useSchedulingTranslations } from "../../i18n";
+
 interface AppointmentBlockProps {
   appointment: Appointment;
   now: number | null;
   timeZone: string;
   onClick: () => void;
-}
-
-function getStatusLabel(status: Appointment["status"]): string {
-  return {
-    CANCELLED: "Cancelled",
-    NO_SHOW: "No show",
-    COMPLETED: "Completed",
-    IN_PROGRESS: "In progress",
-    CONFIRMED: "Confirmed",
-  }[status] ?? status;
 }
 
 function getStatusStyles(appointment: Appointment, now: number | null) {
@@ -43,9 +35,21 @@ function getStatusStyles(appointment: Appointment, now: number | null) {
 }
 
 export function AppointmentBlock({ appointment, now, timeZone, onClick }: AppointmentBlockProps) {
+  const { t, locale } = useSchedulingTranslations();
   const starts = new Date(appointment.startsAt);
   const ends = new Date(appointment.endsAt);
-  const timeRange = `${formatTimeInTimeZone(starts, timeZone)} - ${formatTimeInTimeZone(ends, timeZone)}`;
+  const timeRange = `${formatTimeInTimeZone(starts, timeZone, locale)} - ${formatTimeInTimeZone(ends, timeZone, locale)}`;
+
+  const getStatusLabel = (status: Appointment["status"]): string => {
+    switch (status) {
+      case "CANCELLED": return t.status.cancelled;
+      case "NO_SHOW": return t.status.noShow;
+      case "COMPLETED": return t.status.completed;
+      case "IN_PROGRESS": return t.status.inProgress;
+      case "CONFIRMED": return t.status.confirmed;
+      default: return status;
+    }
+  };
 
   return (
     <button
@@ -53,7 +57,7 @@ export function AppointmentBlock({ appointment, now, timeZone, onClick }: Appoin
       onClick={onClick}
       aria-label={`${getStatusLabel(appointment.status)}: ${appointment.title}, ${timeRange}`}
       className={cn(
-        "w-full rounded-lg border p-2 text-left transition-all min-w-0 overflow-hidden",
+        "w-full rounded-lg border p-2 text-left transition-[transform,box-shadow] min-w-0 overflow-hidden",
         "hover:-translate-y-0.5 hover:shadow-md",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50",
         getStatusStyles(appointment, now)

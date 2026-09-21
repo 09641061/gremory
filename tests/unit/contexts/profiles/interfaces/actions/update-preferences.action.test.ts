@@ -8,8 +8,8 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock("next/headers", () => ({ cookies: vi.fn(() => mocks.cookies) }));
 vi.mock("next/cache", () => ({ updateTag: mocks.updateTag }));
-vi.mock("@/contexts/profiles/application/factory", () => ({
-  createProfileCommandService: () => mocks.commandService,
+vi.mock("@/contexts/profiles/interfaces/server/profile-composition", () => ({
+  composeProfileAdapters: () => ({ commandService: mocks.commandService }),
 }));
 
 import { describe, it, expect, beforeEach, vi } from "vitest";
@@ -57,6 +57,20 @@ describe("updatePreferencesAction", () => {
     expect(result.status).toBe("error");
     expect(result.error).toBe("Language must be ES or EN");
     expect(mocks.commandService.updatePreferences).not.toHaveBeenCalled();
+  });
+
+  it("returns success when cache invalidation fails after the write", async () => {
+    mocks.cookies.get.mockReturnValue({ value: "test-token" });
+    const updatedProfile = { username: "user", imageUrl: null, language: "EN" as const, theme: "DARK" as const };
+    mocks.commandService.updatePreferences.mockResolvedValue(updatedProfile);
+    mocks.updateTag.mockImplementation(() => { throw new Error("cache unavailable"); });
+
+    const result = await updatePreferencesAction(
+      { status: "idle", data: null, error: null },
+      form({ language: "EN", theme: "DARK" }),
+    );
+
+    expect(result).toEqual({ status: "success", data: updatedProfile, error: null });
   });
 
   it("should update preferences and invalidate cache tag on valid submission", async () => {

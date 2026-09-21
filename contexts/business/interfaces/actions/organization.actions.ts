@@ -3,7 +3,6 @@
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { createOrganizationCommandService } from "../../application/internal/commandservices/organization-command.service";
 import {
   createOrganizationCommand,
   updateOrganizationCommand,
@@ -15,10 +14,18 @@ import {
   actionError,
   type BusinessActionResult,
 } from "./business-action-result";
+import { requireOrganizationCapability } from "@/contexts/business/interfaces/authorization/business-authorization";
+import { composeBusinessAdapters } from "../server/business-composition";
 
-function readPhotoFileFromFormData(formData: FormData) {
+async function readPhotoFileFromFormData(formData: FormData) {
   const photoFile = formData.get("photoFile");
-  return photoFile instanceof File && photoFile.size > 0 ? photoFile : null;
+  if (!(photoFile instanceof File) || photoFile.size <= 0) return null;
+  return {
+    name: photoFile.name,
+    type: photoFile.type,
+    size: photoFile.size,
+    bytes: new Uint8Array(await photoFile.arrayBuffer()),
+  };
 }
 
 /** Onboarding step 1 (owner) and the member-starts-their-own-business path. */
@@ -33,10 +40,11 @@ export async function createOrganizationAction(
 
   try {
     await requireBusinessAccessToken();
-    await createOrganizationCommandService().create(
+    const adapters = composeBusinessAdapters();
+    await adapters.organizationCommandService.create(
       createOrganizationCommand({
         ...parsed.data,
-        imageFile: readPhotoFileFromFormData(formData),
+        imageFile: await readPhotoFileFromFormData(formData),
       }),
     );
     await clearWorkspaceSelection();
@@ -65,11 +73,12 @@ export async function updateOrganizationAction(
   if (!parsed.success) return actionError(parsed.error.issues[0]?.message);
 
   try {
-    await requireBusinessAccessToken();
-    const organizationId = await createOrganizationCommandService().update(
+    await requireOrganizationCapability(parsed.data.id, "canUpdate");
+    const adapters = composeBusinessAdapters();
+    const organizationId = await adapters.organizationCommandService.update(
       updateOrganizationCommand({
         ...parsed.data,
-        imageFile: readPhotoFileFromFormData(formData),
+        imageFile: await readPhotoFileFromFormData(formData),
       }),
     );
     revalidateBusinessViews();
@@ -81,8 +90,8 @@ export async function updateOrganizationAction(
 
 function revalidateBusinessViews() {
   revalidatePath("/catalog");
-  revalidatePath("/organization");
-  revalidatePath("/establishments");
+  revalidatePath("/configuration/organization");
+  revalidatePath("/configuration/establishments");
 }
 
 async function clearWorkspaceSelection() {

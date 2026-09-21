@@ -45,6 +45,7 @@ export function DailyStaffCalendar({
   const router = useRouter();
   const [currentDate, setCurrentDate] = useState(() => getCalendarAnchorDate(timeZone));
   const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
   const [, startTransition] = useTransition();
   const [startIndex, setStartIndex] = useState(0);
@@ -62,7 +63,13 @@ export function DailyStaffCalendar({
         establishmentId
       );
       if (requestId === requestIdRef.current) {
-        setAppointments(result.content);
+        if ("content" in result) {
+          setAppointments(result.content);
+          setLoadError(null);
+        } else {
+          setAppointments([]);
+          setLoadError(result.message);
+        }
       }
     });
   }, [currentDate, establishmentId, timeZone, startTransition]);
@@ -95,6 +102,7 @@ export function DailyStaffCalendar({
       data-testid="schedule-calendar"
       className="flex min-h-0 flex-1 w-full flex-col overflow-hidden rounded-xl border border-border bg-background text-foreground shadow-sm"
     >
+      {loadError ? <p role="alert" className="border-b border-destructive/30 px-4 py-2 text-sm text-destructive">{loadError}</p> : null}
       {/* Toolbar and member columns live outside the scroll region. Only the
           hour grid below is allowed to scroll. */}
       <div className="shrink-0 bg-background rounded-t-xl">

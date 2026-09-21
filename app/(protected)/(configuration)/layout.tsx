@@ -5,14 +5,14 @@ import { redirect } from "next/navigation";
 
 import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-session-cookie";
 import { workspaceSelectionCookies } from "@/contexts/business/infrastructure/session/workspace-selection-cookie";
-import { createEntryRouteQueryService } from "@/contexts/shared/application/internal/queryservices/entry-route-query.service";
+import { composeSharedAdapters } from "@/contexts/shared/interfaces/server/shared-composition";
 import { getServerDictionary } from "@/contexts/shared/infrastructure/i18n/server";
-import { EntryRouteUnavailable } from "@/contexts/shared/interfaces/components/entry-route-unavailable";
-import { PageLoading } from "@/contexts/shared/interfaces/components/page-loading";
-import { createPlanHomeRouteQueryService } from "@/contexts/shared/application/internal/queryservices/plan-home-route-query.service";
-import { createBusinessWorkspaceQueryService } from "@/contexts/business/application/internal/queryservices/business-workspace-query.service";
+import { EntryRouteUnavailable } from "@/contexts/shared/interfaces/components/feedback/entry-route-unavailable";
+import { PageLoading } from "@/contexts/shared/interfaces/components/feedback/page-loading";
+
+import { composeBusinessAdapters } from "@/contexts/business/interfaces/server/business-composition";
 import { hasSomewhereToCancelTo } from "@/contexts/business/domain/services/workspace-navigation.policy";
-import { BackNavigationButton } from "@/contexts/shared/interfaces/components/back-navigation-button";
+import { BackNavigationButton } from "@/contexts/shared/interfaces/components/navigation/back-navigation-button";
 
 /**
  * Establishments, organization settings and permissions. One-time
@@ -46,7 +46,7 @@ async function ConfigurationLayoutContent({ children }: { children: ReactNode })
   // Profile is an account-level screen. It must remain reachable from the
   // header even before an owner activates Billing or creates a workspace.
   if (pathname !== "/profile") {
-    const landing = await createEntryRouteQueryService()
+    const landing = await composeSharedAdapters().entryRouteQueryService
       .resolveRoute({
         accessToken,
         organizationId: cookieStore.get(workspaceSelectionCookies.organizationId)?.value ?? undefined,
@@ -124,7 +124,7 @@ export async function resolveConfigurationBackHref() {
   // nowhere-to-go-back-to state), so this same check
   // naturally covers the whole group: it only ever hides the arrow on the
   // mandatory first-establishment screen.
-  const workspace = await createBusinessWorkspaceQueryService()
+  const workspace = await composeBusinessAdapters().workspaceQueryService
     .getHeaderViewModel({ establishmentId })
     .catch(() => null);
   // Mandatory onboarding screens have no valid destination to return to.
@@ -142,15 +142,14 @@ export async function resolveConfigurationBackHref() {
   }
 
   if (organizationId) {
-    const href = new URL("/", "http://localhost");
-    href.searchParams.set("organizationId", organizationId);
+    const searchParams = new URLSearchParams({ organizationId });
     if (establishmentId) {
-      href.searchParams.set("establishmentId", establishmentId);
+      searchParams.set("establishmentId", establishmentId);
     } else if (previewOrganizationId && previewOrganizationId !== organizationId) {
-      href.searchParams.set("previewOrganizationId", previewOrganizationId);
+      searchParams.set("previewOrganizationId", previewOrganizationId);
     }
-    return `${href.pathname}${href.search}`;
+    return `/?${searchParams.toString()}`;
   }
 
-  return await createPlanHomeRouteQueryService().handle({ accessToken, establishmentId });
+  return await composeSharedAdapters().planHomeRouteQueryService.handle({ accessToken, establishmentId });
 }

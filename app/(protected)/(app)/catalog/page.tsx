@@ -1,13 +1,12 @@
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
-import { createCatalogServiceQueryService } from "@/contexts/catalog/application/internal/queryservices/catalog-service-query.service";
-import { createServiceCategoryQueryService } from "@/contexts/catalog/application/internal/queryservices/service-category-query.service";
+import { composeCatalogAdapters } from "@/contexts/catalog/interfaces/server/catalog-composition";
 import type { CategoryDTO, DetailedServiceDTO } from "@/contexts/catalog/application/model/catalog-view.models";
 import { CatalogClientWrapper } from "@/contexts/catalog/interfaces/components/catalog/catalog-client-wrapper";
-import { createBusinessWorkspaceQueryService } from "@/contexts/business/application/internal/queryservices/business-workspace-query.service";
+import { composeBusinessAdapters } from "@/contexts/business/interfaces/server/business-composition";
 import { resolveModuleAccessFallback } from "@/contexts/shared/application/services/module-access.policy";
 import { getWorkspaceEstablishment, hasEstablishmentPermission } from "@/contexts/shared/application/services/workspace-establishment-permissions";
-import { PageLoading } from "@/contexts/shared/interfaces/components/page-loading";
+import { PageLoading } from "@/contexts/shared/interfaces/components/feedback/page-loading";
 
 interface CatalogPageProps {
   searchParams: Promise<{ organizationId?: string; establishmentId?: string; serviceId?: string }>;
@@ -24,7 +23,7 @@ export default function CatalogPage({ searchParams }: CatalogPageProps) {
 async function CatalogPageContent({ searchParams }: CatalogPageProps) {
   const query = await searchParams;
   const { establishmentId: paramEstId, serviceId: paramServiceId } = query;
-  const workspace = await createBusinessWorkspaceQueryService().getHeaderViewModel(query);
+  const workspace = await composeBusinessAdapters().workspaceQueryService.getHeaderViewModel(query);
   if (workspace.accessPolicy?.canOpenCatalog !== true || !workspace.organization) {
     redirect(resolveModuleAccessFallback(workspace));
   }
@@ -43,8 +42,9 @@ async function CatalogPageContent({ searchParams }: CatalogPageProps) {
   let services: DetailedServiceDTO[] = [];
 
   if (establishmentId) {
-    const categoryQueryService = createServiceCategoryQueryService(workspace.organization.id);
-    const serviceQueryService = createCatalogServiceQueryService(workspace.organization.id);
+    const adapters = composeCatalogAdapters(workspace.organization.id);
+    const categoryQueryService = adapters.categoryQueryService;
+    const serviceQueryService = adapters.serviceQueryService;
     const [categoriesPage, servicesPage] = await Promise.all([
       categoryQueryService.list(establishmentId, 0, 100),
       serviceQueryService.search({ establishmentId, page: 0, size: 100 }),

@@ -34,10 +34,27 @@ describe("Catalog gateway contract", () => {
     await expect(promise).rejects.toBeInstanceOf(ApiError);
   });
 
+  it("propagates the explicit organization tenant when listing categories", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(response({
+      content: [],
+      page: 0,
+      size: 20,
+      totalElements: 0,
+      totalPages: 0,
+    }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    await new ServiceCategoryApiGateway("org-1").list("est-1", 0, 20, "token");
+
+    const [, request] = fetchMock.mock.calls[0] as [string, RequestInit];
+    expect(new Headers(request.headers).get("Authorization")).toBe("Bearer token");
+    expect(new Headers(request.headers).get("X-Organization-Id")).toBe("org-1");
+  });
+
   it("accepts the nullable fields in the documented service response", async () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(response(service)));
     const result = await new CatalogServiceApiGateway().getById("service-1", "est-1", "token");
-    expect(result.props.categoryId).toBeNull();
-    expect(result.props.preServiceInstructions).toBeNull();
+    expect(result.categoryId).toBeNull();
+    expect(result.preServiceInstructions).toBeNull();
   });
 });

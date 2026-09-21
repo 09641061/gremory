@@ -1,14 +1,14 @@
 "use server";
 
+import { safePublicError } from "@/contexts/shared/interfaces/actions/safe-error";
+
+
 import "server-only";
-import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 
-import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-session-cookie";
-import { RenameConversationCommandService } from "@/contexts/assistant/application/internal/commandservices/rename-conversation-command.service";
-import { DeleteConversationCommandService } from "@/contexts/assistant/application/internal/commandservices/delete-conversation-command.service";
 import type { AssistantConversationSummaryReadModel } from "@/contexts/assistant/application/internal/transforms/assistant.read-models";
-import { createAssistantConversationRepository } from "./assistant-action-context";
+import { authorizeAssistantAccess } from "../authorization/assistant-authorization";
+import { composeAssistantAdapters } from "../server/assistant-composition";
 
 import {
   assistantConversationIdParamSchema,
@@ -39,11 +39,6 @@ function toSummaryReadModel(conversation: {
   };
 }
 
-async function resolveAccessToken() {
-  const cookieStore = await cookies();
-  return cookieStore.get(iamSessionCookies.accessToken)?.value;
-}
-
 export async function renameAssistantConversationAction(
   input: AssistantConversationRenameInput & AssistantConversationIdParamInput,
 ): Promise<RenameAssistantConversationActionResult> {
@@ -52,23 +47,14 @@ export async function renameAssistantConversationAction(
       ...assistantConversationIdParamSchema.parse({ id: input.id }),
       ...assistantConversationRenameSchema.parse({ title: input.title }),
     };
-    const accessToken = await resolveAccessToken();
-
-    if (!accessToken) {
-      return {
-        status: "error",
-        data: null,
-        error: "You must be signed in to use the assistant.",
-      };
-    }
-
-    const repository = await createAssistantConversationRepository();
-    const conversation = await new RenameConversationCommandService(repository).handle(
+    const authorization = await authorizeAssistantAccess();
+    const adapters = composeAssistantAdapters(authorization.organizationId);
+    const conversation = await adapters.renameConversation.handle(
       {
         conversationId: parsed.id,
         title: parsed.title,
       },
-      accessToken,
+      authorization.token,
     );
 
     revalidatePath("/chat");
@@ -82,7 +68,7 @@ export async function renameAssistantConversationAction(
     return {
       status: "error",
       data: null,
-      error: error instanceof Error ? error.message : "Unable to rename the assistant conversation.",
+      error: safePublicError(error, "Unable to rename the assistant conversation.").message,
     };
   }
 }
@@ -92,20 +78,11 @@ export async function deleteAssistantConversationAction(
 ): Promise<DeleteAssistantConversationActionResult> {
   try {
     const parsed = assistantConversationIdParamSchema.parse({ id: input.id });
-    const accessToken = await resolveAccessToken();
-
-    if (!accessToken) {
-      return {
-        status: "error",
-        data: null,
-        error: "You must be signed in to use the assistant.",
-      };
-    }
-
-    const repository = await createAssistantConversationRepository();
-    await new DeleteConversationCommandService(repository).handle(
+    const authorization = await authorizeAssistantAccess();
+    const adapters = composeAssistantAdapters(authorization.organizationId);
+    await adapters.deleteConversation.handle(
       { conversationId: parsed.id },
-      accessToken,
+      authorization.token,
     );
 
     revalidatePath("/chat");
@@ -119,7 +96,7 @@ export async function deleteAssistantConversationAction(
     return {
       status: "error",
       data: null,
-      error: error instanceof Error ? error.message : "Unable to delete the assistant conversation.",
+      error: safePublicError(error, "Unable to delete the assistant conversation.").message,
     };
   }
 }

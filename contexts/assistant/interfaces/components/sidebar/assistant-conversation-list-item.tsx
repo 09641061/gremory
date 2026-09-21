@@ -5,8 +5,9 @@ import Link from "next/link";
 import { PencilLine, Trash2 } from "lucide-react";
 
 import { buttonVariants } from "@/contexts/shared/interfaces/components/ui/button";
-import { EntityActionsMenu } from "@/contexts/shared/interfaces/components/entity-actions-menu";
+import { EntityActionsMenu } from "@/contexts/shared/interfaces/components/actions/entity-actions-menu";
 import type { AssistantConversationSummaryReadModel } from "@/contexts/assistant/application/internal/transforms/assistant.read-models";
+import { useAssistantTranslations } from "@/contexts/assistant/interfaces/i18n";
 import { cn } from "@/lib/utils";
 
 type AssistantConversationListItemProps = {
@@ -26,7 +27,8 @@ export function AssistantConversationListItem({
   onRename,
   onDelete,
 }: AssistantConversationListItemProps) {
-  const conversationTitle = conversation.title ?? "New conversation";
+  const { t } = useAssistantTranslations();
+  const conversationTitle = conversation.title ?? t.chat.newConversation;
   const href = establishmentId
     ? `/chat?conversationId=${encodeURIComponent(conversation.id)}&establishmentId=${encodeURIComponent(establishmentId)}`
     : `/chat?conversationId=${encodeURIComponent(conversation.id)}`;
@@ -44,19 +46,19 @@ export function AssistantConversationListItem({
         </Link>
 
         <EntityActionsMenu
-          label={`Options for ${conversationTitle}`}
+          label={t.chat.optionsForConversation.replace("{title}", conversationTitle)}
           size="icon-sm"
           disabled={isMutating}
           triggerClassName="shrink-0 rounded-full text-muted-foreground"
           actions={[
             {
-              label: "Edit name",
+              label: t.chat.editName,
               icon: PencilLine,
               disabled: isMutating,
               onSelect: () => onRename(conversation),
             },
             {
-              label: "Delete",
+              label: t.chat.delete,
               icon: Trash2,
               variant: "destructive",
               disabled: isMutating,

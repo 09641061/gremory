@@ -11,7 +11,7 @@ import {
   Plus,
   Trash2,
 } from "lucide-react";
-import { EntityActionsMenu } from "@/contexts/shared/interfaces/components/entity-actions-menu";
+import { EntityActionsMenu } from "@/contexts/shared/interfaces/components/actions/entity-actions-menu";
 import type { CategoryDTO, ServiceSummaryDTO } from "./category-sidebar";
 import { ServiceRow } from "./service-row";
 
@@ -74,7 +74,7 @@ export function CategoryItem({
       onDragOver={(e) => onDragOver(e, cat.id)}
       onDragLeave={onDragLeave}
       onDrop={(e) => onDrop(e, cat.id)}
-      className={`space-y-1 rounded-md transition-all ${
+      className={`space-y-1 rounded-md transition-[background-color,box-shadow] ${
         isDragTarget ? "ring-2 ring-primary bg-primary/10" : ""
       }`}
     >

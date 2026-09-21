@@ -45,3 +45,13 @@ test-results
 
 .pi-plans
 .pi-runs
+
+# skills
+.github/agents
+.github/hooks
+.github/skills
+
+.impeccable
+# subagent worktrees (managed outside the source tree)
+/.worktrees/
+/.pi/subagents/runs/

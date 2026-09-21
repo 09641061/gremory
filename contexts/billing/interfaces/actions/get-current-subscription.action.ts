@@ -3,7 +3,7 @@
 import "server-only";
 import { cookies } from "next/headers";
 
-import { createCurrentSubscriptionQueryService } from "@/contexts/billing/application/internal/queryservices/current-subscription-query.service";
+import { composeBillingAdapters } from "@/contexts/billing/interfaces/server/billing-composition";
 import type { SubscriptionAccessSnapshot } from "@/contexts/billing/domain/services/subscription-access.policy";
 import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-session-cookie";
 
@@ -13,5 +13,5 @@ export async function getCurrentSubscriptionAction(): Promise<SubscriptionAccess
     return null;
   }
 
-  return createCurrentSubscriptionQueryService().getCurrentSubscription(accessToken);
+  return composeBillingAdapters().currentSubscriptionService.getCurrentSubscription(accessToken);
 }

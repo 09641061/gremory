@@ -1,5 +1,3 @@
-import "server-only";
-
 import type {
   ServiceCategoryCommandService,
 } from "../../../domain/services/service-category.services";
@@ -9,10 +7,11 @@ import type {
   UpdateServiceCategoryCommand,
   DeleteServiceCategoryCommand,
 } from "../../../domain/model/commands/service-category.commands";
-import { ServiceCategoryApiGateway } from "../../../infrastructure/gateways/service-category-api.gateway";
 
 export class ServiceCategoryCommandServiceImpl implements ServiceCategoryCommandService {
-  constructor(private readonly gateway: ServiceCategoryApiGateway) {}
+  constructor(
+    private readonly gateway: ServiceCategoryCommandPort,
+  ) {}
 
   create(command: CreateServiceCategoryCommand, token?: string): Promise<ServiceCategory> {
     return this.gateway.create(command, token);
@@ -27,6 +26,18 @@ export class ServiceCategoryCommandServiceImpl implements ServiceCategoryCommand
   }
 }
 
-export function createServiceCategoryCommandService(organizationId?: string) {
-  return new ServiceCategoryCommandServiceImpl(new ServiceCategoryApiGateway(organizationId));
+/**
+ * Server-only port for the service-category mutations. Implementation lives
+ * in Infrastructure and is injected via composition.
+ */
+export interface ServiceCategoryCommandPort {
+  create(command: CreateServiceCategoryCommand, token?: string): Promise<ServiceCategory>;
+  update(command: UpdateServiceCategoryCommand, token?: string): Promise<ServiceCategory>;
+  delete(command: DeleteServiceCategoryCommand, token?: string): Promise<void>;
+}
+
+export function createServiceCategoryCommandService(
+  gateway: ServiceCategoryCommandPort,
+): ServiceCategoryCommandService {
+  return new ServiceCategoryCommandServiceImpl(gateway);
 }

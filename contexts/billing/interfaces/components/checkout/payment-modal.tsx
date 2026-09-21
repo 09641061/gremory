@@ -9,6 +9,7 @@ import { PaymentSuccessView } from "./payment-success-view";
 import { PaymentErrorView } from "./payment-error-view";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import { Card } from "@/contexts/shared/interfaces/components/ui/card";
+import { useBillingI18n } from "@/contexts/billing/interfaces/i18n";
 
 interface PaymentModalProps {
   isOpen: boolean;
@@ -36,6 +37,7 @@ export function PaymentModal({
   planName = "Subscription",
   amountFormatted,
 }: PaymentModalProps) {
+  const { t } = useBillingI18n();
   const [isSuccess, setIsSuccess] = useState(false);
 
   if (!isOpen) return null;
@@ -53,9 +55,9 @@ export function PaymentModal({
         {/* Header */}
         <div className="flex items-center justify-between pb-6 border-b border-border mb-6">
           <div>
-            <h3 id="payment-modal-title" className="text-xl font-bold text-foreground">Complete Subscription</h3>
+            <h3 id="payment-modal-title" className="text-xl font-bold text-foreground">{t.checkout.title}</h3>
             <p className="text-xs text-muted-foreground mt-0.5">
-              Selected plan: <span className="font-semibold text-foreground">{planName}</span>
+              {t.checkout.selectedPlan.replace("{planName}", planName)}
             </p>
           </div>
           <Button
@@ -63,7 +65,7 @@ export function PaymentModal({
             onClick={onClose}
             variant="ghost"
             size="icon"
-            aria-label="Close payment modal"
+            aria-label={t.checkout.closeModalAria}
             className="rounded-full text-muted-foreground hover:text-foreground"
           >
             <X className="size-5" />

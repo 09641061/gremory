@@ -1,0 +1,42 @@
+export const en = {
+  sidebarProfile: {
+    profile: "Profile",
+    upgradePlan: "Upgrade plan",
+    invoices: "Invoices",
+    logOut: "Log out",
+    signingOut: "Signing out...",
+  },
+  preferences: {
+    title: "Preferences",
+    description: "Choose your preferred language and theme.",
+    language: "Language",
+    theme: "Theme",
+    languages: {
+      es: "Es",
+      en: "En",
+    },
+    themes: {
+      light: "Light",
+      dark: "Dark",
+    },
+    errorTitle: "Unable to update preferences",
+    save: "Save",
+    saving: "Saving...",
+    cancel: "Cancel",
+  },
+  profile: {
+    pageTitle: "Profile",
+    pageDescription: "Manage your profile photo and username.",
+    pageLoading: "Loading profile...",
+    photoTitle: "Profile photo",
+    photoDescription: "Click the photo to upload a new one.",
+    usernameTitle: "Username",
+    usernameHint: "Only letters (A-Z, a-z), {min} to {max} characters.",
+    usernameMinLength: "Username must be at least {min} characters.",
+    uploadImage: "Upload image",
+    errorTitle: "Unable to update profile",
+    save: "Save",
+    saving: "Saving...",
+    cancel: "Cancel",
+  },
+} as const;

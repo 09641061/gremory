@@ -3,12 +3,12 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { EyeIcon, EyeOffIcon, Save, Trash2 } from "lucide-react";
-import { ErrorAlert } from "@/contexts/shared/interfaces/components/error";
+import { ErrorAlert } from "@/contexts/shared/interfaces/components/feedback/error";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
-import { Spinner } from "@/contexts/shared/interfaces/components/ui/spinner";
 import { Card, CardContent } from "@/contexts/shared/interfaces/components/ui/card";
-import { EntityActionsMenu } from "@/contexts/shared/interfaces/components/entity-actions-menu";
+import { EntityActionsMenu } from "@/contexts/shared/interfaces/components/actions/entity-actions-menu";
 import { Badge } from "@/contexts/shared/interfaces/components/ui/badge";
+import { FormSubmitButton } from "@/contexts/shared/interfaces/components/form/form-submit-button";
 import { GeneralInfoSection } from "../create-service/general-info-section";
 import { FinancialsAndLogisticsSection } from "../create-service/financials-and-logistics-section";
 import { InstructionsSection } from "../create-service/instructions-section";
@@ -44,9 +44,9 @@ export function EditServiceForm({
   const isActive = service.status === "ACTIVE";
 
   // Combined error and loading state for actions
-  const errorState = 
-    updateState.status === "error" 
-      ? updateState 
+  const errorState =
+    updateState.status === "error"
+      ? updateState
       : statusState.status === "error"
       ? statusState
       : null;
@@ -76,7 +76,7 @@ export function EditServiceForm({
 
       <div className="bg-background text-foreground flex flex-col">
         {/* Form Main Canvas */}
-        <main className="flex-1 max-w-[800px] w-full mx-auto px-4 py-8">
+        <main className="flex-1 max-w-3xl w-full mx-auto px-4 py-8">
           <form action={formAction} key={`${service.id}-${service.status}-${defaultsKey}-${resetKey}`} id="edit-service-form">
             <Card className="rounded-lg border-border bg-card p-6">
               <CardContent className="p-0 space-y-6">
@@ -95,7 +95,11 @@ export function EditServiceForm({
                       <span
                         className={`size-1.5 rounded-full ${isActive ? "bg-primary" : "bg-muted-foreground"}`}
                       />
-                      {isActive ? t.serviceForm.active : service.status === "DELETED" ? t.serviceForm.deleted : t.serviceForm.inactive}
+                      {isActive
+                        ? t.serviceForm.active
+                        : service.status === "DELETED"
+                        ? t.serviceForm.deleted
+                        : t.serviceForm.inactive}
                     </Badge>
 
                     {(canUpdateService || canDeleteService) && (
@@ -109,7 +113,7 @@ export function EditServiceForm({
                             icon: isActive ? EyeOffIcon : EyeIcon,
                             hidden: !canUpdateService,
                             disabled: statusPending,
-                            onSelect: () => changeStatus(service.id, !isActive),
+                            onSelect: () => changeStatus(service.id, !isActive, service.establishmentId),
                           },
                           {
                             label: t.serviceForm.delete,
@@ -125,6 +129,7 @@ export function EditServiceForm({
                 </div>
 
                 <input type="hidden" name="id" value={service.id} />
+                <input type="hidden" name="establishmentId" value={service.establishmentId} />
                 {service.categoryId && (
                   <input type="hidden" name="categoryId" value={service.categoryId} />
                 )}
@@ -176,14 +181,9 @@ export function EditServiceForm({
                   </Button>
 
                   {canUpdateService && (
-                    <Button
-                      type="submit"
-                      disabled={isActionPending}
-                      className="gap-2"
-                    >
-                      {updatePending ? <Spinner className="size-4" /> : <Save className="size-4" />}
+                    <FormSubmitButton isSubmitting={updatePending} icon={<Save className="size-4" />}>
                       {updatePending ? t.serviceForm.saving : t.serviceForm.save}
-                    </Button>
+                    </FormSubmitButton>
                   )}
                 </div>
               </CardContent>
@@ -195,6 +195,7 @@ export function EditServiceForm({
       <DeleteServiceDialog
         serviceId={service.id}
         serviceName={service.name}
+        establishmentId={service.establishmentId}
         open={isDeleteDialogOpen}
         onOpenChange={setIsDeleteDialogOpen}
         onSuccess={onDeleted ?? onCancel}

@@ -1,18 +1,16 @@
 import "server-only";
 
 import { cookies } from "next/headers";
-import { cacheLife, cacheTag } from "next/cache";
 import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-session-cookie";
-import { createProfileQueryService } from "../../application/factory";
+import { composeProfileAdapters } from "../server/profile-composition";
 import type { ProfileViewModel } from "../../application/services/profile.view-model";
 
+/**
+ * Profile data is bearer-token-derived and must remain request-scoped. Do not
+ * put it in a persistent/shared Cache Components cache.
+ */
 export async function fetchMyProfileQuery(accessToken: string): Promise<ProfileViewModel | null> {
-  "use cache";
-  cacheLife("hours");
-  cacheTag("profile");
-
-  const queryService = createProfileQueryService();
-  return queryService.getMyProfile({}, accessToken);
+  return composeProfileAdapters().queryService.getMyProfile({}, accessToken);
 }
 
 export async function getMyProfileServerQuery(): Promise<ProfileViewModel | null> {

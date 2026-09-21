@@ -1,17 +1,10 @@
-import "server-only";
-
-import { SchedulingApiGateway } from "@/contexts/scheduling/infrastructure/gateways/scheduling-api.gateway";
+import type { SchedulingRosterReader } from "../../ports/scheduling-roster";
 import type { SchedulingServiceViewModel } from "../../model/scheduling-page-data.view-model";
 
 export async function loadSchedulingServices(
+  reader: SchedulingRosterReader,
   establishmentId: string,
-  organizationId: string,
+  token?: string,
 ): Promise<SchedulingServiceViewModel[]> {
-  try {
-    const gateway = new SchedulingApiGateway(organizationId);
-    return await gateway.getSchedulingServices(establishmentId);
-  } catch (error) {
-    console.error("Failed to load services for scheduler:", error);
-    return [];
-  }
+  return reader.getSchedulingServices(establishmentId, token);
 }

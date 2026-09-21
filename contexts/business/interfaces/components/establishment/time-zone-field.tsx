@@ -11,6 +11,7 @@ import {
   SelectValue,
 } from "@/contexts/shared/interfaces/components/ui/select";
 import { cn } from "@/lib/utils";
+import { useBusinessTranslations } from "../../i18n";
 
 // Fixed UTC offsets keep the selector compact and avoid country-specific labels.
 // Existing IANA values are still supported below for establishments already saved.
@@ -47,9 +48,9 @@ const LEGACY_TIME_ZONE_LABELS: Record<string, string> = {
   "Europe/Paris": "UTC+01:00",
 };
 
-function formatTimeInZone(timeZone: string, timestamp: number) {
+function formatTimeInZone(timeZone: string, timestamp: number, locale: string = "en-US") {
   try {
-    return new Intl.DateTimeFormat("en-US", {
+    return new Intl.DateTimeFormat(locale, {
       timeZone,
       hour: "numeric",
       minute: "2-digit",
@@ -79,6 +80,8 @@ export function TimeZoneField({
   onChange: (value: string) => void;
   disabled?: boolean;
 }) {
+  const { t, locale } = useBusinessTranslations();
+  const intlLocale = locale === "es" ? "es-ES" : "en-US";
   const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {
@@ -112,7 +115,7 @@ export function TimeZoneField({
       required
       >
       <SelectTrigger className="w-full">
-        <SelectValue placeholder="Select a time zone">
+        <SelectValue placeholder={t.establishments.selectTimeZone}>
           {(selectedValue: string | null) =>
             selectedValue ? (
               <span className="flex min-w-0 items-center justify-between gap-3">
@@ -120,11 +123,11 @@ export function TimeZoneField({
                   {getTimeZoneLabel(selectedValue)}
                 </span>
                 <span className="shrink-0 whitespace-nowrap text-sm font-semibold tabular-nums text-foreground">
-                  {formatTimeInZone(selectedValue, now)}
+                  {formatTimeInZone(selectedValue, now, intlLocale)}
                 </span>
               </span>
             ) : (
-              "Select a time zone"
+              t.establishments.selectTimeZone
             )
           }
         </SelectValue>
@@ -133,7 +136,7 @@ export function TimeZoneField({
       <SelectContent className="scrollbar-hide p-1">
         <SelectGroup>
             <SelectLabel className="px-2 py-2 text-[10px] font-semibold uppercase tracking-[0.24em] text-muted-foreground">
-              UTC time zones
+              {t.establishments.utcTimeZones}
             </SelectLabel>
             {items.map((timeZone) => (
               <SelectItem
@@ -153,7 +156,7 @@ export function TimeZoneField({
                       timeZone.value === value ? "text-emerald-700" : "text-foreground"
                     )}
                   >
-                    {formatTimeInZone(timeZone.value, now)}
+                    {formatTimeInZone(timeZone.value, now, intlLocale)}
                   </span>
                 </span>
               </SelectItem>

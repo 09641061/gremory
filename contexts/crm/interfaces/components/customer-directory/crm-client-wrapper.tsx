@@ -15,12 +15,12 @@ import {
 } from "lucide-react";
 
 import { deleteCustomerAction } from "@/contexts/crm/interfaces/actions/delete-customer.action";
-import { CustomerResponse } from "@/contexts/crm/domain/model/entities/customer";
+import { CustomerResponse } from "@/contexts/crm/application/models/customer";
 import { PageResponse } from "@/contexts/crm/application/services/crm-query.service";
-import { ErrorAlert } from "@/contexts/shared/interfaces/components/error";
-import { PageHeader, PageShell } from "@/contexts/shared/interfaces/components/page-shell";
-import { EntityActionsMenu } from "@/contexts/shared/interfaces/components/entity-actions-menu";
-import { DeleteConfirmDialog } from "@/contexts/shared/interfaces/components/delete-confirm-dialog";
+import { ErrorAlert } from "@/contexts/shared/interfaces/components/feedback/error";
+import { PageHeader, PageShell } from "@/contexts/shared/interfaces/components/layout/page-shell";
+import { EntityActionsMenu } from "@/contexts/shared/interfaces/components/actions/entity-actions-menu";
+import { DeleteConfirmDialog } from "@/contexts/shared/interfaces/components/dialogs/delete-confirm-dialog";
 import { Badge } from "@/contexts/shared/interfaces/components/ui/badge";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import { Card, CardContent } from "@/contexts/shared/interfaces/components/ui/card";

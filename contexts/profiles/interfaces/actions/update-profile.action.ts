@@ -4,16 +4,28 @@ import "server-only";
 import { cookies } from "next/headers";
 import { revalidatePath, updateTag } from "next/cache";
 import { z } from "zod";
+
+import { safePublicError } from "@/contexts/shared/interfaces/actions/safe-error";
 import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-session-cookie";
 import { updateProfileSchema } from "../rest/schemas/profile.schemas";
 import { createUsername } from "../../domain/model/valueobjects/username";
 import { createProfileImageUrl } from "../../domain/model/valueobjects/profile-image-url";
-import { createProfileCommandService } from "../../application/factory";
+import type { ProfileImageInput } from "../../domain/model/commands/update-profile.command";
+import { composeProfileAdapters } from "../server/profile-composition";
 import type { ProfileViewModel } from "../../application/services/profile.view-model";
 
-function readImageFile(formData: FormData) {
+async function readImageFile(formData: FormData): Promise<ProfileImageInput | null> {
   const imageFile = formData.get("imageFile");
-  return imageFile instanceof File && imageFile.size > 0 ? imageFile : null;
+  if (!(imageFile instanceof File) || imageFile.size <= 0) return null;
+  // The backend owns accepted MIME types and size limits. Keep this boundary
+  // transport-neutral and avoid duplicating undocumented constraints here.
+  const bytes = new Uint8Array(await imageFile.arrayBuffer());
+  return {
+    name: imageFile.name,
+    type: imageFile.type,
+    size: imageFile.size,
+    bytes,
+  };
 }
 
 export type UpdateProfileActionState =
@@ -45,16 +57,24 @@ export async function updateProfileAction(
     const command = {
       username: createUsername(input.username),
       imageUrl: createProfileImageUrl(input.imageUrl),
-      imageFile: readImageFile(formData),
+      imageFile: await readImageFile(formData),
     };
 
-    const service = createProfileCommandService();
-    const profile = await service.updateProfile(command, accessToken);
+    const profile = await composeProfileAdapters().commandService.updateProfile(
+      command,
+      accessToken,
+    );
 
-    updateTag("profile");
-    revalidatePath("/team");
-    revalidatePath("/profile");
-    revalidatePath("/", "layout");
+    // Invalidation is best effort: a backend-confirmed write must not be
+    // turned into an error by a failed cache update.
+    try {
+      updateTag("profile");
+      revalidatePath("/team");
+      revalidatePath("/profile");
+      revalidatePath("/", "layout");
+    } catch {
+      /* swallow */
+    }
 
     return {
       status: "success",
@@ -73,7 +93,7 @@ export async function updateProfileAction(
     return {
       status: "error",
       data: null,
-      error: error instanceof Error ? error.message : "Failed to update profile",
+      error: safePublicError(error, "Failed to update profile").message,
     };
   }
 }

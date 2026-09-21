@@ -2,7 +2,7 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { Store } from "lucide-react";
-import { EntityListRow } from "@/contexts/shared/interfaces/components/entity-list-row";
+import { EntityListRow } from "@/contexts/shared/interfaces/components/lists/entity-list-row";
 
 describe("EntityListRow", () => {
   it("renders the avatar image when a src is given", () => {

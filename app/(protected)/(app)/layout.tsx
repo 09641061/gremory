@@ -2,13 +2,13 @@ import type { ReactNode } from "react";
 import { Suspense } from "react";
 import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
-import ProtectedAppShell from "@/contexts/shared/interfaces/components/protected-app-shell";
-import { PageLoading } from "@/contexts/shared/interfaces/components/page-loading";
+import ProtectedAppShell from "@/contexts/shared/interfaces/components/layout/protected-app-shell";
+import { PageLoading } from "@/contexts/shared/interfaces/components/feedback/page-loading";
 import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-session-cookie";
 import { workspaceSelectionCookies } from "@/contexts/business/infrastructure/session/workspace-selection-cookie";
-import { createEntryRouteQueryService } from "@/contexts/shared/application/internal/queryservices/entry-route-query.service";
+import { composeSharedAdapters } from "@/contexts/shared/interfaces/server/shared-composition";
 import { getServerDictionary } from "@/contexts/shared/infrastructure/i18n/server";
-import { EntryRouteUnavailable } from "@/contexts/shared/interfaces/components/entry-route-unavailable";
+import { EntryRouteUnavailable } from "@/contexts/shared/interfaces/components/feedback/entry-route-unavailable";
 
 /**
  * Shell for work routes. Welcome has a separate header-only route group.
@@ -47,7 +47,7 @@ async function AppLayoutContent({
   const requestHeaders = await headers();
   const establishmentId = requestHeaders.get("x-takodu-establishment-id") ?? undefined;
   const organizationId = cookieStore.get(workspaceSelectionCookies.organizationId)?.value ?? undefined;
-  const landing = await createEntryRouteQueryService()
+  const landing = await composeSharedAdapters().entryRouteQueryService
     .resolveRoute({ accessToken, organizationId, establishmentId })
     .catch(() => ({ status: "unavailable" as const }));
 

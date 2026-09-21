@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
+import { safePublicError } from "@/contexts/shared/interfaces/actions/safe-error";
 import { createEstablishmentCommand } from "@/contexts/business/domain/model/commands/business.commands";
-import { createEstablishmentCommandService } from "@/contexts/business/application/internal/commandservices/establishment-command.service";
-import { createEstablishmentQueryService } from "@/contexts/business/application/internal/queryservices/establishment-query.service";
+import { composeBusinessAdapters } from "@/contexts/business/interfaces/server/business-composition";
 import { createEstablishmentSchema } from "@/contexts/business/interfaces/rest/schemas/establishment.schemas";
 import { requireBusinessAccessToken } from "@/contexts/business/infrastructure/session/business-session";
 
@@ -18,11 +18,11 @@ export async function POST(request: Request) {
     }
 
     await requireBusinessAccessToken();
-    const establishmentId = await createEstablishmentCommandService().create(
+    const establishmentId = await composeBusinessAdapters().establishmentCommandService.create(
       createEstablishmentCommand(parsed.data),
     );
 
-    const establishment = await createEstablishmentQueryService().getById({
+    const establishment = await composeBusinessAdapters().establishmentQueryService.getById({
       id: establishmentId.value,
     });
 
@@ -54,36 +54,7 @@ function validationErrorResponse(message?: string) {
   );
 }
 
-function routeErrorResponse(error: unknown): Response {
-  if (error instanceof Error) {
-    const status = readStatus(error);
-    if (status !== undefined) {
-      const details = readDetails(error);
-      return NextResponse.json(
-        details === undefined
-          ? { message: error.message }
-          : { message: error.message, details },
-        { status },
-      );
-    }
-
-    if (error.message === "Authentication is required") {
-      return NextResponse.json({ message: error.message }, { status: 401 });
-    }
-
-    return NextResponse.json({ message: error.message }, { status: 400 });
-  }
-
-  return NextResponse.json({ message: "Unexpected error" }, { status: 500 });
-}
-
-function readStatus(error: Error): number | undefined {
-  const status = (error as Error & { status?: unknown }).status;
-  if (typeof status !== "number" || Number.isNaN(status)) return undefined;
-  if (status <= 0) return 502;
-  return status;
-}
-
-function readDetails(error: Error): unknown {
-  return (error as Error & { details?: unknown }).details;
+function routeErrorResponse(error: unknown, fallback = "Request could not be completed"): Response {
+  const safe = safePublicError(error, fallback);
+  return NextResponse.json({ message: safe.message }, { status: safe.status });
 }

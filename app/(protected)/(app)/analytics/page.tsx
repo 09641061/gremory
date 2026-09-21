@@ -1,26 +1,21 @@
 import "server-only";
 
 import React, { Suspense } from "react";
-import { cookies, headers } from "next/headers";
-import { redirect } from "next/navigation";
-import { PageHeader, PageShell } from "@/contexts/shared/interfaces/components/page-shell";
-import { PageLoading } from "@/contexts/shared/interfaces/components/page-loading";
-import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-session-cookie";
-import { workspaceSelectionCookies } from "@/contexts/business/infrastructure/session/workspace-selection-cookie";
-import { BusinessWorkspaceApiGateway } from "@/contexts/business/infrastructure/gateways/business-workspace-api.gateway";
-import { createGetStandardAnalyticsQueryService } from "@/contexts/analytics/application/internal/queryservices/get-standard-analytics-query.service";
-import { createGetMaxAnalyticsQueryService } from "@/contexts/analytics/application/internal/queryservices/get-max-analytics-query.service";
-import type { StandardAnalyticsDashboardResponse } from "@/contexts/analytics/interfaces/rest/schemas/standard-analytics.schemas";
-import type { MaxAnalyticsDashboardResponse } from "@/contexts/analytics/interfaces/rest/schemas/max-analytics.schemas";
+import { PageHeader, PageShell } from "@/contexts/shared/interfaces/components/layout/page-shell";
+import { PageLoading } from "@/contexts/shared/interfaces/components/feedback/page-loading";
+import { ErrorAlert } from "@/contexts/shared/interfaces/components/feedback/error";
+import { requireAnalyticsContext } from "@/contexts/analytics/interfaces/authorization/analytics-authorization";
+import { composeAnalyticsAdapters } from "@/contexts/analytics/interfaces/server/analytics-composition";
 import { AnalyticsDateRange } from "@/contexts/analytics/domain/model/value-objects/analytics-date-range";
-import { StandardAnalyticsView } from "@/contexts/analytics/interfaces/components/standard/standard-analytics-view";
+import type { MaxAnalyticsDashboardResponse, StandardAnalyticsDashboardResponse } from "@/contexts/analytics/application/model/analytics.view-models";
 import { MaxAnalyticsView } from "@/contexts/analytics/interfaces/components/max/max-analytics-view";
+import { StandardAnalyticsView } from "@/contexts/analytics/interfaces/components/standard/standard-analytics-view";
 import { getAnalyticsDictionary } from "@/contexts/analytics/interfaces/i18n";
 import { getServerLocale } from "@/contexts/shared/infrastructure/i18n/server";
-import { ErrorAlert } from "@/contexts/shared/interfaces/components/error";
+import { createCorrelationId } from "@/contexts/shared/infrastructure/http/api-client";
 
 interface AnalyticsPageProps {
-  searchParams?: Promise<{ organizationId?: string; establishmentId?: string }>;
+  searchParams?: Promise<{ establishmentId?: string }>;
 }
 
 export default async function AnalyticsPage({ searchParams }: AnalyticsPageProps) {
@@ -33,93 +28,37 @@ export default async function AnalyticsPage({ searchParams }: AnalyticsPageProps
 
 async function AnalyticsPageContent({ searchParams }: AnalyticsPageProps) {
   const query = searchParams ? await searchParams : {};
-  const cookieStore = await cookies();
-  const accessToken = cookieStore.get(iamSessionCookies.accessToken)?.value;
-  if (!accessToken) redirect("/login");
-
-  const requestHeaders = await headers();
-  const headerEstablishmentId = requestHeaders.get("x-takodu-establishment-id") ?? undefined;
-  const cookieOrganizationId = cookieStore.get(workspaceSelectionCookies.organizationId)?.value ?? undefined;
-  const organizationId = query.organizationId ?? cookieOrganizationId;
-
-  const workspaceGateway = new BusinessWorkspaceApiGateway(accessToken);
-  const workspace = await workspaceGateway.getWorkspace({
-    organizationId,
-    establishmentId: query.establishmentId ?? headerEstablishmentId,
-  });
-
-  const activeOrganizationId = workspace.organization?.id ?? organizationId;
-  const establishmentId = query.establishmentId ?? headerEstablishmentId ?? workspace.activeEstablishmentId ?? undefined;
-
-  const planName = workspace.subscription?.planName?.toLowerCase() ?? "";
-  const isMaxPlan = planName.includes("max") || planName.includes("premium");
-
-  const serverLocale = await getServerLocale();
-  const dictionary = await getAnalyticsDictionary(serverLocale);
-  const dateRange = AnalyticsDateRange.fromPreset("30d", isMaxPlan ? 90 : 30);
+  const context = await requireAnalyticsContext(query.establishmentId);
+  const dictionary = await getAnalyticsDictionary(await getServerLocale());
+  const useMax = context.canRequestMax;
+  const range = AnalyticsDateRange.fromPreset("30d", useMax ? 90 : 30);
+  const params = {
+    organizationId: context.organizationId,
+    establishmentId: context.establishmentId,
+    from: range.from,
+    to: range.to,
+  };
+  const composed = composeAnalyticsAdapters();
+  const correlationId = createCorrelationId();
 
   let maxData: MaxAnalyticsDashboardResponse | null = null;
   let standardData: StandardAnalyticsDashboardResponse | null = null;
-  let fetchError: unknown = null;
-
   try {
-    if (isMaxPlan) {
+    if (useMax) {
       try {
-        const maxService = createGetMaxAnalyticsQueryService();
-        maxData = await maxService.execute(
-          {
-            establishmentId,
-            from: dateRange.from,
-            to: dateRange.to,
-            organizationId: activeOrganizationId,
-          },
-          accessToken
-        );
-      } catch (maxError: unknown) {
-        const status = (maxError as { status?: number })?.status;
-        if (status === 403) {
-          console.warn("Max analytics not authorized yet (403), falling back to standard view.");
-          const standardService = createGetStandardAnalyticsQueryService();
-          standardData = await standardService.execute(
-            {
-              establishmentId,
-              from: dateRange.from,
-              to: dateRange.to,
-              organizationId: activeOrganizationId,
-            },
-            accessToken
-          );
-        } else {
-          throw maxError;
-        }
+        maxData = await composed.maxQueryService.execute(params, context.token, correlationId);
+      } catch (error) {
+        if ((error as { status?: number }).status !== 403) throw error;
+        standardData = await composed.standardQueryService.execute(params, context.token, correlationId);
       }
     } else {
-      const standardService = createGetStandardAnalyticsQueryService();
-      standardData = await standardService.execute(
-        {
-          establishmentId,
-          from: dateRange.from,
-          to: dateRange.to,
-          organizationId: activeOrganizationId,
-        },
-        accessToken
-      );
+      standardData = await composed.standardQueryService.execute(params, context.token, correlationId);
     }
-  } catch (error) {
-    console.error("Failed to load analytics dashboard data:", error);
-    fetchError = error;
-  }
-
-  if (fetchError || (!maxData && !standardData)) {
+  } catch {
     return (
       <PageShell>
-        <PageHeader
-          title={isMaxPlan ? dictionary.dashboards.max.title : dictionary.dashboards.standard.title}
-        />
-        <ErrorAlert
-          title={dictionary.state.errorTitle}
-          message={dictionary.state.errorMessage}
-        />
+        <PageHeader title={useMax ? dictionary.dashboards.max.title : dictionary.dashboards.standard.title} />
+        <ErrorAlert title={dictionary.state.errorTitle} message={dictionary.state.errorMessage} />
       </PageShell>
     );
   }
@@ -127,30 +66,15 @@ async function AnalyticsPageContent({ searchParams }: AnalyticsPageProps) {
   if (maxData) {
     return (
       <PageShell>
-        <PageHeader
-          title={dictionary.dashboards.max.title}
-          description={dictionary.dashboards.max.description}
-        />
-        <MaxAnalyticsView
-          initialData={maxData}
-          organizationId={activeOrganizationId}
-          establishmentId={establishmentId}
-        />
+        <PageHeader title={dictionary.dashboards.max.title} description={dictionary.dashboards.max.description} />
+        <MaxAnalyticsView initialData={maxData} organizationId={context.organizationId} establishmentId={context.establishmentId} />
       </PageShell>
     );
   }
-
   return (
     <PageShell>
-      <PageHeader
-        title={dictionary.dashboards.standard.title}
-        description={dictionary.dashboards.standard.description}
-      />
-      <StandardAnalyticsView
-        initialData={standardData!}
-        organizationId={activeOrganizationId}
-        establishmentId={establishmentId}
-      />
+      <PageHeader title={dictionary.dashboards.standard.title} description={dictionary.dashboards.standard.description} />
+      <StandardAnalyticsView initialData={standardData!} organizationId={context.organizationId} establishmentId={context.establishmentId} />
     </PageShell>
   );
 }

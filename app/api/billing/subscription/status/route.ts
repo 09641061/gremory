@@ -1,6 +1,6 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
-import { createCurrentSubscriptionQueryService } from "@/contexts/billing/application/internal/queryservices/current-subscription-query.service";
+import { composeBillingAdapters } from "@/contexts/billing/interfaces/server/billing-composition";
 import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-session-cookie";
 import { hasActiveSubscription } from "@/contexts/billing/domain/services/subscription-access.policy";
 
@@ -12,7 +12,7 @@ export async function GET() {
   }
 
   try {
-    const subscription = await createCurrentSubscriptionQueryService().getCurrentSubscription(
+    const subscription = await composeBillingAdapters().currentSubscriptionService.getCurrentSubscription(
       accessToken,
     );
     return NextResponse.json({ active: hasActiveSubscription(subscription) });

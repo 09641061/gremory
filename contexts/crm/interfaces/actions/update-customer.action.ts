@@ -1,20 +1,22 @@
 "use server";
 
+
+
 import { revalidatePath } from "next/cache";
-import { createCrmCommandService } from "../../application/internal/commandservices/crm-command.service";
-import { createBusinessWorkspaceQueryService } from "@/contexts/business/application/internal/queryservices/business-workspace-query.service";
+import { createCrmCommandService } from "../server/crm-composition";
+import { composeBusinessAdapters } from "@/contexts/business/interfaces/server/business-composition";
 import { getWorkspaceEstablishment, hasEstablishmentPermission } from "@/contexts/shared/application/services/workspace-establishment-permissions";
-import { UpdateCustomerCommand } from "../../domain/model/commands/update-customer.command";
+import { UpdateCustomerCommand } from "../../application/models/commands";
 import { ApiError } from "@/contexts/shared/infrastructure/http/api-client";
 import { createActionErrorId, type ActionState } from "./action-state";
-import { CustomerResponse } from "../../domain/model/entities/customer";
+import { CustomerResponse } from "../../application/models/customer";
 import { updateCustomerSchema } from "../schemas/update-customer.schema";
 
 export async function updateCustomerAction(
   command: Omit<UpdateCustomerCommand, "establishmentId">,
   establishmentId: string
 ): Promise<ActionState<CustomerResponse>> {
-  const workspace = await createBusinessWorkspaceQueryService().getHeaderViewModel({ establishmentId });
+  const workspace = await composeBusinessAdapters().workspaceQueryService.getHeaderViewModel({ establishmentId });
   if (!hasEstablishmentPermission(getWorkspaceEstablishment(workspace, establishmentId), "crm:manage")) {
     return {
       status: "error",
@@ -37,25 +39,26 @@ export async function updateCustomerAction(
   }
 
   try {
-    const workspace = await createBusinessWorkspaceQueryService().getHeaderViewModel({ establishmentId });
+    const workspace = await composeBusinessAdapters().workspaceQueryService.getHeaderViewModel({ establishmentId });
     const service = createCrmCommandService(workspace.organization?.id);
     const result = await service.updateCustomer({
       ...parsed.data,
       establishmentId,
     });
 
-    revalidatePath("/crm");
+    try {
+      revalidatePath("/crm");
+    } catch {
+      // The backend write is already confirmed; cache invalidation is best effort.
+    }
     return { status: "success", data: result, error: null, errorId: null, fieldErrors: null };
   } catch (error: unknown) {
-    console.error("Error updating customer:", error);
     let message = "An error occurred while updating the customer.";
     if (error instanceof ApiError) {
       if (error.status === 409) {
         message = "A customer with this document number is already registered in this establishment.";
       } else if (error.status === 422) {
         message = "The identity document could not be validated.";
-      } else if (error.message) {
-        message = error.message;
       }
     }
     return { status: "error", data: null, error: message, errorId: createActionErrorId(), fieldErrors: null };

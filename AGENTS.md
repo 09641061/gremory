@@ -6,6 +6,8 @@ This is a Next.js project.
 - `bun run test` for tests.
 - `bunx <command>` for one-off binaries.
 - Do not use `npm`, `yarn`, or `pnpm` unless explicitly requested.
+* Do not commit, push, or create Git commits unless explicitly requested by the user.
+
 
 <!-- BEGIN:nextjs-agent-rules -->
 

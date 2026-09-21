@@ -98,6 +98,7 @@ export function CatalogLayout({
 
     const formData = new FormData();
     formData.append("id", targetService.id);
+    formData.append("establishmentId", targetService.establishmentId ?? activeEstablishmentId ?? "");
     formData.append("name", targetService.name);
     formData.append("description", targetService.description);
     formData.append("price", String(targetService.price));
@@ -123,6 +124,7 @@ export function CatalogLayout({
         <CategorySidebar
           categories={categories}
           services={serviceSummaries}
+          establishmentId={activeEstablishmentId}
           selectedCategoryId={activeSelectedCategoryId}
           selectedServiceId={selectedServiceId}
           onSelectCategory={(id) => {
@@ -219,6 +221,7 @@ export function CatalogLayout({
             isOpen={!!editingCategory}
             onClose={() => setEditingCategory(null)}
             category={editingCategory}
+            establishmentId={activeEstablishmentId}
           />
         )}
       </div>

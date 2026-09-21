@@ -2,7 +2,7 @@
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
-import { SearchableOptions } from "@/contexts/shared/interfaces/components/searchable-options";
+import { SearchableOptions } from "@/contexts/shared/interfaces/components/form/searchable-options";
 import type { WorkspaceHeaderViewModel } from "@/contexts/business/application/model/business-workspace.view-models";
 import {
   buildWorkspacePath,
@@ -15,9 +15,8 @@ import { useBusinessTranslations } from "@/contexts/business/interfaces/i18n";
 /**
  * The sidebar answers one question only: which establishment am I working in?
  *
- * The organization remains visible as context, but changing organizations now
- * happens in `/organizations` so the workspace selector stays focused and easy
- * to scan.
+ * The organization remains visible as context, with its settings available at
+ * the singular `/organization` route because each account has one organization.
  */
 export function WorkspaceSwitcher({
   workspace,
@@ -88,7 +87,7 @@ export function WorkspaceSwitcher({
               <div className="flex w-full flex-col">
                 <OrganizationBadge
                   organization={organization}
-                  href="/organizations"
+                  href="/organization"
                   onNavigate={close}
                 />
               </div>

@@ -11,7 +11,7 @@ vi.mock("@/contexts/shared/interfaces/components/header/app-header-server", () =
 vi.mock("@/contexts/shared/interfaces/components/sidebar/app-sidebar-shell-server", () => ({ AppShellSidebarServer: () => { mocks.sidebar(); return <aside>Navigation</aside>; } }));
 import { AppHeader } from "@/contexts/shared/interfaces/components/header/app-header";
 import WelcomeLayout from "@/app/(protected)/(welcome)/layout";
-import ProtectedAppShell from "@/contexts/shared/interfaces/components/protected-app-shell";
+import ProtectedAppShell from "@/contexts/shared/interfaces/components/layout/protected-app-shell";
 const workspace = { establishments: [{ id: "branch" }], accessPolicy: { canManageBilling: false } } as WorkspaceHeaderViewModel;
 
 beforeEach(() => {

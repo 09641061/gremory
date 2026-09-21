@@ -5,8 +5,9 @@ import { EstablishmentsSearchBar } from "./establishments-search-bar";
 import { EstablishmentListCard } from "./establishment-list-card";
 import { EstablishmentDetailCard } from "./establishment-detail-card";
 import { deleteEstablishmentAction } from "@/contexts/business/interfaces/actions/establishment.actions";
-import { DeleteConfirmDialog } from "@/contexts/shared/interfaces/components/delete-confirm-dialog";
+import { DeleteConfirmDialog } from "@/contexts/shared/interfaces/components/dialogs/delete-confirm-dialog";
 import { useEntityDelete } from "@/contexts/shared/interfaces/components/hooks/use-entity-delete";
+import { useBusinessTranslations } from "@/contexts/business/interfaces/i18n";
 
 export type EstablishmentListItem = {
   id: string;
@@ -33,6 +34,7 @@ export function EstablishmentsPage({
   defaultCanUpdate?: boolean;
   canCreate?: boolean;
 }) {
+  const { t } = useBusinessTranslations();
   const [filter, setFilter] = useState("");
   const [selectedEstId, setSelectedEstId] = useState<string | null>(
     initialSelectedEstablishmentId ?? null,
@@ -69,9 +71,9 @@ export function EstablishmentsPage({
       >
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between shrink-0">
           <div>
-            <h1 className="page-title">Establishments</h1>
+            <h1 className="page-title">{t.establishments.title}</h1>
             <p className="page-description mt-2">
-              Search, create, and manage the places where your business operates.
+              {t.establishments.pageDescription}
             </p>
           </div>
         </div>
@@ -93,7 +95,7 @@ export function EstablishmentsPage({
       {deleteTarget ? (
         <DeleteConfirmDialog
           {...dialogProps}
-          entityLabel="establishment"
+          entityLabel={t.establishments.deleteEntityLabel}
           entityName={deleteTarget.name}
         >
           <input type="hidden" name="id" value={deleteTarget.id} />

@@ -32,8 +32,8 @@ export function OrganizationSettingsCard({
       </div>
 
       <EntityProfileCard
-        entityLabel="Organization"
-        photoNoun="logo"
+        entityLabel={t.organizations.singleLabel}
+        photoNoun={t.organizations.photoNoun}
         icon={Building2}
         entityId={organization.id}
         entityName={organization.name}

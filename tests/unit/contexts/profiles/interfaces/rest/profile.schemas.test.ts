@@ -2,8 +2,8 @@ import { describe, expect, it } from "vitest";
 import {
   updateProfileSchema,
   updatePreferencesSchema,
-  profileResponseSchema,
 } from "@/contexts/profiles/interfaces/rest/schemas/profile.schemas";
+import { profileResponseSchema } from "@/contexts/profiles/infrastructure/contracts/profile.schemas";
 
 describe("Profile Validation Schemas", () => {
   it("should validate a correct profile payload when username and image are valid", () => {

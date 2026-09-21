@@ -1,5 +1,3 @@
-import "server-only";
-
 import type {
   GetMyOrganizationQuery,
   GetOrganizationByIdQuery,
@@ -8,18 +6,17 @@ import { createOrganizationId } from "../../../domain/model/valueobjects/organiz
 import type { OrganizationRepository } from "../../../domain/services/business.repositories";
 import type { OrganizationQueryService } from "../../services/business.services";
 import type { OrganizationSummary } from "../../model/business.read-models";
-import { OrganizationApiGateway } from "@/contexts/business/infrastructure/gateways/organization-api.gateway";
-import type { AccessibleOrganizationResource } from "@/contexts/business/interfaces/rest/schemas/accessible-organization.schemas";
+import type { AccessibleOrganizationView } from "../../model/accessible-organization";
 
 /** Only the accessible-organizations lookup, so tests can stub it without implementing the full repository. */
 interface AccessibleOrganizationSource {
-  findAccessible(): Promise<AccessibleOrganizationResource[]>;
+  findAccessible(): Promise<ReadonlyArray<AccessibleOrganizationView>>;
 }
 
 export class OrganizationQueryServiceImpl implements OrganizationQueryService {
   constructor(
     private readonly organizations: OrganizationRepository,
-    private readonly accessibleOrganizations: AccessibleOrganizationSource = new OrganizationApiGateway(),
+    private readonly accessibleOrganizations: AccessibleOrganizationSource,
   ) {}
 
   async getMyOrganization(
@@ -38,14 +35,16 @@ export class OrganizationQueryServiceImpl implements OrganizationQueryService {
     return organization ? toOrganizationSummary(organization) : null;
   }
 
-  async getAccessible(): Promise<AccessibleOrganizationResource[]> {
+  async getAccessible(): Promise<ReadonlyArray<AccessibleOrganizationView>> {
     return this.accessibleOrganizations.findAccessible();
   }
 }
 
 export function createOrganizationQueryService(
+  organizations: OrganizationRepository,
+  accessibleOrganizations: AccessibleOrganizationSource,
 ): OrganizationQueryService {
-  return new OrganizationQueryServiceImpl(new OrganizationApiGateway());
+  return new OrganizationQueryServiceImpl(organizations, accessibleOrganizations);
 }
 
 function toOrganizationSummary(

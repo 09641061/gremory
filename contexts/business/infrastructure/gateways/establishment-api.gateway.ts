@@ -40,7 +40,8 @@ export class EstablishmentApiGateway implements EstablishmentRepository {
         timeZone,
       },
       authToken,
-      { "X-Organization-Id": organizationId.value },
+      undefined,
+      { tenantId: organizationId.value },
     );
     return toEstablishment(establishmentResponseSchema.parse(resource));
   }
@@ -72,7 +73,8 @@ export class EstablishmentApiGateway implements EstablishmentRepository {
     const resource = await businessGet<PageResource<EstablishmentResource>>(
       `${apiConfig.routes.establishments}/organization/${encodeURIComponent(organizationId.value)}?${params}`,
       authToken,
-      { "X-Organization-Id": organizationId.value },
+      undefined,
+      { tenantId: organizationId.value },
     );
     return {
       ...resource,
@@ -90,7 +92,8 @@ export class EstablishmentApiGateway implements EstablishmentRepository {
         timeZone: establishment.timeZone,
       },
       authToken,
-      { "X-Organization-Id": establishment.organizationId.value },
+      undefined,
+      { tenantId: establishment.organizationId.value },
     );
     return toEstablishment(establishmentResponseSchema.parse(resource));
   }
@@ -108,7 +111,8 @@ export class EstablishmentApiGateway implements EstablishmentRepository {
     await businessDelete(
       `${apiConfig.routes.establishments}/${encodeURIComponent(id.value)}`,
       authToken,
-      { "X-Organization-Id": organizationId.value },
+      undefined,
+      { tenantId: organizationId.value },
     );
   }
 }

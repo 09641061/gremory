@@ -1,10 +1,8 @@
-import "server-only";
-
 import { hasActiveSubscription } from "@/contexts/billing/domain/services/subscription-access.policy";
 import type { SubscriptionAccessSnapshot } from "@/contexts/billing/domain/services/subscription-access.policy";
-import { createCurrentSubscriptionQueryService } from "@/contexts/billing/application/internal/queryservices/current-subscription-query.service";
-import { ApiError } from "@/contexts/shared/infrastructure/http/api-client";
-import { createBusinessWorkspaceOutboundService } from "../outboundservices/business-workspace.outbound.service";
+import { CurrentSubscriptionQueryService } from "@/contexts/billing/application/internal/queryservices/current-subscription-query.service";
+import { readErrorStatus } from "@/contexts/shared/application/errors/transport-error";
+import { BusinessWorkspaceOutboundService } from "../outboundservices/business-workspace.outbound.service";
 import type { WorkspaceAccountType } from "@/contexts/business/application/model/business-workspace.view-models";
 import {
   type EntryRouteInput,
@@ -24,8 +22,8 @@ type SubscriptionReader = Readonly<{
  */
 export class EntryRouteQueryService {
   constructor(
-    private readonly workspace = createBusinessWorkspaceOutboundService(),
-    private readonly billing: SubscriptionReader = createCurrentSubscriptionQueryService(),
+    private readonly workspace: BusinessWorkspaceOutboundService,
+    private readonly billing: SubscriptionReader,
   ) {}
 
   async resolveRoute({ accessToken, organizationId, establishmentId }: EntryRouteInput): Promise<EntryRouteResolution> {
@@ -86,12 +84,12 @@ function classifyApiError(error: unknown):
 }
 
 function getErrorStatus(error: unknown): number | undefined {
-  if (error instanceof ApiError) return error.status;
-  if (!error || typeof error !== "object") return undefined;
-  const status = (error as { status?: unknown }).status;
-  return typeof status === "number" ? status : undefined;
+  return readErrorStatus(error);
 }
 
-export function createEntryRouteQueryService() {
-  return new EntryRouteQueryService();
+export function createEntryRouteQueryService(
+  workspace: BusinessWorkspaceOutboundService,
+  billing: CurrentSubscriptionQueryService,
+): EntryRouteQueryService {
+  return new EntryRouteQueryService(workspace, billing);
 }

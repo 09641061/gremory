@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
+import { composeCatalogAdapters } from "@/contexts/catalog/interfaces/server/catalog-composition";
+import { safePublicError } from "@/contexts/shared/interfaces/actions/safe-error";
 import { z } from "zod";
-import { createServiceCategoryCommandService } from "@/contexts/catalog/application/internal/commandservices/service-category-command.service";
-import { createServiceCategoryQueryService } from "@/contexts/catalog/application/internal/queryservices/service-category-query.service";
 import { createServiceCategoryReadModel } from "@/contexts/catalog/application/model/service-category.read-model";
+import { requireCatalogContext } from "@/contexts/catalog/interfaces/authorization/catalog-authorization";
 import { createServiceCategorySchema } from "@/contexts/catalog/interfaces/rest/schemas/service-category.schemas";
 
 const listQuerySchema = z.object({
@@ -23,10 +24,13 @@ export async function GET(request: Request) {
       return validationErrorResponse(parsed.error.issues[0]?.message);
     }
 
-    const page = await createServiceCategoryQueryService().list(
+    const auth = await requireCatalogContext("catalog:read", parsed.data.establishmentId);
+    if (auth.establishmentId !== parsed.data.establishmentId) return NextResponse.json({ message: "Operation not permitted" }, { status: 403 });
+    const page = await composeCatalogAdapters().categoryQueryService.list(
       parsed.data.establishmentId,
       parsed.data.page,
       parsed.data.size,
+      auth.token,
     );
 
     return NextResponse.json(page);
@@ -50,38 +54,9 @@ function validationErrorResponse(message?: string) {
   );
 }
 
-function routeErrorResponse(error: unknown): Response {
-  if (error instanceof Error) {
-    const status = readStatus(error);
-    if (status !== undefined) {
-      const details = readDetails(error);
-      return NextResponse.json(
-        details === undefined
-          ? { message: error.message }
-          : { message: error.message, details },
-        { status },
-      );
-    }
-
-    if (error.message === "Authentication is required") {
-      return NextResponse.json({ message: error.message }, { status: 401 });
-    }
-
-    return NextResponse.json({ message: error.message }, { status: 400 });
-  }
-
-  return NextResponse.json({ message: "Unexpected error" }, { status: 500 });
-}
-
-function readStatus(error: Error): number | undefined {
-  const status = (error as Error & { status?: unknown }).status;
-  if (typeof status !== "number" || Number.isNaN(status)) return undefined;
-  if (status <= 0) return 502;
-  return status;
-}
-
-function readDetails(error: Error): unknown {
-  return (error as Error & { details?: unknown }).details;
+function routeErrorResponse(error: unknown, fallback = "Request could not be completed"): Response {
+  const safe = safePublicError(error, fallback);
+  return NextResponse.json({ message: safe.message }, { status: safe.status });
 }
 
 export async function POST(request: Request) {
@@ -95,7 +70,9 @@ export async function POST(request: Request) {
       return validationErrorResponse(parsed.error.issues[0]?.message);
     }
 
-    const category = await createServiceCategoryCommandService().create(parsed.data);
+    const auth = await requireCatalogContext("catalog:manage", parsed.data.establishmentId);
+    if (auth.establishmentId !== parsed.data.establishmentId) return NextResponse.json({ message: "Operation not permitted" }, { status: 403 });
+    const category = await composeCatalogAdapters().categoryCommandService.create(parsed.data, auth.token);
 
     return NextResponse.json(createServiceCategoryReadModel(category), { status: 201 });
   } catch (error) {

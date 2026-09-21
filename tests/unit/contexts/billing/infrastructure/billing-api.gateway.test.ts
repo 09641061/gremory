@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { BillingApiGateway } from "@/contexts/billing/infrastructure/gateways/billing-api.gateway";
+import { BillingApiError, BillingApiGateway } from "@/contexts/billing/infrastructure/gateways/billing-api.gateway";
 import { ApiError } from "@/contexts/shared/infrastructure/http/api-client";
 
 const subscription = {
@@ -21,5 +21,19 @@ describe("Billing gateway contract", () => {
     const error = await new BillingApiGateway().getCurrentSubscription("token").catch((caught: unknown) => caught);
     expect(error).toBeInstanceOf(ApiError);
     expect(error).toMatchObject({ status: 401, message: "Authentication required" });
+  });
+
+  it("rejects malformed invoice pages with a stable technical error", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(response({ content: [{ id: "only-id" }] })));
+    const error = await new BillingApiGateway().getInvoices("token").catch((caught: unknown) => caught);
+    expect(error).toBeInstanceOf(BillingApiError);
+    expect(error).toMatchObject({ status: 502, message: "Invalid billing invoice page response" });
+  });
+
+  it("validates invoice detail responses instead of returning an unchecked cast", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(response({ id: "invoice-1" })));
+    const error = await new BillingApiGateway().getInvoiceById("token", "invoice-1").catch((caught: unknown) => caught);
+    expect(error).toBeInstanceOf(BillingApiError);
+    expect(error).toMatchObject({ status: 502 });
   });
 });

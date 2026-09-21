@@ -11,5 +11,7 @@ export const es: NotificationTranslations = {
     actionsAria: "Acciones de notificación",
     markAsRead: "Marcar como leída",
     delete: "Eliminar",
+    previousPage: "Página anterior",
+    nextPage: "Página siguiente",
   },
 };

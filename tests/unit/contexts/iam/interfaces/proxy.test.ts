@@ -5,8 +5,8 @@ const mocks = {
   resolveSession: vi.fn(),
 };
 
-vi.mock("@/contexts/iam/application/internal/queryservices/iam-session-query.service", () => ({
-  createIamSessionQueryService: () => mocks,
+vi.mock("@/contexts/iam/interfaces/server/iam-composition", () => ({
+  composeIamAdapters: () => ({ sessionQueryService: mocks }),
 }));
 
 const organizationId = "11111111-1111-4111-8111-111111111111";
@@ -377,7 +377,10 @@ describe("IAM session proxy", () => {
       1,
       "http://localhost:8080/api/business/workspace",
       expect.objectContaining({
-        headers: { Authorization: "Bearer access-token" },
+        headers: expect.objectContaining({
+          Authorization: "Bearer access-token",
+          "X-Correlation-Id": expect.any(String),
+        }),
       }),
     );
   });
@@ -402,7 +405,10 @@ describe("IAM session proxy", () => {
       1,
       `http://localhost:8080/api/business/workspace?establishmentId=${establishmentId}`,
       expect.objectContaining({
-        headers: { Authorization: "Bearer access-token" },
+        headers: expect.objectContaining({
+          Authorization: "Bearer access-token",
+          "X-Correlation-Id": expect.any(String),
+        }),
       }),
     );
   });

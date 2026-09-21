@@ -1,23 +1,24 @@
-import type { ProfileRepository } from "../../../domain/repositories/profile.repository";
+import type { ProfileWriter } from "../../ports/profile-writer";
 import type { UpdateProfileCommand } from "../../../domain/model/commands/update-profile.command";
 import type { UpdateProfilePreferencesCommand } from "../../../domain/model/commands/update-profile-preferences.command";
 import type { ProfileCommandService } from "../../services/profile-command.service";
 import type { ProfileViewModel } from "../../services/profile.view-model";
 
+/**
+ * Pure handler: receives the writer port via constructor injection. No
+ * `server-only`, no Infrastructure import, no token singleton.
+ */
 export class ProfileCommandServiceImpl implements ProfileCommandService {
-  constructor(private readonly profileRepository: ProfileRepository) {}
+  constructor(private readonly profileWriter: ProfileWriter) {}
 
-  async updateProfile(
-    command: UpdateProfileCommand,
-    accessToken: string
-  ): Promise<ProfileViewModel> {
-    return this.profileRepository.updateProfile(command, accessToken);
+  updateProfile(command: UpdateProfileCommand, token: string): Promise<ProfileViewModel> {
+    return this.profileWriter.updateProfile(command, token);
   }
 
-  async updatePreferences(
+  updatePreferences(
     command: UpdateProfilePreferencesCommand,
-    accessToken: string
+    token: string,
   ): Promise<ProfileViewModel> {
-    return this.profileRepository.updatePreferences(command, accessToken);
+    return this.profileWriter.updatePreferences(command, token);
   }
 }

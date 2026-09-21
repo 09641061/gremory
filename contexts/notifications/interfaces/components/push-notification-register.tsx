@@ -1,18 +1,15 @@
 "use client";
 
+import { recordSafely } from "@/contexts/shared/interfaces/observability/sanitize-error";
 import { useEffect, useRef } from "react";
 import { requestPushPermission, registerForegroundNotificationListener } from "@/lib/firebase";
 import { registerDeviceTokenAction } from "../actions/notification.actions";
 
-interface PushNotificationRegisterProps {
-  accessToken?: string;
-}
-
-export function PushNotificationRegister({ accessToken }: PushNotificationRegisterProps) {
+export function PushNotificationRegister({ isAuthenticated }: { isAuthenticated: boolean }) {
   const registeredRef = useRef(false);
 
   useEffect(() => {
-    if (!accessToken || registeredRef.current) return;
+    if (!isAuthenticated || registeredRef.current) return;
     registeredRef.current = true;
 
     requestPushPermission().then(async (token) => {
@@ -20,17 +17,17 @@ export function PushNotificationRegister({ accessToken }: PushNotificationRegist
         try {
           const res = await registerDeviceTokenAction(token, "WEB");
           if (!res.success) {
-            console.warn("Failed to register device token in backend:", res.error);
+            recordSafely("notifications.push.notification.register", { code: "CLIENT_OPERATION_REJECTED" });
           }
         } catch (error) {
-          console.error("Error registering device token in backend:", error);
+          recordSafely("notifications.push.notification.register", { cause: error });
         }
       }
     });
 
     // Listen for push notifications when the tab is in the foreground
     const unsubscribe = registerForegroundNotificationListener((payload) => {
-      console.log("Foreground notification received:", payload);
+      recordSafely("notifications.push.notification.register", { code: "FOREGROUND_NOTIFICATION_RECEIVED" });
       const title = payload.notification?.title || payload.data?.title || "Takodu Notification";
       const options = {
         body: payload.notification?.body || payload.data?.message || payload.data?.body || "",
@@ -45,7 +42,7 @@ export function PushNotificationRegister({ accessToken }: PushNotificationRegist
     return () => {
       unsubscribe?.();
     };
-  }, [accessToken]);
+  }, [isAuthenticated]);
 
   return null;
 }

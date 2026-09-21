@@ -49,8 +49,7 @@ export class AssistantConversationRepositoryImpl implements AssistantConversatio
     command: { messageContent: string; establishmentId?: string | null },
     token?: string,
   ): Promise<AssistantConversation> {
-    const conversation = await this.gateway.createConversation(command, token);
-    return toAssistantConversationEntity(conversation);
+    return this.gateway.createConversation(command, token);
   }
 
   async sendMessage(

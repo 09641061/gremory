@@ -1,6 +1,5 @@
 import { CreateEstablishmentForm } from "@/contexts/business/interfaces/components/establishment/create-establishment/create-establishment-form";
-import { createBusinessWorkspaceQueryService } from "@/contexts/business/application/internal/queryservices/business-workspace-query.service";
-import { createOrganizationQueryService } from "@/contexts/business/application/internal/queryservices/organization-query.service";
+import { composeBusinessAdapters } from "@/contexts/business/interfaces/server/business-composition";
 import { hasSomewhereToCancelTo } from "@/contexts/business/domain/services/workspace-navigation.policy";
 import { redirect } from "next/navigation";
 
@@ -10,7 +9,7 @@ interface NewEstablishmentPageProps {
 
 export default async function NewEstablishmentPage({ searchParams }: NewEstablishmentPageProps) {
   const query = await searchParams;
-  const workspace = await createBusinessWorkspaceQueryService().getHeaderViewModel(query);
+  const workspace = await composeBusinessAdapters().workspaceQueryService.getHeaderViewModel(query);
   const requestedOrganizationId = query.organizationId;
 
   // An account without an organization is either mid-invitation or mid onboarding
@@ -24,7 +23,7 @@ export default async function NewEstablishmentPage({ searchParams }: NewEstablis
   const organization =
     requestedOrganizationId && requestedOrganizationId !== workspace.organization.id
       ? workspace.ownedOrganizationId === requestedOrganizationId
-        ? await createOrganizationQueryService().getById({ id: requestedOrganizationId })
+        ? await composeBusinessAdapters().organizationQueryService.getById({ id: requestedOrganizationId })
         : null
       : workspace.organization;
 

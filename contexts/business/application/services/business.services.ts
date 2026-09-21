@@ -20,7 +20,8 @@ import type {
   OrganizationSummary,
   PageView,
 } from "../model/business.read-models";
-import type { AccessibleOrganizationResource } from "../../interfaces/rest/schemas/accessible-organization.schemas";
+import type { AccessibleOrganizationView } from "../model/accessible-organization";
+import type { CommandFileMetadata } from "../../domain/model/commands/business.commands";
 
 /**
  * Image storage sits outside the write model: the file is stored first and only
@@ -29,11 +30,11 @@ import type { AccessibleOrganizationResource } from "../../interfaces/rest/schem
  */
 export interface OrganizationImageStorage {
   /** The backend stores the logo and the name in a single multipart write. */
-  upload(id: OrganizationId, name: OrganizationName, image: File): Promise<void>;
+  upload(id: OrganizationId, name: OrganizationName, image: CommandFileMetadata): Promise<void>;
 }
 
 export interface EstablishmentPhotoStorage {
-  upload(photo: File, organizationId: OrganizationId): Promise<EstablishmentPhoto>;
+  upload(photo: CommandFileMetadata, organizationId: OrganizationId): Promise<EstablishmentPhoto>;
   remove(id: EstablishmentId): Promise<void>;
 }
 
@@ -47,7 +48,7 @@ export interface OrganizationQueryService {
   getMyOrganization(query?: GetMyOrganizationQuery): Promise<OrganizationSummary>;
   getById(query: GetOrganizationByIdQuery): Promise<OrganizationSummary | null>;
   /** All organizations the current member can see (owned or joined via membership). */
-  getAccessible(): Promise<AccessibleOrganizationResource[]>;
+  getAccessible(): Promise<ReadonlyArray<AccessibleOrganizationView>>;
 }
 
 export interface EstablishmentCommandService {

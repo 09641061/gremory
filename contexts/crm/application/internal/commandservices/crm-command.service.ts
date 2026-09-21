@@ -1,32 +1,17 @@
-import "server-only";
+import type { CrmCommandPort } from "../../ports/crm-command.port";
+import type { RegisterCustomerCommand, UpdateCustomerCommand, DeleteCustomerCommand } from "../../models/commands";
+import type { CustomerViewModel, ResolvedIdentityViewModel } from "../../models/customer";
 
-import { CrmCommandService } from "../../../domain/services/crm-command.service";
-import { RegisterCustomerCommand } from "../../../domain/model/commands/register-customer.command";
-import { UpdateCustomerCommand } from "../../../domain/model/commands/update-customer.command";
-import { DeleteCustomerCommand } from "../../../domain/model/commands/delete-customer.command";
-import { CustomerResponse, ResolvedCustomerData } from "../../../domain/model/entities/customer";
-import { CrmApiGateway } from "../../../infrastructure/gateways/crm-api.gateway";
-
-export class CrmCommandServiceImpl implements CrmCommandService {
-  constructor(private readonly gateway: CrmCommandService) {}
-
-  registerCustomer(command: RegisterCustomerCommand): Promise<CustomerResponse> {
-    return this.gateway.registerCustomer(command);
-  }
-
-  updateCustomer(command: UpdateCustomerCommand): Promise<CustomerResponse> {
-    return this.gateway.updateCustomer(command);
-  }
-
-  deleteCustomer(command: DeleteCustomerCommand): Promise<void> {
-    return this.gateway.deleteCustomer(command);
-  }
-
-  resolveDocument(establishmentId: string, dni?: string, ruc?: string): Promise<ResolvedCustomerData> {
+export class CrmCommandServiceImpl implements CrmCommandPort {
+  constructor(private readonly gateway: CrmCommandPort) {}
+  registerCustomer(command: RegisterCustomerCommand): Promise<CustomerViewModel> { return this.gateway.registerCustomer(command); }
+  updateCustomer(command: UpdateCustomerCommand): Promise<CustomerViewModel> { return this.gateway.updateCustomer(command); }
+  deleteCustomer(command: DeleteCustomerCommand): Promise<void> { return this.gateway.deleteCustomer(command); }
+  resolveDocument(establishmentId: string, dni?: string, ruc?: string): Promise<ResolvedIdentityViewModel> {
     return this.gateway.resolveDocument(establishmentId, dni, ruc);
   }
 }
 
-export function createCrmCommandService(organizationId?: string): CrmCommandService {
-  return new CrmCommandServiceImpl(new CrmApiGateway(organizationId));
+export function createCrmCommandService(gateway: CrmCommandPort): CrmCommandPort {
+  return new CrmCommandServiceImpl(gateway);
 }

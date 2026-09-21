@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { createIamSessionQueryService } from "@/contexts/iam/application/internal/queryservices/iam-session-query.service";
-import { createEntryRouteQueryService } from "@/contexts/shared/application/internal/queryservices/entry-route-query.service";
+import { composeIamAdapters } from "@/contexts/iam/interfaces/server/iam-composition";
+import { composeSharedAdapters } from "@/contexts/shared/interfaces/server/shared-composition";
 import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-session-cookie";
 import {
   workspaceSelectionCookieOptions,
@@ -22,7 +22,7 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  const session = await createIamSessionQueryService().resolveSession({
+  const session = await composeIamAdapters().sessionQueryService.resolveSession({
     accessToken,
     refreshToken,
   });
@@ -49,7 +49,7 @@ export async function proxy(request: NextRequest) {
     return continueWithWorkspaceContext(request, response, rotatedHeaders);
   }
 
-  const landing = await createEntryRouteQueryService().resolveRoute({
+  const landing = await composeSharedAdapters(accessToken).entryRouteQueryService.resolveRoute({
     accessToken,
     organizationId: resolveOrganizationSelection(request),
     establishmentId: resolveEstablishmentSelection(request, !isOnboardingPath(pathname)),

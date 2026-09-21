@@ -1,6 +1,11 @@
 import type { CatalogService } from "../../domain/model/entities/catalog-service.entity";
-import type { DetailedServiceDTO } from "./catalog-view.models";
+import type { DetailedServiceDTO } from "../../domain/model/view-models";
 
+/**
+ * Read-model adapter. Application-layer consumers receive `DetailedServiceDTO`
+ * directly from the gateway; this helper remains for callers that still hold
+ * an entity reference (e.g. command paths).
+ */
 export function createCatalogServiceReadModel(service: CatalogService): DetailedServiceDTO {
   return {
     id: service.props.id.value,

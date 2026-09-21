@@ -11,7 +11,9 @@ import {
   DialogFooter,
 } from "@/contexts/shared/interfaces/components/ui/dialog";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
-import type { InvoiceResponse } from "../../../infrastructure/gateways/billing-api.gateway";
+import type { BillingInvoiceReadModel as InvoiceResponse } from "../../../application/ports/billing-readers-writers";
+import { getInvoiceAction } from "../../actions/invoice.actions";
+import { useBillingI18n } from "@/contexts/billing/interfaces/i18n";
 
 interface InvoiceDetailModalProps {
   isOpen: boolean;
@@ -20,6 +22,7 @@ interface InvoiceDetailModalProps {
 }
 
 export function InvoiceDetailModal({ isOpen, onClose, invoiceId }: InvoiceDetailModalProps) {
+  const { t, locale } = useBillingI18n();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [invoice, setInvoice] = useState<InvoiceResponse | null>(null);
@@ -30,22 +33,18 @@ export function InvoiceDetailModal({ isOpen, onClose, invoiceId }: InvoiceDetail
     }
 
     let active = true;
+    const requestedInvoiceId = invoiceId;
 
     async function fetchInvoiceDetails() {
       setLoading(true);
       setError(null);
       try {
-        const response = await fetch(`/api/billing/invoices/${invoiceId}`);
-        if (!response.ok) {
-          throw new Error("Failed to fetch invoice details");
-        }
-        const data = (await response.json()) as InvoiceResponse;
-        if (active) {
-          setInvoice(data);
-        }
+        const result = await getInvoiceAction(requestedInvoiceId);
+        if (result.status !== "success") throw new Error(result.error);
+        if (active) setInvoice(result.data);
       } catch (err) {
         if (active) {
-          setError(err instanceof Error ? err.message : "Something went wrong");
+          setError(err instanceof Error ? err.message : t.invoices.genericError);
         }
       } finally {
         if (active) {
@@ -61,17 +60,19 @@ export function InvoiceDetailModal({ isOpen, onClose, invoiceId }: InvoiceDetail
       setInvoice(null);
       setError(null);
     };
-  }, [isOpen, invoiceId]);
+  }, [isOpen, invoiceId, t.invoices.loadError, t.invoices.genericError]);
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-w-md p-6">
         <DialogHeader>
           <DialogTitle className="text-lg font-bold text-foreground">
-            {invoice ? `Invoice ${invoice.invoiceNumber}` : "Invoice Details"}
+            {invoice
+              ? t.invoices.modalTitle.replace("{number}", invoice.invoiceNumber)
+              : t.invoices.modalDefaultTitle}
           </DialogTitle>
           <DialogDescription className="text-xs text-muted-foreground mt-0.5">
-            Detailed information of your invoice.
+            {t.invoices.modalDescription}
           </DialogDescription>
         </DialogHeader>
 
@@ -90,24 +91,24 @@ export function InvoiceDetailModal({ isOpen, onClose, invoiceId }: InvoiceDetail
         {!loading && !error && invoice && (
           <div className="space-y-4 my-4">
             <div className="grid grid-cols-2 gap-y-3 text-sm py-2">
-              <span className="text-muted-foreground font-medium">Invoice Number</span>
+              <span className="text-muted-foreground font-medium">{t.invoices.invoiceNumber}</span>
               <span className="text-foreground text-right font-semibold">{invoice.invoiceNumber}</span>
 
-              <span className="text-muted-foreground font-medium">Issue Date</span>
+              <span className="text-muted-foreground font-medium">{t.invoices.issueDate}</span>
               <span className="text-foreground text-right">
-                {new Date(invoice.issueDate).toLocaleDateString()}
+                {new Date(invoice.issueDate).toLocaleDateString(locale === "es" ? "es-ES" : "en-US")}
               </span>
 
               {invoice.paidDate && (
                 <>
-                  <span className="text-muted-foreground font-medium">Payment Date</span>
+                  <span className="text-muted-foreground font-medium">{t.invoices.paymentDate}</span>
                   <span className="text-foreground text-right">
-                    {new Date(invoice.paidDate).toLocaleDateString()}
+                    {new Date(invoice.paidDate).toLocaleDateString(locale === "es" ? "es-ES" : "en-US")}
                   </span>
                 </>
               )}
 
-              <span className="text-muted-foreground font-medium">Status</span>
+              <span className="text-muted-foreground font-medium">{t.invoices.status}</span>
               <span className="text-right">
                 <span
                   className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold ${
@@ -116,13 +117,13 @@ export function InvoiceDetailModal({ isOpen, onClose, invoiceId }: InvoiceDetail
                       : "bg-amber-500/10 text-amber-500 border border-amber-500/20"
                   }`}
                 >
-                  {invoice.status}
+                  {invoice.status === "PAID" ? t.invoices.statusPaid : t.invoices.statusPending}
                 </span>
               </span>
 
-              <span className="text-muted-foreground font-medium">Total Amount</span>
+              <span className="text-muted-foreground font-medium">{t.invoices.totalAmount}</span>
               <span className="text-foreground text-right font-bold text-base">
-                {invoice.amount.toLocaleString(undefined, {
+                {invoice.amount.toLocaleString(locale === "es" ? "es-PE" : "en-US", {
                   style: "currency",
                   currency: invoice.currency || "USD",
                 })}
@@ -138,7 +139,18 @@ export function InvoiceDetailModal({ isOpen, onClose, invoiceId }: InvoiceDetail
                   className="w-full flex items-center justify-center gap-2 text-xs"
                 >
                   <FileDown className="size-4" />
-                  Download PDF Invoice
+                  {t.invoices.downloadPdf}
+                </Button>
+              )}
+              {invoice.receiptUrl && (
+                <Button
+                  render={<a href={invoice.receiptUrl} target="_blank" rel="noopener noreferrer" />}
+                  nativeButton={false}
+                  variant="outline"
+                  className="w-full flex items-center justify-center gap-2 text-xs"
+                >
+                  <FileDown className="size-4" />
+                  {t.invoices.downloadReceipt}
                 </Button>
               )}
             </div>
@@ -147,7 +159,7 @@ export function InvoiceDetailModal({ isOpen, onClose, invoiceId }: InvoiceDetail
 
         <DialogFooter className="mt-6 flex justify-end gap-2 border-t border-border pt-4">
           <Button type="button" variant="outline" onClick={onClose} className="min-w-24">
-            Close
+            {t.invoices.close}
           </Button>
         </DialogFooter>
       </DialogContent>

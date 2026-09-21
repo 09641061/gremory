@@ -14,7 +14,8 @@ export const assistantLocales = {
   es,
 };
 
-export const useAssistantTranslations = createLocalTranslationHook(assistantLocales);
+export const useAssistantI18n = createLocalTranslationHook(assistantLocales);
+export const useAssistantTranslations = useAssistantI18n;
 export const getAssistantDictionary = createLocalDictionaryGetter(assistantLocales);
 
 export { en, es };

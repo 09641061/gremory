@@ -1,5 +1,3 @@
-import "server-only";
-
 import type {
   GetEstablishmentByIdQuery,
   ListEstablishmentsByOrganizationQuery,
@@ -12,7 +10,6 @@ import type {
   EstablishmentSummary,
   PageView,
 } from "../../model/business.read-models";
-import { EstablishmentApiGateway } from "@/contexts/business/infrastructure/gateways/establishment-api.gateway";
 
 export class EstablishmentQueryServiceImpl implements EstablishmentQueryService {
   constructor(private readonly establishments: EstablishmentRepository) {}
@@ -42,8 +39,9 @@ export class EstablishmentQueryServiceImpl implements EstablishmentQueryService 
 }
 
 export function createEstablishmentQueryService(
+  establishments: EstablishmentRepository,
 ): EstablishmentQueryService {
-  return new EstablishmentQueryServiceImpl(new EstablishmentApiGateway());
+  return new EstablishmentQueryServiceImpl(establishments);
 }
 
 function toEstablishmentSummary(

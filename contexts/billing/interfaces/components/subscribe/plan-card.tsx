@@ -4,13 +4,16 @@ import React, { useTransition } from "react";
 import { Check, Loader2 } from "lucide-react";
 import type { BillingCycleType } from "../../../domain/model/value-objects/billing-cycle";
 import { getCurrencySymbol, type CurrencyCode } from "../../../domain/model/value-objects/currency";
-import { createSubscriptionAction } from "../../actions/create-subscription.action";
+import {
+  createSubscriptionAction,
+  type CreateSubscriptionActionErrorKind,
+} from "../../actions/create-subscription.action";
 import { StandardIcon } from "../icons/standart";
 import { PremiumIcon } from "../icons/premium";
 import { cn } from "@/lib/utils";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import { Card } from "@/contexts/shared/interfaces/components/ui/card";
-import { useBillingTranslations } from "@/contexts/billing/interfaces/i18n";
+import { useBillingI18n } from "@/contexts/billing/interfaces/i18n";
 
 interface PlanCardProps {
   planId: number;
@@ -25,7 +28,7 @@ interface PlanCardProps {
   buttonLabel?: string;
   buttonDisabled?: boolean;
   onSuccess?: (data: unknown) => void;
-  onError?: (error: string) => void;
+  onError?: (error: { message: string; kind: CreateSubscriptionActionErrorKind }) => void;
   onSelect?: (execute: () => void) => void;
 }
 
@@ -47,7 +50,7 @@ export function PlanCard({
   onError,
   onSelect,
 }: PlanCardProps) {
-  const { t } = useBillingTranslations();
+  const { t } = useBillingI18n();
   const [isPending, startTransition] = useTransition();
 
   const isAnnual = billingCycle === "ANNUAL";
@@ -69,7 +72,7 @@ export function PlanCard({
       if (result.status === "success") {
         onSuccess?.(result.data);
       } else {
-        onError?.(result.error);
+        onError?.({ message: result.error, kind: result.errorKind });
       }
     });
   };
@@ -85,7 +88,7 @@ export function PlanCard({
   return (
     <Card
       className={cn(
-        "relative h-full rounded-lg p-7 transition-all duration-300 justify-between border-border shadow-sm hover:shadow-md"
+        "relative h-full rounded-lg p-7 transition-[box-shadow] duration-300 justify-between border-border shadow-sm hover:shadow-md"
       )}
     >
       <div>
@@ -132,7 +135,7 @@ export function PlanCard({
           variant="outline"
           size="lg"
           className={cn(
-            "w-full rounded-md border-border bg-background px-4 text-sm font-semibold text-foreground hover:bg-muted transition-all duration-150 active:scale-[0.99] shadow-xs",
+            "w-full rounded-md border-border bg-background px-4 text-sm font-semibold text-foreground hover:bg-muted transition-[background-color,transform] duration-150 active:scale-[0.99] shadow-xs",
             buttonDisabled && "opacity-50 cursor-not-allowed hover:bg-background text-muted-foreground"
           )}
         >

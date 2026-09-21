@@ -1,10 +1,12 @@
 "use server";
 
-import { updateTag } from "next/cache";
+import { z } from "zod";
 import { createServiceCategorySchema, updateServiceCategorySchema } from "../rest/schemas/service-category.schemas";
 import { createServiceCategoryCommandService } from "../../application/internal/commandservices/service-category-command.service";
-import { requireCatalogAccessToken, requireCatalogOrganizationId } from "./catalog-action-auth";
 import { createServiceCategoryCreateCommand, createServiceCategoryUpdateCommand } from "../../domain/model/commands/service-category.commands";
+import { requireCatalogContext, requireCatalogCategoryTargetAuthorization } from "../authorization/catalog-authorization";
+import { safePublicError } from "@/contexts/shared/interfaces/actions/safe-error";
+import { composeCatalogAdapters } from "../server/catalog-composition";
 
 export type CategoryActionResult = {
   status: "idle" | "success" | "error";
@@ -28,20 +30,17 @@ export async function createServiceCategoryAction(
   }
 
   try {
-    const [token, organizationId] = await Promise.all([
-      requireCatalogAccessToken(),
-      requireCatalogOrganizationId(parsed.data.establishmentId),
-    ]);
-    const service = createServiceCategoryCommandService(organizationId);
+    const context = await requireCatalogContext("catalog:manage", parsed.data.establishmentId);
+    const token = context.token;
+    const adapters = composeCatalogAdapters(context.organizationId);
+    const service = createServiceCategoryCommandService(adapters.categoryGateway);
     const command = createServiceCategoryCreateCommand(parsed.data);
     await service.create(command, token);
-    updateTag("catalog-categories");
-    updateTag(`catalog-categories:${parsed.data.establishmentId}`);
     return { status: "success", error: null };
   } catch (err) {
     return {
       status: "error",
-      error: err instanceof Error ? err.message : "Error while creating the category",
+      error: safePublicError(err, "Error while creating the category").message,
     };
   }
 }
@@ -53,46 +52,51 @@ export async function updateServiceCategoryAction(
   const rawData = {
     id: formData.get("id"),
     name: formData.get("name"),
+    establishmentId: formData.get("establishmentId"),
   };
 
-  const parsed = updateServiceCategorySchema.safeParse(rawData);
+  const parsed = updateServiceCategorySchema.extend({
+    establishmentId: z.string().uuid("Invalid establishment ID"),
+  }).safeParse(rawData);
 
   if (!parsed.success) {
     return { status: "error", error: parsed.error.issues[0]?.message ?? "Invalid data" };
   }
 
   try {
-    const [token, organizationId] = await Promise.all([
-      requireCatalogAccessToken(),
-      requireCatalogOrganizationId(),
-    ]);
-    const service = createServiceCategoryCommandService(organizationId);
+    const context = await requireCatalogCategoryTargetAuthorization(
+      parsed.data.id,
+      parsed.data.establishmentId,
+    );
+    const token = context.token;
+    const adapters = composeCatalogAdapters(context.organizationId);
+    const service = createServiceCategoryCommandService(adapters.categoryGateway);
     const command = createServiceCategoryUpdateCommand(parsed.data);
     await service.update(command, token);
-    updateTag("catalog-categories");
     return { status: "success", error: null };
   } catch (err) {
     return {
       status: "error",
-      error: err instanceof Error ? err.message : "Error while updating the category",
+      error: safePublicError(err, "Error while updating the category").message,
     };
   }
 }
 
-export async function deleteServiceCategoryAction(id: string): Promise<CategoryActionResult> {
+export async function deleteServiceCategoryAction(
+  id: string,
+  establishmentId?: string,
+): Promise<CategoryActionResult> {
   try {
-    const [token, organizationId] = await Promise.all([
-      requireCatalogAccessToken(),
-      requireCatalogOrganizationId(),
-    ]);
-    const service = createServiceCategoryCommandService(organizationId);
+    const context = await requireCatalogCategoryTargetAuthorization(id, establishmentId);
+    const token = context.token;
+    const adapters = composeCatalogAdapters(context.organizationId);
+    const service = createServiceCategoryCommandService(adapters.categoryGateway);
     await service.delete({ id }, token);
-    updateTag("catalog-categories");
     return { status: "success", error: null };
   } catch (err) {
     return {
       status: "error",
-      error: err instanceof Error ? err.message : "Error while deleting the category",
+      error: safePublicError(err, "Error while deleting the category").message,
     };
   }
 }

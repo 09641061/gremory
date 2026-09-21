@@ -1,7 +1,5 @@
-import "server-only";
-
-import { createAppShellQueryService } from "@/contexts/shared/application/internal/queryservices/app-shell-query.service";
 import type { AppShellHomeHref } from "@/contexts/shared/application/model/app-shell.view-models";
+import type { AppShellQueryService } from "@/contexts/shared/application/internal/queryservices/app-shell-query.service";
 
 export type PlanHomeRouteQuery = Readonly<{
   accessToken?: string;
@@ -21,17 +19,21 @@ export type PlanHomeRoute = AppShellHomeHref | "/login" | "/";
  * the user always lands on a page their subscription can actually open.
  */
 export class PlanHomeRouteQueryService {
+  constructor(private readonly shell: AppShellQueryService) {}
+
   async handle({ accessToken, establishmentId }: PlanHomeRouteQuery): Promise<PlanHomeRoute> {
     if (!accessToken) return "/login";
 
-    const shell = await createAppShellQueryService()
-      .resolve({ workspace: { establishmentId } })
+    const shell = await this.shell
+      .resolve({ workspace: { establishmentId }, accessToken })
       .catch(() => null);
 
     return shell?.homeHref ?? "/";
   }
 }
 
-export function createPlanHomeRouteQueryService() {
-  return new PlanHomeRouteQueryService();
+export function createPlanHomeRouteQueryService(
+  shell: AppShellQueryService,
+): PlanHomeRouteQueryService {
+  return new PlanHomeRouteQueryService(shell);
 }

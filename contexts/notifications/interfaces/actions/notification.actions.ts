@@ -1,43 +1,46 @@
 "use server";
 
 import "server-only";
+import { z } from "zod";
 import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-session-cookie";
-import {
-  workspaceSelectionCookies,
-  workspaceSelectionCookieOptions,
-} from "@/contexts/business/infrastructure/session/workspace-selection-cookie";
-import { ApiError } from "@/contexts/shared/infrastructure/http/api-client";
-import {
-  createNotificationCommandService,
-  createNotificationQueryService,
-} from "../../application/factory";
+import { workspaceSelectionCookies, workspaceSelectionCookieOptions } from "@/contexts/business/infrastructure/session/workspace-selection-cookie";
+import { safePublicError } from "@/contexts/shared/interfaces/actions/safe-error";
+import { composeNotificationAdapters } from "../server/notification-composition";
 import type { PaginatedNotifications } from "../../domain/model/entities/notification";
+
+const notificationIdSchema = z.string().trim().min(1).max(200);
+const pageSchema = z.number().int().nonnegative().max(10_000).default(0);
+const sizeSchema = z.number().int().positive().max(100).default(10);
+const deviceTokenSchema = z.string().trim().min(1).max(2048);
+const platformSchema = z.enum(["WEB", "ANDROID", "IOS"]);
 
 async function getAccessToken(): Promise<string | null> {
   try {
-    const cookieStore = await cookies();
-    return cookieStore.get(iamSessionCookies.accessToken)?.value ?? null;
+    return (await cookies()).get(iamSessionCookies.accessToken)?.value ?? null;
   } catch {
     return null;
   }
 }
 
-function isExpectedAuthorizationError(error: unknown): boolean {
-  return error instanceof ApiError && (error.status === 401 || error.status === 403);
-}
-
 export async function fetchNotificationsAction(page = 0, size = 10): Promise<PaginatedNotifications | null> {
+  const parsedPage = pageSchema.safeParse(page);
+  const parsedSize = sizeSchema.safeParse(size);
+  if (!parsedPage.success || !parsedSize.success) return null;
   const token = await getAccessToken();
   if (!token) return null;
   try {
-    const queryService = createNotificationQueryService();
-    return await queryService.getNotifications(token, page, size);
-  } catch (error) {
-    if (!isExpectedAuthorizationError(error)) {
-      console.error("fetchNotificationsAction error:", error);
-    }
+    const page = await composeNotificationAdapters().queryService.getNotifications(
+      token,
+      parsedPage.data,
+      parsedSize.data,
+    );
+    return {
+      ...page,
+      content: page.content.map(stripServerOnlyInvitationToken),
+    };
+  } catch {
     return null;
   }
 }
@@ -46,99 +49,108 @@ export async function fetchUnreadNotificationsCountAction(): Promise<number> {
   const token = await getAccessToken();
   if (!token) return 0;
   try {
-    const queryService = createNotificationQueryService();
-    return await queryService.getUnreadCount(token);
-  } catch (error) {
-    if (!isExpectedAuthorizationError(error)) {
-      console.error("fetchUnreadNotificationsCountAction error:", error);
-    }
+    return await composeNotificationAdapters().queryService.getUnreadCount(token);
+  } catch {
     return 0;
   }
 }
 
 export async function markNotificationAsReadAction(id: string) {
+  const parsedId = notificationIdSchema.safeParse(id);
+  if (!parsedId.success) return { success: false, error: "Invalid notification." };
   const token = await getAccessToken();
   if (!token) return { success: false, error: "Authentication required" };
   try {
-    const commandService = createNotificationCommandService();
-    await commandService.markAsRead({ id }, token);
-    revalidatePath("/", "layout");
+    await composeNotificationAdapters().commandService.markAsRead({ id: parsedId.data }, token);
+    try { revalidatePath("/", "layout"); } catch { /* write already confirmed */ }
     return { success: true };
   } catch (error) {
-    return { success: false, error: error instanceof Error ? error.message : "Failed to mark as read" };
+    return { success: false, error: safePublicError(error, "Failed to mark as read").message };
   }
 }
 
 export async function deleteNotificationAction(id: string) {
+  const parsedId = notificationIdSchema.safeParse(id);
+  if (!parsedId.success) return { success: false, error: "Invalid notification." };
   const token = await getAccessToken();
   if (!token) return { success: false, error: "Authentication required" };
   try {
-    const commandService = createNotificationCommandService();
-    await commandService.deleteNotification({ id }, token);
-    revalidatePath("/", "layout");
+    await composeNotificationAdapters().commandService.deleteNotification({ id: parsedId.data }, token);
+    try { revalidatePath("/", "layout"); } catch { /* write already confirmed */ }
     return { success: true };
   } catch (error) {
-    return { success: false, error: error instanceof Error ? error.message : "Failed to delete notification" };
+    return { success: false, error: safePublicError(error, "Failed to delete notification").message };
   }
 }
 
-export async function acceptInvitationNotificationAction(notificationId: string, invitationToken: string) {
+export async function acceptInvitationNotificationAction(notificationId: string) {
+  const parsedId = notificationIdSchema.safeParse(notificationId);
+  if (!parsedId.success) return { success: false, error: "Invalid invitation." };
   const token = await getAccessToken();
   if (!token) return { success: false, error: "Authentication required" };
   try {
-    const commandService = createNotificationCommandService();
-    const result = await commandService.acceptInvitation({ notificationId, invitationToken }, token);
+    const page = await composeNotificationAdapters().queryService.getNotifications(token, 0, 100);
+    const notification = page.content.find((item) => item.id === parsedId.data);
+    const invitationToken = notification?.targetToken;
+    if (!invitationToken) {
+      return { success: false, error: "Invitation details are unavailable." };
+    }
+
+    const result = await composeNotificationAdapters().commandService.acceptInvitation(
+      { notificationId: parsedId.data, invitationToken },
+      token,
+    );
     await persistAcceptedWorkspace(result);
-
-    revalidatePath("/", "layout");
+    try { revalidatePath("/", "layout"); } catch { /* write already confirmed */ }
     return { success: true };
   } catch (error) {
-    console.error("acceptInvitationNotificationAction error:", error);
-    return { success: false, error: error instanceof Error ? error.message : "Failed to accept invitation" };
+    return { success: false, error: safePublicError(error, "Failed to accept invitation").message };
   }
 }
 
-/** Accepts the account's pending invitation when no notification token exists. */
 export async function acceptPendingInvitationAction() {
   const token = await getAccessToken();
   if (!token) return { success: false, error: "Authentication required" };
-
   try {
-    const result = await createNotificationCommandService().acceptPendingInvitation(token);
+    const result = await composeNotificationAdapters().commandService.acceptPendingInvitation(token);
     await persistAcceptedWorkspace(result);
-    revalidatePath("/", "layout");
+    try { revalidatePath("/", "layout"); } catch { /* write already confirmed */ }
     return { success: true };
   } catch (error) {
-    console.error("acceptPendingInvitationAction error:", error);
-    return { success: false, error: error instanceof Error ? error.message : "Failed to accept invitation" };
+    return { success: false, error: safePublicError(error, "Failed to accept invitation").message };
   }
 }
 
 export async function registerDeviceTokenAction(deviceToken: string, platform = "WEB") {
+  const parsedDeviceToken = deviceTokenSchema.safeParse(deviceToken);
+  const parsedPlatform = platformSchema.safeParse(platform);
+  if (!parsedDeviceToken.success || !parsedPlatform.success) return { success: false, error: "Invalid device registration." };
   const token = await getAccessToken();
   if (!token) return { success: false, error: "Authentication required" };
   try {
-    const { notificationApiGateway } = await import("../../infrastructure/gateways/notification-api.gateway");
-    await notificationApiGateway.registerDeviceToken(token, deviceToken, platform);
+    await composeNotificationAdapters().commandService.registerDeviceToken(
+      parsedDeviceToken.data,
+      parsedPlatform.data,
+      token,
+    );
     return { success: true };
   } catch (error) {
-    console.error("registerDeviceTokenAction error:", error);
-    return { success: false, error: error instanceof Error ? error.message : "Failed to register device token" };
+    return { success: false, error: safePublicError(error, "Failed to register device token").message };
   }
+}
+
+function stripServerOnlyInvitationToken(notification: PaginatedNotifications["content"][number]) {
+  const clientNotification = { ...notification };
+  delete clientNotification.targetToken;
+  return clientNotification;
 }
 
 async function persistAcceptedWorkspace(result: { organizationId?: string; establishmentId?: string }) {
   try {
     const cookieStore = await cookies();
-    if (result.organizationId) {
-      cookieStore.set(workspaceSelectionCookies.organizationId, result.organizationId, workspaceSelectionCookieOptions);
-    }
-    if (result.establishmentId) {
-      cookieStore.set(workspaceSelectionCookies.establishmentId, result.establishmentId, workspaceSelectionCookieOptions);
-    }
+    if (result.organizationId) cookieStore.set(workspaceSelectionCookies.organizationId, result.organizationId, workspaceSelectionCookieOptions);
+    if (result.establishmentId) cookieStore.set(workspaceSelectionCookies.establishmentId, result.establishmentId, workspaceSelectionCookieOptions);
   } catch {
-    // Cookie persistence is best effort; the next workspace lookup remains the
-    // source of truth after the invitation is accepted.
+    // Cookie persistence is best effort; backend acceptance is authoritative.
   }
 }
-

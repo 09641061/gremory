@@ -21,7 +21,7 @@ import {
 import type { ProfileViewModel } from "@/contexts/profiles/application/services/profile.view-model";
 import { signOutAction } from "@/contexts/iam/interfaces/actions/sign-out.action";
 import { cn } from "@/lib/utils";
-import { useI18n } from "@/contexts/shared/interfaces/i18n";
+import { useProfilesI18n } from "@/contexts/profiles/interfaces/i18n";
 
 type SidebarProfileProps = {
   profile: Pick<ProfileViewModel, "username" | "imageUrl"> | null;
@@ -46,7 +46,7 @@ export function SidebarProfile({
   active = false,
 }: SidebarProfileProps) {
   const router = useRouter();
-  const { t } = useI18n();
+  const { t } = useProfilesI18n();
   const [pending, startTransition] = useTransition();
   const username = profile?.username?.trim() || t.sidebarProfile.profile;
 

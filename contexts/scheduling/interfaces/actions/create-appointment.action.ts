@@ -1,11 +1,14 @@
 "use server";
 
+
+
+import { recordSafely } from "@/contexts/shared/interfaces/observability/sanitize-error";
 import { revalidatePath } from "next/cache";
 import { createAppointmentSchema } from "../rest/schemas/appointment.schemas";
 import { ApiError } from "@/contexts/shared/infrastructure/http/api-client";
 import { Appointment } from "../../domain/model/entities/appointment";
-import { createSchedulingCommandService } from "../../application/internal/commandservices/scheduling-command.service.impl";
-import { createBusinessWorkspaceQueryService } from "@/contexts/business/application/internal/queryservices/business-workspace-query.service";
+import { composeSchedulingAdapters } from "../server/scheduling-composition";
+import { composeBusinessAdapters } from "@/contexts/business/interfaces/server/business-composition";
 import { ActionState } from "./action-state";
 import { getWorkspaceEstablishment, hasEstablishmentPermission } from "@/contexts/shared/application/services/workspace-establishment-permissions";
 
@@ -37,7 +40,7 @@ export async function createAppointmentAction(
     };
   }
 
-  const workspace = await createBusinessWorkspaceQueryService().getHeaderViewModel({
+  const workspace = await composeBusinessAdapters().workspaceQueryService.getHeaderViewModel({
     establishmentId: parsed.data.establishmentId,
   });
   const establishment = getWorkspaceEstablishment(workspace, parsed.data.establishmentId);
@@ -55,23 +58,19 @@ export async function createAppointmentAction(
   }
 
   try {
-    const workspace = await createBusinessWorkspaceQueryService().getHeaderViewModel({
+    const workspace = await composeBusinessAdapters().workspaceQueryService.getHeaderViewModel({
       establishmentId: parsed.data.establishmentId,
     });
-    const commandService = createSchedulingCommandService(workspace.organization?.id);
+    const commandService = composeSchedulingAdapters(workspace.organization?.id).commandService;
     const result = await commandService.createAppointment(parsed.data);
     revalidatePath("/schedule");
     return { status: "success", data: result, error: null, errorId: null, fieldErrors: null };
   } catch (error: unknown) {
-    console.error("Create appointment action failed:", error);
+    recordSafely("scheduling.create.appointment.action", { cause: error });
     let message = "We could not schedule this appointment. Please try again.";
     if (error instanceof ApiError) {
       if (error.status === 409) {
-        message =
-          error.message ||
-          "There is a scheduling conflict at this time. Please choose another slot or check employee availability.";
-      } else if (error.message) {
-        message = error.message;
+        message = "There is a scheduling conflict at this time. Please choose another slot or check employee availability.";
       }
     }
     return {

@@ -13,7 +13,6 @@ firebase.initializeApp({
 const messaging = firebase.messaging();
 
 messaging.onBackgroundMessage((payload) => {
-  console.log('[firebase-messaging-sw.js] Background message received:', payload);
   const notificationTitle = payload.notification?.title || payload.data?.title || "Takodu Notification";
   const notificationOptions = {
     body: payload.notification?.body || payload.data?.message || payload.data?.body || "",

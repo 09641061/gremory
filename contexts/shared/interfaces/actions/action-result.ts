@@ -4,6 +4,8 @@
  * carrying a message. Contexts with this exact shape should alias their
  * `*ActionResult` type to this generic instead of redeclaring the union.
  */
+import { safePublicError } from "./safe-error";
+
 export type ActionResult<T> =
   | { status: "idle"; data: null; error: null }
   | { status: "success"; data: T; error: null }
@@ -17,6 +19,6 @@ export function actionResultError<T>(error: unknown): ActionResult<T> {
   return {
     status: "error",
     data: null,
-    error: error instanceof Error ? error.message : "Unexpected error",
+    error: safePublicError(error).message,
   };
 }

@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 
-import { ErrorBanner } from "@/contexts/shared/interfaces/components/error-banner";
+import { ErrorBanner } from "@/contexts/shared/interfaces/components/feedback/error-banner";
 
 /**
  * Shared surface for authenticated routes. Welcome has a header-only shell;

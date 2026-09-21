@@ -1,13 +1,14 @@
 "use client";
 
+import { recordSafely } from "@/contexts/shared/interfaces/observability/sanitize-error";
 import React, { useState, useTransition } from "react";
-import type { MaxAnalyticsDashboardResponse } from "../../rest/schemas/max-analytics.schemas";
+import type { MaxAnalyticsDashboardResponse } from "../../../application/model/analytics.view-models";
 import type { AnalyticsPreset } from "../../../domain/model/value-objects/analytics-date-range";
-import { AnalyticsExportService } from "../../../domain/services/analytics-export.service";
+import { AnalyticsExportService } from "../../../interfaces/client/analytics-export";
 import { fetchMaxAnalyticsAction } from "../../actions/get-analytics-dashboard.action";
 import { AnalyticsDatePicker } from "../shared/analytics-date-picker";
 import { KpiCard } from "../shared/kpi-card";
-import { useAnalyticsTranslations } from "../../i18n";
+import { useAnalyticsI18n } from "../../i18n";
 import { cn } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/contexts/shared/interfaces/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/contexts/shared/interfaces/components/ui/table";
@@ -48,7 +49,7 @@ export function MaxAnalyticsView({
   onPresetChange,
   activePreset = "30d",
 }: MaxAnalyticsViewProps) {
-  const { t } = useAnalyticsTranslations();
+  const { t, locale } = useAnalyticsI18n();
   const [data, setData] = useState<MaxAnalyticsDashboardResponse>(initialData);
   const [currentPreset, setCurrentPreset] = useState<AnalyticsPreset>(activePreset);
   const [isPending, startTransition] = useTransition();
@@ -62,7 +63,7 @@ export function MaxAnalyticsView({
         const updated = await fetchMaxAnalyticsAction(preset, organizationId, establishmentId);
         setData(updated);
       } catch (err) {
-        console.error("Failed to load preset max analytics:", err);
+        recordSafely("analytics.max.max.analytics.view", { cause: err });
       }
     });
   };
@@ -70,7 +71,11 @@ export function MaxAnalyticsView({
   const handleExport = () => {
     try {
       setIsExporting(true);
-      const headers = ["Fecha", "Ingresos Facturados", "Citas Totales"];
+      const headers = [
+        t.export.csvHeaders.date,
+        t.export.csvHeaders.billedRevenue,
+        t.export.csvHeaders.totalAppointments,
+      ];
       const rows = data.revenueTrend.map((pt, idx) => [
         pt.date,
         pt.value,
@@ -78,7 +83,7 @@ export function MaxAnalyticsView({
       ]);
       const csv = AnalyticsExportService.toCsvWithBom(headers, rows);
       AnalyticsExportService.triggerDownload(
-        `analiticas-max-bi-${data.from}-${data.to}.csv`,
+        `${t.export.filePrefixMax}-${data.from}-${data.to}.csv`,
         csv
       );
     } finally {
@@ -87,7 +92,7 @@ export function MaxAnalyticsView({
   };
 
   const formatCurrency = (amount: number) =>
-    new Intl.NumberFormat("es-PE", { style: "currency", currency: "USD" }).format(amount);
+    new Intl.NumberFormat(locale === "es" ? "es-PE" : "en-US", { style: "currency", currency: "USD" }).format(amount);
 
   return (
     <div className={cn("space-y-6", isPending && "opacity-60 pointer-events-none transition-opacity")}>

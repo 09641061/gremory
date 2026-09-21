@@ -4,6 +4,16 @@ import { ApiError, apiClient } from "@/contexts/shared/infrastructure/http/api-c
 import { createUsername } from "@/contexts/profiles/domain/model/valueobjects/username";
 import { createProfileImageUrl } from "@/contexts/profiles/domain/model/valueobjects/profile-image-url";
 import { defaultProfilePreferences } from "@/contexts/profiles/domain/model/valueobjects/profile-preferences";
+import type { ProfileImageInput } from "@/contexts/profiles/domain/model/commands/update-profile.command";
+
+async function fileToProfileImageInput(file: File): Promise<ProfileImageInput> {
+  return {
+    name: file.name,
+    type: file.type,
+    size: file.size,
+    bytes: new Uint8Array(await file.arrayBuffer()),
+  };
+}
 
 vi.mock("@/contexts/shared/infrastructure/http/api-client", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@/contexts/shared/infrastructure/http/api-client")>();
@@ -12,6 +22,7 @@ vi.mock("@/contexts/shared/infrastructure/http/api-client", async (importOrigina
     apiClient: {
       get: vi.fn(),
       put: vi.fn(),
+      requestMultipart: vi.fn(),
     },
   };
 });
@@ -28,6 +39,7 @@ describe("HttpProfileRepository", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     repository = new HttpProfileRepository();
+    vi.mocked(apiClient.requestMultipart).mockResolvedValue(rawApiResponse);
   });
 
   describe("getMyProfile", () => {
@@ -109,7 +121,7 @@ describe("HttpProfileRepository", () => {
       const command = {
         username: createUsername("user"),
         imageUrl: createProfileImageUrl(null),
-        imageFile: dummyFile,
+        imageFile: await fileToProfileImageInput(dummyFile),
       };
 
       // Act
@@ -122,33 +134,26 @@ describe("HttpProfileRepository", () => {
         language: "ES",
         theme: "LIGHT",
       });
-      expect(mockFetch).toHaveBeenCalledWith(
-        expect.stringContaining("/api/v1/profiles"),
-        expect.objectContaining({
-          method: "PUT",
-          headers: { Authorization: "Bearer token-abc" },
-          body: expect.any(FormData),
-        })
+      expect(apiClient.requestMultipart).toHaveBeenCalledWith(
+        "/api/v1/profiles",
+        expect.any(FormData),
+        expect.objectContaining({ method: "PUT", token: "token-abc" }),
       );
     });
 
     it("should include imageUrl in FormData when imageUrl is present along with image file", async () => {
       // Arrange
       let capturedFormData: FormData | null = null;
-      const mockFetch = vi.fn().mockImplementation((_url, options) => {
-        capturedFormData = options.body;
-        return Promise.resolve({
-          ok: true,
-          json: () => Promise.resolve(rawApiResponse),
-        });
+      vi.mocked(apiClient.requestMultipart).mockImplementation(async (_path, body) => {
+        capturedFormData = body;
+        return rawApiResponse;
       });
-      vi.stubGlobal("fetch", mockFetch);
 
       const dummyFile = new File(["bytes"], "photo.png", { type: "image/png" });
       const command = {
         username: createUsername("user"),
         imageUrl: createProfileImageUrl("https://picsum.photos/seed/replik-test/800/600"),
-        imageFile: dummyFile,
+        imageFile: await fileToProfileImageInput(dummyFile),
       };
 
       // Act
@@ -157,24 +162,25 @@ describe("HttpProfileRepository", () => {
       // Assert
       expect(capturedFormData).not.toBeNull();
       expect(capturedFormData!.get("username")).toBe("user");
-      expect(capturedFormData!.get("photoFile")).toBe(dummyFile);
+      // The Domain carries a transport-neutral ProfileImageInput; the
+      // Infrastructure rebuilds a Blob with the same name, type, and bytes.
+      const photoFile = capturedFormData!.get("photoFile");
+      expect(photoFile).toBeInstanceOf(Blob);
+      expect((photoFile as File).name).toBe("photo.png");
+      expect((photoFile as File).type).toBe("image/png");
+      expect((photoFile as Blob).size).toBe(dummyFile.size);
       expect(capturedFormData!.get("imageUrl")).toBe("https://picsum.photos/seed/replik-test/800/600");
     });
 
     it("should throw ProfileApiError when update with image fails", async () => {
       // Arrange
-      const mockFetch = vi.fn().mockResolvedValue({
-        ok: false,
-        status: 400,
-        json: vi.fn().mockResolvedValue({ message: "Invalid image format" }),
-      });
-      vi.stubGlobal("fetch", mockFetch);
+      vi.mocked(apiClient.requestMultipart).mockRejectedValue(new ApiError("Invalid image format", 400));
 
       const dummyFile = new File(["bytes"], "photo.png", { type: "image/png" });
       const command = {
         username: createUsername("user"),
         imageUrl: createProfileImageUrl(null),
-        imageFile: dummyFile,
+        imageFile: await fileToProfileImageInput(dummyFile),
       };
 
       // Act & Assert

@@ -21,11 +21,6 @@ vi.mock("@/contexts/profiles/interfaces/components/profile/sidebar-profile", () 
   SidebarProfile: () => <button>Profile</button>,
 }));
 
-vi.mock("@/contexts/shared/interfaces/i18n", () => ({
-  LocaleSync: () => null,
-  useI18n: () => ({ t: new Proxy({}, { get: () => (k: string) => k }) }),
-}));
-
 vi.mock("@/contexts/notifications/interfaces/components/push-notification-register-server", () => ({
   PushNotificationRegisterServer: () => null,
 }));
@@ -57,7 +52,7 @@ vi.mock("@/contexts/shared/interfaces/components/sidebar/app-sidebar-fallback", 
 // production layout actually contains them (rather than a test-only stub).
 // The mobile hook inside SidebarProvider calls window.matchMedia, so jsdom
 // needs a polyfill before render().
-import ProtectedAppShell from "@/contexts/shared/interfaces/components/protected-app-shell";
+import ProtectedAppShell from "@/contexts/shared/interfaces/components/layout/protected-app-shell";
 import WelcomeLayout from "@/app/(protected)/(welcome)/layout";
 
 beforeEach(() => {

@@ -38,7 +38,6 @@ import {
   getAppointmentStatusLabel,
 } from "./appointment-detail-utils";
 
-import { useI18n } from "@/contexts/shared/interfaces/i18n";
 import { useSchedulingTranslations } from "../../i18n";
 
 /** Only one secondary flow can be open at a time, so one slot models them all. */
@@ -71,8 +70,7 @@ export function AppointmentDetailModal({
   canDeleteAppointment,
   timeZone,
 }: AppointmentDetailModalProps) {
-  const { locale } = useI18n();
-  const { t } = useSchedulingTranslations();
+  const { t, locale } = useSchedulingTranslations();
   const dateLocale = locale === "es" ? "es-ES" : "en-US";
   const [openFlow, setOpenFlow] = useState<OpenFlow>(null);
   const now = useNow();

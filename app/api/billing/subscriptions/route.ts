@@ -1,8 +1,11 @@
 import { NextResponse } from "next/server";
+import { safePublicError } from "@/contexts/shared/interfaces/actions/safe-error";
 import { z } from "zod";
-import { createBillingSubscriptionAdapter } from "@/contexts/billing/infrastructure/adapters/billing-subscription.adapter";
+import { composeBillingAdapters } from "@/contexts/billing/interfaces/server/billing-composition";
 import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-session-cookie";
 import { cookies } from "next/headers";
+import { requireSubscriptionOwnerAccess } from "@/contexts/billing/interfaces/authorization/billing-authorization";
+import { createCorrelationId } from "@/contexts/shared/infrastructure/http/api-client";
 
 const billingCycleSchema = z.enum(["MONTHLY", "ANNUAL"]);
 const currencySchema = z.enum(["PEN", "USD", "EUR"]);
@@ -32,9 +35,8 @@ export async function GET() {
       return NextResponse.json({ message: "Authentication is required" }, { status: 401 });
     }
 
-    const subscription = await createBillingSubscriptionAdapter().getCurrentSubscription(
-      accessToken,
-    );
+    const billingContext = await requireSubscriptionOwnerAccess(createCorrelationId());
+    const subscription = await composeBillingAdapters().gateway.getCurrentSubscription(accessToken, billingContext);
     return NextResponse.json(subscription);
   } catch (error) {
     return routeErrorResponse(error);
@@ -56,38 +58,9 @@ function validationErrorResponse(message?: string) {
   );
 }
 
-function routeErrorResponse(error: unknown): Response {
-  if (error instanceof Error) {
-    const status = readStatus(error);
-    if (status !== undefined) {
-      const details = readDetails(error);
-      return NextResponse.json(
-        details === undefined
-          ? { message: error.message }
-          : { message: error.message, details },
-        { status },
-      );
-    }
-
-    if (error.message === "Authentication is required") {
-      return NextResponse.json({ message: error.message }, { status: 401 });
-    }
-
-    return NextResponse.json({ message: error.message }, { status: 400 });
-  }
-
-  return NextResponse.json({ message: "Unexpected error" }, { status: 500 });
-}
-
-function readStatus(error: Error): number | undefined {
-  const status = (error as Error & { status?: unknown }).status;
-  if (typeof status !== "number" || Number.isNaN(status)) return undefined;
-  if (status <= 0) return 502;
-  return status;
-}
-
-function readDetails(error: Error): unknown {
-  return (error as Error & { details?: unknown }).details;
+function routeErrorResponse(error: unknown, fallback = "Request could not be completed"): Response {
+  const safe = safePublicError(error, fallback);
+  return NextResponse.json({ message: safe.message }, { status: safe.status });
 }
 
 export async function POST(request: Request) {
@@ -103,16 +76,14 @@ export async function POST(request: Request) {
       return validationErrorResponse(parsed.error.issues[0]?.message);
     }
 
-    const subscription = await createBillingSubscriptionAdapter().createSubscription(
-      accessToken,
-      {
-        planId: parsed.data.planId,
-        billingCycle: parsed.data.billingCycle,
-        currency: parsed.data.currency,
-        successUrl: parsed.data.successUrl,
-        cancelUrl: parsed.data.cancelUrl,
-      },
-    );
+    const billingContext = await requireSubscriptionOwnerAccess(createCorrelationId());
+    const subscription = await composeBillingAdapters().createSubscriptionService.execute(accessToken, {
+      planId: parsed.data.planId,
+      billingCycle: parsed.data.billingCycle,
+      currency: parsed.data.currency,
+      successUrl: parsed.data.successUrl,
+      cancelUrl: parsed.data.cancelUrl,
+    }, billingContext);
 
     return NextResponse.json(subscription, { status: 201 });
   } catch (error) {
@@ -133,13 +104,11 @@ export async function PUT(request: Request) {
       return validationErrorResponse(parsed.error.issues[0]?.message);
     }
 
-    const subscription = await createBillingSubscriptionAdapter().renewSubscription(
-      accessToken,
-      {
-        newPlanId: parsed.data.newPlanId,
-        newBillingCycle: parsed.data.newBillingCycle,
-      },
-    );
+    const billingContext = await requireSubscriptionOwnerAccess(createCorrelationId());
+    const subscription = await composeBillingAdapters().subscriptionCommandService.renew(accessToken, {
+      newPlanId: parsed.data.newPlanId,
+      newBillingCycle: parsed.data.newBillingCycle,
+    }, billingContext);
 
     return NextResponse.json(subscription);
   } catch (error) {
@@ -154,9 +123,8 @@ export async function DELETE() {
       return NextResponse.json({ message: "Authentication is required" }, { status: 401 });
     }
 
-    const subscription = await createBillingSubscriptionAdapter().cancelSubscription(
-      accessToken,
-    );
+    const billingContext = await requireSubscriptionOwnerAccess(createCorrelationId());
+    const subscription = await composeBillingAdapters().subscriptionCommandService.cancel(accessToken, billingContext);
     return NextResponse.json(subscription);
   } catch (error) {
     return routeErrorResponse(error);

@@ -5,7 +5,7 @@ import type { BillingCycle, Currency } from "../../../domain/model/commands/crea
 import { CurrencySelector } from "./currency-selector";
 import { cn } from "@/lib/utils";
 import { Switch } from "@/contexts/shared/interfaces/components/ui/switch";
-import { useBillingTranslations } from "@/contexts/billing/interfaces/i18n";
+import { useBillingI18n } from "@/contexts/billing/interfaces/i18n";
 
 interface SubscribeHeroProps {
   billingCycle: BillingCycle;
@@ -23,7 +23,7 @@ export function SubscribeHero({
   onCycleToggle,
   onCurrencyChange,
 }: SubscribeHeroProps) {
-  const { t } = useBillingTranslations();
+  const { t } = useBillingI18n();
   const isAnnual = billingCycle === "ANNUAL";
 
   return (

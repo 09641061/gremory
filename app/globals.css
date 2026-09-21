@@ -46,8 +46,8 @@
   --app-sidebar-width-icon: 3rem;
   --app-sidebar-menu-gap: 0.25rem;
   --app-sidebar-control-height: 2rem;
-  --app-control-height: 2.25rem;
-  --app-control-height-compact: 2rem;
+  --app-control-height: 2.5rem;
+  --app-control-height-compact: 2.25rem;
   --app-sidebar-control-gap: 0.5rem;
   --app-sidebar-control-padding-x: 0.625rem;
   --app-sidebar-item-radius: 0.375rem;
@@ -57,6 +57,8 @@
   --app-category-sidebar-width: 16.25rem;
   --app-category-sidebar-mobile-width: 17.5rem;
   --radius: 0.625rem;
+  --avatar-shadow: 0 6px 16px rgba(15, 23, 42, 0.05);
+  --code-inset-highlight: rgba(255, 255, 255, 0.45);
 }
 
 .dark {
@@ -98,6 +100,19 @@
   --chart-3: var(--destructive);
   --chart-4: var(--ring);
   --chart-5: var(--muted-foreground);
+  --avatar-shadow: 0 6px 16px rgba(0, 0, 0, 0.35);
+  --code-inset-highlight: rgba(255, 255, 255, 0.06);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 @theme inline {

@@ -4,7 +4,7 @@ import "server-only";
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { createEmail } from "../../domain/model/valueobjects/email";
-import { createIamAuthenticationCommandService } from "../../application/internal/commandservices/iam-authentication-command.service";
+import { composeIamAdapters } from "../server/iam-composition";
 import { iamSessionCookies } from "../../infrastructure/session/iam-session-cookie";
 import { confirmEmailSignInSchema } from "../rest/schemas/authentication.schemas";
 import type { AuthenticationSession } from "../../domain/model/entities/authentication-session";
@@ -27,13 +27,12 @@ export async function confirmEmailSignInAction(
       code: formData.getAll("code").join(""),
     });
 
-    session = await createIamAuthenticationCommandService().confirmEmailSignIn({
+    session = await composeIamAdapters().authenticationWriter.confirmEmailSignIn({
       email: createEmail(input.email),
       code: input.code,
     });
     (await cookies()).delete(iamSessionCookies.pendingEmail);
-  } catch (error) {
-    console.error("Confirm email sign-in failed", error);
+  } catch {
     return {
       status: "error",
       error: "Unable to verify the code. Check it and try again.",

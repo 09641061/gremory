@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { deleteAppointmentAction } from "../../actions/delete-appointment.action";
-import { DeleteConfirmDialog as SharedDeleteConfirmDialog } from "@/contexts/shared/interfaces/components/delete-confirm-dialog";
+import { DeleteConfirmDialog as SharedDeleteConfirmDialog } from "@/contexts/shared/interfaces/components/dialogs/delete-confirm-dialog";
 
 interface DeleteConfirmDialogProps {
   isOpen: boolean;

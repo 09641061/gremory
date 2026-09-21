@@ -1,17 +1,23 @@
 "use server";
 
-import { createCrmCommandService } from "../../application/internal/commandservices/crm-command.service";
-import { createBusinessWorkspaceQueryService } from "@/contexts/business/application/internal/queryservices/business-workspace-query.service";
+import { recordSafely } from "@/contexts/shared/interfaces/observability/sanitize-error";
+import { createCrmCommandService } from "../server/crm-composition";
+import { composeBusinessAdapters } from "@/contexts/business/interfaces/server/business-composition";
 import { getWorkspaceEstablishment } from "@/contexts/shared/application/services/workspace-establishment-permissions";
-import { ResolvedCustomerData } from "../../domain/model/entities/customer";
+import { ResolvedCustomerData } from "../../application/models/customer";
 import { createActionErrorId, type ActionState } from "./action-state";
+import { resolveDocumentInputSchema } from "../schemas/action-input.schema";
 
 export async function resolveDocumentAction(
   type: "dni" | "ruc",
   number: string,
   establishmentId: string
 ): Promise<ActionState<ResolvedCustomerData>> {
-  const workspace = await createBusinessWorkspaceQueryService().getHeaderViewModel({ establishmentId });
+  const parsed = resolveDocumentInputSchema.safeParse({ type, number, establishmentId });
+  if (!parsed.success) {
+    return { status: "error", data: null, error: "Invalid identity document.", errorId: createActionErrorId(), fieldErrors: null };
+  }
+  const workspace = await composeBusinessAdapters().workspaceQueryService.getHeaderViewModel({ establishmentId });
   if (!getWorkspaceEstablishment(workspace, establishmentId)?.canRead) {
     return {
       status: "error",
@@ -23,21 +29,22 @@ export async function resolveDocumentAction(
   }
 
   try {
-    const workspace = await createBusinessWorkspaceQueryService().getHeaderViewModel({ establishmentId });
+    const workspace = await composeBusinessAdapters().workspaceQueryService.getHeaderViewModel({ establishmentId });
     const service = createCrmCommandService(workspace.organization?.id);
     const result = await service.resolveDocument(
-      establishmentId,
-      type === "dni" ? number : undefined,
-      type === "ruc" ? number : undefined
+      parsed.data.establishmentId,
+      parsed.data.type === "dni" ? parsed.data.number : undefined,
+      parsed.data.type === "ruc" ? parsed.data.number : undefined
     );
     return { status: "success", data: result, error: null, errorId: null, fieldErrors: null };
-  } catch (error: unknown) {
-    console.error("Error resolving identity document:", error);
+  } catch {
+    const errorId = createActionErrorId();
+    recordSafely("crm.resolve.document.action", { correlationId: errorId, code: "IDENTITY_RESOLUTION_FAILED" });
     return {
       status: "error",
       data: null,
       error: "Identity document not found or invalid.",
-      errorId: createActionErrorId(),
+      errorId,
       fieldErrors: null,
     };
   }

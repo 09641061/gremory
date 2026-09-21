@@ -13,6 +13,20 @@ import { cn } from "@/lib/utils"
  * to start the download, so remote photos always flash the fallback first.
  * Here the image ships with the markup and paints over the fallback layered
  * beneath it, and `onError` reveals the fallback again when the source dies.
+ *
+ * Audit decision (lane F, <img> vs next/image): we keep `<img>`.
+ *
+ * Swapping to `next/image` with required `width`/`height` props (and no
+ * `fill`) would force every `<AvatarImage>` call site to declare a size,
+ * but the surrounding `<Avatar>` already controls intrinsic size via its
+ * own `size` prop and the consumer's classes (e.g. `className="size-7"`).
+ * 9 call sites span `app/` and `contexts/`, and the prompt explicitly
+ * forbids editing consumers — so a clean A is not viable without either
+ * a breaking API change or a `next.config.ts` `remotePatterns` entry for
+ * every external host (googleusercontent, picsum, blob URLs, etc.).
+ * Going with B keeps the no-flash behaviour, the per-source `onError`
+ * retry state, the default `referrerPolicy="no-referrer"`, and the
+ * existing test contract (`container.querySelector("img")` keeps working).
  */
 
 type AvatarSize = "default" | "sm" | "lg"

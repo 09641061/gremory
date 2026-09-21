@@ -8,6 +8,9 @@ export type CommandFileMetadata = Readonly<{
   name: string;
   type: string;
   size: number;
+  /** Raw bytes are transport-neutral; Interfaces reads them from File and
+   * Infrastructure turns them into a Blob/FormData part. */
+  bytes: Uint8Array;
 }>;
 
 export type CreateOrganizationCommand = Readonly<{

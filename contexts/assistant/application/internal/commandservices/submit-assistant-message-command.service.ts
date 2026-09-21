@@ -1,5 +1,3 @@
-import "server-only";
-
 import { CreateConversationCommandService } from "./create-conversation-command.service";
 import { SendMessageCommandService } from "./send-message-command.service";
 import type { AssistantConversationReadModel } from "../transforms/assistant.read-models";
@@ -12,8 +10,8 @@ export interface SubmitAssistantMessageCommand {
 
 export class SubmitAssistantMessageCommandService {
   constructor(
-    private readonly createConversationService = new CreateConversationCommandService(),
-    private readonly sendMessageService = new SendMessageCommandService(),
+    private readonly createConversationService: CreateConversationCommandService,
+    private readonly sendMessageService: SendMessageCommandService,
   ) {}
 
   async handle(
@@ -39,4 +37,11 @@ export class SubmitAssistantMessageCommandService {
       token,
     );
   }
+}
+
+export function createSubmitAssistantMessageCommandService(
+  createConversationService: CreateConversationCommandService,
+  sendMessageService: SendMessageCommandService,
+): SubmitAssistantMessageCommandService {
+  return new SubmitAssistantMessageCommandService(createConversationService, sendMessageService);
 }

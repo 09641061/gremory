@@ -1,9 +1,13 @@
 "use server";
 
+import { recordSafely } from "@/contexts/shared/interfaces/observability/sanitize-error";
+import { safePublicError } from "@/contexts/shared/interfaces/actions/safe-error";
+
+
+import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { createBusinessWorkspaceQueryService } from "@/contexts/business/application/internal/queryservices/business-workspace-query.service";
-import { getWorkspaceEstablishment, hasEstablishmentPermission } from "@/contexts/shared/application/services/workspace-establishment-permissions";
-import { SchedulingApiGateway } from "../../infrastructure/gateways/scheduling-api.gateway";
+import { requireSchedulingContext } from "../authorization/scheduling-authorization";
+import { composeSchedulingAdapters } from "../server/scheduling-composition";
 
 const visibilitySchema = z.object({
   userId: z.string().uuid(),
@@ -27,30 +31,19 @@ export async function updateEmployeeVisibilityAction(
   });
   if (!parsed.success) return { status: "error", error: "Invalid scheduling visibility data." } as const;
 
-  const workspace = await createBusinessWorkspaceQueryService().getHeaderViewModel({
-    establishmentId: parsed.data.establishmentId,
-  });
-  const establishment = getWorkspaceEstablishment(workspace, parsed.data.establishmentId);
-  if (!hasEstablishmentPermission(establishment, "scheduling:manage")) {
-    return { status: "error", error: "You are not authorized to update scheduling visibility." } as const;
-  }
-  const organizationId = establishment?.organizationId ?? workspace.organization?.id;
-  if (!organizationId) {
-    return { status: "error", error: "Missing organization context." } as const;
-  }
-
   try {
-    await new SchedulingApiGateway(organizationId).updateEmployeeVisibility(
+    const auth = await requireSchedulingContext("scheduling:manage", parsed.data.establishmentId);
+    await composeSchedulingAdapters(auth.organizationId).rosterCommandService.updateEmployeeVisibility(
       parsed.data.userId,
       parsed.data.establishmentId,
       parsed.data.visible,
+      auth.token,
     );
+    revalidatePath("/schedule");
     return { status: "success", error: "" } as const;
   } catch (error) {
-    const message = error instanceof Error && error.message.trim()
-      ? error.message
-      : "Unable to update scheduling visibility.";
-    console.error("Failed to update scheduling visibility:", error);
+    const message = safePublicError(error, "Unable to update scheduling visibility.").message;
+    recordSafely("scheduling.update.employee.visibility.action", { cause: error });
     return { status: "error", error: message } as const;
   }
 }

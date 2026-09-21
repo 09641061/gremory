@@ -4,8 +4,8 @@ import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
 
 import { GoogleIcon } from "./icons/google";
-import { ErrorAlert } from "@/contexts/shared/interfaces/components/error";
-import { PageShell } from "@/contexts/shared/interfaces/components/page-shell";
+import { ErrorAlert } from "@/contexts/shared/interfaces/components/feedback/error";
+import { PageShell } from "@/contexts/shared/interfaces/components/layout/page-shell";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import { Card, CardContent } from "@/contexts/shared/interfaces/components/ui/card";
 import { Input } from "@/contexts/shared/interfaces/components/ui/input";
@@ -17,11 +17,11 @@ import {
   type RequestEmailSignInActionState,
 } from "../actions/request-email-sign-in.action";
 import { startGoogleAuthAction } from "../actions/start-google-auth.action";
-import { useI18n } from "@/contexts/shared/interfaces/i18n";
+import { useIamI18n } from "../i18n";
 
 function GoogleSubmitButton() {
   const { pending } = useFormStatus();
-  const { t } = useI18n();
+  const { t } = useIamI18n();
 
   return (
     <Button type="submit" variant="outline" disabled={pending} className="w-full gap-2">
@@ -32,7 +32,7 @@ function GoogleSubmitButton() {
 }
 
 export function AuthForm({ returnTo = null }: { returnTo?: string | null }) {
-  const { t } = useI18n();
+  const { t } = useIamI18n();
   const [state, formAction, pending] = useActionState(requestEmailSignInAction, {
     status: "idle",
     error: null,

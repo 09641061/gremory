@@ -1,4 +1,4 @@
-import { useEffect, useState, type KeyboardEvent } from "react";
+import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import type { useRouter } from "next/navigation";
 
 import { getAssistantConversationAction } from "@/contexts/assistant/interfaces/actions/get-conversation.action";
@@ -48,6 +48,8 @@ export function useAssistantStream({
   const [draft, setDraft] = useState("");
   const [isSendingMessage, setIsSendingMessage] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const streamAbortRef = useRef<AbortController | null>(null);
+  const streamReaderRef = useRef<ReadableStreamDefaultReader<Uint8Array> | null>(null);
   const visibleConversation = activeConversation ?? pendingConversation;
   const isThreadVisible = Boolean(conversationId || visibleConversation);
 
@@ -95,6 +97,10 @@ export function useAssistantStream({
   }, [conversationId]);
 
   async function sendMessage() {
+    streamAbortRef.current?.abort();
+    await streamReaderRef.current?.cancel().catch(() => undefined);
+    const streamController = new AbortController();
+    streamAbortRef.current = streamController;
     const message = draft.trim();
 
     if (!hasAssistantAccess || !message || isSendingMessage) return;
@@ -188,6 +194,7 @@ export function useAssistantStream({
             "Content-Type": "application/json",
           },
           body: JSON.stringify({ message, establishmentId }),
+          signal: streamController.signal,
         });
 
         if (!response.ok) {
@@ -199,6 +206,7 @@ export function useAssistantStream({
         }
 
         const reader = response.body.getReader();
+        streamReaderRef.current = reader;
         const decoder = new TextDecoder("utf-8");
         let buffer = "";
         let finalResponseText = "";
@@ -287,15 +295,24 @@ export function useAssistantStream({
         setActiveConversation(result.data);
       }
     } catch (requestError) {
+      if (streamController.signal.aborted) return;
       setDraft(message);
       setPendingConversation(null);
       setError(
         requestError instanceof Error ? requestError.message : "Could not send the message.",
       );
     } finally {
+      await streamReaderRef.current?.cancel().catch(() => undefined);
+      streamReaderRef.current = null;
+      if (streamAbortRef.current === streamController) streamAbortRef.current = null;
       setIsSendingMessage(false);
     }
   }
+
+  useEffect(() => () => {
+    streamAbortRef.current?.abort();
+    void streamReaderRef.current?.cancel();
+  }, [router]);
 
   function handleComposerKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
     if (event.key === "Enter" && !event.shiftKey) {

@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import { AlertDialogCancel } from "@/contexts/shared/interfaces/components/ui/alert-dialog";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import { Spinner } from "@/contexts/shared/interfaces/components/ui/spinner";
-import { ErrorAlert } from "@/contexts/shared/interfaces/components/error";
+import { ErrorAlert } from "@/contexts/shared/interfaces/components/feedback/error";
 import type { Appointment } from "../../../domain/model/entities/appointment";
 import { startAppointmentAction } from "../../actions/start-appointment.action";
 import { completeAppointmentAction } from "../../actions/complete-appointment.action";

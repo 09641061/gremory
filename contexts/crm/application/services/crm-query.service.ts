@@ -1,14 +1,8 @@
-import { CustomerResponse } from "../../domain/model/entities/customer";
-import type { PageResponse } from "@/contexts/shared/application/model/page-response";
-export type { PageResponse } from "@/contexts/shared/application/model/page-response";
+import type { CrmQueryPort } from "../ports/crm-query.port";
+import type { CustomerViewModel } from "../models/customer";
+import type { PageResponse as SharedPageResponse } from "@/contexts/shared/application/model/page-response";
 
-export interface CrmQueryService {
-  search(
-    establishmentId: string,
-    search?: string,
-    page?: number,
-    size?: number
-  ): Promise<PageResponse<CustomerResponse>>;
-
-  getCustomer(id: string, establishmentId: string): Promise<CustomerResponse>;
-}
+/** Application-facing query port; remote response shape remains unchanged. */
+export type CrmQueryService = CrmQueryPort;
+export type CustomerResponse = CustomerViewModel;
+export type PageResponse<T = CustomerViewModel> = SharedPageResponse<T>;

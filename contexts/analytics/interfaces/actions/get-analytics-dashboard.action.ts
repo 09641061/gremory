@@ -1,64 +1,46 @@
 "use server";
 
-import { cookies, headers } from "next/headers";
-import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-session-cookie";
-import { workspaceSelectionCookies } from "@/contexts/business/infrastructure/session/workspace-selection-cookie";
-import { createGetStandardAnalyticsQueryService } from "../../application/internal/queryservices/get-standard-analytics-query.service";
-import { createGetMaxAnalyticsQueryService } from "../../application/internal/queryservices/get-max-analytics-query.service";
-import { AnalyticsDateRange, type AnalyticsPreset } from "../../domain/model/value-objects/analytics-date-range";
+import { z } from "zod";
+import { requireAnalyticsContext } from "@/contexts/analytics/interfaces/authorization/analytics-authorization";
+import { createCorrelationId } from "@/contexts/shared/infrastructure/http/api-client";
+import { composeAnalyticsAdapters } from "../server/analytics-composition";
+import { AnalyticsDateRange } from "../../domain/model/value-objects/analytics-date-range";
+import { OperationAuthorizationError } from "@/contexts/shared/interfaces/authorization/operation-authorization";
 
-export async function fetchStandardAnalyticsAction(
-  preset: AnalyticsPreset = "30d",
-  customOrgId?: string,
-  customEstId?: string
-) {
-  const cookieStore = await cookies();
-  const accessToken = cookieStore.get(iamSessionCookies.accessToken)?.value;
-  const cookieOrgId = cookieStore.get(workspaceSelectionCookies.organizationId)?.value;
-  const requestHeaders = await headers();
-  const headerEstId = requestHeaders.get("x-takodu-establishment-id") ?? undefined;
+const presetSchema = z.enum(["today", "7d", "30d", "90d"]);
+const optionalId = z.string().uuid().optional();
 
-  const organizationId = customOrgId ?? cookieOrgId;
-  const establishmentId = customEstId ?? headerEstId;
+async function resolveAnalyticsContext(preset: unknown, customEstId: unknown, requireMax = false) {
+  const parsedPreset = presetSchema.safeParse(preset ?? "30d");
+  const parsedEstablishment = customEstId === undefined ? { success: true as const, data: undefined } : optionalId.safeParse(customEstId);
+  if (!parsedPreset.success || !parsedEstablishment.success) {
+    throw new OperationAuthorizationError("INVALID_RESOURCE");
+  }
+  const auth = await requireAnalyticsContext(parsedEstablishment.data);
+  if (requireMax && !auth.canRequestMax) {
+    throw new OperationAuthorizationError("FORBIDDEN");
+  }
+  // Correlation is generated at this protected boundary and reused for the
+  // complete operation. Client headers cannot choose it.
+  return { preset: parsedPreset.data, ...auth, correlationId: createCorrelationId() };
+}
 
-  const dateRange = AnalyticsDateRange.fromPreset(preset, 30);
-  const service = createGetStandardAnalyticsQueryService();
-
-  return service.execute(
-    {
-      establishmentId,
-      from: dateRange.from,
-      to: dateRange.to,
-      organizationId,
-    },
-    accessToken
+export async function fetchStandardAnalyticsAction(preset: unknown = "30d", _customOrgId?: unknown, customEstId?: unknown) {
+  const context = await resolveAnalyticsContext(preset, customEstId);
+  const dateRange = AnalyticsDateRange.fromPreset(context.preset, 30);
+  return composeAnalyticsAdapters().standardQueryService.execute(
+    { establishmentId: context.establishmentId ?? "", from: dateRange.from, to: dateRange.to, organizationId: context.organizationId ?? "" },
+    context.token,
+    context.correlationId,
   );
 }
 
-export async function fetchMaxAnalyticsAction(
-  preset: AnalyticsPreset = "30d",
-  customOrgId?: string,
-  customEstId?: string
-) {
-  const cookieStore = await cookies();
-  const accessToken = cookieStore.get(iamSessionCookies.accessToken)?.value;
-  const cookieOrgId = cookieStore.get(workspaceSelectionCookies.organizationId)?.value;
-  const requestHeaders = await headers();
-  const headerEstId = requestHeaders.get("x-takodu-establishment-id") ?? undefined;
-
-  const organizationId = customOrgId ?? cookieOrgId;
-  const establishmentId = customEstId ?? headerEstId;
-
-  const dateRange = AnalyticsDateRange.fromPreset(preset, 90);
-  const service = createGetMaxAnalyticsQueryService();
-
-  return service.execute(
-    {
-      establishmentId,
-      from: dateRange.from,
-      to: dateRange.to,
-      organizationId,
-    },
-    accessToken
+export async function fetchMaxAnalyticsAction(preset: unknown = "30d", _customOrgId?: unknown, customEstId?: unknown) {
+  const context = await resolveAnalyticsContext(preset, customEstId, true);
+  const dateRange = AnalyticsDateRange.fromPreset(context.preset, 90);
+  return composeAnalyticsAdapters().maxQueryService.execute(
+    { establishmentId: context.establishmentId ?? "", from: dateRange.from, to: dateRange.to, organizationId: context.organizationId ?? "" },
+    context.token,
+    context.correlationId,
   );
 }

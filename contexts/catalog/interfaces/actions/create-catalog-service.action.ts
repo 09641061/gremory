@@ -1,12 +1,14 @@
 "use server";
 
-import { updateTag } from "next/cache";
+import { safePublicError } from "@/contexts/shared/interfaces/actions/safe-error";
+
+
 import { createCatalogServiceSchema } from "../rest/schemas/catalog-service.schemas";
-import { createCatalogServiceCommandService } from "../../application/internal/commandservices/catalog-service-command.service";
 import { createCatalogServiceReadModel } from "../../application/model/catalog-service.read-model";
-import { requireCatalogAccessToken, requireCatalogOrganizationId } from "./catalog-action-auth";
+import { requireCatalogContext } from "../authorization/catalog-authorization";
 import { createCatalogServiceCreateCommand } from "../../domain/model/commands/catalog-service.commands";
-import type { DetailedServiceDTO } from "../../application/model/catalog-view.models";
+import type { DetailedServiceDTO } from "../../domain/model/view-models";
+import { composeCatalogAdapters } from "../server/catalog-composition";
 
 export type CreateCatalogServiceActionState = {
   status: "idle" | "success" | "error";
@@ -39,16 +41,10 @@ export async function createCatalogServiceAction(
   }
 
   try {
-    const [token, organizationId] = await Promise.all([
-      requireCatalogAccessToken(),
-      requireCatalogOrganizationId(parsed.data.establishmentId),
-    ]);
-    const service = createCatalogServiceCommandService(organizationId);
+    const context = await requireCatalogContext("catalog:manage", parsed.data.establishmentId);
+    const service = composeCatalogAdapters(context.organizationId).serviceCommandService;
     const command = createCatalogServiceCreateCommand(parsed.data);
-    const result = await service.create(command, token);
-
-    updateTag("catalog-services");
-    updateTag(`catalog-services:${parsed.data.establishmentId}`);
+    const result = await service.create(command, context.token);
 
     return {
       status: "success",
@@ -59,7 +55,7 @@ export async function createCatalogServiceAction(
     return {
       status: "error",
       data: null,
-      error: err instanceof Error ? err.message : "Unexpected error while creating the service",
+      error: safePublicError(err, "Unexpected error while creating the service").message,
     };
   }
 }

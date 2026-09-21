@@ -8,8 +8,10 @@ const mocks = vi.hoisted(() => ({
   redirect: vi.fn(),
 }));
 
-vi.mock("@/contexts/business/application/internal/queryservices/business-workspace-query.service", () => ({
-  createBusinessWorkspaceQueryService: () => mocks.workspace,
+vi.mock("@/contexts/business/interfaces/server/business-composition", () => ({
+  composeBusinessAdapters: () => ({
+    workspaceQueryService: mocks.workspace,
+  }),
 }));
 
 vi.mock("next/navigation", () => ({
@@ -77,7 +79,7 @@ describe("EstablishmentSetupPage", () => {
     expect(markup).toContain("/establishments/new?organizationId=org-1");
   });
 
-  it("redirects to organizations when the organization already has establishments", async () => {
+  it("redirects to organization settings when the organization already has establishments", async () => {
     mocks.workspace.getHeaderViewModel.mockResolvedValue({
       accountType: "OWNER",
       organization: { id: "org-1", name: "Acme", imageUrl: null },
@@ -89,6 +91,6 @@ describe("EstablishmentSetupPage", () => {
       EstablishmentSetupPage({ searchParams: Promise.resolve({ organizationId: "org-1" }) }),
     );
 
-    expect(mocks.redirect).toHaveBeenCalledWith("/organizations");
+    expect(mocks.redirect).toHaveBeenCalledWith("/organization");
   });
 });

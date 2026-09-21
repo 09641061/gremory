@@ -5,9 +5,9 @@ import type {
   DeleteCatalogServiceCommand,
 } from "../model/commands/catalog-service.commands";
 import type { CatalogService } from "../model/entities/catalog-service.entity";
-import type { DetailedServiceDTO } from "../../application/model/catalog-view.models";
-import type { PageResponse } from "@/contexts/shared/application/model/page-response";
-export type { PageResponse } from "@/contexts/shared/application/model/page-response";
+import type { DetailedServiceDTO } from "../model/view-models";
+import type { PageResponse } from "@/contexts/shared/domain/model/page-response";
+export type { PageResponse } from "@/contexts/shared/domain/model/page-response";
 
 export interface CatalogServiceSearchParams {
   establishmentId: string;

@@ -1,0 +1,32 @@
+import type { IamDictionary } from "../index";
+
+export const es: IamDictionary = {
+  auth: {
+    continueToTakodu: "Continuar a Takodu",
+    authDescription: "Inicia sesión o crea tu cuenta con Google o correo electrónico.",
+    continueWithGoogle: "Continuar con Google",
+    connecting: "Conectando...",
+    emailAddress: "Correo electrónico",
+    enterEmail: "Ingresa tu correo",
+    continueWithEmail: "Continuar con correo",
+    sending: "Enviando...",
+    termsNotice: "Al continuar, aceptas nuestros Términos y Política de Privacidad.",
+    errorTitle: "No es posible continuar",
+    verificationFailed: "Error de verificación",
+    checkEmail: "Revisa tu correo",
+    checkEmailDesc: "Enviamos un enlace seguro de inicio de sesión y un código de verificación.",
+    clickLinkSentTo: "Para continuar, haz clic en el enlace enviado a",
+    enterVerificationCode: "Ingresa el código de verificación",
+    verifying: "Verificando...",
+    verifyCode: "Verificar código",
+    resending: "Reenviando...",
+    resendEmail: "Reenviar correo",
+    useDifferentEmail: "Usar un correo diferente",
+    logOut: "Cerrar sesión",
+    signingOut: "Cerrando sesión...",
+    unableToLogOut: "No se pudo cerrar sesión",
+    invalidMagicLink: "Este enlace de inicio de sesión no es válido o ha caducado. Solicita uno nuevo.",
+    signingInSrOnly: "Iniciando sesión",
+    verificationDigitAria: "Dígito de verificación {digit}",
+  },
+};

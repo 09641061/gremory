@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "build/**",
     "coverage/**",
     "next-env.d.ts",
+    ".github/skills/impeccable/scripts/**",
+    ".worktrees/**",
   ]),
   {
     files: ["tests/e2e/**"],

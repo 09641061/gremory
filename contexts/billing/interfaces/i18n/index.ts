@@ -15,6 +15,7 @@ export const billingLocales = {
 };
 
 export const useBillingTranslations = createLocalTranslationHook(billingLocales);
+export const useBillingI18n = useBillingTranslations;
 export const getBillingDictionary = createLocalDictionaryGetter(billingLocales);
 
 export { en, es };

@@ -1,12 +1,13 @@
 import { Suspense } from "react";
 import { getCrmPageData } from "@/contexts/crm/application/internal/queryservices/crm-page-data.service";
+import { createCrmQueryService } from "@/contexts/crm/interfaces/server/crm-composition";
 import { CrmClientWrapper } from "@/contexts/crm/interfaces/components/customer-directory/crm-client-wrapper";
 import { redirect } from "next/navigation";
-import { createBusinessWorkspaceQueryService } from "@/contexts/business/application/internal/queryservices/business-workspace-query.service";
+import { composeBusinessAdapters } from "@/contexts/business/interfaces/server/business-composition";
 import { resolveModuleAccessFallback } from "@/contexts/shared/application/services/module-access.policy";
 import { getWorkspaceEstablishment, hasEstablishmentPermission } from "@/contexts/shared/application/services/workspace-establishment-permissions";
 import type { CrmPermissions } from "@/contexts/crm/application/internal/queryservices/crm-access-policy.service";
-import { PageLoading } from "@/contexts/shared/interfaces/components/page-loading";
+import { PageLoading } from "@/contexts/shared/interfaces/components/feedback/page-loading";
 
 interface CrmPageProps {
   searchParams: Promise<{
@@ -29,9 +30,11 @@ export default function CrmPage({ searchParams }: CrmPageProps) {
 async function CrmPageContent({ searchParams }: CrmPageProps) {
   const params = await searchParams;
   const search = params.search || "";
-  const page = params.page ? parseInt(params.page, 10) : 0;
-  const size = params.size ? parseInt(params.size, 10) : 20;
-  const workspace = await createBusinessWorkspaceQueryService().getHeaderViewModel(params);
+  const requestedPage = params.page ? Number(params.page) : 0;
+  const requestedSize = params.size ? Number(params.size) : 20;
+  const page = Number.isInteger(requestedPage) && requestedPage >= 0 ? Math.min(requestedPage, 10_000) : 0;
+  const size = Number.isInteger(requestedSize) && requestedSize > 0 ? Math.min(requestedSize, 100) : 20;
+  const workspace = await composeBusinessAdapters().workspaceQueryService.getHeaderViewModel(params);
   const establishmentId = params.establishmentId ?? workspace.activeEstablishmentId;
 
   if (workspace.accessPolicy?.canOpenCrm !== true) {
@@ -39,9 +42,10 @@ async function CrmPageContent({ searchParams }: CrmPageProps) {
   }
 
   const workspaceEstablishment = getWorkspaceEstablishment(workspace, establishmentId);
+  const canReadCrm = hasEstablishmentPermission(workspaceEstablishment, "crm:read");
   const canManageCrm = hasEstablishmentPermission(workspaceEstablishment, "crm:manage");
   const permissions: CrmPermissions = {
-    canReadCustomers: true,
+    canReadCustomers: canReadCrm,
     canCreateCustomer: canManageCrm,
     canUpdateCustomer: canManageCrm,
     canDeleteCustomer: canManageCrm,
@@ -54,6 +58,7 @@ async function CrmPageContent({ searchParams }: CrmPageProps) {
     page,
     size,
     permissions,
+    createCrmQueryService(workspace.organization?.id),
   );
 
   return (

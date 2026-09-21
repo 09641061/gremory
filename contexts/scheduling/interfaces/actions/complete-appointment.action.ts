@@ -1,27 +1,29 @@
 "use server";
 
+import { recordSafely } from "@/contexts/shared/interfaces/observability/sanitize-error";
+import { safePublicError } from "@/contexts/shared/interfaces/actions/safe-error";
+
+
 import { revalidatePath } from "next/cache";
-import { ApiError } from "@/contexts/shared/infrastructure/http/api-client";
 import { Appointment } from "../../domain/model/entities/appointment";
 import { ActionState } from "./action-state";
-import { createSchedulingCommandService } from "../../application/internal/commandservices/scheduling-command.service.impl";
-import { createBusinessWorkspaceQueryService } from "@/contexts/business/application/internal/queryservices/business-workspace-query.service";
+import { requireAppointmentOperationAuthorization } from "@/contexts/scheduling/interfaces/authorization/scheduling-authorization";
+import { composeSchedulingAdapters } from "../server/scheduling-composition";
+import { composeBusinessAdapters } from "@/contexts/business/interfaces/server/business-composition";
 
 export async function completeAppointmentAction(
   appointmentId: string
 ): Promise<ActionState<Appointment>> {
   try {
-    const workspace = await createBusinessWorkspaceQueryService().getHeaderViewModel();
-    const commandService = createSchedulingCommandService(workspace.organization?.id);
+    await requireAppointmentOperationAuthorization(appointmentId);
+    const workspace = await composeBusinessAdapters().workspaceQueryService.getHeaderViewModel();
+    const commandService = composeSchedulingAdapters(workspace.organization?.id).commandService;
     const result = await commandService.completeAppointment(appointmentId);
     revalidatePath("/schedule");
     return { status: "success", data: result, error: null, errorId: null, fieldErrors: null };
   } catch (error: unknown) {
-    console.error("Complete appointment action failed:", error);
-    let message = "We could not complete this appointment. Please try again.";
-    if (error instanceof ApiError && error.message) {
-      message = error.message;
-    }
+    recordSafely("scheduling.complete.appointment.action", { cause: error });
+    const message = safePublicError(error, "We could not complete this appointment. Please try again.").message;
     return {
       status: "error",
       data: null,

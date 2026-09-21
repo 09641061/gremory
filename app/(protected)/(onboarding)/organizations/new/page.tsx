@@ -1,9 +1,9 @@
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { CreateOrganizationForm } from "@/contexts/business/interfaces/components/organization/create-organization/create-organization-form";
-import { createBusinessWorkspaceQueryService } from "@/contexts/business/application/internal/queryservices/business-workspace-query.service";
+import { composeBusinessAdapters } from "@/contexts/business/interfaces/server/business-composition";
 import { hasSomewhereToCancelTo } from "@/contexts/business/domain/services/workspace-navigation.policy";
-import { PageLoading } from "@/contexts/shared/interfaces/components/page-loading";
+import { PageLoading } from "@/contexts/shared/interfaces/components/feedback/page-loading";
 
 export default function NewOrganizationPage() {
   return (
@@ -14,7 +14,7 @@ export default function NewOrganizationPage() {
 }
 
 async function NewOrganizationPageContent() {
-  const workspace = await createBusinessWorkspaceQueryService().getHeaderViewModel();
+  const workspace = await composeBusinessAdapters().workspaceQueryService.getHeaderViewModel();
 
   // An account without an organization has an invitation to accept first.
   if (workspace.accountType === "PENDING_INVITATION") {

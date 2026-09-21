@@ -1,12 +1,16 @@
 "use server";
 
+
+
+import { recordSafely } from "@/contexts/shared/interfaces/observability/sanitize-error";
 import { revalidatePath } from "next/cache";
 import { rescheduleAppointmentSchema } from "../rest/schemas/appointment.schemas";
 import { ApiError } from "@/contexts/shared/infrastructure/http/api-client";
 import { Appointment } from "../../domain/model/entities/appointment";
 import { ActionState } from "./action-state";
-import { createSchedulingCommandService } from "../../application/internal/commandservices/scheduling-command.service.impl";
-import { createBusinessWorkspaceQueryService } from "@/contexts/business/application/internal/queryservices/business-workspace-query.service";
+import { requireAppointmentOperationAuthorization } from "@/contexts/scheduling/interfaces/authorization/scheduling-authorization";
+import { composeSchedulingAdapters } from "../server/scheduling-composition";
+import { composeBusinessAdapters } from "@/contexts/business/interfaces/server/business-composition";
 
 export async function rescheduleAppointmentAction(
   appointmentId: string,
@@ -32,19 +36,18 @@ export async function rescheduleAppointmentAction(
   }
 
   try {
-    const workspace = await createBusinessWorkspaceQueryService().getHeaderViewModel();
-    const commandService = createSchedulingCommandService(workspace.organization?.id);
+    await requireAppointmentOperationAuthorization(appointmentId);
+    const workspace = await composeBusinessAdapters().workspaceQueryService.getHeaderViewModel();
+    const commandService = composeSchedulingAdapters(workspace.organization?.id).commandService;
     const result = await commandService.rescheduleAppointment(appointmentId, parsed.data);
     revalidatePath("/schedule");
     return { status: "success", data: result, error: null, errorId: null, fieldErrors: null };
   } catch (error: unknown) {
-    console.error("Reschedule appointment action failed:", error);
+    recordSafely("scheduling.reschedule.appointment.action", { cause: error });
     let message = "We could not reschedule this appointment. Please try again.";
     if (error instanceof ApiError) {
       if (error.status === 409) {
         message = "There is a scheduling conflict at this time. Please choose another slot or check employee availability.";
-      } else if (error.message) {
-        message = error.message;
       }
     }
     return {

@@ -1,18 +1,24 @@
 "use server";
 
+import { recordSafely } from "@/contexts/shared/interfaces/observability/sanitize-error";
 import { Appointment } from "../../domain/model/entities/appointment";
-import { createSchedulingQueryService } from "../../application/internal/queryservices/scheduling-query.service.impl";
-import { createBusinessWorkspaceQueryService } from "@/contexts/business/application/internal/queryservices/business-workspace-query.service";
+import { composeSchedulingAdapters } from "../server/scheduling-composition";
+import { requireAppointmentOperationAuthorization } from "../authorization/scheduling-authorization";
+import { safePublicError } from "@/contexts/shared/interfaces/actions/safe-error";
 
-export async function getAppointmentAction(
-  id: string
-): Promise<Appointment | null> {
+export type GetAppointmentResult =
+  | Appointment
+  | { status: "forbidden" | "not-found" | "error"; message: string };
+
+export async function getAppointmentAction(id: string): Promise<GetAppointmentResult> {
   try {
-    const workspace = await createBusinessWorkspaceQueryService().getHeaderViewModel();
-    const queryService = createSchedulingQueryService(workspace.organization?.id);
-    return await queryService.getAppointment(id);
+    const auth = await requireAppointmentOperationAuthorization(id, "scheduling:read");
+    const queryService = composeSchedulingAdapters(auth.organizationId).queryService;
+    return await queryService.getAppointment(id, auth.token);
   } catch (error) {
-    console.error("Get appointment action failed:", error);
-    return null;
+    recordSafely("scheduling.get.appointment.action", { cause: error });
+    const safe = safePublicError(error, "Unable to load appointment.");
+    const status = safe.status === 403 ? "forbidden" : safe.status === 404 ? "not-found" : "error";
+    return { status, message: safe.message };
   }
 }
