@@ -42,7 +42,7 @@ async function CatalogPageContent({ searchParams }: CatalogPageProps) {
   let services: DetailedServiceDTO[] = [];
 
   if (establishmentId) {
-    const adapters = composeCatalogAdapters();
+    const adapters = composeCatalogAdapters(workspace.organization.id);
     const categoryQueryService = adapters.categoryQueryService;
     const serviceQueryService = adapters.serviceQueryService;
     const [categoriesPage, servicesPage] = await Promise.all([

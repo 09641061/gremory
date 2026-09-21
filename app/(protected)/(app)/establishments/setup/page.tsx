@@ -35,7 +35,7 @@ async function EstablishmentSetupPageContent({ searchParams }: EstablishmentSetu
     : [];
 
   if (!workspace.organization || organizationEstablishments.length > 0) {
-    redirect("/organizations");
+    redirect("/organization");
   }
 
   const serverLocale = await getServerLocale();
@@ -63,7 +63,7 @@ async function EstablishmentSetupPageContent({ searchParams }: EstablishmentSetu
           >
             {dictionary.establishments.setupCreateBtn}
           </Link>
-          <Link href="/organizations" className={buttonVariants({ variant: "outline" })}>
+          <Link href="/organization" className={buttonVariants({ variant: "outline" })}>
             {dictionary.establishments.setupManageOrgsBtn}
           </Link>
         </div>

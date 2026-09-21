@@ -10,12 +10,12 @@ vi.mock("next/navigation", () => ({
 }));
 
 describe("AccessDeniedActions", () => {
-  it("offers a direct path to the organizations hub", () => {
+  it("offers a direct path to organization settings", () => {
     render(<AccessDeniedActions />);
 
     expect(screen.getByRole("link", { name: /manage organizations/i })).toHaveAttribute(
       "href",
-      "/organizations",
+      "/organization",
     );
     expect(screen.getByRole("button", { name: /try again/i })).toBeTruthy();
   });

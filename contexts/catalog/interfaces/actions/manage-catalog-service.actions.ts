@@ -1,5 +1,6 @@
 "use server";
 
+import { z } from "zod";
 import { safePublicError } from "@/contexts/shared/interfaces/actions/safe-error";
 
 
@@ -20,6 +21,7 @@ export async function updateCatalogServiceAction(
 ): Promise<CatalogServiceActionResult> {
   const rawData = {
     id: formData.get("id"),
+    establishmentId: formData.get("establishmentId"),
     name: formData.get("name"),
     description: formData.get("description"),
     price: formData.get("price"),
@@ -31,7 +33,9 @@ export async function updateCatalogServiceAction(
     cleanupMinutes: formData.get("cleanupMinutes") || 0,
   };
 
-  const parsed = updateCatalogServiceSchema.safeParse(rawData);
+  const parsed = updateCatalogServiceSchema.extend({
+    establishmentId: z.string().uuid("Invalid establishment ID"),
+  }).safeParse(rawData);
 
   if (!parsed.success) {
     const firstError = parsed.error.issues[0]?.message ?? "Invalid data";
@@ -39,10 +43,15 @@ export async function updateCatalogServiceAction(
   }
 
   try {
-    const auth = await requireCatalogServiceTargetAuthorization(String(parsed.data.id));
+    const { establishmentId, ...updateInput } = parsed.data;
+    const auth = await requireCatalogServiceTargetAuthorization(
+      String(updateInput.id),
+      "catalog:manage",
+      establishmentId,
+    );
     const token = auth.token;
-    const service = composeCatalogAdapters().serviceCommandService;
-    const command = createCatalogServiceUpdateCommand(parsed.data);
+    const service = composeCatalogAdapters(auth.organizationId).serviceCommandService;
+    const command = createCatalogServiceUpdateCommand(updateInput);
     await service.update(command, token);
 
     return { status: "success", error: null };
@@ -56,12 +65,13 @@ export async function updateCatalogServiceAction(
 
 export async function changeCatalogServiceStatusAction(
   id: string,
-  active: boolean
+  active: boolean,
+  establishmentId?: string,
 ): Promise<CatalogServiceActionResult> {
   try {
-    const auth = await requireCatalogServiceTargetAuthorization(id);
+    const auth = await requireCatalogServiceTargetAuthorization(id, "catalog:manage", establishmentId);
     const token = auth.token;
-    const service = composeCatalogAdapters().serviceCommandService;
+    const service = composeCatalogAdapters(auth.organizationId).serviceCommandService;
     await service.changeStatus({ id, active }, token);
     return { status: "success", error: null };
   } catch (err) {
@@ -73,12 +83,13 @@ export async function changeCatalogServiceStatusAction(
 }
 
 export async function deleteCatalogServiceAction(
-  id: string
+  id: string,
+  establishmentId?: string,
 ): Promise<CatalogServiceActionResult> {
   try {
-    const auth = await requireCatalogServiceTargetAuthorization(id);
+    const auth = await requireCatalogServiceTargetAuthorization(id, "catalog:manage", establishmentId);
     const token = auth.token;
-    const service = composeCatalogAdapters().serviceCommandService;
+    const service = composeCatalogAdapters(auth.organizationId).serviceCommandService;
     await service.delete({ id }, token);
     return { status: "success", error: null };
   } catch (err) {

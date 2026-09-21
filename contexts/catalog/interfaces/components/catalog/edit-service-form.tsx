@@ -113,7 +113,7 @@ export function EditServiceForm({
                             icon: isActive ? EyeOffIcon : EyeIcon,
                             hidden: !canUpdateService,
                             disabled: statusPending,
-                            onSelect: () => changeStatus(service.id, !isActive),
+                            onSelect: () => changeStatus(service.id, !isActive, service.establishmentId),
                           },
                           {
                             label: t.serviceForm.delete,
@@ -129,6 +129,7 @@ export function EditServiceForm({
                 </div>
 
                 <input type="hidden" name="id" value={service.id} />
+                <input type="hidden" name="establishmentId" value={service.establishmentId} />
                 {service.categoryId && (
                   <input type="hidden" name="categoryId" value={service.categoryId} />
                 )}
@@ -194,6 +195,7 @@ export function EditServiceForm({
       <DeleteServiceDialog
         serviceId={service.id}
         serviceName={service.name}
+        establishmentId={service.establishmentId}
         open={isDeleteDialogOpen}
         onOpenChange={setIsDeleteDialogOpen}
         onSuccess={onDeleted ?? onCancel}

@@ -9,6 +9,7 @@ import { useCatalogTranslations } from "../../i18n";
 interface DeleteCategoryDialogProps {
   categoryId: string;
   categoryName: string;
+  establishmentId?: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
@@ -16,6 +17,7 @@ interface DeleteCategoryDialogProps {
 export function DeleteCategoryDialog({
   categoryId,
   categoryName,
+  establishmentId,
   open,
   onOpenChange,
 }: DeleteCategoryDialogProps) {
@@ -38,7 +40,7 @@ export function DeleteCategoryDialog({
       entityName={categoryName}
       pending={pending}
       error={state.status === "error" ? state.error : null}
-      onConfirm={() => deleteCategory(categoryId)}
+      onConfirm={() => deleteCategory(categoryId, establishmentId)}
     />
   );
 }

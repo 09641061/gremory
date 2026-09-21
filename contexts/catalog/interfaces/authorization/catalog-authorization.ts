@@ -14,7 +14,9 @@ async function context(permission: string = "catalog:manage", requestedEstablish
   });
   const id = requestedEstablishmentId ?? workspace.activeEstablishmentId;
   const item = getWorkspaceEstablishment(workspace, id);
-  if (!id || !item || !hasEstablishmentPermission(item, permission)) {
+  const isOrganizationOwner = workspace.accountType === "OWNER";
+  const hasPermission = isOrganizationOwner || hasEstablishmentPermission(item, permission);
+  if (!id || !item || !hasPermission) {
     throw new OperationAuthorizationError("FORBIDDEN");
   }
   return { token, organizationId: workspace.organization?.id, establishmentId: id };
@@ -43,7 +45,7 @@ export async function requireCatalogServiceTargetAuthorization(
 ) {
   if (!idSchema.safeParse(id).success) throw new OperationAuthorizationError("INVALID_RESOURCE");
   const result = await context(permission, requestedEstablishmentId);
-  const service = await composeCatalogAdapters().serviceQueryService.getById(
+  const service = await composeCatalogAdapters(result.organizationId).serviceQueryService.getById(
     id,
     result.establishmentId,
     result.token,
@@ -59,10 +61,13 @@ export async function requireCatalogServiceTargetAuthorization(
  * page until it found an id. The provider lookup is now one bounded request
  * for the target id; the backend remains authoritative for access.
  */
-export async function requireCatalogCategoryTargetAuthorization(id: string) {
+export async function requireCatalogCategoryTargetAuthorization(
+  id: string,
+  requestedEstablishmentId?: string,
+) {
   if (!idSchema.safeParse(id).success) throw new OperationAuthorizationError("INVALID_RESOURCE");
-  const result = await context();
-  const category = await composeCatalogAdapters().categoryQueryService.getById(
+  const result = await context("catalog:manage", requestedEstablishmentId);
+  const category = await composeCatalogAdapters(result.organizationId).categoryQueryService.getById(
     id,
     result.establishmentId,
     result.token,

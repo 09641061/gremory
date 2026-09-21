@@ -124,7 +124,7 @@ export async function deleteEstablishmentAction(
 // the catalog is stale too once this list changes.
 function revalidateBusinessViews() {
   revalidatePath("/");
-  revalidatePath("/configuration/organizations");
+  revalidatePath("/organization");
   revalidatePath("/catalog");
   revalidatePath("/configuration/establishments");
 }

@@ -1,81 +1,19 @@
-import { Suspense } from "react";
-import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
-import { composeBusinessAdapters } from "@/contexts/business/interfaces/server/business-composition";
-import { OrganizationsPage } from "@/contexts/business/interfaces/components/organization/organizations-page/organizations-page";
-import {
-  canCreateOrganization,
-  type WorkspaceNavigationOrganizationGroup,
-} from "@/contexts/business/domain/services/workspace-navigation.policy";
-import { workspaceSelectionCookies } from "@/contexts/business/infrastructure/session/workspace-selection-cookie";
-import { PageLoading } from "@/contexts/shared/interfaces/components/feedback/page-loading";
-
 interface OrganizationsRoutePageProps {
-  searchParams: Promise<{ establishmentId?: string; organizationId?: string; previewOrganizationId?: string }>;
+  searchParams: Promise<{ establishmentId?: string; organizationId?: string }>;
 }
 
-export default function OrganizationsRoutePage({ searchParams }: OrganizationsRoutePageProps) {
-  return (
-    <Suspense fallback={<PageLoading />}>
-      <OrganizationsRoutePageContent searchParams={searchParams} />
-    </Suspense>
-  );
-}
-
-export async function OrganizationsRoutePageContent({ searchParams }: OrganizationsRoutePageProps) {
+/**
+ * Keep the old plural URL as a compatibility alias. There is only one
+ * organization per account, so organization settings live at `/organization`.
+ */
+export default async function OrganizationsRoutePage({ searchParams }: OrganizationsRoutePageProps) {
   const query = await searchParams;
-  const cookieStore = await cookies();
-  // The organizations index must load the complete accessible workspace. The
-  // query organization only selects the preview; sending it to `/workspace`
-  // would scope the response to one organization and hide foreign memberships.
-  const [workspace, accessibleOrganizations] = await Promise.all([
-    composeBusinessAdapters().workspaceQueryService.getHeaderViewModel({ establishmentId: query.establishmentId }),
-    composeBusinessAdapters().organizationQueryService.getAccessible(),
-  ]);
-  const requestedOrganizationId = query.organizationId;
-  const requestedPreviewOrganizationId = query.previewOrganizationId;
-  const rememberedPreviewOrganizationId =
-    cookieStore.get(workspaceSelectionCookies.previewOrganizationId)?.value ?? null;
-  const activeOrganizationId =
-    cookieStore.get(workspaceSelectionCookies.organizationId)?.value ?? workspace.organization?.id ?? null;
-  const ownedOrganizationId =
-    accessibleOrganizations.find((organization) => organization.isOwned)?.id ?? workspace.ownedOrganizationId;
+  const params = new URLSearchParams();
+  if (query.establishmentId) params.set("establishmentId", query.establishmentId);
+  if (query.organizationId) params.set("organizationId", query.organizationId);
+  const queryString = params.toString();
 
-  // An account without an organization has an invitation to accept first.
-  if (workspace.accountType === "PENDING_INVITATION") {
-    redirect("/invitations/pending");
-  }
-
-  const organizations: ReadonlyArray<WorkspaceNavigationOrganizationGroup> = accessibleOrganizations.map(
-    (organization) => ({
-      organizationId: organization.id,
-      organizationName: organization.name,
-      organizationImageUrl: organization.imageUrl,
-      canUpdate: organization.permissions.canUpdate,
-      canCreateEstablishment: organization.permissions.canCreateEstablishment,
-      establishments: organization.establishments.map((establishment) => ({
-        id: establishment.id,
-        name: establishment.name,
-        photoUrl: establishment.photoUrl ?? null,
-        timeZone: establishment.timeZone ?? null,
-        effectivePermissions: establishment.effectivePermissions,
-        organizationId: organization.id,
-        organizationName: organization.name,
-        organizationImageUrl: organization.imageUrl,
-      })),
-    }),
-  );
-
-  return (
-    <OrganizationsPage
-      organizations={organizations}
-      ownedOrganizationId={ownedOrganizationId ?? null}
-      canCreateOrganization={canCreateOrganization(ownedOrganizationId ?? null)}
-      initialPreviewOrganizationId={
-        requestedPreviewOrganizationId ?? requestedOrganizationId ?? rememberedPreviewOrganizationId ?? activeOrganizationId
-      }
-      activeOrganizationId={activeOrganizationId}
-    />
-  );
+  redirect(queryString ? `/organization?${queryString}` : "/organization");
 }

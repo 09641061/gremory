@@ -5,7 +5,7 @@ import { safePublicError } from "@/contexts/shared/interfaces/actions/safe-error
 
 import { createCatalogServiceSchema } from "../rest/schemas/catalog-service.schemas";
 import { createCatalogServiceReadModel } from "../../application/model/catalog-service.read-model";
-import { requireCatalogAccessToken } from "./catalog-action-auth";
+import { requireCatalogContext } from "../authorization/catalog-authorization";
 import { createCatalogServiceCreateCommand } from "../../domain/model/commands/catalog-service.commands";
 import type { DetailedServiceDTO } from "../../domain/model/view-models";
 import { composeCatalogAdapters } from "../server/catalog-composition";
@@ -41,10 +41,10 @@ export async function createCatalogServiceAction(
   }
 
   try {
-    const token = await requireCatalogAccessToken();
-    const service = composeCatalogAdapters().serviceCommandService;
+    const context = await requireCatalogContext("catalog:manage", parsed.data.establishmentId);
+    const service = composeCatalogAdapters(context.organizationId).serviceCommandService;
     const command = createCatalogServiceCreateCommand(parsed.data);
-    const result = await service.create(command, token);
+    const result = await service.create(command, context.token);
 
     return {
       status: "success",

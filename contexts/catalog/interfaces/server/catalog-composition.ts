@@ -47,10 +47,10 @@ class CookieCatalogAccessContext implements CatalogAccessContext {
   }
 }
 
-export function composeCatalogAdapters(): ComposedCatalogAdapters {
+export function composeCatalogAdapters(organizationId?: string): ComposedCatalogAdapters {
   const access: CatalogAccessContext = new CookieCatalogAccessContext();
-  const serviceGateway = new CatalogServiceApiGateway();
-  const categoryGateway = new ServiceCategoryApiGateway();
+  const serviceGateway = new CatalogServiceApiGateway(organizationId);
+  const categoryGateway = new ServiceCategoryApiGateway(organizationId);
   const serviceApiPort: CatalogServiceApiPort & CatalogServiceCommandPort = serviceGateway;
   const categoryApiPort: ServiceCategoryApiPort & ServiceCategoryCommandPort = categoryGateway;
   return {

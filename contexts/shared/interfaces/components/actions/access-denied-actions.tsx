@@ -27,7 +27,7 @@ export function AccessDeniedActions() {
 
   return (
     <div className="flex flex-col items-center justify-center gap-2 sm:flex-row">
-      <Link href="/organizations" className={buttonVariants({ variant: "outline" })}>
+      <Link href="/organization" className={buttonVariants({ variant: "outline" })}>
         {t.shared.manageOrganizations}
       </Link>
       <Button

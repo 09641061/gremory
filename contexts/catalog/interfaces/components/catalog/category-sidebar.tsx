@@ -46,6 +46,7 @@ export type ServiceSummaryDTO = {
 interface CategorySidebarProps {
   categories: CategoryDTO[];
   services: ServiceSummaryDTO[];
+  establishmentId?: string;
   selectedServiceId?: string;
   selectedCategoryId?: string;
   onSelectService: (id: string) => void;
@@ -63,6 +64,7 @@ interface CategorySidebarProps {
 export function CategorySidebar({
   categories,
   services,
+  establishmentId,
   selectedServiceId,
   selectedCategoryId,
   onSelectService,
@@ -304,6 +306,7 @@ export function CategorySidebar({
         <DeleteCategoryDialog
           categoryId={categoryToDelete.id}
           categoryName={categoryToDelete.name}
+          establishmentId={establishmentId}
           open={!!categoryToDelete}
           onOpenChange={(open) => {
             if (!open) setCategoryToDelete(null);

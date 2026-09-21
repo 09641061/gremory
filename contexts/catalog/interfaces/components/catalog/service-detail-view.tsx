@@ -13,6 +13,7 @@ import { useCatalogTranslations } from "../../i18n";
 
 export type DetailedServiceDTO = {
   id: string;
+  establishmentId: string;
   name: string;
   description: string;
   price: number;
@@ -75,7 +76,7 @@ export function ServiceDetailView({ service }: ServiceDetailViewProps) {
           <Button
             variant="outline"
             disabled={pending}
-            onClick={() => changeStatus(service.id, !isActive)}
+            onClick={() => changeStatus(service.id, !isActive, service.establishmentId)}
             className="gap-2 border-border bg-card hover:bg-muted"
           >
             {pending ? (
