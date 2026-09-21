@@ -41,7 +41,7 @@ import type { VariantProps } from "class-variance-authority";
  * pasting it without `type="submit"`.
  */
 export interface FormSubmitButtonProps
-  extends Omit<React.ComponentProps<"button">, "type"> {
+  extends Omit<React.ComponentProps<typeof Button>, "type" | "children"> {
   /** While `true`, disables the button and shows a spinner. */
   isSubmitting: boolean;
   /** Visible button label (already translated). */

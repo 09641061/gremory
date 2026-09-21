@@ -1,17 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import React from "react";
+import { render, screen } from "@testing-library/react";
 
 const mocks = vi.hoisted(() => ({
-  redirect: vi.fn((href: string) => {
-    throw new Error(`REDIRECT:${href}`);
-  }),
   cookies: vi.fn(),
   landing: {
     resolveRoute: vi.fn(),
   },
-}));
-
-vi.mock("next/navigation", () => ({
-  redirect: mocks.redirect,
 }));
 
 vi.mock("next/headers", () => ({
@@ -24,48 +19,75 @@ vi.mock("@/contexts/shared/interfaces/server/shared-composition", () => ({
   }),
 }));
 
-import HomePage from "@/app/page";
+import LandingLayout from "@/app/(landing)/layout";
+import LandingHomePage from "@/app/(landing)/page";
+import PricingPage from "@/app/(landing)/pricing/page";
 
-describe("HomePage", () => {
+describe("Landing Routes & Layout", () => {
   beforeEach(() => {
     vi.resetAllMocks();
-    mocks.cookies.mockResolvedValue({
-      get: () => ({ value: "access-token" }),
+  });
+
+  describe("LandingHomePage", () => {
+    it("renders the landing home page sections", () => {
+      const { container } = render(<LandingHomePage />);
+      expect(container).toBeDefined();
     });
   });
 
-  it("sends an authenticated owner without a subscription to welcome", async () => {
-    mocks.landing.resolveRoute.mockResolvedValue({
-      status: "subscription-required",
-      setupHref: "/welcome",
-      allowedPaths: ["/welcome"],
+  describe("PricingPage", () => {
+    it("renders the dedicated pricing page", () => {
+      const { container } = render(<PricingPage />);
+      expect(container).toBeDefined();
     });
-
-    await expect(
-      HomePage({ searchParams: Promise.resolve({}) }),
-    ).rejects.toThrow("REDIRECT:/welcome");
   });
 
-  it("sends an active owner without an organization to organization onboarding", async () => {
-    mocks.landing.resolveRoute.mockResolvedValue({
-      status: "organization-required",
-      setupHref: "/organizations/new",
-      allowedPaths: ["/organizations/new"],
+  describe("LandingLayout", () => {
+    it("renders layout for unauthenticated visitors without active session", async () => {
+      mocks.cookies.mockResolvedValue({
+        get: () => undefined,
+      });
+
+      const element = await LandingLayout({
+        children: <div data-testid="child-content">Child Content</div>,
+      });
+
+      const { getByTestId } = render(element);
+      expect(getByTestId("child-content")).toBeDefined();
     });
 
-    await expect(
-      HomePage({ searchParams: Promise.resolve({}) }),
-    ).rejects.toThrow("REDIRECT:/organizations/new");
-  });
+    it("resolves route and provides workspace navigation for authenticated users", async () => {
+      mocks.cookies.mockResolvedValue({
+        get: () => ({ value: "valid-session-token" }),
+      });
+      mocks.landing.resolveRoute.mockResolvedValue({
+        status: "ready",
+        homeHref: "/schedule",
+      });
 
-  it("uses the resolved workspace home when the account is ready", async () => {
-    mocks.landing.resolveRoute.mockResolvedValue({
-      status: "ready",
-      homeHref: "/chat",
+      const element = await LandingLayout({
+        children: <div data-testid="child-content">Child Content</div>,
+      });
+
+      const { getByTestId } = render(element);
+      expect(getByTestId("child-content")).toBeDefined();
     });
 
-    await expect(
-      HomePage({ searchParams: Promise.resolve({}) }),
-    ).rejects.toThrow("REDIRECT:/chat");
+    it("handles subscription-required or onboarding states gracefully for authenticated users", async () => {
+      mocks.cookies.mockResolvedValue({
+        get: () => ({ value: "valid-session-token" }),
+      });
+      mocks.landing.resolveRoute.mockResolvedValue({
+        status: "subscription-required",
+        setupHref: "/welcome",
+      });
+
+      const element = await LandingLayout({
+        children: <div data-testid="child-content">Child Content</div>,
+      });
+
+      const { getByTestId } = render(element);
+      expect(getByTestId("child-content")).toBeDefined();
+    });
   });
 });

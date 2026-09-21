@@ -6,9 +6,11 @@ export { interpolate };
 
 export type StringLeaf<T> = T extends string
   ? string
-  : T extends object
-    ? { readonly [K in keyof T]: StringLeaf<T[K]> }
-    : T;
+  : T extends readonly (infer U)[]
+    ? readonly StringLeaf<U>[]
+    : T extends object
+      ? { readonly [K in keyof T]: StringLeaf<T[K]> }
+      : T;
 
 export type ContextLocales<T> = {
   en: T;

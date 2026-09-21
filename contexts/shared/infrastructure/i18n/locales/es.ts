@@ -1,6 +1,7 @@
 import type { LocaleDictionary } from "./index";
 import { es as iamEs } from "@/contexts/iam/interfaces/i18n/locales/es";
 import { es as profilesEs } from "@/contexts/profiles/interfaces/i18n/locales/es";
+import { es as landingEs } from "@/contexts/landing/interfaces/i18n/locales/es";
 
 export const es: LocaleDictionary = {
   common: {
@@ -32,6 +33,7 @@ export const es: LocaleDictionary = {
   preferences: profilesEs.preferences,
   profile: profilesEs.profile,
   auth: iamEs.auth,
+  landing: landingEs.landing as unknown as LocaleDictionary["landing"],
   shared: {
     accessDenied: "Acceso denegado",
     somethingWentWrong: "Algo salió mal",

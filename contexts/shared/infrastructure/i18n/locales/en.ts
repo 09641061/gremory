@@ -1,5 +1,6 @@
 import { en as iamEn } from "@/contexts/iam/interfaces/i18n/locales/en";
 import { en as profilesEn } from "@/contexts/profiles/interfaces/i18n/locales/en";
+import { en as landingEn } from "@/contexts/landing/interfaces/i18n/locales/en";
 
 export const en = {
   common: {
@@ -31,6 +32,7 @@ export const en = {
   preferences: profilesEn.preferences,
   profile: profilesEn.profile,
   auth: iamEn.auth,
+  landing: landingEn.landing,
   shared: {
     accessDenied: "Access denied",
     somethingWentWrong: "Something went wrong",
