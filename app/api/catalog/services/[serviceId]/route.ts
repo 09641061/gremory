@@ -5,7 +5,7 @@ import { createCatalogServiceCommandService } from "@/contexts/catalog/applicati
 import { createCatalogServiceQueryService } from "@/contexts/catalog/application/internal/queryservices/catalog-service-query.service";
 import { createCatalogServiceReadModel } from "@/contexts/catalog/application/model/catalog-service.read-model";
 import { updateCatalogServiceSchema } from "@/contexts/catalog/interfaces/rest/schemas/catalog-service.schemas";
-import { requireCatalogContext, requireCatalogServiceTargetAuthorization } from "@/contexts/catalog/interfaces/authorization/catalog-authorization";
+import { requireCatalogServiceTargetAuthorization } from "@/contexts/catalog/interfaces/authorization/catalog-authorization";
 
 const uuidSchema = z.string().uuid();
 

@@ -7,6 +7,7 @@ import { resolveDocumentAction } from "@/contexts/crm/interfaces/actions/resolve
 import { FormField } from "@/contexts/shared/interfaces/components/form/form-field";
 import { FormSection } from "@/contexts/shared/interfaces/components/form/form-section";
 import { FormSubmitButton } from "@/contexts/shared/interfaces/components/form/form-submit-button";
+import { useFormSubmit } from "@/contexts/shared/interfaces/components/form/use-form-submit";
 import { useFormValidation } from "@/contexts/shared/interfaces/components/form/use-form-validation";
 import {
   validateDNI,
@@ -64,7 +65,13 @@ export function CustomerForm({
   const { errors, setError, clearError } = useFormValidation();
   const error = errors[FORM_ERROR_FIELD] ?? null;
   const [isResolving, setIsResolving] = React.useState(false);
-  const isSubmittingRef = React.useRef(false);
+  // `useFormSubmit` centralises the double-submit guard: `guard()` is the
+  // synchronous check used at the top of `handleSubmit` so a stale click
+  // that races React's commit of `isSaving` still early-returns, and
+  // `submit()` wraps the actual `onSubmit(data)` call so re-entry during
+  // the parent's async work is blocked. `isSubmitting` feeds the submit
+  // button's loading state as a defense-in-depth alongside `isSaving`.
+  const { isSubmitting, submit, guard } = useFormSubmit();
 
   const handleResolve = React.useCallback(async () => {
     if (docType !== "dni" && docType !== "ruc") return;
@@ -81,9 +88,13 @@ export function CustomerForm({
     }
   }, [docNumber, docType, establishmentId]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (isSaving || isSubmittingRef.current) return;
+    // `isSaving` reflects the parent's lifecycle (EditCustomerForm flips
+    // it via setIsSaving). `guard()` reflects this hook's own re-entry
+    // lock — together they cover both the "parent already saving" and
+    // the "two clicks inside the same render tick" cases.
+    if (isSaving || guard()) return;
     clearError(FORM_ERROR_FIELD);
 
     if (docType === "dni" && !validateDNI(docNumber)) {
@@ -107,14 +118,23 @@ export function CustomerForm({
       return;
     }
 
-    isSubmittingRef.current = true;
-    onSubmit({
-      docType,
-      docNumber,
-      name,
-      email,
-      phoneCountryCode: phoneCountryCode.trim(),
-      phoneNumber,
+    // Wrap the parent's onSubmit in `submit()` so the hook's in-flight
+    // flag covers the full submission lifecycle. `onSubmit` is typed as
+    // `void` but may be backed by an async handler that returns a
+    // Promise; awaiting it inside the callback is what actually keeps
+    // the hook's lock held for the duration of the parent's work. A
+    // purely-sync `onSubmit` (returning `undefined`) resolves on the next
+    // microtask, so the lock is still held across React's commit window —
+    // enough to absorb a same-tick double-click.
+    await submit(async () => {
+      await onSubmit({
+        docType,
+        docNumber,
+        name,
+        email,
+        phoneCountryCode: phoneCountryCode.trim(),
+        phoneNumber,
+      });
     });
   };
 
@@ -215,11 +235,11 @@ export function CustomerForm({
 
       <div className="flex justify-end gap-3 border-t border-border/70 pt-4">
         {onCancel ? (
-          <Button type="button" variant="outline" onClick={onCancel} disabled={isSaving}>
+          <Button type="button" variant="outline" onClick={onCancel} disabled={isSaving || isSubmitting}>
             {t.form.cancel}
           </Button>
         ) : null}
-        <FormSubmitButton isSubmitting={isSaving} icon={submitIcon}>
+        <FormSubmitButton isSubmitting={isSaving || isSubmitting} icon={submitIcon}>
           {submitLabel}
         </FormSubmitButton>
       </div>

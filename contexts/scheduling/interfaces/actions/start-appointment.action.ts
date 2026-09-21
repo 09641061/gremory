@@ -4,7 +4,6 @@ import { safePublicError } from "@/contexts/shared/interfaces/actions/safe-error
 
 
 import { revalidatePath } from "next/cache";
-import { ApiError } from "@/contexts/shared/infrastructure/http/api-client";
 import { Appointment } from "../../domain/model/entities/appointment";
 import { ActionState } from "./action-state";
 import { requireAppointmentOperationAuthorization } from "@/contexts/scheduling/interfaces/authorization/scheduling-authorization";

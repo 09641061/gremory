@@ -1,6 +1,5 @@
 "use server";
 
-import { safePublicError } from "@/contexts/shared/interfaces/actions/safe-error";
 
 
 import { revalidatePath } from "next/cache";

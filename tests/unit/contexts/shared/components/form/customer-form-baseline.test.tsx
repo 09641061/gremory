@@ -360,7 +360,12 @@ describe("CustomerForm — successful submit", () => {
   });
 
   it("calls onSubmit exactly once when the user double-clicks the submit button", async () => {
-    const onSubmit = vi.fn();
+    // The hook's `useFormSubmit` lock stays held for the duration of the
+    // callback's resolution. A parent that returns a never-resolving
+    // Promise models a real "save in flight" — the second click has to
+    // be blocked by the hook's re-entry guard, not by an external
+    // `isSaving` prop (the test explicitly sets `isSaving: false`).
+    const onSubmit = vi.fn().mockReturnValue(new Promise(() => {}));
     renderForm({ onSubmit });
     const user = userEvent.setup();
     await fillValidForm(user);
