@@ -15,6 +15,7 @@ import {
   updateEstablishmentSchema,
 } from "../rest/schemas/establishment.schemas";
 import { actionError, type BusinessActionResult } from "./business-action-result";
+import { requireEstablishmentCapability } from "@/contexts/business/interfaces/authorization/business-authorization";
 
 function readPhotoFileFromFormData(formData: FormData) {
   const photoFile = formData.get("photoFile");
@@ -76,7 +77,7 @@ export async function updateEstablishmentAction(
   if (!parsed.success) return actionError(parsed.error.issues[0]?.message);
 
   try {
-    await requireBusinessAccessToken();
+    await requireEstablishmentCapability(parsed.data.id, "canUpdate");
     const establishmentId = await createEstablishmentCommandService().update(
       updateEstablishmentCommand({
         ...parsed.data,
@@ -99,7 +100,7 @@ export async function deleteEstablishmentAction(
   if (!parsed.success) return actionError(parsed.error.issues[0]?.message);
 
   try {
-    await requireBusinessAccessToken();
+    await requireEstablishmentCapability(parsed.data.id, "canDelete");
     await createEstablishmentCommandService().delete(
       deleteEstablishmentCommand(parsed.data),
     );

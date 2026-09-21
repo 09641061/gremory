@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { safePublicError } from "@/contexts/shared/interfaces/actions/safe-error";
 import { z } from "zod";
 import { createBillingSubscriptionAdapter } from "@/contexts/billing/infrastructure/adapters/billing-subscription.adapter";
 import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-session-cookie";
@@ -56,38 +57,9 @@ function validationErrorResponse(message?: string) {
   );
 }
 
-function routeErrorResponse(error: unknown): Response {
-  if (error instanceof Error) {
-    const status = readStatus(error);
-    if (status !== undefined) {
-      const details = readDetails(error);
-      return NextResponse.json(
-        details === undefined
-          ? { message: error.message }
-          : { message: error.message, details },
-        { status },
-      );
-    }
-
-    if (error.message === "Authentication is required") {
-      return NextResponse.json({ message: error.message }, { status: 401 });
-    }
-
-    return NextResponse.json({ message: error.message }, { status: 400 });
-  }
-
-  return NextResponse.json({ message: "Unexpected error" }, { status: 500 });
-}
-
-function readStatus(error: Error): number | undefined {
-  const status = (error as Error & { status?: unknown }).status;
-  if (typeof status !== "number" || Number.isNaN(status)) return undefined;
-  if (status <= 0) return 502;
-  return status;
-}
-
-function readDetails(error: Error): unknown {
-  return (error as Error & { details?: unknown }).details;
+function routeErrorResponse(error: unknown, fallback = "Request could not be completed"): Response {
+  const safe = safePublicError(error, fallback);
+  return NextResponse.json({ message: safe.message }, { status: safe.status });
 }
 
 export async function POST(request: Request) {

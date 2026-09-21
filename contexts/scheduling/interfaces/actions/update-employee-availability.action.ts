@@ -1,5 +1,8 @@
 "use server";
 
+import { safePublicError } from "@/contexts/shared/interfaces/actions/safe-error";
+
+
 import { z } from "zod";
 import { createBusinessWorkspaceQueryService } from "@/contexts/business/application/internal/queryservices/business-workspace-query.service";
 import { getWorkspaceEstablishment, hasEstablishmentPermission } from "@/contexts/shared/application/services/workspace-establishment-permissions";
@@ -50,7 +53,7 @@ export async function updateEmployeeAvailabilityAction(
     return { status: "success", error: "" } as const;
   } catch (error) {
     const message =
-      error instanceof Error && error.message.trim() ? error.message : "Unable to update availability.";
+      safePublicError(error, "Unable to update availability.").message;
     console.error("Failed to update employee availability:", error);
     return { status: "error", error: message } as const;
   }

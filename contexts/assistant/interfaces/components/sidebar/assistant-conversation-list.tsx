@@ -1,6 +1,7 @@
 "use client";
 
 import type { AssistantConversationSummaryReadModel } from "@/contexts/assistant/application/internal/transforms/assistant.read-models";
+import { useAssistantTranslations } from "@/contexts/assistant/interfaces/i18n";
 
 import { AssistantConversationListItem } from "./assistant-conversation-list-item";
 
@@ -25,6 +26,7 @@ export function AssistantConversationList({
   onRename,
   onDelete,
 }: AssistantConversationListProps) {
+  const { t } = useAssistantTranslations();
   if (isLoading) {
     return (
       <div className="space-y-1.5">
@@ -46,7 +48,7 @@ export function AssistantConversationList({
   if (conversations.length === 0) {
     return (
       <p className="rounded-md border border-dashed border-border/60 px-3 py-2 text-xs text-muted-foreground">
-        No chats yet.
+        {t.chat.emptyChats}
       </p>
     );
   }

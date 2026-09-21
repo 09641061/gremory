@@ -1,5 +1,8 @@
 "use server";
 
+import { safePublicError } from "@/contexts/shared/interfaces/actions/safe-error";
+
+
 import "server-only";
 import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
@@ -82,7 +85,7 @@ export async function renameAssistantConversationAction(
     return {
       status: "error",
       data: null,
-      error: error instanceof Error ? error.message : "Unable to rename the assistant conversation.",
+      error: safePublicError(error, "Unable to rename the assistant conversation.").message,
     };
   }
 }
@@ -119,7 +122,7 @@ export async function deleteAssistantConversationAction(
     return {
       status: "error",
       data: null,
-      error: error instanceof Error ? error.message : "Unable to delete the assistant conversation.",
+      error: safePublicError(error, "Unable to delete the assistant conversation.").message,
     };
   }
 }

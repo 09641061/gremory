@@ -6,7 +6,7 @@ import { createBusinessWorkspaceQueryService } from "@/contexts/business/applica
 import { resolveModuleAccessFallback } from "@/contexts/shared/application/services/module-access.policy";
 import { getWorkspaceEstablishment, hasEstablishmentPermission } from "@/contexts/shared/application/services/workspace-establishment-permissions";
 import type { CrmPermissions } from "@/contexts/crm/application/internal/queryservices/crm-access-policy.service";
-import { PageLoading } from "@/contexts/shared/interfaces/components/page-loading";
+import { PageLoading } from "@/contexts/shared/interfaces/components/feedback/page-loading";
 
 interface CrmPageProps {
   searchParams: Promise<{

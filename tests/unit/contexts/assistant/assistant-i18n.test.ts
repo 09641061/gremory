@@ -3,6 +3,7 @@ import {
   en,
   es,
   getAssistantDictionary,
+  useAssistantI18n,
 } from "@/contexts/assistant/interfaces/i18n";
 
 describe("Assistant i18n translations", () => {
@@ -34,5 +35,9 @@ describe("Assistant i18n translations", () => {
     expect(getAssistantDictionary("es")).toBe(es);
     expect(getAssistantDictionary("en")).toBe(en);
     expect(getAssistantDictionary(null)).toBe(en);
+  });
+
+  it("should export useAssistantI18n hook", () => {
+    expect(typeof useAssistantI18n).toBe("function");
   });
 });

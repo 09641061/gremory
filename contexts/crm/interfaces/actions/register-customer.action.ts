@@ -1,5 +1,7 @@
 "use server";
 
+
+
 import { revalidatePath } from "next/cache";
 import { createCrmCommandService } from "../../application/internal/commandservices/crm-command.service";
 import { createBusinessWorkspaceQueryService } from "@/contexts/business/application/internal/queryservices/business-workspace-query.service";
@@ -54,8 +56,6 @@ export async function registerCustomerAction(
         message = "A customer with this document number is already registered in this establishment.";
       } else if (error.status === 422) {
         message = "The identity document could not be validated.";
-      } else if (error.message) {
-        message = error.message;
       }
     }
     return { status: "error", data: null, error: message, errorId: createActionErrorId(), fieldErrors: null };

@@ -9,7 +9,7 @@ import {
 import {
   EntityActionsMenu,
   type EntityAction,
-} from "@/contexts/shared/interfaces/components/entity-actions-menu";
+} from "@/contexts/shared/interfaces/components/actions/entity-actions-menu";
 import { cn } from "@/lib/utils";
 
 interface EntityListRowProps {

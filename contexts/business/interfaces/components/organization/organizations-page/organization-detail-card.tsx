@@ -47,8 +47,8 @@ export function OrganizationDetailCard({
     <div className={cn("flex-1", className)}>
       <EntityProfileCard
         key={organization.organizationId}
-        entityLabel="Organization"
-        photoNoun="logo"
+        entityLabel={t.organizations.singleLabel}
+        photoNoun={t.organizations.photoNoun}
         icon={Building2}
         entityId={organization.organizationId}
         entityName={organization.organizationName}

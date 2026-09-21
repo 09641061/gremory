@@ -1,0 +1,13 @@
+import "server-only";
+import { z } from "zod";
+import { createBusinessWorkspaceQueryService } from "@/contexts/business/application/internal/queryservices/business-workspace-query.service";
+import { getWorkspaceEstablishment, hasEstablishmentPermission } from "@/contexts/shared/application/services/workspace-establishment-permissions";
+import { OperationAuthorizationError, requireAuthenticatedToken } from "@/contexts/shared/interfaces/authorization/operation-authorization";
+import { createCatalogServiceQueryService } from "@/contexts/catalog/application/internal/queryservices/catalog-service-query.service";
+import { createServiceCategoryQueryService } from "@/contexts/catalog/application/internal/queryservices/service-category-query.service";
+const idSchema=z.string().uuid();
+async function context(permission:string="catalog:manage", requestedEstablishmentId?: string){ const token=await requireAuthenticatedToken(); const workspace=await createBusinessWorkspaceQueryService().getHeaderViewModel({ establishmentId: requestedEstablishmentId }); const id=requestedEstablishmentId ?? workspace.activeEstablishmentId; const item=getWorkspaceEstablishment(workspace,id); if(!id||!item||!hasEstablishmentPermission(item,permission)) throw new OperationAuthorizationError("FORBIDDEN"); return {token,organizationId:workspace.organization?.id,establishmentId:id}; }
+export const requireOperationAuthorization = requireCatalogContext;
+export async function requireCatalogContext(permission="catalog:manage", establishmentId?:string){ const c=await context(permission, establishmentId); if(establishmentId!==undefined && (!idSchema.safeParse(establishmentId).success || c.establishmentId!==establishmentId)) throw new OperationAuthorizationError("FORBIDDEN"); return c; }
+export async function requireCatalogServiceTargetAuthorization(id:string, permission="catalog:manage", requestedEstablishmentId?: string){ const c=await context(permission, requestedEstablishmentId); const service=await createCatalogServiceQueryService(c.organizationId).getById(id,c.establishmentId,c.token); if(service.establishmentId!==c.establishmentId) throw new OperationAuthorizationError("FORBIDDEN"); return c; }
+export async function requireCatalogCategoryTargetAuthorization(id:string){ const c=await context(); let page=0; do { const result=await createServiceCategoryQueryService(c.organizationId).list(c.establishmentId,page,100,c.token); const found=result.content.find((x)=>x.id===id); if(found){ if(found.establishmentId!==c.establishmentId) throw new OperationAuthorizationError("FORBIDDEN"); return c; } page++; if(page>=result.totalPages) break; } while(true); throw new OperationAuthorizationError("FORBIDDEN"); }

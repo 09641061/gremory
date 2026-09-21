@@ -1,6 +1,6 @@
 "use client";
 
-import { EntitySearchBar } from "@/contexts/shared/interfaces/components/entity-search-bar";
+import { EntitySearchBar } from "@/contexts/shared/interfaces/components/lists/entity-search-bar";
 import { useBusinessTranslations } from "@/contexts/business/interfaces/i18n";
 
 interface OrganizationsSearchBarProps {

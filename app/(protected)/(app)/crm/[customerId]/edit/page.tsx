@@ -6,7 +6,7 @@ import type { CustomerResponse } from "@/contexts/crm/domain/model/entities/cust
 import { EditCustomerForm } from "@/contexts/crm/interfaces/components/customer-management/edit-customer-form";
 import { resolveModuleAccessFallback } from "@/contexts/shared/application/services/module-access.policy";
 import { getWorkspaceEstablishment, hasEstablishmentPermission } from "@/contexts/shared/application/services/workspace-establishment-permissions";
-import { PageLoading } from "@/contexts/shared/interfaces/components/page-loading";
+import { PageLoading } from "@/contexts/shared/interfaces/components/feedback/page-loading";
 
 interface EditCustomerPageProps {
   params: Promise<{ customerId: string }>;

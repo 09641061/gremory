@@ -10,7 +10,7 @@ import {
   DialogTitle,
 } from "@/contexts/shared/interfaces/components/ui/dialog";
 import { cancelSubscriptionAction } from "../../actions/cancel-subscription.action";
-import { useBillingTranslations } from "@/contexts/billing/interfaces/i18n";
+import { useBillingI18n } from "@/contexts/billing/interfaces/i18n";
 
 interface CancelSubscriptionModalProps {
   isOpen: boolean;
@@ -25,7 +25,7 @@ export function CancelSubscriptionModal({
   planName,
   onCancelled,
 }: CancelSubscriptionModalProps) {
-  const { t } = useBillingTranslations();
+  const { t } = useBillingI18n();
   const [isPending, startTransition] = useTransition();
 
   const handleCancel = () => {

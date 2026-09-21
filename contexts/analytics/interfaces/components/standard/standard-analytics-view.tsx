@@ -7,7 +7,7 @@ import { AnalyticsExportService } from "../../../domain/services/analytics-expor
 import { fetchStandardAnalyticsAction } from "../../actions/get-analytics-dashboard.action";
 import { AnalyticsDatePicker } from "../shared/analytics-date-picker";
 import { KpiCard } from "../shared/kpi-card";
-import { useAnalyticsTranslations } from "../../i18n";
+import { useAnalyticsI18n } from "../../i18n";
 import { cn } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/contexts/shared/interfaces/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/contexts/shared/interfaces/components/ui/table";
@@ -49,7 +49,7 @@ export function StandardAnalyticsView({
   onPresetChange,
   activePreset = "30d",
 }: StandardAnalyticsViewProps) {
-  const { t } = useAnalyticsTranslations();
+  const { t, locale } = useAnalyticsI18n();
   const [data, setData] = useState<StandardAnalyticsDashboardResponse>(initialData);
   const [currentPreset, setCurrentPreset] = useState<AnalyticsPreset>(activePreset);
   const [isPending, startTransition] = useTransition();
@@ -71,7 +71,11 @@ export function StandardAnalyticsView({
   const handleExport = () => {
     try {
       setIsExporting(true);
-      const headers = ["Fecha", "Citas Completadas", "Canceladas"];
+      const headers = [
+        t.export.csvHeaders.date,
+        t.export.csvHeaders.completedAppointments,
+        t.export.csvHeaders.cancelledAppointments,
+      ];
       const rows = data.completionVsCancellationTrend.map((pt) => [
         pt.date,
         pt.primaryValue,
@@ -79,7 +83,7 @@ export function StandardAnalyticsView({
       ]);
       const csv = AnalyticsExportService.toCsvWithBom(headers, rows);
       AnalyticsExportService.triggerDownload(
-        `analiticas-standard-${data.from}-${data.to}.csv`,
+        `${t.export.filePrefixStandard}-${data.from}-${data.to}.csv`,
         csv
       );
     } finally {
@@ -87,10 +91,13 @@ export function StandardAnalyticsView({
     }
   };
 
-  const formattedGrossRevenue = new Intl.NumberFormat("es-PE", {
-    style: "currency",
-    currency: "USD",
-  }).format(data.grossRevenue);
+  const formatCurrency = (amount: number) =>
+    new Intl.NumberFormat(locale === "es" ? "es-PE" : "en-US", {
+      style: "currency",
+      currency: "USD",
+    }).format(amount);
+
+  const formattedGrossRevenue = formatCurrency(data.grossRevenue);
 
   return (
     <div className={cn("space-y-6 transition-opacity duration-200", isPending && "opacity-60 pointer-events-none")}>
@@ -266,7 +273,7 @@ export function StandardAnalyticsView({
                         {service.completedCount}
                       </TableCell>
                       <TableCell className="text-right font-medium">
-                        {new Intl.NumberFormat("es-PE", { style: "currency", currency: "USD" }).format(service.grossRevenue)}
+                        {formatCurrency(service.grossRevenue)}
                       </TableCell>
                     </TableRow>
                   ))

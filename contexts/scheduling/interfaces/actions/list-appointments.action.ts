@@ -3,7 +3,7 @@
 import { Appointment } from "../../domain/model/entities/appointment";
 import { PageResponse } from "../../application/model/page-response";
 import { createSchedulingQueryService } from "../../application/internal/queryservices/scheduling-query.service.impl";
-import { createBusinessWorkspaceQueryService } from "@/contexts/business/application/internal/queryservices/business-workspace-query.service";
+import { requireSchedulingContext } from "../authorization/scheduling-authorization";
 import { AppointmentStatusType } from "../../domain/model/valueobjects/appointment-status";
 
 export async function listAppointmentsAction(
@@ -16,17 +16,17 @@ export async function listAppointmentsAction(
   size = 100
 ): Promise<PageResponse<Appointment>> {
   try {
-    const workspace = await createBusinessWorkspaceQueryService().getHeaderViewModel({ establishmentId });
-    const queryService = createSchedulingQueryService(workspace.organization?.id);
+    const auth = await requireSchedulingContext("scheduling:read", establishmentId);
+    const queryService = createSchedulingQueryService(auth.organizationId);
     return await queryService.searchAppointments({
       from,
       to,
-      establishmentId,
+      establishmentId: auth.establishmentId,
       employeeId,
       status,
       page,
       size,
-    });
+    }, auth.token);
   } catch (error) {
     console.error("List appointments action failed:", error);
     return {

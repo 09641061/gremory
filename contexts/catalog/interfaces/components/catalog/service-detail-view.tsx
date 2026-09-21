@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import Link from "next/link";
 import { EditIcon, ClockIcon, TimerIcon, SparklesIcon, CreditCardIcon, EyeIcon, EyeOffIcon } from "lucide-react";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
@@ -7,7 +8,8 @@ import { Badge } from "@/contexts/shared/interfaces/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/contexts/shared/interfaces/components/ui/card";
 import { useChangeCatalogServiceStatus } from "../../hooks/use-change-catalog-service-status";
 import { Spinner } from "@/contexts/shared/interfaces/components/ui/spinner";
-import { ErrorAlert } from "@/contexts/shared/interfaces/components/error";
+import { ErrorAlert } from "@/contexts/shared/interfaces/components/feedback/error";
+import { useCatalogTranslations } from "../../i18n";
 
 export type DetailedServiceDTO = {
   id: string;
@@ -28,13 +30,25 @@ interface ServiceDetailViewProps {
 }
 
 export function ServiceDetailView({ service }: ServiceDetailViewProps) {
+  const { t, locale } = useCatalogTranslations();
   const { changeStatus, pending, state } = useChangeCatalogServiceStatus();
   const isActive = service.status === "ACTIVE";
+
+  const formattedPrice = useMemo(() => {
+    try {
+      return new Intl.NumberFormat(locale, {
+        style: "currency",
+        currency: "USD",
+      }).format(service.price);
+    } catch {
+      return `$${service.price.toFixed(2)}`;
+    }
+  }, [locale, service.price]);
 
   return (
     <div className="max-w-[1200px] mx-auto p-6 space-y-6">
       <ErrorAlert
-        title="Failed to change service status"
+        title={t.serviceDetail.failedToChangeStatus}
         message={state.status === "error" ? (state.error ?? undefined) : undefined}
       />
 
@@ -53,7 +67,7 @@ export function ServiceDetailView({ service }: ServiceDetailViewProps) {
             <span
               className={`size-1.5 rounded-full ${isActive ? "bg-primary" : "bg-muted-foreground"}`}
             />
-            {isActive ? "Active" : service.status === "DELETED" ? "Deleted" : "Inactive"}
+            {isActive ? t.serviceForm.active : service.status === "DELETED" ? t.serviceForm.deleted : t.serviceForm.inactive}
           </Badge>
         </div>
 
@@ -71,13 +85,13 @@ export function ServiceDetailView({ service }: ServiceDetailViewProps) {
             ) : (
               <EyeIcon className="size-4 text-primary" />
             )}
-            <span>{isActive ? "Deactivate" : "Activate"}</span>
+            <span>{isActive ? t.serviceForm.deactivate : t.serviceForm.activate}</span>
           </Button>
 
           <Link href={`/catalog/${service.id}/edit`}>
             <Button variant="outline" className="gap-2 border-border bg-card hover:bg-muted">
               <EditIcon className="size-4 text-primary" />
-              <span>Edit Service</span>
+              <span>{t.serviceDetail.editService}</span>
             </Button>
           </Link>
         </div>
@@ -90,12 +104,12 @@ export function ServiceDetailView({ service }: ServiceDetailViewProps) {
           {/* Description Card */}
           <Card className="rounded-xl border-border bg-card">
             <CardHeader className="border-b border-border pb-4">
-              <CardTitle className="text-lg font-semibold">Service Details</CardTitle>
+              <CardTitle className="text-lg font-semibold">{t.serviceDetail.serviceDetailsTitle}</CardTitle>
             </CardHeader>
             <CardContent className="p-6 space-y-6">
               <div>
                 <label className="text-xs font-semibold uppercase text-muted-foreground block mb-1">
-                  Description
+                  {t.serviceDetail.descriptionLabel}
                 </label>
                 <p className="text-sm text-foreground leading-relaxed">
                   {service.description}
@@ -105,18 +119,18 @@ export function ServiceDetailView({ service }: ServiceDetailViewProps) {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div>
                   <label className="text-xs font-semibold uppercase text-muted-foreground block mb-1">
-                    Pre-service Instructions
+                    {t.serviceDetail.preServiceLabel}
                   </label>
                   <p className="text-sm text-foreground italic">
-                    {service.preServiceInstructions || "No pre-service instructions."}
+                    {service.preServiceInstructions || t.serviceDetail.noPreService}
                   </p>
                 </div>
                 <div>
                   <label className="text-xs font-semibold uppercase text-muted-foreground block mb-1">
-                    Post-service Recommendations
+                    {t.serviceDetail.postServiceLabel}
                   </label>
                   <p className="text-sm text-foreground">
-                    {service.postServiceRecommendations || "No post-service recommendations."}
+                    {service.postServiceRecommendations || t.serviceDetail.noPostService}
                   </p>
                 </div>
               </div>
@@ -126,24 +140,30 @@ export function ServiceDetailView({ service }: ServiceDetailViewProps) {
           {/* Operational Times Card */}
           <Card className="rounded-xl border-border bg-card">
             <CardHeader className="border-b border-border pb-4">
-              <CardTitle className="text-lg font-semibold">Operational Schedule</CardTitle>
+              <CardTitle className="text-lg font-semibold">{t.serviceDetail.operationalSchedule}</CardTitle>
             </CardHeader>
             <CardContent className="p-6">
               <div className="grid grid-cols-3 gap-6 text-center">
                 <div className="flex flex-col items-center p-4 bg-muted/40 rounded-lg border border-border">
                   <ClockIcon className="size-5 text-muted-foreground mb-2" />
-                  <span className="text-xs font-semibold uppercase text-muted-foreground">Preparation</span>
-                  <span className="text-xl font-bold text-foreground mt-1">{service.preparationMinutes} min</span>
+                  <span className="text-xs font-semibold uppercase text-muted-foreground">{t.serviceDetail.preparation}</span>
+                  <span className="text-xl font-bold text-foreground mt-1">
+                    {t.serviceDetail.minutesSuffix.replace("{minutes}", String(service.preparationMinutes))}
+                  </span>
                 </div>
                 <div className="flex flex-col items-center p-4 bg-primary/5 rounded-lg border border-primary/20">
                   <TimerIcon className="size-5 text-primary mb-2" />
-                  <span className="text-xs font-semibold uppercase text-muted-foreground">Duration</span>
-                  <span className="text-xl font-bold text-primary mt-1">{service.durationMinutes} min</span>
+                  <span className="text-xs font-semibold uppercase text-muted-foreground">{t.serviceDetail.duration}</span>
+                  <span className="text-xl font-bold text-primary mt-1">
+                    {t.serviceDetail.minutesSuffix.replace("{minutes}", String(service.durationMinutes))}
+                  </span>
                 </div>
                 <div className="flex flex-col items-center p-4 bg-muted/40 rounded-lg border border-border">
                   <SparklesIcon className="size-5 text-muted-foreground mb-2" />
-                  <span className="text-xs font-semibold uppercase text-muted-foreground">Cleanup</span>
-                  <span className="text-xl font-bold text-foreground mt-1">{service.cleanupMinutes} min</span>
+                  <span className="text-xs font-semibold uppercase text-muted-foreground">{t.serviceDetail.cleanup}</span>
+                  <span className="text-xl font-bold text-foreground mt-1">
+                    {t.serviceDetail.minutesSuffix.replace("{minutes}", String(service.cleanupMinutes))}
+                  </span>
                 </div>
               </div>
             </CardContent>
@@ -154,15 +174,15 @@ export function ServiceDetailView({ service }: ServiceDetailViewProps) {
         <div className="md:col-span-4 space-y-6">
           <Card className="rounded-xl border-border bg-card relative overflow-hidden">
             <CardHeader className="border-b border-border pb-4 flex flex-row items-center justify-between">
-              <CardTitle className="text-lg font-semibold">Pricing</CardTitle>
+              <CardTitle className="text-lg font-semibold">{t.serviceDetail.pricing}</CardTitle>
               <CreditCardIcon className="size-5 text-primary" />
             </CardHeader>
             <CardContent className="p-6 flex flex-col">
               <label className="text-xs font-semibold uppercase text-muted-foreground mb-1">
-                Retail Price
+                {t.serviceDetail.retailPrice}
               </label>
               <span className="text-3xl font-bold text-primary">
-                ${service.price.toFixed(2)}
+                {formattedPrice}
               </span>
             </CardContent>
           </Card>

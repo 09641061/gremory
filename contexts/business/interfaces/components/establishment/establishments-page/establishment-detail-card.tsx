@@ -51,8 +51,8 @@ export function EstablishmentDetailCard({
     <div className={cn("hidden flex-1 lg:block", className)}>
       <EntityProfileCard
         key={establishment.id}
-        entityLabel="Establishment"
-        photoNoun="photo"
+        entityLabel={t.establishments.singleLabel}
+        photoNoun={t.establishments.photoNoun}
         icon={Store}
         entityId={establishment.id}
         entityName={establishment.name}

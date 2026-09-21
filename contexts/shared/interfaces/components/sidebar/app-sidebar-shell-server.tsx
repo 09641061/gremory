@@ -3,7 +3,7 @@ import type { AssistantConversationSummaryReadModel } from "@/contexts/assistant
 import { createAssistantConversationsAdapter } from "@/contexts/assistant/infrastructure/adapters/assistant-conversations.adapter";
 import { getMyProfileServerQuery } from "@/contexts/profiles/interfaces/queries/get-my-profile.query-handler";
 import { AppShellSidebarClient } from "./app-sidebar-shell-client";
-import { getAppShellData, logAppShellError } from "../app-shell-data";
+import { getAppShellData, logAppShellError } from "../layout/app-shell-data";
 
 export async function AppShellSidebarServer() {
   const data = await getAppShellData();

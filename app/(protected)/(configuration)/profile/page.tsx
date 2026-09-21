@@ -4,7 +4,8 @@ import { redirect } from "next/navigation";
 import { getMyProfileServerQuery } from "@/contexts/profiles/interfaces/queries/get-my-profile.query-handler";
 import { ProfileCard } from "@/contexts/profiles/interfaces/components/profile/profile-card";
 import { ProfilePreferencesCard } from "@/contexts/profiles/interfaces/components/profile/profile-preferences-card";
-import { getServerDictionary } from "@/contexts/shared/infrastructure/i18n/server";
+import { getServerLocale } from "@/contexts/shared/infrastructure/i18n/server";
+import { getProfilesDictionary } from "@/contexts/profiles/interfaces/i18n";
 
 export default function ProfilePage() {
   return (
@@ -21,7 +22,8 @@ export async function ProfilePageContent() {
     redirect("/login");
   }
 
-  const dict = await getServerDictionary();
+  const locale = await getServerLocale();
+  const dict = getProfilesDictionary(locale);
 
   return (
     <div className="mx-auto w-full max-w-3xl space-y-6">

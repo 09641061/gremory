@@ -1,7 +1,7 @@
 /** @vitest-environment jsdom */
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { describe, it, expect, vi } from "vitest";
-import { ErrorBanner } from "@/contexts/shared/interfaces/components/error-banner";
+import { ErrorBanner } from "@/contexts/shared/interfaces/components/feedback/error-banner";
 
 const mockGet = vi.fn().mockReturnValueOnce("org").mockReturnValue(null);
 const mockReplace = vi.fn();
@@ -21,7 +21,7 @@ describe("ErrorBanner Component", () => {
 
     // Verify error banner content has been translated from "org" parameter
     await waitFor(() => {
-      expect(screen.getByText("Access Denied")).toBeDefined();
+      expect(screen.getByText("Access denied")).toBeDefined();
       expect(screen.getByText("You do not have permission to access organization details. Please contact your administrator.")).toBeDefined();
     });
 

@@ -9,7 +9,7 @@ import { listPlansByCurrencyQueryService } from "@/contexts/billing/application/
 import { createAppShellQueryService } from "@/contexts/shared/application/internal/queryservices/app-shell-query.service";
 import { createBusinessWorkspaceQueryService } from "@/contexts/business/application/internal/queryservices/business-workspace-query.service";
 import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-session-cookie";
-import { PageLoading } from "@/contexts/shared/interfaces/components/page-loading";
+import { PageLoading } from "@/contexts/shared/interfaces/components/feedback/page-loading";
 
 /**
  * Keep the route shell instant-renderable while request-bound billing data is

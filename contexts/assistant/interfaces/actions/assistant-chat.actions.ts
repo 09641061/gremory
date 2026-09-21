@@ -1,5 +1,8 @@
 "use server";
 
+import { safePublicError } from "@/contexts/shared/interfaces/actions/safe-error";
+
+
 import "server-only";
 import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
@@ -61,7 +64,7 @@ export async function submitAssistantMessageAction(
     return {
       status: "error",
       data: null,
-      error: error instanceof Error ? error.message : "Unable to send the assistant message.",
+      error: safePublicError(error, "Unable to send the assistant message.").message,
     };
   }
 }

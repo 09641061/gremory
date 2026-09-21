@@ -1,5 +1,8 @@
 "use server";
 
+import { safePublicError } from "@/contexts/shared/interfaces/actions/safe-error";
+
+
 import { revalidatePath } from "next/cache";
 import { createCrmCommandService } from "../../application/internal/commandservices/crm-command.service";
 import { createBusinessWorkspaceQueryService } from "@/contexts/business/application/internal/queryservices/business-workspace-query.service";
@@ -33,7 +36,7 @@ export async function deleteCustomerAction(
     return {
       status: "error",
       data: null,
-      error: error instanceof Error ? error.message : "An error occurred while deleting the customer.",
+      error: safePublicError(error, "An error occurred while deleting the customer.").message,
       errorId: createActionErrorId(),
       fieldErrors: null,
     };

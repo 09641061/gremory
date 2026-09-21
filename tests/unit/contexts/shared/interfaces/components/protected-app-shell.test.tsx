@@ -64,7 +64,7 @@ vi.mock("@/contexts/shared/interfaces/components/ui/sidebar", () => ({
 // the assertion does not depend on renderToStaticMarkup's sync-renderer
 // behaviour (React 19's legacy server renderer does not support Suspense on
 // its own — see react-dom-server-legacy error message).
-import ProtectedAppShell from "@/contexts/shared/interfaces/components/protected-app-shell";
+import ProtectedAppShell from "@/contexts/shared/interfaces/components/layout/protected-app-shell";
 import { AppHeaderServer } from "@/contexts/shared/interfaces/components/header/app-header-server";
 import { AppShellSidebarServer } from "@/contexts/shared/interfaces/components/sidebar/app-sidebar-shell-server";
 

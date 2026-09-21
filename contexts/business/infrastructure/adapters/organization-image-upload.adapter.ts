@@ -5,11 +5,10 @@ import type { OrganizationId } from "@/contexts/business/domain/model/valueobjec
 import type { OrganizationName } from "@/contexts/business/domain/model/valueobjects/organization-name.vo";
 import { requireBusinessAccessToken } from "@/contexts/business/infrastructure/session/business-session";
 import { apiConfig } from "@/api.config";
+import { apiClient } from "@/contexts/shared/infrastructure/http/api-client";
+import { z } from "zod";
 
-type OrganizationImageUploadResponse = {
-  message?: unknown;
-  detail?: unknown;
-};
+const organizationImageResponseSchema = z.object({ message: z.unknown().optional(), detail: z.unknown().optional() }).passthrough();
 
 export class OrganizationImageUploadAdapter implements OrganizationImageStorage {
   constructor(private readonly providedToken?: string) {}
@@ -20,28 +19,10 @@ export class OrganizationImageUploadAdapter implements OrganizationImageStorage 
     formData.set("name", name.value);
     formData.set("photoFile", image);
 
-    const response = await fetch(
-      `${apiConfig.baseUrl}${apiConfig.routes.organizations}/${encodeURIComponent(id.value)}`,
-      {
-        method: "PUT",
-        headers: {
-          Authorization: `Bearer ${authToken}`,
-          "X-Organization-Id": id.value,
-        },
-        body: formData,
-      },
-    );
-
-    if (!response.ok) {
-      const data = (await response.json().catch(() => null)) as OrganizationImageUploadResponse | null;
-      const message =
-        typeof data?.message === "string" && data.message.trim()
-          ? data.message
-          : typeof data?.detail === "string" && data.detail.trim()
-            ? data.detail
-            : "Failed to update organization";
-      throw new Error(message);
-    }
+    const data = await apiClient.requestMultipart<unknown>(`${apiConfig.routes.organizations}/${encodeURIComponent(id.value)}`, formData, {
+      method: "PUT", token: authToken, tenantId: id.value, errorMessage: "Failed to update organization",
+    });
+    organizationImageResponseSchema.parse(data);
   }
 }
 

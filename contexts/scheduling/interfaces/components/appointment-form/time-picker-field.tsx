@@ -10,6 +10,7 @@ import {
   PopoverTrigger,
 } from "@/contexts/shared/interfaces/components/ui/popover";
 import { cn } from "@/lib/utils";
+import { useSchedulingTranslations } from "../../i18n";
 
 const MINUTE_STEP = 15;
 const DEFAULT_TIME = "09:00";
@@ -30,6 +31,7 @@ function to12Hour(hour24: number) {
 }
 
 export function TimePickerField({ id, value, onChange }: TimePickerFieldProps) {
+  const { t } = useSchedulingTranslations();
   const [hour24, minute] = (value || DEFAULT_TIME).split(":").map(Number);
   const isPM = hour24 >= 12;
   const hour12 = to12Hour(hour24);
@@ -102,7 +104,7 @@ export function TimePickerField({ id, value, onChange }: TimePickerFieldProps) {
         className="w-full justify-between gap-3 bg-transparent px-3 text-left font-normal dark:bg-input/30"
       >
         <span className={cn("truncate", !value && "text-muted-foreground")}>
-          {value ? `${pad(hour12)}:${pad(minute)} ${isPM ? "PM" : "AM"}` : "Select time..."}
+          {value ? `${pad(hour12)}:${pad(minute)} ${isPM ? "PM" : "AM"}` : t.calendar.selectTime}
         </span>
         <Clock className="size-4 shrink-0 text-muted-foreground" />
       </PopoverTrigger>
@@ -115,13 +117,13 @@ export function TimePickerField({ id, value, onChange }: TimePickerFieldProps) {
               variant="ghost"
               size="icon-xs"
               onClick={() => shiftHour(1)}
-              aria-label="Increase hour"
+              aria-label={t.calendar.increaseHour}
             >
               <ChevronUp className="size-4" />
             </Button>
             <Input
               inputMode="numeric"
-              aria-label="Hour"
+              aria-label={t.calendar.hour}
               value={hourInput}
               onChange={(event) => handleHourInput(event.target.value)}
               onBlur={handleHourBlur}
@@ -132,7 +134,7 @@ export function TimePickerField({ id, value, onChange }: TimePickerFieldProps) {
               variant="ghost"
               size="icon-xs"
               onClick={() => shiftHour(-1)}
-              aria-label="Decrease hour"
+              aria-label={t.calendar.decreaseHour}
             >
               <ChevronDown className="size-4" />
             </Button>
@@ -148,13 +150,13 @@ export function TimePickerField({ id, value, onChange }: TimePickerFieldProps) {
               variant="ghost"
               size="icon-xs"
               onClick={() => shiftMinute(MINUTE_STEP)}
-              aria-label={`Increase minutes by ${MINUTE_STEP}`}
+              aria-label={t.calendar.increaseMinutes}
             >
               <ChevronUp className="size-4" />
             </Button>
             <Input
               inputMode="numeric"
-              aria-label="Minutes"
+              aria-label={t.calendar.minutes}
               value={minuteInput}
               onChange={(event) => handleMinuteInput(event.target.value)}
               onBlur={handleMinuteBlur}
@@ -165,7 +167,7 @@ export function TimePickerField({ id, value, onChange }: TimePickerFieldProps) {
               variant="ghost"
               size="icon-xs"
               onClick={() => shiftMinute(-MINUTE_STEP)}
-              aria-label={`Decrease minutes by ${MINUTE_STEP}`}
+              aria-label={t.calendar.decreaseMinutes}
             >
               <ChevronDown className="size-4" />
             </Button>

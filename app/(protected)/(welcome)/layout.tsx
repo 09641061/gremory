@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { Suspense } from "react";
 import { AppHeaderServer } from "@/contexts/shared/interfaces/components/header/app-header-server";
-import { PageLoading } from "@/contexts/shared/interfaces/components/page-loading";
+import { PageLoading } from "@/contexts/shared/interfaces/components/feedback/page-loading";
 
 // Welcome's page owns the existing entry guard. This shell never mounts app navigation.
 export default function WelcomeLayout({ children }: { children: ReactNode }) {

@@ -1,10 +1,14 @@
 "use server";
 
+import { safePublicError } from "@/contexts/shared/interfaces/actions/safe-error";
+
+
 import { revalidatePath } from "next/cache";
 import { cancelAppointmentSchema } from "../rest/schemas/appointment.schemas";
 import { ApiError } from "@/contexts/shared/infrastructure/http/api-client";
 import { Appointment } from "../../domain/model/entities/appointment";
 import { ActionState } from "./action-state";
+import { requireAppointmentOperationAuthorization } from "@/contexts/scheduling/interfaces/authorization/scheduling-authorization";
 import { createSchedulingCommandService } from "../../application/internal/commandservices/scheduling-command.service.impl";
 import { createBusinessWorkspaceQueryService } from "@/contexts/business/application/internal/queryservices/business-workspace-query.service";
 
@@ -30,6 +34,7 @@ export async function cancelAppointmentAction(
   }
 
   try {
+    await requireAppointmentOperationAuthorization(appointmentId);
     const workspace = await createBusinessWorkspaceQueryService().getHeaderViewModel();
     const commandService = createSchedulingCommandService(workspace.organization?.id);
     const result = await commandService.cancelAppointment(appointmentId, parsed.data);
@@ -37,10 +42,7 @@ export async function cancelAppointmentAction(
     return { status: "success", data: result, error: null, errorId: null, fieldErrors: null };
   } catch (error: unknown) {
     console.error("Cancel appointment action failed:", error);
-    let message = "We could not cancel this appointment. Please try again.";
-    if (error instanceof ApiError && error.message) {
-      message = error.message;
-    }
+    const message = safePublicError(error, "We could not cancel this appointment. Please try again.").message;
     return {
       status: "error",
       data: null,

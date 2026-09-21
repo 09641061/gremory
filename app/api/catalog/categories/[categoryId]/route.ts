@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
+import { safePublicError } from "@/contexts/shared/interfaces/actions/safe-error";
 import { z } from "zod";
 import { createServiceCategoryCommandService } from "@/contexts/catalog/application/internal/commandservices/service-category-command.service";
 import { createServiceCategoryReadModel } from "@/contexts/catalog/application/model/service-category.read-model";
+import { requireCatalogCategoryTargetAuthorization } from "@/contexts/catalog/interfaces/authorization/catalog-authorization";
 import { updateServiceCategorySchema } from "@/contexts/catalog/interfaces/rest/schemas/service-category.schemas";
 
 const uuidSchema = z.string().uuid();
@@ -26,6 +28,7 @@ export async function PUT(
       return validationErrorResponse(parsed.error.issues[0]?.message);
     }
 
+    await requireCatalogCategoryTargetAuthorization(idParsed.data);
     const category = await createServiceCategoryCommandService().update(parsed.data);
 
     return NextResponse.json(createServiceCategoryReadModel(category));
@@ -49,38 +52,9 @@ function validationErrorResponse(message?: string) {
   );
 }
 
-function routeErrorResponse(error: unknown): Response {
-  if (error instanceof Error) {
-    const status = readStatus(error);
-    if (status !== undefined) {
-      const details = readDetails(error);
-      return NextResponse.json(
-        details === undefined
-          ? { message: error.message }
-          : { message: error.message, details },
-        { status },
-      );
-    }
-
-    if (error.message === "Authentication is required") {
-      return NextResponse.json({ message: error.message }, { status: 401 });
-    }
-
-    return NextResponse.json({ message: error.message }, { status: 400 });
-  }
-
-  return NextResponse.json({ message: "Unexpected error" }, { status: 500 });
-}
-
-function readStatus(error: Error): number | undefined {
-  const status = (error as Error & { status?: unknown }).status;
-  if (typeof status !== "number" || Number.isNaN(status)) return undefined;
-  if (status <= 0) return 502;
-  return status;
-}
-
-function readDetails(error: Error): unknown {
-  return (error as Error & { details?: unknown }).details;
+function routeErrorResponse(error: unknown, fallback = "Request could not be completed"): Response {
+  const safe = safePublicError(error, fallback);
+  return NextResponse.json({ message: safe.message }, { status: safe.status });
 }
 
 export async function DELETE(
@@ -94,6 +68,7 @@ export async function DELETE(
       return validationErrorResponse(idParsed.error.issues[0]?.message);
     }
 
+    await requireCatalogCategoryTargetAuthorization(idParsed.data);
     await createServiceCategoryCommandService().delete({ id: idParsed.data });
 
     return new Response(null, { status: 204 });

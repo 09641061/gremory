@@ -10,7 +10,7 @@ import { PremiumIcon } from "../icons/premium";
 import { cn } from "@/lib/utils";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import { Card } from "@/contexts/shared/interfaces/components/ui/card";
-import { useBillingTranslations } from "@/contexts/billing/interfaces/i18n";
+import { useBillingI18n } from "@/contexts/billing/interfaces/i18n";
 
 interface PlanCardProps {
   planId: number;
@@ -47,7 +47,7 @@ export function PlanCard({
   onError,
   onSelect,
 }: PlanCardProps) {
-  const { t } = useBillingTranslations();
+  const { t } = useBillingI18n();
   const [isPending, startTransition] = useTransition();
 
   const isAnnual = billingCycle === "ANNUAL";

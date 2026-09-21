@@ -1,6 +1,12 @@
 export type ApiRequestContext = Readonly<{
   token?: string;
   tenantId?: string;
+  /** Correlates this request with backend diagnostics without carrying secrets. */
+  correlationId?: string;
+  /** Caller-provided cancellation signal. */
+  signal?: AbortSignal;
+  /** Per-operation deadline in milliseconds. */
+  timeoutMs?: number;
 }>;
 
 export type AuthenticatedRequestContext = Readonly<{
@@ -20,6 +26,10 @@ export function buildApiRequestHeaders(
 
   if (context.tenantId && !hasHeader(merged, "x-organization-id")) {
     merged["X-Organization-Id"] = context.tenantId;
+  }
+
+  if (context.correlationId && !hasHeader(merged, "x-correlation-id")) {
+    merged["X-Correlation-Id"] = context.correlationId;
   }
 
   return merged;

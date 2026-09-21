@@ -1,5 +1,5 @@
 import { AppHeader } from "./app-header";
-import { getAppShellData } from "../app-shell-data";
+import { getAppShellData } from "../layout/app-shell-data";
 
 /**
  * Home destination when no shell data is available (no auth, expired token,

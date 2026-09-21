@@ -1,9 +1,11 @@
 import { NextResponse } from "next/server";
+import { safePublicError } from "@/contexts/shared/interfaces/actions/safe-error";
 import { z } from "zod";
 import { createCatalogServiceCommandService } from "@/contexts/catalog/application/internal/commandservices/catalog-service-command.service";
 import { createCatalogServiceQueryService } from "@/contexts/catalog/application/internal/queryservices/catalog-service-query.service";
 import { createCatalogServiceReadModel } from "@/contexts/catalog/application/model/catalog-service.read-model";
 import { updateCatalogServiceSchema } from "@/contexts/catalog/interfaces/rest/schemas/catalog-service.schemas";
+import { requireCatalogContext, requireCatalogServiceTargetAuthorization } from "@/contexts/catalog/interfaces/authorization/catalog-authorization";
 
 const uuidSchema = z.string().uuid();
 
@@ -24,9 +26,11 @@ export async function GET(
       return validationErrorResponse("establishmentId is required");
     }
 
-    const service = await createCatalogServiceQueryService().getById(
+    const auth = await requireCatalogServiceTargetAuthorization(idParsed.data, "catalog:read", establishmentId);
+    const service = await createCatalogServiceQueryService(auth.organizationId).getById(
       idParsed.data,
       establishmentId,
+      auth.token,
     );
 
     return NextResponse.json(service);
@@ -50,38 +54,9 @@ function validationErrorResponse(message?: string) {
   );
 }
 
-function routeErrorResponse(error: unknown): Response {
-  if (error instanceof Error) {
-    const status = readStatus(error);
-    if (status !== undefined) {
-      const details = readDetails(error);
-      return NextResponse.json(
-        details === undefined
-          ? { message: error.message }
-          : { message: error.message, details },
-        { status },
-      );
-    }
-
-    if (error.message === "Authentication is required") {
-      return NextResponse.json({ message: error.message }, { status: 401 });
-    }
-
-    return NextResponse.json({ message: error.message }, { status: 400 });
-  }
-
-  return NextResponse.json({ message: "Unexpected error" }, { status: 500 });
-}
-
-function readStatus(error: Error): number | undefined {
-  const status = (error as Error & { status?: unknown }).status;
-  if (typeof status !== "number" || Number.isNaN(status)) return undefined;
-  if (status <= 0) return 502;
-  return status;
-}
-
-function readDetails(error: Error): unknown {
-  return (error as Error & { details?: unknown }).details;
+function routeErrorResponse(error: unknown, fallback = "Request could not be completed"): Response {
+  const safe = safePublicError(error, fallback);
+  return NextResponse.json({ message: safe.message }, { status: safe.status });
 }
 
 export async function PUT(
@@ -95,6 +70,11 @@ export async function PUT(
       return validationErrorResponse(idParsed.error.issues[0]?.message);
     }
 
+    const url = new URL(request.url);
+    const establishmentId = url.searchParams.get("establishmentId");
+    if (!establishmentId) return validationErrorResponse("establishmentId is required");
+    const auth = await requireCatalogServiceTargetAuthorization(idParsed.data);
+    if (auth.establishmentId !== establishmentId) return NextResponse.json({ message: "Operation not permitted" }, { status: 403 });
     const body = await parseJsonBody(request);
     const parsed = updateCatalogServiceSchema.safeParse({
       id: idParsed.data,
@@ -135,6 +115,10 @@ export async function DELETE(
     if (!idParsed.success) {
       return validationErrorResponse(idParsed.error.issues[0]?.message);
     }
+    const establishmentId = new URL(_request.url).searchParams.get("establishmentId");
+    if (!establishmentId) return validationErrorResponse("establishmentId is required");
+    const auth = await requireCatalogServiceTargetAuthorization(idParsed.data);
+    if (auth.establishmentId !== establishmentId) return NextResponse.json({ message: "Operation not permitted" }, { status: 403 });
 
     await createCatalogServiceCommandService().delete({ id: idParsed.data });
     return new Response(null, { status: 204 });

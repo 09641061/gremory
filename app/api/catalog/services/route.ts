@@ -1,9 +1,11 @@
 import { NextResponse } from "next/server";
+import { safePublicError } from "@/contexts/shared/interfaces/actions/safe-error";
 import { z } from "zod";
 import { createCatalogServiceCommandService } from "@/contexts/catalog/application/internal/commandservices/catalog-service-command.service";
 import { createCatalogServiceQueryService } from "@/contexts/catalog/application/internal/queryservices/catalog-service-query.service";
 import { createCatalogServiceReadModel } from "@/contexts/catalog/application/model/catalog-service.read-model";
 import { createCatalogServiceSchema } from "@/contexts/catalog/interfaces/rest/schemas/catalog-service.schemas";
+import { requireOperationAuthorization } from "@/contexts/catalog/interfaces/authorization/catalog-authorization";
 
 const activeQuerySchema = z.enum(["true", "false"]).transform((value) => value === "true").optional();
 const listQuerySchema = z.object({
@@ -38,7 +40,9 @@ export async function GET(request: Request) {
       return validationErrorResponse(parsed.error.issues[0]?.message);
     }
 
-    const page = await createCatalogServiceQueryService().search({
+    const auth = await requireOperationAuthorization("catalog:read", parsed.data.establishmentId);
+    if (auth.establishmentId !== parsed.data.establishmentId) return NextResponse.json({ message: "Operation not permitted" }, { status: 403 });
+    const page = await createCatalogServiceQueryService(auth.organizationId).search({
       establishmentId: parsed.data.establishmentId,
       categoryId: parsed.data.categoryId,
       search: parsed.data.search,
@@ -49,7 +53,7 @@ export async function GET(request: Request) {
       maxDuration: parsed.data.maxDuration,
       page: parsed.data.page,
       size: parsed.data.size,
-    });
+    }, auth.token);
 
     return NextResponse.json(page);
   } catch (error) {
@@ -72,38 +76,9 @@ function validationErrorResponse(message?: string) {
   );
 }
 
-function routeErrorResponse(error: unknown): Response {
-  if (error instanceof Error) {
-    const status = readStatus(error);
-    if (status !== undefined) {
-      const details = readDetails(error);
-      return NextResponse.json(
-        details === undefined
-          ? { message: error.message }
-          : { message: error.message, details },
-        { status },
-      );
-    }
-
-    if (error.message === "Authentication is required") {
-      return NextResponse.json({ message: error.message }, { status: 401 });
-    }
-
-    return NextResponse.json({ message: error.message }, { status: 400 });
-  }
-
-  return NextResponse.json({ message: "Unexpected error" }, { status: 500 });
-}
-
-function readStatus(error: Error): number | undefined {
-  const status = (error as Error & { status?: unknown }).status;
-  if (typeof status !== "number" || Number.isNaN(status)) return undefined;
-  if (status <= 0) return 502;
-  return status;
-}
-
-function readDetails(error: Error): unknown {
-  return (error as Error & { details?: unknown }).details;
+function routeErrorResponse(error: unknown, fallback = "Request could not be completed"): Response {
+  const safe = safePublicError(error, fallback);
+  return NextResponse.json({ message: safe.message }, { status: safe.status });
 }
 
 export async function POST(request: Request) {
@@ -125,6 +100,8 @@ export async function POST(request: Request) {
       return validationErrorResponse(parsed.error.issues[0]?.message);
     }
 
+    const auth = await requireOperationAuthorization("catalog:manage", parsed.data.establishmentId);
+    if (auth.establishmentId !== parsed.data.establishmentId) return NextResponse.json({ message: "Operation not permitted" }, { status: 403 });
     const service = await createCatalogServiceCommandService().create({
       ...parsed.data,
       categoryId: parsed.data.categoryId || null,

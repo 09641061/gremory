@@ -4,11 +4,8 @@ import { cookies } from "next/headers";
 
 import { apiConfig } from "@/api.config";
 import {
-  ApiError,
   apiClient,
-  extractApiErrorMessage,
 } from "@/contexts/shared/infrastructure/http/api-client";
-import { buildApiRequestHeaders } from "@/contexts/shared/infrastructure/http/request-context";
 import type { PageResponse } from "@/contexts/shared/application/model/page-response";
 export type { PageResponse } from "@/contexts/shared/application/model/page-response";
 import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-session-cookie";
@@ -154,35 +151,23 @@ export class AssistantApiGateway {
     id: string,
     command: SendAssistantMessageRequest,
     token?: string,
+    options: { signal?: AbortSignal; timeoutMs?: number; correlationId?: string } = {},
   ): Promise<Response> {
     const authToken = await resolveAccessToken(token);
 
-    const response = await fetch(
-      `${apiClient.buildUrl(apiConfig.routes.assistantConversations)}/${encodeURIComponent(id)}/messages/stream`,
+    return apiClient.requestStream(
+      `${apiConfig.routes.assistantConversations}/${encodeURIComponent(id)}/messages/stream`,
       {
         method: "POST",
-        headers: buildApiRequestHeaders(
-          { token: authToken, tenantId: this.organizationId },
-          {
-            "Content-Type": "application/json",
-            Accept: "text/event-stream",
-          },
-        ),
-        body: JSON.stringify(command),
+        token: authToken,
+        tenantId: this.organizationId,
+        signal: options.signal,
+        timeoutMs: options.timeoutMs,
+        correlationId: options.correlationId,
+        headers: { Accept: "text/event-stream" },
+        body: command,
       },
     );
-    if (!response.ok) {
-      const body = await response.text();
-      let message = body;
-      try {
-        const parsed: unknown = JSON.parse(body);
-        message = extractApiErrorMessage(parsed) ?? message;
-      } catch {
-        // Keep the raw response body when the server does not return JSON.
-      }
-      throw new ApiError(message || `Assistant stream failed with status ${response.status}`, response.status);
-    }
-    return response;
   }
 
   async renameConversation(

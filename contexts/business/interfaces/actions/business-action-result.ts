@@ -1,4 +1,5 @@
 import type { ActionResult } from "@/contexts/shared/interfaces/actions/action-result";
+import { safePublicError } from "@/contexts/shared/interfaces/actions/safe-error";
 
 export type BusinessActionResult = ActionResult<{ id?: string } | null>;
 
@@ -12,6 +13,6 @@ export function actionError(error: unknown): BusinessActionResult {
   return {
     status: "error",
     data: null,
-    error: error instanceof Error ? error.message : "Unexpected error",
+    error: safePublicError(error).message,
   };
 }

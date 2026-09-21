@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { ErrorScreen } from "@/contexts/shared/interfaces/components/error-screen";
+import { ErrorScreen } from "@/contexts/shared/interfaces/components/feedback/error-screen";
 
 export default function PermissionsError({
   error,
@@ -16,8 +16,6 @@ export default function PermissionsError({
 
   return (
     <ErrorScreen
-      title="Could not load permissions"
-      message="We hit a problem while loading the roles list. Please try again."
       reset={reset}
       mainClassName="flex min-h-0 flex-1 items-center justify-center px-4 text-foreground"
     />

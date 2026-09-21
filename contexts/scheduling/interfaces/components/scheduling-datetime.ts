@@ -63,16 +63,17 @@ export function isSameDay(a: Date, b: Date): boolean {
   );
 }
 
-export function formatClockTime(date: Date): string {
-  return date.toLocaleTimeString("en-US", {
+export function formatClockTime(date: Date, locale: string = "en-US"): string {
+  const isEs = locale.startsWith("es");
+  return date.toLocaleTimeString(isEs ? "es-ES" : "en-US", {
     hour: "numeric",
     minute: "2-digit",
-    hour12: true,
+    hour12: !isEs,
   });
 }
 
-export function formatClockRange(start: Date, end: Date): string {
-  return `${formatClockTime(start)} - ${formatClockTime(end)}`;
+export function formatClockRange(start: Date, end: Date, locale?: string): string {
+  return `${formatClockTime(start, locale)} - ${formatClockTime(end, locale)}`;
 }
 
 /** Sunday-to-Saturday bounds of the week containing `date`. */

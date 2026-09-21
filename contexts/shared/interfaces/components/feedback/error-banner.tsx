@@ -7,8 +7,10 @@ import { ShieldAlert, X } from "lucide-react";
 import { useEffect, useState, Suspense } from "react";
 
 import { useRouter, usePathname } from "next/navigation";
+import { useI18n } from "@/contexts/shared/interfaces/i18n";
 
 function ErrorBannerContent() {
+  const { t } = useI18n();
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
@@ -19,14 +21,14 @@ function ErrorBannerContent() {
     if (denied) {
       setTimeout(() => {
         if (denied === "org") {
-          setErrorMsg("You do not have permission to access organization details. Please contact your administrator.");
+          setErrorMsg(t.shared.accessDeniedOrgDetails);
         } else if (denied === "est") {
-          setErrorMsg("You do not have permission to access establishments in this organization. Please contact your administrator.");
+          setErrorMsg(t.shared.accessDeniedOrgEstablishments);
         }
       }, 0);
       router.replace(pathname);
     }
-  }, [searchParams, router, pathname]);
+  }, [searchParams, router, pathname, t.shared.accessDeniedOrgDetails, t.shared.accessDeniedOrgEstablishments]);
 
   if (!errorMsg) return null;
 
@@ -34,7 +36,7 @@ function ErrorBannerContent() {
     <div className="fixed top-4 right-4 z-50 max-w-md animate-in fade-in slide-in-from-top-5">
       <Alert variant="destructive" className="relative rounded-lg border-destructive/20 bg-card pr-10 shadow-lg">
         <ShieldAlert className="size-4" />
-        <AlertTitle>Access Denied</AlertTitle>
+        <AlertTitle>{t.shared.accessDenied}</AlertTitle>
         <AlertDescription>{errorMsg}</AlertDescription>
         <Button
           type="button"
@@ -42,7 +44,7 @@ function ErrorBannerContent() {
           size="icon-xs"
           onClick={() => setErrorMsg(null)}
           className="absolute top-2.5 right-2.5 text-muted-foreground hover:bg-muted/70 hover:text-foreground"
-          aria-label="Dismiss alert"
+          aria-label={t.shared.dismissAlert}
         >
           <X className="size-4" />
         </Button>

@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { AuthForm } from "@/contexts/iam/interfaces/components/auth-form";
-import { PageLoading } from "@/contexts/shared/interfaces/components/page-loading";
+import { PageLoading } from "@/contexts/shared/interfaces/components/feedback/page-loading";
 import { normalizeAuthReturnPath } from "@/contexts/iam/domain/model/valueobjects/auth-return-path";
 
 type LoginPageProps = {

@@ -12,6 +12,7 @@ vi.mock("@/contexts/shared/infrastructure/http/api-client", async (importOrigina
     apiClient: {
       get: vi.fn(),
       put: vi.fn(),
+      requestMultipart: vi.fn(),
     },
   };
 });
@@ -28,6 +29,7 @@ describe("HttpProfileRepository", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     repository = new HttpProfileRepository();
+    vi.mocked(apiClient.requestMultipart).mockResolvedValue(rawApiResponse);
   });
 
   describe("getMyProfile", () => {
@@ -122,27 +124,20 @@ describe("HttpProfileRepository", () => {
         language: "ES",
         theme: "LIGHT",
       });
-      expect(mockFetch).toHaveBeenCalledWith(
-        expect.stringContaining("/api/v1/profiles"),
-        expect.objectContaining({
-          method: "PUT",
-          headers: { Authorization: "Bearer token-abc" },
-          body: expect.any(FormData),
-        })
+      expect(apiClient.requestMultipart).toHaveBeenCalledWith(
+        "/api/v1/profiles",
+        expect.any(FormData),
+        expect.objectContaining({ method: "PUT", token: "token-abc" }),
       );
     });
 
     it("should include imageUrl in FormData when imageUrl is present along with image file", async () => {
       // Arrange
       let capturedFormData: FormData | null = null;
-      const mockFetch = vi.fn().mockImplementation((_url, options) => {
-        capturedFormData = options.body;
-        return Promise.resolve({
-          ok: true,
-          json: () => Promise.resolve(rawApiResponse),
-        });
+      vi.mocked(apiClient.requestMultipart).mockImplementation(async (_path, body) => {
+        capturedFormData = body;
+        return rawApiResponse;
       });
-      vi.stubGlobal("fetch", mockFetch);
 
       const dummyFile = new File(["bytes"], "photo.png", { type: "image/png" });
       const command = {
@@ -163,12 +158,7 @@ describe("HttpProfileRepository", () => {
 
     it("should throw ProfileApiError when update with image fails", async () => {
       // Arrange
-      const mockFetch = vi.fn().mockResolvedValue({
-        ok: false,
-        status: 400,
-        json: vi.fn().mockResolvedValue({ message: "Invalid image format" }),
-      });
-      vi.stubGlobal("fetch", mockFetch);
+      vi.mocked(apiClient.requestMultipart).mockRejectedValue(new ApiError("Invalid image format", 400));
 
       const dummyFile = new File(["bytes"], "photo.png", { type: "image/png" });
       const command = {

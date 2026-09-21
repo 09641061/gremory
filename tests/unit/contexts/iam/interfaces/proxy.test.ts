@@ -377,7 +377,10 @@ describe("IAM session proxy", () => {
       1,
       "http://localhost:8080/api/business/workspace",
       expect.objectContaining({
-        headers: { Authorization: "Bearer access-token" },
+        headers: expect.objectContaining({
+          Authorization: "Bearer access-token",
+          "X-Correlation-Id": expect.any(String),
+        }),
       }),
     );
   });
@@ -402,7 +405,10 @@ describe("IAM session proxy", () => {
       1,
       `http://localhost:8080/api/business/workspace?establishmentId=${establishmentId}`,
       expect.objectContaining({
-        headers: { Authorization: "Bearer access-token" },
+        headers: expect.objectContaining({
+          Authorization: "Bearer access-token",
+          "X-Correlation-Id": expect.any(String),
+        }),
       }),
     );
   });

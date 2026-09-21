@@ -1,5 +1,8 @@
 "use server";
 
+import { safePublicError } from "@/contexts/shared/interfaces/actions/safe-error";
+
+
 import "server-only";
 import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
@@ -65,7 +68,7 @@ export async function markNotificationAsReadAction(id: string) {
     revalidatePath("/", "layout");
     return { success: true };
   } catch (error) {
-    return { success: false, error: error instanceof Error ? error.message : "Failed to mark as read" };
+    return { success: false, error: safePublicError(error, "Failed to mark as read").message };
   }
 }
 
@@ -78,7 +81,7 @@ export async function deleteNotificationAction(id: string) {
     revalidatePath("/", "layout");
     return { success: true };
   } catch (error) {
-    return { success: false, error: error instanceof Error ? error.message : "Failed to delete notification" };
+    return { success: false, error: safePublicError(error, "Failed to delete notification").message };
   }
 }
 
@@ -94,7 +97,7 @@ export async function acceptInvitationNotificationAction(notificationId: string,
     return { success: true };
   } catch (error) {
     console.error("acceptInvitationNotificationAction error:", error);
-    return { success: false, error: error instanceof Error ? error.message : "Failed to accept invitation" };
+    return { success: false, error: safePublicError(error, "Failed to accept invitation").message };
   }
 }
 
@@ -110,7 +113,7 @@ export async function acceptPendingInvitationAction() {
     return { success: true };
   } catch (error) {
     console.error("acceptPendingInvitationAction error:", error);
-    return { success: false, error: error instanceof Error ? error.message : "Failed to accept invitation" };
+    return { success: false, error: safePublicError(error, "Failed to accept invitation").message };
   }
 }
 
@@ -123,7 +126,7 @@ export async function registerDeviceTokenAction(deviceToken: string, platform = 
     return { success: true };
   } catch (error) {
     console.error("registerDeviceTokenAction error:", error);
-    return { success: false, error: error instanceof Error ? error.message : "Failed to register device token" };
+    return { success: false, error: safePublicError(error, "Failed to register device token").message };
   }
 }
 

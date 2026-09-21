@@ -1,7 +1,7 @@
 import "server-only";
 
 import { apiConfig } from "@/api.config";
-import { ApiError, apiClient, extractApiErrorMessage } from "@/contexts/shared/infrastructure/http/api-client";
+import { ApiError, apiClient } from "@/contexts/shared/infrastructure/http/api-client";
 import type { ProfileRepository } from "../../domain/repositories/profile.repository";
 import type { UpdateProfileCommand } from "../../domain/model/commands/update-profile.command";
 import type { UpdateProfilePreferencesCommand } from "../../domain/model/commands/update-profile-preferences.command";
@@ -60,20 +60,12 @@ export class HttpProfileRepository implements ProfileRepository {
       formData.set("imageUrl", command.imageUrl.value);
     }
 
-    const response = await fetch(`${apiConfig.baseUrl}${apiConfig.routes.profiles.root}`, {
+    return apiClient.requestMultipart<unknown>(apiConfig.routes.profiles.root, formData, {
       method: "PUT",
-      headers: { Authorization: `Bearer ${accessToken}` },
-      body: formData,
+      token: accessToken,
+      errorMessage: "Failed to update profile",
+      errorType: ProfileApiError,
     });
-    const data = await response.json().catch(() => null);
-    if (!response.ok) {
-      throw new ProfileApiError(
-        extractApiErrorMessage(data) ?? "Failed to update profile",
-        response.status,
-        data,
-      );
-    }
-    return data;
   }
 
   async updatePreferences(

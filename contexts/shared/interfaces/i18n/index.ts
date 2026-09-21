@@ -3,5 +3,7 @@ export { LocaleSync } from "./locale-sync";
 export {
   createLocalTranslationHook,
   createLocalDictionaryGetter,
+  interpolate,
   type ContextLocales,
 } from "./federated";
+export { LanguageSwitcher } from "../components/header/language-switcher";

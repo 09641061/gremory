@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { safePublicError } from "@/contexts/shared/interfaces/actions/safe-error";
 
 import { cookies } from "next/headers";
 import { DeleteConversationCommandService } from "@/contexts/assistant/application/internal/commandservices/delete-conversation-command.service";
@@ -30,8 +31,8 @@ export async function GET(
     return NextResponse.json(data);
   } catch (error) {
     return NextResponse.json(
-      { message: error instanceof Error ? error.message : "Failed to fetch conversation" },
-      { status: error instanceof Error && "status" in error ? (error as { status: number }).status : 500 },
+      { message: safePublicError(error, "Failed to fetch conversation").message },
+      { status: safePublicError(error, "Failed to fetch conversation").status },
     );
   }
 }
@@ -60,8 +61,8 @@ export async function PATCH(
     return NextResponse.json(data);
   } catch (error) {
     return NextResponse.json(
-      { message: error instanceof Error ? error.message : "Failed to rename conversation" },
-      { status: error instanceof Error && "status" in error ? (error as { status: number }).status : 500 },
+      { message: safePublicError(error, "Failed to rename conversation").message },
+      { status: safePublicError(error, "Failed to rename conversation").status },
     );
   }
 }
@@ -87,8 +88,8 @@ export async function DELETE(
     return new NextResponse(null, { status: 204 });
   } catch (error) {
     return NextResponse.json(
-      { message: error instanceof Error ? error.message : "Failed to delete conversation" },
-      { status: error instanceof Error && "status" in error ? (error as { status: number }).status : 500 },
+      { message: safePublicError(error, "Failed to delete conversation").message },
+      { status: safePublicError(error, "Failed to delete conversation").status },
     );
   }
 }

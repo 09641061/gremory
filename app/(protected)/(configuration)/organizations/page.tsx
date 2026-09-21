@@ -10,7 +10,7 @@ import {
   type WorkspaceNavigationOrganizationGroup,
 } from "@/contexts/business/domain/services/workspace-navigation.policy";
 import { workspaceSelectionCookies } from "@/contexts/business/infrastructure/session/workspace-selection-cookie";
-import { PageLoading } from "@/contexts/shared/interfaces/components/page-loading";
+import { PageLoading } from "@/contexts/shared/interfaces/components/feedback/page-loading";
 
 interface OrganizationsRoutePageProps {
   searchParams: Promise<{ establishmentId?: string; organizationId?: string; previewOrganizationId?: string }>;

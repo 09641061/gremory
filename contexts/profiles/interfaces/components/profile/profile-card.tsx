@@ -15,11 +15,11 @@ import {
 import { Card, CardContent, CardFooter } from "@/contexts/shared/interfaces/components/ui/card";
 import { Input } from "@/contexts/shared/interfaces/components/ui/input";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
-import { ErrorAlert } from "@/contexts/shared/interfaces/components/error";
+import { ErrorAlert } from "@/contexts/shared/interfaces/components/feedback/error";
 import { Spinner } from "@/contexts/shared/interfaces/components/ui/spinner";
-import { ImageUploadAvatar } from "@/contexts/shared/interfaces/components/image-upload-avatar";
+import { ImageUploadAvatar } from "@/contexts/shared/interfaces/components/upload/image-upload-avatar";
 import type { ProfileViewModel } from "@/contexts/profiles/application/services/profile.view-model";
-import { useI18n } from "@/contexts/shared/interfaces/i18n";
+import { useProfilesI18n } from "@/contexts/profiles/interfaces/i18n";
 
 const initialProfileActionState: UpdateProfileActionState = {
   status: "idle",
@@ -68,7 +68,7 @@ function ProfileCardForm({
   const usernameLabelId = useId();
   const usernameHintId = useId();
   const usernameErrorId = useId();
-  const { t, translate } = useI18n();
+  const { t, interpolate } = useProfilesI18n();
   const [username, setUsername] = useState(() => profile.username);
   const [hasFileSelected, setHasFileSelected] = useState(false);
 
@@ -118,7 +118,7 @@ function ProfileCardForm({
               </span>
             </div>
             <p id={usernameHintId} className="text-sm text-muted-foreground">
-              {translate("profile.usernameHint", { min: MIN_USERNAME_LENGTH, max: MAX_USERNAME_LENGTH })}
+              {interpolate(t.profile.usernameHint, { min: MIN_USERNAME_LENGTH, max: MAX_USERNAME_LENGTH })}
             </p>
           </div>
 
@@ -140,7 +140,7 @@ function ProfileCardForm({
 
           {isTooShort ? (
             <p id={usernameErrorId} role="alert" className="text-xs font-medium text-destructive">
-              {translate("profile.usernameMinLength", { min: MIN_USERNAME_LENGTH })}
+              {interpolate(t.profile.usernameMinLength, { min: MIN_USERNAME_LENGTH })}
             </p>
           ) : null}
         </div>

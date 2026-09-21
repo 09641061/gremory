@@ -1,11 +1,11 @@
 "use client";
 
 import { Save } from "lucide-react";
-import { ErrorAlert } from "@/contexts/shared/interfaces/components/error";
+import { ErrorAlert } from "@/contexts/shared/interfaces/components/feedback/error";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
+import { FormField } from "@/contexts/shared/interfaces/components/form/form-field";
+import { FormSubmitButton } from "@/contexts/shared/interfaces/components/form/form-submit-button";
 import { Input } from "@/contexts/shared/interfaces/components/ui/input";
-import { Label } from "@/contexts/shared/interfaces/components/ui/label";
-import { Spinner } from "@/contexts/shared/interfaces/components/ui/spinner";
 import { Dialog, DialogContent, DialogTitle } from "@/contexts/shared/interfaces/components/ui/dialog";
 import { useCreateServiceCategory } from "../../hooks/use-create-service-category";
 import { useCatalogTranslations } from "../../i18n";
@@ -38,8 +38,7 @@ export function CreateCategoryModal({
           <form action={formAction} className="space-y-6 mt-4">
             <input type="hidden" name="establishmentId" value={establishmentId ?? ""} />
 
-            <div className="space-y-2">
-              <Label htmlFor="category-name">{t.dialogs.categoryNameLabel}</Label>
+            <FormField id="category-name" label={t.dialogs.categoryNameLabel} required>
               <Input
                 id="category-name"
                 name="name"
@@ -47,20 +46,15 @@ export function CreateCategoryModal({
                 required
                 className="bg-card border-border"
               />
-            </div>
+            </FormField>
 
             <div className="flex justify-end gap-3 pt-2">
               <Button type="button" variant="ghost" onClick={onClose} disabled={pending}>
                 {t.dialogs.cancel}
               </Button>
-              <Button
-                type="submit"
-                disabled={pending}
-                className="gap-2"
-              >
-                {pending ? <Spinner className="size-4" /> : <Save className="size-4" />}
+              <FormSubmitButton isSubmitting={pending} icon={<Save className="size-4" />}>
                 {pending ? t.dialogs.saving : t.dialogs.save}
-              </Button>
+              </FormSubmitButton>
             </div>
           </form>
         </DialogContent>

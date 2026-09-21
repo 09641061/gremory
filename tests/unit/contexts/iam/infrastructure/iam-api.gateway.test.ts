@@ -70,7 +70,11 @@ describe("IamApiGateway", () => {
       "http://localhost:8080/api/v1/auth/sign-out",
       expect.objectContaining({
         method: "DELETE",
-        headers: { Authorization: "Bearer a", "X-Refresh-Token": "r" },
+        headers: expect.objectContaining({
+          Authorization: "Bearer a",
+          "X-Refresh-Token": "r",
+          "X-Correlation-Id": expect.any(String),
+        }),
       })
     );
   });
@@ -89,7 +93,11 @@ describe("IamApiGateway", () => {
     expect(result).toEqual(session);
     expect(fetchMock).toHaveBeenCalledWith(
       "http://localhost:8080/api/v1/auth/google/exchange?code=code%20with%20spaces",
-      { cache: "no-store" },
+      expect.objectContaining({
+        cache: "no-store",
+        headers: expect.objectContaining({ "X-Correlation-Id": expect.any(String) }),
+        signal: expect.any(AbortSignal),
+      }),
     );
   });
 
@@ -122,7 +130,11 @@ describe("IamApiGateway", () => {
     expect(result).toEqual(session);
     expect(fetchMock).toHaveBeenCalledWith(
       "http://localhost:8080/api/v1/auth/magic-link?token=token%20with%20spaces",
-      { cache: "no-store" }
+      expect.objectContaining({
+        cache: "no-store",
+        headers: expect.objectContaining({ "X-Correlation-Id": expect.any(String) }),
+        signal: expect.any(AbortSignal),
+      })
     );
   });
 

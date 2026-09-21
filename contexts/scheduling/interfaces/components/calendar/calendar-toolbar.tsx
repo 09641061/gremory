@@ -3,8 +3,6 @@ import { ChevronLeft, ChevronRight, ChevronDown } from "lucide-react";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/contexts/shared/interfaces/components/ui/popover";
 import { Calendar } from "@/contexts/shared/interfaces/components/ui/calendar";
-
-import { useI18n } from "@/contexts/shared/interfaces/i18n";
 import { useSchedulingTranslations } from "../../i18n";
 
 interface CalendarToolbarProps {
@@ -28,8 +26,7 @@ export function CalendarToolbar({
   canCreateAppointment,
   timeZone,
 }: CalendarToolbarProps) {
-  const { locale } = useI18n();
-  const { t } = useSchedulingTranslations();
+  const { t, locale } = useSchedulingTranslations();
   const [isPickerOpen, setIsPickerOpen] = useState(false);
   const formatter = new Intl.DateTimeFormat(locale === "es" ? "es-ES" : "en-US", {
     timeZone,

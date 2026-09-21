@@ -4,10 +4,20 @@ import * as React from "react";
 import { Loader2 } from "lucide-react";
 
 import { resolveDocumentAction } from "@/contexts/crm/interfaces/actions/resolve-document.action";
+import { FormField } from "@/contexts/shared/interfaces/components/form/form-field";
+import { FormSection } from "@/contexts/shared/interfaces/components/form/form-section";
+import { FormSubmitButton } from "@/contexts/shared/interfaces/components/form/form-submit-button";
+import { useFormValidation } from "@/contexts/shared/interfaces/components/form/use-form-validation";
+import {
+  validateDNI,
+  validateForeignResidentCard,
+  validatePassport,
+  validatePhone,
+  validateRUC,
+} from "@/contexts/shared/interfaces/components/form/document-validators";
 import { Alert, AlertDescription, AlertTitle } from "@/contexts/shared/interfaces/components/ui/alert";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import { Input } from "@/contexts/shared/interfaces/components/ui/input";
-import { Label } from "@/contexts/shared/interfaces/components/ui/label";
 import { NativeSelect, NativeSelectOption } from "@/contexts/shared/interfaces/components/ui/native-select";
 
 import { PhoneInput } from "./phone-input";
@@ -32,6 +42,9 @@ interface CustomerFormProps {
   establishmentId: string;
 }
 
+// Synthetic key for the single top-of-form error stored in `useFormValidation`.
+const FORM_ERROR_FIELD = "_form";
+
 export function CustomerForm({
   initialData,
   onSubmit,
@@ -48,8 +61,10 @@ export function CustomerForm({
   const [email, setEmail] = React.useState(initialData?.email || "");
   const [phoneCountryCode, setPhoneCountryCode] = React.useState(initialData?.phoneCountryCode || "+51");
   const [phoneNumber, setPhoneNumber] = React.useState(initialData?.phoneNumber || "");
-  const [error, setError] = React.useState<string | null>(null);
+  const { errors, setError, clearError } = useFormValidation();
+  const error = errors[FORM_ERROR_FIELD] ?? null;
   const [isResolving, setIsResolving] = React.useState(false);
+  const isSubmittingRef = React.useRef(false);
 
   const handleResolve = React.useCallback(async () => {
     if (docType !== "dni" && docType !== "ruc") return;
@@ -58,9 +73,7 @@ export function CustomerForm({
     setIsResolving(true);
     try {
       const res = await resolveDocumentAction(docType as "dni" | "ruc", docNumber, establishmentId);
-      if (res.status === "success" && res.data) {
-        setName(res.data.name);
-      }
+      if (res.status === "success" && res.data) setName(res.data.name);
     } catch {
       // Silent error, user can still manually edit
     } finally {
@@ -70,35 +83,31 @@ export function CustomerForm({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
+    if (isSaving || isSubmittingRef.current) return;
+    clearError(FORM_ERROR_FIELD);
 
-    if (docType === "dni") {
-      if (!/^\d{8}$/.test(docNumber)) {
-        setError(t.form.validation.dniLength);
-        return;
-      }
-    } else if (docType === "ruc") {
-      if (!/^\d{11}$/.test(docNumber)) {
-        setError(t.form.validation.rucLength);
-        return;
-      }
-    } else if (docType === "foreign_resident_card") {
-      if (!/^\d{9,11}$/.test(docNumber)) {
-        setError(t.form.validation.foreignCardLength);
-        return;
-      }
-    } else if (docType === "passport") {
-      if (!/^[A-Z0-9]{6,15}$/.test(docNumber)) {
-        setError(t.form.validation.passportLength);
-        return;
-      }
+    if (docType === "dni" && !validateDNI(docNumber)) {
+      setError(FORM_ERROR_FIELD, t.form.validation.dniLength);
+      return;
     }
-
-    if (!/^\+?\d+$/.test(phoneCountryCode.trim()) || !/^\d+$/.test(phoneNumber)) {
-      setError(t.form.validation.phoneFormat);
+    if (docType === "ruc" && !validateRUC(docNumber)) {
+      setError(FORM_ERROR_FIELD, t.form.validation.rucLength);
+      return;
+    }
+    if (docType === "foreign_resident_card" && !validateForeignResidentCard(docNumber)) {
+      setError(FORM_ERROR_FIELD, t.form.validation.foreignCardLength);
+      return;
+    }
+    if (docType === "passport" && !validatePassport(docNumber)) {
+      setError(FORM_ERROR_FIELD, t.form.validation.passportLength);
+      return;
+    }
+    if (!validatePhone(phoneCountryCode, phoneNumber)) {
+      setError(FORM_ERROR_FIELD, t.form.validation.phoneFormat);
       return;
     }
 
+    isSubmittingRef.current = true;
     onSubmit({
       docType,
       docNumber,
@@ -112,7 +121,7 @@ export function CustomerForm({
   const isDniOrRuc = docType === "dni" || docType === "ruc";
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit} noValidate className="space-y-6">
       {error ? (
         <Alert variant="destructive">
           <AlertTitle>{t.form.validation.errorTitle}</AlertTitle>
@@ -120,27 +129,18 @@ export function CustomerForm({
         </Alert>
       ) : null}
 
-      <section className="space-y-4">
-        <div className="flex items-center justify-between gap-3 border-b border-border/70 pb-3">
-          <div>
-            <h2 className="text-sm font-semibold text-foreground">{t.form.identitySection}</h2>
-            <p className="text-xs text-muted-foreground">{t.form.identitySubtitle}</p>
-          </div>
-        </div>
-
+      <FormSection title={t.form.identitySection} description={t.form.identitySubtitle}>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-          <div className="space-y-1.5">
-            <Label htmlFor="doc_type">{t.form.documentTypeLabel}</Label>
+          <FormField id="doc_type" label={t.form.documentTypeLabel}>
             <NativeSelect
               id="doc_type"
               className="w-full"
               value={docType}
               onChange={(e) => {
-                const newType = e.target.value;
-                setDocType(newType);
+                setDocType(e.target.value);
                 setName("");
                 setDocNumber("");
-                setError(null);
+                clearError(FORM_ERROR_FIELD);
               }}
             >
               <NativeSelectOption value="dni">{t.form.docTypes.dni}</NativeSelectOption>
@@ -148,36 +148,36 @@ export function CustomerForm({
               <NativeSelectOption value="foreign_resident_card">{t.form.docTypes.foreign_resident_card}</NativeSelectOption>
               <NativeSelectOption value="passport">{t.form.docTypes.passport}</NativeSelectOption>
             </NativeSelect>
-          </div>
+          </FormField>
 
-          <div className="space-y-1.5 md:col-span-2">
-            <Label htmlFor="doc_number">{t.form.documentNumberLabel}</Label>
-            <div className="flex gap-2">
-              <Input
-                id="doc_number"
-                value={docNumber}
-                onChange={(e) => {
-                  const val = e.target.value;
-                  setError(null);
-                  const pattern = docType === "passport" ? /^[A-Za-z0-9]*$/ : /^\d*$/;
-                  if (pattern.test(val)) {
-                    setDocNumber(docType === "passport" ? val.toUpperCase() : val);
-                  }
-                }}
-                maxLength={docType === "dni" ? 8 : docType === "ruc" || docType === "foreign_resident_card" ? 11 : 15}
-                placeholder={t.form.documentNumberPlaceholder}
-                required
-              />
-              {isDniOrRuc ? (
-                <Button type="button" variant="outline" onClick={handleResolve} disabled={isResolving || !docNumber}>
-                  {isResolving ? <Loader2 className="size-4 animate-spin" /> : t.form.autoFill}
-                </Button>
-              ) : null}
-            </div>
-          </div>
+          {/* doc_number: autofill Button is FormField's `trailingAdornment`. For non-DNI/RUC doc types the adornment is null and FormField drops the flex wrapper. */}
+          <FormField
+            id="doc_number"
+            label={t.form.documentNumberLabel}
+            className="md:col-span-2"
+            trailingAdornment={isDniOrRuc ? (
+              <Button type="button" variant="outline" onClick={handleResolve} disabled={isResolving || !docNumber}>
+                {isResolving ? <Loader2 className="size-4 animate-spin" /> : t.form.autoFill}
+              </Button>
+            ) : null}
+          >
+            <Input
+              id="doc_number"
+              value={docNumber}
+              onChange={(e) => {
+                const val = e.target.value;
+                clearError(FORM_ERROR_FIELD);
+                const pattern = docType === "passport" ? /^[A-Za-z0-9]*$/ : /^\d*$/;
+                if (pattern.test(val)) {
+                  setDocNumber(docType === "passport" ? val.toUpperCase() : val);
+                }
+              }}
+              placeholder={t.form.documentNumberPlaceholder}
+              required
+            />
+          </FormField>
 
-          <div className="space-y-1.5 md:col-span-3">
-            <Label htmlFor="full_name">{t.form.nameLabel}</Label>
+          <FormField id="full_name" label={t.form.nameLabel} className="md:col-span-3">
             <Input
               id="full_name"
               value={name}
@@ -185,21 +185,13 @@ export function CustomerForm({
               placeholder={t.form.namePlaceholder}
               required
             />
-          </div>
+          </FormField>
         </div>
-      </section>
+      </FormSection>
 
-      <section className="space-y-4 border-t border-border/70 pt-6">
-        <div className="flex items-center justify-between gap-3">
-          <div>
-            <h2 className="text-sm font-semibold text-foreground">{t.form.contactSection}</h2>
-            <p className="text-xs text-muted-foreground">{t.form.contactSubtitle}</p>
-          </div>
-        </div>
-
+      <FormSection title={t.form.contactSection} description={t.form.contactSubtitle}>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          <div className="space-y-1.5">
-            <Label htmlFor="email">{t.form.emailLabel}</Label>
+          <FormField id="email" label={t.form.emailLabel}>
             <Input
               id="email"
               type="email"
@@ -208,8 +200,8 @@ export function CustomerForm({
               placeholder={t.form.emailPlaceholder}
               required
             />
-          </div>
-
+          </FormField>
+          {/* PhoneInput owns its Label + two Inputs; cannot be a single FormField child. */}
           <PhoneInput
             id="phone"
             value={phoneNumber}
@@ -219,7 +211,7 @@ export function CustomerForm({
             required
           />
         </div>
-      </section>
+      </FormSection>
 
       <div className="flex justify-end gap-3 border-t border-border/70 pt-4">
         {onCancel ? (
@@ -227,10 +219,9 @@ export function CustomerForm({
             {t.form.cancel}
           </Button>
         ) : null}
-        <Button type="submit" disabled={isSaving} className="gap-2">
-          {isSaving ? <Loader2 className="size-4 animate-spin" /> : submitIcon}
+        <FormSubmitButton isSubmitting={isSaving} icon={submitIcon}>
           {submitLabel}
-        </Button>
+        </FormSubmitButton>
       </div>
     </form>
   );

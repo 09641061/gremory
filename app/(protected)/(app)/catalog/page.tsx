@@ -7,7 +7,7 @@ import { CatalogClientWrapper } from "@/contexts/catalog/interfaces/components/c
 import { createBusinessWorkspaceQueryService } from "@/contexts/business/application/internal/queryservices/business-workspace-query.service";
 import { resolveModuleAccessFallback } from "@/contexts/shared/application/services/module-access.policy";
 import { getWorkspaceEstablishment, hasEstablishmentPermission } from "@/contexts/shared/application/services/workspace-establishment-permissions";
-import { PageLoading } from "@/contexts/shared/interfaces/components/page-loading";
+import { PageLoading } from "@/contexts/shared/interfaces/components/feedback/page-loading";
 
 interface CatalogPageProps {
   searchParams: Promise<{ organizationId?: string; establishmentId?: string; serviceId?: string }>;

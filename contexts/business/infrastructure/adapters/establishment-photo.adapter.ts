@@ -10,13 +10,10 @@ import {
 } from "@/contexts/business/domain/model/valueobjects/establishment-photo.vo";
 import { requireBusinessAccessToken } from "@/contexts/business/infrastructure/session/business-session";
 import { apiConfig } from "@/api.config";
+import { apiClient } from "@/contexts/shared/infrastructure/http/api-client";
+import { z } from "zod";
 
-type EstablishmentPhotoUploadResponse = {
-  message?: unknown;
-  detail?: unknown;
-  storedPath?: string;
-  photoUrl?: string;
-};
+const establishmentPhotoUploadResponseSchema = z.object({ storedPath: z.string().optional(), photoUrl: z.string().optional() }).passthrough();
 
 export class EstablishmentPhotoAdapter implements EstablishmentPhotoStorage {
   constructor(private readonly providedToken?: string) {}
@@ -26,28 +23,11 @@ export class EstablishmentPhotoAdapter implements EstablishmentPhotoStorage {
     const formData = new FormData();
     formData.set("file", photo);
 
-    const response = await fetch(`${apiConfig.baseUrl}${apiConfig.routes.establishmentImages}`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${authToken}`,
-        "X-Organization-Id": organizationId.value,
-      },
-      body: formData,
+    const raw = await apiClient.requestMultipart<unknown>(apiConfig.routes.establishmentImages, formData, {
+      method: "POST", token: authToken, tenantId: organizationId.value, errorMessage: "Failed to upload establishment image",
     });
-
-    const data = (await response.json().catch(() => null)) as EstablishmentPhotoUploadResponse | null;
-
-    if (!response.ok) {
-      const message =
-        typeof data?.message === "string" && data.message.trim()
-          ? data.message
-          : typeof data?.detail === "string" && data.detail.trim()
-            ? data.detail
-            : "Failed to upload establishment image";
-      throw new Error(message);
-    }
-
-    const storedReference = data?.photoUrl ?? data?.storedPath;
+    const data = establishmentPhotoUploadResponseSchema.parse(raw);
+    const storedReference = data.photoUrl ?? data.storedPath;
     if (!storedReference) {
       throw new Error("Failed to upload establishment image");
     }

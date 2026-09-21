@@ -1,5 +1,8 @@
 "use server";
 
+import { safePublicError } from "@/contexts/shared/interfaces/actions/safe-error";
+
+
 import "server-only";
 import { cookies } from "next/headers";
 import { revalidatePath, updateTag } from "next/cache";
@@ -73,7 +76,7 @@ export async function updateProfileAction(
     return {
       status: "error",
       data: null,
-      error: error instanceof Error ? error.message : "Failed to update profile",
+      error: safePublicError(error, "Failed to update profile").message,
     };
   }
 }

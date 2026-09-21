@@ -4,7 +4,7 @@ import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-ses
 import { createEntryRouteQueryService } from "@/contexts/shared/application/internal/queryservices/entry-route-query.service";
 import { appendWorkspaceSelection } from "@/contexts/shared/application/services/entry-route-navigation";
 import { getServerDictionary } from "@/contexts/shared/infrastructure/i18n/server";
-import { EntryRouteUnavailable } from "@/contexts/shared/interfaces/components/entry-route-unavailable";
+import { EntryRouteUnavailable } from "@/contexts/shared/interfaces/components/feedback/entry-route-unavailable";
 
 interface HomePageProps {
   searchParams: Promise<{ organizationId?: string; establishmentId?: string }>;

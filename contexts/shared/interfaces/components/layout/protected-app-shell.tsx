@@ -1,12 +1,12 @@
 import type { ReactNode } from "react";
 import { Suspense } from "react";
 
-import { AppHeaderServer } from "./header/app-header-server";
-import { AppHeaderFallback } from "./header/app-header-fallback";
-import { AppShellSidebarServer } from "./sidebar/app-sidebar-shell-server";
-import { AppSidebarFallback } from "./sidebar/app-sidebar-fallback";
-import { PageLoading } from "./page-loading";
-import { SidebarProvider, SidebarTrigger, SidebarInset } from "./ui/sidebar";
+import { AppHeaderServer } from "../header/app-header-server";
+import { AppHeaderFallback } from "../header/app-header-fallback";
+import { AppShellSidebarServer } from "../sidebar/app-sidebar-shell-server";
+import { AppSidebarFallback } from "../sidebar/app-sidebar-fallback";
+import { PageLoading } from "../feedback/page-loading";
+import { SidebarProvider, SidebarTrigger, SidebarInset } from "../ui/sidebar";
 
 import { PushNotificationRegisterServer } from "@/contexts/notifications/interfaces/components/push-notification-register-server";
 

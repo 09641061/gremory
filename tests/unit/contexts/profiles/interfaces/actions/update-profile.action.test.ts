@@ -176,7 +176,7 @@ describe("updateProfileAction", () => {
     expect(result).toEqual({
       status: "error",
       data: null,
-      error: "Username already taken",
+      error: "Failed to update profile",
     });
   });
 });

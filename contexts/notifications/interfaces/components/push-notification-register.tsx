@@ -4,15 +4,11 @@ import { useEffect, useRef } from "react";
 import { requestPushPermission, registerForegroundNotificationListener } from "@/lib/firebase";
 import { registerDeviceTokenAction } from "../actions/notification.actions";
 
-interface PushNotificationRegisterProps {
-  accessToken?: string;
-}
-
-export function PushNotificationRegister({ accessToken }: PushNotificationRegisterProps) {
+export function PushNotificationRegister({ isAuthenticated }: { isAuthenticated: boolean }) {
   const registeredRef = useRef(false);
 
   useEffect(() => {
-    if (!accessToken || registeredRef.current) return;
+    if (!isAuthenticated || registeredRef.current) return;
     registeredRef.current = true;
 
     requestPushPermission().then(async (token) => {
@@ -45,7 +41,7 @@ export function PushNotificationRegister({ accessToken }: PushNotificationRegist
     return () => {
       unsubscribe?.();
     };
-  }, [accessToken]);
+  }, [isAuthenticated]);
 
   return null;
 }

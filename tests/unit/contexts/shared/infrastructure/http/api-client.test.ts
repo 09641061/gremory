@@ -128,6 +128,35 @@ describe("ApiClient error responses", () => {
     expect(response.data).toBeUndefined();
   });
 
+  it("propagates correlation headers and caller cancellation", async () => {
+    const controller = new AbortController();
+    const fetchSpy = vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response("{}", { status: 200 }));
+
+    await client.get("/users", { correlationId: "corr-test", signal: controller.signal, timeoutMs: 1000 });
+
+    expect(fetchSpy).toHaveBeenCalledWith(
+      "https://api.example.test/users",
+      expect.objectContaining({
+        headers: expect.objectContaining({ "X-Correlation-Id": "corr-test" }),
+        signal: expect.any(AbortSignal),
+      }),
+    );
+  });
+
+  it("fails with a safe timeout error when the backend does not respond", async () => {
+    vi.spyOn(globalThis, "fetch").mockImplementation((_input, init) =>
+      new Promise((_resolve, reject) => {
+        init?.signal?.addEventListener("abort", () => reject(new DOMException("Aborted", "AbortError")), { once: true });
+      }),
+    );
+
+    await expect(client.get("/slow", { timeoutMs: 1 })).rejects.toMatchObject({
+      name: "ApiError",
+      status: 504,
+      message: "The API request timed out or was cancelled",
+    });
+  });
+
   it("throws ApiError instances", async () => {
     vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response(JSON.stringify({ title: "Unavailable" }), { status: 503 }));
 

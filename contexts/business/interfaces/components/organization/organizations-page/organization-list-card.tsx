@@ -4,7 +4,7 @@ import { Building2 } from "lucide-react";
 
 import { StatusBadge } from "@/contexts/shared/interfaces/components/ui/status-badge";
 import { Card, CardContent } from "@/contexts/shared/interfaces/components/ui/card";
-import { EntityListRow } from "@/contexts/shared/interfaces/components/entity-list-row";
+import { EntityListRow } from "@/contexts/shared/interfaces/components/lists/entity-list-row";
 import type { OrganizationListItem } from "./organizations-page";
 import { useBusinessTranslations } from "@/contexts/business/interfaces/i18n";
 

@@ -57,7 +57,7 @@ vi.mock("@/contexts/shared/interfaces/components/sidebar/app-sidebar-fallback", 
 // production layout actually contains them (rather than a test-only stub).
 // The mobile hook inside SidebarProvider calls window.matchMedia, so jsdom
 // needs a polyfill before render().
-import ProtectedAppShell from "@/contexts/shared/interfaces/components/protected-app-shell";
+import ProtectedAppShell from "@/contexts/shared/interfaces/components/layout/protected-app-shell";
 import WelcomeLayout from "@/app/(protected)/(welcome)/layout";
 
 beforeEach(() => {

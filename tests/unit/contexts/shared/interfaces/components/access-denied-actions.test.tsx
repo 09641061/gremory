@@ -3,7 +3,7 @@ import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { vi } from "vitest";
 
-import { AccessDeniedActions } from "@/contexts/shared/interfaces/components/access-denied-actions";
+import { AccessDeniedActions } from "@/contexts/shared/interfaces/components/actions/access-denied-actions";
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }),

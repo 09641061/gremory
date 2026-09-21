@@ -1,10 +1,14 @@
 "use server";
 
+import { safePublicError } from "@/contexts/shared/interfaces/actions/safe-error";
+
+
 import { updateTag } from "next/cache";
 import { updateCatalogServiceSchema } from "../rest/schemas/catalog-service.schemas";
 import { createCatalogServiceCommandService } from "../../application/internal/commandservices/catalog-service-command.service";
 import { requireCatalogAccessToken, requireCatalogOrganizationId } from "./catalog-action-auth";
 import { createCatalogServiceUpdateCommand } from "../../domain/model/commands/catalog-service.commands";
+import { requireCatalogServiceTargetAuthorization } from "@/contexts/catalog/interfaces/authorization/catalog-authorization";
 
 export type CatalogServiceActionResult = {
   status: "idle" | "success" | "error";
@@ -36,6 +40,7 @@ export async function updateCatalogServiceAction(
   }
 
   try {
+    await requireCatalogServiceTargetAuthorization(String(parsed.data.id));
     const [token, organizationId] = await Promise.all([
       requireCatalogAccessToken(),
       requireCatalogOrganizationId(),
@@ -50,7 +55,7 @@ export async function updateCatalogServiceAction(
   } catch (err) {
     return {
       status: "error",
-      error: err instanceof Error ? err.message : "Error while updating the service",
+      error: safePublicError(err, "Error while updating the service").message,
     };
   }
 }
@@ -60,6 +65,7 @@ export async function changeCatalogServiceStatusAction(
   active: boolean
 ): Promise<CatalogServiceActionResult> {
   try {
+    await requireCatalogServiceTargetAuthorization(id);
     const [token, organizationId] = await Promise.all([
       requireCatalogAccessToken(),
       requireCatalogOrganizationId(),
@@ -72,7 +78,7 @@ export async function changeCatalogServiceStatusAction(
   } catch (err) {
     return {
       status: "error",
-      error: err instanceof Error ? err.message : "Error while changing the service status",
+      error: safePublicError(err, "Error while changing the service status").message,
     };
   }
 }
@@ -81,6 +87,7 @@ export async function deleteCatalogServiceAction(
   id: string
 ): Promise<CatalogServiceActionResult> {
   try {
+    await requireCatalogServiceTargetAuthorization(id);
     const [token, organizationId] = await Promise.all([
       requireCatalogAccessToken(),
       requireCatalogOrganizationId(),
@@ -93,7 +100,7 @@ export async function deleteCatalogServiceAction(
   } catch (err) {
     return {
       status: "error",
-      error: err instanceof Error ? err.message : "Error while deleting the service",
+      error: safePublicError(err, "Error while deleting the service").message,
     };
   }
 }

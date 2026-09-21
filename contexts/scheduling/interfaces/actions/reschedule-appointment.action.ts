@@ -1,10 +1,14 @@
 "use server";
 
+import { safePublicError } from "@/contexts/shared/interfaces/actions/safe-error";
+
+
 import { revalidatePath } from "next/cache";
 import { rescheduleAppointmentSchema } from "../rest/schemas/appointment.schemas";
 import { ApiError } from "@/contexts/shared/infrastructure/http/api-client";
 import { Appointment } from "../../domain/model/entities/appointment";
 import { ActionState } from "./action-state";
+import { requireAppointmentOperationAuthorization } from "@/contexts/scheduling/interfaces/authorization/scheduling-authorization";
 import { createSchedulingCommandService } from "../../application/internal/commandservices/scheduling-command.service.impl";
 import { createBusinessWorkspaceQueryService } from "@/contexts/business/application/internal/queryservices/business-workspace-query.service";
 
@@ -32,6 +36,7 @@ export async function rescheduleAppointmentAction(
   }
 
   try {
+    await requireAppointmentOperationAuthorization(appointmentId);
     const workspace = await createBusinessWorkspaceQueryService().getHeaderViewModel();
     const commandService = createSchedulingCommandService(workspace.organization?.id);
     const result = await commandService.rescheduleAppointment(appointmentId, parsed.data);
@@ -43,8 +48,6 @@ export async function rescheduleAppointmentAction(
     if (error instanceof ApiError) {
       if (error.status === 409) {
         message = "There is a scheduling conflict at this time. Please choose another slot or check employee availability.";
-      } else if (error.message) {
-        message = error.message;
       }
     }
     return {

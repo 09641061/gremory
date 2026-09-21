@@ -6,7 +6,8 @@ import type { ProfileViewModel } from "@/contexts/profiles/application/services/
 import type { WorkspaceHeaderViewModel } from "@/contexts/business/application/model/business-workspace.view-models";
 import { SidebarProfile } from "@/contexts/profiles/interfaces/components/profile/sidebar-profile";
 import { NotificationDropdown } from "@/contexts/notifications/interfaces/components/notification-dropdown";
-import { LocaleSync } from "@/contexts/shared/interfaces/i18n";
+import { LocaleSync, useI18n } from "@/contexts/shared/interfaces/i18n";
+import { LanguageSwitcher } from "./language-switcher";
 
 /**
  * Canonical landing route for an unauthenticated / shell-unavailable user.
@@ -39,13 +40,15 @@ export function AppHeader({
   const resolvedHomeHref = homeHref ?? APP_HEADER_FALLBACK_HOME_HREF;
   const isHomeActive = pathname === resolvedHomeHref;
 
+  const { locale } = useI18n();
+
   return (
     <header className="sticky top-0 z-30 flex h-16 shrink-0 items-center justify-between gap-3 border-b border-border/60 bg-background px-4 sm:px-6">
       <LocaleSync profileLanguage={profile?.language} />
 
       <Link
         href={resolvedHomeHref}
-        aria-label="Takodu — go to home"
+        aria-label={locale === "es" ? "Takodu — ir al inicio" : "Takodu — go to home"}
         aria-current={isHomeActive ? "page" : undefined}
         data-testid="app-header-brand-link"
         className="-mx-2 rounded-md px-2 py-1 text-sm font-semibold tracking-tight text-foreground transition-colors hover:bg-accent/70 hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
@@ -54,6 +57,7 @@ export function AppHeader({
       </Link>
 
       <div className="flex min-w-0 items-center gap-3">
+        <LanguageSwitcher />
         <NotificationDropdown variant="compact" />
         <SidebarProfile
           profile={profile}

@@ -3,8 +3,9 @@
 import { updateTag } from "next/cache";
 import { createServiceCategorySchema, updateServiceCategorySchema } from "../rest/schemas/service-category.schemas";
 import { createServiceCategoryCommandService } from "../../application/internal/commandservices/service-category-command.service";
-import { requireCatalogAccessToken, requireCatalogOrganizationId } from "./catalog-action-auth";
 import { createServiceCategoryCreateCommand, createServiceCategoryUpdateCommand } from "../../domain/model/commands/service-category.commands";
+import { requireCatalogContext, requireCatalogCategoryTargetAuthorization } from "../authorization/catalog-authorization";
+import { safePublicError } from "@/contexts/shared/interfaces/actions/safe-error";
 
 export type CategoryActionResult = {
   status: "idle" | "success" | "error";
@@ -28,10 +29,8 @@ export async function createServiceCategoryAction(
   }
 
   try {
-    const [token, organizationId] = await Promise.all([
-      requireCatalogAccessToken(),
-      requireCatalogOrganizationId(parsed.data.establishmentId),
-    ]);
+    const context = await requireCatalogContext("catalog:manage", parsed.data.establishmentId);
+    const [token, organizationId] = [context.token, context.organizationId];
     const service = createServiceCategoryCommandService(organizationId);
     const command = createServiceCategoryCreateCommand(parsed.data);
     await service.create(command, token);
@@ -41,7 +40,7 @@ export async function createServiceCategoryAction(
   } catch (err) {
     return {
       status: "error",
-      error: err instanceof Error ? err.message : "Error while creating the category",
+      error: safePublicError(err, "Error while creating the category").message,
     };
   }
 }
@@ -62,10 +61,8 @@ export async function updateServiceCategoryAction(
   }
 
   try {
-    const [token, organizationId] = await Promise.all([
-      requireCatalogAccessToken(),
-      requireCatalogOrganizationId(),
-    ]);
+    const context = await requireCatalogCategoryTargetAuthorization(parsed.data.id);
+    const [token, organizationId] = [context.token, context.organizationId];
     const service = createServiceCategoryCommandService(organizationId);
     const command = createServiceCategoryUpdateCommand(parsed.data);
     await service.update(command, token);
@@ -74,17 +71,15 @@ export async function updateServiceCategoryAction(
   } catch (err) {
     return {
       status: "error",
-      error: err instanceof Error ? err.message : "Error while updating the category",
+      error: safePublicError(err, "Error while updating the category").message,
     };
   }
 }
 
 export async function deleteServiceCategoryAction(id: string): Promise<CategoryActionResult> {
   try {
-    const [token, organizationId] = await Promise.all([
-      requireCatalogAccessToken(),
-      requireCatalogOrganizationId(),
-    ]);
+    const context = await requireCatalogCategoryTargetAuthorization(id);
+    const [token, organizationId] = [context.token, context.organizationId];
     const service = createServiceCategoryCommandService(organizationId);
     await service.delete({ id }, token);
     updateTag("catalog-categories");
@@ -92,7 +87,7 @@ export async function deleteServiceCategoryAction(id: string): Promise<CategoryA
   } catch (err) {
     return {
       status: "error",
-      error: err instanceof Error ? err.message : "Error while deleting the category",
+      error: safePublicError(err, "Error while deleting the category").message,
     };
   }
 }

@@ -1,5 +1,8 @@
 "use server";
 
+import { safePublicError } from "@/contexts/shared/interfaces/actions/safe-error";
+
+
 import { revalidatePath } from "next/cache";
 import { createAppointmentSchema } from "../rest/schemas/appointment.schemas";
 import { ApiError } from "@/contexts/shared/infrastructure/http/api-client";
@@ -67,11 +70,7 @@ export async function createAppointmentAction(
     let message = "We could not schedule this appointment. Please try again.";
     if (error instanceof ApiError) {
       if (error.status === 409) {
-        message =
-          error.message ||
-          "There is a scheduling conflict at this time. Please choose another slot or check employee availability.";
-      } else if (error.message) {
-        message = error.message;
+        message = "There is a scheduling conflict at this time. Please choose another slot or check employee availability.";
       }
     }
     return {

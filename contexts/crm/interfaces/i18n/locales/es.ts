@@ -1,4 +1,4 @@
-import type { CrmDictionary } from "./index";
+import type { CrmDictionary } from "../index";
 
 export const es: CrmDictionary = {
   directory: {
@@ -56,12 +56,15 @@ export const es: CrmDictionary = {
     emailPlaceholder: "ej. maria@ejemplo.com",
     phoneLabel: "Número de teléfono",
     phonePlaceholder: "Teléfono",
+    countryCodeLabel: "Código de país",
+    countryCodePlaceholder: "+51",
     documentTypeLabel: "Tipo de documento",
     documentNumberLabel: "Número de documento",
     documentNumberPlaceholder: "ej. 12345678",
     autoFill: "Consultar",
     searching: "Consultando...",
     save: "Guardar cliente",
+    saveChanges: "Guardar cambios",
     saving: "Guardando...",
     cancel: "Cancelar",
     updateSuccess: "Cliente actualizado con éxito",
@@ -71,6 +74,14 @@ export const es: CrmDictionary = {
       ruc: "RUC (Registro Único de Contribuyentes)",
       foreign_resident_card: "Carné de extranjería",
       passport: "Pasaporte",
+    },
+    errors: {
+      registerTitle: "Error al registrar cliente",
+      registerFailed: "No se pudo registrar el cliente.",
+      unexpectedRegister: "Ocurrió un error inesperado al registrar el cliente.",
+      updateTitle: "Error al actualizar cliente",
+      updateFailed: "No se pudo actualizar el cliente.",
+      unexpectedUpdate: "Ocurrió un error inesperado al guardar el cliente.",
     },
     validation: {
       errorTitle: "Error de validación",

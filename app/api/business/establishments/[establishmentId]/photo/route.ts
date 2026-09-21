@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
+import { safePublicError } from "@/contexts/shared/interfaces/actions/safe-error";
 import { z } from "zod";
 
 import { createEstablishmentId } from "@/contexts/business/domain/model/valueobjects/establishment-id.vo";
 import { createEstablishmentPhotoAdapter } from "@/contexts/business/infrastructure/adapters/establishment-photo.adapter";
-import { requireBusinessAccessToken } from "@/contexts/business/infrastructure/session/business-session";
+import { requireEstablishmentCapability } from "@/contexts/business/interfaces/authorization/business-authorization";
 
 const uuidSchema = z.string().uuid();
 
@@ -18,7 +19,7 @@ export async function DELETE(
       return validationErrorResponse(idParsed.error.issues[0]?.message);
     }
 
-    await requireBusinessAccessToken();
+    await requireEstablishmentCapability(idParsed.data, "canUpdate");
     await createEstablishmentPhotoAdapter().remove(createEstablishmentId(idParsed.data));
 
     return new Response(null, { status: 204 });
@@ -34,36 +35,7 @@ function validationErrorResponse(message?: string) {
   );
 }
 
-function routeErrorResponse(error: unknown): Response {
-  if (error instanceof Error) {
-    const status = readStatus(error);
-    if (status !== undefined) {
-      const details = readDetails(error);
-      return NextResponse.json(
-        details === undefined
-          ? { message: error.message }
-          : { message: error.message, details },
-        { status },
-      );
-    }
-
-    if (error.message === "Authentication is required") {
-      return NextResponse.json({ message: error.message }, { status: 401 });
-    }
-
-    return NextResponse.json({ message: error.message }, { status: 400 });
-  }
-
-  return NextResponse.json({ message: "Unexpected error" }, { status: 500 });
-}
-
-function readStatus(error: Error): number | undefined {
-  const status = (error as Error & { status?: unknown }).status;
-  if (typeof status !== "number" || Number.isNaN(status)) return undefined;
-  if (status <= 0) return 502;
-  return status;
-}
-
-function readDetails(error: Error): unknown {
-  return (error as Error & { details?: unknown }).details;
+function routeErrorResponse(error: unknown, fallback = "Request could not be completed"): Response {
+  const safe = safePublicError(error, fallback);
+  return NextResponse.json({ message: safe.message }, { status: safe.status });
 }

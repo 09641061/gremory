@@ -2,7 +2,7 @@
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
-import { SearchableOptions } from "@/contexts/shared/interfaces/components/searchable-options";
+import { SearchableOptions } from "@/contexts/shared/interfaces/components/form/searchable-options";
 import type { WorkspaceHeaderViewModel } from "@/contexts/business/application/model/business-workspace.view-models";
 import {
   buildWorkspacePath,

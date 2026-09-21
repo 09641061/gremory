@@ -15,6 +15,7 @@ import {
   actionError,
   type BusinessActionResult,
 } from "./business-action-result";
+import { requireOrganizationCapability } from "@/contexts/business/interfaces/authorization/business-authorization";
 
 function readPhotoFileFromFormData(formData: FormData) {
   const photoFile = formData.get("photoFile");
@@ -65,7 +66,7 @@ export async function updateOrganizationAction(
   if (!parsed.success) return actionError(parsed.error.issues[0]?.message);
 
   try {
-    await requireBusinessAccessToken();
+    await requireOrganizationCapability(parsed.data.id, "canUpdate");
     const organizationId = await createOrganizationCommandService().update(
       updateOrganizationCommand({
         ...parsed.data,

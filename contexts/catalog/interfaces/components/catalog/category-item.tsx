@@ -11,7 +11,7 @@ import {
   Plus,
   Trash2,
 } from "lucide-react";
-import { EntityActionsMenu } from "@/contexts/shared/interfaces/components/entity-actions-menu";
+import { EntityActionsMenu } from "@/contexts/shared/interfaces/components/actions/entity-actions-menu";
 import type { CategoryDTO, ServiceSummaryDTO } from "./category-sidebar";
 import { ServiceRow } from "./service-row";
 

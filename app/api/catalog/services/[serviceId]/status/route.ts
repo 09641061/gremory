@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
+import { safePublicError } from "@/contexts/shared/interfaces/actions/safe-error";
 import { z } from "zod";
 import { createCatalogServiceCommandService } from "@/contexts/catalog/application/internal/commandservices/catalog-service-command.service";
+import { requireCatalogServiceTargetAuthorization } from "@/contexts/catalog/interfaces/authorization/catalog-authorization";
 
 const uuidSchema = z.string().uuid();
 const activeSchema = z.enum(["true", "false"]).transform((value) => value === "true");
@@ -17,6 +19,10 @@ export async function PATCH(
     }
 
     const url = new URL(request.url);
+    const establishmentId = url.searchParams.get("establishmentId");
+    if (!establishmentId) return validationErrorResponse("establishmentId is required");
+    const auth = await requireCatalogServiceTargetAuthorization(idParsed.data);
+    if (auth.establishmentId !== establishmentId) return NextResponse.json({ message: "Operation not permitted" }, { status: 403 });
     const activeParsed = activeSchema.safeParse(url.searchParams.get("active"));
     if (!activeParsed.success) {
       return validationErrorResponse(activeParsed.error.issues[0]?.message);
@@ -40,36 +46,7 @@ function validationErrorResponse(message?: string) {
   );
 }
 
-function routeErrorResponse(error: unknown): Response {
-  if (error instanceof Error) {
-    const status = readStatus(error);
-    if (status !== undefined) {
-      const details = readDetails(error);
-      return NextResponse.json(
-        details === undefined
-          ? { message: error.message }
-          : { message: error.message, details },
-        { status },
-      );
-    }
-
-    if (error.message === "Authentication is required") {
-      return NextResponse.json({ message: error.message }, { status: 401 });
-    }
-
-    return NextResponse.json({ message: error.message }, { status: 400 });
-  }
-
-  return NextResponse.json({ message: "Unexpected error" }, { status: 500 });
-}
-
-function readStatus(error: Error): number | undefined {
-  const status = (error as Error & { status?: unknown }).status;
-  if (typeof status !== "number" || Number.isNaN(status)) return undefined;
-  if (status <= 0) return 502;
-  return status;
-}
-
-function readDetails(error: Error): unknown {
-  return (error as Error & { details?: unknown }).details;
+function routeErrorResponse(error: unknown, fallback = "Request could not be completed"): Response {
+  const safe = safePublicError(error, fallback);
+  return NextResponse.json({ message: safe.message }, { status: safe.status });
 }

@@ -7,12 +7,12 @@ import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-ses
 import { workspaceSelectionCookies } from "@/contexts/business/infrastructure/session/workspace-selection-cookie";
 import { createEntryRouteQueryService } from "@/contexts/shared/application/internal/queryservices/entry-route-query.service";
 import { getServerDictionary } from "@/contexts/shared/infrastructure/i18n/server";
-import { EntryRouteUnavailable } from "@/contexts/shared/interfaces/components/entry-route-unavailable";
-import { PageLoading } from "@/contexts/shared/interfaces/components/page-loading";
+import { EntryRouteUnavailable } from "@/contexts/shared/interfaces/components/feedback/entry-route-unavailable";
+import { PageLoading } from "@/contexts/shared/interfaces/components/feedback/page-loading";
 import { createPlanHomeRouteQueryService } from "@/contexts/shared/application/internal/queryservices/plan-home-route-query.service";
 import { createBusinessWorkspaceQueryService } from "@/contexts/business/application/internal/queryservices/business-workspace-query.service";
 import { hasSomewhereToCancelTo } from "@/contexts/business/domain/services/workspace-navigation.policy";
-import { BackNavigationButton } from "@/contexts/shared/interfaces/components/back-navigation-button";
+import { BackNavigationButton } from "@/contexts/shared/interfaces/components/navigation/back-navigation-button";
 
 /**
  * Establishments, organization settings and permissions. One-time

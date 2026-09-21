@@ -1,5 +1,8 @@
 "use server";
 
+import { safePublicError } from "@/contexts/shared/interfaces/actions/safe-error";
+
+
 import { updateTag } from "next/cache";
 import { createCatalogServiceSchema } from "../rest/schemas/catalog-service.schemas";
 import { createCatalogServiceCommandService } from "../../application/internal/commandservices/catalog-service-command.service";
@@ -59,7 +62,7 @@ export async function createCatalogServiceAction(
     return {
       status: "error",
       data: null,
-      error: err instanceof Error ? err.message : "Unexpected error while creating the service",
+      error: safePublicError(err, "Unexpected error while creating the service").message,
     };
   }
 }

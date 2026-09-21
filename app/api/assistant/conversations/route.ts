@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { safePublicError } from "@/contexts/shared/interfaces/actions/safe-error";
 
 import { cookies } from "next/headers";
 import { CreateConversationCommandService } from "@/contexts/assistant/application/internal/commandservices/create-conversation-command.service";
@@ -32,8 +33,8 @@ export async function GET(request: Request) {
     return NextResponse.json(data);
   } catch (error) {
     return NextResponse.json(
-      { message: error instanceof Error ? error.message : "Failed to fetch conversations" },
-      { status: error instanceof Error && "status" in error ? (error as { status: number }).status : 500 },
+      (() => { const safe = safePublicError(error, "Failed to fetch conversations"); return { message: safe.message }; })(),
+      { status: safePublicError(error, "Failed to fetch conversations").status },
     );
   }
 }
@@ -59,8 +60,8 @@ export async function POST(request: Request) {
     return NextResponse.json(data, { status: 201 });
   } catch (error) {
     return NextResponse.json(
-      { message: error instanceof Error ? error.message : "Failed to create conversation" },
-      { status: error instanceof Error && "status" in error ? (error as { status: number }).status : 500 },
+      (() => { const safe = safePublicError(error, "Failed to create conversation"); return { message: safe.message }; })(),
+      { status: safePublicError(error, "Failed to create conversation").status },
     );
   }
 }

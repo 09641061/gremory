@@ -1,5 +1,8 @@
 "use server";
 
+import { safePublicError } from "@/contexts/shared/interfaces/actions/safe-error";
+
+
 import "server-only";
 import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
@@ -54,7 +57,7 @@ export async function createSubscriptionAction(
     return {
       status: "error",
       data: null,
-      error: error instanceof Error ? error.message : "An error occurred while processing the plan selection.",
+      error: safePublicError(error, "An error occurred while processing the plan selection.").message,
     };
   }
 }

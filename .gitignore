@@ -45,3 +45,10 @@ test-results
 
 .pi-plans
 .pi-runs
+
+# skills
+.github/agents
+.github/hooks
+.github/skills
+
+.impeccable

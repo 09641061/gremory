@@ -1,9 +1,12 @@
-import { PageHeader, PageShell } from "@/contexts/shared/interfaces/components/page-shell";
+import { PageHeader, PageShell } from "@/contexts/shared/interfaces/components/layout/page-shell";
+import { getServerDictionary } from "@/contexts/shared/infrastructure/i18n/server";
 
-export default function PermissionsPage() {
+export default async function PermissionsPage() {
+  const dictionary = await getServerDictionary();
+
   return (
     <PageShell>
-      <PageHeader title="Permissions" />
+      <PageHeader title={dictionary.navigation.permissions} />
     </PageShell>
   );
 }

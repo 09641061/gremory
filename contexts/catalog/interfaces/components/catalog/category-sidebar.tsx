@@ -23,7 +23,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/contexts/shared/interfaces/components/ui/sheet";
-import { ErrorAlert } from "@/contexts/shared/interfaces/components/error";
+import { ErrorAlert } from "@/contexts/shared/interfaces/components/feedback/error";
 import { CategoryItem } from "./category-item";
 import { ServiceRow } from "./service-row";
 import { DeleteCategoryDialog } from "./delete-category-dialog";
@@ -286,7 +286,7 @@ export function CategorySidebar({
           className="w-(--app-category-sidebar-mobile-width) gap-0 p-0 md:hidden"
         >
           <SheetHeader className="sr-only">
-            <SheetTitle>Categories</SheetTitle>
+            <SheetTitle>{t.sidebar.categoriesTitle}</SheetTitle>
           </SheetHeader>
           {sidebarContent}
         </SheetContent>

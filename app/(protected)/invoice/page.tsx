@@ -6,7 +6,7 @@ import { createCurrentSubscriptionQueryService } from "@/contexts/billing/applic
 import { createBillingInvoicesAdapter } from "@/contexts/billing/infrastructure/adapters/billing-invoices.adapter";
 import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-session-cookie";
 import { InvoiceView } from "@/contexts/billing/interfaces/components/invoice/invoice-view";
-import { PageLoading } from "@/contexts/shared/interfaces/components/page-loading";
+import { PageLoading } from "@/contexts/shared/interfaces/components/feedback/page-loading";
 
 export default function InvoicePage() {
   return (

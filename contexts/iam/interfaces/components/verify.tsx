@@ -6,6 +6,8 @@ import { createIamAuthenticationCommandService } from "../../application/interna
 import { iamSessionCookies } from "../../infrastructure/session/iam-session-cookie";
 import { VerifyForm } from "./verify-form";
 import { normalizeAuthReturnPath, loginPath } from "../../domain/model/valueobjects/auth-return-path";
+import { getServerLocale } from "@/contexts/shared/infrastructure/i18n/server";
+import { getIamDictionary } from "../i18n";
 
 export async function Verify({
   searchParams,
@@ -31,11 +33,13 @@ export async function Verify({
       });
     } catch (error) {
       console.error("Magic link verification failed", error);
+      const locale = await getServerLocale();
+      const iamDict = getIamDictionary(locale);
       return (
         <VerifyForm
           email={email ?? ""}
           returnTo={returnTo}
-          initialError="This sign-in link is invalid or has expired. Request a new one."
+          initialError={iamDict.auth.invalidMagicLink}
         />
       );
     }

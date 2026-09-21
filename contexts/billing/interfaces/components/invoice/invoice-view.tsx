@@ -11,8 +11,8 @@ import {
 import type { InvoiceResponse, PageResponse } from "../../../infrastructure/gateways/billing-api.gateway";
 import { CancelSubscriptionModal } from "../cancel/cancel-subscription-modal";
 import { InvoiceDetailModal } from "./invoice-detail-modal";
-import { BackNavigationButton } from "@/contexts/shared/interfaces/components/back-navigation-button";
-import { PageHeader, PageShell } from "@/contexts/shared/interfaces/components/page-shell";
+import { BackNavigationButton } from "@/contexts/shared/interfaces/components/navigation/back-navigation-button";
+import { PageHeader, PageShell } from "@/contexts/shared/interfaces/components/layout/page-shell";
 import { Badge } from "@/contexts/shared/interfaces/components/ui/badge";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import { Card, CardContent } from "@/contexts/shared/interfaces/components/ui/card";
@@ -25,7 +25,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/contexts/shared/interfaces/components/ui/table";
-import { useBillingTranslations } from "@/contexts/billing/interfaces/i18n";
+import { useBillingI18n } from "@/contexts/billing/interfaces/i18n";
 
 interface InvoiceViewProps {
   currentSubscription: SubscriptionAccessSnapshot | null;
@@ -33,7 +33,7 @@ interface InvoiceViewProps {
 }
 
 export function InvoiceView({ currentSubscription, initialInvoices }: InvoiceViewProps) {
-  const { t } = useBillingTranslations();
+  const { t, locale } = useBillingI18n();
   const router = useRouter();
   const [cancelModalOpen, setCancelModalOpen] = useState(false);
   const [selectedInvoiceId, setSelectedInvoiceId] = useState<string | null>(null);
@@ -111,13 +111,13 @@ export function InvoiceView({ currentSubscription, initialInvoices }: InvoiceVie
                     ? t.invoices.endsOn.replace(
                         "{date}",
                         currentSubscription.currentPeriodEnd
-                          ? new Date(currentSubscription.currentPeriodEnd).toLocaleDateString()
+                          ? new Date(currentSubscription.currentPeriodEnd).toLocaleDateString(locale === "es" ? "es-ES" : "en-US")
                           : ""
                       )
                     : currentSubscription.currentPeriodEnd
                       ? t.invoices.renewsOn.replace(
                           "{date}",
-                          new Date(currentSubscription.currentPeriodEnd).toLocaleDateString()
+                          new Date(currentSubscription.currentPeriodEnd).toLocaleDateString(locale === "es" ? "es-ES" : "en-US")
                         )
                       : t.invoices.active}
                 </p>
@@ -168,14 +168,14 @@ export function InvoiceView({ currentSubscription, initialInvoices }: InvoiceVie
                     {invoicesData.content.map((invoice) => (
                       <TableRow key={invoice.id} className="hover:bg-muted/20">
                         <TableCell className="px-5 py-4 text-sm text-foreground">
-                          {new Date(invoice.issueDate).toLocaleDateString(undefined, {
+                          {new Date(invoice.issueDate).toLocaleDateString(locale === "es" ? "es-ES" : "en-US", {
                             year: "numeric",
                             month: "short",
                             day: "numeric",
                           })}
                         </TableCell>
                         <TableCell className="px-5 py-4 text-sm font-medium text-foreground">
-                          {invoice.amount.toLocaleString(undefined, {
+                          {invoice.amount.toLocaleString(locale === "es" ? "es-PE" : "en-US", {
                             style: "currency",
                             currency: invoice.currency || "USD",
                           })}
@@ -185,7 +185,7 @@ export function InvoiceView({ currentSubscription, initialInvoices }: InvoiceVie
                             variant={invoice.status === "PAID" ? "default" : "outline"}
                             className="rounded-full px-2.5 uppercase tracking-wide"
                           >
-                            {invoice.status}
+                            {invoice.status === "PAID" ? t.invoices.statusPaid : t.invoices.statusPending}
                           </Badge>
                         </TableCell>
                         <TableCell className="px-5 py-4 text-right text-sm">

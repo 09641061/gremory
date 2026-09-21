@@ -3,6 +3,8 @@ import {
   en,
   es,
   getSchedulingDictionary,
+  useSchedulingI18n,
+  useSchedulingTranslations,
 } from "@/contexts/scheduling/interfaces/i18n";
 
 describe("Scheduling i18n translations", () => {
@@ -36,5 +38,10 @@ describe("Scheduling i18n translations", () => {
     expect(getSchedulingDictionary("es")).toBe(es);
     expect(getSchedulingDictionary("en")).toBe(en);
     expect(getSchedulingDictionary(null)).toBe(en);
+  });
+
+  it("should export useSchedulingI18n and useSchedulingTranslations hooks", () => {
+    expect(typeof useSchedulingI18n).toBe("function");
+    expect(useSchedulingTranslations).toBe(useSchedulingI18n);
   });
 });

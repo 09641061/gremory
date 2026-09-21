@@ -3,8 +3,8 @@ import "server-only";
 import React, { Suspense } from "react";
 import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
-import { PageHeader, PageShell } from "@/contexts/shared/interfaces/components/page-shell";
-import { PageLoading } from "@/contexts/shared/interfaces/components/page-loading";
+import { PageHeader, PageShell } from "@/contexts/shared/interfaces/components/layout/page-shell";
+import { PageLoading } from "@/contexts/shared/interfaces/components/feedback/page-loading";
 import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-session-cookie";
 import { workspaceSelectionCookies } from "@/contexts/business/infrastructure/session/workspace-selection-cookie";
 import { BusinessWorkspaceApiGateway } from "@/contexts/business/infrastructure/gateways/business-workspace-api.gateway";
@@ -17,7 +17,7 @@ import { StandardAnalyticsView } from "@/contexts/analytics/interfaces/component
 import { MaxAnalyticsView } from "@/contexts/analytics/interfaces/components/max/max-analytics-view";
 import { getAnalyticsDictionary } from "@/contexts/analytics/interfaces/i18n";
 import { getServerLocale } from "@/contexts/shared/infrastructure/i18n/server";
-import { ErrorAlert } from "@/contexts/shared/interfaces/components/error";
+import { ErrorAlert } from "@/contexts/shared/interfaces/components/feedback/error";
 
 interface AnalyticsPageProps {
   searchParams?: Promise<{ organizationId?: string; establishmentId?: string }>;

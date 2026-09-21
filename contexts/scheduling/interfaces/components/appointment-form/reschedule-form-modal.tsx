@@ -12,7 +12,7 @@ import {
 } from "@/contexts/shared/interfaces/components/ui/dialog";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import { Spinner } from "@/contexts/shared/interfaces/components/ui/spinner";
-import { ErrorAlert } from "@/contexts/shared/interfaces/components/error";
+import { ErrorAlert } from "@/contexts/shared/interfaces/components/feedback/error";
 import { updateAppointmentAction } from "../../actions/update-appointment.action";
 import type { Appointment } from "../../../domain/model/entities/appointment";
 import type { ActionState } from "../../actions/action-state";

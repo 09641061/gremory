@@ -5,11 +5,12 @@ import { CircleAlertIcon, X } from "lucide-react";
 import { createPortal } from "react-dom";
 import { cn } from "@/lib/utils";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
+import { useI18n } from "@/contexts/shared/interfaces/i18n";
 import {
   Alert,
   AlertDescription,
   AlertTitle,
-} from "./ui/alert";
+} from "../ui/alert";
 
 export function ErrorAlert({
   title,
@@ -93,6 +94,7 @@ function ErrorToast({
   message: string;
   onDismiss: () => void;
 }) {
+  const { t } = useI18n();
   const [progress, setProgress] = useState(100);
 
   useEffect(() => {
@@ -144,7 +146,7 @@ function ErrorToast({
         size="icon-xs"
         onClick={onDismiss}
         className="absolute top-3 right-3 rounded-lg p-1.5 text-muted-foreground/60 transition-colors hover:bg-muted/70 hover:text-foreground"
-        aria-label="Dismiss alert"
+        aria-label={t.shared.dismissAlert}
       >
         <X className="size-3.5" />
       </Button>

@@ -8,6 +8,7 @@ import { OrganizationsSearchBar } from "./organizations-search-bar";
 import { OrganizationListCard } from "./organization-list-card";
 import { OrganizationDetailCard } from "./organization-detail-card";
 import type { WorkspaceNavigationOrganizationGroup } from "@/contexts/business/domain/services/workspace-navigation.policy";
+import { useBusinessTranslations } from "@/contexts/business/interfaces/i18n";
 
 
 export type OrganizationListItem = WorkspaceNavigationOrganizationGroup;
@@ -25,6 +26,7 @@ export function OrganizationsPage({
   initialPreviewOrganizationId?: string | null;
   canCreateOrganization?: boolean;
 }) {
+  const { t } = useBusinessTranslations();
   const router = useRouter();
   const [filter, setFilter] = useState("");
   const [previewOrgId, setPreviewOrgId] = useState<string | null>(initialPreviewOrganizationId);
@@ -83,9 +85,9 @@ export function OrganizationsPage({
       >
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between shrink-0">
           <div>
-            <h1 className="page-title">Organizations</h1>
+            <h1 className="page-title">{t.organizations.title}</h1>
             <p className="page-description mt-2">
-              Manage your organization&apos;s identity and the establishments inside it.
+              {t.organizations.pageDescription}
             </p>
           </div>
         </div>

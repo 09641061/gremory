@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { useDeleteServiceCategory } from "../../hooks/use-delete-service-category";
-import { DeleteConfirmDialog } from "@/contexts/shared/interfaces/components/delete-confirm-dialog";
+import { DeleteConfirmDialog } from "@/contexts/shared/interfaces/components/dialogs/delete-confirm-dialog";
 
 import { useCatalogTranslations } from "../../i18n";
 

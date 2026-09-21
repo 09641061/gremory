@@ -1,5 +1,8 @@
 "use server";
 
+import { safePublicError } from "@/contexts/shared/interfaces/actions/safe-error";
+
+
 import "server-only";
 import { cookies } from "next/headers";
 import { updateTag } from "next/cache";
@@ -75,7 +78,7 @@ export async function updatePreferencesAction(
     return {
       status: "error",
       data: null,
-      error: error instanceof Error ? error.message : "Failed to update preferences",
+      error: safePublicError(error, "Failed to update preferences").message,
     };
   }
 }
