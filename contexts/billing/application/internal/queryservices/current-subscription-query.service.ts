@@ -1,16 +1,11 @@
-import "server-only";
-
 import type { SubscriptionAccessSnapshot } from "../../../domain/services/subscription-access.policy";
-import {
-  createBillingSubscriptionAdapter,
-  type BillingSubscriptionSnapshot,
-} from "@/contexts/billing/infrastructure/adapters/billing-subscription.adapter";
+import type { BillingSubscriptionReader, BillingSubscriptionReadModel, BillingRequestContext } from "../../ports/billing-readers-writers";
 
 export class CurrentSubscriptionQueryService {
-  async getCurrentSubscription(accessToken: string): Promise<SubscriptionAccessSnapshot> {
-    const subscription = await createBillingSubscriptionAdapter().getCurrentSubscription(
-      accessToken,
-    );
+  constructor(private readonly reader: BillingSubscriptionReader) {}
+
+  async getCurrentSubscription(accessToken: string, context?: BillingRequestContext): Promise<SubscriptionAccessSnapshot> {
+    const subscription = await this.reader.getCurrentSubscription(accessToken, context);
     return toSubscriptionAccessSnapshot(subscription);
   }
 
@@ -22,21 +17,28 @@ export class CurrentSubscriptionQueryService {
    */
   async getCurrentSubscriptionSnapshot(
     accessToken: string,
+    context?: BillingRequestContext,
   ): Promise<SubscriptionAccessSnapshot | null> {
     try {
-      return await this.getCurrentSubscription(accessToken);
+      return await this.getCurrentSubscription(accessToken, context);
     } catch {
       return null;
     }
   }
 }
 
-export function createCurrentSubscriptionQueryService() {
-  return new CurrentSubscriptionQueryService();
+export function createCurrentSubscriptionQueryService(reader?: BillingSubscriptionReader) {
+  return new CurrentSubscriptionQueryService(reader ?? unavailableSubscriptionReader);
 }
 
+const unavailableSubscriptionReader: BillingSubscriptionReader = {
+  async getCurrentSubscription() {
+    throw new Error("Billing composition is required for subscription reads");
+  },
+};
+
 function toSubscriptionAccessSnapshot(
-  subscription: BillingSubscriptionSnapshot,
+  subscription: BillingSubscriptionReadModel,
 ): SubscriptionAccessSnapshot {
   return {
     active: subscription.active,

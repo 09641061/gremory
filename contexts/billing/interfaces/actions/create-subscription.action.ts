@@ -8,13 +8,14 @@ import { z } from "zod";
 import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-session-cookie";
-import { createBillingSubscriptionAdapter, type BillingSubscriptionSnapshot } from "@/contexts/billing/infrastructure/adapters/billing-subscription.adapter";
-import { CreateSubscriptionCommandService } from "../../application/internal/commandservices/create-subscription-command.service";
+import type { BillingSubscriptionReadModel } from "../../application/ports/billing-readers-writers";
+import { composeBillingAdapters } from "../server/billing-composition";
+import { requireBillingManager } from "../authorization/billing-authorization";
 import type { BillingCycleType } from "../../domain/model/value-objects/billing-cycle";
 import type { CurrencyCode } from "../../domain/model/value-objects/currency";
 
 export type CreateSubscriptionActionResult =
-  | { status: "success"; data: BillingSubscriptionSnapshot; error: null }
+  | { status: "success"; data: BillingSubscriptionReadModel; error: null }
   | { status: "error"; data: null; error: string };
 
 const createSubscriptionInputSchema = z.object({
@@ -50,18 +51,18 @@ export async function createSubscriptionAction(
       };
     }
 
-    const prepared = new CreateSubscriptionCommandService().handle({
+    const billingContext = await requireBillingManager();
+    const result = await composeBillingAdapters().createSubscriptionService.execute(accessToken, {
       planId: parsed.data.planId,
       billingCycle: parsed.data.billingCycle as BillingCycleType,
       currency: parsed.data.currency as CurrencyCode | undefined,
-    });
-    const result = await createBillingSubscriptionAdapter().createSubscription(accessToken, prepared);
+    }, billingContext);
 
     try {
       revalidatePath("/upgrade");
       revalidatePath("/chat");
       revalidatePath("/schedule");
-      revalidatePath("/invoices");
+      revalidatePath("/invoice");
     } catch {
       // A confirmed subscription change remains successful if cache invalidation fails.
     }

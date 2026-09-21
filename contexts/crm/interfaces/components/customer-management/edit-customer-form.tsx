@@ -6,7 +6,7 @@ import { Save } from "lucide-react";
 
 import { toUpdateCustomerCommand } from "@/contexts/crm/application/transforms/customer-command.transforms";
 import { updateCustomerAction } from "@/contexts/crm/interfaces/actions/update-customer.action";
-import type { CustomerResponse } from "@/contexts/crm/domain/model/entities/customer";
+import type { CustomerResponse } from "@/contexts/crm/application/models/customer";
 import { ErrorAlert } from "@/contexts/shared/interfaces/components/feedback/error";
 import { PageHeader, PageShell } from "@/contexts/shared/interfaces/components/layout/page-shell";
 import { Card, CardContent } from "@/contexts/shared/interfaces/components/ui/card";

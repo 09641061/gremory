@@ -5,13 +5,6 @@ import {
   USERNAME_REGEX,
 } from "@/contexts/profiles/domain/model/valueobjects/username";
 
-export const profileResponseSchema = z.object({
-  username: z.string(),
-  imageUrl: z.string().nullable().optional(),
-  language: z.enum(["ES", "EN"]),
-  theme: z.enum(["LIGHT", "DARK"]),
-});
-
 export const updateProfileSchema = z.object({
   username: z
     .string()
@@ -26,12 +19,8 @@ export const updateProfileSchema = z.object({
 export type UpdateProfileInput = z.infer<typeof updateProfileSchema>;
 
 export const updatePreferencesSchema = z.object({
-  language: z.enum(["ES", "EN"], {
-    message: "Language must be ES or EN",
-  }),
-  theme: z.enum(["LIGHT", "DARK"], {
-    message: "Theme must be LIGHT or DARK",
-  }),
+  language: z.enum(["ES", "EN"], { message: "Language must be ES or EN" }),
+  theme: z.enum(["LIGHT", "DARK"], { message: "Theme must be LIGHT or DARK" }),
 });
 
 export type UpdatePreferencesInput = z.infer<typeof updatePreferencesSchema>;

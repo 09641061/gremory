@@ -1,12 +1,13 @@
 "use server";
 
+import { recordSafely } from "@/contexts/shared/interfaces/observability/sanitize-error";
 import { safePublicError } from "@/contexts/shared/interfaces/actions/safe-error";
 
 
+import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { createBusinessWorkspaceQueryService } from "@/contexts/business/application/internal/queryservices/business-workspace-query.service";
-import { getWorkspaceEstablishment, hasEstablishmentPermission } from "@/contexts/shared/application/services/workspace-establishment-permissions";
-import { SchedulingApiGateway } from "../../infrastructure/gateways/scheduling-api.gateway";
+import { requireSchedulingContext } from "../authorization/scheduling-authorization";
+import { composeSchedulingAdapters } from "../server/scheduling-composition";
 
 const availabilitySchema = z.object({
   userId: z.string().uuid(),
@@ -30,31 +31,20 @@ export async function updateEmployeeAvailabilityAction(
   });
   if (!parsed.success) return { status: "error", error: "Invalid availability data." } as const;
 
-  const workspace = await createBusinessWorkspaceQueryService().getHeaderViewModel({
-    establishmentId: parsed.data.establishmentId,
-  });
-  const establishment = getWorkspaceEstablishment(workspace, parsed.data.establishmentId);
-  if (!hasEstablishmentPermission(establishment, "scheduling:manage")) {
-    return { status: "error", error: "You are not authorized to update scheduling availability." } as const;
-  }
-  const organizationId = establishment?.organizationId ?? workspace.organization?.id;
-  if (!organizationId) {
-    return { status: "error", error: "Missing organization context." } as const;
-  }
-
   try {
-    await new SchedulingApiGateway(
-      workspace.organization?.id ?? establishment?.organizationId,
-    ).updateEmployeeAvailability(
+    const auth = await requireSchedulingContext("scheduling:manage", parsed.data.establishmentId);
+    await composeSchedulingAdapters(auth.organizationId).rosterCommandService.updateEmployeeAvailability(
       parsed.data.userId,
       parsed.data.establishmentId,
       parsed.data.available,
+      auth.token,
     );
+    revalidatePath("/schedule");
     return { status: "success", error: "" } as const;
   } catch (error) {
     const message =
       safePublicError(error, "Unable to update availability.").message;
-    console.error("Failed to update employee availability:", error);
+    recordSafely("scheduling.update.employee.availability.action", { cause: error });
     return { status: "error", error: message } as const;
   }
 }

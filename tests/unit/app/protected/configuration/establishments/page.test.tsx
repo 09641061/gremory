@@ -12,9 +12,11 @@ vi.mock("next/navigation", () => ({
   redirect: mocks.redirect,
 }));
 
-vi.mock("@/contexts/business/application/internal/queryservices/business-workspace-query.service", () => ({
-  createBusinessWorkspaceQueryService: () => ({
-    getHeaderViewModel: mocks.getHeaderViewModel,
+vi.mock("@/contexts/business/interfaces/server/business-composition", () => ({
+  composeBusinessAdapters: () => ({
+    workspaceQueryService: {
+      getHeaderViewModel: mocks.getHeaderViewModel,
+    },
   }),
 }));
 

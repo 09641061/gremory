@@ -1,5 +1,5 @@
 import { EstablishmentsPage } from "@/contexts/business/interfaces/components/establishment/establishments-page/establishments-page";
-import { createBusinessWorkspaceQueryService } from "@/contexts/business/application/internal/queryservices/business-workspace-query.service";
+import { composeBusinessAdapters } from "@/contexts/business/interfaces/server/business-composition";
 import { redirect } from "next/navigation";
 
 interface EstablishmentsPageProps {
@@ -8,7 +8,7 @@ interface EstablishmentsPageProps {
 
 export default async function EstablishmentsRoutePage({ searchParams }: EstablishmentsPageProps) {
   const query = await searchParams;
-  const workspace = await createBusinessWorkspaceQueryService().getHeaderViewModel(query);
+  const workspace = await composeBusinessAdapters().workspaceQueryService.getHeaderViewModel(query);
   const selectedEstablishmentId = query.establishmentId ?? workspace.activeEstablishmentId;
   const selectedEstablishment = selectedEstablishmentId
     ? workspace.establishments.find((establishment) => establishment.id === selectedEstablishmentId) ?? null

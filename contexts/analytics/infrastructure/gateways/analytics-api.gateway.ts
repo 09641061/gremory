@@ -10,22 +10,21 @@ import {
   maxAnalyticsDashboardResponseSchema,
   type MaxAnalyticsDashboardResponse,
 } from "../contracts/max-analytics.schemas";
+import type {
+  AnalyticsApiPort,
+} from "../../application/ports/analytics-port";
+import type {
+  AnalyticsQueryParams,
+} from "../../application/model/analytics.view-models";
 
-export interface AnalyticsQueryParams {
-  establishmentId?: string;
-  from: string;
-  to: string;
-  organizationId?: string;
-}
+export type { AnalyticsQueryParams };
 
-export class AnalyticsApiGateway {
-  static async getStandardDashboard(
+export class AnalyticsApiGateway implements AnalyticsApiPort {
+  async getStandardDashboard(
     query: AnalyticsQueryParams,
     token?: string,
     correlationId?: string,
   ): Promise<StandardAnalyticsDashboardResponse> {
-    const headers: Record<string, string> = {};
-    if (query.organizationId) headers["X-Organization-Id"] = query.organizationId;
     const params = new URLSearchParams();
     if (query.establishmentId) params.set("establishmentId", query.establishmentId);
     params.set("from", query.from);
@@ -33,20 +32,18 @@ export class AnalyticsApiGateway {
     const endpoint = `${apiConfig.routes.analytics.standard}?${params.toString()}`;
     const response = await apiClient.get<unknown>(endpoint, {
       token,
+      tenantId: query.organizationId,
       correlationId,
-      headers,
       errorMessage: "Failed to fetch standard analytics dashboard",
     });
     return standardAnalyticsDashboardResponseSchema.parse(response);
   }
 
-  static async getMaxDashboard(
+  async getMaxDashboard(
     query: AnalyticsQueryParams,
     token?: string,
     correlationId?: string,
   ): Promise<MaxAnalyticsDashboardResponse> {
-    const headers: Record<string, string> = {};
-    if (query.organizationId) headers["X-Organization-Id"] = query.organizationId;
     const params = new URLSearchParams();
     if (query.establishmentId) params.set("establishmentId", query.establishmentId);
     params.set("from", query.from);
@@ -54,8 +51,8 @@ export class AnalyticsApiGateway {
     const endpoint = `${apiConfig.routes.analytics.max}?${params.toString()}`;
     const response = await apiClient.get<unknown>(endpoint, {
       token,
+      tenantId: query.organizationId,
       correlationId,
-      headers,
       errorMessage: "Failed to fetch max analytics dashboard",
     });
     return maxAnalyticsDashboardResponseSchema.parse(response);

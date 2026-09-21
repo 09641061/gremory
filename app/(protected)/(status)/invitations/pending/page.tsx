@@ -2,7 +2,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { Building2, MailOpen } from "lucide-react";
 
-import { createBusinessWorkspaceQueryService } from "@/contexts/business/application/internal/queryservices/business-workspace-query.service";
+import { composeBusinessAdapters } from "@/contexts/business/interfaces/server/business-composition";
 import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-session-cookie";
 import { AcceptPendingInvitationButton } from "@/contexts/notifications/interfaces/components/accept-pending-invitation-button";
 import { getServerDictionary } from "@/contexts/shared/infrastructure/i18n/server";
@@ -12,7 +12,7 @@ export default async function PendingInvitationPage() {
   const accessToken = (await cookies()).get(iamSessionCookies.accessToken)?.value;
   if (!accessToken) redirect("/login");
 
-  const workspace = await createBusinessWorkspaceQueryService()
+  const workspace = await composeBusinessAdapters().workspaceQueryService
     .getHeaderViewModel()
     .catch(() => null);
   if (!workspace || workspace.accountType !== "PENDING_INVITATION") {

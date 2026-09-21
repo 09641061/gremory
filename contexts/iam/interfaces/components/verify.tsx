@@ -1,8 +1,9 @@
+import { recordSafely } from "@/contexts/shared/interfaces/observability/sanitize-error";
 import "server-only";
 
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
-import { createIamAuthenticationCommandService } from "../../application/internal/commandservices/iam-authentication-command.service";
+import { composeIamAdapters } from "../server/iam-composition";
 import { iamSessionCookies } from "../../infrastructure/session/iam-session-cookie";
 import { VerifyForm } from "./verify-form";
 import { normalizeAuthReturnPath, loginPath } from "../../domain/model/valueobjects/auth-return-path";
@@ -28,11 +29,11 @@ export async function Verify({
     let session;
 
     try {
-      session = await createIamAuthenticationCommandService().verifyMagicLink({
+      session = await composeIamAdapters().authenticationWriter.verifyMagicLink({
         token: params.token,
       });
     } catch (error) {
-      console.error("Magic link verification failed", error);
+      recordSafely("iam.verify", { cause: error });
       const locale = await getServerLocale();
       const iamDict = getIamDictionary(locale);
       return (

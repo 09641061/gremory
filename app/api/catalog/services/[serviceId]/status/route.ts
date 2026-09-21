@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
+import { composeCatalogAdapters } from "@/contexts/catalog/interfaces/server/catalog-composition";
 import { safePublicError } from "@/contexts/shared/interfaces/actions/safe-error";
 import { z } from "zod";
-import { createCatalogServiceCommandService } from "@/contexts/catalog/application/internal/commandservices/catalog-service-command.service";
 import { requireCatalogServiceTargetAuthorization } from "@/contexts/catalog/interfaces/authorization/catalog-authorization";
 
 const uuidSchema = z.string().uuid();
@@ -21,17 +21,17 @@ export async function PATCH(
     const url = new URL(request.url);
     const establishmentId = url.searchParams.get("establishmentId");
     if (!establishmentId) return validationErrorResponse("establishmentId is required");
-    const auth = await requireCatalogServiceTargetAuthorization(idParsed.data);
+    const auth = await requireCatalogServiceTargetAuthorization(idParsed.data, "catalog:manage", establishmentId);
     if (auth.establishmentId !== establishmentId) return NextResponse.json({ message: "Operation not permitted" }, { status: 403 });
     const activeParsed = activeSchema.safeParse(url.searchParams.get("active"));
     if (!activeParsed.success) {
       return validationErrorResponse(activeParsed.error.issues[0]?.message);
     }
 
-    await createCatalogServiceCommandService().changeStatus({
+    await composeCatalogAdapters().serviceCommandService.changeStatus({
       id: idParsed.data,
       active: activeParsed.data,
-    });
+    }, auth.token);
 
     return new Response(null, { status: 204 });
   } catch (error) {

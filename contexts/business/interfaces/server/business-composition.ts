@@ -6,8 +6,21 @@ import { EstablishmentApiGateway } from "../../infrastructure/gateways/establish
 import { BusinessWorkspaceQueryService } from "../../application/internal/queryservices/business-workspace-query.service";
 import { OrganizationCommandServiceImpl } from "../../application/internal/commandservices/organization-command.service";
 import { EstablishmentCommandServiceImpl } from "../../application/internal/commandservices/establishment-command.service";
+import { OrganizationQueryServiceImpl } from "../../application/internal/queryservices/organization-query.service";
+import { EstablishmentQueryServiceImpl } from "../../application/internal/queryservices/establishment-query.service";
 import { createOrganizationImageUploadAdapter } from "../../infrastructure/adapters/organization-image-upload.adapter";
 import { createEstablishmentPhotoAdapter } from "../../infrastructure/adapters/establishment-photo.adapter";
+import type { BusinessWorkspaceReader } from "../../application/ports/business-workspace-reader";
+import type { OrganizationImageStorage } from "../../application/services/business.services";
+import type { OrganizationRepository } from "../../domain/services/business.repositories";
+import type { EstablishmentPhotoStorage } from "../../application/ports/establishment-photo-storage";
+import type { EstablishmentRepository } from "../../domain/services/business.repositories";
+import type {
+  OrganizationCommandService,
+  OrganizationQueryService,
+  EstablishmentCommandService,
+  EstablishmentQueryService,
+} from "../../application/services/business.services";
 
 /**
  * Server-only composition for the Business bounded context.
@@ -15,37 +28,46 @@ import { createEstablishmentPhotoAdapter } from "../../infrastructure/adapters/e
  * Returns a fresh composition per invocation. Callers (Server Actions, Route
  * Handlers, Server Components) destructure the parts they need; they MUST NOT
  * import the gateways or services directly.
- *
- * Migration target: the new Application ports
- *   - `application/ports/business-workspace-reader.ts`
- *   - `application/ports/organization-reader-writer.ts`
- *   - `application/ports/establishment-reader-writer.ts`
- * remain the consumer-owned contracts the gateways will eventually implement.
- * Until then, this composition hands out the existing command/query
- * services so callers stop reaching into the gateways themselves.
  */
 export type ComposedBusinessAdapters = Readonly<{
-  workspaceGateway: BusinessWorkspaceApiGateway;
-  organizationGateway: OrganizationApiGateway;
-  establishmentGateway: EstablishmentApiGateway;
+  workspaceReader: BusinessWorkspaceReader;
+  organizationRepository: OrganizationRepository;
+  organizationImageStorage: OrganizationImageStorage;
+  establishmentRepository: EstablishmentRepository;
+  establishmentPhotoStorage: EstablishmentPhotoStorage;
   workspaceQueryService: BusinessWorkspaceQueryService;
-  organizationCommandService: OrganizationCommandServiceImpl;
-  establishmentCommandService: EstablishmentCommandServiceImpl;
+  organizationCommandService: OrganizationCommandService;
+  organizationQueryService: OrganizationQueryService;
+  establishmentCommandService: EstablishmentCommandService;
+  establishmentQueryService: EstablishmentQueryService;
 }>;
 
-export function composeBusinessAdapters(): ComposedBusinessAdapters {
-  const workspaceGateway = new BusinessWorkspaceApiGateway();
-  const organizationGateway = new OrganizationApiGateway();
-  const establishmentGateway = new EstablishmentApiGateway();
-  const organizationImageUpload = createOrganizationImageUploadAdapter();
-  const establishmentPhotoUpload = createEstablishmentPhotoAdapter();
+export function composeBusinessAdapters(accessToken?: string): ComposedBusinessAdapters {
+  const workspaceReader = new BusinessWorkspaceApiGateway(accessToken);
+  const organizationRepository = new OrganizationApiGateway();
+  const establishmentRepository = new EstablishmentApiGateway();
+  const organizationImageStorage = createOrganizationImageUploadAdapter();
+  const establishmentPhotoStorage = createEstablishmentPhotoAdapter();
 
   return {
-    workspaceGateway,
-    organizationGateway,
-    establishmentGateway,
-    workspaceQueryService: new BusinessWorkspaceQueryService(workspaceGateway),
-    organizationCommandService: new OrganizationCommandServiceImpl(organizationGateway, organizationImageUpload),
-    establishmentCommandService: new EstablishmentCommandServiceImpl(establishmentGateway, establishmentPhotoUpload),
+    workspaceReader,
+    organizationRepository,
+    organizationImageStorage,
+    establishmentRepository,
+    establishmentPhotoStorage,
+    workspaceQueryService: new BusinessWorkspaceQueryService(workspaceReader),
+    organizationCommandService: new OrganizationCommandServiceImpl(
+      organizationRepository,
+      organizationImageStorage,
+    ),
+    organizationQueryService: new OrganizationQueryServiceImpl(
+      organizationRepository,
+      organizationRepository,
+    ),
+    establishmentCommandService: new EstablishmentCommandServiceImpl(
+      establishmentRepository,
+      establishmentPhotoStorage,
+    ),
+    establishmentQueryService: new EstablishmentQueryServiceImpl(establishmentRepository),
   };
 }

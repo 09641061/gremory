@@ -13,7 +13,6 @@ import { NotificationCommandServiceImpl } from "../../application/internal/comma
  * past the Application boundary.
  */
 export type ComposedNotificationAdapters = Readonly<{
-  gateway: NotificationApiGateway;
   queryService: NotificationQueryServiceImpl;
   commandService: NotificationCommandServiceImpl;
 }>;
@@ -21,7 +20,6 @@ export type ComposedNotificationAdapters = Readonly<{
 export function composeNotificationAdapters(): ComposedNotificationAdapters {
   const gateway = new NotificationApiGateway();
   return {
-    gateway,
     queryService: new NotificationQueryServiceImpl(gateway),
     commandService: new NotificationCommandServiceImpl(gateway),
   };

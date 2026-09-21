@@ -7,7 +7,7 @@ import { revalidatePath } from "next/cache";
 import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-session-cookie";
 import { workspaceSelectionCookies, workspaceSelectionCookieOptions } from "@/contexts/business/infrastructure/session/workspace-selection-cookie";
 import { safePublicError } from "@/contexts/shared/interfaces/actions/safe-error";
-import { createNotificationCommandService, createNotificationQueryService } from "../../application/factory";
+import { composeNotificationAdapters } from "../server/notification-composition";
 import type { PaginatedNotifications } from "../../domain/model/entities/notification";
 
 const notificationIdSchema = z.string().trim().min(1).max(200);
@@ -31,7 +31,15 @@ export async function fetchNotificationsAction(page = 0, size = 10): Promise<Pag
   const token = await getAccessToken();
   if (!token) return null;
   try {
-    return await createNotificationQueryService().getNotifications(token, parsedPage.data, parsedSize.data);
+    const page = await composeNotificationAdapters().queryService.getNotifications(
+      token,
+      parsedPage.data,
+      parsedSize.data,
+    );
+    return {
+      ...page,
+      content: page.content.map(stripServerOnlyInvitationToken),
+    };
   } catch {
     return null;
   }
@@ -41,7 +49,7 @@ export async function fetchUnreadNotificationsCountAction(): Promise<number> {
   const token = await getAccessToken();
   if (!token) return 0;
   try {
-    return await createNotificationQueryService().getUnreadCount(token);
+    return await composeNotificationAdapters().queryService.getUnreadCount(token);
   } catch {
     return 0;
   }
@@ -53,7 +61,7 @@ export async function markNotificationAsReadAction(id: string) {
   const token = await getAccessToken();
   if (!token) return { success: false, error: "Authentication required" };
   try {
-    await createNotificationCommandService().markAsRead({ id: parsedId.data }, token);
+    await composeNotificationAdapters().commandService.markAsRead({ id: parsedId.data }, token);
     try { revalidatePath("/", "layout"); } catch { /* write already confirmed */ }
     return { success: true };
   } catch (error) {
@@ -67,7 +75,7 @@ export async function deleteNotificationAction(id: string) {
   const token = await getAccessToken();
   if (!token) return { success: false, error: "Authentication required" };
   try {
-    await createNotificationCommandService().deleteNotification({ id: parsedId.data }, token);
+    await composeNotificationAdapters().commandService.deleteNotification({ id: parsedId.data }, token);
     try { revalidatePath("/", "layout"); } catch { /* write already confirmed */ }
     return { success: true };
   } catch (error) {
@@ -75,14 +83,23 @@ export async function deleteNotificationAction(id: string) {
   }
 }
 
-export async function acceptInvitationNotificationAction(notificationId: string, invitationToken: string) {
+export async function acceptInvitationNotificationAction(notificationId: string) {
   const parsedId = notificationIdSchema.safeParse(notificationId);
-  const parsedToken = z.string().trim().min(1).max(2048).safeParse(invitationToken);
-  if (!parsedId.success || !parsedToken.success) return { success: false, error: "Invalid invitation." };
+  if (!parsedId.success) return { success: false, error: "Invalid invitation." };
   const token = await getAccessToken();
   if (!token) return { success: false, error: "Authentication required" };
   try {
-    const result = await createNotificationCommandService().acceptInvitation({ notificationId: parsedId.data, invitationToken: parsedToken.data }, token);
+    const page = await composeNotificationAdapters().queryService.getNotifications(token, 0, 100);
+    const notification = page.content.find((item) => item.id === parsedId.data);
+    const invitationToken = notification?.targetToken;
+    if (!invitationToken) {
+      return { success: false, error: "Invitation details are unavailable." };
+    }
+
+    const result = await composeNotificationAdapters().commandService.acceptInvitation(
+      { notificationId: parsedId.data, invitationToken },
+      token,
+    );
     await persistAcceptedWorkspace(result);
     try { revalidatePath("/", "layout"); } catch { /* write already confirmed */ }
     return { success: true };
@@ -95,7 +112,7 @@ export async function acceptPendingInvitationAction() {
   const token = await getAccessToken();
   if (!token) return { success: false, error: "Authentication required" };
   try {
-    const result = await createNotificationCommandService().acceptPendingInvitation(token);
+    const result = await composeNotificationAdapters().commandService.acceptPendingInvitation(token);
     await persistAcceptedWorkspace(result);
     try { revalidatePath("/", "layout"); } catch { /* write already confirmed */ }
     return { success: true };
@@ -111,12 +128,21 @@ export async function registerDeviceTokenAction(deviceToken: string, platform = 
   const token = await getAccessToken();
   if (!token) return { success: false, error: "Authentication required" };
   try {
-    const { notificationApiGateway } = await import("../../infrastructure/gateways/notification-api.gateway");
-    await notificationApiGateway.registerDeviceToken(token, parsedDeviceToken.data, parsedPlatform.data);
+    await composeNotificationAdapters().commandService.registerDeviceToken(
+      parsedDeviceToken.data,
+      parsedPlatform.data,
+      token,
+    );
     return { success: true };
   } catch (error) {
     return { success: false, error: safePublicError(error, "Failed to register device token").message };
   }
+}
+
+function stripServerOnlyInvitationToken(notification: PaginatedNotifications["content"][number]) {
+  const clientNotification = { ...notification };
+  delete clientNotification.targetToken;
+  return clientNotification;
 }
 
 async function persistAcceptedWorkspace(result: { organizationId?: string; establishmentId?: string }) {

@@ -3,8 +3,8 @@
  *
  * Goal: keep enough information for protected diagnostics (correlation id,
  * status code, stable error code) without leaking raw bodies, request/response
- * headers, stack traces, or tokens. Never logs through `console.error`/`log`
- * directly: callers must go through `recordSafely`, which is non-throwing
+ * headers, stack traces, or tokens. Never writes directly to host logging
+ * APIs: callers must go through `recordSafely`, which is non-throwing
  * and bounded.
  *
  * Usage:
@@ -51,7 +51,8 @@ const MAX_STACK_LENGTH = 1024;
 type DiagnosticLevel = "info" | "warn" | "error";
 
 export type SanitizedDiagnostic = Readonly<{
-  event: string;
+  /** Event name is supplied separately to `recordSafely`. */
+  event?: string;
   level?: DiagnosticLevel;
   correlationId?: string;
   status?: number;
@@ -70,6 +71,22 @@ function truncate(value: string, max: number): string {
   return value.length > max ? `${value.slice(0, max)}…` : value;
 }
 
+/** Redact credentials that can occur in otherwise harmless diagnostic text. */
+function sanitizeText(value: string, max: number): string {
+  const redacted = value
+    .replace(/Bearer\s+[^\s,;]+/gi, "Bearer [redacted]")
+    .replace(/(token|api[-_ ]?key|secret|password|authorization)\s*[:=]\s*[^\s,;]+/gi, "$1=[redacted]");
+  return truncate(redacted, max);
+}
+
+function readProperty(object: object, key: string): unknown {
+  try {
+    return Reflect.get(object, key);
+  } catch {
+    return "[unreadable]";
+  }
+}
+
 function isForbiddenKey(key: string): boolean {
   const normalized = key.toLowerCase().replace(/[-_]/g, "");
   if (FORBIDDEN_KEYS.has(normalized)) return true;
@@ -84,7 +101,7 @@ function sanitizeValue(value: unknown, depth: number, seen: WeakSet<object>): un
   if (depth > MAX_DEPTH) return "[truncated]";
 
   const t = typeof value;
-  if (t === "string") return truncate(value as string, MAX_STRING_LENGTH);
+  if (t === "string") return sanitizeText(value as string, MAX_STRING_LENGTH);
   if (t === "number" || t === "boolean" || t === "bigint") return value;
   if (t === "function" || t === "symbol") return undefined;
   if (t === "object") {
@@ -93,23 +110,20 @@ function sanitizeValue(value: unknown, depth: number, seen: WeakSet<object>): un
     seen.add(obj);
 
     if (value instanceof Error) {
+      const name = readProperty(value, "name");
+      const message = readProperty(value, "message");
       const out: Record<string, unknown> = {
-        name: value.name,
-        message: truncate(value.message ?? "", MAX_STRING_LENGTH),
+        name: typeof name === "string" ? sanitizeText(name, MAX_STRING_LENGTH) : "Error",
+        message: typeof message === "string" ? sanitizeText(message, MAX_STRING_LENGTH) : "[unreadable]",
       };
-      if (typeof value.stack === "string") {
-        out.stack = truncate(value.stack, MAX_STACK_LENGTH);
-      }
-      if ("status" in value && typeof (value as { status?: unknown }).status === "number") {
-        out.status = (value as { status: number }).status;
-      }
-      if ("code" in value && typeof (value as { code?: unknown }).code === "string") {
-        out.code = (value as { code: string }).code;
-      }
-      const cause = (value as { cause?: unknown }).cause;
-      if (cause !== undefined) {
-        out.cause = sanitizeValue(cause, depth + 1, seen);
-      }
+      const stack = readProperty(value, "stack");
+      if (typeof stack === "string") out.stack = sanitizeText(stack, MAX_STACK_LENGTH);
+      const status = readProperty(value, "status");
+      if (typeof status === "number") out.status = status;
+      const code = readProperty(value, "code");
+      if (typeof code === "string") out.code = sanitizeText(code, MAX_STRING_LENGTH);
+      const cause = readProperty(value, "cause");
+      if (cause !== undefined) out.cause = sanitizeValue(cause, depth + 1, seen);
       return out;
     }
 
@@ -121,12 +135,12 @@ function sanitizeValue(value: unknown, depth: number, seen: WeakSet<object>): un
 
     if (isPlainObject(value)) {
       const out: Record<string, unknown> = {};
-      for (const [key, entry] of Object.entries(value)) {
+      for (const key of Object.keys(value)) {
         if (isForbiddenKey(key)) {
           out[key] = "[redacted]";
           continue;
         }
-        out[key] = sanitizeValue(entry, depth + 1, seen);
+        out[key] = sanitizeValue(readProperty(value, key), depth + 1, seen);
       }
       return out;
     }

@@ -2,8 +2,10 @@ import "server-only";
 
 import { BillingApiGateway } from "../../infrastructure/gateways/billing-api.gateway";
 import { CreateSubscriptionCommandService } from "../../application/internal/commandservices/create-subscription-command.service";
+import { SubscriptionCommandService } from "../../application/internal/commandservices/subscription-command.service";
 import { CurrentSubscriptionQueryService } from "../../application/internal/queryservices/current-subscription-query.service";
 import { ListPlansQueryService } from "../../application/internal/queryservices/list-plans-query.service";
+import { InvoiceQueryService } from "../../application/internal/queryservices/invoice-query.service";
 import { SubscriptionAccessQueryService } from "../../application/internal/queryservices/subscription-access-query.service";
 
 /**
@@ -18,8 +20,10 @@ import { SubscriptionAccessQueryService } from "../../application/internal/query
 export type ComposedBillingAdapters = Readonly<{
   gateway: BillingApiGateway;
   createSubscriptionService: CreateSubscriptionCommandService;
+  subscriptionCommandService: SubscriptionCommandService;
   currentSubscriptionService: CurrentSubscriptionQueryService;
   listPlansService: ListPlansQueryService;
+  invoiceQueryService: InvoiceQueryService;
   subscriptionAccessService: SubscriptionAccessQueryService;
 }>;
 
@@ -27,9 +31,11 @@ export function composeBillingAdapters(): ComposedBillingAdapters {
   const gateway = new BillingApiGateway();
   return {
     gateway,
-    createSubscriptionService: new CreateSubscriptionCommandService(),
-    currentSubscriptionService: new CurrentSubscriptionQueryService(),
-    listPlansService: new ListPlansQueryService(),
+    createSubscriptionService: new CreateSubscriptionCommandService(gateway),
+    subscriptionCommandService: new SubscriptionCommandService(gateway),
+    currentSubscriptionService: new CurrentSubscriptionQueryService(gateway),
+    listPlansService: new ListPlansQueryService(gateway),
+    invoiceQueryService: new InvoiceQueryService(gateway),
     subscriptionAccessService: new SubscriptionAccessQueryService(),
   };
 }

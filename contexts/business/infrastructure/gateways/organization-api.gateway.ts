@@ -5,6 +5,7 @@ import { createOrganizationId } from "../../domain/model/valueobjects/organizati
 import { createOrganizationName, type OrganizationName } from "../../domain/model/valueobjects/organization-name.vo";
 import { createOrganizationImage } from "../../domain/model/valueobjects/organization-image.vo";
 import type { OrganizationRepository } from "../../domain/services/business.repositories";
+import type { CommandFileMetadata } from "../../domain/model/commands/business.commands";
 import type { OrganizationId } from "../../domain/model/valueobjects/organization-id.vo";
 import type { OrganizationResource } from "../../interfaces/rest/resources/business.resources";
 import {
@@ -18,37 +19,32 @@ import {
 } from "../http/business-api.client";
 import { requireBusinessAccessToken } from "../session/business-session";
 import { apiConfig } from "@/api.config";
+import { apiClient } from "@/contexts/shared/infrastructure/http/api-client";
 import { organizationResponseSchema } from "../../interfaces/rest/schemas/organization.schemas";
-
-type OrganizationCreateResponse = OrganizationResource & { message?: string };
 
 export class OrganizationApiGateway implements OrganizationRepository {
   constructor(private readonly providedToken?: string) {}
 
   /** Multipart so the logo can ride the same request as the onboarding form. */
-  async create(name: OrganizationName, imageFile?: File | null): Promise<Organization> {
+  async create(name: OrganizationName, imageFile?: CommandFileMetadata | null): Promise<Organization> {
     const authToken = await requireBusinessAccessToken(this.providedToken);
     const formData = new FormData();
     formData.set("name", name.value);
-    if (imageFile) formData.set("photoFile", imageFile);
-
-    const response = await fetch(`${apiConfig.baseUrl}${apiConfig.routes.organizations}`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${authToken}`,
-      },
-      body: formData,
-    });
-
-    const data = (await response.json().catch(() => null)) as OrganizationCreateResponse | null;
-    if (!response.ok) {
-      throw new BusinessApiError(
-        data?.message || "Failed to create organization",
-        response.status,
-        data,
-      );
+    if (imageFile) {
+      const blob = new Blob([imageFile.bytes.buffer as ArrayBuffer], { type: imageFile.type });
+      formData.set("photoFile", blob, imageFile.name);
     }
 
+    const data = await apiClient.requestMultipart<unknown>(
+      apiConfig.routes.organizations,
+      formData,
+      {
+        method: "POST",
+        token: authToken,
+        errorMessage: "Failed to create organization",
+        errorType: BusinessApiError,
+      },
+    );
     return toOrganization(organizationResponseSchema.parse(data));
   }
 
@@ -69,7 +65,7 @@ export class OrganizationApiGateway implements OrganizationRepository {
     try {
       const resource = await businessGet<OrganizationResource>(
         `${apiConfig.routes.organizations}/${encodeURIComponent(id.value)}`,
-        authToken
+        authToken,
       );
       return toOrganization(organizationResponseSchema.parse(resource));
     } catch (error) {
@@ -84,7 +80,8 @@ export class OrganizationApiGateway implements OrganizationRepository {
       `${apiConfig.routes.organizations}/${encodeURIComponent(organization.id.value)}`,
       { name: organization.name.value, imageUrl: organization.imageUrl.value },
       authToken,
-      { "X-Organization-Id": organization.id.value },
+      undefined,
+      { tenantId: organization.id.value },
     );
     return toOrganization(organizationResponseSchema.parse(resource));
   }

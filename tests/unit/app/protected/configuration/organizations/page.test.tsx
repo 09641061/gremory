@@ -20,14 +20,13 @@ vi.mock("next/headers", () => ({
   cookies: mocks.cookies,
 }));
 
-vi.mock("@/contexts/business/application/internal/queryservices/business-workspace-query.service", () => ({
-  createBusinessWorkspaceQueryService: () => mocks.workspace,
-}));
-
-vi.mock("@/contexts/business/infrastructure/gateways/organization-api.gateway", () => ({
-  OrganizationApiGateway: class {
-    findAccessible = mocks.accessibleOrganizations;
-  },
+vi.mock("@/contexts/business/interfaces/server/business-composition", () => ({
+  composeBusinessAdapters: () => ({
+    workspaceQueryService: mocks.workspace,
+    organizationQueryService: {
+      getAccessible: mocks.accessibleOrganizations,
+    },
+  }),
 }));
 
 vi.mock("@/contexts/business/interfaces/components/organization/organizations-page/organizations-page", () => ({

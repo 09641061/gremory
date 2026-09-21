@@ -2,8 +2,7 @@ import { Suspense } from "react";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
-import { createBusinessWorkspaceQueryService } from "@/contexts/business/application/internal/queryservices/business-workspace-query.service";
-import { createOrganizationQueryService } from "@/contexts/business/application/internal/queryservices/organization-query.service";
+import { composeBusinessAdapters } from "@/contexts/business/interfaces/server/business-composition";
 import { OrganizationsPage } from "@/contexts/business/interfaces/components/organization/organizations-page/organizations-page";
 import {
   canCreateOrganization,
@@ -31,8 +30,8 @@ export async function OrganizationsRoutePageContent({ searchParams }: Organizati
   // query organization only selects the preview; sending it to `/workspace`
   // would scope the response to one organization and hide foreign memberships.
   const [workspace, accessibleOrganizations] = await Promise.all([
-    createBusinessWorkspaceQueryService().getHeaderViewModel({ establishmentId: query.establishmentId }),
-    createOrganizationQueryService().getAccessible(),
+    composeBusinessAdapters().workspaceQueryService.getHeaderViewModel({ establishmentId: query.establishmentId }),
+    composeBusinessAdapters().organizationQueryService.getAccessible(),
   ]);
   const requestedOrganizationId = query.organizationId;
   const requestedPreviewOrganizationId = query.previewOrganizationId;

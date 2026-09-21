@@ -1,8 +1,9 @@
 "use server";
 
+import { recordSafely } from "@/contexts/shared/interfaces/observability/sanitize-error";
 import "server-only";
 import { cookies } from "next/headers";
-import { createIamAuthenticationCommandService } from "../../application/internal/commandservices/iam-authentication-command.service";
+import { composeIamAdapters } from "../server/iam-composition";
 import { iamSessionCookies } from "../../infrastructure/session/iam-session-cookie";
 import { workspaceSelectionCookies } from "@/contexts/business/infrastructure/session/workspace-selection-cookie";
 import { signOutSchema } from "../rest/schemas/sign-out.schema";
@@ -23,7 +24,7 @@ export async function signOutAction(): Promise<SignOutActionResult> {
   }
 
   try {
-    await createIamAuthenticationCommandService().signOut(input.data);
+    await composeIamAdapters().authenticationWriter.signOut(input.data);
     cookieStore.delete(iamSessionCookies.accessToken);
     cookieStore.delete(iamSessionCookies.refreshToken);
     cookieStore.delete(workspaceSelectionCookies.organizationId);
@@ -31,7 +32,7 @@ export async function signOutAction(): Promise<SignOutActionResult> {
     cookieStore.delete(workspaceSelectionCookies.previewOrganizationId);
     return { status: "success", error: null };
   } catch (error) {
-    console.error("Sign out failed", error);
+    recordSafely("iam.sign.out.action", { cause: error });
     return {
       status: "error",
       error: "Unable to sign out. Please try again.",

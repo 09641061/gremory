@@ -4,19 +4,19 @@
 
 import { revalidatePath } from "next/cache";
 import { createCrmCommandService } from "../server/crm-composition";
-import { createBusinessWorkspaceQueryService } from "@/contexts/business/application/internal/queryservices/business-workspace-query.service";
+import { composeBusinessAdapters } from "@/contexts/business/interfaces/server/business-composition";
 import { getWorkspaceEstablishment, hasEstablishmentPermission } from "@/contexts/shared/application/services/workspace-establishment-permissions";
-import { UpdateCustomerCommand } from "../../domain/model/commands/update-customer.command";
+import { UpdateCustomerCommand } from "../../application/models/commands";
 import { ApiError } from "@/contexts/shared/infrastructure/http/api-client";
 import { createActionErrorId, type ActionState } from "./action-state";
-import { CustomerResponse } from "../../domain/model/entities/customer";
+import { CustomerResponse } from "../../application/models/customer";
 import { updateCustomerSchema } from "../schemas/update-customer.schema";
 
 export async function updateCustomerAction(
   command: Omit<UpdateCustomerCommand, "establishmentId">,
   establishmentId: string
 ): Promise<ActionState<CustomerResponse>> {
-  const workspace = await createBusinessWorkspaceQueryService().getHeaderViewModel({ establishmentId });
+  const workspace = await composeBusinessAdapters().workspaceQueryService.getHeaderViewModel({ establishmentId });
   if (!hasEstablishmentPermission(getWorkspaceEstablishment(workspace, establishmentId), "crm:manage")) {
     return {
       status: "error",
@@ -39,7 +39,7 @@ export async function updateCustomerAction(
   }
 
   try {
-    const workspace = await createBusinessWorkspaceQueryService().getHeaderViewModel({ establishmentId });
+    const workspace = await composeBusinessAdapters().workspaceQueryService.getHeaderViewModel({ establishmentId });
     const service = createCrmCommandService(workspace.organization?.id);
     const result = await service.updateCustomer({
       ...parsed.data,

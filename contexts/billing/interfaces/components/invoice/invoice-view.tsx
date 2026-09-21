@@ -8,7 +8,9 @@ import {
   hasActiveSubscription,
   type SubscriptionAccessSnapshot,
 } from "../../../domain/services/subscription-access.policy";
-import type { InvoiceResponse, PageResponse } from "../../../infrastructure/gateways/billing-api.gateway";
+import type { BillingInvoiceReadModel as InvoiceResponse } from "../../../application/ports/billing-readers-writers";
+import { listInvoicesAction } from "../../actions/invoice.actions";
+import type { PageResponse } from "@/contexts/shared/application/model/page-response";
 import { CancelSubscriptionModal } from "../cancel/cancel-subscription-modal";
 import { InvoiceDetailModal } from "./invoice-detail-modal";
 import { BackNavigationButton } from "@/contexts/shared/interfaces/components/navigation/back-navigation-button";
@@ -46,31 +48,15 @@ export function InvoiceView({ currentSubscription, initialInvoices }: InvoiceVie
   const fetchPage = async (page: number) => {
     setLoading(true);
     try {
-      const response = await fetch(`/api/billing/invoices?page=${page}&size=20`);
-      if (response.ok) {
-        const data = await response.json();
-        setInvoicesData(data);
+      const result = await listInvoicesAction(page, 20);
+      if (result.status === "success") {
+        setInvoicesData(result.data);
         setCurrentPage(page);
       }
-    } catch (error) {
-      console.error("Error fetching page:", error);
     } finally {
       setLoading(false);
     }
   };
-
-  React.useEffect(() => {
-    // Force a dynamic fetch on client-side mount to bypass compilation components cache
-    let active = true;
-    setTimeout(() => {
-      if (active) {
-        fetchPage(0);
-      }
-    }, 0);
-    return () => {
-      active = false;
-    };
-  }, []);
 
   const currentPlanName =
     currentSubscription?.planId === 2 ? "Premium" : "Standard";

@@ -64,6 +64,16 @@ describe("recordSafely", () => {
     expect(ring[0]?.cause).toMatchObject({ name: "A", self: "[circular]" });
   });
 
+  it("handles throwing getters and redacts credentials in messages", () => {
+    const cause = {} as Record<string, unknown>;
+    Object.defineProperty(cause, "bad", { enumerable: true, get: () => { throw new Error("getter leaked"); } });
+    cause.message = "Bearer leaked-token";
+    recordSafely("any.event", { cause });
+    const ring = readDiagnosticRing();
+    expect(ring).toHaveLength(1);
+    expect(JSON.stringify(ring[0])).not.toContain("leaked-token");
+  });
+
   it("truncates very long stacks and messages", () => {
     const cause = new Error("x".repeat(2048));
     cause.stack = "y".repeat(4096);

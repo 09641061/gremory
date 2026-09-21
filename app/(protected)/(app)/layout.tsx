@@ -6,7 +6,7 @@ import ProtectedAppShell from "@/contexts/shared/interfaces/components/layout/pr
 import { PageLoading } from "@/contexts/shared/interfaces/components/feedback/page-loading";
 import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-session-cookie";
 import { workspaceSelectionCookies } from "@/contexts/business/infrastructure/session/workspace-selection-cookie";
-import { createEntryRouteQueryService } from "@/contexts/shared/application/internal/queryservices/entry-route-query.service";
+import { composeSharedAdapters } from "@/contexts/shared/interfaces/server/shared-composition";
 import { getServerDictionary } from "@/contexts/shared/infrastructure/i18n/server";
 import { EntryRouteUnavailable } from "@/contexts/shared/interfaces/components/feedback/entry-route-unavailable";
 
@@ -47,7 +47,7 @@ async function AppLayoutContent({
   const requestHeaders = await headers();
   const establishmentId = requestHeaders.get("x-takodu-establishment-id") ?? undefined;
   const organizationId = cookieStore.get(workspaceSelectionCookies.organizationId)?.value ?? undefined;
-  const landing = await createEntryRouteQueryService()
+  const landing = await composeSharedAdapters().entryRouteQueryService
     .resolveRoute({ accessToken, organizationId, establishmentId })
     .catch(() => ({ status: "unavailable" as const }));
 

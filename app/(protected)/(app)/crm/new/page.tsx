@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import { CreateCustomerForm } from "@/contexts/crm/interfaces/components/customer-registration/create-customer-form";
 import { redirect } from "next/navigation";
-import { createBusinessWorkspaceQueryService } from "@/contexts/business/application/internal/queryservices/business-workspace-query.service";
+import { composeBusinessAdapters } from "@/contexts/business/interfaces/server/business-composition";
 import { resolveModuleAccessFallback } from "@/contexts/shared/application/services/module-access.policy";
 import { getWorkspaceEstablishment, hasEstablishmentPermission } from "@/contexts/shared/application/services/workspace-establishment-permissions";
 import { PageLoading } from "@/contexts/shared/interfaces/components/feedback/page-loading";
@@ -20,7 +20,7 @@ export default function NewCustomerPage({ searchParams }: NewCustomerPageProps) 
 
 async function NewCustomerPageContent({ searchParams }: NewCustomerPageProps) {
   const query = await searchParams;
-  const workspace = await createBusinessWorkspaceQueryService().getHeaderViewModel(query);
+  const workspace = await composeBusinessAdapters().workspaceQueryService.getHeaderViewModel(query);
   if (workspace.accessPolicy?.canOpenCrm !== true) {
     redirect(resolveModuleAccessFallback(workspace));
   }

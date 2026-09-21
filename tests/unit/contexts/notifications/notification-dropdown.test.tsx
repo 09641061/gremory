@@ -153,7 +153,7 @@ describe("NotificationDropdown (using NotificationsProvider)", () => {
     try {
       await user.click(screen.getByRole("button", { name: "Accept" }));
 
-      expect(mocks.acceptInvitationNotificationAction).toHaveBeenCalledWith("invite-1", "tok-1");
+      expect(mocks.acceptInvitationNotificationAction).toHaveBeenCalledWith("invite-1");
       // The post-acceptance workspace reload is a UI-level side effect that
       // belongs in the dropdown (the context is UI-agnostic).
       expect(reloadSpy).toHaveBeenCalledTimes(1);

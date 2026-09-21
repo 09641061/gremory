@@ -43,19 +43,22 @@ const APPLICATION_LAYER = ARCHITECTURE_ROOTS.map((root) => `${root}/application`
 const DOMAIN_LAYER = ARCHITECTURE_ROOTS.map((root) => `${root}/domain`);
 
 const FORBIDDEN_FROM_APPLICATION = [
-  /from\s+["']next\//,
-  /from\s+["']react(-dom)?["']/,
-  /from\s+["']zod["']/,
-  /from\s+["']next\/headers["']/,
-  /from\s+["']server-only["']/,
-  /from\s+["']\.{1,2}\/interfaces\//,
-  /from\s+["']\.{1,2}\/\.\.\/\.\.\/interfaces\//,
+  // Relative and aliased imports that cross outward from the layer. We match
+  // the path inside the import specifier rather than walking from `from`/
+  // `import` so that quoted-string syntax is handled uniformly.
+  /["'][^"']*\/infrastructure\//,
+  /["'][^"']*\/interfaces\//,
+  // Platform/framework imports and side-effect imports.
+  /["'][^"']*next\//,
+  /["']react(?:-dom)?["']/,
+  /["']zod["']/,
+  /["']server-only["']/,
+  /["'](?:node:)?(?:fs|path|url|stream)(?:\/|["'])/,
 ];
 
 const FORBIDDEN_FROM_DOMAIN = [
   ...FORBIDDEN_FROM_APPLICATION,
-  /from\s+["']\.{1,2}\/application\//,
-  /from\s+["']\.{1,2}\/\.\.\/\.\.\/application\//,
+  /["'][^"']*\/application\//,
 ];
 
 const FORBIDDEN_PLATFORM_TYPES = new Set([
@@ -78,7 +81,7 @@ describe("architecture layer imports", () => {
     for (const layer of APPLICATION_LAYER) {
       const files = await collectFiles(layer);
       for (const file of files) {
-        const hits = findForbiddenImports(file, FORBIDDEN_FROM_APPLICATION);
+        const hits = await findForbiddenImports(file, FORBIDDEN_FROM_APPLICATION);
         if (hits.length > 0) offenders.set(file, hits);
       }
     }
@@ -96,7 +99,7 @@ describe("architecture layer imports", () => {
     for (const layer of DOMAIN_LAYER) {
       const files = await collectFiles(layer);
       for (const file of files) {
-        const hits = findForbiddenImports(file, FORBIDDEN_FROM_DOMAIN);
+        const hits = await findForbiddenImports(file, FORBIDDEN_FROM_DOMAIN);
         if (hits.length > 0) offenders.set(file, hits);
       }
     }
@@ -114,7 +117,7 @@ describe("architecture layer imports", () => {
     for (const layer of DOMAIN_LAYER) {
       const files = await collectFiles(layer);
       for (const file of files) {
-        const hits = findForbiddenPlatformTypes(file, FORBIDDEN_PLATFORM_TYPES);
+        const hits = await findForbiddenPlatformTypes(file, FORBIDDEN_PLATFORM_TYPES);
         if (hits.length > 0) offenders.set(file, hits);
       }
     }

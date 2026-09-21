@@ -7,17 +7,45 @@ import {
   type AuthenticatedRequestContext,
 } from "./request-context";
 import { extractProblemDetailsMessage, type ProblemDetails } from "./problem-details";
+import { TransportError, type TransportErrorKind } from "@/contexts/shared/application/errors/transport-error";
 
-export class ApiError extends Error {
+export class ApiError extends TransportError {
   constructor(
     message: string,
     public readonly status: number,
     public readonly details?: unknown,
     options?: ErrorOptions,
   ) {
-    super(message, options);
+    super({
+      message,
+      status,
+      code: apiStatusToCode(status),
+      kind: classifyStatus(status),
+    });
     this.name = "ApiError";
+    if (options?.cause !== undefined) {
+      // Preserve the underlying cause for protected diagnostics while keeping
+      // TransportError's stack intact.
+      Object.defineProperty(this, "cause", { value: options.cause, enumerable: false });
+    }
   }
+}
+
+function apiStatusToCode(status: number): string {
+  if (status === 0) return "TRANSPORT_UNREACHABLE";
+  if (status === 401) return "UNAUTHENTICATED";
+  if (status === 403) return "FORBIDDEN";
+  if (status === 404) return "NOT_FOUND";
+  if (status === 408 || status === 504) return "TIMEOUT";
+  if (status >= 500) return "UPSTREAM_UNAVAILABLE";
+  return `HTTP_${status}`;
+}
+
+function classifyStatus(status: number): TransportErrorKind {
+  if (status === 0 || status === 408 || status === 504) return "request";
+  if (status >= 500) return "upstream";
+  if (status >= 400) return "protocol";
+  return "unknown";
 }
 
 type ApiErrorConstructor = new (

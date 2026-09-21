@@ -1,5 +1,6 @@
 "use client";
 
+import { recordSafely } from "@/contexts/shared/interfaces/observability/sanitize-error";
 import { useEffect } from "react";
 import { ErrorScreen } from "@/contexts/shared/interfaces/components/feedback/error-screen";
 
@@ -11,7 +12,7 @@ export default function PermissionsError({
   reset: () => void;
 }) {
   useEffect(() => {
-    console.error("Unexpected permissions error", error);
+    recordSafely("app.protected.configuration.permissions.error", { cause: error });
   }, [error]);
 
   return (

@@ -11,7 +11,8 @@ import {
   DialogFooter,
 } from "@/contexts/shared/interfaces/components/ui/dialog";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
-import type { InvoiceResponse } from "../../../infrastructure/gateways/billing-api.gateway";
+import type { BillingInvoiceReadModel as InvoiceResponse } from "../../../application/ports/billing-readers-writers";
+import { getInvoiceAction } from "../../actions/invoice.actions";
 import { useBillingI18n } from "@/contexts/billing/interfaces/i18n";
 
 interface InvoiceDetailModalProps {
@@ -32,19 +33,15 @@ export function InvoiceDetailModal({ isOpen, onClose, invoiceId }: InvoiceDetail
     }
 
     let active = true;
+    const requestedInvoiceId = invoiceId;
 
     async function fetchInvoiceDetails() {
       setLoading(true);
       setError(null);
       try {
-        const response = await fetch(`/api/billing/invoices/${invoiceId}`);
-        if (!response.ok) {
-          throw new Error(t.invoices.loadError);
-        }
-        const data = (await response.json()) as InvoiceResponse;
-        if (active) {
-          setInvoice(data);
-        }
+        const result = await getInvoiceAction(requestedInvoiceId);
+        if (result.status !== "success") throw new Error(result.error);
+        if (active) setInvoice(result.data);
       } catch (err) {
         if (active) {
           setError(err instanceof Error ? err.message : t.invoices.genericError);

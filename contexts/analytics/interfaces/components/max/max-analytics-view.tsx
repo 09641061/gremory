@@ -1,9 +1,10 @@
 "use client";
 
+import { recordSafely } from "@/contexts/shared/interfaces/observability/sanitize-error";
 import React, { useState, useTransition } from "react";
-import type { MaxAnalyticsDashboardResponse } from "../../../infrastructure/contracts/max-analytics.schemas";
+import type { MaxAnalyticsDashboardResponse } from "../../../application/model/analytics.view-models";
 import type { AnalyticsPreset } from "../../../domain/model/value-objects/analytics-date-range";
-import { AnalyticsExportService } from "../../../domain/services/analytics-export.service";
+import { AnalyticsExportService } from "../../../interfaces/client/analytics-export";
 import { fetchMaxAnalyticsAction } from "../../actions/get-analytics-dashboard.action";
 import { AnalyticsDatePicker } from "../shared/analytics-date-picker";
 import { KpiCard } from "../shared/kpi-card";
@@ -62,7 +63,7 @@ export function MaxAnalyticsView({
         const updated = await fetchMaxAnalyticsAction(preset, organizationId, establishmentId);
         setData(updated);
       } catch (err) {
-        console.error("Failed to load preset max analytics:", err);
+        recordSafely("analytics.max.max.analytics.view", { cause: err });
       }
     });
   };

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { safePublicError } from "@/contexts/shared/interfaces/actions/safe-error";
 import { z } from "zod";
-import { createEstablishmentQueryService } from "@/contexts/business/application/internal/queryservices/establishment-query.service";
+import { composeBusinessAdapters } from "@/contexts/business/interfaces/server/business-composition";
 
 const uuidSchema = z.string().uuid();
 const paginationSchema = z.object({
@@ -29,7 +29,7 @@ export async function GET(
       return validationErrorResponse(parsed.error.issues[0]?.message);
     }
 
-    const page = await createEstablishmentQueryService().getByOrganization({
+    const page = await composeBusinessAdapters().establishmentQueryService.getByOrganization({
       organizationId: organizationParsed.data,
       page: parsed.data.page,
       size: parsed.data.size,

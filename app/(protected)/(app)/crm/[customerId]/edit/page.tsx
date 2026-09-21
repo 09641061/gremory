@@ -1,8 +1,8 @@
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
-import { createBusinessWorkspaceQueryService } from "@/contexts/business/application/internal/queryservices/business-workspace-query.service";
+import { composeBusinessAdapters } from "@/contexts/business/interfaces/server/business-composition";
 import { createCrmQueryService } from "@/contexts/crm/interfaces/server/crm-composition";
-import type { CustomerResponse } from "@/contexts/crm/domain/model/entities/customer";
+import type { CustomerResponse } from "@/contexts/crm/application/models/customer";
 import { EditCustomerForm } from "@/contexts/crm/interfaces/components/customer-management/edit-customer-form";
 import { resolveModuleAccessFallback } from "@/contexts/shared/application/services/module-access.policy";
 import { getWorkspaceEstablishment, hasEstablishmentPermission } from "@/contexts/shared/application/services/workspace-establishment-permissions";
@@ -23,7 +23,7 @@ export default function EditCustomerPage({ params, searchParams }: EditCustomerP
 
 async function EditCustomerPageContent({ params, searchParams }: EditCustomerPageProps) {
   const [{ customerId }, query] = await Promise.all([params, searchParams]);
-  const workspace = await createBusinessWorkspaceQueryService().getHeaderViewModel(query);
+  const workspace = await composeBusinessAdapters().workspaceQueryService.getHeaderViewModel(query);
   if (workspace.accessPolicy?.canOpenCrm !== true) {
     redirect(resolveModuleAccessFallback(workspace));
   }

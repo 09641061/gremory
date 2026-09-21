@@ -2,11 +2,11 @@ import { Suspense } from "react";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
-import { createCurrentSubscriptionQueryService } from "@/contexts/billing/application/internal/queryservices/current-subscription-query.service";
-import { createBillingInvoicesAdapter } from "@/contexts/billing/infrastructure/adapters/billing-invoices.adapter";
+import { composeBillingAdapters } from "@/contexts/billing/interfaces/server/billing-composition";
 import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-session-cookie";
 import { InvoiceView } from "@/contexts/billing/interfaces/components/invoice/invoice-view";
 import { PageLoading } from "@/contexts/shared/interfaces/components/feedback/page-loading";
+import { requireBillingManager } from "@/contexts/billing/interfaces/authorization/billing-authorization";
 
 export default function InvoicePage() {
   return (
@@ -26,8 +26,10 @@ async function InvoicePageContent() {
   // without a paid subscription; the backend applies authentication and owner
   // scoping, but not the active-subscription gate.
 
-  const subscription = await createCurrentSubscriptionQueryService().getCurrentSubscriptionSnapshot(accessToken);
-  const invoices = await createBillingInvoicesAdapter().getInvoices(accessToken, 0, 20);
+  const billing = composeBillingAdapters();
+  const billingContext = await requireBillingManager();
+  const subscription = await billing.currentSubscriptionService.getCurrentSubscriptionSnapshot(accessToken, billingContext);
+  const invoices = await billing.invoiceQueryService.getInvoices(accessToken, 0, 20, billingContext);
 
   return (
     <InvoiceView

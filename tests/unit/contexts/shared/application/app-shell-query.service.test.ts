@@ -111,7 +111,17 @@ vi.mock(
   }),
 );
 
-import { createAppShellQueryService } from "@/contexts/shared/application/internal/queryservices/app-shell-query.service";
+import { createAppShellQueryService as createAppShellQueryServiceImpl } from "@/contexts/shared/application/internal/queryservices/app-shell-query.service";
+
+const createAppShellQueryService = () => {
+  const service = createAppShellQueryServiceImpl(
+    mocks.workspace as never,
+    { getCurrentSubscription: mocks.getCurrentSubscription } as never,
+  );
+  return {
+    resolve: () => service.resolve({ accessToken: "access-token" }),
+  };
+};
 
 describe("app shell query service", () => {
   beforeEach(() => {

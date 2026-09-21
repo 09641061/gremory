@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
+import { composeCatalogAdapters } from "@/contexts/catalog/interfaces/server/catalog-composition";
 import { safePublicError } from "@/contexts/shared/interfaces/actions/safe-error";
 import { z } from "zod";
-import { createCatalogServiceCommandService } from "@/contexts/catalog/application/internal/commandservices/catalog-service-command.service";
-import { createCatalogServiceQueryService } from "@/contexts/catalog/application/internal/queryservices/catalog-service-query.service";
 import { createCatalogServiceReadModel } from "@/contexts/catalog/application/model/catalog-service.read-model";
 import { createCatalogServiceSchema } from "@/contexts/catalog/interfaces/rest/schemas/catalog-service.schemas";
 import { requireOperationAuthorization } from "@/contexts/catalog/interfaces/authorization/catalog-authorization";
@@ -42,7 +41,7 @@ export async function GET(request: Request) {
 
     const auth = await requireOperationAuthorization("catalog:read", parsed.data.establishmentId);
     if (auth.establishmentId !== parsed.data.establishmentId) return NextResponse.json({ message: "Operation not permitted" }, { status: 403 });
-    const page = await createCatalogServiceQueryService(auth.organizationId).search({
+    const page = await composeCatalogAdapters().serviceQueryService.search({
       establishmentId: parsed.data.establishmentId,
       categoryId: parsed.data.categoryId,
       search: parsed.data.search,
@@ -102,12 +101,12 @@ export async function POST(request: Request) {
 
     const auth = await requireOperationAuthorization("catalog:manage", parsed.data.establishmentId);
     if (auth.establishmentId !== parsed.data.establishmentId) return NextResponse.json({ message: "Operation not permitted" }, { status: 403 });
-    const service = await createCatalogServiceCommandService().create({
+    const service = await composeCatalogAdapters().serviceCommandService.create({
       ...parsed.data,
       categoryId: parsed.data.categoryId || null,
       preServiceInstructions: parsed.data.preServiceInstructions || null,
       postServiceRecommendations: parsed.data.postServiceRecommendations || null,
-    });
+    }, auth.token);
 
     return NextResponse.json(createCatalogServiceReadModel(service), { status: 201 });
   } catch (error) {

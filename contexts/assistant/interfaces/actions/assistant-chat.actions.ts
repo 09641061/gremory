@@ -4,14 +4,10 @@ import { safePublicError } from "@/contexts/shared/interfaces/actions/safe-error
 
 
 import "server-only";
-import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 
-import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-session-cookie";
-import { SubmitAssistantMessageCommandService } from "@/contexts/assistant/application/internal/commandservices/submit-assistant-message-command.service";
-import { CreateConversationCommandService } from "@/contexts/assistant/application/internal/commandservices/create-conversation-command.service";
-import { SendMessageCommandService } from "@/contexts/assistant/application/internal/commandservices/send-message-command.service";
-import { createAssistantConversationRepository } from "./assistant-action-context";
+import { authorizeAssistantAccess } from "../authorization/assistant-authorization";
+import { composeAssistantAdapters } from "../server/assistant-composition";
 import { toConversationViewModel } from "@/contexts/assistant/interfaces/presenters/assistant-chat.presenter.server";
 import type { AssistantConversationViewModel } from "@/contexts/assistant/interfaces/view-models/assistant-chat.view-model";
 
@@ -29,28 +25,15 @@ export async function submitAssistantMessageAction(
 ): Promise<SubmitAssistantMessageActionResult> {
   try {
     const parsed = submitAssistantMessageSchema.parse(input);
-    const cookieStore = await cookies();
-    const accessToken = cookieStore.get(iamSessionCookies.accessToken)?.value;
-
-    if (!accessToken) {
-      return {
-        status: "error",
-        data: null,
-        error: "You must be signed in to use the assistant.",
-      };
-    }
-
-    const repository = await createAssistantConversationRepository(parsed.establishmentId);
-    const conversation = await new SubmitAssistantMessageCommandService(
-      new CreateConversationCommandService(repository),
-      new SendMessageCommandService(repository),
-    ).handle(
+    const authorization = await authorizeAssistantAccess(parsed.establishmentId);
+    const adapters = composeAssistantAdapters(authorization.organizationId);
+    const conversation = await adapters.submitAssistantMessage.handle(
       {
         conversationId: parsed.conversationId,
         message: parsed.message,
         establishmentId: parsed.establishmentId,
       },
-      accessToken,
+      authorization.token,
     );
 
     revalidatePath("/chat");

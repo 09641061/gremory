@@ -1,9 +1,10 @@
 "use client";
 
+import { recordSafely } from "@/contexts/shared/interfaces/observability/sanitize-error";
 import React, { useState, useTransition } from "react";
-import type { StandardAnalyticsDashboardResponse } from "../../../infrastructure/contracts/standard-analytics.schemas";
+import type { StandardAnalyticsDashboardResponse } from "../../../application/model/analytics.view-models";
 import type { AnalyticsPreset } from "../../../domain/model/value-objects/analytics-date-range";
-import { AnalyticsExportService } from "../../../domain/services/analytics-export.service";
+import { AnalyticsExportService } from "../../../interfaces/client/analytics-export";
 import { fetchStandardAnalyticsAction } from "../../actions/get-analytics-dashboard.action";
 import { AnalyticsDatePicker } from "../shared/analytics-date-picker";
 import { KpiCard } from "../shared/kpi-card";
@@ -63,7 +64,7 @@ export function StandardAnalyticsView({
         const updated = await fetchStandardAnalyticsAction(preset, organizationId, establishmentId);
         setData(updated);
       } catch (err) {
-        console.error("Failed to load preset analytics:", err);
+        recordSafely("analytics.standard.standard.analytics.view", { cause: err });
       }
     });
   };

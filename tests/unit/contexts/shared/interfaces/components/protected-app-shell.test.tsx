@@ -4,6 +4,7 @@ const mocks = vi.hoisted(() => ({
   cookies: vi.fn(),
   headers: vi.fn(),
   appShellResolve: vi.fn(),
+  workspaceGetHeaderViewModel: vi.fn(),
   organizationGetById: vi.fn(),
   conversationsQueryServiceCtor: vi.fn(),
   conversationsHandle: vi.fn(),
@@ -20,12 +21,29 @@ vi.mock("@/contexts/shared/application/internal/queryservices/app-shell-query.se
   createAppShellQueryService: () => ({ resolve: mocks.appShellResolve }),
 }));
 
-vi.mock("@/contexts/business/application/internal/queryservices/organization-query.service", () => ({
-  createOrganizationQueryService: () => ({ getById: mocks.organizationGetById }),
+vi.mock("@/contexts/business/interfaces/server/business-composition", () => ({
+  composeBusinessAdapters: () => ({
+    workspaceQueryService: {
+      getHeaderViewModel: mocks.workspaceGetHeaderViewModel,
+    },
+    organizationQueryService: {
+      getById: mocks.organizationGetById,
+    },
+  }),
 }));
 
-vi.mock("@/contexts/assistant/infrastructure/adapters/assistant-conversations.adapter", () => ({
-  createAssistantConversationsAdapter: mocks.createAssistantConversationsAdapter,
+vi.mock("@/contexts/billing/interfaces/server/billing-composition", () => ({
+  composeBillingAdapters: () => ({
+    currentSubscriptionService: {
+      getCurrentSubscription: vi.fn(),
+    },
+  }),
+}));
+
+vi.mock("@/contexts/assistant/interfaces/server/assistant-composition", () => ({
+  composeAssistantAdapters: (organizationId?: string) => ({
+    conversations: mocks.createAssistantConversationsAdapter(organizationId),
+  }),
 }));
 
 vi.mock("@/contexts/assistant/application/internal/queryservices/list-conversations-query.service", () => ({
@@ -92,6 +110,12 @@ describe("ProtectedAppShell sidebar conversations", () => {
       hasAssistantAccess: true,
       homeHref: "/chat",
       visibleSidebarRoutes: [],
+    });
+    mocks.workspaceGetHeaderViewModel.mockResolvedValue({
+      accountType: "OWNER",
+      organization: { id: organizationId },
+      establishments: [],
+      activeEstablishmentId: undefined,
     });
     mocks.getMyProfileServerQuery.mockResolvedValue(null);
     mocks.conversationsHandle.mockResolvedValue({ content: [] });

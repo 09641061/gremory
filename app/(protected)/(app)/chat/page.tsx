@@ -1,7 +1,6 @@
 import { Suspense } from "react";
-import { GetConversationQueryService } from "@/contexts/assistant/application/internal/queryservices/get-conversation-query.service";
-import { createAssistantConversationsAdapter } from "@/contexts/assistant/infrastructure/adapters/assistant-conversations.adapter";
-import { createBusinessWorkspaceQueryService } from "@/contexts/business/application/internal/queryservices/business-workspace-query.service";
+import { composeAssistantAdapters } from "@/contexts/assistant/interfaces/server/assistant-composition";
+import { composeBusinessAdapters } from "@/contexts/business/interfaces/server/business-composition";
 import { AssistantChatView } from "@/contexts/assistant/interfaces/components/chat-view/assistant-chat-view";
 import { AssistantChatLoadingState } from "@/contexts/assistant/interfaces/components/chat-view/assistant-chat-loading-state";
 import { toConversationViewModel } from "@/contexts/assistant/interfaces/presenters/assistant-chat.presenter.server";
@@ -44,7 +43,7 @@ async function ChatPageContent({
   const denied = resolvedSearchParams?.denied;
   const requestedEstablishmentId = resolvedSearchParams?.establishmentId;
 
-  const workspace = await createBusinessWorkspaceQueryService().getHeaderViewModel({
+  const workspace = await composeBusinessAdapters().workspaceQueryService.getHeaderViewModel({
     establishmentId: requestedEstablishmentId,
   });
   const hasAssistantAccess = workspace.accessPolicy?.canUseAssistant ?? false;
@@ -55,9 +54,7 @@ async function ChatPageContent({
       ? requestedEstablishmentId
       : workspace.activeEstablishmentId ?? null;
   const initialConversation = hasAssistantAccess && conversationId
-    ? await new GetConversationQueryService(
-        createAssistantConversationsAdapter(workspace.organization?.id),
-      ).handle(conversationId)
+    ? await composeAssistantAdapters(workspace.organization?.id).getConversation.handle(conversationId)
     : null;
   const serverLocale = await getServerLocale();
   const dictionary = getAssistantDictionary(serverLocale);

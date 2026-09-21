@@ -6,55 +6,67 @@ import { apiConfig } from "@/api.config";
 import {
   apiClient,
 } from "@/contexts/shared/infrastructure/http/api-client";
-import type { PageResponse } from "@/contexts/shared/application/model/page-response";
-export type { PageResponse } from "@/contexts/shared/application/model/page-response";
+import type { PageResponse } from "@/contexts/shared/domain/model/page-response";
+export type { PageResponse } from "@/contexts/shared/domain/model/page-response";
 import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-session-cookie";
 import {
   assistantConversationPageResponseSchema,
   assistantConversationResponseSchema,
-} from "../../interfaces/rest/schemas/assistant-chat.schemas";
+} from "../contracts/assistant-chat.contracts";
+import { AssistantConversation } from "../../domain/model/entities/assistant-conversation";
+import { AssistantMessage } from "../../domain/model/entities/assistant-message";
+import { createAssistantConversationId } from "../../domain/model/value-objects/assistant-conversation-id";
+import { createAssistantConversationTitle } from "../../domain/model/value-objects/assistant-conversation-title";
+import { createAssistantMessageContent } from "../../domain/model/value-objects/assistant-message-content";
+import { normalizeAssistantRole } from "../../domain/model/value-objects/assistant-message-role";
+import type { AssistantConversationsPort } from "../../application/ports/assistant-port";
+import type {
+  AssistantConversationResponse,
+  AssistantConversationSummaryResponse,
+  AssistantMessageResponse,
+  AssistantMessageRole,
+  CreateConversationRequest,
+  ListConversationsParams,
+  RenameConversationRequest,
+  SendAssistantMessageRequest,
+} from "../../application/model/assistant.view-models";
 
-export type AssistantMessageRole = "USER" | "AGENT" | string;
+export type {
+  AssistantConversationResponse,
+  AssistantConversationSummaryResponse,
+  AssistantMessageResponse,
+  AssistantMessageRole,
+  CreateConversationRequest,
+  ListConversationsParams,
+  RenameConversationRequest,
+  SendAssistantMessageRequest,
+};
 
-export interface AssistantConversationSummaryResponse {
-  id: string;
-  userId: string;
-  title: string | null;
-  createdAt: string;
-  updatedAt: string;
+function toAssistantMessageEntity(message: AssistantMessageResponse): AssistantMessage {
+  // The Domain `AssistantMessageRole` is a narrow union, while the API
+  // contract may return other strings the gateway normalizes back to the
+  // domain shape.
+  return AssistantMessage.create({
+    id: message.id,
+    role: normalizeAssistantRole(message.role) as AssistantMessage["role"],
+    content: createAssistantMessageContent(message.content).value,
+    intent: null,
+    createdAt: message.createdAt,
+  });
 }
 
-export interface AssistantMessageResponse {
-  id: string;
-  sender: string;
-  role: AssistantMessageRole;
-  content: string;
-  createdAt: string;
-}
-
-export interface AssistantConversationResponse
-  extends AssistantConversationSummaryResponse {
-  messages: AssistantMessageResponse[];
-}
-
-export interface CreateConversationRequest {
-  messageContent: string;
-  establishmentId?: string | null;
-}
-
-export interface RenameConversationRequest {
-  title: string;
-}
-
-export interface SendAssistantMessageRequest {
-  messageContent: string;
-  establishmentId?: string | null;
-}
-
-export interface ListConversationsParams {
-  search?: string;
-  page?: number;
-  size?: number;
+function toAssistantConversationEntity(
+  conversation: AssistantConversationResponse,
+): AssistantConversation {
+  return AssistantConversation.create({
+    id: createAssistantConversationId(conversation.id),
+    title: conversation.title?.trim()
+      ? createAssistantConversationTitle(conversation.title)
+      : null,
+    createdAt: conversation.createdAt,
+    updatedAt: conversation.updatedAt,
+    messages: conversation.messages.map(toAssistantMessageEntity),
+  });
 }
 
 async function resolveAccessToken(providedToken?: string): Promise<string | undefined> {
@@ -68,7 +80,7 @@ async function resolveAccessToken(providedToken?: string): Promise<string | unde
   }
 }
 
-export class AssistantApiGateway {
+export class AssistantApiGateway implements AssistantConversationsPort {
   constructor(private readonly organizationId?: string) {}
 
   async listConversations(
@@ -113,7 +125,7 @@ export class AssistantApiGateway {
   async createConversation(
     command: CreateConversationRequest,
     token?: string,
-  ): Promise<AssistantConversationResponse> {
+  ): Promise<AssistantConversation> {
     const authToken = await resolveAccessToken(token);
 
     const response = await apiClient.post<unknown>(
@@ -125,7 +137,7 @@ export class AssistantApiGateway {
         errorMessage: "Failed to create assistant conversation",
       },
     );
-    return assistantConversationResponseSchema.parse(response);
+    return toAssistantConversationEntity(assistantConversationResponseSchema.parse(response));
   }
 
   async sendMessage(
@@ -145,6 +157,14 @@ export class AssistantApiGateway {
       },
     );
     return assistantConversationResponseSchema.parse(response);
+  }
+
+  async submitAssistantMessage(
+    id: string,
+    command: SendAssistantMessageRequest,
+    token?: string,
+  ): Promise<AssistantConversationResponse> {
+    return this.sendMessage(id, command, token);
   }
 
   async sendMessageStream(

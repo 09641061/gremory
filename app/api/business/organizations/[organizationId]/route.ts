@@ -2,8 +2,7 @@ import { NextResponse } from "next/server";
 import { safePublicError } from "@/contexts/shared/interfaces/actions/safe-error";
 import { z } from "zod";
 import { updateOrganizationCommand } from "@/contexts/business/domain/model/commands/business.commands";
-import { createOrganizationCommandService } from "@/contexts/business/application/internal/commandservices/organization-command.service";
-import { createOrganizationQueryService } from "@/contexts/business/application/internal/queryservices/organization-query.service";
+import { composeBusinessAdapters } from "@/contexts/business/interfaces/server/business-composition";
 import { updateOrganizationSchema } from "@/contexts/business/interfaces/rest/schemas/organization.schemas";
 import { requireOrganizationCapability } from "@/contexts/business/interfaces/authorization/business-authorization";
 
@@ -21,7 +20,7 @@ export async function GET(
     }
 
     await requireOrganizationCapability(parsed.data, "canRead");
-    const organization = await createOrganizationQueryService().getById({
+    const organization = await composeBusinessAdapters().organizationQueryService.getById({
       id: parsed.data,
     });
 
@@ -80,11 +79,11 @@ export async function PUT(
     }
 
     await requireOrganizationCapability(idParsed.data, "canUpdate");
-    await createOrganizationCommandService().update(
+    await composeBusinessAdapters().organizationCommandService.update(
       updateOrganizationCommand(parsed.data),
     );
 
-    const organization = await createOrganizationQueryService().getById({
+    const organization = await composeBusinessAdapters().organizationQueryService.getById({
       id: idParsed.data,
     });
     if (!organization) {

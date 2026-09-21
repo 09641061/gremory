@@ -50,7 +50,7 @@ export type UseNotificationsApi = Readonly<{
    * badge. The accepted notification is removed from the cached page so the
    * UI no longer shows it as actionable.
    */
-  acceptInvitation: (notificationId: string, invitationToken?: string) => Promise<void>;
+  acceptInvitation: (notificationId: string) => Promise<void>;
   /** True while the initial unread-count fetch is in flight. */
   isLoadingUnread: boolean;
 }>;
@@ -162,10 +162,11 @@ export function NotificationsProvider({
   );
 
   const acceptInvitation = useCallback(
-    async (notificationId: string, invitationToken?: string) => {
-      // The server action persists workspace cookies on success; consumers may
-      // still need a hard reload afterwards to pick up the new workspace.
-      const result = await acceptInvitationNotificationAction(notificationId, invitationToken ?? "");
+    async (notificationId: string) => {
+      // The server action resolves the invitation token without exposing it to
+      // the browser. Consumers may still need a hard reload afterwards to pick
+      // up the new workspace.
+      const result = await acceptInvitationNotificationAction(notificationId);
       if (!result.success) return;
       await refresh();
       if (!isMounted.current) return;

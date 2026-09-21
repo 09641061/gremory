@@ -1,112 +1,104 @@
 # DDD Refactor — Implementation Status
 
-This document records the work delivered this session. The Token Plan rate
-limit hit before the three developer subagents could run; remaining work
-was done inline with the same goals.
+## Current state
 
-## Delivered
+The bounded-context refactor plans have been implemented and integrated in the
+working tree on `feature/add-refactor-domain-roles`. Each bounded context is
+kept as a **REMOTE FEATURE**: the frontend owns ports, transport adapters,
+validation, composition, authorization boundaries, and view models; backend
+business rules and undocumented endpoint behavior are not duplicated.
 
-### Phase 1 — Shared foundation (committed `22ae7fea`)
+The implementation was completed through isolated developer lanes for:
+Analytics, Assistant, Billing, Business, Catalog, CRM, IAM, Notifications,
+Profiles, Scheduling, and Shared/architecture. Lane copies and obsolete
+worktrees were removed after integration. No commit was created.
 
-- `contexts/shared/infrastructure/http/request-context.ts` — restored
-  authoritative header precedence (`Authorization`, `X-Organization-Id`,
-  `X-Correlation-Id`) and made every casing variant of caller-supplied
-  values be stripped.
-- `contexts/shared/infrastructure/http/request-context-builder.ts` —
-  edge helper that validates incoming correlation ids and never emits
-  blank `token` / `tenantId`.
-- `contexts/shared/interfaces/observability/sanitize-error.ts` — bounded
-  diagnostic policy that redacts forbidden keys, handles circular
-  causes, truncates long stacks, and never calls `console.*`.
-- 15 new regression tests for spoofing, correlation reuse, sanitizer.
+## Delivered by concern
 
-### Phase 2 — Application ports + composition (committed in 3 follow-ups)
+### Shared foundation and architecture
 
-| BC | Ports | Composition | Critical fixes |
-|---|---|---|---|
-| iam | `application/ports/{iam-session-reader,iam-authentication-writer,iam-session-coordinator}.ts` | `interfaces/server/iam-composition.ts` | cookie validated before write; proxy uses composition |
-| profiles | `application/ports/{profile-reader,profile-writer}.ts` | `interfaces/server/profile-composition.ts` | `File` removed from Domain (transport-neutral `ProfileImageInput`); factory singleton removed; cache-invalidation failure swallowed |
-| business | `application/ports/{business-workspace-reader,organization-reader-writer,establishment-reader-writer,organization-image-input,page-result}.ts` | `interfaces/server/business-composition.ts` | target-aware authorization rewritten using composition (no factory singleton) |
-| catalog | (existing services) | `interfaces/server/catalog-composition.ts` | composition seam created |
-| crm | (existing) | existing `crm-composition.ts` | kept as-is |
-| scheduling | (existing) | `interfaces/server/scheduling-composition.ts` | composition seam created |
-| billing | (existing) | `interfaces/server/billing-composition.ts` | composition seam created |
-| notifications | (existing) | `interfaces/server/notification-composition.ts` | composition seam created |
-| analytics | (existing) | `interfaces/server/analytics-composition.ts` | composition seam created |
-| assistant | (existing) | `interfaces/server/assistant-composition.ts` | composition seam created |
+- Server-authoritative `Authorization`, `X-Organization-Id`, and
+  `X-Correlation-Id` propagation with case-insensitive spoof protection.
+- Request-scoped correlation and timeout/cancellation propagation.
+- Transport-only `ApiClient` and multipart support; runtime response parsing
+  remains at Infrastructure boundaries.
+- Bounded, non-throwing `recordSafely`/diagnostic sanitization with credential,
+  token, PII, cycle, getter, and stack protection.
+- Server-only composition seams and an import/layer architecture gate.
+- Entry-route, app-shell, and public error states preserve unavailable versus
+  unauthorized/not-found behavior.
 
-### Gates
+### IAM and Profiles
 
-- `bun run lint` clean
-- `bunx tsc --noEmit` clean
-- `bun run test` → **863/863 passing**
+- Composition-based authentication/session access and proxy token propagation.
+- Validated authentication responses and protected cookie/session handling;
+  no browser cookie writes or token logging.
+- Profile ports, infrastructure contracts/mappers, transport-neutral image
+  input, current-profile reuse in the sidebar, and safe post-write
+  invalidation.
 
-## Not delivered / deferred
+### Business
 
-The Token Plan rate limit (`429 Token Plan rate limit reached`) was hit
-during the parallel subagent dispatch. The remaining work in each plan
-is substantial and was deferred to keep the codebase green. Items left
-for follow-up commits:
+- Workspace, organization, and establishment ports with server-only
+  composition.
+- Target-aware organization/establishment authorization.
+- Server-owned workspace-selection cookies and transport-neutral upload seams.
+- Trusted token and tenant propagation through Business gateways.
 
-### Per-BC deferred work (still pending)
+### Catalog and CRM
 
-- **iam**: move every action/route to use `composeIamAdapters`; replace
-  remaining `console.error` calls with `recordSafely`; tighten
-  refresh-coordination policy.
-- **profiles**: full sidebar reuse of `currentProfile`; concrete
-  backend-driven MIME/size caps once contracts are confirmed.
-- **business**: migrate all gateways to implement the new ports;
-  switch every upload path to `apiClient.requestMultipart`; centralise
-  revalidation paths (real `/configuration/...` routes); remove raw
-  `fetch` from upload adapters; move workspace-selection cookie writes
-  off client components.
-- **catalog**: move response schemas (including page envelopes) to
-  `infrastructure/contracts/`; replace the paginated scan used by
-  authorization with a target-aware lookup.
-- **crm**: separate response contracts; add Zod input schemas for
-  delete / resolve-document; replace raw `console.error` with
-  `recordSafely`; update Client Components to consume view models.
-- **scheduling**: remove `server-only` from Application; centralise
-  authorization; route employee mutations through Application; define
-  explicit revalidation; replace error-to-empty-array fallbacks with
-  not-found / forbidden / technical distinction.
-- **billing**: separate response contracts; add `canManageBilling` /
-  target-tenant authorization in every action/route; fix `/invoice`
-  invalidation; remove direct `/api` fetches from UI.
-- **notifications**: extend runtime schemas to all responses; route
-  device registration through Application; remove Firebase payload
-  logging; document invitation atomicity.
-- **analytics**: export logic move from Domain to `interfaces/client`;
-  centralise `requireAnalyticsContext`; replace
-  `planName.includes("max")` with capability-based authorization.
-- **assistant**: define SSE contract (event names, payload shape, max
-  size, terminal/error/cancel rules); centralise workspace-id check;
-  migrate the SSE endpoint to composition.
-- **shared (Phases 2-6)**: move cross-context composition out of
-  `contexts/shared/application/internal/outboundservices/` into
-  `contexts/shared/interfaces/server/`; convert application services
-  into pure handlers; centralised error/sanitizer helpers wired
-  across BCs.
+- Application-owned Catalog ports/read models and CRM ports/projections.
+- Zod contracts for provider pages and resources.
+- Bounded target lookup instead of unbounded authorization page scans.
+- Validated CRM mutation/document inputs, target authorization, safe action
+  errors, and client view models.
 
-### Architectural test (Phase 6 gate)
+### Scheduling
 
-The plan calls for an architecture test that prohibits imports outward
-from Domain/Application and platform types in Domain. This was not
-delivered this session; the proposed location is
-`tests/architecture/layer-imports.test.ts` using `ts-morph` or a
-hand-rolled AST walker. Recommend doing it as part of the next
-follow-up commit when more BCs have migrated their Application layer.
+- Injected appointment and roster ports/services.
+- Runtime contracts for appointment, roster, customer, and service responses.
+- Centralized target authorization and application-owned employee mutations.
+- Explicit revalidation and distinct forbidden/not-found/technical results;
+  read failures are not converted into empty pages or `null`.
 
-## How to continue
+### Billing and Notifications
 
-The worktrees were removed after the rate-limit failure; to resume
-the parallel pattern once quota is available:
+- Billing ports, composition, runtime contracts, invoice query/actions, and
+  explicit billing-manager/tenant authorization.
+- Invoice UI reads through the server boundary and correct `/invoice`
+  invalidation.
+- Notification runtime contracts, composed device registration, explicit
+  action/state fields, sanitized Firebase diagnostics, and documented
+  non-atomic invitation acceptance.
+- `targetToken` remains compatibility-only until the backend confirms an
+  ID-only acceptance contract.
 
-```sh
-git worktree add .worktrees/ddd-<batch> -b feature/ddd-<batch> HEAD
-# dispatch one developer subagent per worktree
-```
+### Analytics and Assistant
 
-The lane-board document at `.pi/subagents/ddd-refactor-lane-board.md`
-still describes the intended partitioning if you want to resume the
-parallel pattern.
+- Analytics application ports/read models, runtime contracts, server
+  composition, capability-based Max authorization, and client-only export.
+- Assistant application ports/composition, workspace authorization, runtime
+  contracts, and validated bounded SSE forwarding.
+- SSE only permits the documented stable event set, bounds frames/payloads,
+  redacts malformed/upstream failures, and terminates with `done`.
+
+## Validation gates
+
+All gates pass after integration:
+
+- `bunx tsc --noEmit`
+- `bun run lint`
+- `bun run test -- tests/architecture` — 3 tests passed
+- `bun run test` — **136 test files, 892 tests passed**
+
+## Known contract-dependent residuals
+
+- Backend-specific SSE event semantics, Billing capability naming, upload
+  limits, and invitation atomicity remain intentionally unresolved because the
+  remote contracts are not available.
+- Invitation acceptance is still a documented two-call workflow and can leave
+  a notification accepted while the invitation remains pending if the second
+  call fails.
+- The frontend must continue treating backend 401/403/404/5xx responses as
+  authoritative and must not infer permissions from plan display names or
+  localized text.

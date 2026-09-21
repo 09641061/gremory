@@ -1,4 +1,5 @@
 import { initializeApp, getApps } from "firebase/app";
+import { recordSafely } from "@/contexts/shared/interfaces/observability/sanitize-error";
 import { getMessaging, getToken, isSupported, onMessage, type MessagePayload } from "firebase/messaging";
 
 const firebaseConfig = {
@@ -25,12 +26,12 @@ export const requestPushPermission = async (): Promise<string | null> => {
 
     const supported = await isSupported();
     if (!supported) {
-      console.warn("Firebase Messaging is not supported in this browser.");
+      recordSafely("firebase.messaging.unsupported", { level: "warn", code: "UNSUPPORTED_BROWSER" });
       return null;
     }
 
     if (Notification.permission === "denied") {
-      console.warn("Notification permission denied in browser.");
+      recordSafely("firebase.messaging.permission", { level: "warn", code: "PERMISSION_DENIED" });
       return null;
     }
 
@@ -52,16 +53,15 @@ export const requestPushPermission = async (): Promise<string | null> => {
 
       return token;
     } else {
-      console.warn("User did not grant notification permissions:", permission);
+      recordSafely("firebase.messaging.permission", {
+        level: "warn",
+        code: "PERMISSION_NOT_GRANTED",
+        context: { permission },
+      });
       return null;
     }
   } catch (error) {
-    console.warn("Notification permission or push service failed:", error);
-    if (String(error).includes("push service error") || String(error).includes("AbortError")) {
-      console.warn(
-        "💡 Note: If using Brave Browser, enable 'Use Google services for push messaging' in brave://settings/privacy. Push notifications are not supported in incognito/private mode."
-      );
-    }
+    recordSafely("firebase.messaging.request.failed", { cause: error });
   }
   return null;
 };
@@ -78,7 +78,7 @@ export const registerForegroundNotificationListener = (
       onNotificationReceived(payload);
     });
   } catch (err) {
-    console.warn("Could not register foreground notification listener:", err);
+    recordSafely("firebase.messaging.listener.failed", { cause: err });
     return () => {};
   }
 };

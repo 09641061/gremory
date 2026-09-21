@@ -37,7 +37,7 @@ describe("Catalog gateway contract", () => {
   it("accepts the nullable fields in the documented service response", async () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(response(service)));
     const result = await new CatalogServiceApiGateway().getById("service-1", "est-1", "token");
-    expect(result.props.categoryId).toBeNull();
-    expect(result.props.preServiceInstructions).toBeNull();
+    expect(result.categoryId).toBeNull();
+    expect(result.preServiceInstructions).toBeNull();
   });
 });

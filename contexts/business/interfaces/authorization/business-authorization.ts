@@ -51,7 +51,9 @@ export async function requireOrganizationCapability(
   if (!idSchema.safeParse(id).success) {
     throw new OperationAuthorizationError("INVALID_RESOURCE");
   }
-  const workspace = await composeBusinessAdapters().workspaceQueryService.getHeaderViewModel();
+  const workspace = await composeBusinessAdapters().workspaceQueryService.getHeaderViewModel({
+    organizationId: id,
+  });
   if (workspace.organization?.id !== id || workspace.organization[capability] !== true) {
     throw new OperationAuthorizationError("FORBIDDEN");
   }

@@ -82,20 +82,17 @@ export function buildApiRequestHeaders(
 ): Record<string, string> {
   const merged = toHeaderRecord(headers);
 
-  if (context.token) {
-    stripHeaderIgnoreCase(merged, "Authorization");
-    merged.Authorization = `Bearer ${context.token}`;
+  // Always remove caller values first. An absent verified value means the
+  // header must be absent, not that an untrusted caller value is acceptable.
+  // This is deliberately done for every casing variant before adding the
+  // server-owned value.
+  for (const name of SERVER_AUTHORITATIVE_HEADERS) {
+    stripHeaderIgnoreCase(merged, name);
   }
 
-  if (context.tenantId) {
-    stripHeaderIgnoreCase(merged, "X-Organization-Id");
-    merged["X-Organization-Id"] = context.tenantId;
-  }
-
-  if (context.correlationId) {
-    stripHeaderIgnoreCase(merged, "X-Correlation-Id");
-    merged["X-Correlation-Id"] = context.correlationId;
-  }
+  if (context.token) merged.Authorization = `Bearer ${context.token}`;
+  if (context.tenantId) merged["X-Organization-Id"] = context.tenantId;
+  if (context.correlationId) merged["X-Correlation-Id"] = context.correlationId;
 
   return merged;
 }

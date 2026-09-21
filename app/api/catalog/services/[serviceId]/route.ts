@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
+import { composeCatalogAdapters } from "@/contexts/catalog/interfaces/server/catalog-composition";
 import { safePublicError } from "@/contexts/shared/interfaces/actions/safe-error";
 import { z } from "zod";
-import { createCatalogServiceCommandService } from "@/contexts/catalog/application/internal/commandservices/catalog-service-command.service";
-import { createCatalogServiceQueryService } from "@/contexts/catalog/application/internal/queryservices/catalog-service-query.service";
 import { createCatalogServiceReadModel } from "@/contexts/catalog/application/model/catalog-service.read-model";
 import { updateCatalogServiceSchema } from "@/contexts/catalog/interfaces/rest/schemas/catalog-service.schemas";
 import { requireCatalogServiceTargetAuthorization } from "@/contexts/catalog/interfaces/authorization/catalog-authorization";
@@ -27,7 +26,7 @@ export async function GET(
     }
 
     const auth = await requireCatalogServiceTargetAuthorization(idParsed.data, "catalog:read", establishmentId);
-    const service = await createCatalogServiceQueryService(auth.organizationId).getById(
+    const service = await composeCatalogAdapters().serviceQueryService.getById(
       idParsed.data,
       establishmentId,
       auth.token,
@@ -73,7 +72,7 @@ export async function PUT(
     const url = new URL(request.url);
     const establishmentId = url.searchParams.get("establishmentId");
     if (!establishmentId) return validationErrorResponse("establishmentId is required");
-    const auth = await requireCatalogServiceTargetAuthorization(idParsed.data);
+    const auth = await requireCatalogServiceTargetAuthorization(idParsed.data, "catalog:manage", establishmentId);
     if (auth.establishmentId !== establishmentId) return NextResponse.json({ message: "Operation not permitted" }, { status: 403 });
     const body = await parseJsonBody(request);
     const parsed = updateCatalogServiceSchema.safeParse({
@@ -92,12 +91,12 @@ export async function PUT(
       return validationErrorResponse(parsed.error.issues[0]?.message);
     }
 
-    const service = await createCatalogServiceCommandService().update({
+    const service = await composeCatalogAdapters().serviceCommandService.update({
       ...parsed.data,
       categoryId: parsed.data.categoryId || null,
       preServiceInstructions: parsed.data.preServiceInstructions || null,
       postServiceRecommendations: parsed.data.postServiceRecommendations || null,
-    });
+    }, auth.token);
 
     return NextResponse.json(createCatalogServiceReadModel(service));
   } catch (error) {
@@ -117,10 +116,10 @@ export async function DELETE(
     }
     const establishmentId = new URL(_request.url).searchParams.get("establishmentId");
     if (!establishmentId) return validationErrorResponse("establishmentId is required");
-    const auth = await requireCatalogServiceTargetAuthorization(idParsed.data);
+    const auth = await requireCatalogServiceTargetAuthorization(idParsed.data, "catalog:manage", establishmentId);
     if (auth.establishmentId !== establishmentId) return NextResponse.json({ message: "Operation not permitted" }, { status: 403 });
 
-    await createCatalogServiceCommandService().delete({ id: idParsed.data });
+    await composeCatalogAdapters().serviceCommandService.delete({ id: idParsed.data }, auth.token);
     return new Response(null, { status: 204 });
   } catch (error) {
     return routeErrorResponse(error);

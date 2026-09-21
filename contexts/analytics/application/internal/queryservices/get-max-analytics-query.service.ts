@@ -1,21 +1,23 @@
-import "server-only";
-
-import {
-  AnalyticsApiGateway,
-  type AnalyticsQueryParams,
-} from "../../../infrastructure/gateways/analytics-api.gateway";
-import type { MaxAnalyticsDashboardResponse } from "../../../infrastructure/contracts/max-analytics.schemas";
+import type { AnalyticsApiPort } from "../../ports/analytics-port";
+import type {
+  AnalyticsQueryParams,
+  MaxAnalyticsDashboardResponse,
+} from "../../model/analytics.view-models";
 
 export class GetMaxAnalyticsQueryService {
+  constructor(private readonly gateway: AnalyticsApiPort) {}
+
   async execute(
     query: AnalyticsQueryParams,
     token?: string,
     correlationId?: string,
   ): Promise<MaxAnalyticsDashboardResponse> {
-    return AnalyticsApiGateway.getMaxDashboard(query, token, correlationId);
+    return this.gateway.getMaxDashboard(query, token, correlationId);
   }
 }
 
-export function createGetMaxAnalyticsQueryService() {
-  return new GetMaxAnalyticsQueryService();
+export function createGetMaxAnalyticsQueryService(
+  gateway: AnalyticsApiPort,
+): GetMaxAnalyticsQueryService {
+  return new GetMaxAnalyticsQueryService(gateway);
 }

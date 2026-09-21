@@ -1,5 +1,3 @@
-import "server-only";
-
 import type {
   CatalogServiceCommandService,
 } from "../../../domain/services/catalog-service.services";
@@ -10,10 +8,20 @@ import type {
   ChangeCatalogServiceStatusCommand,
   DeleteCatalogServiceCommand,
 } from "../../../domain/model/commands/catalog-service.commands";
-import { CatalogServiceApiGateway } from "../../../infrastructure/gateways/catalog-service-api.gateway";
+
+/**
+ * Server-only port for the catalog-service mutations. Implementation lives
+ * in Infrastructure and is injected via composition.
+ */
+export interface CatalogServiceCommandPort {
+  create(command: CreateCatalogServiceCommand, token?: string): Promise<CatalogService>;
+  update(command: UpdateCatalogServiceCommand, token?: string): Promise<CatalogService>;
+  changeStatus(command: ChangeCatalogServiceStatusCommand, token?: string): Promise<void>;
+  delete(command: DeleteCatalogServiceCommand, token?: string): Promise<void>;
+}
 
 export class CatalogServiceCommandServiceImpl implements CatalogServiceCommandService {
-  constructor(private readonly gateway: CatalogServiceApiGateway) {}
+  constructor(private readonly gateway: CatalogServiceCommandPort) {}
 
   create(command: CreateCatalogServiceCommand, token?: string): Promise<CatalogService> {
     return this.gateway.create(command, token);
@@ -32,6 +40,8 @@ export class CatalogServiceCommandServiceImpl implements CatalogServiceCommandSe
   }
 }
 
-export function createCatalogServiceCommandService(organizationId?: string, establishmentId?: string) {
-  return new CatalogServiceCommandServiceImpl(new CatalogServiceApiGateway(organizationId, establishmentId));
+export function createCatalogServiceCommandService(
+  gateway: CatalogServiceCommandPort,
+): CatalogServiceCommandService {
+  return new CatalogServiceCommandServiceImpl(gateway);
 }

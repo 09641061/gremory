@@ -64,6 +64,15 @@ describe("API request context", () => {
     });
   });
 
+  it("removes security headers when no trusted context value exists", () => {
+    expect(buildApiRequestHeaders({}, {
+      authorization: "Bearer spoofed",
+      "x-organization-id": "spoofed-org",
+      "x-correlation-id": "spoofed-correlation",
+      Accept: "application/json",
+    })).toEqual({ Accept: "application/json" });
+  });
+
   it("exposes the list of authoritative headers so adapters can audit them", () => {
     expect(SERVER_AUTHORITATIVE_HEADERS).toContain("Authorization");
     expect(SERVER_AUTHORITATIVE_HEADERS).toContain("X-Organization-Id");

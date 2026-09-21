@@ -3,7 +3,7 @@ import { safePublicError } from "@/contexts/shared/interfaces/actions/safe-error
 import { z } from "zod";
 
 import { createEstablishmentId } from "@/contexts/business/domain/model/valueobjects/establishment-id.vo";
-import { createEstablishmentPhotoAdapter } from "@/contexts/business/infrastructure/adapters/establishment-photo.adapter";
+import { composeBusinessAdapters } from "@/contexts/business/interfaces/server/business-composition";
 import { requireEstablishmentCapability } from "@/contexts/business/interfaces/authorization/business-authorization";
 
 const uuidSchema = z.string().uuid();
@@ -20,7 +20,7 @@ export async function DELETE(
     }
 
     await requireEstablishmentCapability(idParsed.data, "canUpdate");
-    await createEstablishmentPhotoAdapter().remove(createEstablishmentId(idParsed.data));
+    await composeBusinessAdapters().establishmentPhotoStorage.remove(createEstablishmentId(idParsed.data));
 
     return new Response(null, { status: 204 });
   } catch (error) {

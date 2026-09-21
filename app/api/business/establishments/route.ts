@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
 import { safePublicError } from "@/contexts/shared/interfaces/actions/safe-error";
 import { createEstablishmentCommand } from "@/contexts/business/domain/model/commands/business.commands";
-import { createEstablishmentCommandService } from "@/contexts/business/application/internal/commandservices/establishment-command.service";
-import { createEstablishmentQueryService } from "@/contexts/business/application/internal/queryservices/establishment-query.service";
+import { composeBusinessAdapters } from "@/contexts/business/interfaces/server/business-composition";
 import { createEstablishmentSchema } from "@/contexts/business/interfaces/rest/schemas/establishment.schemas";
 import { requireBusinessAccessToken } from "@/contexts/business/infrastructure/session/business-session";
 
@@ -19,11 +18,11 @@ export async function POST(request: Request) {
     }
 
     await requireBusinessAccessToken();
-    const establishmentId = await createEstablishmentCommandService().create(
+    const establishmentId = await composeBusinessAdapters().establishmentCommandService.create(
       createEstablishmentCommand(parsed.data),
     );
 
-    const establishment = await createEstablishmentQueryService().getById({
+    const establishment = await composeBusinessAdapters().establishmentQueryService.getById({
       id: establishmentId.value,
     });
 

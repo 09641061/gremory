@@ -18,8 +18,10 @@ vi.mock("next/headers", () => ({
   cookies: mocks.cookies,
 }));
 
-vi.mock("@/contexts/shared/application/internal/queryservices/entry-route-query.service", () => ({
-  createEntryRouteQueryService: () => mocks.landing,
+vi.mock("@/contexts/shared/interfaces/server/shared-composition", () => ({
+  composeSharedAdapters: () => ({
+    entryRouteQueryService: mocks.landing,
+  }),
 }));
 
 import HomePage from "@/app/page";

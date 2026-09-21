@@ -1,7 +1,30 @@
 import "server-only";
-import { createBusinessWorkspaceQueryService } from "@/contexts/business/application/internal/queryservices/business-workspace-query.service";
+import { composeBusinessAdapters } from "@/contexts/business/interfaces/server/business-composition";
 import { getWorkspaceEstablishment, hasEstablishmentPermission } from "@/contexts/shared/application/services/workspace-establishment-permissions";
-import { createSchedulingQueryService } from "@/contexts/scheduling/application/internal/queryservices/scheduling-query.service.impl";
+import { composeSchedulingAdapters } from "@/contexts/scheduling/interfaces/server/scheduling-composition";
 import { OperationAuthorizationError, requireAuthenticatedToken } from "@/contexts/shared/interfaces/authorization/operation-authorization";
-export async function requireAppointmentOperationAuthorization(id:string, permission="scheduling:manage") { const token=await requireAuthenticatedToken(); const w=await createBusinessWorkspaceQueryService().getHeaderViewModel(); const e=getWorkspaceEstablishment(w,w.activeEstablishmentId); if(!e||!hasEstablishmentPermission(e,permission)) throw new OperationAuthorizationError("FORBIDDEN"); const a=await createSchedulingQueryService(w.organization?.id).getAppointment(id,token); if(a.establishmentId!==e.id) throw new OperationAuthorizationError("FORBIDDEN"); return {token,organizationId:w.organization?.id,establishmentId:e.id}; }
-export async function requireSchedulingContext(permission="scheduling:manage", requestedEstablishmentId?: string){ const token=await requireAuthenticatedToken(); const w=await createBusinessWorkspaceQueryService().getHeaderViewModel({ establishmentId: requestedEstablishmentId }); const id=requestedEstablishmentId ?? w.activeEstablishmentId; const e=getWorkspaceEstablishment(w,id); if(!e||!hasEstablishmentPermission(e,permission)) throw new OperationAuthorizationError("FORBIDDEN"); return {token,organizationId:w.organization?.id,establishmentId:e.id}; }
+export async function requireAppointmentOperationAuthorization(id: string, permission = "scheduling:manage") {
+  const token = await requireAuthenticatedToken();
+  const workspace = await composeBusinessAdapters().workspaceQueryService.getHeaderViewModel();
+  const establishment = getWorkspaceEstablishment(workspace, workspace.activeEstablishmentId);
+  if (!establishment || !hasEstablishmentPermission(establishment, permission)) {
+    throw new OperationAuthorizationError("FORBIDDEN");
+  }
+  const appointment = await composeSchedulingAdapters(workspace.organization?.id).queryService.getAppointment(id, token);
+  if (appointment.establishmentId !== establishment.id) {
+    throw new OperationAuthorizationError("FORBIDDEN");
+  }
+  return { token, organizationId: workspace.organization?.id, establishmentId: establishment.id };
+}
+export async function requireSchedulingContext(permission = "scheduling:manage", requestedEstablishmentId?: string) {
+  const token = await requireAuthenticatedToken();
+  const workspace = await composeBusinessAdapters().workspaceQueryService.getHeaderViewModel({
+    establishmentId: requestedEstablishmentId,
+  });
+  const id = requestedEstablishmentId ?? workspace.activeEstablishmentId;
+  const establishment = getWorkspaceEstablishment(workspace, id);
+  if (!establishment || !hasEstablishmentPermission(establishment, permission)) {
+    throw new OperationAuthorizationError("FORBIDDEN");
+  }
+  return { token, organizationId: workspace.organization?.id, establishmentId: establishment.id };
+}

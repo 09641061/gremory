@@ -1,13 +1,3 @@
-import "server-only";
-
-import { cookies } from "next/headers";
-import { createCurrentSubscriptionQueryService } from "@/contexts/billing/application/internal/queryservices/current-subscription-query.service";
-import {
-  hasActiveSubscription,
-  type SubscriptionAccessSnapshot,
-} from "@/contexts/billing/domain/services/subscription-access.policy";
-import { createBusinessWorkspaceQueryService } from "@/contexts/business/application/internal/queryservices/business-workspace-query.service";
-import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-session-cookie";
 import type {
   AppShellHomeHref,
   AppShellViewModel,
@@ -15,13 +5,16 @@ import type {
 } from "@/contexts/shared/application/model/app-shell.view-models";
 import type { EntryRouteSubscriptionState } from "@/contexts/shared/application/model/entry-route.view-models";
 import { resolveEntryRoutePolicy } from "@/contexts/shared/application/services/entry-route.policy";
-import { ApiError } from "@/contexts/shared/infrastructure/http/api-client";
+import { readErrorStatus } from "@/contexts/shared/application/errors/transport-error";
+import type { BusinessWorkspaceQueryService } from "@/contexts/business/application/internal/queryservices/business-workspace-query.service";
+import type { CurrentSubscriptionQueryService } from "@/contexts/billing/application/internal/queryservices/current-subscription-query.service";
 
 type SubscriptionReader = Readonly<{
-  getCurrentSubscription: (accessToken: string) => Promise<SubscriptionAccessSnapshot>;
+  getCurrentSubscription: (accessToken: string) => Promise<import("@/contexts/billing/domain/services/subscription-access.policy").SubscriptionAccessSnapshot>;
 }>;
 
 export interface AppShellQueryInput {
+  accessToken?: string;
   workspace?: Readonly<{
     organizationId?: string;
     establishmentId?: string;
@@ -30,12 +23,12 @@ export interface AppShellQueryInput {
 
 export class AppShellQueryService {
   constructor(
-    private readonly workspaceQuery = createBusinessWorkspaceQueryService(),
-    private readonly billing: SubscriptionReader = createCurrentSubscriptionQueryService(),
+    private readonly workspaceQuery: BusinessWorkspaceQueryService,
+    private readonly billing: SubscriptionReader,
   ) {}
 
-  async resolve({ workspace: workspaceSelection }: AppShellQueryInput = {}): Promise<AppShellViewModel> {
-    const workspace = await this.workspaceQuery.getHeaderViewModel(workspaceSelection);
+  async resolve({ workspace: workspaceSelection, accessToken }: AppShellQueryInput = {}): Promise<AppShellViewModel> {
+    const workspace = await this.workspaceQuery.getHeaderViewModel(workspaceSelection ?? {});
     const accessPolicy = workspace.accessPolicy;
     const hasAssistantPolicy = accessPolicy?.canUseAssistant ?? false;
     const canReadScheduling =
@@ -59,7 +52,7 @@ export class AppShellQueryService {
 
     const entry = resolveEntryRoutePolicy(
       workspace,
-      await resolveWorkspaceSubscriptionState(workspace, this.billing),
+      await resolveWorkspaceSubscriptionState(workspace, this.billing, accessToken),
     );
     const isApplicationReady = entry.status === "ready";
     const hasAssistantAccess = isApplicationReady && (accessPolicy?.canUseAssistant ?? false);
@@ -73,8 +66,11 @@ export class AppShellQueryService {
   }
 }
 
-export function createAppShellQueryService() {
-  return new AppShellQueryService();
+export function createAppShellQueryService(
+  workspaceQuery: BusinessWorkspaceQueryService,
+  billing: CurrentSubscriptionQueryService,
+): AppShellQueryService {
+  return new AppShellQueryService(workspaceQuery, billing);
 }
 
 function resolveVisibleSidebarRoutes(
@@ -112,11 +108,14 @@ function resolveVisibleSidebarRoutes(
 async function resolveWorkspaceSubscriptionState(
   workspace: AppShellViewModel["workspace"],
   billing: SubscriptionReader,
+  accessToken: string | undefined,
 ): Promise<EntryRouteSubscriptionState> {
   if (workspace.accountType !== "OWNER") return "not-required";
+  if (!accessToken) return "unavailable";
 
   try {
-    return hasActiveSubscription(await billing.getCurrentSubscription(await getAccessToken()))
+    const { hasActiveSubscription } = await import("@/contexts/billing/domain/services/subscription-access.policy");
+    return hasActiveSubscription(await billing.getCurrentSubscription(accessToken))
       ? "active"
       : "inactive";
   } catch (error) {
@@ -126,17 +125,8 @@ async function resolveWorkspaceSubscriptionState(
   }
 }
 
-async function getAccessToken(): Promise<string> {
-  const token = (await cookies()).get(iamSessionCookies.accessToken)?.value;
-  if (!token) throw new ApiError("Authentication is required", 401);
-  return token;
-}
-
 function getErrorStatus(error: unknown): number | undefined {
-  if (error instanceof ApiError) return error.status;
-  if (!error || typeof error !== "object") return undefined;
-  const status = (error as { status?: unknown }).status;
-  return typeof status === "number" ? status : undefined;
+  return readErrorStatus(error);
 }
 
 function resolveShellHomeHref(

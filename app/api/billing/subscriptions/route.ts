@@ -1,9 +1,11 @@
 import { NextResponse } from "next/server";
 import { safePublicError } from "@/contexts/shared/interfaces/actions/safe-error";
 import { z } from "zod";
-import { createBillingSubscriptionAdapter } from "@/contexts/billing/infrastructure/adapters/billing-subscription.adapter";
+import { composeBillingAdapters } from "@/contexts/billing/interfaces/server/billing-composition";
 import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-session-cookie";
 import { cookies } from "next/headers";
+import { requireBillingManager } from "@/contexts/billing/interfaces/authorization/billing-authorization";
+import { createCorrelationId } from "@/contexts/shared/infrastructure/http/api-client";
 
 const billingCycleSchema = z.enum(["MONTHLY", "ANNUAL"]);
 const currencySchema = z.enum(["PEN", "USD", "EUR"]);
@@ -26,16 +28,15 @@ async function getAccessToken(): Promise<string | undefined> {
   return cookieStore.get(iamSessionCookies.accessToken)?.value;
 }
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
     const accessToken = await getAccessToken();
     if (!accessToken) {
       return NextResponse.json({ message: "Authentication is required" }, { status: 401 });
     }
 
-    const subscription = await createBillingSubscriptionAdapter().getCurrentSubscription(
-      accessToken,
-    );
+    const billingContext = await requireBillingManager(request.headers.get("x-correlation-id") ?? createCorrelationId());
+    const subscription = await composeBillingAdapters().gateway.getCurrentSubscription(accessToken, billingContext);
     return NextResponse.json(subscription);
   } catch (error) {
     return routeErrorResponse(error);
@@ -75,16 +76,14 @@ export async function POST(request: Request) {
       return validationErrorResponse(parsed.error.issues[0]?.message);
     }
 
-    const subscription = await createBillingSubscriptionAdapter().createSubscription(
-      accessToken,
-      {
-        planId: parsed.data.planId,
-        billingCycle: parsed.data.billingCycle,
-        currency: parsed.data.currency,
-        successUrl: parsed.data.successUrl,
-        cancelUrl: parsed.data.cancelUrl,
-      },
-    );
+    const billingContext = await requireBillingManager(request.headers.get("x-correlation-id") ?? createCorrelationId());
+    const subscription = await composeBillingAdapters().createSubscriptionService.execute(accessToken, {
+      planId: parsed.data.planId,
+      billingCycle: parsed.data.billingCycle,
+      currency: parsed.data.currency,
+      successUrl: parsed.data.successUrl,
+      cancelUrl: parsed.data.cancelUrl,
+    }, billingContext);
 
     return NextResponse.json(subscription, { status: 201 });
   } catch (error) {
@@ -105,13 +104,11 @@ export async function PUT(request: Request) {
       return validationErrorResponse(parsed.error.issues[0]?.message);
     }
 
-    const subscription = await createBillingSubscriptionAdapter().renewSubscription(
-      accessToken,
-      {
-        newPlanId: parsed.data.newPlanId,
-        newBillingCycle: parsed.data.newBillingCycle,
-      },
-    );
+    const billingContext = await requireBillingManager(request.headers.get("x-correlation-id") ?? createCorrelationId());
+    const subscription = await composeBillingAdapters().subscriptionCommandService.renew(accessToken, {
+      newPlanId: parsed.data.newPlanId,
+      newBillingCycle: parsed.data.newBillingCycle,
+    }, billingContext);
 
     return NextResponse.json(subscription);
   } catch (error) {
@@ -126,9 +123,8 @@ export async function DELETE() {
       return NextResponse.json({ message: "Authentication is required" }, { status: 401 });
     }
 
-    const subscription = await createBillingSubscriptionAdapter().cancelSubscription(
-      accessToken,
-    );
+    const billingContext = await requireBillingManager(createCorrelationId());
+    const subscription = await composeBillingAdapters().subscriptionCommandService.cancel(accessToken, billingContext);
     return NextResponse.json(subscription);
   } catch (error) {
     return routeErrorResponse(error);

@@ -3,7 +3,10 @@ import "server-only";
 import { SchedulingApiGateway } from "../../infrastructure/gateways/scheduling-api.gateway";
 import { SchedulingQueryServiceImpl } from "../../application/internal/queryservices/scheduling-query.service.impl";
 import { SchedulingCommandServiceImpl } from "../../application/internal/commandservices/scheduling-command.service.impl";
-import { SchedulingAccessPolicyService } from "../../application/internal/queryservices/scheduling-access-policy.service";
+import { SchedulingRosterCommandService } from "../../application/internal/commandservices/scheduling-roster-command.service";
+import { loadSchedulingPageData } from "../../application/internal/queryservices/scheduling-page-data.query.service";
+import type { SchedulingPageData } from "../../application/model/scheduling-page-data.view-model";
+import type { SchedulingRosterReader } from "../../application/ports/scheduling-roster";
 
 /**
  * Server-only composition for the Scheduling bounded context.
@@ -22,15 +25,27 @@ export type ComposedSchedulingAdapters = Readonly<{
   gateway: SchedulingApiGateway;
   queryService: SchedulingQueryServiceImpl;
   commandService: SchedulingCommandServiceImpl;
-  accessPolicyService: SchedulingAccessPolicyService;
+  rosterCommandService: SchedulingRosterCommandService;
+  rosterReader: SchedulingRosterReader;
 }>;
 
-export function composeSchedulingAdapters(): ComposedSchedulingAdapters {
-  const gateway = new SchedulingApiGateway();
+export function composeSchedulingAdapters(organizationId?: string): ComposedSchedulingAdapters {
+  const gateway = new SchedulingApiGateway(organizationId);
   return {
     gateway,
-    queryService: new SchedulingQueryServiceImpl(),
-    commandService: new SchedulingCommandServiceImpl(),
-    accessPolicyService: new SchedulingAccessPolicyService(),
+    queryService: new SchedulingQueryServiceImpl(gateway),
+    commandService: new SchedulingCommandServiceImpl(gateway),
+    rosterCommandService: new SchedulingRosterCommandService(gateway),
+    rosterReader: gateway,
   };
+}
+
+export async function loadComposedSchedulingPageData(
+  establishmentId: string,
+  organizationId: string,
+  canManageScheduling: boolean,
+  token?: string,
+): Promise<SchedulingPageData> {
+  const { rosterReader } = composeSchedulingAdapters(organizationId);
+  return loadSchedulingPageData(rosterReader, establishmentId, token, canManageScheduling);
 }

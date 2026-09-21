@@ -5,6 +5,14 @@ import type { EstablishmentName } from "../model/valueobjects/establishment-name
 import type { EstablishmentPhoto } from "../model/valueobjects/establishment-photo.vo";
 import type { OrganizationId } from "../model/valueobjects/organization-id.vo";
 import type { OrganizationName } from "../model/valueobjects/organization-name.vo";
+import type { CommandFileMetadata } from "../model/commands/business.commands";
+
+/**
+ * Repository contracts remain only as a compatibility seam while the
+ * Application ports migrate. The file payload is transport-neutral; browser
+ * `File`/`FormData` conversion belongs to Interfaces and Infrastructure.
+ */
+export type { CommandFileMetadata };
 
 export interface PageResult<T> {
   content: T[];
@@ -22,7 +30,7 @@ export interface PageResult<T> {
 // call `create`: the account authenticates the request, so no owner ID travels
 // through this contract.
 export interface OrganizationRepository {
-  create(name: OrganizationName, imageFile?: File | null): Promise<Organization>;
+  create(name: OrganizationName, imageFile?: CommandFileMetadata | null): Promise<Organization>;
   findMine(): Promise<Organization>;
   findById(id: OrganizationId): Promise<Organization | null>;
   save(organization: Organization): Promise<Organization>;

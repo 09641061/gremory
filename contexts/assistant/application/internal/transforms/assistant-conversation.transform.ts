@@ -1,8 +1,8 @@
 import type {
   AssistantConversationResponse,
   AssistantConversationSummaryResponse,
-  PageResponse,
-} from "@/contexts/assistant/infrastructure/gateways/assistant-api.gateway";
+} from "../../model/assistant.view-models";
+import type { PageResponse } from "@/contexts/shared/domain/model/page-response";
 
 import type { AssistantConversation } from "../../../domain/model/entities/assistant-conversation";
 import type { AssistantMessage } from "../../../domain/model/entities/assistant-message";
@@ -79,7 +79,7 @@ function stripDefaultGreeting(messages: AssistantMessageReadModel[]): AssistantM
 }
 
 function normalizeConversationMessages(
-  messages: ConversationMessageSource[],
+  messages: ReadonlyArray<ConversationMessageSource>,
 ): AssistantMessageReadModel[] {
   const normalizedMessages = stripDefaultGreeting(messages.map(normalizeMessage).filter(isAssistantMessageReadModel));
   const hasAssistantMessage = normalizedMessages.some((message) => message.role === "assistant");

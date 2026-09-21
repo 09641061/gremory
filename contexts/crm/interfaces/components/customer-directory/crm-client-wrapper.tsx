@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 
 import { deleteCustomerAction } from "@/contexts/crm/interfaces/actions/delete-customer.action";
-import { CustomerResponse } from "@/contexts/crm/domain/model/entities/customer";
+import { CustomerResponse } from "@/contexts/crm/application/models/customer";
 import { PageResponse } from "@/contexts/crm/application/services/crm-query.service";
 import { ErrorAlert } from "@/contexts/shared/interfaces/components/feedback/error";
 import { PageHeader, PageShell } from "@/contexts/shared/interfaces/components/layout/page-shell";

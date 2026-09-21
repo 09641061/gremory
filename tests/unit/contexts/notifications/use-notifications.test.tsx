@@ -193,10 +193,10 @@ describe("useNotifications", () => {
     mocks.fetchUnreadNotificationsCountAction.mockImplementation(() => makeUnreadResponse(unread));
 
     await act(async () => {
-      await result.current.acceptInvitation("n-1", "invite-token");
+      await result.current.acceptInvitation("n-1");
     });
 
-    expect(mocks.acceptInvitationNotificationAction).toHaveBeenCalledWith("n-1", "invite-token");
+    expect(mocks.acceptInvitationNotificationAction).toHaveBeenCalledWith("n-1");
     await waitFor(() => {
       expect(result.current.unreadCount).toBe(3);
     });

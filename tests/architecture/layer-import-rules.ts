@@ -46,8 +46,14 @@ export async function findForbiddenImports(
   const absolute = join(ROOT, file);
   const text = await readFile(absolute, "utf8").catch(() => "");
   if (!text) return [];
+  // Mask comments so that, e.g., `// see contexts/iam/infrastructure` does
+  // not produce a false positive. We keep newlines intact so the reported
+  // line/column still matches the original source.
+  const stripped = text
+    .replace(/\/\/[^\r\n]*/g, (value) => " ".repeat(value.length))
+    .replace(/\/\*[\s\S]*?\*\//g, (value) => value.replace(/[^\r\n]/g, " "));
   const hits: string[] = [];
-  const lines = text.split(/\r?\n/);
+  const lines = stripped.split(/\r?\n/);
   lines.forEach((raw, idx) => {
     for (const pattern of patterns) {
       const match = raw.match(pattern);
@@ -72,20 +78,25 @@ export async function findForbiddenPlatformTypes(
   const absolute = join(ROOT, file);
   const text = await readFile(absolute, "utf8").catch(() => "");
   if (!text) return [];
-  const lines = text.split(/\r?\n/);
+  // Mask comments and quoted literals while preserving newlines so an error
+  // such as `"photo URL cannot exceed..."` does not look like a platform type.
+  const masked = text
+    .replace(/\/\/[^\r\n]*/g, (value) => " ".repeat(value.length))
+    .replace(/\/\*[\s\S]*?\*\//g, (value) => value.replace(/[^\r\n]/g, " "))
+    .replace(/`(?:\\\\.|[^`])*`/g, (value) => value.replace(/[^\r\n]/g, " "))
+    .replace(/"(?:\\\\.|[^"\\])*"/g, (value) => value.replace(/[^\r\n]/g, " "))
+    .replace(/'(?:\\\\.|[^'\\])*'/g, (value) => value.replace(/[^\r\n]/g, " "));
+  const lines = masked.split(/\r?\n/);
+  const originalLines = text.split(/\r?\n/);
   const hits: string[] = [];
   lines.forEach((raw, idx) => {
-    // Skip comments quickly so we don't flag // or /* references.
-    const noComments = raw
-      .replace(/\/\/.*$/, "")
-      .replace(/\/\*[\s\S]*?\*\//g, "");
     for (const type of forbidden) {
       // Match identifiers preceded by `:`, `<`, `,`, `(`, `[`, ` `, `=`, `&`, `|`,
       // and followed by a non-identifier boundary. Avoids flagging partial
       // words inside longer identifiers.
       const re = new RegExp(`(?:[:<,(\\[\\s=&|])${type}(?![A-Za-z0-9_])`);
-      if (re.test(noComments)) {
-        hits.push(`${idx + 1}: ${type} (${raw.trim()})`);
+      if (re.test(raw)) {
+        hits.push(`${idx + 1}: ${type} (${originalLines[idx]?.trim() ?? ""})`);
         break;
       }
     }

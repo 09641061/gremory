@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 
-import { createBusinessWorkspaceQueryService } from "@/contexts/business/application/internal/queryservices/business-workspace-query.service";
+import { composeBusinessAdapters } from "@/contexts/business/interfaces/server/business-composition";
 import { buttonVariants } from "@/contexts/shared/interfaces/components/ui/button";
 import { PageLoading } from "@/contexts/shared/interfaces/components/feedback/page-loading";
 import { getBusinessDictionary } from "@/contexts/business/interfaces/i18n";
@@ -22,7 +22,7 @@ export default function EstablishmentSetupPage({ searchParams }: EstablishmentSe
 }
 
 async function EstablishmentSetupPageContent({ searchParams }: EstablishmentSetupPageProps) {
-  const workspace = await createBusinessWorkspaceQueryService().getHeaderViewModel(await searchParams);
+  const workspace = await composeBusinessAdapters().workspaceQueryService.getHeaderViewModel(await searchParams);
 
   if (workspace.accountType === "PENDING_INVITATION") {
     redirect("/invitations/pending");

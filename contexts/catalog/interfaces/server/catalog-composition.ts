@@ -1,5 +1,8 @@
 import "server-only";
 
+import { cookies } from "next/headers";
+import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-session-cookie";
+import { workspaceSelectionCookies } from "@/contexts/business/infrastructure/session/workspace-selection-cookie";
 import { CatalogServiceApiGateway } from "../../infrastructure/gateways/catalog-service-api.gateway";
 import { ServiceCategoryApiGateway } from "../../infrastructure/gateways/service-category-api.gateway";
 import { CatalogServiceQueryServiceImpl } from "../../application/internal/queryservices/catalog-service-query.service";
@@ -7,16 +10,20 @@ import { CatalogServiceCommandServiceImpl } from "../../application/internal/com
 import { ServiceCategoryQueryServiceImpl } from "../../application/internal/queryservices/service-category-query.service";
 import { ServiceCategoryCommandServiceImpl } from "../../application/internal/commandservices/service-category-command.service";
 import { CatalogAccessPolicyService } from "../../application/internal/queryservices/catalog-access-policy.service";
+import type {
+  CatalogServiceApiPort,
+  CatalogServiceCommandPort,
+  CatalogAccessContext,
+} from "../../application/ports/catalog-service-port";
+import type {
+  ServiceCategoryApiPort,
+  ServiceCategoryCommandPort,
+} from "../../application/ports/service-category-port";
 
 /**
- * Server-only composition for the Catalog bounded context.
- *
- * Composition returns a fresh set of adapters per invocation. Callers MUST NOT
- * import gateways or command/query services directly; the seams are:
- *   - application/ports/catalog-service-reader.ts (future)
- *   - application/ports/service-category-reader.ts (future)
- * Until those ports exist, this composition hands out the existing
- * services so callers stop reaching into the gateways themselves.
+ * Server-only composition for the Catalog bounded context. Returns a fresh
+ * set of adapters per invocation. Callers MUST NOT import gateways or
+ * command/query services directly.
  */
 export type ComposedCatalogAdapters = Readonly<{
   serviceGateway: CatalogServiceApiGateway;
@@ -26,18 +33,34 @@ export type ComposedCatalogAdapters = Readonly<{
   categoryQueryService: ServiceCategoryQueryServiceImpl;
   categoryCommandService: ServiceCategoryCommandServiceImpl;
   accessPolicyService: CatalogAccessPolicyService;
+  accessContext: CatalogAccessContext;
 }>;
 
+class CookieCatalogAccessContext implements CatalogAccessContext {
+  async getAccessToken(): Promise<string | undefined> {
+    const cookieStore = await cookies();
+    return cookieStore.get(iamSessionCookies.accessToken)?.value;
+  }
+  async getOrganizationId(): Promise<string | undefined> {
+    const cookieStore = await cookies();
+    return cookieStore.get(workspaceSelectionCookies.organizationId)?.value;
+  }
+}
+
 export function composeCatalogAdapters(): ComposedCatalogAdapters {
+  const access: CatalogAccessContext = new CookieCatalogAccessContext();
   const serviceGateway = new CatalogServiceApiGateway();
   const categoryGateway = new ServiceCategoryApiGateway();
+  const serviceApiPort: CatalogServiceApiPort & CatalogServiceCommandPort = serviceGateway;
+  const categoryApiPort: ServiceCategoryApiPort & ServiceCategoryCommandPort = categoryGateway;
   return {
     serviceGateway,
     categoryGateway,
-    serviceQueryService: new CatalogServiceQueryServiceImpl(),
-    serviceCommandService: new CatalogServiceCommandServiceImpl(serviceGateway),
-    categoryQueryService: new ServiceCategoryQueryServiceImpl(),
-    categoryCommandService: new ServiceCategoryCommandServiceImpl(categoryGateway),
+    serviceQueryService: new CatalogServiceQueryServiceImpl(serviceApiPort, access),
+    serviceCommandService: new CatalogServiceCommandServiceImpl(serviceApiPort),
+    categoryQueryService: new ServiceCategoryQueryServiceImpl(categoryApiPort, access),
+    categoryCommandService: new ServiceCategoryCommandServiceImpl(categoryApiPort),
     accessPolicyService: new CatalogAccessPolicyService(),
+    accessContext: access,
   };
 }

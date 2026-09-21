@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
 import { safePublicError } from "@/contexts/shared/interfaces/actions/safe-error";
-import { createBillingInvoicesAdapter } from "@/contexts/billing/infrastructure/adapters/billing-invoices.adapter";
+import { composeBillingAdapters } from "@/contexts/billing/interfaces/server/billing-composition";
 import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-session-cookie";
 import { cookies } from "next/headers";
+import { requireBillingManager } from "@/contexts/billing/interfaces/authorization/billing-authorization";
+import { createCorrelationId } from "@/contexts/shared/infrastructure/http/api-client";
 import { z } from "zod";
 
 const querySchema = z.object({
@@ -34,10 +36,12 @@ export async function GET(request: Request) {
       );
     }
 
-    const invoices = await createBillingInvoicesAdapter().getInvoices(
+    const billingContext = await requireBillingManager(request.headers.get("x-correlation-id") ?? createCorrelationId());
+    const invoices = await composeBillingAdapters().invoiceQueryService.getInvoices(
       accessToken,
       parsed.data.page,
       parsed.data.size,
+      billingContext,
     );
     return NextResponse.json(invoices);
   } catch (error) {

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
+import { composeCatalogAdapters } from "@/contexts/catalog/interfaces/server/catalog-composition";
 import { safePublicError } from "@/contexts/shared/interfaces/actions/safe-error";
 import { z } from "zod";
-import { createServiceCategoryCommandService } from "@/contexts/catalog/application/internal/commandservices/service-category-command.service";
 import { createServiceCategoryReadModel } from "@/contexts/catalog/application/model/service-category.read-model";
 import { requireCatalogCategoryTargetAuthorization } from "@/contexts/catalog/interfaces/authorization/catalog-authorization";
 import { updateServiceCategorySchema } from "@/contexts/catalog/interfaces/rest/schemas/service-category.schemas";
@@ -28,8 +28,8 @@ export async function PUT(
       return validationErrorResponse(parsed.error.issues[0]?.message);
     }
 
-    await requireCatalogCategoryTargetAuthorization(idParsed.data);
-    const category = await createServiceCategoryCommandService().update(parsed.data);
+    const auth = await requireCatalogCategoryTargetAuthorization(idParsed.data);
+    const category = await composeCatalogAdapters().categoryCommandService.update(parsed.data, auth.token);
 
     return NextResponse.json(createServiceCategoryReadModel(category));
   } catch (error) {
@@ -68,8 +68,8 @@ export async function DELETE(
       return validationErrorResponse(idParsed.error.issues[0]?.message);
     }
 
-    await requireCatalogCategoryTargetAuthorization(idParsed.data);
-    await createServiceCategoryCommandService().delete({ id: idParsed.data });
+    const auth = await requireCatalogCategoryTargetAuthorization(idParsed.data);
+    await composeCatalogAdapters().categoryCommandService.delete({ id: idParsed.data }, auth.token);
 
     return new Response(null, { status: 204 });
   } catch (error) {

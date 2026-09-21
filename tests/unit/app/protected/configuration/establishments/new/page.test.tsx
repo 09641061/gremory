@@ -17,12 +17,11 @@ vi.mock("next/navigation", () => ({
   redirect: mocks.redirect,
 }));
 
-vi.mock("@/contexts/business/application/internal/queryservices/business-workspace-query.service", () => ({
-  createBusinessWorkspaceQueryService: () => mocks.workspace,
-}));
-
-vi.mock("@/contexts/business/application/internal/queryservices/organization-query.service", () => ({
-  createOrganizationQueryService: () => mocks.organization,
+vi.mock("@/contexts/business/interfaces/server/business-composition", () => ({
+  composeBusinessAdapters: () => ({
+    workspaceQueryService: mocks.workspace,
+    organizationQueryService: mocks.organization,
+  }),
 }));
 
 vi.mock("@/contexts/business/interfaces/components/establishment/create-establishment/create-establishment-form", () => ({

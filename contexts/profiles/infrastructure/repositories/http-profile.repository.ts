@@ -5,7 +5,7 @@ import { ApiError, apiClient } from "@/contexts/shared/infrastructure/http/api-c
 import type { ProfileImageInput } from "../../domain/model/commands/update-profile.command";
 import type { UpdateProfileCommand } from "../../domain/model/commands/update-profile.command";
 import type { UpdateProfilePreferencesCommand } from "../../domain/model/commands/update-profile-preferences.command";
-import { profileFromApiResponse } from "../../interfaces/rest/mappers/profile.mapper";
+import { profileFromApiResponse } from "../contracts/profile.mapper";
 import type { ProfileViewModel } from "../../application/services/profile.view-model";
 import type { ProfileReader } from "../../application/ports/profile-reader";
 import type { ProfileWriter } from "../../application/ports/profile-writer";

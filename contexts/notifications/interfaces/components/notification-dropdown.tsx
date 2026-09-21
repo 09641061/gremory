@@ -68,8 +68,8 @@ export function NotificationDropdown({ variant = "default" }: NotificationDropdo
     void deleteNotification(id);
   };
 
-  const handleAcceptInvitation = async (notificationId: string, token?: string) => {
-    await acceptInvitation(notificationId, token);
+  const handleAcceptInvitation = async (notificationId: string) => {
+    await acceptInvitation(notificationId);
     // The server action persists new workspace cookies; the application shell
     // needs a hard reload to pick them up so the header re-resolves against
     // the new workspace.
@@ -187,14 +187,19 @@ function NotificationItem({
   locale: string;
   onMarkAsRead: (id: string) => void;
   onDelete: (id: string) => void;
-  onAcceptInvitation: (id: string, token?: string) => void;
+  onAcceptInvitation: (id: string) => void;
   isPending: boolean;
 }) {
   const { t } = useNotificationTranslations();
   const isUnread = notification.status === "UNREAD";
+  // Action/state are provider-owned fields. Older backend responses may omit
+  // them, so retain the safe invitation/status fallback without inspecting
+  // localized title text.
   const isPendingInvitation =
     notification.type === "WORKFORCE_INVITATION" &&
-    !notification.title.toLowerCase().includes("accepted");
+    (notification.action
+      ? notification.action === "ACCEPT_INVITATION" && notification.state !== "ACCEPTED"
+      : notification.status !== "READ" && notification.status !== "DISMISSED");
 
   return (
     <div
@@ -226,7 +231,7 @@ function NotificationItem({
                 size="sm"
                 className="h-7 px-2.5 text-xs font-medium"
                 disabled={isPending}
-                onClick={() => onAcceptInvitation(notification.id, notification.targetToken)}
+                onClick={() => onAcceptInvitation(notification.id)}
               >
                 <CheckCircle2 className="mr-1 size-3.5" />
                 {t.notifications.accept}

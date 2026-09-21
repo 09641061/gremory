@@ -1,5 +1,6 @@
 "use client";
 
+import { recordSafely } from "@/contexts/shared/interfaces/observability/sanitize-error";
 import { useEffect } from "react";
 import { ErrorScreen } from "@/contexts/shared/interfaces/components/feedback/error-screen";
 
@@ -11,7 +12,7 @@ export default function Error({
   reset: () => void;
 }) {
   useEffect(() => {
-    console.error("Unexpected application error", error);
+    recordSafely("app.error", { cause: error });
   }, [error]);
 
   return (

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { safePublicError } from "@/contexts/shared/interfaces/actions/safe-error";
 
-import { BusinessWorkspaceApiGateway } from "@/contexts/business/infrastructure/gateways/business-workspace-api.gateway";
+import { composeBusinessAdapters } from "@/contexts/business/interfaces/server/business-composition";
 
 function routeErrorResponse(error: unknown, fallback = "Request could not be completed"): Response {
   const safe = safePublicError(error, fallback);
@@ -10,7 +10,7 @@ function routeErrorResponse(error: unknown, fallback = "Request could not be com
 
 export async function GET() {
   try {
-    const workspace = await new BusinessWorkspaceApiGateway().getWorkspace();
+    const workspace = await composeBusinessAdapters().workspaceReader.fetchResource();
     return NextResponse.json(workspace);
   } catch (error) {
     return routeErrorResponse(error);

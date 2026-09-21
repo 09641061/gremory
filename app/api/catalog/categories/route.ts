@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
+import { composeCatalogAdapters } from "@/contexts/catalog/interfaces/server/catalog-composition";
 import { safePublicError } from "@/contexts/shared/interfaces/actions/safe-error";
 import { z } from "zod";
-import { createServiceCategoryCommandService } from "@/contexts/catalog/application/internal/commandservices/service-category-command.service";
-import { createServiceCategoryQueryService } from "@/contexts/catalog/application/internal/queryservices/service-category-query.service";
 import { createServiceCategoryReadModel } from "@/contexts/catalog/application/model/service-category.read-model";
 import { requireCatalogContext } from "@/contexts/catalog/interfaces/authorization/catalog-authorization";
 import { createServiceCategorySchema } from "@/contexts/catalog/interfaces/rest/schemas/service-category.schemas";
@@ -27,10 +26,11 @@ export async function GET(request: Request) {
 
     const auth = await requireCatalogContext("catalog:read", parsed.data.establishmentId);
     if (auth.establishmentId !== parsed.data.establishmentId) return NextResponse.json({ message: "Operation not permitted" }, { status: 403 });
-    const page = await createServiceCategoryQueryService().list(
+    const page = await composeCatalogAdapters().categoryQueryService.list(
       parsed.data.establishmentId,
       parsed.data.page,
       parsed.data.size,
+      auth.token,
     );
 
     return NextResponse.json(page);
@@ -72,7 +72,7 @@ export async function POST(request: Request) {
 
     const auth = await requireCatalogContext("catalog:manage", parsed.data.establishmentId);
     if (auth.establishmentId !== parsed.data.establishmentId) return NextResponse.json({ message: "Operation not permitted" }, { status: 403 });
-    const category = await createServiceCategoryCommandService().create(parsed.data);
+    const category = await composeCatalogAdapters().categoryCommandService.create(parsed.data, auth.token);
 
     return NextResponse.json(createServiceCategoryReadModel(category), { status: 201 });
   } catch (error) {

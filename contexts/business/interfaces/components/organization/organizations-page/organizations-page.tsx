@@ -3,7 +3,7 @@
 import { startTransition, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
-import { workspaceSelectionCookies } from "@/contexts/business/infrastructure/session/workspace-selection-cookie";
+import { setWorkspaceSelectionAction } from "@/contexts/business/interfaces/actions/workspace-selection.actions";
 import { OrganizationsSearchBar } from "./organizations-search-bar";
 import { OrganizationListCard } from "./organization-list-card";
 import { OrganizationDetailCard } from "./organization-detail-card";
@@ -50,26 +50,21 @@ export function OrganizationsPage({
 
   const handleSelectOrganization = (organizationId: string) => {
     setPreviewOrgId(organizationId);
-    document.cookie = `${workspaceSelectionCookies.previewOrganizationId}=${encodeURIComponent(
-      organizationId,
-    )}; path=/; max-age=${60 * 60 * 24 * 180}; SameSite=Lax`;
-
     const confirmed = organizations.find((org) => org.organizationId === organizationId) ?? null;
     setActiveOrgId(organizationId);
     if (confirmed) {
-      document.cookie = `takodu.active_organization_id=${encodeURIComponent(organizationId)}; path=/; max-age=${60 * 60 * 24 * 180}; sameSite=lax`;
-      if (confirmed.establishments.length > 0) {
-        document.cookie = `takodu.active_establishment_id=${encodeURIComponent(
-          confirmed.establishments[0].id,
-        )}; path=/; max-age=${60 * 60 * 24 * 180}; sameSite=lax`;
-      } else {
-        document.cookie = "takodu.active_establishment_id=; path=/; max-age=0; sameSite=lax";
-      }
-      if (organizationId === ownedOrganizationId && confirmed.establishments.length === 0) {
+      const establishmentId = confirmed.establishments[0]?.id ?? null;
+      startTransition(() => {
+        void setWorkspaceSelectionAction({
+          organizationId,
+          establishmentId,
+          previewOrganizationId: organizationId,
+        });
+      });
+      if (organizationId === ownedOrganizationId && !establishmentId) {
         router.push(`/establishments/setup?organizationId=${encodeURIComponent(organizationId)}`);
       } else {
         const params = new URLSearchParams({ organizationId });
-        const establishmentId = confirmed.establishments[0]?.id;
         if (establishmentId) params.set("establishmentId", establishmentId);
         router.push(`/?${params.toString()}`);
       }

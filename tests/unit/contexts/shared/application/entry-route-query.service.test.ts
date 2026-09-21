@@ -17,7 +17,13 @@ vi.mock("@/contexts/billing/application/internal/queryservices/current-subscript
   }),
 }));
 
-import { createEntryRouteQueryService } from "@/contexts/shared/application/internal/queryservices/entry-route-query.service";
+import { createEntryRouteQueryService as createEntryRouteQueryServiceImpl } from "@/contexts/shared/application/internal/queryservices/entry-route-query.service";
+
+const createEntryRouteQueryService = () =>
+  createEntryRouteQueryServiceImpl(
+    { getWorkspace: mocks.getWorkspace } as never,
+    { getCurrentSubscription: mocks.getCurrentSubscription } as never,
+  );
 
 describe("entry route query service", () => {
   beforeEach(() => {

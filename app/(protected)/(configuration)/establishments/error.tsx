@@ -1,5 +1,6 @@
 "use client";
 
+import { recordSafely } from "@/contexts/shared/interfaces/observability/sanitize-error";
 import { useEffect } from "react";
 import { ErrorScreen } from "@/contexts/shared/interfaces/components/feedback/error-screen";
 
@@ -11,7 +12,7 @@ export default function ProtectedError({
   reset: () => void;
 }) {
   useEffect(() => {
-    console.error("Unexpected protected application error", error);
+    recordSafely("app.protected.configuration.establishments.error", { cause: error });
   }, [error]);
 
   return (

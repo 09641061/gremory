@@ -5,8 +5,7 @@ import {
   deleteEstablishmentCommand,
   updateEstablishmentCommand,
 } from "@/contexts/business/domain/model/commands/business.commands";
-import { createEstablishmentCommandService } from "@/contexts/business/application/internal/commandservices/establishment-command.service";
-import { createEstablishmentQueryService } from "@/contexts/business/application/internal/queryservices/establishment-query.service";
+import { composeBusinessAdapters } from "@/contexts/business/interfaces/server/business-composition";
 import { requireEstablishmentCapability } from "@/contexts/business/interfaces/authorization/business-authorization";
 import { updateEstablishmentSchema } from "@/contexts/business/interfaces/rest/schemas/establishment.schemas";
 
@@ -24,7 +23,7 @@ export async function GET(
     }
 
     await requireEstablishmentCapability(idParsed.data, "canRead");
-    const establishment = await createEstablishmentQueryService().getById({
+    const establishment = await composeBusinessAdapters().establishmentQueryService.getById({
       id: idParsed.data,
     });
 
@@ -83,11 +82,11 @@ export async function PUT(
     }
 
     await requireEstablishmentCapability(idParsed.data, "canUpdate");
-    await createEstablishmentCommandService().update(
+    await composeBusinessAdapters().establishmentCommandService.update(
       updateEstablishmentCommand(parsed.data),
     );
 
-    const establishment = await createEstablishmentQueryService().getById({
+    const establishment = await composeBusinessAdapters().establishmentQueryService.getById({
       id: idParsed.data,
     });
     if (!establishment) {
@@ -115,7 +114,7 @@ export async function DELETE(
     }
 
     await requireEstablishmentCapability(idParsed.data, "canDelete");
-    await createEstablishmentCommandService().delete(
+    await composeBusinessAdapters().establishmentCommandService.delete(
       deleteEstablishmentCommand({ id: idParsed.data }),
     );
 

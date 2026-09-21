@@ -14,35 +14,11 @@ import type { ProfileImageInput } from "../../domain/model/commands/update-profi
 import { composeProfileAdapters } from "../server/profile-composition";
 import type { ProfileViewModel } from "../../application/services/profile.view-model";
 
-const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
-const ALLOWED_IMAGE_TYPES = new Set([
-  "image/png",
-  "image/jpeg",
-  "image/webp",
-  "image/gif",
-]);
-
 async function readImageFile(formData: FormData): Promise<ProfileImageInput | null> {
   const imageFile = formData.get("imageFile");
   if (!(imageFile instanceof File) || imageFile.size <= 0) return null;
-  if (imageFile.size > MAX_IMAGE_BYTES) {
-    throw new z.ZodError([
-      {
-        code: "custom",
-        path: ["imageFile"],
-        message: "Image must be 8 MB or smaller",
-      },
-    ]);
-  }
-  if (imageFile.type && !ALLOWED_IMAGE_TYPES.has(imageFile.type)) {
-    throw new z.ZodError([
-      {
-        code: "custom",
-        path: ["imageFile"],
-        message: "Unsupported image format",
-      },
-    ]);
-  }
+  // The backend owns accepted MIME types and size limits. Keep this boundary
+  // transport-neutral and avoid duplicating undocumented constraints here.
   const bytes = new Uint8Array(await imageFile.arrayBuffer());
   return {
     name: imageFile.name,

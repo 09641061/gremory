@@ -1,36 +1,31 @@
 # DDD Refactor — Lane Board
 
-## Status: Phase 1 (foundation) complete; Phase 2 in progress.
+## Status: integrated and validated
 
-## Lane assignments
+The 11 bounded-context developer lanes were executed in isolated copies and
+merged into the primary working tree. The temporary lane copies and obsolete
+`.worktrees/ddd-deferred-batch-*` worktrees were removed after handoff.
 
-| Lane | Agent | Worktree path | Branch | BCs | Status |
-|---|---|---|---|---|---|
-| A | developer | `.worktrees/ddd-identity-foundation` | `feature/ddd-identity-foundation` | shared (Phases 2-6), iam, profiles, business | launching |
-| B | developer | `.worktrees/ddd-operational-core` | `feature/ddd-operational-core` | catalog, crm, scheduling | launching |
-| C | developer | `.worktrees/ddd-specialized-domains` | `feature/ddd-specialized-domains` | billing, notifications, analytics, assistant | launching |
+| Lane | Scope | Status | Validation |
+|---|---|---|---|
+| Analytics | ports, capabilities, contracts, export boundary | integrated | focused suite, TypeScript, lint |
+| Assistant | authorization, contracts, validated SSE | integrated | focused suite, TypeScript, lint |
+| Billing | ports, invoice boundary, manager authorization | integrated | focused suite, TypeScript, lint |
+| Business | composition, target authorization, server cookies | integrated | focused suite, TypeScript, lint |
+| Catalog | contracts, target lookup, invalidation | integrated | focused suite, TypeScript, lint |
+| CRM | ports, contracts, input validation, diagnostics | integrated | focused suite, TypeScript, lint |
+| IAM | composition and proxy token propagation | integrated | 15 files / 99 tests, TypeScript, lint |
+| Notifications | runtime contracts, device flow, diagnostics | integrated | 6 files / 37 tests, TypeScript, lint |
+| Profiles | contracts, current-profile reuse, uploads | integrated | 13 files / 80 tests, TypeScript, lint |
+| Scheduling | roster ports, error distinctions, timezone behavior | integrated | 7 files / 23 tests, TypeScript, lint |
+| Shared | request context, sanitizer, architecture seams | integrated | architecture and shared tests, TypeScript, lint |
 
-## Why independent
+## Final gates
 
-- Distinct bounded contexts; no file overlap between BCs.
-- Shared Phase 1 (header precedence + sanitizer + edge builder) already
-  committed to `feature/add-refactor-domain-roles` (HEAD `22ae7fea`).
-- Lane A also owns the shared/application composition cleanup (no BC files).
+- `bunx tsc --noEmit` — passed
+- `bun run lint` — passed
+- `bun run test -- tests/architecture` — 3 passed
+- `bun run test` — 136 files / 892 tests passed
 
-## Authority
-
-Each lane is the sole writer for its worktree. They may edit shared files only
-inside `contexts/shared/interfaces/` (composition helpers) and must document
-the touch-points in their handoff.
-
-## Gates per lane
-
-- `bun run lint` clean
-- `bunx tsc --noEmit` clean
-- `bun run test` — baseline (863 tests) must keep passing; each lane should
-  add regression tests for the new ports/composition it introduces.
-
-## Handoff format
-
-Each lane returns: changed file count, new files with brief purpose, test
-results, any deferred work, and any blocker requiring parent decision.
+No commits or pushes were made. Remaining contract-dependent risks are tracked
+in `docs/ddd-refactor/IMPLEMENTATION-STATUS.md`.

@@ -3,11 +3,11 @@ import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 
 import { SubscribeView } from "@/contexts/billing/interfaces/components/subscribe/subscribe-view";
-import { createCurrentSubscriptionQueryService } from "@/contexts/billing/application/internal/queryservices/current-subscription-query.service";
+import { composeBillingAdapters } from "@/contexts/billing/interfaces/server/billing-composition";
 import { hasActiveSubscription } from "@/contexts/billing/domain/services/subscription-access.policy";
 import { listPlansByCurrencyQueryService } from "@/contexts/billing/application/internal/queryservices/list-plans-query.service";
 import { createAppShellQueryService } from "@/contexts/shared/application/internal/queryservices/app-shell-query.service";
-import { createBusinessWorkspaceQueryService } from "@/contexts/business/application/internal/queryservices/business-workspace-query.service";
+import { composeBusinessAdapters } from "@/contexts/business/interfaces/server/business-composition";
 import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-session-cookie";
 import { PageLoading } from "@/contexts/shared/interfaces/components/feedback/page-loading";
 
@@ -28,18 +28,20 @@ async function UpgradePageContent() {
   const accessToken = (await cookies()).get(iamSessionCookies.accessToken)?.value;
   const requestHeaders = await headers();
   const establishmentId = requestHeaders.get("x-takodu-establishment-id") ?? undefined;
+  const business = composeBusinessAdapters();
+  const billing = composeBillingAdapters();
   const workspace = accessToken
-    ? await createBusinessWorkspaceQueryService().getHeaderViewModel({ establishmentId }).catch(() => null)
+    ? await business.workspaceQueryService.getHeaderViewModel({ establishmentId }).catch(() => null)
     : null;
 
   const shell = accessToken
-    ? await createAppShellQueryService()
-        .resolve({ workspace: { establishmentId } })
+    ? await createAppShellQueryService(business.workspaceQueryService, billing.currentSubscriptionService)
+        .resolve({ workspace: { establishmentId }, accessToken })
         .catch(() => null)
     : null;
 
   const subscription = accessToken
-    ? await createCurrentSubscriptionQueryService().getCurrentSubscriptionSnapshot(accessToken)
+    ? await billing.currentSubscriptionService.getCurrentSubscriptionSnapshot(accessToken)
     : null;
   const ownerNeedsActivation =
     workspace?.accountType === "OWNER" && !hasActiveSubscription(subscription);
@@ -59,7 +61,7 @@ async function UpgradePageContent() {
   return (
     <SubscribeView
       backHref={workspace?.organization ? (shell?.homeHref ?? "/welcome") : "/welcome"}
-      plansByCurrency={await listPlansByCurrencyQueryService()}
+      plansByCurrency={await listPlansByCurrencyQueryService(billing.listPlansService)}
       currentSubscription={subscription}
     />
   );

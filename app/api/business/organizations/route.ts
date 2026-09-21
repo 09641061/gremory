@@ -1,14 +1,13 @@
 import { NextResponse } from "next/server";
 import { safePublicError } from "@/contexts/shared/interfaces/actions/safe-error";
-import { createOrganizationCommandService } from "@/contexts/business/application/internal/commandservices/organization-command.service";
-import { createOrganizationQueryService } from "@/contexts/business/application/internal/queryservices/organization-query.service";
+import { composeBusinessAdapters } from "@/contexts/business/interfaces/server/business-composition";
 import { createOrganizationCommand } from "@/contexts/business/domain/model/commands/business.commands";
 import { createOrganizationSchema } from "@/contexts/business/interfaces/rest/schemas/organization.schemas";
 import { requireBusinessAccessToken } from "@/contexts/business/infrastructure/session/business-session";
 
 export async function GET() {
   try {
-    const organization = await createOrganizationQueryService().getMyOrganization();
+    const organization = await composeBusinessAdapters().organizationQueryService.getMyOrganization();
     return NextResponse.json(organization);
   } catch (error) {
     return routeErrorResponse(error);
@@ -27,11 +26,11 @@ export async function POST(request: Request) {
     }
 
     await requireBusinessAccessToken();
-    const organizationId = await createOrganizationCommandService().create(
+    const organizationId = await composeBusinessAdapters().organizationCommandService.create(
       createOrganizationCommand(parsed.data),
     );
 
-    const organization = await createOrganizationQueryService().getById({
+    const organization = await composeBusinessAdapters().organizationQueryService.getById({
       id: organizationId.value,
     });
 

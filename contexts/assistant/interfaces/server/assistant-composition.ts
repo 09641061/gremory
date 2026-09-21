@@ -8,18 +8,18 @@ import { SubmitAssistantMessageCommandService } from "../../application/internal
 import { CreateConversationCommandService } from "../../application/internal/commandservices/create-conversation-command.service";
 import { DeleteConversationCommandService } from "../../application/internal/commandservices/delete-conversation-command.service";
 import { RenameConversationCommandService } from "../../application/internal/commandservices/rename-conversation-command.service";
+import type { AssistantConversationsPort } from "../../application/ports/assistant-port";
 
 /**
  * Server-only composition for the Assistant bounded context.
  *
  * Composition returns a fresh set of adapters per invocation. Callers MUST NOT
- * import the gateway directly. Future migration target: replace this with
- * `application/ports/{assistant-reader, assistant-writer,
- * assistant-streaming-writer}.ts` once the gateway implements those
- * consumer-owned contracts.
+ * import the gateway directly. The gateway implements the Application port and
+ * is injected into every command/query service.
  */
 export type ComposedAssistantAdapters = Readonly<{
   gateway: AssistantApiGateway;
+  conversations: AssistantConversationsPort;
   listConversations: ListConversationsQueryService;
   getConversation: GetConversationQueryService;
   sendMessage: SendMessageCommandService;
@@ -29,16 +29,23 @@ export type ComposedAssistantAdapters = Readonly<{
   renameConversation: RenameConversationCommandService;
 }>;
 
-export function composeAssistantAdapters(): ComposedAssistantAdapters {
-  const gateway = new AssistantApiGateway();
+export function composeAssistantAdapters(organizationId?: string): ComposedAssistantAdapters {
+  const gateway = new AssistantApiGateway(organizationId);
+  const conversations: AssistantConversationsPort = gateway;
+  const createConversation = new CreateConversationCommandService(conversations);
+  const sendMessage = new SendMessageCommandService(conversations);
   return {
     gateway,
-    listConversations: new ListConversationsQueryService(),
-    getConversation: new GetConversationQueryService(),
-    sendMessage: new SendMessageCommandService(),
-    submitAssistantMessage: new SubmitAssistantMessageCommandService(),
-    createConversation: new CreateConversationCommandService(),
-    deleteConversation: new DeleteConversationCommandService(),
-    renameConversation: new RenameConversationCommandService(),
+    conversations,
+    listConversations: new ListConversationsQueryService(conversations),
+    getConversation: new GetConversationQueryService(conversations),
+    sendMessage,
+    createConversation,
+    submitAssistantMessage: new SubmitAssistantMessageCommandService(
+      createConversation,
+      sendMessage,
+    ),
+    deleteConversation: new DeleteConversationCommandService(conversations),
+    renameConversation: new RenameConversationCommandService(conversations),
   };
 }

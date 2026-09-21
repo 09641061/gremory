@@ -2,14 +2,15 @@
 
 
 
+import { recordSafely } from "@/contexts/shared/interfaces/observability/sanitize-error";
 import { revalidatePath } from "next/cache";
 import { updateAppointmentSchema } from "../rest/schemas/appointment.schemas";
 import { ApiError } from "@/contexts/shared/infrastructure/http/api-client";
 import { Appointment } from "../../domain/model/entities/appointment";
 import { ActionState } from "./action-state";
 import { requireAppointmentOperationAuthorization } from "@/contexts/scheduling/interfaces/authorization/scheduling-authorization";
-import { createSchedulingCommandService } from "../../application/internal/commandservices/scheduling-command.service.impl";
-import { createBusinessWorkspaceQueryService } from "@/contexts/business/application/internal/queryservices/business-workspace-query.service";
+import { composeSchedulingAdapters } from "../server/scheduling-composition";
+import { composeBusinessAdapters } from "@/contexts/business/interfaces/server/business-composition";
 
 export async function updateAppointmentAction(
   appointmentId: string,
@@ -39,13 +40,13 @@ export async function updateAppointmentAction(
 
   try {
     await requireAppointmentOperationAuthorization(appointmentId);
-    const workspace = await createBusinessWorkspaceQueryService().getHeaderViewModel();
-    const commandService = createSchedulingCommandService(workspace.organization?.id);
+    const workspace = await composeBusinessAdapters().workspaceQueryService.getHeaderViewModel();
+    const commandService = composeSchedulingAdapters(workspace.organization?.id).commandService;
     const result = await commandService.updateAppointment(appointmentId, parsed.data);
     revalidatePath("/schedule");
     return { status: "success", data: result, error: null, errorId: null, fieldErrors: null };
   } catch (error: unknown) {
-    console.error("Update appointment action failed:", error);
+    recordSafely("scheduling.update.appointment.action", { cause: error });
     let message = "We could not update this appointment. Please try again.";
     if (error instanceof ApiError) {
       if (error.status === 409) {
