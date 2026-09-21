@@ -69,7 +69,6 @@ export async function updateProfileAction(
     // turned into an error by a failed cache update.
     try {
       updateTag("profile");
-      revalidatePath("/team");
       revalidatePath("/profile");
       revalidatePath("/", "layout");
     } catch {

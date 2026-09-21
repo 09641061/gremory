@@ -17,6 +17,7 @@ vi.mock("next/navigation", () => ({
   useRouter: () => ({
     push: mocks.push,
   }),
+  usePathname: () => "/upgrade",
 }));
 
 vi.mock("@/contexts/billing/interfaces/actions/create-subscription.action", () => ({

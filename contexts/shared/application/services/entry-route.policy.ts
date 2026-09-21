@@ -93,7 +93,6 @@ function resolveAccessPolicyEntryPath(
   if (accessPolicy?.canOpenScheduling) return "/schedule";
   if (accessPolicy?.canOpenCatalog) return "/catalog";
   if (accessPolicy?.canOpenCrm) return "/crm";
-  if (accessPolicy?.canOpenTeam) return "/team";
   if (accessPolicy?.canOpenAnalytics) return "/analytics";
 
   // No module is openable, but the account may still manage the establishment

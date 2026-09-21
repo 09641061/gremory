@@ -90,7 +90,6 @@ describe("updateProfileAction", () => {
       error: null,
     });
     expect(mocks.updateTag).toHaveBeenCalledWith("profile");
-    expect(mocks.revalidatePath).toHaveBeenCalledWith("/team");
     expect(mocks.revalidatePath).toHaveBeenCalledWith("/profile");
     expect(mocks.revalidatePath).toHaveBeenCalledWith("/", "layout");
     expect(mocks.commandService.updateProfile).toHaveBeenCalledWith(

@@ -104,6 +104,9 @@ async function BackToHomeLink() {
   const href = await resolveConfigurationBackHref();
   if (!href) return null;
 
+  // `BackNavigationButton` detects the org settings hub internally via
+  // `usePathname()`, so this layout only has to hand over the resolved
+  // workspace home as the fallback URL.
   return <BackNavigationButton fallbackHref={href} />;
 }
 

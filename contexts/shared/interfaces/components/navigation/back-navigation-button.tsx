@@ -1,21 +1,42 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import { useI18n } from "@/contexts/shared/interfaces/i18n";
 
-export function BackNavigationButton({ fallbackHref }: { fallbackHref: string }) {
+export function BackNavigationButton({
+  fallbackHref,
+  forceFallback = false,
+}: {
+  fallbackHref: string;
+  /**
+   * When true, the button always navigates to `fallbackHref` instead of
+   * `router.back()`. Use this for navigation hubs whose sub-pages are reached
+   * through their own sidebar: there the browser history only reflects the
+   * entry point, so `router.back()` can pop the user out of the app to an
+   * unrelated previous page rather than to the hub's parent screen.
+   */
+  forceFallback?: boolean;
+}) {
   const router = useRouter();
+  const pathname = usePathname();
   const { t } = useI18n();
 
+  // The org settings hub (`/organization`, `/organization/members`,
+  // `/organization/roles`, `/organization/invites`) is navigated via its own
+  // left-hand sidebar. The browser history there only records the entry into
+  // the hub, so `router.back()` would take the user out of the app to
+  // whatever they were looking at before. Detect the hub here (client-side,
+  // reactive to client navigations between sibling routes) and exit to the
+  // workspace home instead.
+  const isOrgSettingsHub =
+    pathname === "/organization" || pathname.startsWith("/organization/");
+  const mustUseFallback = forceFallback || isOrgSettingsHub;
+
   const handleBack = () => {
-    // Configuration pages are opened from a sidebar page (for example Team).
-    // Going to the plan home here loses that context and always lands on Chat.
-    // Next's client navigation keeps this history entry, even though the
-    // document referrer still points to the first page of the session.
-    if (window.history.length > 1) {
+    if (!mustUseFallback && window.history.length > 1) {
       router.back();
       return;
     }
