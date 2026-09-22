@@ -459,7 +459,6 @@ export const en = {
             category: "Scheduling & Shifts",
             features: [
               { name: "Real-time interactive calendar", standard: true, max: true },
-              { name: "Multi-specialist simultaneous view", standard: true, max: true },
               { name: "Overlap and break management", standard: true, max: true },
               { name: "Automated email reminders", standard: true, max: true },
               { name: "Automated cancellations & rescheduling", standard: true, max: true },

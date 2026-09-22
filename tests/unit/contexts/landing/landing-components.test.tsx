@@ -181,6 +181,7 @@ describe("Landing UI Components (Bilingual & No Trial Mentions)", () => {
       expect(screen.queryByText("Support, Security & SLA")).not.toBeInTheDocument();
       expect(screen.queryByText(/whatsapp/i)).not.toBeInTheDocument();
       expect(screen.queryByText("Customer database")).not.toBeInTheDocument();
+      expect(screen.queryByText("Multi-specialist simultaneous view")).not.toBeInTheDocument();
       expect(screen.queryByText("Capacidad & Organización")).not.toBeInTheDocument();
       expect(screen.queryByText(/14 days/i)).not.toBeInTheDocument();
       expect(screen.queryByText(/free trial/i)).not.toBeInTheDocument();
@@ -193,6 +194,7 @@ describe("Landing UI Components (Bilingual & No Trial Mentions)", () => {
       expect(screen.getByText("Directorio de clientes")).toBeInTheDocument();
       expect(screen.queryByText("Soporte, Seguridad y SLA")).not.toBeInTheDocument();
       expect(screen.queryByText("Base de datos de clientes")).not.toBeInTheDocument();
+      expect(screen.queryByText("Vista simultánea multi-especialista")).not.toBeInTheDocument();
       expect(screen.queryByText(/whatsapp/i)).not.toBeInTheDocument();
       expect(screen.queryByText("Notas personalizadas y preferencias")).not.toBeInTheDocument();
       expect(screen.queryByText("Campañas de reactivación de clientes")).not.toBeInTheDocument();

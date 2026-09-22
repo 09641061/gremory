@@ -459,7 +459,6 @@ export const es = {
             category: "Agenda y Turnos",
             features: [
               { name: "Calendario interactivo en tiempo real", standard: true, max: true },
-              { name: "Vista simultánea multi-especialista", standard: true, max: true },
               { name: "Control de solapamientos y descansos", standard: true, max: true },
               { name: "Recordatorios automáticos por correo", standard: true, max: true },
               { name: "Cancelaciones y reprogramación autónoma", standard: true, max: true },
