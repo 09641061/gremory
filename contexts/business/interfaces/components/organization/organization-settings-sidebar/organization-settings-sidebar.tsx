@@ -4,9 +4,9 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   Building2,
-  ShieldCheck,
   Store,
   UserPlus,
+  UserShield,
   Users,
   type LucideIcon,
 } from "lucide-react";
@@ -64,7 +64,7 @@ export function OrganizationSettingsSidebar() {
     {
       href: "/organization/roles",
       label: t.organizationSettings.roles,
-      icon: ShieldCheck,
+      icon: UserShield,
     },
     {
       href: "/organization/invites",
