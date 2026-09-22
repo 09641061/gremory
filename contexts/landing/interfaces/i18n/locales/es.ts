@@ -1,6 +1,4 @@
-import type { LandingDictionary } from "../index";
-
-export const es: LandingDictionary = {
+export const es = {
   landing: {
     navbar: {
       brand: "Takodu",
@@ -31,7 +29,7 @@ export const es: LandingDictionary = {
       faq: "Preguntas Frecuentes",
       login: "Iniciar Sesión",
       workspace: "Ir a mi espacio",
-      getStarted: "Comenzar gratis",
+      getStarted: "Comenzar",
       menu: "Menú de navegación",
       language: "Idioma",
       spanish: "Español",
@@ -50,26 +48,28 @@ export const es: LandingDictionary = {
         "Centraliza reservas, atiende clientes las 24 horas y organiza tu equipo sin fricción. Kodu, tu copiloto inteligente, gestiona tu agenda y CRM en segundos.",
       ctaPrimary: "Empieza ahora",
       ctaSecondary: "Ver precios",
-      primaryCta: "Empieza ahora",
+      primaryCta: "Comenzar ahora",
       secondaryCta: "Ver planes y precios",
       trustBadges: {
-        noCreditCard: "Sin tarjeta de crédito requerida",
+        noCreditCard: "Sin contratos a largo plazo",
         setupTime: "Configuración en 2 minutos",
         activeBusinesses: "Más de 500+ negocios activos",
         satisfaction: "99.8% de disponibilidad garantizada",
       },
-      freeTrialNote: "Prueba de 14 días gratis • No requiere tarjeta",
-      socialProofTitle: "Confiado por más de 500+ negocios en Latinoamérica",
+      freeTrialNote: "Configuración inmediata • Cancela cuando quieras",
+      socialProofTitle: "Confiado por más de 500+ negocios de servicios en Latinoamérica",
       ratingValue: "4.9/5",
       ratingCount: "de satisfacción",
       businesses: "negocios activos",
+      koduOnline: "Kodu en línea",
+      koduGreeting: "\"¡Hola! ¿Qué agendamos hoy para tu negocio?\"",
     },
     features: {
       eyebrow: "Capacidades de la plataforma",
       tag: "Potencia tu negocio",
       title: "Todo lo que tu negocio necesita para operar, crecer y escalar",
       description:
-        "Diseñado para profesionales independientes, estudios y negocios de servicios que buscan excelencia operativa y atención automatizada sin perder el toque humano.",
+        "Diseñado para salones, clínicas, consultorías y profesionales de servicios listos para modernizarse.",
       pillars: {
         assistant: {
           badge: "Inteligencia Artificial",
@@ -122,24 +122,28 @@ export const es: LandingDictionary = {
           title: "Asistente IA Conversacional (Kodu)",
           description:
             "Kodu atiende consultas, agenda citas en lenguaje natural y confirma turnos automáticamente por múltiples canales 24/7.",
+          highlights: ["Conversación natural", "Atención 24/7 para clientes", "Integración multicanal"],
         },
         scheduling: {
           badge: "En tiempo real",
           title: "Agenda & Reservas Inteligentes",
           description:
             "Visualiza la disponibilidad de todo tu equipo, evita solapamientos y permite a tus clientes agendar en tiempo real.",
+          highlights: ["Prevención de solapamientos", "Vistas por equipo y sede", "Recordatorios automáticos"],
         },
         crm: {
           badge: "Fidelización",
           title: "CRM & Gestión de Clientes",
           description:
             "Historial completo de visitas, notas personalizadas, recordatorios automáticos y segmentación para fidelizar a tu clientela.",
+          highlights: ["Perfiles y preferencias", "Historial de servicios", "Campañas de fidelización"],
         },
         analytics: {
           badge: "Insights",
           title: "Analíticas & Inteligencia de Negocio",
           description:
             "Métricas clave de ingresos, rendimiento de colaboradores, retención y horas pico para tomar decisiones basadas en datos.",
+          highlights: ["Ingresos en tiempo real", "Tasa de ocupación", "Rendimiento del equipo"],
         },
       },
     },
@@ -252,6 +256,13 @@ export const es: LandingDictionary = {
       title: "Mira a Takodu en acción",
       description:
         "Explora cómo Kodu interactúa con tus clientes, organiza tu calendario y resume tus métricas en tiempo real.",
+      aiActive: "IA Activa",
+      liveCalendar: "Calendario en Vivo",
+      updatedRealtime: "Actualizado en tiempo real por el motor Takodu",
+      highPerformance: "Rendimiento Alto",
+      recommendation: "Recomendación: Ampliar horarios",
+      clientLabel: "Cliente",
+      confirmationFooter: "Confirmación enviada por WhatsApp y Correo",
       tabs: {
         chat: "Chat con Kodu IA",
         schedule: "Agenda Inteligente",
@@ -326,8 +337,7 @@ export const es: LandingDictionary = {
       title: "Planes simples y transparentes",
       subtitle:
         "Elige el plan ideal para la etapa de tu negocio. Sin costos ocultos ni comisiones sorpresa.",
-      description:
-        "Sin comisiones ocultas ni sorpresas. Cambia de plan o cancela cuando quieras.",
+      description: "Sin comisiones ocultas ni sorpresas. Cambia de plan o cancela cuando quieras.",
       monthly: "Facturación mensual",
       annual: "Facturación anual",
       yearly: "Anual",
@@ -339,8 +349,9 @@ export const es: LandingDictionary = {
       billedMonthly: "facturado mes a mes",
       currencyToggle: "Ver en USD ($) / Soles (S/.)",
       faqTitle: "¿Tienes dudas sobre los planes?",
-      cta: "Prueba Takodu gratis por 14 días",
+      cta: "Comenzar con Takodu",
       guarantee: "Cancela o cambia de plan cuando quieras sin penalizaciones.",
+      includesLabel: "Incluye:",
       plans: {
         standard: {
           name: "Standard",
@@ -409,14 +420,110 @@ export const es: LandingDictionary = {
         billedAnnuallyPEN: "Facturado anualmente (S/. 1,716/año)",
         features: [
           "Establecimientos y colaboradores ilimitados",
-          "Asistente IA Kodu ilimitado (WhatsApp + Web)",
+          "Asistente IA Kodu ilimitado",
           "Agenda avanzada con control de disponibilidad",
           "CRM completo con historial y segmentación",
           "Analíticas avanzadas e inteligencia de negocio",
           "Recordatorios y confirmaciones automáticas",
-          "Soporte prioritario 24/7 y onboarding dedicado",
+          "Soporte prioritario y onboarding dedicado",
         ],
         cta: "Obtener Plan Max",
+      },
+      comparison: {
+        tag: "Comparativa Detallada",
+        title: "Compara todas las características",
+        description: "Revisa punto por punto cada funcionalidad para elegir el plan ideal para tu negocio.",
+        featureCol: "Funcionalidad",
+        categories: [
+          {
+            category: "Capacidad y Organización",
+            features: [
+              { name: "Establecimientos incluidos", standard: "1 establecimiento", max: "Ilimitados" },
+              { name: "Sedes y sucursales", standard: "1 sede", max: "Ilimitadas" },
+              { name: "Colaboradores / Especialistas", standard: "Hasta 3", max: "Ilimitados" },
+              { name: "Directorio de clientes", standard: "Hasta 1,000", max: "Ilimitados" },
+              { name: "Roles y permisos por equipo", standard: "Básico", max: "Avanzado granular" },
+            ],
+          },
+          {
+            category: "Asistente Inteligente IA (Kodu)",
+            features: [
+              { name: "Consultas y respuestas 24/7", standard: true, max: true },
+              { name: "Límite de mensajes mensuales", standard: "500 msgs/mes", max: "Ilimitado" },
+              { name: "Agendamiento automático por chat", standard: true, max: true },
+              { name: "Sugerencias y recordatorios proactivos", standard: false, max: true },
+              { name: "Análisis de intención conversacional", standard: false, max: true },
+            ],
+          },
+          {
+            category: "Agenda y Turnos",
+            features: [
+              { name: "Calendario interactivo en tiempo real", standard: true, max: true },
+              { name: "Vista simultánea multi-especialista", standard: true, max: true },
+              { name: "Control de solapamientos y descansos", standard: true, max: true },
+              { name: "Recordatorios automáticos por correo", standard: true, max: true },
+              { name: "Cancelaciones y reprogramación autónoma", standard: true, max: true },
+            ],
+          },
+          {
+            category: "CRM y Fidelización",
+            features: [
+              { name: "Ficha única y perfil de contacto", standard: true, max: true },
+              { name: "Historial completo de citas y servicios", standard: true, max: true },
+              { name: "Segmentación por frecuencia y gasto", standard: false, max: true },
+            ],
+          },
+          {
+            category: "Métricas, Analíticas y Finanzas",
+            features: [
+              { name: "Tablero de ingresos en tiempo real", standard: true, max: true },
+              { name: "Reporte de servicios más solicitados", standard: true, max: true },
+              { name: "Rendimiento por colaborador", standard: "Básico", max: "Avanzado" },
+              { name: "Tasa de retención y recurrencia", standard: false, max: true },
+              { name: "Exportación de datos (CSV / Excel)", standard: true, max: true },
+              { name: "Gestión de comprobantes y recibos", standard: true, max: true },
+            ],
+          },
+        ],
+      },
+      billingFaq: {
+        tag: "Facturación y Pagos",
+        title: "Preguntas frecuentes sobre pagos",
+        description: "Todo sobre formas de pago, ciclos de facturación y suscripciones.",
+        items: [
+          {
+            question: "¿Cómo funciona la facturación y suscripción?",
+            answer:
+              "Puedes elegir entre facturación mensual o anual con un 20% de descuento. No existen cláusulas de permanencia ni contratos a largo plazo; cancelas cuando quieras con un clic.",
+          },
+          {
+            question: "¿Qué métodos de pago aceptan?",
+            answer:
+              "Aceptamos tarjetas de crédito y débito (Visa, Mastercard, American Express) procesadas de forma segura a través de Stripe. En Perú también soportamos pagos en Soles (PEN) y transferencias.",
+          },
+          {
+            question: "¿Puedo cambiar de plan o cancelar en cualquier momento?",
+            answer:
+              "¡Sí! Puedes cambiar entre Standard y Max cuando lo necesites. El prorrateo se calcula automáticamente y puedes cancelar en cualquier momento desde tu panel.",
+          },
+          {
+            question: "¿Emiten facturas o comprobantes electrónicos?",
+            answer:
+              "Sí. Emitimos comprobantes y facturas electrónicas válidas en formato PDF para cada cobro. Puedes ingresar tu RUC o identificación fiscal en la configuración de facturación.",
+          },
+          {
+            question: "¿Existe algún compromiso de permanencia forzosa?",
+            answer:
+              "Ninguno. Los planes mensuales se renuevan mes a mes y los anuales una vez al año con 20% de descuento. Tú tienes el control total en todo momento.",
+          },
+        ],
+      },
+      checkoutBanner: {
+        title: "¿Listo para comenzar a automatizar tu negocio?",
+        description: "Elige el plan ideal para tu negocio. La configuración toma solo unos minutos.",
+        primaryCta: "Comenzar Ahora",
+        secondaryCta: "Obtener Plan Max",
+        guarantee: "Garantía de satisfacción • Cancela cuando quieras sin compromisos",
       },
     },
     testimonials: {
@@ -482,14 +589,14 @@ export const es: LandingDictionary = {
       description: "¿Tienes dudas? Aquí te explicamos todo con claridad.",
       questions: {
         howItWorks: {
-          question: "¿Cómo funciona Takodu?",
+          question: "¿Qué es Takodu y cómo ayuda a mi negocio?",
           answer:
             "Takodu es una plataforma de gestión empresarial impulsada por IA diseñada para automatizar reservas, atención a clientes, gestión de agenda y CRM. Kodu, nuestro asistente inteligente, se encarga de las tareas repetitivas para que tú te enfoques en brindar tu mejor servicio.",
         },
         creditCard: {
-          question: "¿Necesito tarjeta de crédito?",
+          question: "¿Necesito contratos a largo plazo?",
           answer:
-            "No. Ofrecemos 14 días de prueba gratuita completa en todos nuestros planes sin necesidad de ingresar tarjeta de crédito.",
+            "No. Puedes comenzar de inmediato con nuestros planes Standard o Max sin contratos a largo plazo. Puedes cambiar de plan o cancelar en cualquier momento desde tu panel de control.",
         },
         changePlan: {
           question: "¿Puedo cambiar de plan?",
@@ -529,9 +636,9 @@ export const es: LandingDictionary = {
             "Para nada. La configuración inicial toma menos de 5 minutos. Solo ingresas los datos de tu negocio, horarios y servicios, y la plataforma estará lista para funcionar.",
         },
         {
-          question: "¿Puedo probar la plataforma antes de pagar?",
+          question: "¿Puedo cambiar de plan o cancelar en cualquier momento?",
           answer:
-            "Por supuesto. Ofrecemos 14 días de prueba gratuita completa en todos nuestros planes sin necesidad de ingresar tarjeta de crédito.",
+            "Sí, tienes total libertad. Puedes subir de nivel, cambiar de ciclo de facturación o cancelar tu suscripción con un solo clic desde tu panel sin penalizaciones.",
         },
         {
           question: "¿Mis datos y los de mis clientes están seguros?",
@@ -539,9 +646,9 @@ export const es: LandingDictionary = {
             "La seguridad y privacidad son nuestra máxima prioridad. Todos los datos están encriptados de extremo a extremo y cumplimos con los más altos estándares de protección de datos.",
         },
         {
-          question: "¿Puedo cambiar de plan o cancelar en cualquier momento?",
+          question: "¿Qué tan rápido puedo comenzar?",
           answer:
-            "Sí, tienes total libertad. Puedes subir de nivel, cambiar de ciclo de facturación o cancelar tu suscripción con un solo clic desde tu panel.",
+            "Inmediatamente después de elegir tu plan, tu espacio de trabajo estará listo para configurar tus servicios, horarios y tu asistente de IA.",
         },
       ],
       contactPrompt: "¿Tienes otra pregunta que no aparece aquí?",
@@ -552,14 +659,14 @@ export const es: LandingDictionary = {
       badge: "Impulsa tu crecimiento hoy",
       title: "¿Listo para transformar la gestión de tu negocio?",
       description:
-        "Únete a más de 500 negocios que ya automatizan sus reservas y aumentan sus ingresos con Takodu.",
-      button: "Comenzar prueba gratis",
-      primaryCta: "Comenzar prueba gratis",
+        "Únete a más de 500 negocios que ya automatizan sus reservas y aumentan sus ingresos con Takodu y Kodu IA.",
+      button: "Comenzar Ahora",
+      primaryCta: "Comenzar Ahora",
       secondaryButton: "Hablar con un asesor",
       secondary: "Hablar con un asesor",
       footnote: "Sin contratos a largo plazo • Cancela en cualquier momento",
       perks: {
-        noCard: "Sin tarjeta de crédito requerida",
+        noCard: "Configuración inmediata",
         instantSetup: "Configuración en 2 minutos",
         cancelAnytime: "Cancela cuando quieras",
       },
@@ -620,10 +727,10 @@ export const es: LandingDictionary = {
         },
         legal: {
           title: "Legal",
-          privacy: "Privacidad",
+          privacy: "Política de Privacidad",
           terms: "Términos del Servicio",
           security: "Seguridad",
-          cookies: "Cookies",
+          cookies: "Política de Cookies",
         },
       },
       copyright: "© 2026 Takodu Inc. Todos los derechos reservados.",
@@ -631,4 +738,4 @@ export const es: LandingDictionary = {
       status: "Sistemas operativos",
     },
   },
-};
+} as const;

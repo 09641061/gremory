@@ -12,7 +12,6 @@ import {
   CardTitle,
 } from "@/contexts/shared/interfaces/components/ui/card";
 import { Switch } from "@/contexts/shared/interfaces/components/ui/switch";
-import { Badge } from "@/contexts/shared/interfaces/components/ui/badge";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import {
   CheckIcon,
@@ -197,7 +196,7 @@ export function PricingSection() {
               <CardContent className="space-y-4 flex-1 px-6 sm:px-8">
                 <div className="pt-3 border-t border-border/40">
                   <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
-                    Incluye:
+                    {pricing.includesLabel || "Includes:"}
                   </p>
                   <ul className="space-y-2.5 text-sm text-foreground">
                     {plan.features.map((feature, idx) => (

@@ -28,7 +28,7 @@ export function FeaturesSection() {
       title: f.items.ai.title,
       description: f.items.ai.description,
       icon: BotIcon,
-      highlights: ["Lenguaje natural fluido", "Atención 24/7 sin pausas", "Integración multicanal"],
+      highlights: f.items.ai.highlights,
     },
     {
       id: "scheduling",
@@ -36,7 +36,7 @@ export function FeaturesSection() {
       title: f.items.scheduling.title,
       description: f.items.scheduling.description,
       icon: CalendarDaysIcon,
-      highlights: ["Control de solapamientos", "Vista por profesional/sede", "Recordatorios automáticos"],
+      highlights: f.items.scheduling.highlights,
     },
     {
       id: "crm",
@@ -44,7 +44,7 @@ export function FeaturesSection() {
       title: f.items.crm.title,
       description: f.items.crm.description,
       icon: UsersIcon,
-      highlights: ["Fichas y preferencias", "Historial de servicios", "Campañas de fidelización"],
+      highlights: f.items.crm.highlights,
     },
     {
       id: "analytics",
@@ -52,7 +52,7 @@ export function FeaturesSection() {
       title: f.items.analytics.title,
       description: f.items.analytics.description,
       icon: TrendingUpIcon,
-      highlights: ["Ingresos en tiempo real", "Tasa de ocupación", "Rendimiento del equipo"],
+      highlights: f.items.analytics.highlights,
     },
   ];
 

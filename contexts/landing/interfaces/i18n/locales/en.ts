@@ -29,7 +29,7 @@ export const en = {
       faq: "FAQ",
       login: "Sign In",
       workspace: "Go to Workspace",
-      getStarted: "Get Started Free",
+      getStarted: "Get Started",
       menu: "Navigation Menu",
       language: "Language",
       spanish: "Español",
@@ -48,19 +48,21 @@ export const en = {
         "Centralize bookings, assist clients 24/7, and organize your team effortlessly. Kodu, your smart copilot, manages your schedule and CRM in seconds.",
       ctaPrimary: "Get started now",
       ctaSecondary: "View pricing",
-      primaryCta: "Start Free Trial",
+      primaryCta: "Get Started",
       secondaryCta: "View Plans & Pricing",
       trustBadges: {
-        noCreditCard: "No credit card required",
+        noCreditCard: "No long-term contracts",
         setupTime: "2-minute setup",
         activeBusinesses: "Over 500+ active businesses",
         satisfaction: "99.8% uptime guaranteed",
       },
-      freeTrialNote: "14-day free trial • No credit card required",
+      freeTrialNote: "Instant setup • Cancel anytime with zero commitment",
       socialProofTitle: "Trusted by 500+ service businesses across Latin America",
       ratingValue: "4.9/5",
       ratingCount: "satisfaction score",
       businesses: "active businesses",
+      koduOnline: "Kodu Online",
+      koduGreeting: "\"Hi! What can we schedule for your business today?\"",
     },
     features: {
       eyebrow: "Platform Capabilities",
@@ -120,24 +122,28 @@ export const en = {
           title: "Conversational AI Assistant (Kodu)",
           description:
             "Kodu handles inquiries, books appointments via natural conversation, and confirms bookings automatically across channels 24/7.",
+          highlights: ["Natural conversation", "24/7 client assistance", "Multi-channel integration"],
         },
         scheduling: {
           badge: "Real-time",
           title: "Smart Scheduling & Booking",
           description:
             "Visualize your team's real-time availability, prevent overlaps, and allow clients to self-book seamlessly.",
+          highlights: ["Overlap prevention", "Staff and location views", "Automated reminders"],
         },
         crm: {
           badge: "Retention",
           title: "CRM & Client Management",
           description:
             "Full visit histories, customized notes, automated reminders, and client segmentation to foster loyalty.",
+          highlights: ["Client profiles and preferences", "Service histories", "Loyalty campaigns"],
         },
         analytics: {
           badge: "Insights",
           title: "Analytics & Business Intelligence",
           description:
             "Key revenue metrics, team performance data, client retention, and peak hour trends for smarter decisions.",
+          highlights: ["Real-time revenue", "Occupancy rates", "Team performance"],
         },
       },
     },
@@ -250,6 +256,13 @@ export const en = {
       title: "See Takodu in Action",
       description:
         "Explore how Kodu chats with clients, organizes your calendar, and highlights key metrics in real time.",
+      aiActive: "AI Active",
+      liveCalendar: "Live Calendar",
+      updatedRealtime: "Updated in real time by Takodu engine",
+      highPerformance: "High Performance",
+      recommendation: "Recommendation: Extend hours",
+      clientLabel: "Client",
+      confirmationFooter: "Confirmation sent via WhatsApp & Email",
       tabs: {
         chat: "Chat with Kodu AI",
         schedule: "Smart Schedule",
@@ -336,8 +349,9 @@ export const en = {
       billedMonthly: "billed monthly",
       currencyToggle: "View in USD ($) / Soles (S/.)",
       faqTitle: "Questions about our plans?",
-      cta: "Try Takodu free for 14 days",
+      cta: "Get started with Takodu",
       guarantee: "Cancel or change your plan at any time without penalty.",
+      includesLabel: "Includes:",
       plans: {
         standard: {
           name: "Standard",
@@ -406,14 +420,105 @@ export const en = {
         billedAnnuallyPEN: "Billed annually (S/. 1,716/year)",
         features: [
           "Unlimited establishments and team members",
-          "Unlimited Kodu AI Assistant (WhatsApp + Web)",
+          "Unlimited Kodu AI Assistant",
           "Advanced scheduling with capacity control",
           "Full CRM with history and client tagging",
           "Advanced business analytics and insights",
           "Automated reminders and instant confirmations",
-          "24/7 Priority support and dedicated onboarding",
+          "Priority support and dedicated onboarding",
         ],
         cta: "Get Max Plan",
+      },
+      comparison: {
+        tag: "Detailed Comparison",
+        title: "Compare all features",
+        description: "Review feature by feature to find the perfect plan for your business.",
+        featureCol: "Feature",
+        categories: [
+          {
+            category: "Capacity & Organization",
+            features: [
+              { name: "Establishments included", standard: "1 establishment", max: "Unlimited" },
+              { name: "Locations and branches", standard: "1 location", max: "Unlimited" },
+              { name: "Team members / Specialists", standard: "Up to 3", max: "Unlimited" },
+              { name: "Client directory & records", standard: "Up to 1,000", max: "Unlimited" },
+              { name: "Team roles & permissions", standard: "Basic", max: "Granular advanced" },
+            ],
+          },
+          {
+            category: "Intelligent AI Assistant (Kodu)",
+            features: [
+              { name: "24/7 inquiries & responses", standard: true, max: true },
+              { name: "Monthly message capacity", standard: "500 msgs/mo", max: "Unlimited" },
+              { name: "Automated chat booking", standard: true, max: true },
+              { name: "Proactive suggestions & reminders", standard: false, max: true },
+              { name: "Conversational intent analysis", standard: false, max: true },
+            ],
+          },
+          {
+            category: "Scheduling & Shifts",
+            features: [
+              { name: "Real-time interactive calendar", standard: true, max: true },
+              { name: "Multi-specialist simultaneous view", standard: true, max: true },
+              { name: "Overlap and break management", standard: true, max: true },
+              { name: "Automated email reminders", standard: true, max: true },
+              { name: "Automated cancellations & rescheduling", standard: true, max: true },
+            ],
+          },
+          {
+            category: "CRM & Loyalty",
+            features: [
+              { name: "Unified client profile & contact", standard: true, max: true },
+              { name: "Complete appointment & service history", standard: true, max: true },
+              { name: "Frequency & spend segmentation", standard: false, max: true },
+            ],
+          },
+          {
+            category: "Metrics, Analytics & Finances",
+            features: [
+              { name: "Real-time revenue dashboard", standard: true, max: true },
+              { name: "Top-requested services report", standard: true, max: true },
+              { name: "Performance per collaborator", standard: "Basic", max: "Advanced" },
+              { name: "Retention & recurrence rate", standard: false, max: true },
+              { name: "Data export (CSV / Excel)", standard: true, max: true },
+              { name: "Invoice & receipt management", standard: true, max: true },
+            ],
+          },
+        ],
+      },
+      billingFaq: {
+        tag: "Billing & Payments",
+        title: "Frequently asked questions about payments",
+        description: "Answers about subscriptions, billing cycles, and payment methods.",
+        items: [
+          {
+            question: "How do subscriptions and billing work?",
+            answer: "You can choose between monthly billing or annual billing with a 20% discount. There are no hidden fees or long-term contracts; you can cancel anytime with one click.",
+          },
+          {
+            question: "What payment methods do you accept?",
+            answer: "We accept all major credit and debit cards (Visa, Mastercard, American Express) processed securely via Stripe. In Peru we also support Soles (PEN) and local business payments.",
+          },
+          {
+            question: "Can I upgrade, downgrade, or cancel anytime?",
+            answer: "Yes! You can switch between Standard and Max plans at any time in your settings. Prorated adjustments are calculated automatically, and you can cancel anytime.",
+          },
+          {
+            question: "Do you issue electronic invoices and tax receipts?",
+            answer: "Yes. Invoices and receipts in PDF format are generated immediately for every payment. You can configure tax IDs and business info in your billing settings.",
+          },
+          {
+            question: "Is there any long-term commitment or lock-in?",
+            answer: "None. Monthly plans renew month-to-month, and annual plans are billed once per year with a 20% discount. You retain full control of your subscription.",
+          },
+        ],
+      },
+      checkoutBanner: {
+        title: "Ready to start automating your business?",
+        description: "Choose the plan that fits your business. Setup takes only a few minutes.",
+        primaryCta: "Get Started Now",
+        secondaryCta: "Get Max Plan",
+        guarantee: "Satisfaction guarantee • Cancel anytime with no commitment",
       },
     },
     testimonials: {
@@ -484,9 +589,9 @@ export const en = {
             "Takodu is an AI-powered business management platform designed to automate appointment bookings, customer support, team scheduling, and CRM. Kodu, our AI assistant, handles repetitive tasks so you can focus on delivering high-quality service.",
         },
         creditCard: {
-          question: "Do I need a credit card?",
+          question: "Do I need a credit card to get started?",
           answer:
-            "No. We offer a full 14-day free trial on all plans with zero commitment and no credit card required.",
+            "You can get started immediately with our Standard or Max plans without long-term commitments. You can cancel or switch plans at any time directly in your settings.",
         },
         changePlan: {
           question: "Can I change plans?",
@@ -526,9 +631,9 @@ export const en = {
             "Not at all. Initial setup takes less than 5 minutes. Simply input your business details, working hours, and services, and the system is ready to operate.",
         },
         {
-          question: "Can I try the platform before paying?",
+          question: "Can I switch plans or cancel anytime?",
           answer:
-            "Absolutely. We offer a full 14-day free trial on all plans with zero commitment and no credit card required.",
+            "Yes, you have total flexibility. You can upgrade, downgrade, change billing cycles, or cancel anytime with one click in your settings without penalties.",
         },
         {
           question: "Is my business and customer data secure?",
@@ -536,9 +641,9 @@ export const en = {
             "Security and privacy are top priorities. All data is encrypted end-to-end and handled following strict compliance and data protection standards.",
         },
         {
-          question: "Can I switch plans or cancel anytime?",
+          question: "How fast can I get started?",
           answer:
-            "Yes, you have total flexibility. You can upgrade, downgrade, change billing cycles, or cancel anytime with one click in your settings.",
+            "Immediately upon choosing your plan, your workspace is created and ready for configuring services, schedules, and your AI assistant.",
         },
       ],
       contactPrompt: "Have a question that is not listed here?",
@@ -550,13 +655,13 @@ export const en = {
       title: "Ready to automate and elevate your business?",
       description:
         "Join 500+ businesses saving hours and growing revenue with Takodu and Kodu AI.",
-      button: "Start Free 14-Day Trial",
-      primaryCta: "Start Free 14-Day Trial",
+      button: "Get Started Now",
+      primaryCta: "Get Started Now",
       secondaryButton: "Talk to Sales",
       secondary: "Talk to Sales",
       footnote: "No long-term contracts • Cancel anytime",
       perks: {
-        noCard: "No credit card required",
+        noCard: "Instant setup",
         instantSetup: "2-minute setup",
         cancelAnytime: "Cancel anytime",
       },
@@ -571,7 +676,7 @@ export const en = {
           title: "Product",
           features: "Features",
           pricing: "Pricing",
-          koduAi: "Asistente Kodu",
+          koduAi: "Kodu Assistant",
           scheduling: "Real-time Scheduling",
           crm: "CRM & Clients",
           analytics: "Analytics",

@@ -1,6 +1,35 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+// @vitest-environment jsdom
+import "@testing-library/jest-dom";
+import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import React from "react";
-import { render, screen } from "@testing-library/react";
+import { render } from "@testing-library/react";
+
+beforeAll(() => {
+  Object.defineProperty(window, "matchMedia", {
+    writable: true,
+    value: (query: string) => ({
+      matches: false,
+      media: query,
+      onchange: null,
+      addListener: () => {},
+      removeListener: () => {},
+      addEventListener: () => {},
+      removeEventListener: () => {},
+      dispatchEvent: () => false,
+    }),
+  });
+
+  class MockIntersectionObserver {
+    observe = () => {};
+    unobserve = () => {};
+    disconnect = () => {};
+  }
+  Object.defineProperty(window, "IntersectionObserver", {
+    writable: true,
+    configurable: true,
+    value: MockIntersectionObserver,
+  });
+});
 
 const mocks = vi.hoisted(() => ({
   cookies: vi.fn(),

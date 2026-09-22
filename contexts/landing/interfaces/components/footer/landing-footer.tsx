@@ -10,48 +10,31 @@ export function LandingFooter() {
   const f = t.landing.footer;
   const nav = t.landing.nav;
 
-  const productLinks = [
-    { label: f.sections.product.features, href: "#features" },
-    { label: f.sections.product.scheduling, href: "#product-preview" },
-    { label: f.sections.product.aiAssistant, href: "#product-preview" },
-    { label: f.sections.product.crm, href: "#features" },
-    { label: f.sections.product.analytics, href: "#product-preview" },
-    { label: f.sections.product.pricing, href: "#pricing" },
+  const quickLinks = [
+    { label: nav.home, href: "/#hero" },
+    { label: nav.features, href: "/#features" },
+    { label: nav.preview, href: "/#product-preview" },
+    { label: nav.pricing, href: "/pricing" },
+    { label: nav.faq, href: "/#faq" },
   ];
 
-  const companyLinks = [
-    { label: f.sections.company.about, href: "#" },
-    { label: f.sections.company.careers, href: "#" },
-    { label: f.sections.company.blog, href: "#" },
-    { label: f.sections.company.contact, href: "#" },
-  ];
-
-  const resourcesLinks = [
-    { label: f.sections.resources.helpCenter, href: "#" },
-    { label: f.sections.resources.apiDocs, href: "#" },
-    { label: f.sections.resources.guides, href: "#" },
-    { label: f.sections.resources.community, href: "#" },
-  ];
-
-  const legalLinks = [
-    { label: f.sections.legal.privacy, href: "#" },
-    { label: f.sections.legal.terms, href: "#" },
-    { label: f.sections.legal.security, href: "#" },
-    { label: f.sections.legal.cookies, href: "#" },
+  const accessLinks = [
+    { label: nav.login, href: "/login" },
+    { label: nav.getStarted, href: "/login" },
   ];
 
   return (
     <footer className="border-t border-border/40 bg-muted/20 text-foreground">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-12 pb-10">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-8 pb-10">
-          {/* Brand Col (2 spans) */}
-          <div className="lg:col-span-2 space-y-3">
+        <div className="flex flex-col md:flex-row items-start justify-between gap-8 pb-10">
+          {/* Brand Col */}
+          <div className="space-y-3 max-w-sm">
             <Link
-              href="#hero"
-              className="inline-flex items-center gap-2 outline-none rounded-lg"
+              href="/#hero"
+              className="inline-flex items-center gap-2 outline-none rounded-lg group"
               aria-label={nav.brand}
             >
-              <div className="flex size-7 items-center justify-center rounded-lg bg-primary/10 border border-primary/20 text-primary">
+              <div className="flex size-7 items-center justify-center rounded-lg bg-primary/10 border border-primary/20 text-primary transition-colors group-hover:bg-primary/20">
                 <KoduStaIcon size={18} className="text-primary" />
               </div>
               <span className="text-base font-bold tracking-tight text-foreground">
@@ -59,7 +42,7 @@ export function LandingFooter() {
               </span>
             </Link>
 
-            <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed max-w-xs font-normal">
+            <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed font-normal">
               {f.brandDescription}
             </p>
 
@@ -72,80 +55,43 @@ export function LandingFooter() {
             </div>
           </div>
 
-          {/* Product Links */}
-          <div className="space-y-2.5">
-            <h4 className="text-xs font-semibold uppercase tracking-wider text-foreground">
-              {f.sections.product.title}
-            </h4>
-            <ul className="space-y-1.5 text-xs sm:text-sm text-muted-foreground">
-              {productLinks.map((link, idx) => (
-                <li key={idx}>
-                  <Link
-                    href={link.href}
-                    className="hover:text-foreground transition-colors"
-                  >
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
+          {/* Functional Navigation Links */}
+          <div className="flex flex-wrap gap-12 sm:gap-16">
+            <div className="space-y-2.5">
+              <h4 className="text-xs font-semibold uppercase tracking-wider text-foreground">
+                {nav.brand}
+              </h4>
+              <ul className="space-y-2 text-xs sm:text-sm text-muted-foreground">
+                {quickLinks.map((link, idx) => (
+                  <li key={idx}>
+                    <Link
+                      href={link.href}
+                      className="hover:text-foreground transition-colors"
+                    >
+                      {link.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
 
-          {/* Company Links */}
-          <div className="space-y-2.5">
-            <h4 className="text-xs font-semibold uppercase tracking-wider text-foreground">
-              {f.sections.company.title}
-            </h4>
-            <ul className="space-y-1.5 text-xs sm:text-sm text-muted-foreground">
-              {companyLinks.map((link, idx) => (
-                <li key={idx}>
-                  <Link
-                    href={link.href}
-                    className="hover:text-foreground transition-colors"
-                  >
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Resources Links */}
-          <div className="space-y-2.5">
-            <h4 className="text-xs font-semibold uppercase tracking-wider text-foreground">
-              {f.sections.resources.title}
-            </h4>
-            <ul className="space-y-1.5 text-xs sm:text-sm text-muted-foreground">
-              {resourcesLinks.map((link, idx) => (
-                <li key={idx}>
-                  <Link
-                    href={link.href}
-                    className="hover:text-foreground transition-colors"
-                  >
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Legal Links */}
-          <div className="space-y-2.5">
-            <h4 className="text-xs font-semibold uppercase tracking-wider text-foreground">
-              {f.sections.legal.title}
-            </h4>
-            <ul className="space-y-1.5 text-xs sm:text-sm text-muted-foreground">
-              {legalLinks.map((link, idx) => (
-                <li key={idx}>
-                  <Link
-                    href={link.href}
-                    className="hover:text-foreground transition-colors"
-                  >
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
+            <div className="space-y-2.5">
+              <h4 className="text-xs font-semibold uppercase tracking-wider text-foreground">
+                {nav.login}
+              </h4>
+              <ul className="space-y-2 text-xs sm:text-sm text-muted-foreground">
+                {accessLinks.map((link, idx) => (
+                  <li key={idx}>
+                    <Link
+                      href={link.href}
+                      className="hover:text-foreground transition-colors"
+                    >
+                      {link.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
           </div>
         </div>
 
@@ -154,17 +100,9 @@ export function LandingFooter() {
         {/* Bottom copyright bar */}
         <div className="pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-muted-foreground">
           <p>{f.copyright}</p>
-          <div className="flex items-center gap-5">
-            <Link href="#" className="hover:text-foreground transition-colors">
-              {f.sections.legal.privacy}
-            </Link>
-            <Link href="#" className="hover:text-foreground transition-colors">
-              {f.sections.legal.terms}
-            </Link>
-            <Link href="#" className="hover:text-foreground transition-colors">
-              {f.sections.legal.cookies}
-            </Link>
-          </div>
+          <p className="text-[11px] text-muted-foreground/70">
+            {f.allRightsReserved}
+          </p>
         </div>
       </div>
     </footer>

@@ -49,6 +49,14 @@ export function ProductPreviewSection() {
 
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
 
+  const clientLabel = preview.clientLabel;
+  const aiActive = preview.aiActive;
+  const confirmationFooter = preview.confirmationFooter;
+  const liveCalendar = preview.liveCalendar;
+  const updatedRealtime = preview.updatedRealtime;
+  const highPerformance = preview.highPerformance;
+  const recommendation = preview.recommendation;
+
   return (
     <section id="product-preview" className="py-16 lg:py-24 relative overflow-hidden">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -112,7 +120,7 @@ export function ProductPreviewSection() {
 
                 <div className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-xs font-medium text-emerald-700 dark:text-emerald-300">
                   <span className="size-1.5 rounded-full bg-emerald-500" />
-                  IA Activa
+                  {aiActive}
                 </div>
               </div>
 
@@ -121,7 +129,7 @@ export function ProductPreviewSection() {
                 {/* 1. Client Message */}
                 <Message align="end">
                   <MessageContent>
-                    <MessageHeader className="text-xs text-muted-foreground">Cliente • 10:14 AM</MessageHeader>
+                    <MessageHeader className="text-xs text-muted-foreground">{clientLabel} • 10:14 AM</MessageHeader>
                     <Bubble align="end" variant="default">
                       <BubbleContent className="bg-primary text-primary-foreground font-medium text-sm">
                         {preview.chatDemo.userMsg1}
@@ -153,7 +161,7 @@ export function ProductPreviewSection() {
                 {/* 3. Client Reply */}
                 <Message align="end">
                   <MessageContent>
-                    <MessageHeader className="text-xs text-muted-foreground">Cliente • 10:15 AM</MessageHeader>
+                    <MessageHeader className="text-xs text-muted-foreground">{clientLabel} • 10:15 AM</MessageHeader>
                     <Bubble align="end" variant="default">
                       <BubbleContent className="bg-primary text-primary-foreground font-medium text-sm">
                         {preview.chatDemo.userMsg2}
@@ -195,7 +203,7 @@ export function ProductPreviewSection() {
                         </p>
                       </div>
                     </BubbleGroup>
-                    <MessageFooter className="text-xs text-muted-foreground pt-1">Confirmación enviada vía WhatsApp &amp; Email</MessageFooter>
+                    <MessageFooter className="text-xs text-muted-foreground pt-1">{confirmationFooter}</MessageFooter>
                   </MessageContent>
                 </Message>
               </div>
@@ -223,7 +231,7 @@ export function ProductPreviewSection() {
                 <div className="md:col-span-5 flex flex-col items-center border border-border/40 rounded-xl p-3 bg-muted/20">
                   <h4 className="text-xs font-semibold text-muted-foreground mb-2 flex items-center gap-1.5">
                     <CalendarDaysIcon className="size-3.5 text-primary" />
-                    Calendario en Vivo
+                    {liveCalendar}
                   </h4>
                   <Calendar
                     mode="single"
@@ -298,12 +306,12 @@ export function ProductPreviewSection() {
                     {preview.analyticsDemo.title}
                   </h3>
                   <p className="text-xs text-muted-foreground">
-                    Actualizado en tiempo real por el motor de Takodu
+                    {updatedRealtime}
                   </p>
                 </div>
                 <Badge variant="outline" className="w-fit text-xs gap-1 border-border/60">
                   <TrendingUpIcon className="size-3 text-primary" />
-                  Rendimiento Alto
+                  {highPerformance}
                 </Badge>
               </div>
 
@@ -377,7 +385,7 @@ export function ProductPreviewSection() {
                   </div>
                 </div>
                 <Badge variant="secondary" className="text-xs">
-                  Recomendación: Ampliar horarios
+                  {recommendation}
                 </Badge>
               </div>
             </div>

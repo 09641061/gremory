@@ -3,16 +3,9 @@
 import Link from "next/link";
 import { useLandingI18n } from "@/contexts/landing/interfaces/i18n";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-  AvatarGroup,
-} from "@/contexts/shared/interfaces/components/ui/avatar";
 import { KoduBlinkingIcon } from "@/contexts/shared/interfaces/components/icons/kodu-blinking";
 import {
   ArrowRightIcon,
-  StarIcon,
   SparklesIcon,
   CheckCircle2Icon,
 } from "lucide-react";
@@ -20,13 +13,6 @@ import {
 export function HeroSection() {
   const { t } = useLandingI18n();
   const hero = t.landing.hero;
-
-  const demoAvatars = [
-    { name: "Lucia Romero", initials: "LR", img: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80" },
-    { name: "Marco Peña", initials: "MP", img: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop&q=80" },
-    { name: "Sofia Castro", initials: "SC", img: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&auto=format&fit=crop&q=80" },
-    { name: "Andres Gil", initials: "AG", img: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&auto=format&fit=crop&q=80" },
-  ];
 
   return (
     <section
@@ -75,7 +61,7 @@ export function HeroSection() {
                 size="lg"
                 nativeButton={false}
                 className="gap-2 border-border/80 text-foreground hover:bg-muted/50 text-sm font-medium px-6 h-11"
-                render={<Link href="#pricing" />}
+                render={<Link href="/pricing" />}
               >
                 <span>{hero.secondaryCta}</span>
               </Button>
@@ -85,35 +71,6 @@ export function HeroSection() {
             <div className="flex items-center gap-2 text-xs text-muted-foreground pt-1">
               <CheckCircle2Icon className="size-3.5 text-primary shrink-0" />
               <span>{hero.freeTrialNote}</span>
-            </div>
-
-            {/* Social Proof */}
-            <div className="pt-6 border-t border-border/40 w-full flex flex-wrap items-center gap-5">
-              <AvatarGroup className="-space-x-2">
-                {demoAvatars.map((user, i) => (
-                  <Avatar key={i} size="sm" className="ring-2 ring-background">
-                    <AvatarImage src={user.img} alt={user.name} />
-                    <AvatarFallback>{user.initials}</AvatarFallback>
-                  </Avatar>
-                ))}
-              </AvatarGroup>
-
-              <div className="flex flex-col">
-                <div className="flex items-center gap-1">
-                  {[...Array(5)].map((_, i) => (
-                    <StarIcon
-                      key={i}
-                      className="size-3.5 fill-amber-400 text-amber-400"
-                    />
-                  ))}
-                  <span className="text-xs font-bold text-foreground ml-1">
-                    {hero.ratingValue}
-                  </span>
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  {hero.socialProofTitle}
-                </p>
-              </div>
             </div>
           </div>
 
@@ -132,10 +89,10 @@ export function HeroSection() {
                   <div className="mt-4 text-center space-y-2">
                     <div className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-0.5 text-xs font-semibold text-primary">
                       <span className="size-1.5 rounded-full bg-primary animate-pulse" />
-                      Kodu Online
+                      {hero.koduOnline || "Kodu Online"}
                     </div>
                     <p className="text-xs sm:text-sm font-medium text-muted-foreground max-w-xs">
-                      &quot;¡Hola! ¿Qué agendamos hoy para tu negocio?&quot;
+                      {hero.koduGreeting || '"Hi! What can we schedule for your business today?"'}
                     </p>
                   </div>
                 </div>

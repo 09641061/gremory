@@ -25,11 +25,11 @@ describe("Landing i18n translations", () => {
     expect(collectKeys(es)).toEqual(collectKeys(en));
   });
 
-  it("should provide non-empty strings in both locales", () => {
+  it("should provide non-empty strings in both locales without free trial mentions", () => {
     expect(en.landing.nav.brand).toBe("Takodu");
     expect(es.landing.nav.brand).toBe("Takodu");
-    expect(en.landing.hero.primaryCta).toBe("Start Free Trial");
-    expect(es.landing.hero.primaryCta).toBe("Empieza ahora");
+    expect(en.landing.hero.primaryCta).toBe("Get Started");
+    expect(es.landing.hero.primaryCta).toBe("Comenzar ahora");
     expect(en.landing.features.title).toBeTruthy();
     expect(es.landing.features.title).toBeTruthy();
     expect(en.landing.pricing.standard.name).toBe("Standard");

@@ -43,7 +43,7 @@ export function FinalCtaSection() {
                 size="lg"
                 nativeButton={false}
                 className="w-full sm:w-auto text-foreground hover:bg-muted/50 text-sm font-medium px-5 h-11 border-border/80"
-                render={<Link href="#pricing" />}
+                render={<Link href="/pricing" />}
               >
                 <span>{cta.secondary}</span>
               </Button>

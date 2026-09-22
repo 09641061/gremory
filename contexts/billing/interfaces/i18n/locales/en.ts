@@ -30,7 +30,7 @@ export const en = {
       standardFeature1: "1 establishment included",
       standardFeature2: "Real-time calendar & appointment scheduling",
       standardFeature3: "Service catalog & team member assignment",
-      standardFeature4: "Customer database (CRM)",
+      standardFeature4: "Client directory (CRM)",
       standardFeature5: "Standard analytics dashboard (30-day window)",
       standardFeature6: "AI Virtual Assistant",
       premiumDescription: "Multi-location management and advanced business intelligence to maximize revenue.",

@@ -4,14 +4,6 @@ import Link from "next/link";
 import { useLandingI18n } from "@/contexts/landing/interfaces/i18n";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/contexts/shared/interfaces/components/ui/dropdown-menu";
-import {
   NavigationMenu,
   NavigationMenuItem,
   NavigationMenuLink,
@@ -30,7 +22,6 @@ import {
   GlobeIcon,
   MenuIcon,
   ArrowRightIcon,
-  CheckIcon,
   SparklesIcon,
 } from "lucide-react";
 
@@ -43,34 +34,34 @@ export function LandingNavbar({
   isAuthenticated = false,
   workspaceHref = "/schedule",
 }: LandingNavbarProps) {
-  const { t, locale, setLocale } = useLandingI18n();
+  const { locale, setLocale, t } = useLandingI18n();
   const nav = t.landing.nav;
 
+  const toggleLocale = () => {
+    setLocale(locale === "en" ? "es" : "en");
+  };
+
   const navLinks = [
-    { label: nav.home, href: "/#hero" },
-    { label: nav.features, href: "/#features" },
-    { label: nav.preview, href: "/#product-preview" },
-    { label: nav.pricing, href: "/pricing" },
-    { label: nav.faq, href: "/#faq" },
+    { href: "#features", label: nav.features },
+    { href: "#preview", label: nav.preview },
+    { href: "/pricing", label: nav.pricing },
+    { href: "#faq", label: nav.faq },
   ];
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-border/40 bg-background/80 backdrop-blur-md transition-all">
-      <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-        {/* Brand / Logo */}
+    <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/80 backdrop-blur-md supports-[backdrop-filter]:bg-background/60">
+      <div className="container mx-auto flex h-14 max-w-6xl items-center justify-between px-4 sm:px-6">
+        {/* Brand Logo */}
         <Link
-          href="#hero"
-          className="group flex items-center gap-2 outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-lg transition-transform active:scale-95"
-          aria-label={nav.brand}
+          href="/"
+          className="flex items-center gap-2.5 transition-opacity hover:opacity-85"
+          aria-label="Takodu"
         >
-          <div className="flex size-8 items-center justify-center rounded-lg bg-primary/10 border border-primary/20 text-primary transition-all group-hover:bg-primary/20">
-            <KoduStaIcon size={20} className="text-primary" />
+          <div className="flex size-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+            <KoduStaIcon size={20} />
           </div>
-          <span className="text-base font-bold tracking-tight text-foreground flex items-center gap-1.5">
+          <span className="text-base font-bold tracking-tight text-foreground">
             {nav.brand}
-            <span className="text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">
-              AI
-            </span>
           </span>
         </Link>
 
@@ -82,7 +73,7 @@ export function LandingNavbar({
                 <NavigationMenuItem key={link.href}>
                   <NavigationMenuLink
                     href={link.href}
-                    className="px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground rounded-md"
+                    className="px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground hover:bg-muted/50 rounded-md"
                   >
                     {link.label}
                   </NavigationMenuLink>
@@ -92,46 +83,22 @@ export function LandingNavbar({
           </NavigationMenu>
         </div>
 
-        {/* Right Actions (Language + Auth) */}
+        {/* Right Actions (Language Toggle + Auth) */}
         <div className="hidden md:flex items-center gap-2">
-          {/* Language Selector */}
-          <DropdownMenu>
-            <DropdownMenuTrigger
-              render={
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="gap-1.5 px-2 text-muted-foreground hover:text-foreground h-8"
-                  aria-label={nav.language}
-                />
-              }
-            >
-              <GlobeIcon className="size-3.5" />
-              <span className="text-xs uppercase font-semibold tracking-wider">
-                {locale}
-              </span>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-32">
-              <DropdownMenuLabel className="text-xs text-muted-foreground">
-                {nav.language}
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={() => setLocale("es")}
-                className="flex items-center justify-between text-xs"
-              >
-                <span>{nav.spanish}</span>
-                {locale === "es" && <CheckIcon className="size-3.5 text-primary" />}
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => setLocale("en")}
-                className="flex items-center justify-between text-xs"
-              >
-                <span>{nav.english}</span>
-                {locale === "en" && <CheckIcon className="size-3.5 text-primary" />}
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          {/* Direct Language Toggle Button */}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={toggleLocale}
+            className="gap-1.5 px-2 text-muted-foreground hover:text-foreground h-8 cursor-pointer"
+            aria-label={nav.language}
+            title={locale === "es" ? "Cambiar a English" : "Switch to Español"}
+          >
+            <GlobeIcon className="size-3.5" />
+            <span className="text-xs uppercase font-semibold tracking-wider">
+              {locale}
+            </span>
+          </Button>
 
           {isAuthenticated ? (
             <Button
@@ -172,37 +139,18 @@ export function LandingNavbar({
 
         {/* Mobile Menu Drawer */}
         <div className="flex md:hidden items-center gap-2">
-          {/* Mobile Language Dropdown */}
-          <DropdownMenu>
-            <DropdownMenuTrigger
-              render={
-                <Button
-                  variant="ghost"
-                  size="icon-sm"
-                  className="text-muted-foreground size-8"
-                  aria-label={nav.language}
-                />
-              }
-            >
-              <GlobeIcon className="size-3.5" />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-32">
-              <DropdownMenuItem
-                onClick={() => setLocale("es")}
-                className="flex items-center justify-between text-xs"
-              >
-                <span>ES</span>
-                {locale === "es" && <CheckIcon className="size-3.5 text-primary" />}
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => setLocale("en")}
-                className="flex items-center justify-between text-xs"
-              >
-                <span>EN</span>
-                {locale === "en" && <CheckIcon className="size-3.5 text-primary" />}
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          {/* Mobile Language Toggle Button */}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={toggleLocale}
+            className="text-muted-foreground hover:text-foreground h-8 px-2 gap-1 text-xs uppercase font-semibold cursor-pointer"
+            aria-label={nav.language}
+            title={locale === "es" ? "Cambiar a English" : "Switch to Español"}
+          >
+            <GlobeIcon className="size-3.5" />
+            <span>{locale}</span>
+          </Button>
 
           {/* Hamburger Sheet */}
           <Sheet>
