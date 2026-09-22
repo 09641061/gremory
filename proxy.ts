@@ -28,7 +28,7 @@ export async function proxy(request: NextRequest) {
   });
 
   if (session.status === "unauthenticated") {
-    if (accessToken || refreshToken || pathname === "/" || isPrivateRoute(pathname)) {
+    if (accessToken || refreshToken || isPrivateRoute(pathname)) {
       return redirectToLogin(request);
     }
     return NextResponse.next();
@@ -45,7 +45,12 @@ export async function proxy(request: NextRequest) {
   // Explicit account and billing screens remain reachable independently of
   // workspace onboarding. `/welcome` is resolved by the same entry policy as
   // every other route and is only reachable while activation is required.
-  if (pathname === "/upgrade" || pathname === "/invoice" || pathname === "/profile") {
+  if (
+    pathname === "/upgrade" ||
+    pathname === "/invoice" ||
+    pathname === "/profile" ||
+    pathname === "/pricing"
+  ) {
     return continueWithWorkspaceContext(request, response, rotatedHeaders);
   }
 

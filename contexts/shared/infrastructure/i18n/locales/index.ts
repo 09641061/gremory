@@ -4,9 +4,11 @@ import { es } from "./es";
 
 type StringLeaf<T> = T extends string
   ? string
-  : T extends object
-    ? { readonly [K in keyof T]: StringLeaf<T[K]> }
-    : T;
+  : T extends readonly (infer U)[]
+    ? readonly StringLeaf<U>[]
+    : T extends object
+      ? { readonly [K in keyof T]: StringLeaf<T[K]> }
+      : T;
 
 export type LocaleDictionary = StringLeaf<typeof en>;
 

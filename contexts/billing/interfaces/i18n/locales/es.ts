@@ -32,7 +32,7 @@ export const es: BillingDictionary = {
       standardFeature1: "1 establecimiento comercial",
       standardFeature2: "Gestión de citas y calendario en tiempo real",
       standardFeature3: "Catálogo de servicios y asignación de equipo",
-      standardFeature4: "Base de datos de clientes (CRM)",
+      standardFeature4: "Directorio de clientes (CRM)",
       standardFeature5: "Dashboard de analíticas estándar (30 días)",
       standardFeature6: "Asistente Virtual IA",
       premiumDescription: "Control multisede y analíticas avanzadas para maximizar tus ingresos.",
