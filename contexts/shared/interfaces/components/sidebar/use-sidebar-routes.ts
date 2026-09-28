@@ -7,7 +7,6 @@ import {
   ContactRound,
   MessageCircle,
   Package,
-  Users,
   type LucideIcon,
 } from "lucide-react";
 
@@ -103,7 +102,6 @@ export function useSidebarRoutes({
     { label: t.navigation.schedule, href: "/schedule", icon: CalendarDays },
     { label: t.navigation.crm, href: "/crm", icon: ContactRound },
     { label: t.navigation.catalog, href: "/catalog", icon: Package },
-    { label: t.navigation.team, href: "/team", icon: Users },
     { label: t.navigation.analytics, href: "/analytics", icon: BarChart3 },
   ];
 

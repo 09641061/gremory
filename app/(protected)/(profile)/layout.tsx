@@ -13,12 +13,10 @@ import { PageLoading } from "@/contexts/shared/interfaces/components/feedback/pa
 import { composeBusinessAdapters } from "@/contexts/business/interfaces/server/business-composition";
 import { hasSomewhereToCancelTo } from "@/contexts/business/domain/services/workspace-navigation.policy";
 import { BackNavigationButton } from "@/contexts/shared/interfaces/components/navigation/back-navigation-button";
-import { OrganizationSettingsShell } from "@/contexts/business/interfaces/components/organization/organization-settings-shell/organization-settings-shell";
 
 /**
- * Establishments and organization settings (Organization + Members + Roles +
- * Invites). One-time organization creation lives in the onboarding route
- * group instead.
+ * Establishments, organization settings and permissions. One-time
+ * organization creation lives in the onboarding route group instead.
  *
  * These are settings reached from the app and left again, so the back arrow is
  * their only chrome, exactly as on `/upgrade`. It streams behind its own
@@ -27,15 +25,6 @@ import { OrganizationSettingsShell } from "@/contexts/business/interfaces/compon
  * The entry-guard reads (cookies, headers, resolveRoute, server dictionary)
  * are wrapped in a Suspense subtree so the App Shell can render instantly
  * under Cache Components (`blocking-prerender-dynamic`).
- *
- * The hub sidebar (Organization + Members + Roles + Invites + Establishments)
- * is attached here too: every route currently under `(configuration)/` is a
- * settings-hub screen, so wrapping `children` with
- * {@link OrganizationSettingsShell} keeps the sidebar mounted across
- * cross-section navigations like `/organization` → `/establishments` or
- * `/organization/members` → `/organization/roles`. Sibling configuration pages
- * outside this group (`/profile`, `/invoice`) live under `(profile)/` and
- * intentionally do not see the sidebar.
  */
 export default function ConfigurationLayout({ children }: { children: ReactNode }) {
   return (
@@ -106,7 +95,7 @@ async function ConfigurationLayoutContent({ children }: { children: ReactNode })
 
       <div className="mb-4 h-8" aria-hidden="true" />
 
-      <OrganizationSettingsShell>{children}</OrganizationSettingsShell>
+      {children}
     </main>
   );
 }
