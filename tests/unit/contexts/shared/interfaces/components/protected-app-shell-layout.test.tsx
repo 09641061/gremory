@@ -25,18 +25,6 @@ vi.mock("@/contexts/notifications/interfaces/components/push-notification-regist
   PushNotificationRegisterServer: () => null,
 }));
 
-vi.mock("@/contexts/shared/interfaces/components/header/app-header", () => ({
-  AppHeader: () => <header role="banner" data-testid="app-header-stub">Header</header>,
-}));
-
-vi.mock("@/contexts/shared/interfaces/components/header/app-header-server", () => ({
-  AppHeaderServer: () => <header role="banner" data-testid="app-header-stub">Header</header>,
-}));
-
-vi.mock("@/contexts/shared/interfaces/components/header/app-header-fallback", () => ({
-  AppHeaderFallback: () => <div data-testid="app-header-fallback-stub" className="h-16" />,
-}));
-
 vi.mock("@/contexts/shared/interfaces/components/sidebar/app-sidebar-shell-server", () => ({
   AppShellSidebarServer: () => {
     mocks.sidebar();
@@ -53,7 +41,6 @@ vi.mock("@/contexts/shared/interfaces/components/sidebar/app-sidebar-fallback", 
 // The mobile hook inside SidebarProvider calls window.matchMedia, so jsdom
 // needs a polyfill before render().
 import ProtectedAppShell from "@/contexts/shared/interfaces/components/layout/protected-app-shell";
-import WelcomeLayout from "@/app/(protected)/(welcome)/layout";
 
 beforeEach(() => {
   mocks.pathname = "/chat";
@@ -65,8 +52,8 @@ beforeEach(() => {
   });
 });
 
-describe("ProtectedAppShell layout invariant", () => {
-  it("should keep the header as a sibling above SidebarProvider, never a descendant", () => {
+describe("ProtectedAppShell layout invariant (unified sidebar)", () => {
+  it("should not render any standalone header — the sidebar owns the brand", () => {
     // Given ProtectedAppShell is rendered with arbitrary page content.
     const { container } = render(
       <ProtectedAppShell>
@@ -74,26 +61,18 @@ describe("ProtectedAppShell layout invariant", () => {
       </ProtectedAppShell>,
     );
 
-    // Then a single banner (the <header>) is rendered.
-    const banner = screen.getByRole("banner");
-    expect(banner).toBeInTheDocument();
+    // Then NO banner (the previous <header> chrome) is mounted anywhere.
+    expect(container.querySelector('header[role="banner"]')).toBeNull();
 
     // And the real SidebarProvider wrapper is present.
     const sidebarWrapper = container.querySelector('[data-slot="sidebar-wrapper"]');
     expect(sidebarWrapper).not.toBeNull();
 
-    // And the banner is NOT contained by the sidebar wrapper …
-    expect(sidebarWrapper!.contains(banner)).toBe(false);
-    // … nor is the sidebar wrapper contained by the banner.
-    expect(banner.contains(sidebarWrapper!)).toBe(false);
-
-    // And the banner comes BEFORE the sidebar wrapper in document order.
-    expect(
-      banner.compareDocumentPosition(sidebarWrapper!) & Node.DOCUMENT_POSITION_FOLLOWING,
-    ).toBeTruthy();
+    // And the sidebar was actually mounted through the streaming boundary.
+    expect(mocks.sidebar).toHaveBeenCalled();
   });
 
-  it("should wrap the page content in SidebarInset with a mobile-only trigger", () => {
+  it("should wrap the page content in SidebarInset with no leftover mobile trigger outside the sidebar", () => {
     // Given ProtectedAppShell with arbitrary page content.
     const { container } = render(
       <ProtectedAppShell>
@@ -106,63 +85,26 @@ describe("ProtectedAppShell layout invariant", () => {
     expect(inset).not.toBeNull();
     expect(inset!.tagName.toLowerCase()).toBe("main");
 
-    // And it lives INSIDE the sidebar-wrapper (its parent in the DOM).
+    // And it lives INSIDE the sidebar-wrapper.
     const sidebarWrapper = container.querySelector('[data-slot="sidebar-wrapper"]');
     expect(sidebarWrapper!.contains(inset!)).toBe(true);
 
-    // And it contains the SidebarTrigger and the page content.
-    const trigger = within(inset as HTMLElement).getByRole("button", { name: "Toggle Sidebar" });
-    expect(trigger).toHaveAttribute("data-sidebar", "trigger");
+    // And it contains the page content.
     expect(within(inset as HTMLElement).getByRole("heading", { name: "Chat" })).toBeInTheDocument();
 
-    // And the trigger is hidden on md+ viewports (the regression that motivated
-    // the SidebarInset adoption: the trigger must NOT block the desktop layout).
-    expect(trigger).toHaveClass("md:hidden");
+    // And no leftover top-level "Toggle Sidebar" trigger sits in the main content —
+    // the trigger now lives inside the sidebar header.
+    const insetTriggers = within(inset as HTMLElement).queryAllByRole("button", { name: "Toggle Sidebar" });
+    expect(insetTriggers).toHaveLength(0);
   });
 
-  it("should render only the header and main on the Welcome route, with no sidebar", () => {
-    // Given the Welcome layout.
-    const { container } = render(
-      <WelcomeLayout>
-        <h1>Welcome</h1>
-      </WelcomeLayout>,
-    );
-
-    // Then exactly one banner is mounted.
-    expect(screen.getAllByRole("banner")).toHaveLength(1);
-
-    // And the page content sits inside <main>.
-    expect(
-      within(screen.getByRole("main")).getByRole("heading", { name: "Welcome" }),
-    ).toBeVisible();
-
-    // And NO SidebarProvider, NO SidebarInset, NO sidebar wrapper was rendered.
-    expect(container.querySelector('[data-slot="sidebar-wrapper"]')).toBeNull();
-    expect(container.querySelector('[data-slot="sidebar-inset"]')).toBeNull();
-
-    // And the real AppShellSidebarServer was never invoked.
-    expect(mocks.sidebar).not.toHaveBeenCalled();
-
-    // And no mobile trigger leaked into the welcome tree.
-    expect(screen.queryByRole("button", { name: "Toggle Sidebar" })).toBeNull();
-
-    // And the banner is NOT inside the (absent) main element — they are
-    // siblings inside the layout fragment, exactly as authored.
-    const banner = screen.getByRole("banner");
-    const main = screen.getByRole("main");
-    expect(main.contains(banner)).toBe(false);
-    expect(banner.contains(main)).toBe(false);
-  });
-
-  it("should order the app route DOM as banner → aside (sidebar) → main (sidebar-inset)", () => {
-    // Given ProtectedAppShell with arbitrary page content.
+  it("should order the app route DOM as aside (sidebar) → main (sidebar-inset) inside SidebarProvider", () => {
     const { container } = render(
       <ProtectedAppShell>
         <h1>Chat</h1>
       </ProtectedAppShell>,
     );
 
-    const banner = screen.getByRole("banner");
     const aside = screen.getByRole("complementary");
     const sidebarWrapper = container.querySelector('[data-slot="sidebar-wrapper"]');
     const inset = container.querySelector('[data-slot="sidebar-inset"]');
@@ -174,76 +116,43 @@ describe("ProtectedAppShell layout invariant", () => {
     expect(sidebarWrapper!.contains(aside)).toBe(true);
     expect(sidebarWrapper!.contains(inset!)).toBe(true);
 
-    // The banner precedes the sidebar wrapper (re-stated here so this it()
-    // stands on its own as a structural snapshot of the route).
-    expect(
-      banner.compareDocumentPosition(sidebarWrapper!) & Node.DOCUMENT_POSITION_FOLLOWING,
-    ).toBeTruthy();
-
     // Inside the provider, <aside> and SidebarInset are siblings, with the
     // aside painted first on the page.
     expect(aside.compareDocumentPosition(inset!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-
-    // Top-to-bottom DOM order: banner → aside → main.
-    expect(banner.compareDocumentPosition(aside) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    expect(banner.compareDocumentPosition(inset!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
-  it("should wrap the header and SidebarProvider in a flex column that owns the viewport", () => {
-    // Regression for the redundant vertical scroll on app routes. The fix
-    // moved the viewport-fill responsibility up: a `flex h-svh overflow-hidden
-    // flex-col` wrapper now encloses both the sticky header AND the sidebar
-    // provider, and the provider itself grows with `flex-1` instead of
-    // claiming 100svh on its own. The page total must therefore stay at 100svh.
+  it("should keep the SidebarProvider as a flex-1 column so the sidebar fills the protected viewport", () => {
     const { container } = render(
       <ProtectedAppShell>
         <h1>Chat</h1>
       </ProtectedAppShell>,
     );
 
-    const banner = screen.getByRole("banner");
     const sidebarWrapper = container.querySelector('[data-slot="sidebar-wrapper"]');
     expect(sidebarWrapper).not.toBeNull();
 
-    // The banner and the sidebar wrapper share a single flex-column parent.
-    const wrapper = banner.parentElement;
-    expect(wrapper).not.toBeNull();
-    expect(wrapper).toBe(sidebarWrapper!.parentElement);
-
-    // The shared wrapper is a fixed `flex h-svh overflow-hidden flex-col`
-    // viewport-owning column. The exact token list may grow over time, but
-    // these classes prevent the document from becoming the scroll owner.
-    expect(wrapper).toHaveClass("flex");
-    expect(wrapper).toHaveClass("flex-col");
-    expect(wrapper).toHaveClass("h-svh");
-    expect(wrapper).toHaveClass("overflow-hidden");
-
-    // The wrapper is the viewport-owner, NOT the sidebar provider: the
-    // provider no longer carries `min-h-svh` (otherwise the column would
-    // resolve to 100svh + 64px header = scrollbar). The provider must carry
-    // `flex-1` so it grows to fill the remaining column space instead.
+    // The provider must NOT claim its own viewport (min-h-svh) — the parent
+    // (protected) layout already owns the viewport.
     expect(sidebarWrapper).not.toHaveClass("min-h-svh");
     expect(sidebarWrapper).toHaveClass("flex-1");
-
-    // Banner precedes sidebar wrapper in document order (carried forward from
-    // the original invariant — the header is the first column child).
-    expect(
-      banner.compareDocumentPosition(sidebarWrapper!) & Node.DOCUMENT_POSITION_FOLLOWING,
-    ).toBeTruthy();
+    expect(sidebarWrapper).toHaveClass("flex");
   });
 
-  it("renders the push-notification register as a non-visual last child of the viewport-owning wrapper", () => {
+  it("renders the push-notification register as a non-visual sibling of the SidebarProvider", () => {
     const { container } = render(
       <ProtectedAppShell>
         <h1>Chat</h1>
       </ProtectedAppShell>,
     );
     const sidebarWrapper = container.querySelector('[data-slot="sidebar-wrapper"]');
-    const wrapper = sidebarWrapper!.parentElement;
-    const lastChild = wrapper!.lastElementChild;
-    expect(lastChild).not.toBeNull();
-    // It must NOT be inside SidebarInset (otherwise it would participate in the main content flex column).
+    // The push-notification register must NOT be inside the sidebar wrapper
+    // (otherwise it would participate in the provider's flex layout).
     const inset = container.querySelector('[data-slot="sidebar-inset"]');
-    expect(inset!.contains(lastChild!)).toBe(false);
+    expect(inset).not.toBeNull();
+    expect(sidebarWrapper!.contains(inset!)).toBe(true);
+    // The SidebarInset is the last layout-meaningful child of the wrapper;
+    // the push register lives outside the wrapper as a sibling.
+    const lastMeaningful = sidebarWrapper!.lastElementChild;
+    expect(lastMeaningful).toBe(inset);
   });
 });

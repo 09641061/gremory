@@ -31,6 +31,8 @@ type SidebarProfileProps = {
   canManageBilling?: boolean;
   /** Highlights the trigger while the settings route is open. */
   active?: boolean;
+  /** Extra classes applied to the trigger button (e.g. to grow it inside a footer row). */
+  className?: string;
 };
 
 /**
@@ -44,6 +46,7 @@ export function SidebarProfile({
   invoiceHref = "/invoice",
   canManageBilling = true,
   active = false,
+  className,
 }: SidebarProfileProps) {
   const router = useRouter();
   const { t } = useProfilesI18n();
@@ -69,6 +72,7 @@ export function SidebarProfile({
           "focus-visible:ring-2 focus-visible:ring-ring/50",
           "data-popup-open:bg-accent data-popup-open:text-accent-foreground",
           active && "bg-accent text-accent-foreground",
+          className,
         )}
         title={username}
         aria-label={username}

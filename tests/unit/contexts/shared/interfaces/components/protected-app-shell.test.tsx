@@ -83,7 +83,6 @@ vi.mock("@/contexts/shared/interfaces/components/ui/sidebar", () => ({
 // behaviour (React 19's legacy server renderer does not support Suspense on
 // its own — see react-dom-server-legacy error message).
 import ProtectedAppShell from "@/contexts/shared/interfaces/components/layout/protected-app-shell";
-import { AppHeaderServer } from "@/contexts/shared/interfaces/components/header/app-header-server";
 import { AppShellSidebarServer } from "@/contexts/shared/interfaces/components/sidebar/app-sidebar-shell-server";
 
 describe("ProtectedAppShell sidebar conversations", () => {
@@ -133,12 +132,37 @@ describe("ProtectedAppShell sidebar conversations", () => {
     expect(mocks.conversationsQueryServiceCtor).toHaveBeenCalledWith({ id: organizationId });
   });
 
-  it("should resolve account data for the Welcome header without loading app conversations", async () => {
-    mocks.getMyProfileServerQuery.mockResolvedValue({ username: "Ada", imageUrl: null });
-    const header = await AppHeaderServer();
-    expect(header.props.profile).toEqual({ username: "Ada", imageUrl: null });
-    expect(header.props.workspace.organization.id).toBe(organizationId);
+  it("should resolve account data through the unified sidebar shell", async () => {
+    // After unifying the header into the sidebar, there is a single shell
+    // server component. It still resolves profile + workspace + homeHref
+    // (used by the brand link + sidebar profile) and only fetches assistant
+    // conversations when the workspace actually has assistant access.
+    mocks.appShellResolve.mockResolvedValueOnce({
+      workspace: {
+        accountType: "OWNER",
+        organization: { id: organizationId },
+        ownedOrganizationId: organizationId,
+        establishments: [],
+        activeEstablishmentId: undefined,
+      },
+      hasAssistantAccess: false,
+      homeHref: "/chat",
+      visibleSidebarRoutes: [],
+    });
+    mocks.getMyProfileServerQuery.mockResolvedValueOnce({ username: "Ada", imageUrl: null });
+    const tree = await AppShellSidebarServer();
+    expect(tree).toBeDefined();
+    // Profile + workspace + homeHref flow into the client component.
+    const clientProps = tree!.props as {
+      currentProfile: { username: string };
+      workspace: { organization: { id: string } };
+      homeHref: string;
+    };
+    expect(clientProps.currentProfile).toEqual({ username: "Ada", imageUrl: null });
+    expect(clientProps.workspace.organization.id).toBe(organizationId);
+    expect(clientProps.homeHref).toBe("/chat");
     expect(mocks.appShellResolve).toHaveBeenCalledTimes(1);
+    // Without assistant access, no conversation adapter is built.
     expect(mocks.createAssistantConversationsAdapter).not.toHaveBeenCalled();
     expect(mocks.conversationsHandle).not.toHaveBeenCalled();
   });

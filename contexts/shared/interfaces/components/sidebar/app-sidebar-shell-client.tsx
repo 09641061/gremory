@@ -11,19 +11,24 @@ interface AppShellSidebarClientProps {
   initialAssistantConversations: AssistantConversationSummaryReadModel[];
   currentProfile: Pick<ProfileViewModel, "username" | "imageUrl"> | null;
   workspace: WorkspaceHeaderViewModel;
+  homeHref?: string | null;
   visibleRoutes: ReadonlyArray<SidebarRouteId>;
   showAssistantSection: boolean;
   showAssistantNavigation: boolean;
   showWorkspaceSwitcher: boolean;
+  showNavigation?: boolean;
 }
 
 export function AppShellSidebarClient({
   initialAssistantConversations,
+  currentProfile,
   workspace,
+  homeHref,
   visibleRoutes,
   showAssistantSection,
   showAssistantNavigation,
   showWorkspaceSwitcher,
+  showNavigation = true,
 }: AppShellSidebarClientProps) {
   // Use client pathname for active state detection and route checks
   const pathname = usePathname();
@@ -34,10 +39,13 @@ export function AppShellSidebarClient({
     <AppSidebar
       initialAssistantConversations={initialAssistantConversations}
       workspace={workspace}
+      profile={currentProfile}
+      homeHref={homeHref}
       visibleRoutes={visibleRoutes}
       showAssistantSection={showAssistantSection}
       showAssistantNavigation={showAssistantNavigation}
       showWorkspaceSwitcher={showWorkspaceSwitcher && !isSetupRoute}
+      showNavigation={showNavigation}
       pathname={pathname}
     />
   );

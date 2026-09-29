@@ -41,9 +41,11 @@
   --chart-3: var(--destructive);
   --chart-4: var(--ring);
   --chart-5: var(--muted-foreground);
-  --app-sidebar-width: 15rem;
+  --app-sidebar-width: 15.5rem;
   --app-sidebar-width-mobile: 18rem;
   --app-sidebar-width-icon: 3rem;
+  --app-sidebar-header-height: 2.75rem;
+  --app-sidebar-footer-height: 3rem;
   --app-sidebar-menu-gap: 0.25rem;
   --app-sidebar-control-height: 2rem;
   --app-control-height: 2.5rem;

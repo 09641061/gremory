@@ -23,6 +23,7 @@ export async function AppShellSidebarServer() {
       initialAssistantConversations={assistantConversations.content}
       currentProfile={currentProfile}
       workspace={workspace}
+      homeHref={shell.homeHref}
       visibleRoutes={shell.visibleSidebarRoutes}
       showAssistantSection={shell.hasAssistantAccess}
       showAssistantNavigation={shell.hasAssistantAccess}

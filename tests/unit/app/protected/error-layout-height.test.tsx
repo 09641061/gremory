@@ -28,10 +28,10 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vites
 import ProtectedLayout from "@/app/(protected)/layout";
 import ProtectedError from "@/app/(protected)/error";
 import AppError from "@/app/(protected)/(app)/error";
-import ConfigurationError from "@/app/(protected)/(configuration)/error";
-import EstablishmentsError from "@/app/(protected)/(configuration)/(organization-hub)/establishments/error";
-import OrganizationError from "@/app/(protected)/(configuration)/(organization-hub)/organization/error";
-import PermissionsError from "@/app/(protected)/(configuration)/permissions/error";
+import ConfigurationError from "@/app/(protected)/(configuration)/establishments/error";
+import EstablishmentsError from "@/app/(protected)/(configuration)/establishments/error";
+import OrganizationError from "@/app/(protected)/(configuration)/organization/error";
+import PermissionsError from "@/app/(protected)/(profile)/error";
 
 let consoleErrorSpy: ReturnType<typeof vi.spyOn> | undefined;
 
@@ -92,19 +92,9 @@ describe("Protected error fallbacks fill their parent column without a viewport 
   }> = [
     { name: "app/(protected)/error.tsx", ErrorComponent: ProtectedError as ErrorFallback },
     { name: "app/(protected)/(app)/error.tsx", ErrorComponent: AppError as ErrorFallback },
-    { name: "app/(protected)/(configuration)/error.tsx", ErrorComponent: ConfigurationError as ErrorFallback },
-    {
-      name: "app/(protected)/(configuration)/(organization-hub)/establishments/error.tsx",
-      ErrorComponent: EstablishmentsError as ErrorFallback,
-    },
-    {
-      name: "app/(protected)/(configuration)/(organization-hub)/organization/error.tsx",
-      ErrorComponent: OrganizationError as ErrorFallback,
-    },
-    {
-      name: "app/(protected)/(configuration)/permissions/error.tsx",
-      ErrorComponent: PermissionsError as ErrorFallback,
-    },
+    { name: "app/(protected)/(configuration)/establishments/error.tsx", ErrorComponent: EstablishmentsError as ErrorFallback },
+    { name: "app/(protected)/(configuration)/organization/error.tsx", ErrorComponent: OrganizationError as ErrorFallback },
+    { name: "app/(protected)/(profile)/error.tsx", ErrorComponent: PermissionsError as ErrorFallback },
   ];
 
   for (const { name, ErrorComponent } of cases) {

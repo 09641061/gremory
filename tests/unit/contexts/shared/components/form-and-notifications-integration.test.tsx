@@ -28,7 +28,8 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { I18nProvider } from "@/contexts/shared/interfaces/i18n";
 import { CustomerForm } from "@/contexts/crm/interfaces/components/customer-management/customer-form";
 import { useFormSubmit } from "@/contexts/shared/interfaces/components/form/use-form-submit";
-import { AppHeader } from "@/contexts/shared/interfaces/components/header/app-header";
+import { AppSidebar as AppHeader } from "@/contexts/shared/interfaces/components/sidebar/app-sidebar";
+import { SidebarProvider } from "@/contexts/shared/interfaces/components/ui/sidebar";
 import type { WorkspaceHeaderViewModel } from "@/contexts/business/application/model/business-workspace.view-models";
 
 // ---------------------------------------------------------------------------
@@ -396,11 +397,18 @@ describe("AppHeader + NotificationDropdown — provider state propagation", () =
 
     render(
       <I18nProvider initialLocale="en">
-        <AppHeader
-          profile={{ username: "Ada", imageUrl: null }}
-          workspace={workspace}
-          homeHref="/welcome"
-        />
+        <SidebarProvider>
+          <AppHeader
+            initialAssistantConversations={[]}
+            profile={{ username: "Ada", imageUrl: null }}
+            workspace={workspace}
+            homeHref="/welcome"
+            visibleRoutes={[]}
+            showAssistantSection={false}
+            showAssistantNavigation={false}
+            showWorkspaceSwitcher={false}
+          />
+        </SidebarProvider>
       </I18nProvider>,
     );
 
@@ -444,11 +452,18 @@ describe("AppHeader + NotificationDropdown — provider state propagation", () =
 
     render(
       <I18nProvider initialLocale="en">
-        <AppHeader
-          profile={{ username: "Ada", imageUrl: null }}
-          workspace={workspace}
-          homeHref="/welcome"
-        />
+        <SidebarProvider>
+          <AppHeader
+            initialAssistantConversations={[]}
+            profile={{ username: "Ada", imageUrl: null }}
+            workspace={workspace}
+            homeHref="/welcome"
+            visibleRoutes={[]}
+            showAssistantSection={false}
+            showAssistantNavigation={false}
+            showWorkspaceSwitcher={false}
+          />
+        </SidebarProvider>
       </I18nProvider>,
     );
 

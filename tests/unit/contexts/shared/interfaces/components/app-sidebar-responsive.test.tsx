@@ -2,7 +2,7 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { WorkspaceHeaderViewModel } from "@/contexts/business/application/model/business-workspace.view-models";
-vi.mock("next/navigation", () => ({ usePathname: () => "/schedule", useSearchParams: () => new URLSearchParams() }));
+vi.mock("next/navigation", () => ({ usePathname: () => "/schedule", useSearchParams: () => new URLSearchParams(), useRouter: () => ({ replace: vi.fn(), push: vi.fn(), back: vi.fn(), refresh: vi.fn() }) }));
 vi.mock("@/contexts/assistant/interfaces/components/sidebar/assistant-chats-section", () => ({ AssistantChatsSection: () => null }));
 vi.mock("@/contexts/business/interfaces/components/workspace/workspace-switcher/workspace-switcher", () => ({ WorkspaceSwitcher: () => null }));
 import { AppSidebar } from "@/contexts/shared/interfaces/components/sidebar/app-sidebar";
@@ -13,7 +13,9 @@ function mountSidebar(width: number) {
   window.matchMedia = vi.fn().mockReturnValue({ matches: width < 768, addEventListener: vi.fn(), removeEventListener: vi.fn() });
   return render(<SidebarProvider><SidebarTrigger /><AppSidebar
     initialAssistantConversations={[]}
+    profile={null}
     workspace={{ establishments: [], activeEstablishmentId: "branch", accessPolicy: { canManageBilling: false } } as unknown as WorkspaceHeaderViewModel}
+    homeHref="/chat"
     visibleRoutes={["/schedule", "/crm"]}
     showAssistantSection={false}
     showAssistantNavigation={false}
@@ -21,13 +23,13 @@ function mountSidebar(width: number) {
   /></SidebarProvider>);
 }
 
-it("should retain desktop navigation below Header without mounting account controls", async () => {
+it("should retain desktop navigation and account controls inside the unified sidebar", async () => {
   const { container } = mountSidebar(1280);
   expect(screen.getByRole("link", { name: "Schedule" })).toHaveAttribute("href", "/schedule?establishmentId=branch");
   expect(screen.getByRole("link", { name: "Schedule" })).toHaveAttribute("aria-current", "page");
-  expect(container.querySelector('[data-slot="sidebar-container"]')).toHaveClass("top-16", "h-[calc(100svh-4rem)]");
-  expect(container.querySelector('[data-slot="profile-menu-card"]')).toBeNull();
-  expect(container.querySelector('[data-slot="dropdown-menu-trigger"]')).toBeNull();
+  // The sidebar now owns the full viewport — no top offset for a header.
+  expect(container.querySelector('[data-slot="sidebar-container"]')).toHaveClass("inset-y-0", "h-svh");
+  expect(container.querySelector('[data-slot="sidebar-container"]')).not.toHaveClass("top-16");
   fireEvent.keyDown(window, { key: "b", ctrlKey: true });
   await waitFor(() => expect(container.querySelector('[data-slot="sidebar"]')).toHaveAttribute("data-state", "collapsed"));
 });
