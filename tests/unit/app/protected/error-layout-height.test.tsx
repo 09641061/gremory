@@ -28,7 +28,6 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vites
 import ProtectedLayout from "@/app/(protected)/layout";
 import ProtectedError from "@/app/(protected)/error";
 import AppError from "@/app/(protected)/(app)/error";
-import ConfigurationError from "@/app/(protected)/(configuration)/establishments/error";
 import EstablishmentsError from "@/app/(protected)/(configuration)/establishments/error";
 import OrganizationError from "@/app/(protected)/(configuration)/organization/error";
 import PermissionsError from "@/app/(protected)/(profile)/error";
