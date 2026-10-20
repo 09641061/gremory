@@ -25,7 +25,7 @@ vi.mock("@/contexts/profiles/interfaces/components/profile/profile-card", () => 
 
 import ProfilePage, {
   ProfilePageContent,
-} from "@/app/(protected)/(configuration)/profile/page";
+} from "@/app/(protected)/(profile)/profile/page";
 
 describe("Profile Route Page", () => {
   beforeEach(() => {

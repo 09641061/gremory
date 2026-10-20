@@ -53,7 +53,7 @@ vi.mock("@/contexts/shared/interfaces/components/sidebar/app-sidebar-fallback", 
 // The mobile hook inside SidebarProvider calls window.matchMedia, so jsdom
 // needs a polyfill before render().
 import ProtectedAppShell from "@/contexts/shared/interfaces/components/layout/protected-app-shell";
-import WelcomeLayout from "@/app/(protected)/(welcome)/layout";
+import WelcomeLayout from "@/app/(protected)/(onboarding)/(start)/layout";
 
 beforeEach(() => {
   mocks.pathname = "/chat";

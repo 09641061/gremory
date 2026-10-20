@@ -10,7 +10,7 @@ vi.mock("@/contexts/notifications/interfaces/components/notification-dropdown", 
 vi.mock("@/contexts/shared/interfaces/components/header/app-header-server", () => ({ AppHeaderServer: () => <AppHeader profile={{ username: "Ada", imageUrl: null }} workspace={workspace} homeHref={mocks.homeHref} /> }));
 vi.mock("@/contexts/shared/interfaces/components/sidebar/app-sidebar-shell-server", () => ({ AppShellSidebarServer: () => { mocks.sidebar(); return <aside>Navigation</aside>; } }));
 import { AppHeader } from "@/contexts/shared/interfaces/components/header/app-header";
-import WelcomeLayout from "@/app/(protected)/(welcome)/layout";
+import WelcomeLayout from "@/app/(protected)/(onboarding)/(start)/layout";
 import ProtectedAppShell from "@/contexts/shared/interfaces/components/layout/protected-app-shell";
 const workspace = { establishments: [{ id: "branch" }], accessPolicy: { canManageBilling: false } } as WorkspaceHeaderViewModel;
 
