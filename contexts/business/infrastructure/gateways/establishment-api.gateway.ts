@@ -19,7 +19,11 @@ import {
 } from "../http/business-api.client";
 import { requireBusinessAccessToken } from "../session/business-session";
 import { apiConfig } from "@/api.config";
-import { establishmentResponseSchema } from "../../interfaces/rest/schemas/establishment.schemas";
+import {
+  establishmentResponseSchema,
+  whatsappStatusResponseSchema,
+  type WhatsappStatusResponse,
+} from "../../interfaces/rest/schemas/establishment.schemas";
 
 export class EstablishmentApiGateway implements EstablishmentRepository {
   constructor(private readonly providedToken?: string) {}
@@ -113,6 +117,49 @@ export class EstablishmentApiGateway implements EstablishmentRepository {
       authToken,
       undefined,
       { tenantId: organizationId.value },
+    );
+  }
+
+  async getWhatsappStatus(id: EstablishmentId, organizationId?: OrganizationId): Promise<WhatsappStatusResponse> {
+    const authToken = await requireBusinessAccessToken(this.providedToken);
+    const resource = await businessGet<unknown>(
+      `${apiConfig.routes.establishments}/${encodeURIComponent(id.value)}/whatsapp`,
+      authToken,
+      undefined,
+      organizationId ? { tenantId: organizationId.value } : undefined,
+    );
+    return whatsappStatusResponseSchema.parse(resource);
+  }
+
+  async connectWhatsapp(
+    id: EstablishmentId,
+    code: string,
+    organizationId?: OrganizationId,
+    wabaId?: string | null,
+    phoneNumberId?: string | null,
+  ): Promise<WhatsappStatusResponse> {
+    const authToken = await requireBusinessAccessToken(this.providedToken);
+    const resource = await businessPost<unknown>(
+      `${apiConfig.routes.establishments}/${encodeURIComponent(id.value)}/whatsapp/connect`,
+      {
+        code,
+        ...(wabaId ? { wabaId } : {}),
+        ...(phoneNumberId ? { phoneNumberId } : {}),
+      },
+      authToken,
+      undefined,
+      organizationId ? { tenantId: organizationId.value } : undefined,
+    );
+    return whatsappStatusResponseSchema.parse(resource);
+  }
+
+  async disconnectWhatsapp(id: EstablishmentId, organizationId?: OrganizationId): Promise<void> {
+    const authToken = await requireBusinessAccessToken(this.providedToken);
+    await businessDelete(
+      `${apiConfig.routes.establishments}/${encodeURIComponent(id.value)}/whatsapp`,
+      authToken,
+      undefined,
+      organizationId ? { tenantId: organizationId.value } : undefined,
     );
   }
 }

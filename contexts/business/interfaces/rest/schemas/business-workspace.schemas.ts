@@ -36,10 +36,10 @@ const workspaceAuthorizationSchema = z
     capabilities: z.object({
       canEditOrganizationProfile: z.boolean(),
       canEditEstablishmentProfile: z.boolean(),
-      canManageMembers: z.boolean(),
+      canManageMembers: z.boolean().optional(),
       canManageBilling: z.boolean(),
       canOpenModules: z.boolean(),
-      canInviteUsers: z.boolean(),
+      canInviteUsers: z.boolean().optional(),
     }),
   })
   .nullable()

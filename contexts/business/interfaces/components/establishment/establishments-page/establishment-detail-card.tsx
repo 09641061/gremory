@@ -6,6 +6,7 @@ import type { EstablishmentListItem } from "./establishments-page";
 import { updateEstablishmentAction } from "@/contexts/business/interfaces/actions/establishment.actions";
 import { EntityProfileCard } from "@/contexts/business/interfaces/components/entity-profile-card/entity-profile-card";
 import { TimeZoneField } from "../time-zone-field";
+import { EstablishmentWhatsappSection } from "./establishment-whatsapp-section";
 import { cn } from "@/lib/utils";
 import { useBusinessTranslations } from "@/contexts/business/interfaces/i18n";
 
@@ -62,24 +63,31 @@ export function EstablishmentDetailCard({
         onCancel={onCancel}
         className="lg:ml-3 lg:h-(--app-page-viewport-height)"
         extraFields={
-          <div className="flex flex-col border-t border-border">
-            <div className="space-y-4 p-6">
-              <div className="space-y-1">
-                <h3 className="text-base font-semibold text-foreground">{t.establishments.timeZoneTitle}</h3>
-                <p className="text-sm text-muted-foreground">
-                  {t.establishments.timeZoneDescription}
-                </p>
-              </div>
-              <div className="max-w-xs">
-                <TimeZoneField
-                  name="timeZone"
-                  value={timeZone}
-                  onChange={setTimeZone}
-                  disabled={!canUpdate}
-                />
+          <>
+            <div className="flex flex-col border-t border-border">
+              <div className="space-y-4 p-6">
+                <div className="space-y-1">
+                  <h3 className="text-base font-semibold text-foreground">{t.establishments.timeZoneTitle}</h3>
+                  <p className="text-sm text-muted-foreground">
+                    {t.establishments.timeZoneDescription}
+                  </p>
+                </div>
+                <div className="max-w-xs">
+                  <TimeZoneField
+                    name="timeZone"
+                    value={timeZone}
+                    onChange={setTimeZone}
+                    disabled={!canUpdate}
+                  />
+                </div>
               </div>
             </div>
-          </div>
+            <EstablishmentWhatsappSection
+              key={`whatsapp-${establishment.id}`}
+              establishmentId={establishment.id}
+              canUpdate={canUpdate}
+            />
+          </>
         }
       />
     </div>
