@@ -45,12 +45,7 @@ export async function proxy(request: NextRequest) {
   // Explicit account and billing screens remain reachable independently of
   // workspace onboarding. `/welcome` is resolved by the same entry policy as
   // every other route and is only reachable while activation is required.
-  if (
-    pathname === "/upgrade" ||
-    pathname === "/invoice" ||
-    pathname === "/profile" ||
-    pathname === "/pricing"
-  ) {
+  if (pathname === "/upgrade" || pathname === "/invoice" || pathname === "/profile") {
     return continueWithWorkspaceContext(request, response, rotatedHeaders);
   }
 

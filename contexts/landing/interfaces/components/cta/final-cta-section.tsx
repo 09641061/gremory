@@ -1,60 +1,27 @@
-"use client";
-
 import Link from "next/link";
-import { useLandingI18n } from "@/contexts/landing/interfaces/i18n";
-import { Button } from "@/contexts/shared/interfaces/components/ui/button";
-import { KoduAvatar } from "@/contexts/shared/interfaces/components/kodu/kodu-avatar";
-import { ArrowRightIcon, CheckCircle2Icon } from "lucide-react";
+import { KoduStaIcon } from "@/contexts/shared/interfaces/components/icons/kodu";
+import type { LandingFinalCta } from "@/contexts/landing/interfaces/i18n";
 
-export function FinalCtaSection() {
-  const { t } = useLandingI18n();
-  const cta = t.landing.cta;
-
+export function FinalCtaSection({
+  finalCta,
+}: {
+  finalCta: LandingFinalCta;
+}) {
   return (
-    <section className="py-16 lg:py-24 relative overflow-hidden">
-      <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
-        <div className="rounded-2xl border border-border/60 bg-card p-8 sm:p-14 lg:p-16 text-center shadow-xs">
-          <div className="max-w-2xl mx-auto space-y-5">
-            <div className="flex justify-center">
-              <KoduAvatar iconSize={26} className="size-12 bg-primary/10 border border-primary/20" />
-            </div>
-
-            <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-foreground leading-tight">
-              {cta.title}
-            </h2>
-
-            <p className="text-base sm:text-lg text-muted-foreground leading-relaxed max-w-xl mx-auto font-normal">
-              {cta.description}
-            </p>
-
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
-              <Button
-                size="lg"
-                nativeButton={false}
-                className="w-full sm:w-auto gap-2 bg-primary text-primary-foreground hover:bg-primary/90 text-sm font-semibold px-6 h-11 shadow-xs"
-                render={<Link href="/login" />}
-              >
-                <span>{cta.button}</span>
-                <ArrowRightIcon className="size-3.5" />
-              </Button>
-
-              <Button
-                variant="outline"
-                size="lg"
-                nativeButton={false}
-                className="w-full sm:w-auto text-foreground hover:bg-muted/50 text-sm font-medium px-5 h-11 border-border/80"
-                render={<Link href="/pricing" />}
-              >
-                <span>{cta.secondary}</span>
-              </Button>
-            </div>
-
-            <div className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground pt-1">
-              <CheckCircle2Icon className="size-3.5 text-primary shrink-0" />
-              <span>{cta.footnote}</span>
-            </div>
-          </div>
-        </div>
+    <section className="border-t border-border/40 bg-muted/30">
+      <div className="mx-auto flex max-w-3xl flex-col items-center px-4 py-20 text-center sm:px-6 lg:py-28">
+        <span className="text-primary">
+          <KoduStaIcon size={96} />
+        </span>
+        <h2 className="mt-8 text-3xl font-extrabold leading-tight tracking-tight text-foreground sm:text-4xl">
+          {finalCta.title}
+        </h2>
+        <Link
+          href="/login"
+          className="mt-8 inline-flex h-11 items-center rounded-lg bg-primary px-7 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
+        >
+          {finalCta.cta}
+        </Link>
       </div>
     </section>
   );

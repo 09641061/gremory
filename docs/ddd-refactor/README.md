@@ -10,6 +10,7 @@ Estos documentos son los planes de revisión e implementación para el proyecto.
 - [Catalog](./catalog.md)
 - [CRM](./crm.md)
 - [IAM](./iam.md)
+- [Landing](./landing.md)
 - [Notifications](./notifications.md)
 - [Profiles](./profiles.md)
 - [Scheduling](./scheduling.md)
