@@ -50,10 +50,10 @@ export type WorkspaceAuthorizationScope = Readonly<{
 export type WorkspaceAuthorizationCapabilities = Readonly<{
   canEditOrganizationProfile: boolean;
   canEditEstablishmentProfile: boolean;
-  canManageMembers: boolean;
+  canManageMembers?: boolean;
   canManageBilling: boolean;
   canOpenModules: boolean;
-  canInviteUsers: boolean;
+  canInviteUsers?: boolean;
 }>;
 
 export type WorkspaceAuthorization = Readonly<{

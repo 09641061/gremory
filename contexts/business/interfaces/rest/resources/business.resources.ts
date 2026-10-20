@@ -14,6 +14,15 @@ export interface EstablishmentResource {
   ownerAvailableForScheduling?: boolean;
 }
 
+export interface WhatsappStatusResource {
+  establishmentId: string;
+  connected: boolean;
+  status: string | null;
+  displayPhoneNumber: string | null;
+  wabaId: string | null;
+  phoneNumberId: string | null;
+}
+
 export interface PageResource<T> {
   content: T[];
   number: number;
