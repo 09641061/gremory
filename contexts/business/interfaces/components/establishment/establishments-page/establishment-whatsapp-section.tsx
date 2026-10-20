@@ -101,14 +101,13 @@ export function EstablishmentWhatsappSection({
 
   useEffect(() => {
     let mounted = true;
-    setLoading(true);
-    setError(null);
 
     getEstablishmentWhatsappStatusAction(establishmentId)
       .then((result) => {
         if (!mounted) return;
         if (result.status === "success" && result.data) {
           setStatus(result.data as WhatsappStatusResponse);
+          setError(null);
         } else {
           setError(result.error ?? null);
         }
