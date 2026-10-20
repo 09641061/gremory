@@ -1,28 +1,32 @@
 import type { Metadata } from "next";
+import { getServerLocale } from "@/contexts/shared/infrastructure/i18n/server";
 import {
-  HeroSection,
-  FeaturesSection,
-  ProductPreviewSection,
-  PricingSection,
   FaqSection,
   FinalCtaSection,
+  HeroSection,
+  HowItWorksSection,
+  OwnerSection,
+  PricingSection,
 } from "@/contexts/landing/interfaces/components";
+import { getLandingDictionary } from "@/contexts/landing/interfaces/i18n";
 
 export const metadata: Metadata = {
-  title: "Takodu - Plataforma inteligente con Asistente IA para tu negocio",
+  title: "Takodu - Tu agenda se llena sola por WhatsApp",
   description:
-    "Centraliza citas, gestiona clientes con CRM y automatiza tu operación 24/7 con el Asistente IA Kodu.",
+    "Takodu responde a tus clientes a cualquier hora, agenda sus citas y les recuerda llegar. Agenda, CRM y reportes para barberías, spas y consultorios.",
 };
 
-export default function LandingHomePage() {
+export default async function LandingPage() {
+  const dictionary = getLandingDictionary(await getServerLocale());
+
   return (
     <>
-      <HeroSection />
-      <FeaturesSection />
-      <ProductPreviewSection />
-      <PricingSection />
-      <FaqSection />
-      <FinalCtaSection />
+      <HeroSection hero={dictionary.hero} />
+      <HowItWorksSection howItWorks={dictionary.howItWorks} />
+      <OwnerSection owner={dictionary.owner} />
+      <PricingSection pricing={dictionary.pricing} />
+      <FaqSection faq={dictionary.faq} />
+      <FinalCtaSection finalCta={dictionary.finalCta} />
     </>
   );
 }

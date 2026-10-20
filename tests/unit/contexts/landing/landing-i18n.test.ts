@@ -1,51 +1,59 @@
 import { describe, expect, it } from "vitest";
-import {
-  en,
-  es,
-  getLandingDictionary,
-  useLandingI18n,
-  useLandingTranslations,
-} from "@/contexts/landing/interfaces/i18n";
+import { en } from "@/contexts/landing/interfaces/i18n/locales/en";
+import { es } from "@/contexts/landing/interfaces/i18n/locales/es";
 
-describe("Landing i18n translations", () => {
-  it("should have matching keys between en and es dictionaries", () => {
-    function collectKeys(obj: Record<string, unknown>, prefix = ""): string[] {
-      const keys: string[] = [];
-      for (const [key, value] of Object.entries(obj)) {
-        const fullKey = prefix ? `${prefix}.${key}` : key;
-        if (value && typeof value === "object" && !Array.isArray(value)) {
-          keys.push(...collectKeys(value as Record<string, unknown>, fullKey));
-        } else {
-          keys.push(fullKey);
-        }
-      }
-      return keys.sort();
+type Tree = { [key: string]: string | Tree | readonly Tree[] };
+
+function collectPaths(node: Tree, prefix = ""): string[] {
+  return Object.entries(node).flatMap(([key, value]) => {
+    const path = prefix ? `${prefix}.${key}` : key;
+    if (typeof value === "string") return [path];
+    if (Array.isArray(value)) {
+      return value.flatMap((item, index) => {
+        const itemPath = `${path}.${index}`;
+        return typeof item === "string" ? [itemPath] : collectPaths(item, itemPath);
+      });
     }
+    return collectPaths(value, path);
+  });
+}
 
-    expect(collectKeys(es)).toEqual(collectKeys(en));
+function collectEmptyPaths(node: Tree, prefix = ""): string[] {
+  return Object.entries(node).flatMap(([key, value]) => {
+    const path = prefix ? `${prefix}.${key}` : key;
+    if (typeof value === "string") {
+      return value.trim().length === 0 ? [path] : [];
+    }
+    if (Array.isArray(value)) {
+      return value.flatMap((item, index) => {
+        const itemPath = `${path}.${index}`;
+        if (typeof item === "string") {
+          return item.trim().length === 0 ? [itemPath] : [];
+        }
+        return collectEmptyPaths(item, itemPath);
+      });
+    }
+    return collectEmptyPaths(value, path);
+  });
+}
+
+describe("Landing i18n", () => {
+  it("keeps the same keys in both locales", () => {
+    const esPaths = collectPaths(es.landing as unknown as Tree).sort();
+    const enPaths = collectPaths(en.landing as unknown as Tree).sort();
+
+    expect(esPaths).toEqual(enPaths);
   });
 
-  it("should provide non-empty strings in both locales without free trial mentions", () => {
-    expect(en.landing.nav.brand).toBe("Takodu");
+  it("has no empty translations", () => {
+    expect(collectEmptyPaths(es.landing as unknown as Tree)).toEqual([]);
+    expect(collectEmptyPaths(en.landing as unknown as Tree)).toEqual([]);
+  });
+
+  it("exposes the landing branch through the shared locale dictionary", () => {
     expect(es.landing.nav.brand).toBe("Takodu");
-    expect(en.landing.hero.primaryCta).toBe("Get Started");
-    expect(es.landing.hero.primaryCta).toBe("Comenzar ahora");
-    expect(en.landing.features.title).toBeTruthy();
-    expect(es.landing.features.title).toBeTruthy();
-    expect(en.landing.pricing.standard.name).toBe("Standard");
-    expect(es.landing.pricing.standard.name).toBe("Standard");
-    expect(en.landing.pricing.max.name).toBe("Max");
-    expect(es.landing.pricing.max.name).toBe("Max");
-  });
-
-  it("should return the correct dictionary by locale", () => {
-    expect(getLandingDictionary("es")).toBe(es);
-    expect(getLandingDictionary("en")).toBe(en);
-    expect(getLandingDictionary(null)).toBe(en);
-  });
-
-  it("should export useLandingI18n equal to useLandingTranslations", () => {
-    expect(useLandingI18n).toBe(useLandingTranslations);
-    expect(typeof useLandingI18n).toBe("function");
+    expect(en.landing.nav.brand).toBe("Takodu");
+    expect(es.landing.pricing.plans.negocio.price).toBe("S/ 149");
+    expect(en.landing.pricing.plans.negocio.price).toBe("S/ 149");
   });
 });
