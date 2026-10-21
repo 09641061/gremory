@@ -7,10 +7,10 @@ import type { CustomerResponse, CustomerOverviewViewModel } from "@/contexts/crm
 import { getCustomerOverviewAction } from "@/contexts/crm/interfaces/actions/get-customer-overview.action";
 import { useCrmTranslations } from "@/contexts/crm/interfaces/i18n";
 import { Avatar, AvatarFallback } from "@/contexts/shared/interfaces/components/ui/avatar";
-import { Badge } from "@/contexts/shared/interfaces/components/ui/badge";
-import { Button } from "@/contexts/shared/interfaces/components/ui/button";
+import { Button, buttonVariants } from "@/contexts/shared/interfaces/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/contexts/shared/interfaces/components/ui/card";
 import { ScrollArea } from "@/contexts/shared/interfaces/components/ui/scroll-area";
+import { cn } from "@/lib/utils";
 import { CrmCustomerKpis } from "./crm-customer-kpis";
 import { CrmCustomerNotesCard } from "./crm-customer-notes-card";
 import { CrmCustomerHistoryCard } from "./crm-customer-history-card";
@@ -68,12 +68,7 @@ export function CrmCustomerDetailView({
               <AvatarFallback>{initials(customer.name)}</AvatarFallback>
             </Avatar>
             <div>
-              <div className="flex items-center gap-2">
-                <h2 className="text-xl font-semibold tracking-tight">{customer.name}</h2>
-                <Badge variant="secondary" className="text-xs">
-                  {t.masterDetail.statusBadge}
-                </Badge>
-              </div>
+              <h2 className="text-xl font-semibold tracking-tight">{customer.name}</h2>
               <div className="text-xs text-muted-foreground flex items-center gap-2 mt-0.5 font-mono">
                 <span>{customer.documentType}: {customer.documentNumber}</span>
               </div>
@@ -92,10 +87,14 @@ export function CrmCustomerDetailView({
             {canUpdateCustomer && (
               <Link
                 href={`/crm/${customer.id}/edit`}
-                className="inline-flex items-center justify-center rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground px-2.5 py-1.5 text-xs font-medium h-8"
+                className={cn(
+                  buttonVariants({ variant: "outline", size: "sm" }),
+                  "aspect-square px-0 text-muted-foreground hover:text-foreground",
+                )}
+                title={t.masterDetail.edit}
+                aria-label={t.masterDetail.edit}
               >
-                <Edit className="size-3.5 mr-1.5" />
-                {t.masterDetail.edit}
+                <Edit className="size-4" />
               </Link>
             )}
           </div>
