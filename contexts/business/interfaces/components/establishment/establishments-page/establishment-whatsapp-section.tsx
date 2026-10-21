@@ -26,11 +26,14 @@ import type { WhatsappStatusResponse } from "../../../rest/schemas/establishment
 
 interface FBLoginOptions {
   config_id: string;
-  response_type: string;
+  response_type?: string;
   override_default_response_type?: boolean;
   extras?: {
+    feature?: string;
     featureType?: string;
-    sessionInfoVersion?: number;
+    version?: number;
+    sessionInfoVersion?: number | string;
+    setup?: Record<string, unknown>;
   };
 }
 
@@ -40,7 +43,7 @@ declare global {
     FB?: {
       init: (options: { appId: string; cookie?: boolean; xfbml?: boolean; version: string }) => void;
       login: (
-        callback: (response: { authResponse?: { code?: string }; status?: string }) => void,
+        callback: (response: { authResponse?: { code?: string; accessToken?: string }; status?: string }) => void,
         options: FBLoginOptions
       ) => void;
     };
@@ -64,6 +67,7 @@ export function EstablishmentWhatsappSection({
 
   const [showManualCode, setShowManualCode] = useState(false);
   const [manualCode, setManualCode] = useState("");
+  const [manualWabaId, setManualWabaId] = useState("");
   const [showDisconnectDialog, setShowDisconnectDialog] = useState(false);
 
   const sessionInfoRef = useRef<{ wabaId?: string; phoneNumberId?: string }>({});
@@ -159,12 +163,13 @@ export function EstablishmentWhatsappSection({
       const res = await connectEstablishmentWhatsappAction(
         establishmentId,
         code,
-        wabaId ?? sessionInfoRef.current.wabaId,
+        wabaId || manualWabaId.trim() || sessionInfoRef.current.wabaId,
         phoneNumberId ?? sessionInfoRef.current.phoneNumberId,
       );
       if (res.status === "success" && res.data) {
         setStatus(res.data as WhatsappStatusResponse);
         setManualCode("");
+        setManualWabaId("");
         setShowManualCode(false);
         sessionInfoRef.current = {};
       } else {
@@ -194,9 +199,10 @@ export function EstablishmentWhatsappSection({
     sessionInfoRef.current = {};
     window.FB.login(
       (response) => {
-        if (response.authResponse?.code) {
+        const codeOrToken = response.authResponse?.accessToken ?? response.authResponse?.code;
+        if (codeOrToken) {
           handleConnectWithCode(
-            response.authResponse.code,
+            codeOrToken,
             sessionInfoRef.current.wabaId,
             sessionInfoRef.current.phoneNumberId,
           );
@@ -207,7 +213,6 @@ export function EstablishmentWhatsappSection({
         response_type: "code",
         override_default_response_type: true,
         extras: {
-          featureType: "whatsapp_embedded_signup",
           sessionInfoVersion: 3,
         },
       }
@@ -330,20 +335,33 @@ export function EstablishmentWhatsappSection({
             )}
 
             {showManualCode && canUpdate && (
-              <div className="flex max-w-md items-center gap-2 pt-1">
+              <div className="flex max-w-xl flex-wrap items-center gap-2 pt-1">
                 <Input
                   type="text"
                   placeholder={t.establishments.whatsappManualCodePlaceholder}
                   value={manualCode}
                   onChange={(e) => setManualCode(e.target.value)}
                   disabled={isPending}
-                  className="text-xs"
+                  className="min-w-[200px] flex-1 text-xs"
+                />
+                <Input
+                  type="text"
+                  placeholder="WABA / Messaging Account ID (ej. 28708613182166073)"
+                  value={manualWabaId}
+                  onChange={(e) => setManualWabaId(e.target.value)}
+                  disabled={isPending}
+                  className="w-64 text-xs"
                 />
                 <Button
                   type="button"
                   size="sm"
                   disabled={isPending || !manualCode.trim()}
-                  onClick={() => handleConnectWithCode(manualCode.trim())}
+                  onClick={() =>
+                    handleConnectWithCode(
+                      manualCode.trim(),
+                      manualWabaId.trim() || undefined,
+                    )
+                  }
                 >
                   {isPending ? <Spinner className="size-3" /> : t.establishments.whatsappManualCodeSubmit}
                 </Button>
