@@ -42,6 +42,7 @@ export interface EstablishmentRepository {
     name: EstablishmentName,
     photoUrl: EstablishmentPhoto,
     timeZone: string,
+    currency?: "USD" | "PEN",
   ): Promise<Establishment>;
   findById(id: EstablishmentId): Promise<Establishment | null>;
   findByOrganization(

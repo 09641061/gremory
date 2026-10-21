@@ -50,6 +50,7 @@ const establishmentResourceSchema = z.object({
   name: z.string().trim().min(1),
   photoUrl: z.string().nullable(),
   timeZone: z.string().nullable().optional(),
+  currency: z.enum(["USD", "PEN"]).nullish().default("USD"),
   effectivePermissions: z.array(z.string()).default([]),
   permissions: z.object({
     canRead: z.boolean(),

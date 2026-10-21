@@ -94,6 +94,7 @@ function toHeaderEstablishment(
     name: establishment.name,
     photoUrl: establishment.photoUrl,
     timeZone: establishment.timeZone ?? null,
+    currency: establishment.currency ?? "USD",
     ...(effectivePermissions.length > 0 ? { effectivePermissions } : {}),
     canRead: establishment.permissions.canRead,
     canUpdate: establishment.permissions.canUpdate,

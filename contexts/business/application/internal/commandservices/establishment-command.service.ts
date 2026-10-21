@@ -30,6 +30,7 @@ export class EstablishmentCommandServiceImpl implements EstablishmentCommandServ
       createEstablishmentName(command.name),
       photo,
       command.timeZone ?? "UTC",
+      command.currency ?? "USD",
     );
     return establishment.id;
   }
@@ -40,7 +41,7 @@ export class EstablishmentCommandServiceImpl implements EstablishmentCommandServ
     if (!establishment) throw new Error("Establishment not found");
 
     const photo = await this.resolvePhoto(id, establishment.organizationId, command);
-    establishment.update(command.name, photo.value, command.timeZone, command.ownerAvailableForScheduling);
+    establishment.update(command.name, photo.value, command.timeZone, command.ownerAvailableForScheduling, command.currency);
     const saved = await this.establishments.save(establishment);
     return saved.id;
   }
