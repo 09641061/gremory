@@ -35,13 +35,6 @@ import type { WorkspaceHeaderViewModel } from "@/contexts/business/application/m
 // Mocks shared by all three integration tests
 // ---------------------------------------------------------------------------
 
-// The CustomerForm server action used by the autofill button. We do not
-// exercise autofill in these tests; the mock just prevents the action
-// from running against a Next.js runtime.
-vi.mock("@/contexts/crm/interfaces/actions/resolve-document.action", () => ({
-  resolveDocumentAction: vi.fn(),
-}));
-
 // next/navigation is referenced by I18nProvider (via the federated
 // dictionary loader) and by AppHeader itself.
 const mocks = vi.hoisted(() => ({
@@ -84,9 +77,6 @@ vi.mock("@/contexts/notifications/interfaces/actions/notification.actions", () =
   deleteNotificationAction: mocks.deleteNotificationAction,
   acceptInvitationNotificationAction: mocks.acceptInvitationNotificationAction,
 }));
-
-import { resolveDocumentAction } from "@/contexts/crm/interfaces/actions/resolve-document.action";
-const mockResolveDocumentAction = vi.mocked(resolveDocumentAction);
 
 const baseCustomerProps = {
   establishmentId: "est-1",
@@ -138,13 +128,6 @@ beforeEach(() => {
   vi.clearAllMocks();
   mocks.pathname = "/welcome";
   mocks.searchParams = new URLSearchParams();
-  mockResolveDocumentAction.mockResolvedValue({
-    status: "error",
-    data: null,
-    error: null,
-    errorId: null,
-    fieldErrors: null,
-  });
   mocks.signOut.mockResolvedValue({ status: "success" });
   window.matchMedia = vi.fn().mockReturnValue({
     addEventListener: vi.fn(),

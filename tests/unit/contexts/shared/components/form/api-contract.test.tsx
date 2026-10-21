@@ -19,10 +19,6 @@ import { CreateCategoryModal } from "@/contexts/catalog/interfaces/components/ca
 // continues to render without runtime errors — they are not snapshot tests.
 // ---------------------------------------------------------------------------
 
-vi.mock("@/contexts/crm/interfaces/actions/resolve-document.action", () => ({
-  resolveDocumentAction: vi.fn(),
-}));
-
 vi.mock("next/navigation", () => ({
   useRouter: () => ({
     refresh: vi.fn(),
@@ -86,18 +82,8 @@ vi.mock("@/contexts/catalog/interfaces/hooks/use-create-service-category", () =>
   }),
 }));
 
-import { resolveDocumentAction } from "@/contexts/crm/interfaces/actions/resolve-document.action";
-const mockResolveDocumentAction = vi.mocked(resolveDocumentAction);
-
 beforeEach(() => {
   vi.clearAllMocks();
-  mockResolveDocumentAction.mockResolvedValue({
-    status: "error",
-    data: null,
-    error: null,
-    errorId: null,
-    fieldErrors: null,
-  });
 
   editServiceHooks.updateState = { status: "idle", error: null };
   editServiceHooks.updateFormAction = vi.fn();
@@ -289,7 +275,7 @@ describe("API contract — CustomerForm props", () => {
     expect(screen.queryByTestId("submit-icon")).not.toBeInTheDocument();
   });
 
-  it("accepts establishmentId as a required string prop and forwards it to resolveDocumentAction", async () => {
+  it("accepts establishmentId as a required string prop", () => {
     render(
       <I18nProvider initialLocale="en">
         <CustomerForm
@@ -301,18 +287,7 @@ describe("API contract — CustomerForm props", () => {
       </I18nProvider>,
     );
 
-    // The autofill button is the only place establishmentId is observable
-    // from the outside (it's forwarded to resolveDocumentAction). Clicking
-    // it should call the mock with "est-42".
-    const user = userEvent.setup();
-    await user.type(screen.getByLabelText(/document number/i), "12345678");
-    await user.click(screen.getByRole("button", { name: /autofill/i }));
-
-    expect(mockResolveDocumentAction).toHaveBeenCalledWith(
-      "dni",
-      "12345678",
-      "est-42",
-    );
+    expect(screen.getByRole("button", { name: /^save$/i })).toBeInTheDocument();
   });
 });
 

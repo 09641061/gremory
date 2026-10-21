@@ -2,32 +2,15 @@
 
 import * as React from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import {
-  ChevronLeft,
-  ChevronRight,
-  ChevronsLeft,
-  ChevronsRight,
-  Edit,
-  Plus,
-  Search,
-  Trash2,
-  UsersRound,
-} from "lucide-react";
-
-import { deleteCustomerAction } from "@/contexts/crm/interfaces/actions/delete-customer.action";
+import { MessageSquare, Users } from "lucide-react";
 import { CustomerResponse } from "@/contexts/crm/application/models/customer";
 import { PageResponse } from "@/contexts/crm/application/services/crm-query.service";
 import { ErrorAlert } from "@/contexts/shared/interfaces/components/feedback/error";
 import { PageHeader, PageShell } from "@/contexts/shared/interfaces/components/layout/page-shell";
-import { EntityActionsMenu } from "@/contexts/shared/interfaces/components/actions/entity-actions-menu";
-import { DeleteConfirmDialog } from "@/contexts/shared/interfaces/components/dialogs/delete-confirm-dialog";
-import { Badge } from "@/contexts/shared/interfaces/components/ui/badge";
-import { Button } from "@/contexts/shared/interfaces/components/ui/button";
-import { Card, CardContent } from "@/contexts/shared/interfaces/components/ui/card";
-import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/contexts/shared/interfaces/components/ui/empty";
-import { Input } from "@/contexts/shared/interfaces/components/ui/input";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/contexts/shared/interfaces/components/ui/table";
 import { useCrmTranslations } from "@/contexts/crm/interfaces/i18n";
+import { CrmMasterDetailView } from "./crm-master-detail-view";
+import { ChatWhatsappInboxView } from "@/contexts/chat/interfaces/components/whatsapp-inbox/chat-whatsapp-inbox-view";
+import { openWhatsappForCustomerAction } from "@/contexts/chat/interfaces/actions/whatsapp-conversations.action";
 
 interface CrmClientWrapperProps {
   initialCustomers: PageResponse<CustomerResponse>;
@@ -43,17 +26,21 @@ export function CrmClientWrapper({
   establishmentId,
   canCreateCustomer = true,
   canUpdateCustomer = true,
-  canDeleteCustomer = true,
   loadError = false,
 }: CrmClientWrapperProps) {
   const t = useCrmTranslations();
   const router = useRouter();
   const searchParams = useSearchParams();
 
+  const [activeTab, setActiveTab] = React.useState<"customers" | "whatsapp">(
+    (searchParams.get("tab") as "customers" | "whatsapp") || "customers",
+  );
+
   const [searchTerm, setSearchTerm] = React.useState(searchParams.get("search") || "");
-  const [customerToDelete, setCustomerToDelete] = React.useState<CustomerResponse | null>(null);
-  const [errorMsg, setErrorMsg] = React.useState<string | null>(null);
-  const [isDeleting, setIsDeleting] = React.useState<string | null>(null);
+  const [selectedCustomerId, setSelectedCustomerId] = React.useState<string | null>(
+    initialCustomers.content[0]?.id ?? null,
+  );
+  const [activeWhatsappConversationId, setActiveWhatsappConversationId] = React.useState<string | null>(null);
 
   const handleSearchChange = (value: string) => {
     setSearchTerm(value);
@@ -67,41 +54,23 @@ export function CrmClientWrapper({
     router.push(`/crm?${params.toString()}`);
   };
 
-  const handlePageChange = (newPage: number) => {
-    const params = new URLSearchParams(searchParams.toString());
-    params.set("page", String(newPage));
-    router.push(`/crm?${params.toString()}`);
-  };
-
-  const handleRefresh = React.useTransition()[1];
-
-  const handleDelete = async () => {
-    if (!customerToDelete || !establishmentId) return;
-    const id = customerToDelete.id;
-    setIsDeleting(id);
-    setErrorMsg(null);
-
+  const handleOpenWhatsapp = async (customerId: string) => {
+    if (!establishmentId) return;
     try {
-      const res = await deleteCustomerAction(id, establishmentId);
-      if (res.status === "success") {
-        setCustomerToDelete(null);
-        handleRefresh(() => {
-          router.refresh();
-        });
-      } else {
-        setErrorMsg(res.error || t.directory.errors.deleteFailed);
+      const res = await openWhatsappForCustomerAction(customerId, establishmentId);
+      if (res.status === "success" && res.data) {
+        setActiveWhatsappConversationId(res.data.id);
       }
     } catch {
-      setErrorMsg(t.directory.errors.unexpectedDelete);
-    } finally {
-      setIsDeleting(null);
+      // Fallback
     }
+    setActiveTab("whatsapp");
   };
 
-  const customers = initialCustomers.content;
-  const currentPage = initialCustomers.page;
-  const totalElements = initialCustomers.totalElements;
-  const totalPages = initialCustomers.totalPages;
+  const handleOpenCustomerDetail = (customerId: string) => {
+    setSelectedCustomerId(customerId);
+    setActiveTab("customers");
+  };
 
   return (
     <>
@@ -111,155 +80,61 @@ export function CrmClientWrapper({
       />
 
       <PageShell>
-        <PageHeader
-          title={t.directory.title}
-          description={t.directory.description}
-          actions={
-            canCreateCustomer ? (
-              <Button onClick={() => router.push(`/crm/new${establishmentId ? `?establishmentId=${encodeURIComponent(establishmentId)}` : ""}`)} className="gap-2">
-                <Plus className="size-4" />
-                {t.directory.addCustomer}
-              </Button>
-            ) : null
-          }
-        />
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2">
+          <PageHeader
+            title={activeTab === "customers" ? t.directory.title : t.tabs.whatsapp}
+            description={activeTab === "customers" ? t.directory.description : "Supervisión del Asistente IA y atención humana por excepción"}
+          />
 
-        <Card>
-          <CardContent className="p-0">
-            <div className="flex flex-col gap-3 border-b border-border/70 bg-muted/30 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
-              <label className="relative block w-full max-w-xl">
-                <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  value={searchTerm}
-                  onChange={(e) => handleSearchChange(e.target.value)}
-                  placeholder={t.directory.searchPlaceholder}
-                  className="pl-9"
-                />
-              </label>
-              <div className="text-sm text-muted-foreground">
-                {totalElements === 1
-                  ? t.directory.customerCount.replace("{count}", "1")
-                  : t.directory.customersCount.replace("{count}", String(totalElements))}
-              </div>
-            </div>
+          {/* Selector minimalista de vista superior (Sin emojis) */}
+          <div className="flex items-center gap-1 p-1 bg-muted/60 rounded-lg border shrink-0">
+            <button
+              type="button"
+              onClick={() => setActiveTab("customers")}
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
+                activeTab === "customers"
+                  ? "bg-background text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <Users className="size-3.5" />
+              <span>{t.tabs.customers}</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab("whatsapp")}
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
+                activeTab === "whatsapp"
+                  ? "bg-background text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <MessageSquare className="size-3.5" />
+              <span>{t.tabs.whatsapp}</span>
+            </button>
+          </div>
+        </div>
 
-            {customers.length === 0 ? (
-              <Empty className="rounded-none border-0 py-16">
-                <EmptyHeader>
-                  <EmptyMedia variant="icon">
-                    <UsersRound />
-                  </EmptyMedia>
-                  <EmptyContent>
-                    <EmptyTitle>{t.directory.noCustomersTitle}</EmptyTitle>
-                    <EmptyDescription>
-                      {t.directory.noCustomersDescription}
-                    </EmptyDescription>
-                  </EmptyContent>
-                </EmptyHeader>
-              </Empty>
-            ) : (
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="px-5 py-3 text-xs font-medium uppercase tracking-wide text-muted-foreground">{t.directory.columns.customer}</TableHead>
-                      <TableHead className="px-5 py-3 text-xs font-medium uppercase tracking-wide text-muted-foreground">{t.directory.columns.document}</TableHead>
-                      <TableHead className="px-5 py-3 text-xs font-medium uppercase tracking-wide text-muted-foreground">{t.directory.columns.type}</TableHead>
-                      <TableHead className="px-5 py-3 text-xs font-medium uppercase tracking-wide text-muted-foreground">{t.directory.columns.email}</TableHead>
-                      <TableHead className="px-5 py-3 text-xs font-medium uppercase tracking-wide text-muted-foreground">{t.directory.columns.phone}</TableHead>
-                      {(canUpdateCustomer || canDeleteCustomer) ? (
-                        <TableHead className="px-5 py-3 text-right text-xs font-medium uppercase tracking-wide text-muted-foreground">{t.directory.columns.actions}</TableHead>
-                      ) : null}
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {customers.map((cust) => (
-                      <TableRow key={cust.id} className="hover:bg-muted/20">
-                        <TableCell className="px-5 py-4">
-                          <p className="truncate text-sm font-medium text-foreground">{cust.name}</p>
-                        </TableCell>
-                        <TableCell className="px-5 py-4 text-sm text-muted-foreground">{cust.documentNumber}</TableCell>
-                        <TableCell className="px-5 py-4">
-                          <Badge variant="outline" className="rounded-full px-2.5 text-[0.7rem] uppercase tracking-wide">
-                            {cust.documentType}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="px-5 py-4 text-sm text-muted-foreground">{cust.email}</TableCell>
-                        <TableCell className="px-5 py-4 text-sm text-muted-foreground">
-                          {cust.phoneCountryCode && cust.phoneNumber
-                            ? `${cust.phoneCountryCode}${cust.phoneNumber}`
-                            : cust.phone ?? "—"}
-                        </TableCell>
-                        {(canUpdateCustomer || canDeleteCustomer) ? (
-                          <TableCell className="px-5 py-4 text-right">
-                            <EntityActionsMenu
-                              label={t.directory.actions.moreActions.replace("{name}", cust.name)}
-                              actions={[
-                                {
-                                  label: t.directory.actions.editProfile,
-                                  icon: Edit,
-                                  hidden: !canUpdateCustomer,
-                                  onSelect: () =>
-                                    router.push(`/crm/${cust.id}/edit?establishmentId=${encodeURIComponent(cust.establishmentId)}`),
-                                },
-                                {
-                                  label: isDeleting === cust.id ? t.directory.actions.deleting : t.directory.actions.delete,
-                                  icon: Trash2,
-                                  variant: "destructive",
-                                  hidden: !canDeleteCustomer,
-                                  disabled: isDeleting === cust.id,
-                                  onSelect: () => setCustomerToDelete(cust),
-                                },
-                              ]}
-                            />
-                          </TableCell>
-                        ) : null}
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            )}
-
-            {totalPages > 1 ? (
-              <footer className="flex items-center justify-between border-t border-border/70 bg-muted/20 px-5 py-4">
-                <div className="text-xs text-muted-foreground">
-                  {t.directory.pagination.pageOf
-                    .replace("{page}", String(currentPage + 1))
-                    .replace("{totalPages}", String(totalPages))
-                    .replace("{totalElements}", String(totalElements))}
-                </div>
-                <div className="flex items-center gap-1">
-                  <Button variant="outline" size="icon-sm" onClick={() => handlePageChange(0)} disabled={currentPage === 0} aria-label={t.directory.pagination.firstPage}>
-                    <ChevronsLeft className="size-4" />
-                  </Button>
-                  <Button variant="outline" size="icon-sm" onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage === 0} aria-label={t.directory.pagination.previousPage}>
-                    <ChevronLeft className="size-4" />
-                  </Button>
-                  <Button variant="outline" size="icon-sm" onClick={() => handlePageChange(currentPage + 1)} disabled={currentPage >= totalPages - 1} aria-label={t.directory.pagination.nextPage}>
-                    <ChevronRight className="size-4" />
-                  </Button>
-                  <Button variant="outline" size="icon-sm" onClick={() => handlePageChange(totalPages - 1)} disabled={currentPage >= totalPages - 1} aria-label={t.directory.pagination.lastPage}>
-                    <ChevronsRight className="size-4" />
-                  </Button>
-                </div>
-              </footer>
-            ) : null}
-          </CardContent>
-        </Card>
+        {activeTab === "customers" ? (
+          <CrmMasterDetailView
+            customers={initialCustomers.content}
+            establishmentId={establishmentId || ""}
+            selectedCustomerId={selectedCustomerId}
+            onSelectCustomer={(c) => setSelectedCustomerId(c.id)}
+            onOpenWhatsapp={handleOpenWhatsapp}
+            searchTerm={searchTerm}
+            onSearchChange={handleSearchChange}
+            canCreateCustomer={canCreateCustomer}
+            canUpdateCustomer={canUpdateCustomer}
+          />
+        ) : (
+          <ChatWhatsappInboxView
+            establishmentId={establishmentId || ""}
+            initialConversationId={activeWhatsappConversationId}
+            onOpenCustomerDetail={handleOpenCustomerDetail}
+          />
+        )}
       </PageShell>
-
-      <DeleteConfirmDialog
-        open={customerToDelete !== null}
-        onOpenChange={(open) => {
-          if (!open) setCustomerToDelete(null);
-        }}
-        entityLabel={t.directory.deleteDialog.entityLabel}
-        entityName={customerToDelete?.name ?? ""}
-        pending={isDeleting !== null}
-        error={errorMsg}
-        onConfirm={handleDelete}
-      />
     </>
   );
 }

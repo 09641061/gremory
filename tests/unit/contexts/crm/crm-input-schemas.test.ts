@@ -1,26 +1,29 @@
 import { describe, expect, it } from "vitest";
-import { deleteCustomerInputSchema, resolveDocumentInputSchema } from "@/contexts/crm/interfaces/schemas/action-input.schema";
-import { resolvedIdentitySchema } from "@/contexts/crm/infrastructure/contracts/crm.schemas";
+import { deleteCustomerInputSchema, updateCustomerNotesInputSchema } from "@/contexts/crm/interfaces/schemas/action-input.schema";
 
 describe("CRM action input schemas", () => {
   it("rejects blank identifiers", () => {
     expect(deleteCustomerInputSchema.safeParse({ id: "", establishmentId: "est-1" }).success).toBe(false);
-    expect(resolveDocumentInputSchema.safeParse({ type: "dni", number: "", establishmentId: "est-1" }).success).toBe(false);
+    expect(deleteCustomerInputSchema.safeParse({ id: "cust-1", establishmentId: "" }).success).toBe(false);
   });
 
-  it("accepts DNI resolution without SUNAT metadata", () => {
-    const result = resolvedIdentitySchema.safeParse({
-      documentNumber: "07760394",
-      name: "Maria Gonzalez",
-      taxpayerStatus: null,
-      taxpayerCondition: null,
-    });
+  it("validates updateCustomerNotesInputSchema correctly", () => {
+    expect(updateCustomerNotesInputSchema.safeParse({
+      customerId: "cust-1",
+      establishmentId: "est-1",
+      notes: "Cliente prefiere corte con tijera",
+    }).success).toBe(true);
 
-    expect(result.success).toBe(true);
-  });
+    expect(updateCustomerNotesInputSchema.safeParse({
+      customerId: "",
+      establishmentId: "est-1",
+      notes: "Notes",
+    }).success).toBe(false);
 
-  it("accepts only the stable document types", () => {
-    expect(resolveDocumentInputSchema.safeParse({ type: "dni", number: "12345678", establishmentId: "est-1" }).success).toBe(true);
-    expect(resolveDocumentInputSchema.safeParse({ type: "tax", number: "123", establishmentId: "est-1" }).success).toBe(false);
+    expect(updateCustomerNotesInputSchema.safeParse({
+      customerId: "cust-1",
+      establishmentId: "est-1",
+      notes: "a".repeat(1001),
+    }).success).toBe(false);
   });
 });

@@ -13,3 +13,7 @@ export function createCrmCommandService(organizationId?: string): CrmCommandPort
 export function createCrmQueryService(organizationId?: string): CrmQueryPort {
   return composeQueryService(new CrmApiGateway(organizationId));
 }
+
+export function createCrmApiGateway(organizationId?: string): CrmApiGateway {
+  return new CrmApiGateway(organizationId);
+}

@@ -32,6 +32,7 @@ const ARCHITECTURE_ROOTS = [
   "contexts/business",
   "contexts/catalog",
   "contexts/crm",
+  "contexts/chat",
   "contexts/scheduling",
   "contexts/billing",
   "contexts/notifications",

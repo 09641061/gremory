@@ -6,12 +6,6 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { I18nProvider } from "@/contexts/shared/interfaces/i18n";
 import { CustomerForm } from "@/contexts/crm/interfaces/components/customer-management/customer-form";
 
-// Server action — the form calls it for DNI/RUC autofill. We mock it to keep
-// the test pure (no Next.js runtime, no auth/workspace queries).
-vi.mock("@/contexts/crm/interfaces/actions/resolve-document.action", () => ({
-  resolveDocumentAction: vi.fn(),
-}));
-
 // next/navigation is referenced transitively by other modules in the form
 // tree (e.g. I18nProvider). A router stub is the safe default.
 vi.mock("next/navigation", () => ({
@@ -24,9 +18,6 @@ vi.mock("next/navigation", () => ({
   usePathname: () => "/crm",
   useSearchParams: () => new URLSearchParams(),
 }));
-
-import { resolveDocumentAction } from "@/contexts/crm/interfaces/actions/resolve-document.action";
-const mockResolveDocumentAction = vi.mocked(resolveDocumentAction);
 
 const baseProps = {
   establishmentId: "est-1",
@@ -83,13 +74,6 @@ async function fillValidForm(
 
 beforeEach(() => {
   vi.clearAllMocks();
-  mockResolveDocumentAction.mockResolvedValue({
-    status: "error",
-    data: null,
-    error: null,
-    errorId: null,
-    fieldErrors: null,
-  });
 });
 
 // ---------------------------------------------------------------------------
@@ -131,28 +115,6 @@ describe("CustomerForm — initial render", () => {
     expect(screen.getByLabelText(/email address/i)).toHaveValue("maria@example.com");
     expect(screen.getByRole("textbox", { name: /country code/i })).toHaveValue("+51");
     expect(screen.getByRole("textbox", { name: /phone number/i })).toHaveValue("987654321");
-  });
-
-  it("shows the autofill button for DNI and RUC and hides it for the other types", () => {
-    // Each scenario renders a fresh form because CustomerForm's useState
-    // initializers only run on mount; a `rerender` with new initialData would
-    // keep the previous state and silently invalidate this assertion. We
-    // `unmount()` between scenarios so the previous form's autofill button
-    // does not leak into the DOM of the next render.
-    const dni = renderForm({ initialData: { docType: "dni" } });
-    expect(screen.getByRole("button", { name: /autofill/i })).toBeInTheDocument();
-    dni.unmount();
-
-    const ruc = renderForm({ initialData: { docType: "ruc" } });
-    expect(screen.getByRole("button", { name: /autofill/i })).toBeInTheDocument();
-    ruc.unmount();
-
-    const passport = renderForm({ initialData: { docType: "passport" } });
-    expect(screen.queryByRole("button", { name: /autofill/i })).not.toBeInTheDocument();
-    passport.unmount();
-
-    renderForm({ initialData: { docType: "foreign_resident_card" } });
-    expect(screen.queryByRole("button", { name: /autofill/i })).not.toBeInTheDocument();
   });
 });
 
@@ -455,95 +417,5 @@ describe("CustomerForm — cancel button", () => {
   it("does not render the cancel button when onCancel is not provided", () => {
     renderForm({ onCancel: undefined });
     expect(screen.queryByRole("button", { name: /^cancel$/i })).not.toBeInTheDocument();
-  });
-});
-
-// ---------------------------------------------------------------------------
-// Autofill behavior (calls resolveDocumentAction and patches the name)
-// ---------------------------------------------------------------------------
-
-describe("CustomerForm — autofill", () => {
-  it("calls resolveDocumentAction with the doc type and number on autofill click", async () => {
-    mockResolveDocumentAction.mockResolvedValueOnce({
-      status: "error",
-      data: null,
-      error: null,
-      errorId: null,
-      fieldErrors: null,
-    });
-
-    renderForm({ initialData: { docType: "dni" } });
-    const user = userEvent.setup();
-
-    await user.type(screen.getByLabelText(/document number/i), "12345678");
-    await user.click(screen.getByRole("button", { name: /autofill/i }));
-
-    await waitFor(() => {
-      expect(mockResolveDocumentAction).toHaveBeenCalledWith(
-        "dni",
-        "12345678",
-        "est-1",
-      );
-    });
-  });
-
-  it("patches the name field with the resolved customer data", async () => {
-    mockResolveDocumentAction.mockResolvedValueOnce({
-      status: "success",
-      data: {
-        documentNumber: "12345678",
-        name: "Resolved Name",
-        taxpayerStatus: null,
-        taxpayerCondition: null,
-      },
-      error: null,
-      errorId: null,
-      fieldErrors: null,
-    });
-
-    renderForm({ initialData: { docType: "dni" } });
-    const user = userEvent.setup();
-
-    await user.type(screen.getByLabelText(/document number/i), "12345678");
-    await user.click(screen.getByRole("button", { name: /autofill/i }));
-
-    await waitFor(() => {
-      expect(screen.getByLabelText(/full name/i)).toHaveValue("Resolved Name");
-    });
-  });
-
-  it("shows the lookup error when the document cannot be resolved", async () => {
-    mockResolveDocumentAction.mockResolvedValueOnce({
-      status: "error",
-      data: null,
-      error: "Identity document not found or invalid.",
-      errorId: "lookup-error",
-      fieldErrors: null,
-    });
-
-    renderForm({ initialData: { docType: "dni" } });
-    const user = userEvent.setup();
-
-    await user.type(screen.getByLabelText(/document number/i), "12345678");
-    await user.click(screen.getByRole("button", { name: /autofill/i }));
-
-    expect(await screen.findByRole("alert")).toHaveTextContent(/identity document not found/i);
-  });
-
-  it("does not throw when resolveDocumentAction rejects", async () => {
-    mockResolveDocumentAction.mockRejectedValueOnce(new Error("network"));
-
-    renderForm({ initialData: { docType: "dni" } });
-    const user = userEvent.setup();
-
-    await user.type(screen.getByLabelText(/document number/i), "12345678");
-    await expect(
-      user.click(screen.getByRole("button", { name: /autofill/i })),
-    ).resolves.not.toThrow();
-  });
-
-  it("disables the autofill button when the document number is empty", () => {
-    renderForm({ initialData: { docType: "dni" } });
-    expect(screen.getByRole("button", { name: /autofill/i })).toBeDisabled();
   });
 });
