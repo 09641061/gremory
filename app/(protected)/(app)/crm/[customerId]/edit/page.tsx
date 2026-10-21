@@ -28,10 +28,11 @@ async function EditCustomerPageContent({ params, searchParams }: EditCustomerPag
     redirect(resolveModuleAccessFallback(workspace));
   }
   const establishmentId = query.establishmentId ?? workspace.activeEstablishmentId;
-
+  const isOwner = workspace.accountType === "OWNER";
   const canUpdateCustomer = hasEstablishmentPermission(
     getWorkspaceEstablishment(workspace, establishmentId),
     "crm:manage",
+    isOwner,
   );
   if (!canUpdateCustomer || !establishmentId) {
     redirect("/access-denied");

@@ -1,9 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Loader2 } from "lucide-react";
 
-import { resolveDocumentAction } from "@/contexts/crm/interfaces/actions/resolve-document.action";
 import { FormField } from "@/contexts/shared/interfaces/components/form/form-field";
 import { FormSection } from "@/contexts/shared/interfaces/components/form/form-section";
 import { FormSubmitButton } from "@/contexts/shared/interfaces/components/form/form-submit-button";
@@ -53,7 +51,6 @@ export function CustomerForm({
   isSaving,
   submitLabel,
   submitIcon,
-  establishmentId,
 }: CustomerFormProps) {
   const t = useCrmTranslations();
   const [docType, setDocType] = React.useState(initialData?.docType || "dni");
@@ -64,8 +61,6 @@ export function CustomerForm({
   const [phoneNumber, setPhoneNumber] = React.useState(initialData?.phoneNumber || "");
   const { errors, setError, clearError } = useFormValidation();
   const error = errors[FORM_ERROR_FIELD] ?? null;
-  const [isResolving, setIsResolving] = React.useState(false);
-  const identityLookupFailedMessage = t.form.errors.identityLookupFailed;
   // `useFormSubmit` centralises the double-submit guard: `guard()` is the
   // synchronous check used at the top of `handleSubmit` so a stale click
   // that races React's commit of `isSaving` still early-returns, and
@@ -73,26 +68,6 @@ export function CustomerForm({
   // the parent's async work is blocked. `isSubmitting` feeds the submit
   // button's loading state as a defense-in-depth alongside `isSaving`.
   const { isSubmitting, submit, guard } = useFormSubmit();
-
-  const handleResolve = React.useCallback(async () => {
-    if (docType !== "dni" && docType !== "ruc") return;
-    if (!docNumber) return;
-
-    setIsResolving(true);
-    clearError(FORM_ERROR_FIELD);
-    try {
-      const res = await resolveDocumentAction(docType as "dni" | "ruc", docNumber, establishmentId);
-      if (res.status === "success" && res.data) {
-        setName(res.data.name);
-      } else if (res.status === "error") {
-        setError(FORM_ERROR_FIELD, res.error ?? identityLookupFailedMessage);
-      }
-    } catch {
-      setError(FORM_ERROR_FIELD, identityLookupFailedMessage);
-    } finally {
-      setIsResolving(false);
-    }
-  }, [clearError, docNumber, docType, establishmentId, identityLookupFailedMessage, setError]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -144,8 +119,6 @@ export function CustomerForm({
     });
   };
 
-  const isDniOrRuc = docType === "dni" || docType === "ruc";
-
   return (
     <form onSubmit={handleSubmit} noValidate className="space-y-6">
       {error ? (
@@ -176,16 +149,10 @@ export function CustomerForm({
             </NativeSelect>
           </FormField>
 
-          {/* doc_number: autofill Button is FormField's `trailingAdornment`. For non-DNI/RUC doc types the adornment is null and FormField drops the flex wrapper. */}
           <FormField
             id="doc_number"
             label={t.form.documentNumberLabel}
             className="md:col-span-2"
-            trailingAdornment={isDniOrRuc ? (
-              <Button type="button" variant="outline" onClick={handleResolve} disabled={isResolving || !docNumber}>
-                {isResolving ? <Loader2 className="size-4 animate-spin" /> : t.form.autoFill}
-              </Button>
-            ) : null}
           >
             <Input
               id="doc_number"

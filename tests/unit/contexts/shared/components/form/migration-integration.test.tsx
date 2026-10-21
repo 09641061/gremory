@@ -13,10 +13,6 @@ import { CreateCategoryModal } from "@/contexts/catalog/interfaces/components/ca
 // self-contained and explicit about what it stubs out).
 // ---------------------------------------------------------------------------
 
-vi.mock("@/contexts/crm/interfaces/actions/resolve-document.action", () => ({
-  resolveDocumentAction: vi.fn(),
-}));
-
 vi.mock("next/navigation", () => ({
   useRouter: () => ({
     refresh: vi.fn(),
@@ -83,18 +79,8 @@ vi.mock("@/contexts/catalog/interfaces/hooks/use-create-service-category", () =>
   }),
 }));
 
-import { resolveDocumentAction } from "@/contexts/crm/interfaces/actions/resolve-document.action";
-const mockResolveDocumentAction = vi.mocked(resolveDocumentAction);
-
 beforeEach(() => {
   vi.clearAllMocks();
-  mockResolveDocumentAction.mockResolvedValue({
-    status: "error",
-    data: null,
-    error: null,
-    errorId: null,
-    fieldErrors: null,
-  });
 
   editServiceHooks.updateState = { status: "idle", error: null };
   editServiceHooks.updateFormAction = vi.fn();

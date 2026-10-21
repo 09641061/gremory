@@ -42,8 +42,9 @@ async function CrmPageContent({ searchParams }: CrmPageProps) {
   }
 
   const workspaceEstablishment = getWorkspaceEstablishment(workspace, establishmentId);
-  const canReadCrm = hasEstablishmentPermission(workspaceEstablishment, "crm:read");
-  const canManageCrm = hasEstablishmentPermission(workspaceEstablishment, "crm:manage");
+  const isOwner = workspace.accountType === "OWNER";
+  const canReadCrm = hasEstablishmentPermission(workspaceEstablishment, "crm:read", isOwner);
+  const canManageCrm = hasEstablishmentPermission(workspaceEstablishment, "crm:manage", isOwner);
   const permissions: CrmPermissions = {
     canReadCustomers: canReadCrm,
     canCreateCustomer: canManageCrm,

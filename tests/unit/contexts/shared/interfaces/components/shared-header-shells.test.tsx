@@ -1,5 +1,5 @@
 /** @vitest-environment jsdom */
-import { render, screen, within } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { WorkspaceHeaderViewModel } from "@/contexts/business/application/model/business-workspace.view-models";
 
@@ -83,7 +83,9 @@ describe("shared account header and route shells", () => {
     expect(await screen.findByRole("menuitem", { name: "Profile" })).toBeVisible();
     expect(screen.queryByRole("menuitem", { name: "Invoices" })).toBeNull();
     await user.keyboard("{Escape}");
-    expect(screen.getByRole("button", { name: "Ada" })).toHaveFocus();
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: "Ada" })).toHaveFocus();
+    });
   });
 
   it("should expose the Takodu brand link in the header pointing at the server-resolved home", () => {

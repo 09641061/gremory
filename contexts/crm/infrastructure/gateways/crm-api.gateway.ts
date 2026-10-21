@@ -5,14 +5,17 @@ import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-ses
 import type { CrmCommandPort } from "../../application/ports/crm-command.port";
 import type { CrmQueryPort } from "../../application/ports/crm-query.port";
 import type { RegisterCustomerCommand, UpdateCustomerCommand, DeleteCustomerCommand } from "../../application/models/commands";
-import type { CustomerResponse, ResolvedCustomerData } from "../../application/models/customer";
+import type {
+  CustomerResponse,
+  CustomerOverviewViewModel,
+} from "../../application/models/customer";
 import type { PageResponse } from "../../application/services/crm-query.service";
 import { apiClient } from "@/contexts/shared/infrastructure/http/api-client";
 import { ApiError } from "@/contexts/shared/infrastructure/http/api-client";
 import {
   customerPageResponseSchema,
   customerSchema,
-  resolvedIdentitySchema,
+  customerOverviewResponseSchema,
 } from "../contracts/crm.schemas";
 
 async function resolveAccessToken(providedToken?: string): Promise<string | undefined> {
@@ -82,31 +85,6 @@ export class CrmApiGateway implements CrmCommandPort, CrmQueryPort {
     );
   }
 
-  async resolveDocument(
-    establishmentId: string,
-    dni?: string,
-    ruc?: string,
-    token?: string,
-  ): Promise<ResolvedCustomerData> {
-    const authToken = await resolveAccessToken(token);
-    const query = new URLSearchParams();
-    query.append("establishmentId", establishmentId);
-    if (dni) query.append("dni", dni);
-    if (ruc) query.append("ruc", ruc);
-
-    const response = await apiClient.post<unknown>(
-      `/api/crm/customers/resolve?${query.toString()}`,
-      undefined,
-      {
-        token: authToken,
-        ...this.tenantOptions(),
-        errorMessage: "Failed to resolve identity document",
-        errorType: CrmApiError,
-      },
-    );
-    return parseProviderResponse(resolvedIdentitySchema, response, "resolved identity");
-  }
-
   async search(
     establishmentId: string,
     search?: string,
@@ -143,6 +121,35 @@ export class CrmApiGateway implements CrmCommandPort, CrmQueryPort {
         token: authToken,
         ...this.tenantOptions(),
         errorMessage: "Failed to fetch customer",
+        errorType: CrmApiError,
+      },
+    );
+    return parseProviderResponse(customerSchema, response, "customer");
+  }
+
+  async getCustomerOverview(id: string, establishmentId: string, token?: string): Promise<CustomerOverviewViewModel> {
+    const authToken = await resolveAccessToken(token);
+    const response = await apiClient.get<unknown>(
+      `/api/crm/customers/${encodeURIComponent(id)}/overview?establishmentId=${encodeURIComponent(establishmentId)}`,
+      {
+        token: authToken,
+        ...this.tenantOptions(),
+        errorMessage: "Failed to fetch customer overview",
+        errorType: CrmApiError,
+      },
+    );
+    return parseProviderResponse(customerOverviewResponseSchema, response, "customer overview");
+  }
+
+  async updateCustomerNotes(id: string, establishmentId: string, notes: string, token?: string): Promise<CustomerResponse> {
+    const authToken = await resolveAccessToken(token);
+    const response = await apiClient.patch<unknown>(
+      `/api/crm/customers/${encodeURIComponent(id)}/notes`,
+      { notes, establishmentId },
+      {
+        token: authToken,
+        ...this.tenantOptions(),
+        errorMessage: "Failed to update customer notes",
         errorType: CrmApiError,
       },
     );

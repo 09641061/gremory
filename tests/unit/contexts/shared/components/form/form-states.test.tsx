@@ -12,11 +12,6 @@ import { CreateCategoryModal } from "@/contexts/catalog/interfaces/components/ca
 // Shared mocks
 // ---------------------------------------------------------------------------
 
-// Server action used by the customer form for DNI/RUC autofill.
-vi.mock("@/contexts/crm/interfaces/actions/resolve-document.action", () => ({
-  resolveDocumentAction: vi.fn(),
-}));
-
 // next/navigation is referenced transitively by several modules in the tree.
 vi.mock("next/navigation", () => ({
   useRouter: () => ({
