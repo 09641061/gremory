@@ -1,8 +1,9 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { MessageSquare, Users } from "lucide-react";
+import { MessageSquare, Plus, Users } from "lucide-react";
 import { CustomerResponse } from "@/contexts/crm/application/models/customer";
 import { PageResponse } from "@/contexts/crm/application/services/crm-query.service";
 import { ErrorAlert } from "@/contexts/shared/interfaces/components/feedback/error";
@@ -86,32 +87,45 @@ export function CrmClientWrapper({
             description={activeTab === "customers" ? t.directory.description : "Supervisión del Asistente IA y atención humana por excepción"}
           />
 
-          {/* Selector minimalista de vista superior (Sin emojis) */}
-          <div className="flex items-center gap-1 p-1 bg-muted/60 rounded-lg border shrink-0">
-            <button
-              type="button"
-              onClick={() => setActiveTab("customers")}
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
-                activeTab === "customers"
-                  ? "bg-background text-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              <Users className="size-3.5" />
-              <span>{t.tabs.customers}</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setActiveTab("whatsapp")}
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
-                activeTab === "whatsapp"
-                  ? "bg-background text-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              <MessageSquare className="size-3.5" />
-              <span>{t.tabs.whatsapp}</span>
-            </button>
+          {/* Acciones y selector de vista superior */}
+          <div className="flex items-center gap-2.5 shrink-0">
+            {activeTab === "customers" && canCreateCustomer && (
+              <Link
+                href="/crm/new"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-medium hover:bg-primary/90 transition-colors shadow-xs"
+              >
+                <Plus className="size-3.5" />
+                <span>{t.directory.addCustomer}</span>
+              </Link>
+            )}
+
+            {/* Selector minimalista de vista superior (Sin emojis) */}
+            <div className="flex items-center gap-1 p-1 bg-muted/60 rounded-lg border shrink-0">
+              <button
+                type="button"
+                onClick={() => setActiveTab("customers")}
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
+                  activeTab === "customers"
+                    ? "bg-background text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <Users className="size-3.5" />
+                <span>{t.tabs.customers}</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab("whatsapp")}
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
+                  activeTab === "whatsapp"
+                    ? "bg-background text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <MessageSquare className="size-3.5" />
+                <span>{t.tabs.whatsapp}</span>
+              </button>
+            </div>
           </div>
         </div>
 
