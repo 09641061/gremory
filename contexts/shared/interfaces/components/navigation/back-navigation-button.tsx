@@ -25,7 +25,7 @@ export function BackNavigationButton({
   const { t } = useI18n();
 
   // The org settings hub (`/organization`, `/organization/members`,
-  // `/organization/roles`, `/organization/invites`) is navigated via its own
+  // `/organization/members`, `/organization/invites`) is navigated via its own
   // left-hand sidebar. The browser history there only records the entry into
   // the hub, so `router.back()` would take the user out of the app to
   // whatever they were looking at before. Detect the hub here (client-side,

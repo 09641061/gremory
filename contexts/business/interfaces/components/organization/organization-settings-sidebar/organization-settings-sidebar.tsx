@@ -6,7 +6,6 @@ import {
   Building2,
   Store,
   UserPlus,
-  UserShield,
   Users,
   type LucideIcon,
 } from "lucide-react";
@@ -23,7 +22,6 @@ import { useI18n } from "@/contexts/shared/interfaces/i18n";
 type OrganizationSettingsHref =
   | "/organization"
   | "/organization/members"
-  | "/organization/roles"
   | "/organization/invites"
   | "/establishments";
 
@@ -34,12 +32,12 @@ type OrganizationSettingsHref =
  * the main app sidebar. Lives inside the
  * `app/(protected)/(configuration)/(organization-hub)/` route group, so it
  * scopes itself to the Organization settings hub (Organization + Members +
- * Roles + Invites + Establishments) and never bleeds into sibling
+ * Invites + Establishments) and never bleeds into sibling
  * configuration pages (`/profile`, `/permissions`, the legacy
  * `/organizations` redirect).
  *
  * Entries are hardcoded — no permission filtering for now because every owner
- * who reaches `/organization` is expected to manage the five sections. Add
+ * who reaches `/organization` is expected to manage these sections. Add
  * filtering here if/when granular per-section permissions are introduced.
  */
 export function OrganizationSettingsSidebar() {
@@ -60,11 +58,6 @@ export function OrganizationSettingsSidebar() {
       href: "/organization/members",
       label: t.organizationSettings.members,
       icon: Users,
-    },
-    {
-      href: "/organization/roles",
-      label: t.organizationSettings.roles,
-      icon: UserShield,
     },
     {
       href: "/organization/invites",

@@ -30,7 +30,6 @@ export const en = {
   organizationSettings: {
     organization: "Organization",
     members: "Members",
-    roles: "Roles",
     invites: "Invites",
     establishments: "Establishments",
   },
