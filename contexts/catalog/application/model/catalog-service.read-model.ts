@@ -17,8 +17,6 @@ export function createCatalogServiceReadModel(service: CatalogService): Detailed
     preparationMinutes: service.props.preparationMinutes,
     cleanupMinutes: service.props.cleanupMinutes,
     categoryId: service.props.categoryId ?? null,
-    preServiceInstructions: service.props.preServiceInstructions ?? null,
-    postServiceRecommendations: service.props.postServiceRecommendations ?? null,
     status: service.props.status,
   };
 }

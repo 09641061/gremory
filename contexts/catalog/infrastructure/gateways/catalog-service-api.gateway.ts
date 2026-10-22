@@ -34,12 +34,10 @@ type RawCatalogService = {
   id: string;
   establishmentId: string;
   name: string;
-  description: string;
+  description?: string | null;
   price: number;
   durationMinutes: number;
   categoryId?: string | null;
-  preServiceInstructions?: string | null;
-  postServiceRecommendations?: string | null;
   preparationMinutes: number;
   cleanupMinutes: number;
   status: "ACTIVE" | "INACTIVE" | "DELETED";
@@ -50,12 +48,10 @@ function mapServiceToEntity(raw: RawCatalogService): CatalogService {
     id: createCatalogServiceId(raw.id),
     establishmentId: raw.establishmentId,
     name: raw.name,
-    description: raw.description,
+    description: raw.description ?? "",
     price: createPrice(raw.price),
     durationMinutes: raw.durationMinutes,
     categoryId: raw.categoryId ?? null,
-    preServiceInstructions: raw.preServiceInstructions ?? null,
-    postServiceRecommendations: raw.postServiceRecommendations ?? null,
     preparationMinutes: raw.preparationMinutes ?? 0,
     cleanupMinutes: raw.cleanupMinutes ?? 0,
     status: raw.status,
@@ -67,14 +63,12 @@ function mapServiceToDTO(raw: RawCatalogService): DetailedServiceDTO {
     id: raw.id,
     establishmentId: raw.establishmentId,
     name: raw.name,
-    description: raw.description,
+    description: raw.description ?? "",
     price: raw.price,
     durationMinutes: raw.durationMinutes,
     preparationMinutes: raw.preparationMinutes ?? 0,
     cleanupMinutes: raw.cleanupMinutes ?? 0,
     categoryId: raw.categoryId ?? null,
-    preServiceInstructions: raw.preServiceInstructions ?? null,
-    postServiceRecommendations: raw.postServiceRecommendations ?? null,
     status: raw.status,
   };
 }

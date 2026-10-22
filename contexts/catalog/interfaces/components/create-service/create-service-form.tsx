@@ -8,19 +8,27 @@ import { Spinner } from "@/contexts/shared/interfaces/components/ui/spinner";
 import { Card, CardContent } from "@/contexts/shared/interfaces/components/ui/card";
 import { GeneralInfoSection } from "./general-info-section";
 import { FinancialsAndLogisticsSection } from "./financials-and-logistics-section";
-import { InstructionsSection } from "./instructions-section";
 import { useCreateCatalogService } from "../../hooks/use-create-catalog-service";
-import type { DetailedServiceDTO } from "@/contexts/catalog/application/model/catalog-view.models";
+import type { CategoryDTO, DetailedServiceDTO } from "@/contexts/catalog/application/model/catalog-view.models";
 import { useCatalogTranslations } from "../../i18n";
 
 interface CreateServiceFormProps {
   establishmentId: string;
   categoryId?: string;
+  categories: CategoryDTO[];
+  currency?: "USD" | "PEN";
   onSuccess?: (service: DetailedServiceDTO) => void;
   onCancel?: () => void;
 }
 
-export function CreateServiceForm({ establishmentId, categoryId, onSuccess, onCancel }: CreateServiceFormProps) {
+export function CreateServiceForm({
+  establishmentId,
+  categoryId,
+  categories,
+  currency = "USD",
+  onSuccess,
+  onCancel,
+}: CreateServiceFormProps) {
   const { t } = useCatalogTranslations();
   const router = useRouter();
   const { state, formAction, pending } = useCreateCatalogService((service) => {
@@ -36,62 +44,59 @@ export function CreateServiceForm({ establishmentId, categoryId, onSuccess, onCa
   });
 
   return (
-    <>
+    <div className="w-full space-y-4">
       <ErrorAlert
         title={t.serviceForm.failedToCreateService}
         message={state.status === "error" && !pending ? (state.error ?? undefined) : undefined}
       />
 
-      <div className="w-full bg-background text-foreground">
-        <div className="mx-auto w-full max-w-[800px] px-4 py-8">
-          <form action={formAction} id="create-service-form">
-            <Card className="rounded-lg border-border bg-card p-6">
-              <CardContent className="p-0 space-y-6">
-                <div className="border-b border-border pb-4">
-                  <h1 className="text-xl font-bold text-foreground">{t.serviceForm.createTitle}</h1>
-                  <p className="text-sm text-muted-foreground mt-1.5">
-                    {t.serviceForm.createSubtitle}
-                  </p>
-                </div>
+      <form action={formAction} id="create-service-form">
+        <Card className="rounded-lg border-border bg-card p-6 shadow-sm">
+          <CardContent className="p-0 space-y-6">
+            <div className="border-b border-border pb-4">
+              <h2 className="text-lg font-bold text-foreground">{t.serviceForm.createTitle}</h2>
+              <p className="text-xs text-muted-foreground mt-1">
+                {t.serviceForm.createSubtitle}
+              </p>
+            </div>
 
-                <input type="hidden" name="establishmentId" value={establishmentId} />
-                {categoryId && <input type="hidden" name="categoryId" value={categoryId} />}
+            <input type="hidden" name="establishmentId" value={establishmentId} />
 
-                <GeneralInfoSection />
-                <FinancialsAndLogisticsSection />
-                <InstructionsSection />
+            <GeneralInfoSection
+              categories={categories}
+              defaultValues={{ categoryId }}
+              disabled={pending}
+            />
 
-                {/* Actions Inside Form */}
-                <div className="flex justify-end items-center gap-3 pt-6 border-t border-border mt-8">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    disabled={pending}
-                    onClick={() => {
-                      if (onCancel) {
-                        onCancel();
-                      } else {
-                        router.push("/catalog");
-                      }
-                    }}
-                  >
-                    {t.serviceForm.cancel}
-                  </Button>
+            <FinancialsAndLogisticsSection
+              currency={currency}
+              disabled={pending}
+            />
 
-                  <Button
-                    type="submit"
-                    disabled={pending}
-                    className="gap-2"
-                  >
-                    {pending ? <Spinner className="size-4" /> : <Save className="size-4" />}
-                    {pending ? t.serviceForm.saving : t.serviceForm.save}
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </form>
-        </div>
-      </div>
-    </>
+            <div className="flex justify-end items-center gap-3 pt-6 border-t border-border">
+              {onCancel && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  disabled={pending}
+                  onClick={onCancel}
+                >
+                  {t.serviceForm.cancel}
+                </Button>
+              )}
+
+              <Button
+                type="submit"
+                disabled={pending || categories.length === 0}
+                className="gap-2"
+              >
+                {pending ? <Spinner className="size-4" /> : <Save className="size-4" />}
+                {pending ? t.serviceForm.saving : t.serviceForm.save}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </form>
+    </div>
   );
 }

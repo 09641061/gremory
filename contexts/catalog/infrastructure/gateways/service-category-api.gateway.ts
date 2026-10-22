@@ -25,6 +25,7 @@ type RawServiceCategory = {
   id: string;
   establishmentId: string;
   name: string;
+  displayOrder?: number;
 };
 
 function mapCategoryToEntity(raw: RawServiceCategory): ServiceCategory {
@@ -40,6 +41,7 @@ function mapCategoryToDTO(raw: RawServiceCategory): CategoryDTO {
     id: raw.id,
     establishmentId: raw.establishmentId,
     name: raw.name,
+    displayOrder: raw.displayOrder ?? 0,
   };
 }
 
@@ -161,5 +163,19 @@ export class ServiceCategoryApiGateway
         errorMessage: "Failed to delete category"
       },
     );
+  }
+
+  async reorder(establishmentId: string, categoryIds: string[], token?: string): Promise<CategoryDTO[]> {
+    const authToken = await resolveAccessToken(token);
+    const resources = await apiClient.put<RawServiceCategory[]>(
+      `${apiConfig.routes.catalogCategories}/reorder`,
+      { establishmentId, categoryIds },
+      {
+        token: authToken,
+        ...(await this.tenantOptions()),
+        errorMessage: "Failed to reorder categories",
+      },
+    );
+    return Array.isArray(resources) ? resources.map(mapCategoryToDTO) : [];
   }
 }

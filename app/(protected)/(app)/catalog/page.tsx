@@ -30,6 +30,7 @@ async function CatalogPageContent({ searchParams }: CatalogPageProps) {
 
   const establishmentId = paramEstId ?? workspace.activeEstablishmentId;
   const establishment = getWorkspaceEstablishment(workspace, establishmentId);
+  const currency = establishment?.currency ?? "USD";
   const canManageCatalog = hasEstablishmentPermission(establishment, "catalog:manage");
   const canCreateCategory = canManageCatalog;
   const canUpdateCategory = canManageCatalog;
@@ -55,6 +56,7 @@ async function CatalogPageContent({ searchParams }: CatalogPageProps) {
 
   return (
     <CatalogClientWrapper
+      currency={currency}
       initialEstablishmentId={establishmentId}
       initialSelectedServiceId={paramServiceId}
       initialCategories={categories}

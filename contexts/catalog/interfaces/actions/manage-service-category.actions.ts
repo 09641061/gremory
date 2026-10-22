@@ -100,3 +100,22 @@ export async function deleteServiceCategoryAction(
     };
   }
 }
+
+export async function reorderCatalogCategoriesAction(
+  establishmentId: string,
+  categoryIds: string[]
+): Promise<CategoryActionResult> {
+  try {
+    const context = await requireCatalogContext("catalog:manage", establishmentId);
+    const token = context.token;
+    const adapters = composeCatalogAdapters(context.organizationId);
+    const service = createServiceCategoryCommandService(adapters.categoryGateway);
+    await service.reorder(establishmentId, categoryIds, token);
+    return { status: "success", error: null };
+  } catch (err) {
+    return {
+      status: "error",
+      error: safePublicError(err, "Error while reordering categories").message,
+    };
+  }
+}

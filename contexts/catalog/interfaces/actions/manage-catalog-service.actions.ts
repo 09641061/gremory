@@ -27,8 +27,6 @@ export async function updateCatalogServiceAction(
     price: formData.get("price"),
     durationMinutes: formData.get("durationMinutes"),
     categoryId: formData.get("categoryId") || undefined,
-    preServiceInstructions: formData.get("preServiceInstructions") || undefined,
-    postServiceRecommendations: formData.get("postServiceRecommendations") || undefined,
     preparationMinutes: formData.get("preparationMinutes") || 0,
     cleanupMinutes: formData.get("cleanupMinutes") || 0,
   };

@@ -1,6 +1,14 @@
 import type { CatalogDictionary } from "../index";
 
 export const es: CatalogDictionary = {
+  header: {
+    searchPlaceholder: "Buscar servicios...",
+    filterAll: "Todos",
+    filterActive: "Activos",
+    filterInactive: "Inactivos",
+    newCategoryBtn: "+ Categoría",
+    newServiceBtn: "+ Nuevo servicio",
+  },
   sidebar: {
     createCategory: "Crear categoría",
     createService: "Crear servicio",
@@ -31,8 +39,8 @@ export const es: CatalogDictionary = {
   },
   serviceForm: {
     createTitle: "Crear nuevo servicio",
-    createSubtitle: "Añade un nuevo servicio a tu catálogo. Configura sus detalles, precio, tiempos de atención y preparación para empezar a recibir reservas.",
-    editTitle: "Configuración del servicio",
+    createSubtitle: "Añade un nuevo servicio a tu catálogo. Configura sus detalles, precio y tiempos de atención para empezar a recibir reservas.",
+    editTitle: "Detalles del servicio",
     moreActionsForService: "Más acciones para {name}",
     active: "Activo",
     inactive: "Inactivo",
@@ -44,21 +52,21 @@ export const es: CatalogDictionary = {
     failedToUpdateService: "Error al procesar el servicio",
     serviceNameLabel: "Nombre del servicio",
     serviceNamePlaceholder: "ej. Corte ejecutivo",
+    categoryLabel: "Categoría",
+    selectCategory: "Seleccionar categoría",
     descriptionLabel: "Descripción",
     descriptionPlaceholder: "Describe los detalles principales del servicio...",
-    priceLabel: "Precio ($)",
+    priceLabel: "Precio ({currency})",
     durationLabel: "Duración (min)",
     durationPlaceholder: "30",
     prepLabel: "Prep. (min)",
     prepPlaceholder: "0",
     cleanLabel: "Limp. (min)",
     cleanPlaceholder: "0",
-    preServiceLabel: "Antes del servicio",
-    preServicePlaceholder: "ej. Llegar 5 minutos antes...",
-    postServiceLabel: "Recomendaciones posteriores",
-    postServicePlaceholder: "ej. Evitar lavar el cabello durante 12 horas...",
+    optional: "(Opcional)",
     cancel: "Cancelar",
     save: "Guardar",
+    saveChanges: "Guardar cambios",
     saving: "Guardando...",
   },
   serviceDetail: {
@@ -66,10 +74,6 @@ export const es: CatalogDictionary = {
     editService: "Editar servicio",
     serviceDetailsTitle: "Detalles del servicio",
     descriptionLabel: "Descripción",
-    preServiceLabel: "Instrucciones antes del servicio",
-    noPreService: "Sin instrucciones previas.",
-    postServiceLabel: "Recomendaciones posteriores",
-    noPostService: "Sin recomendaciones posteriores.",
     operationalSchedule: "Horario operacional",
     preparation: "Preparación",
     duration: "Duración",
@@ -79,6 +83,8 @@ export const es: CatalogDictionary = {
     retailPrice: "Precio de venta",
   },
   emptyState: {
-    selectServicePrompt: "Selecciona un servicio de la barra lateral para ver o editar sus ajustes.",
+    selectServicePrompt: "Selecciona un servicio de la lista para ver o editar sus ajustes o haz clic en '+ Nuevo servicio' para registrar uno.",
+    noServicesFound: "No se encontraron servicios con el criterio especificado.",
+    noCategoriesYet: "Aún no tienes categorías creadas. Haz clic en '+ Categoría' para comenzar.",
   },
 };

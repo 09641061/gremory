@@ -20,6 +20,8 @@ export const en = {
     timeZoneDescription: "Used for scheduling and analytics in local time.",
     selectTimeZone: "Select a time zone",
     utcTimeZones: "UTC time zones",
+    currencyTitle: "Establishment Currency",
+    currencyDescription: "Sets the currency symbol for catalog service prices (without price conversion).",
     newTitle: "New establishment",
     newDescription: "Give your establishment a name and an optional photo.",
     createButton: "Create",
