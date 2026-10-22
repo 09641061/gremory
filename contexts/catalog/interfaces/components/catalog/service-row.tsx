@@ -41,9 +41,6 @@ export function ServiceRow({
   return (
     <>
       <div
-        draggable
-        onDragStart={(e) => onDragStart(e, svc.id)}
-        onDragEnd={onDragEnd}
         onClick={() => onSelectService(svc.id)}
         className={`group relative flex items-center justify-between gap-3 p-3 rounded-lg border transition-all cursor-pointer ${
           isSelected
@@ -51,44 +48,55 @@ export function ServiceRow({
             : "border-border/60 bg-card hover:border-border hover:bg-accent/40"
         } ${!isActive ? "opacity-75" : ""}`}
       >
-        {/* Left: Drag Handle + Service Info */}
-        <div className="flex items-center gap-2.5 min-w-0 flex-1">
+        {/* Left: Drag Handle + Service Info (Name, Description, and Duration below) */}
+        <div className="flex items-start gap-2.5 min-w-0 flex-1">
           <div
-            className="cursor-grab active:cursor-grabbing text-muted-foreground/40 hover:text-foreground shrink-0 p-1 -ml-1"
+            draggable
+            onDragStart={(e) => onDragStart(e, svc.id)}
+            onDragEnd={onDragEnd}
+            className="cursor-grab active:cursor-grabbing text-muted-foreground/40 hover:text-foreground shrink-0 p-1 -ml-1 mt-0.5"
             title="Arrastrar para mover de categoría"
             onClick={(e) => e.stopPropagation()}
           >
             <GripVertical className="size-4" />
           </div>
 
-          <div className="min-w-0 flex-1">
+          <div className="min-w-0 flex-1 space-y-1">
             <div className="flex items-center gap-2">
-              <span className={`text-sm font-semibold truncate ${isActive ? "text-foreground" : "text-muted-foreground line-through"}`}>
+              <span
+                className={`text-sm font-semibold truncate ${
+                  isActive ? "text-foreground" : "text-muted-foreground line-through"
+                }`}
+              >
                 {svc.name}
               </span>
             </div>
 
             {svc.description && (
-              <p className="text-xs text-muted-foreground truncate max-w-md mt-0.5">
+              <p className="text-xs text-muted-foreground truncate max-w-md">
                 {svc.description}
               </p>
             )}
+
+            {/* Duración abajo para que no esté al lado del precio */}
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground pt-0.5">
+              <span className="font-medium bg-secondary/80 px-2 py-0.5 rounded text-secondary-foreground text-[11px]">
+                {svc.durationMinutes} min
+              </span>
+              {bufferMinutes > 0 && (
+                <span
+                  className="text-[11px] text-muted-foreground"
+                  title={`Prep: ${svc.preparationMinutes}m, Limp: ${svc.cleanupMinutes}m`}
+                >
+                  (+{bufferMinutes}m)
+                </span>
+              )}
+            </div>
           </div>
         </div>
 
-        {/* Middle/Right: Badges + Price */}
-        <div className="flex items-center gap-3 shrink-0">
-          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <span className="font-medium bg-secondary px-2 py-0.5 rounded text-secondary-foreground">
-              {svc.durationMinutes} min
-            </span>
-            {bufferMinutes > 0 && (
-              <span className="text-[11px] text-muted-foreground" title={`Prep: ${svc.preparationMinutes}m, Limp: ${svc.cleanupMinutes}m`}>
-                (+{bufferMinutes}m)
-              </span>
-            )}
-          </div>
-
+        {/* Right: Only Price + Switch + Trash */}
+        <div className="flex items-center gap-3 shrink-0 self-center">
           <span className="text-sm font-semibold text-foreground min-w-[70px] text-right">
             {currencySymbol} {Number(svc.price).toFixed(2)}
           </span>
@@ -131,8 +139,8 @@ export function ServiceRow({
 
       {isDeleteDialogOpen && (
         <DeleteServiceDialog
-          isOpen={isDeleteDialogOpen}
-          onClose={() => setIsDeleteDialogOpen(false)}
+          open={isDeleteDialogOpen}
+          onOpenChange={setIsDeleteDialogOpen}
           serviceId={svc.id}
           serviceName={svc.name}
           establishmentId={svc.establishmentId}

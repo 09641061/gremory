@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { FolderPlus, Plus, Search, X } from "lucide-react";
 import { Input } from "@/contexts/shared/interfaces/components/ui/input";
@@ -52,6 +52,15 @@ export function CatalogLayout({
   // Categories and services local state
   const [categoriesList, setCategoriesList] = useState<CategoryDTO[]>(initialCategories);
   const [servicesList, setServicesList] = useState<DetailedServiceDTO[]>(initialServices);
+
+  // Sync state when props refresh from server
+  useEffect(() => {
+    setServicesList(initialServices);
+  }, [initialServices]);
+
+  useEffect(() => {
+    setCategoriesList(initialCategories);
+  }, [initialCategories]);
 
   // Inspector selection state
   const [selectedServiceId, setSelectedServiceId] = useState<string | undefined>(initialSelectedServiceId);
@@ -241,7 +250,7 @@ export function CatalogLayout({
                 onClick={() => setIsCreateCategoryModalOpen(true)}
               >
                 <FolderPlus className="size-4" />
-                <span>{t.header?.newCategoryBtn ?? "+ Categoría"}</span>
+                <span>{t.header?.newCategoryBtn ?? "Categoría"}</span>
               </Button>
             )}
 
@@ -257,7 +266,7 @@ export function CatalogLayout({
                 }}
               >
                 <Plus className="size-4" />
-                <span>{t.header?.newServiceBtn ?? "+ Nuevo servicio"}</span>
+                <span>{t.header?.newServiceBtn ?? "Nuevo servicio"}</span>
               </Button>
             )}
           </div>
@@ -357,11 +366,20 @@ export function CatalogLayout({
             <EditServiceForm
               key={`edit-${selectedService.id}`}
               service={selectedService}
+              establishmentId={activeEstablishmentId}
               categories={categoriesList}
               currency={currency}
               canUpdateService={canUpdateService}
               canDeleteService={canDeleteService}
               onCancel={() => setSelectedServiceId(undefined)}
+              onSuccess={(updated) => {
+                if (updated) {
+                  setServicesList((prev) =>
+                    prev.map((s) => (s.id === updated.id ? updated : s))
+                  );
+                }
+                router.refresh();
+              }}
               onDeleted={() => {
                 setServicesList((prev) => prev.filter((s) => s.id !== selectedService.id));
                 setSelectedServiceId(undefined);
@@ -388,7 +406,7 @@ export function CatalogLayout({
                   }}
                 >
                   <Plus className="size-4" />
-                  <span>{t.header?.newServiceBtn ?? "+ Nuevo servicio"}</span>
+                  <span>{t.header?.newServiceBtn ?? "Nuevo servicio"}</span>
                 </Button>
               )}
             </div>
@@ -429,6 +447,11 @@ export function CatalogLayout({
           categoryId={categoryToDelete.id}
           categoryName={categoryToDelete.name}
           establishmentId={activeEstablishmentId}
+          onSuccess={() => {
+            setCategoriesList((prev) => prev.filter((c) => c.id !== categoryToDelete.id));
+            setCategoryToDelete(null);
+            router.refresh();
+          }}
         />
       )}
     </div>

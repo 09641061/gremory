@@ -29,32 +29,30 @@ export function FinancialsAndLogisticsSection({
   const priceLabel = t.serviceForm.priceLabel.replace("{currency}", currencySymbol);
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-      {/* Financials */}
-      <div className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="price">{priceLabel}</Label>
-          <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground font-medium">
-              {currencySymbol}
-            </span>
-            <Input
-              id="price"
-              name="price"
-              type="number"
-              step="0.01"
-              placeholder="0.00"
-              defaultValue={numberFieldValue(defaultValues?.price)}
-              required
-              className="pl-11 bg-card border-border"
-              disabled={disabled}
-            />
-          </div>
+    <div className="space-y-5">
+      {/* Financials (Price) */}
+      <div className="space-y-2">
+        <Label htmlFor="price">{priceLabel}</Label>
+        <div className="relative">
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground font-medium">
+            {currencySymbol}
+          </span>
+          <Input
+            id="price"
+            name="price"
+            type="number"
+            step="0.01"
+            placeholder="0.00"
+            defaultValue={numberFieldValue(defaultValues?.price)}
+            required
+            className="pl-11 bg-card border-border"
+            disabled={disabled}
+          />
         </div>
       </div>
 
-      {/* Logistics */}
-      <div className="space-y-4">
+      {/* Logistics (Duration, Prep, Clean) below Price */}
+      <div className="space-y-2">
         <div className="grid grid-cols-3 gap-3">
           <div className="space-y-1.5">
             <Label htmlFor="durationMinutes" className="text-xs">

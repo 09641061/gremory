@@ -4,8 +4,8 @@ export const en = {
     filterAll: "All",
     filterActive: "Active",
     filterInactive: "Inactive",
-    newCategoryBtn: "+ Category",
-    newServiceBtn: "+ New service",
+    newCategoryBtn: "Category",
+    newServiceBtn: "New service",
   },
   sidebar: {
     createCategory: "Create Category",

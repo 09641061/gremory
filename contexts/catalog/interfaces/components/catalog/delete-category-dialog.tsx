@@ -12,6 +12,7 @@ interface DeleteCategoryDialogProps {
   establishmentId?: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onSuccess?: () => void;
 }
 
 export function DeleteCategoryDialog({
@@ -20,17 +21,20 @@ export function DeleteCategoryDialog({
   establishmentId,
   open,
   onOpenChange,
+  onSuccess,
 }: DeleteCategoryDialogProps) {
   const { t } = useCatalogTranslations();
   const { deleteCategory, pending, state } = useDeleteServiceCategory(() => {
     onOpenChange(false);
+    onSuccess?.();
   });
 
   useEffect(() => {
     if (state.status === "success") {
       onOpenChange(false);
+      onSuccess?.();
     }
-  }, [state.status, onOpenChange]);
+  }, [state.status, onOpenChange, onSuccess]);
 
   return (
     <DeleteConfirmDialog

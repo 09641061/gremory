@@ -75,7 +75,9 @@ export function CategoryItem({
       label: t.sidebar.edit,
       icon: Pencil,
       hidden: !canUpdateCategory,
-      onSelect: () => onOpenEditCategoryModal(cat),
+      onSelect: () => {
+        onOpenEditCategoryModal(cat);
+      },
     },
     {
       label: t.sidebar.delete,
@@ -110,7 +112,6 @@ export function CategoryItem({
   };
 
   const handleDragLeave = (e: React.DragEvent) => {
-    // Only clear if leaving the component entirely
     if (!e.currentTarget.contains(e.relatedTarget as Node)) {
       setIsDragTarget(false);
     }
@@ -151,15 +152,13 @@ export function CategoryItem({
           : "border-border/70 bg-card/60 hover:border-border"
       }`}
     >
-      {/* Category Header */}
-      <div
-        draggable
-        onDragStart={handleDragStart}
-        className="flex items-center justify-between p-3 select-none"
-      >
+      {/* Category Header (not draggable itself to avoid breaking clicks on 3-dots) */}
+      <div className="flex items-center justify-between p-3 select-none">
         <div className="flex items-center gap-2 flex-1 min-w-0">
-          {/* Grip handle to reorder categories */}
+          {/* Grip handle to reorder categories - ONLY this is draggable */}
           <div
+            draggable
+            onDragStart={handleDragStart}
             className="cursor-grab active:cursor-grabbing text-muted-foreground/40 hover:text-foreground shrink-0 p-1 -ml-1"
             title="Arrastrar para reordenar categoría"
           >
@@ -169,7 +168,7 @@ export function CategoryItem({
           <button
             type="button"
             onClick={() => onToggleExpand(cat.id)}
-            className="flex items-center gap-2 truncate text-left flex-1 hover:text-primary transition-colors"
+            className="flex items-center gap-2 truncate text-left flex-1 hover:text-primary transition-colors cursor-pointer"
           >
             {isExpanded ? (
               <ChevronDown className="size-4 text-muted-foreground shrink-0" />
@@ -190,8 +189,12 @@ export function CategoryItem({
           </button>
         </div>
 
-        {/* 3-dots actions menu */}
-        <div className="shrink-0 pl-2">
+        {/* 3-dots actions menu with event isolation */}
+        <div
+          className="shrink-0 pl-2"
+          onClick={(e) => e.stopPropagation()}
+          onMouseDown={(e) => e.stopPropagation()}
+        >
           <EntityActionsMenu
             actions={categoryActions}
             label={t.sidebar.moreActionsForCategory.replace("{name}", cat.name)}

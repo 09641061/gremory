@@ -18,20 +18,24 @@ import { useCatalogTranslations } from "../../i18n";
 
 interface EditServiceFormProps {
   service: DetailedServiceDTO;
+  establishmentId?: string;
   categories?: CategoryDTO[];
   currency?: "USD" | "PEN";
   onCancel?: () => void;
   onDeleted?: () => void;
+  onSuccess?: (service?: DetailedServiceDTO | null) => void;
   canUpdateService: boolean;
   canDeleteService: boolean;
 }
 
 export function EditServiceForm({
   service,
+  establishmentId,
   categories = [],
   currency = "USD",
   onCancel,
   onDeleted,
+  onSuccess,
   canUpdateService,
   canDeleteService,
 }: EditServiceFormProps) {
@@ -39,7 +43,7 @@ export function EditServiceForm({
   const [resetKey, setResetKey] = useState(0);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const { changeStatus, pending: statusPending, state: statusState } = useChangeCatalogServiceStatus();
-  const { state: updateState, formAction, pending: updatePending } = useUpdateCatalogService();
+  const { state: updateState, formAction, pending: updatePending } = useUpdateCatalogService(onSuccess);
 
   const isActive = service.status === "ACTIVE";
 
@@ -101,7 +105,7 @@ export function EditServiceForm({
               </div>
 
               <input type="hidden" name="id" value={service.id} />
-              <input type="hidden" name="establishmentId" value={service.establishmentId} />
+              <input type="hidden" name="establishmentId" value={service.establishmentId || establishmentId || ""} />
 
               <GeneralInfoSection
                 categories={categories}
@@ -171,11 +175,11 @@ export function EditServiceForm({
 
       {isDeleteDialogOpen && (
         <DeleteServiceDialog
-          isOpen={isDeleteDialogOpen}
-          onClose={() => setIsDeleteDialogOpen(false)}
+          open={isDeleteDialogOpen}
+          onOpenChange={setIsDeleteDialogOpen}
           serviceId={service.id}
           serviceName={service.name}
-          establishmentId={service.establishmentId}
+          establishmentId={service.establishmentId || establishmentId}
           onSuccess={() => {
             setIsDeleteDialogOpen(false);
             if (onDeleted) onDeleted();

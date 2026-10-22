@@ -6,8 +6,8 @@ export const es: CatalogDictionary = {
     filterAll: "Todos",
     filterActive: "Activos",
     filterInactive: "Inactivos",
-    newCategoryBtn: "+ Categoría",
-    newServiceBtn: "+ Nuevo servicio",
+    newCategoryBtn: "Categoría",
+    newServiceBtn: "Nuevo servicio",
   },
   sidebar: {
     createCategory: "Crear categoría",

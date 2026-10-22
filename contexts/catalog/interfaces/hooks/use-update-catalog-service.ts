@@ -7,7 +7,9 @@ import {
   type CatalogServiceActionResult,
 } from "../actions/manage-catalog-service.actions";
 
-export function useUpdateCatalogService(onSuccess?: () => void) {
+import type { DetailedServiceDTO } from "@/contexts/catalog/application/model/catalog-view.models";
+
+export function useUpdateCatalogService(onSuccess?: (service?: DetailedServiceDTO | null) => void) {
   const router = useRouter();
   const onSuccessRef = useRef(onSuccess);
 
@@ -23,9 +25,9 @@ export function useUpdateCatalogService(onSuccess?: () => void) {
   useEffect(() => {
     if (state.status === "success") {
       router.refresh();
-      onSuccessRef.current?.();
+      onSuccessRef.current?.(state.data);
     }
-  }, [state.status, router]);
+  }, [state.status, state.data, router]);
 
   return {
     state,
