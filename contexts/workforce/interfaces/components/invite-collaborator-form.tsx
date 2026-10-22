@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useRef } from "react";
+import { useActionState, useEffect, useMemo, useRef } from "react";
 import { MailPlus } from "lucide-react";
 
 import { createIdleActionState } from "@/contexts/shared/application/model/action-state";
@@ -23,6 +23,10 @@ export function InviteCollaboratorForm({ organizationId, establishments }: { org
   const formRef = useRef<HTMLFormElement>(null);
   const action = inviteWorkforceMemberAction.bind(null, organizationId);
   const [state, formAction, pending] = useActionState(action, createIdleActionState<{ invitationId: string }, { email?: string[]; establishmentId?: string[] } | null>());
+  const establishmentItems = useMemo(
+    () => establishments.map(({ id, name }) => ({ value: id, label: name })),
+    [establishments],
+  );
 
   useEffect(() => {
     if (state.status === "success") formRef.current?.reset();
@@ -35,11 +39,6 @@ export function InviteCollaboratorForm({ organizationId, establishments }: { org
         message={state.status === "error" ? state.error : undefined}
         resetKey={pending ? "pending" : state.status}
       />
-      {state.status === "success" ? (
-        <p role="status" className="rounded-lg border border-emerald-500/25 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-700 dark:text-emerald-300">
-          Invitación enviada por correo electrónico.
-        </p>
-      ) : null}
       <FieldGroup className="grid gap-4 md:grid-cols-[minmax(0,1fr)_minmax(220px,0.65fr)_auto] md:items-end">
         <Field data-invalid={Boolean(state.status === "error" && state.fieldErrors?.email)}>
           <FieldLabel htmlFor="invitation-email">Correo electrónico</FieldLabel>
@@ -48,7 +47,7 @@ export function InviteCollaboratorForm({ organizationId, establishments }: { org
         </Field>
         <Field data-invalid={Boolean(state.status === "error" && state.fieldErrors?.establishmentId)}>
           <FieldLabel htmlFor="invitation-establishment">Establecimiento</FieldLabel>
-          <Select name="establishmentId" defaultValue={establishments[0]?.id} required>
+          <Select name="establishmentId" items={establishmentItems} defaultValue={establishments[0]?.id} required>
             <SelectTrigger id="invitation-establishment" className="w-full"><SelectValue placeholder="Selecciona un establecimiento" /></SelectTrigger>
             <SelectContent>
               {establishments.map((establishment) => <SelectItem key={establishment.id} value={establishment.id}>{establishment.name}</SelectItem>)}

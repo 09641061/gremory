@@ -39,7 +39,7 @@ async function OrganizationInvitesPageContent() {
 
   return (
     <PageShell>
-      <PageHeader title={dictionary.organizationSettings.invites} description="Envía un enlace por correo electrónico para sumar colaboradores a tu organización." />
+      <PageHeader title={dictionary.organizationSettings.invites} description="Genera un enlace temporal para sumar colaboradores a tu organización." />
       <Card>
         <CardHeader>
           <CardTitle>Nueva invitación</CardTitle>
