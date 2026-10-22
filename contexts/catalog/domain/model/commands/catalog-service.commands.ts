@@ -1,12 +1,10 @@
 export type CreateCatalogServiceCommand = {
   establishmentId: string;
   name: string;
-  description: string;
+  description?: string | null;
   price: number;
   durationMinutes: number;
   categoryId?: string | null;
-  preServiceInstructions?: string | null;
-  postServiceRecommendations?: string | null;
   preparationMinutes?: number;
   cleanupMinutes?: number;
 };
@@ -14,12 +12,10 @@ export type CreateCatalogServiceCommand = {
 export type UpdateCatalogServiceCommand = {
   id: string;
   name: string;
-  description: string;
+  description?: string | null;
   price: number;
   durationMinutes: number;
   categoryId?: string | null;
-  preServiceInstructions?: string | null;
-  postServiceRecommendations?: string | null;
   preparationMinutes?: number;
   cleanupMinutes?: number;
 };
@@ -33,14 +29,19 @@ export type DeleteCatalogServiceCommand = {
   id: string;
 };
 
+function normalizeNullableString(value: unknown): string | null {
+  if (value === undefined || value === null) return null;
+  const str = String(value).trim();
+  return str.length === 0 ? null : str;
+}
+
 export function createCatalogServiceCreateCommand(
   input: CreateCatalogServiceCommand
 ): CreateCatalogServiceCommand {
   return {
     ...input,
+    description: normalizeNullableString(input.description) ?? "",
     categoryId: normalizeNullableString(input.categoryId),
-    preServiceInstructions: normalizeNullableString(input.preServiceInstructions),
-    postServiceRecommendations: normalizeNullableString(input.postServiceRecommendations),
     preparationMinutes: input.preparationMinutes ?? 0,
     cleanupMinutes: input.cleanupMinutes ?? 0,
   };
@@ -51,15 +52,9 @@ export function createCatalogServiceUpdateCommand(
 ): UpdateCatalogServiceCommand {
   return {
     ...input,
+    description: normalizeNullableString(input.description) ?? "",
     categoryId: normalizeNullableString(input.categoryId),
-    preServiceInstructions: normalizeNullableString(input.preServiceInstructions),
-    postServiceRecommendations: normalizeNullableString(input.postServiceRecommendations),
     preparationMinutes: input.preparationMinutes ?? 0,
     cleanupMinutes: input.cleanupMinutes ?? 0,
   };
-}
-
-function normalizeNullableString(value?: string | null | ""): string | null | undefined {
-  if (value === "") return null;
-  return value;
 }

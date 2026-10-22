@@ -14,6 +14,7 @@ export type EstablishmentListItem = {
   name: string;
   photoUrl: string | null;
   timeZone: string | null;
+  currency?: "USD" | "PEN" | string | null;
   ownerAvailableForScheduling?: boolean;
 };
 

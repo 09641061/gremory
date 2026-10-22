@@ -22,6 +22,8 @@ export const es: BusinessTranslations = {
     timeZoneDescription: "Se usa para agendamiento y analíticas en hora local.",
     selectTimeZone: "Seleccionar una zona horaria",
     utcTimeZones: "Zonas horarias UTC",
+    currencyTitle: "Moneda del establecimiento",
+    currencyDescription: "Define el símbolo monetario de los precios del catálogo (sin conversión cambiaria).",
     newTitle: "Nuevo establecimiento",
     newDescription: "Asigna un nombre a tu establecimiento y una foto opcional.",
     createButton: "Crear",

@@ -32,6 +32,7 @@ export type CreateEstablishmentCommand = Readonly<{
   name: string;
   photoUrl?: string | null;
   timeZone?: string | null;
+  currency?: "USD" | "PEN" | null;
   /** New photo picked by the account, stored before the write lands. */
   photoFile?: CommandFileMetadata | null;
 }>;
@@ -40,6 +41,7 @@ export type UpdateEstablishmentCommand = Readonly<{
   name: string;
   photoUrl?: string | null;
   timeZone?: string | null;
+  currency?: "USD" | "PEN" | null;
   photoFile?: CommandFileMetadata | null;
   /** Drops the stored photo when no replacement is provided. */
   removePhoto?: boolean;

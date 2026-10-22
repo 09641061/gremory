@@ -11,6 +11,7 @@ export interface ServiceCategoryCommandService {
   create(command: CreateServiceCategoryCommand, token?: string): Promise<ServiceCategory>;
   update(command: UpdateServiceCategoryCommand, token?: string): Promise<ServiceCategory>;
   delete(command: DeleteServiceCategoryCommand, token?: string): Promise<void>;
+  reorder(establishmentId: string, categoryIds: string[], token?: string): Promise<CategoryDTO[]>;
 }
 
 export interface ServiceCategoryQueryService {

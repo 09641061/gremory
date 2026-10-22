@@ -10,9 +10,13 @@ import { createCatalogServiceUpdateCommand } from "../../domain/model/commands/c
 import { requireCatalogServiceTargetAuthorization } from "@/contexts/catalog/interfaces/authorization/catalog-authorization";
 import { composeCatalogAdapters } from "../server/catalog-composition";
 
+import { createCatalogServiceReadModel } from "../../application/model/catalog-service.read-model";
+import type { DetailedServiceDTO } from "../../domain/model/view-models";
+
 export type CatalogServiceActionResult = {
   status: "idle" | "success" | "error";
   error: string | null;
+  data?: DetailedServiceDTO | null;
 };
 
 export async function updateCatalogServiceAction(
@@ -27,14 +31,12 @@ export async function updateCatalogServiceAction(
     price: formData.get("price"),
     durationMinutes: formData.get("durationMinutes"),
     categoryId: formData.get("categoryId") || undefined,
-    preServiceInstructions: formData.get("preServiceInstructions") || undefined,
-    postServiceRecommendations: formData.get("postServiceRecommendations") || undefined,
     preparationMinutes: formData.get("preparationMinutes") || 0,
     cleanupMinutes: formData.get("cleanupMinutes") || 0,
   };
 
   const parsed = updateCatalogServiceSchema.extend({
-    establishmentId: z.string().uuid("Invalid establishment ID"),
+    establishmentId: z.string().uuid("Invalid establishment ID").optional().nullable().or(z.literal("")),
   }).safeParse(rawData);
 
   if (!parsed.success) {
@@ -43,18 +45,23 @@ export async function updateCatalogServiceAction(
   }
 
   try {
-    const { establishmentId, ...updateInput } = parsed.data;
+    const { establishmentId: rawEstId, ...updateInput } = parsed.data;
+    const effectiveEstId = rawEstId && rawEstId.trim() ? rawEstId : undefined;
     const auth = await requireCatalogServiceTargetAuthorization(
       String(updateInput.id),
       "catalog:manage",
-      establishmentId,
+      effectiveEstId,
     );
     const token = auth.token;
     const service = composeCatalogAdapters(auth.organizationId).serviceCommandService;
     const command = createCatalogServiceUpdateCommand(updateInput);
-    await service.update(command, token);
+    const updated = await service.update(command, token);
 
-    return { status: "success", error: null };
+    return {
+      status: "success",
+      data: createCatalogServiceReadModel(updated),
+      error: null,
+    };
   } catch (err) {
     return {
       status: "error",

@@ -28,6 +28,7 @@ import { CategoryItem } from "./category-item";
 import { ServiceRow } from "./service-row";
 import { DeleteCategoryDialog } from "./delete-category-dialog";
 import { useCatalogTranslations } from "../../i18n";
+import type { DetailedServiceDTO } from "@/contexts/catalog/application/model/catalog-view.models";
 
 // Sentinel used as drop-target key for the "Uncategorized" bucket, which has no real category id
 const UNCATEGORIZED_DROP_ID = "__uncategorized__";
@@ -229,7 +230,7 @@ export function CategorySidebar({
             {uncategorizedServices.map((svc) => (
               <ServiceRow
                 key={svc.id}
-                svc={svc}
+                svc={svc as unknown as DetailedServiceDTO}
                 isSelected={selectedServiceId === svc.id}
                 onSelectService={onSelectService}
                 onDragStart={handleDragStart}
@@ -242,7 +243,7 @@ export function CategorySidebar({
               <CategoryItem
                 key={cat.id}
                 cat={cat}
-                services={services}
+                services={services as unknown as DetailedServiceDTO[]}
                 selectedCategoryId={selectedCategoryId}
                 selectedServiceId={selectedServiceId}
                 isExpanded={expandedCategoryIds.has(cat.id)}

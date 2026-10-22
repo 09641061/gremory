@@ -33,6 +33,7 @@ export class EstablishmentApiGateway implements EstablishmentRepository {
     name: EstablishmentName,
     photoUrl: EstablishmentPhoto,
     timeZone: string,
+    currency?: "USD" | "PEN",
   ): Promise<Establishment> {
     const authToken = await requireBusinessAccessToken(this.providedToken);
     const resource = await businessPost<EstablishmentResource>(
@@ -42,6 +43,7 @@ export class EstablishmentApiGateway implements EstablishmentRepository {
         name: name.value,
         photoUrl: photoUrl.value,
         timeZone,
+        currency: currency ?? "USD",
       },
       authToken,
       undefined,
@@ -94,6 +96,7 @@ export class EstablishmentApiGateway implements EstablishmentRepository {
         name: establishment.name.value,
         photoUrl: establishment.photoUrl.value,
         timeZone: establishment.timeZone,
+        currency: establishment.currency,
       },
       authToken,
       undefined,
@@ -171,6 +174,7 @@ function toEstablishment(resource: EstablishmentResource): Establishment {
     name: createEstablishmentName(resource.name),
     photoUrl: createEstablishmentPhoto(resource.photoUrl),
     timeZone: resource.timeZone ?? "UTC",
+    currency: resource.currency === "PEN" ? "PEN" : "USD",
     active: true,
     ownerAvailableForScheduling: resource.ownerAvailableForScheduling,
   });

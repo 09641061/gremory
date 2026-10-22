@@ -11,6 +11,7 @@ export type WorkspaceHeaderEstablishment = Readonly<{
   name: string;
   photoUrl?: string | null;
   timeZone?: string | null;
+  currency?: "USD" | "PEN" | null;
   effectivePermissions?: ReadonlyArray<string>;
   canRead?: boolean;
   canUpdate?: boolean;

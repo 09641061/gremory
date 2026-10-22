@@ -12,6 +12,7 @@ import { ErrorAlert } from "@/contexts/shared/interfaces/components/feedback/err
 import { Spinner } from "@/contexts/shared/interfaces/components/ui/spinner";
 import { ImageUploadAvatar } from "@/contexts/shared/interfaces/components/upload/image-upload-avatar";
 import { TimeZoneField } from "../time-zone-field";
+import { CurrencyField } from "../currency-field";
 import { useBusinessTranslations } from "@/contexts/business/interfaces/i18n";
 
 /**
@@ -40,6 +41,7 @@ export function CreateEstablishmentForm({
 
   const [name, setName] = useState("");
   const [timeZone, setTimeZone] = useState("America/Lima");
+  const [currency, setCurrency] = useState("USD");
 
   const [state, formAction, pending] = useActionState(
     createEstablishmentAction,
@@ -159,6 +161,24 @@ export function CreateEstablishmentForm({
                       name="timeZone"
                       value={timeZone}
                       onChange={setTimeZone}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex flex-col border-t border-border">
+                <div className="space-y-4 p-6">
+                  <div className="space-y-1">
+                    <h3 className="text-base font-semibold text-foreground">{t.establishments.currencyTitle}</h3>
+                    <p className="text-sm text-muted-foreground">
+                      {t.establishments.currencyDescription}
+                    </p>
+                  </div>
+                  <div className="max-w-xs">
+                    <CurrencyField
+                      name="currency"
+                      value={currency}
+                      onChange={setCurrency}
                     />
                   </div>
                 </div>

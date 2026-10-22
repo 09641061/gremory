@@ -36,9 +36,6 @@ vi.mock("@/contexts/catalog/interfaces/components/create-service/general-info-se
 vi.mock("@/contexts/catalog/interfaces/components/create-service/financials-and-logistics-section", () => ({
   FinancialsAndLogisticsSection: () => <div data-testid="financials-section" />,
 }));
-vi.mock("@/contexts/catalog/interfaces/components/create-service/instructions-section", () => ({
-  InstructionsSection: () => <div data-testid="instructions-section" />,
-}));
 vi.mock("@/contexts/catalog/interfaces/components/catalog/delete-service-dialog", () => ({
   DeleteServiceDialog: () => null,
 }));

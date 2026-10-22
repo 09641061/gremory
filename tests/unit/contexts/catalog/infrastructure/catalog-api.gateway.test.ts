@@ -6,8 +6,7 @@ import { ApiError } from "@/contexts/shared/infrastructure/http/api-client";
 const category = { id: "cat-1", establishmentId: "est-1", name: "Hair" };
 const service = {
   id: "service-1", establishmentId: "est-1", name: "Cut", description: "Basic cut",
-  price: 25, durationMinutes: 30, categoryId: null, preServiceInstructions: null,
-  postServiceRecommendations: null, preparationMinutes: 0, cleanupMinutes: 0, status: "ACTIVE" as const,
+  price: 25, durationMinutes: 30, categoryId: null, preparationMinutes: 0, cleanupMinutes: 0, status: "ACTIVE" as const,
 };
 function response(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/problem+json" } });
@@ -55,6 +54,5 @@ describe("Catalog gateway contract", () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(response(service)));
     const result = await new CatalogServiceApiGateway().getById("service-1", "est-1", "token");
     expect(result.categoryId).toBeNull();
-    expect(result.preServiceInstructions).toBeNull();
   });
 });

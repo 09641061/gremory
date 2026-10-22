@@ -11,6 +11,7 @@ export interface EstablishmentResource {
   name: string;
   photoUrl: string | null;
   timeZone: string | null;
+  currency?: "USD" | "PEN" | null;
   ownerAvailableForScheduling?: boolean;
 }
 
