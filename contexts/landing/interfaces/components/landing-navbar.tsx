@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { GlobeIcon, MenuIcon } from "lucide-react";
-import { KoduStaIcon } from "@/contexts/shared/interfaces/components/icons/kodu";
+import { KoduFaceMinimalistIcon } from "@/contexts/shared/interfaces/components/icons/kodu-face-minimalist";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import {
   Sheet,
@@ -36,14 +36,14 @@ export function LandingNavbar({ nav }: { nav: LandingNav }) {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/85 backdrop-blur-md">
-      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
+      <div className="mx-auto flex h-16 max-w-6xl items-center gap-8 px-4 sm:px-6">
         <Link
           href="/"
           className="flex items-center gap-2 transition-opacity hover:opacity-80"
           aria-label={nav.brand}
         >
           <span className="text-primary">
-            <KoduStaIcon size={24} />
+            <KoduFaceMinimalistIcon size={24} />
           </span>
           <span className="text-lg font-bold tracking-tight text-foreground">
             {nav.brand}
@@ -62,7 +62,7 @@ export function LandingNavbar({ nav }: { nav: LandingNav }) {
           ))}
         </nav>
 
-        <div className="flex items-center gap-2">
+        <div className="ml-auto flex items-center gap-2">
           <Button
             variant="ghost"
             size="sm"
@@ -78,22 +78,12 @@ export function LandingNavbar({ nav }: { nav: LandingNav }) {
           </Button>
 
           <Button
-            variant="ghost"
             size="sm"
             nativeButton={false}
-            className="hidden h-8 px-3 text-sm font-medium text-foreground hover:bg-transparent hover:text-primary md:inline-flex"
+            className="hidden h-9 rounded-full bg-primary px-5 text-sm font-medium text-primary-foreground hover:bg-primary/90 md:inline-flex"
             render={<Link href="/login" />}
           >
             {nav.login}
-          </Button>
-
-          <Button
-            size="sm"
-            nativeButton={false}
-            className="hidden h-9 gap-1.5 rounded-full bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary/90 md:inline-flex"
-            render={<Link href="/login" />}
-          >
-            {nav.startFree}
           </Button>
 
           <Sheet>
@@ -114,7 +104,7 @@ export function LandingNavbar({ nav }: { nav: LandingNav }) {
                 <SheetHeader className="border-b border-border/40 p-0 pb-6 text-left">
                   <SheetTitle className="flex items-center gap-2 text-base font-bold">
                     <span className="text-primary">
-                      <KoduStaIcon size={22} />
+                      <KoduFaceMinimalistIcon size={22} />
                     </span>
                     {nav.brand}
                   </SheetTitle>
@@ -141,25 +131,13 @@ export function LandingNavbar({ nav }: { nav: LandingNav }) {
                 <SheetClose
                   render={
                     <Button
-                      variant="outline"
-                      nativeButton={false}
-                      className="h-10 w-full justify-center rounded-lg text-sm font-medium border-border/60"
-                      render={<Link href="/login" />}
-                    />
-                  }
-                >
-                  {nav.login}
-                </SheetClose>
-                <SheetClose
-                  render={
-                    <Button
                       nativeButton={false}
                       className="h-10 w-full justify-center rounded-lg bg-primary text-sm font-medium text-primary-foreground hover:bg-primary/90"
                       render={<Link href="/login" />}
                     />
                   }
                 >
-                  {nav.startFree}
+                  {nav.login}
                 </SheetClose>
               </div>
             </SheetContent>

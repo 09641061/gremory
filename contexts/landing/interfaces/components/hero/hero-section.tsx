@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { DropletIcon, Grid2x2Icon, ScissorsIcon, SparklesIcon } from "lucide-react";
-import { KoduStaIcon } from "@/contexts/shared/interfaces/components/icons/kodu";
+import { KoduMinimalistIcon } from "@/contexts/shared/interfaces/components/icons/kodu-minimalist";
 import type { LandingHero } from "@/contexts/landing/interfaces/i18n";
 import { WhatsappMockup } from "./whatsapp-mockup";
 
@@ -20,7 +20,7 @@ export function HeroSection({ hero }: { hero: LandingHero }) {
         <div className="space-y-6">
           <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-accent-foreground">
             <span className="text-primary">
-              <KoduStaIcon size={22} />
+              <KoduMinimalistIcon size={22} />
             </span>
             {hero.eyebrow}
           </p>

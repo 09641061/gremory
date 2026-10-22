@@ -8,7 +8,7 @@ export function WhatsappMockup({
   chat: LandingHero["chat"];
 }) {
   return (
-    <div className="relative mx-auto w-full max-w-sm lg:ml-auto">
+    <div className="relative mx-auto w-full max-w-sm lg:ml-auto lg:max-w-none">
       <div className="rounded-2xl bg-muted/70 p-4 shadow-sm">
         <div className="flex items-center gap-3 border-b border-border/50 pb-3">
           <span className="flex size-9 items-center justify-center rounded-full bg-primary/15 text-sm font-bold text-primary">
