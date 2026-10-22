@@ -73,6 +73,27 @@ export async function revokeWorkforceInvitationAction(organizationId: string, in
   }
 }
 
+export async function deactivateWorkforceMemberAction(organizationId: string, membershipId: string) {
+  const input = z.object({ organizationId: uuid, membershipId: uuid }).safeParse({ organizationId, membershipId });
+  if (!input.success) return { success: false, error: "Colaborador inválido." };
+  try {
+    const accessToken = await requireBusinessAccessToken();
+    await composeWorkforceAdapters().workforceService.deactivateMember(
+      accessToken,
+      input.data.organizationId,
+      input.data.membershipId,
+    );
+    try {
+      revalidatePath("/organization/members");
+    } catch {
+      // The backend write is already confirmed; cache invalidation is best effort.
+    }
+    return { success: true, error: null };
+  } catch (error) {
+    return { success: false, error: memberDeactivationMessage(error) };
+  }
+}
+
 export async function acceptWorkforceInvitationAction(token: string) {
   const parsed = invitationTokenSchema.safeParse(token);
   if (!parsed.success) return { success: false, error: "El enlace de invitación no es válido." };
@@ -107,4 +128,13 @@ function publicMessage(error: unknown, fallback: string) {
   if (status === 404) return "La invitación ya no existe o expiró.";
   if (status === 409) return "Esta persona ya es colaboradora o tiene una invitación pendiente.";
   return fallback;
+}
+
+function memberDeactivationMessage(error: unknown) {
+  const status = error instanceof Error && "status" in error ? Number((error as { status?: unknown }).status) : 0;
+  if (status === 401) return "Inicia sesión para continuar.";
+  if (status === 403) return "No tienes acceso para dar de baja colaboradores.";
+  if (status === 404) return "El colaborador ya no está activo.";
+  if (status === 409) return "Reasigna sus citas futuras antes de darlo de baja.";
+  return "No pudimos dar de baja al colaborador.";
 }

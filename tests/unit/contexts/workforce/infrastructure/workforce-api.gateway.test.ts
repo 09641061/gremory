@@ -6,6 +6,7 @@ const organizationId = "11111111-1111-4111-8111-111111111111";
 const establishmentId = "22222222-2222-4222-8222-222222222222";
 const invitationId = "33333333-3333-4333-8333-333333333333";
 const userId = "44444444-4444-4444-8444-444444444444";
+const membershipId = "55555555-5555-4555-8555-555555555555";
 
 function response(body: unknown, status = 200) {
   return new Response(body === undefined ? null : JSON.stringify(body), { status });
@@ -75,5 +76,19 @@ describe("Workforce API gateway", () => {
     expect(result).toEqual({ organizationId, establishmentId });
     const [, request] = fetchMock.mock.calls[0] as [string, RequestInit];
     expect(new Headers(request.headers).get("Authorization")).toBe("Bearer access-token");
+  });
+
+  it("deactivates a collaborator in the selected organization", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(response(undefined, 204));
+    vi.stubGlobal("fetch", fetchMock);
+
+    await new WorkforceApiGateway().deactivateMember("access-token", organizationId, membershipId);
+
+    const [url, request] = fetchMock.mock.calls[0] as [string, RequestInit];
+    expect(url).toContain(`/api/workforce/members/${membershipId}`);
+    expect(request.method).toBe("DELETE");
+    const headers = new Headers(request.headers);
+    expect(headers.get("Authorization")).toBe("Bearer access-token");
+    expect(headers.get("X-Organization-Id")).toBe(organizationId);
   });
 });

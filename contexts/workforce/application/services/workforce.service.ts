@@ -30,4 +30,8 @@ export class WorkforceService {
   listMembers(accessToken: string, organizationId: string) {
     return this.gateway.listMembers(accessToken, organizationId);
   }
+
+  deactivateMember(accessToken: string, organizationId: string, membershipId: string) {
+    return this.gateway.deactivateMember(accessToken, organizationId, membershipId);
+  }
 }

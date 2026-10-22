@@ -11,6 +11,7 @@ import { composeWorkforceAdapters } from "@/contexts/workforce/interfaces/server
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/contexts/shared/interfaces/components/ui/card";
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/contexts/shared/interfaces/components/ui/empty";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/contexts/shared/interfaces/components/ui/table";
+import { MemberRowActions } from "@/contexts/workforce/interfaces/components/member-row-actions";
 
 export default function OrganizationMembersPage() {
   return (
@@ -39,8 +40,8 @@ async function OrganizationMembersPageContent() {
             <Empty className="border"><EmptyHeader><EmptyMedia variant="icon"><Users /></EmptyMedia><EmptyTitle>Aún no hay colaboradores</EmptyTitle><EmptyDescription>Las personas aparecerán aquí después de aceptar su invitación.</EmptyDescription></EmptyHeader></Empty>
           ) : (
             <Table>
-              <TableHeader><TableRow><TableHead>Correo</TableHead><TableHead>Establecimiento</TableHead><TableHead>Se unió</TableHead></TableRow></TableHeader>
-              <TableBody>{members.map((member) => <TableRow key={member.id}><TableCell className="font-medium">{member.email}</TableCell><TableCell>{member.establishmentName}</TableCell><TableCell>{dateFormatter.format(new Date(member.joinedAt))}</TableCell></TableRow>)}</TableBody>
+              <TableHeader><TableRow><TableHead>Correo</TableHead><TableHead>Establecimiento</TableHead><TableHead>Se unió</TableHead><TableHead className="text-right">Acciones</TableHead></TableRow></TableHeader>
+              <TableBody>{members.map((member) => <TableRow key={member.id}><TableCell className="font-medium">{member.email}</TableCell><TableCell>{member.establishmentName}</TableCell><TableCell>{dateFormatter.format(new Date(member.joinedAt))}</TableCell><TableCell className="text-right"><MemberRowActions organizationId={organization.id} membershipId={member.id} email={member.email} /></TableCell></TableRow>)}</TableBody>
             </Table>
           )}
         </CardContent>

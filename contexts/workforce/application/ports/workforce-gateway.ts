@@ -13,4 +13,5 @@ export interface WorkforceGateway {
   preview(token: string): Promise<WorkforceInvitationPreview>;
   accept(accessToken: string, token: string): Promise<AcceptedWorkforceInvitation>;
   listMembers(accessToken: string, organizationId: string): Promise<readonly WorkforceMember[]>;
+  deactivateMember(accessToken: string, organizationId: string, membershipId: string): Promise<void>;
 }

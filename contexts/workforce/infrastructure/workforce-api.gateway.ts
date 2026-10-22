@@ -67,6 +67,13 @@ export class WorkforceApiGateway implements WorkforceGateway {
     return workforceMemberListSchema.parse(response);
   }
 
+  async deactivateMember(accessToken: string, organizationId: string, membershipId: string) {
+    await apiClient.delete(
+      `${apiConfig.routes.workforce.members}/${encodeURIComponent(membershipId)}`,
+      this.auth(accessToken, organizationId),
+    );
+  }
+
   private auth(token: string, tenantId: string) {
     return {
       token,
