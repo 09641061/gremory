@@ -8,6 +8,8 @@ import { es } from "./locales/es";
 
 export type IamDictionary = StringLeaf<typeof en>;
 
+export type IamAuthBrand = IamDictionary["auth"]["brand"];
+
 export const iamLocales = {
   en,
   es,

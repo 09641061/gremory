@@ -40,12 +40,12 @@ export function HeroSection({ hero }: { hero: LandingHero }) {
             >
               {hero.primaryCta}
             </Link>
-            <Link
+            <a
               href="#como-funciona"
               className="inline-flex h-11 items-center rounded-lg border border-border bg-background px-6 text-sm font-semibold text-foreground transition-colors hover:bg-muted/70"
             >
               {hero.secondaryCta}
-            </Link>
+            </a>
           </div>
         </div>
 

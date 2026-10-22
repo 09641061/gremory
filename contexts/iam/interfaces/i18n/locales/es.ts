@@ -9,6 +9,7 @@ export const es: IamDictionary = {
     emailAddress: "Correo electrónico",
     enterEmail: "Ingresa tu correo",
     continueWithEmail: "Continuar con correo",
+    orWithEmail: "o con tu correo",
     sending: "Enviando...",
     termsNotice: "Al continuar, aceptas nuestros Términos y Política de Privacidad.",
     errorTitle: "No es posible continuar",
@@ -28,5 +29,13 @@ export const es: IamDictionary = {
     invalidMagicLink: "Este enlace de inicio de sesión no es válido o ha caducado. Solicita uno nuevo.",
     signingInSrOnly: "Iniciando sesión",
     verificationDigitAria: "Dígito de verificación {digit}",
+    brand: {
+      name: "Takodu",
+      backToHome: "Volver al inicio",
+      tagline: "Tu agenda se llena sola por WhatsApp.",
+      description:
+        "En 10 minutos tienes tu negocio, tu primer local y el asistente respondiendo.",
+      footer: "© 2026 Takodu · Hecho en Lima",
+    },
   },
 };

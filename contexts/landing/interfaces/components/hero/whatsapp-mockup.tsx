@@ -8,8 +8,8 @@ export function WhatsappMockup({
   chat: LandingHero["chat"];
 }) {
   return (
-    <div className="relative mx-auto w-full max-w-sm lg:ml-auto lg:max-w-none">
-      <div className="rounded-2xl bg-muted/70 p-4 shadow-sm">
+    <div className="relative mx-auto w-full max-w-sm lg:ml-auto lg:mr-0 lg:max-w-md">
+      <div className="rounded-2xl bg-muted/70 p-4 pb-14 shadow-sm">
         <div className="flex items-center gap-3 border-b border-border/50 pb-3">
           <span className="flex size-9 items-center justify-center rounded-full bg-primary/15 text-sm font-bold text-primary">
             B
@@ -56,7 +56,7 @@ export function WhatsappMockup({
         </div>
       </div>
 
-      <div className="absolute -bottom-7 left-0 w-56 rounded-xl border border-border/60 bg-card p-3 shadow-lg sm:-left-6">
+      <div className="absolute -bottom-7 left-0 w-56 rounded-xl border border-border/60 bg-card p-3 shadow-lg sm:-left-8">
         <p className="flex items-center gap-1.5 text-[0.7rem] font-semibold text-primary">
           <span className="size-1.5 rounded-full bg-primary" />
           {chat.newBookingLabel}

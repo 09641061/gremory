@@ -2,15 +2,16 @@
 
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
+import Link from "next/link";
+import { ArrowLeftIcon } from "lucide-react";
 
 import { GoogleIcon } from "./icons/google";
+import { AuthBrandPanel } from "./auth-brand-panel";
 import { ErrorAlert } from "@/contexts/shared/interfaces/components/feedback/error";
-import { PageShell } from "@/contexts/shared/interfaces/components/layout/page-shell";
+import { AuthSplitLayout } from "@/contexts/shared/interfaces/components/layout/auth-split-layout";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
-import { Card, CardContent } from "@/contexts/shared/interfaces/components/ui/card";
 import { Input } from "@/contexts/shared/interfaces/components/ui/input";
 import { Label } from "@/contexts/shared/interfaces/components/ui/label";
-import { Separator } from "@/contexts/shared/interfaces/components/ui/separator";
 import { Spinner } from "@/contexts/shared/interfaces/components/ui/spinner";
 import {
   requestEmailSignInAction,
@@ -45,48 +46,65 @@ export function AuthForm({ returnTo = null }: { returnTo?: string | null }) {
         message={!pending && state.status === "error" ? state.error : undefined}
         resetKey={pending ? "pending" : state.status}
       />
-      <PageShell className="min-h-svh max-w-none justify-center">
-        <section className="mx-auto w-full max-w-[440px]">
-          <header className="mb-5 space-y-2 text-center">
-            <h1 className="page-title">{t.auth.continueToTakodu}</h1>
-            <p className="page-description">{t.auth.authDescription}</p>
+
+      <AuthSplitLayout aside={<AuthBrandPanel brand={t.auth.brand} />}>
+        <div className="w-full max-w-[400px] space-y-6">
+          <Button
+            nativeButton={false}
+            variant="ghost"
+            size="sm"
+            render={<Link href="/" />}
+            className="h-9 w-fit gap-2 px-2.5 font-bold tracking-tight text-foreground hover:bg-transparent lg:hidden"
+          >
+            <ArrowLeftIcon data-icon="inline-start" />
+            {t.auth.brand.name}
+            <span className="sr-only">· {t.auth.brand.backToHome}</span>
+          </Button>
+
+          <header className="space-y-2">
+            <h1 className="text-[26px] font-bold leading-tight tracking-[-0.02em] text-foreground">
+              {t.auth.continueToTakodu}
+            </h1>
+            <p className="text-sm leading-relaxed text-muted-foreground">
+              {t.auth.authDescription}
+            </p>
           </header>
 
-          <Card>
-            <CardContent className="space-y-4 p-6 pt-0">
-              <form action={startGoogleAuthAction}>
-                {returnTo ? <input type="hidden" name="returnTo" value={returnTo} /> : null}
-                <GoogleSubmitButton />
-              </form>
+          <form action={startGoogleAuthAction}>
+            {returnTo ? <input type="hidden" name="returnTo" value={returnTo} /> : null}
+            <GoogleSubmitButton />
+          </form>
 
-              <Separator className="my-4" />
+          <div className="flex items-center gap-3">
+            <span className="h-px flex-1 bg-border" />
+            <span className="text-xs text-muted-foreground">{t.auth.orWithEmail}</span>
+            <span className="h-px flex-1 bg-border" />
+          </div>
 
-              <form action={formAction} className="space-y-4 text-left">
-                {returnTo ? <input type="hidden" name="returnTo" value={returnTo} /> : null}
-                <div className="space-y-2">
-                  <Label htmlFor="email">{t.auth.emailAddress}</Label>
-                  <Input
-                    id="email"
-                    name="email"
-                    type="email"
-                    placeholder={t.auth.enterEmail}
-                    autoComplete="email"
-                  />
-                </div>
+          <form action={formAction} className="space-y-4">
+            {returnTo ? <input type="hidden" name="returnTo" value={returnTo} /> : null}
+            <div className="space-y-2">
+              <Label htmlFor="email">{t.auth.emailAddress}</Label>
+              <Input
+                id="email"
+                name="email"
+                type="email"
+                placeholder={t.auth.enterEmail}
+                autoComplete="email"
+              />
+            </div>
 
-                <Button type="submit" disabled={pending} className="w-full gap-2">
-                  {pending ? <Spinner data-icon="inline-start" /> : null}
-                  {pending ? t.auth.sending : t.auth.continueWithEmail}
-                </Button>
-              </form>
+            <Button type="submit" disabled={pending} className="w-full gap-2">
+              {pending ? <Spinner data-icon="inline-start" /> : null}
+              {pending ? t.auth.sending : t.auth.continueWithEmail}
+            </Button>
+          </form>
 
-              <p className="text-center text-[11px] leading-4 text-muted-foreground">
-                {t.auth.termsNotice}
-              </p>
-            </CardContent>
-          </Card>
-        </section>
-      </PageShell>
+          <p className="text-center text-[11px] leading-4 text-muted-foreground">
+            {t.auth.termsNotice}
+          </p>
+        </div>
+      </AuthSplitLayout>
     </>
   );
 }

@@ -7,7 +7,6 @@ export const en = {
       pricing: "Pricing",
       questions: "FAQ",
       login: "Sign in",
-      startFree: "Try for free",
       menu: "Navigation menu",
       openMenu: "Open menu",
       closeMenu: "Close menu",
@@ -18,7 +17,7 @@ export const en = {
       title: "Your calendar fills itself over WhatsApp.",
       description:
         "Takodu answers your customers at any hour, books their appointments and reminds them to show up. You only take care of them.",
-      primaryCta: "Try for free",
+      primaryCta: "Get started",
       secondaryCta: "See how it works",
       chat: {
         business: "Barbershop · Miraflores branch",
@@ -110,7 +109,7 @@ export const en = {
             "2,000 AI conversations per month",
             "Reports with an AI summary",
           ],
-          cta: "Try for free",
+          cta: "Choose Business",
         },
         multisede: {
           name: "Multi-branch",
@@ -122,7 +121,7 @@ export const en = {
             "6,000 AI conversations per month",
             "Reports per branch",
           ],
-          cta: "Talk to us",
+          cta: "Choose Multi-branch",
         },
       },
     },
@@ -154,7 +153,7 @@ export const en = {
     },
     finalCta: {
       title: "Let your calendar work while you take care of your customers.",
-      cta: "Try for free",
+      cta: "Get started",
     },
   },
 } as const;

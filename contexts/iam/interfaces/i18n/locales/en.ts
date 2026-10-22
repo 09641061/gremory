@@ -7,6 +7,7 @@ export const en = {
     emailAddress: "Email address",
     enterEmail: "Enter your email",
     continueWithEmail: "Continue with email",
+    orWithEmail: "or with your email",
     sending: "Sending...",
     termsNotice: "By continuing, you agree to our Terms and Privacy Policy.",
     errorTitle: "Unable to continue",
@@ -26,5 +27,13 @@ export const en = {
     invalidMagicLink: "This sign-in link is invalid or has expired. Request a new one.",
     signingInSrOnly: "Signing you in",
     verificationDigitAria: "Verification digit {digit}",
+    brand: {
+      name: "Takodu",
+      backToHome: "Back to home",
+      tagline: "Your calendar fills itself over WhatsApp.",
+      description:
+        "In 10 minutes you have your business, your first location and the assistant answering.",
+      footer: "© 2026 Takodu · Made in Lima",
+    },
   },
 } as const;

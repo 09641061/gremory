@@ -12,7 +12,6 @@ export const es = {
       pricing: "Precios",
       questions: "Preguntas",
       login: "Ingresar",
-      startFree: "Probar gratis",
       menu: "Menú de navegación",
       openMenu: "Abrir menú",
       closeMenu: "Cerrar menú",
@@ -23,7 +22,7 @@ export const es = {
       title: "Tu agenda se llena sola por WhatsApp.",
       description:
         "Takodu responde a tus clientes a cualquier hora, agenda sus citas y les recuerda llegar. Tú solo atiendes.",
-      primaryCta: "Probar gratis",
+      primaryCta: "Empezar",
       secondaryCta: "Ver cómo funciona",
       chat: {
         business: "Barbería · Sede Miraflores",
@@ -115,7 +114,7 @@ export const es = {
             "2,000 conversaciones con IA al mes",
             "Reportes con resumen de IA",
           ],
-          cta: "Probar gratis",
+          cta: "Elegir Negocio",
         },
         multisede: {
           name: "Multisede",
@@ -127,7 +126,7 @@ export const es = {
             "6,000 conversaciones con IA al mes",
             "Reportes por sede",
           ],
-          cta: "Hablar con nosotros",
+          cta: "Elegir Multisede",
         },
       },
     },
@@ -159,7 +158,7 @@ export const es = {
     },
     finalCta: {
       title: "Deja que tu agenda trabaje mientras tú atiendes.",
-      cta: "Probar gratis",
+      cta: "Empezar",
     },
   },
 } as const;

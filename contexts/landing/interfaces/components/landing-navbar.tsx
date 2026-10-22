@@ -52,13 +52,13 @@ export function LandingNavbar({ nav }: { nav: LandingNav }) {
 
         <nav className="hidden items-center gap-7 md:flex">
           {navLinks.map((link) => (
-            <Link
+            <a
               key={link.href}
               href={link.href}
               className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
             >
               {link.label}
-            </Link>
+            </a>
           ))}
         </nav>
 
