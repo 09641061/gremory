@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Input } from "@/contexts/shared/interfaces/components/ui/input";
 import { Label } from "@/contexts/shared/interfaces/components/ui/label";
 import { Textarea } from "@/contexts/shared/interfaces/components/ui/textarea";
@@ -35,13 +35,11 @@ export function GeneralInfoSection({
     defaultValues?.categoryId ?? categories[0]?.id ?? ""
   );
 
-  useEffect(() => {
-    if (defaultValues?.categoryId) {
-      setSelectedCatId(defaultValues.categoryId);
-    } else if (categories[0]?.id && !selectedCatId) {
-      setSelectedCatId(categories[0].id);
-    }
-  }, [defaultValues?.categoryId, categories]);
+  const [prevDefaultCatId, setPrevDefaultCatId] = useState(defaultValues?.categoryId);
+  if (defaultValues?.categoryId !== prevDefaultCatId) {
+    setPrevDefaultCatId(defaultValues?.categoryId);
+    setSelectedCatId(defaultValues?.categoryId ?? categories[0]?.id ?? "");
+  }
 
   const categoryItems = categories.map((c) => ({
     value: c.id,

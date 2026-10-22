@@ -113,27 +113,8 @@ export function ServiceDetailView({ service }: ServiceDetailViewProps) {
                   {t.serviceDetail.descriptionLabel}
                 </label>
                 <p className="text-sm text-foreground leading-relaxed">
-                  {service.description}
+                  {service.description || "—"}
                 </p>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                <div>
-                  <label className="text-xs font-semibold uppercase text-muted-foreground block mb-1">
-                    {t.serviceDetail.preServiceLabel}
-                  </label>
-                  <p className="text-sm text-foreground italic">
-                    {service.preServiceInstructions || t.serviceDetail.noPreService}
-                  </p>
-                </div>
-                <div>
-                  <label className="text-xs font-semibold uppercase text-muted-foreground block mb-1">
-                    {t.serviceDetail.postServiceLabel}
-                  </label>
-                  <p className="text-sm text-foreground">
-                    {service.postServiceRecommendations || t.serviceDetail.noPostService}
-                  </p>
-                </div>
               </div>
             </CardContent>
           </Card>

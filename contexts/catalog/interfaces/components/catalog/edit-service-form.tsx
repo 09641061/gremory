@@ -1,11 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Save, Trash2 } from "lucide-react";
 import { ErrorAlert } from "@/contexts/shared/interfaces/components/feedback/error";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import { Card, CardContent } from "@/contexts/shared/interfaces/components/ui/card";
-import { Badge } from "@/contexts/shared/interfaces/components/ui/badge";
 import { Switch } from "@/contexts/shared/interfaces/components/ui/switch";
 import { FormSubmitButton } from "@/contexts/shared/interfaces/components/form/form-submit-button";
 import { GeneralInfoSection } from "../create-service/general-info-section";
@@ -40,7 +40,7 @@ export function EditServiceForm({
   canDeleteService,
 }: EditServiceFormProps) {
   const { t } = useCatalogTranslations();
-  const [resetKey, setResetKey] = useState(0);
+  const router = useRouter();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const { changeStatus, pending: statusPending, state: statusState } = useChangeCatalogServiceStatus();
   const { state: updateState, formAction, pending: updatePending } = useUpdateCatalogService(onSuccess);
@@ -55,6 +55,14 @@ export function EditServiceForm({
       : null;
 
   const isActionPending = updatePending || statusPending;
+
+  const handleCancel = () => {
+    if (onCancel) {
+      onCancel();
+    } else {
+      router.push("/catalog");
+    }
+  };
 
   const defaultsKey = JSON.stringify([
     service.name,
@@ -76,7 +84,7 @@ export function EditServiceForm({
       <div className="w-full space-y-4">
         <form
           action={formAction}
-          key={`${service.id}-${service.status}-${defaultsKey}-${resetKey}`}
+          key={`${service.id}-${service.status}-${defaultsKey}`}
           id="edit-service-form"
         >
           <Card className="rounded-lg border-border bg-card p-6 shadow-sm">
@@ -107,26 +115,28 @@ export function EditServiceForm({
               <input type="hidden" name="id" value={service.id} />
               <input type="hidden" name="establishmentId" value={service.establishmentId || establishmentId || ""} />
 
-              <GeneralInfoSection
-                categories={categories}
-                defaultValues={{
-                  name: service.name,
-                  description: service.description,
-                  categoryId: service.categoryId,
-                }}
-                disabled={!canUpdateService || isActionPending}
-              />
+              <fieldset disabled={!canUpdateService || isActionPending} className="space-y-6">
+                <GeneralInfoSection
+                  categories={categories}
+                  defaultValues={{
+                    name: service.name,
+                    description: service.description,
+                    categoryId: service.categoryId,
+                  }}
+                  disabled={!canUpdateService || isActionPending}
+                />
 
-              <FinancialsAndLogisticsSection
-                currency={currency}
-                defaultValues={{
-                  price: service.price,
-                  durationMinutes: service.durationMinutes,
-                  preparationMinutes: service.preparationMinutes,
-                  cleanupMinutes: service.cleanupMinutes,
-                }}
-                disabled={!canUpdateService || isActionPending}
-              />
+                <FinancialsAndLogisticsSection
+                  currency={currency}
+                  defaultValues={{
+                    price: service.price,
+                    durationMinutes: service.durationMinutes,
+                    preparationMinutes: service.preparationMinutes,
+                    cleanupMinutes: service.cleanupMinutes,
+                  }}
+                  disabled={!canUpdateService || isActionPending}
+                />
+              </fieldset>
 
               <div className="flex justify-between items-center pt-6 border-t border-border mt-8">
                 {canDeleteService ? (
@@ -146,16 +156,14 @@ export function EditServiceForm({
                 )}
 
                 <div className="flex items-center gap-3">
-                  {onCancel && (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      disabled={isActionPending}
-                      onClick={onCancel}
-                    >
-                      {t.serviceForm.cancel}
-                    </Button>
-                  )}
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    disabled={isActionPending}
+                    onClick={handleCancel}
+                  >
+                    {t.serviceForm.cancel}
+                  </Button>
 
                   {canUpdateService && (
                     <FormSubmitButton
@@ -163,7 +171,7 @@ export function EditServiceForm({
                       icon={<Save className="size-4" />}
                       disabled={isActionPending}
                     >
-                      {t.serviceForm.save}
+                      {isActionPending ? t.serviceForm.saving : t.serviceForm.save}
                     </FormSubmitButton>
                   )}
                 </div>

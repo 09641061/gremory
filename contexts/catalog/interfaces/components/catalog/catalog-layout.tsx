@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { FolderPlus, Plus, Search, X } from "lucide-react";
 import { Input } from "@/contexts/shared/interfaces/components/ui/input";
@@ -53,14 +53,18 @@ export function CatalogLayout({
   const [categoriesList, setCategoriesList] = useState<CategoryDTO[]>(initialCategories);
   const [servicesList, setServicesList] = useState<DetailedServiceDTO[]>(initialServices);
 
-  // Sync state when props refresh from server
-  useEffect(() => {
+  // Sync state when props refresh from server (adjusting state during render)
+  const [prevInitialServices, setPrevInitialServices] = useState(initialServices);
+  if (prevInitialServices !== initialServices) {
+    setPrevInitialServices(initialServices);
     setServicesList(initialServices);
-  }, [initialServices]);
+  }
 
-  useEffect(() => {
+  const [prevInitialCategories, setPrevInitialCategories] = useState(initialCategories);
+  if (prevInitialCategories !== initialCategories) {
+    setPrevInitialCategories(initialCategories);
     setCategoriesList(initialCategories);
-  }, [initialCategories]);
+  }
 
   // Inspector selection state
   const [selectedServiceId, setSelectedServiceId] = useState<string | undefined>(initialSelectedServiceId);

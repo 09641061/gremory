@@ -32,9 +32,6 @@ vi.mock("@/contexts/catalog/interfaces/components/create-service/general-info-se
 vi.mock("@/contexts/catalog/interfaces/components/create-service/financials-and-logistics-section", () => ({
   FinancialsAndLogisticsSection: () => <div data-testid="financials-section" />,
 }));
-vi.mock("@/contexts/catalog/interfaces/components/create-service/instructions-section", () => ({
-  InstructionsSection: () => <div data-testid="instructions-section" />,
-}));
 vi.mock("@/contexts/catalog/interfaces/components/catalog/delete-service-dialog", () => ({
   DeleteServiceDialog: () => null,
 }));
@@ -179,7 +176,6 @@ describe("Form states — EMPTY", () => {
     renderEditServiceForm();
     expect(screen.getByTestId("general-info-section")).toBeInTheDocument();
     expect(screen.getByTestId("financials-section")).toBeInTheDocument();
-    expect(screen.getByTestId("instructions-section")).toBeInTheDocument();
     // No destructive alert in the DOM (ErrorAlert returns null when no message).
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
     // The save button is enabled because nothing is pending.

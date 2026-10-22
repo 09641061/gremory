@@ -82,8 +82,6 @@ export async function PUT(
       price: (body as { price?: unknown })?.price,
       durationMinutes: (body as { durationMinutes?: unknown })?.durationMinutes,
       categoryId: (body as { categoryId?: unknown })?.categoryId || undefined,
-      preServiceInstructions: (body as { preServiceInstructions?: unknown })?.preServiceInstructions || undefined,
-      postServiceRecommendations: (body as { postServiceRecommendations?: unknown })?.postServiceRecommendations || undefined,
       preparationMinutes: (body as { preparationMinutes?: unknown })?.preparationMinutes ?? 0,
       cleanupMinutes: (body as { cleanupMinutes?: unknown })?.cleanupMinutes ?? 0,
     });
@@ -94,8 +92,6 @@ export async function PUT(
     const service = await composeCatalogAdapters().serviceCommandService.update({
       ...parsed.data,
       categoryId: parsed.data.categoryId || null,
-      preServiceInstructions: parsed.data.preServiceInstructions || null,
-      postServiceRecommendations: parsed.data.postServiceRecommendations || null,
     }, auth.token);
 
     return NextResponse.json(createCatalogServiceReadModel(service));

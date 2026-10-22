@@ -79,7 +79,7 @@ export function ServiceRow({
           {/* Duración abajo */}
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground pt-0.5">
             <span className="font-medium bg-secondary/80 px-2 py-0.5 rounded text-secondary-foreground text-[11px]">
-              {svc.durationMinutes} min
+              {svc.durationMinutes ?? 0} min
             </span>
             {bufferMinutes > 0 && (
               <span
@@ -96,7 +96,7 @@ export function ServiceRow({
       {/* Right: Price */}
       <div className="flex items-center shrink-0 self-center">
         <span className="text-sm font-semibold text-foreground min-w-[70px] text-right">
-          {currencySymbol} {Number(svc.price).toFixed(2)}
+          {currencySymbol} {svc.price !== undefined ? Number(svc.price).toFixed(2) : "0.00"}
         </span>
       </div>
     </div>

@@ -21,7 +21,9 @@ interface CategoryItemProps {
   services: DetailedServiceDTO[];
   currency?: "USD" | "PEN";
   selectedServiceId?: string;
+  selectedCategoryId?: string;
   isExpanded: boolean;
+  isDragTarget?: boolean;
   onToggleExpand: (id: string) => void;
   onSelectService: (id: string) => void;
   onOpenEditCategoryModal: (category: CategoryDTO) => void;
@@ -29,12 +31,18 @@ interface CategoryItemProps {
   onCreateService?: (categoryId: string) => void;
   onMoveServiceCategory?: (serviceId: string, newCategoryId: string) => void;
   onReorderCategory?: (draggedCatId: string, targetCatId: string) => void;
-  setAlertMessage: (msg: string | null) => void;
-  canUpdateCategory: boolean;
-  canDeleteCategory: boolean;
-  canCreateService: boolean;
-  canUpdateService: boolean;
-  canDeleteService: boolean;
+  setAlertMessage?: (msg: string | null) => void;
+  canUpdateCategory?: boolean;
+  canDeleteCategory?: boolean;
+  canCreateService?: boolean;
+  canUpdateService?: boolean;
+  canDeleteService?: boolean;
+  onDragStart?: (e: React.DragEvent, catId: string) => void;
+  onDragEnd?: () => void;
+  onDragOver?: (e: React.DragEvent, catId: string) => void;
+  onDragLeave?: (e: React.DragEvent) => void;
+  onDrop?: (e: React.DragEvent, catId: string) => void;
+  setIsMobileOpen?: (open: boolean) => void;
 }
 
 export function CategoryItem({
@@ -86,7 +94,7 @@ export function CategoryItem({
       hidden: !canDeleteCategory,
       onSelect: () => {
         if (catServices.length > 0) {
-          setAlertMessage(t.sidebar.cannotDeleteWithServices);
+          if (setAlertMessage) setAlertMessage(t.sidebar.cannotDeleteWithServices);
           return;
         }
         onDeleteCategory(cat);
