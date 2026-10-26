@@ -45,6 +45,22 @@ describe("IAM client components", () => {
     expect(screen.getByRole("button", { name: "Continue with email" })).toBeEnabled();
   });
 
+  it("should present registration controls for a new invitation recipient", () => {
+    render(
+      <AuthForm
+        intent="register"
+        returnTo="/invitations/accept?token=raw-token"
+      />,
+    );
+
+    expect(screen.getByRole("heading", { name: "Create your Takodu account" })).toBeVisible();
+    expect(screen.getByRole("button", { name: "Sign up with Google" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Sign up with email" })).toBeEnabled();
+    expect(document.querySelector('input[name="returnTo"]')).toHaveValue(
+      "/invitations/accept?token=raw-token",
+    );
+  });
+
   it("should navigate to login when sign-out succeeds", async () => {
     // Arrange
     const user = userEvent.setup();

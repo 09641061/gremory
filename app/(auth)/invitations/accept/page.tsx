@@ -2,7 +2,10 @@ import { cookies } from "next/headers";
 import Link from "next/link";
 import { Building2, Clock3, MailOpen } from "lucide-react";
 
-import { loginPath } from "@/contexts/iam/domain/model/valueobjects/auth-return-path";
+import {
+  loginPath,
+  registrationPath,
+} from "@/contexts/iam/domain/model/valueobjects/auth-return-path";
 import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-session-cookie";
 import { PageShell } from "@/contexts/shared/interfaces/components/layout/page-shell";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
@@ -36,8 +39,23 @@ export default async function AcceptInvitationPage({ searchParams }: PageProps) 
                 <div><dt className="flex items-center gap-2 text-muted-foreground"><Building2 className="size-4" />Establecimiento</dt><dd className="mt-1 font-medium">{preview.establishmentName}</dd></div>
                 <div><dt className="flex items-center gap-2 text-muted-foreground"><Clock3 className="size-4" />Válida hasta</dt><dd className="mt-1 font-medium">{new Intl.DateTimeFormat("es-PE", { dateStyle: "medium", timeStyle: "short" }).format(new Date(preview.expiresAt))}</dd></div>
               </dl>
-              <p className="text-sm text-muted-foreground">Esta invitación está dirigida a <span className="font-medium text-foreground">{preview.maskedEmail}</span>. Debes iniciar sesión con ese correo.</p>
-              {accessToken ? <AcceptInvitationButton token={token!} /> : <Button className="w-full" render={<Link href={loginPath(returnPath)} />}>Iniciar sesión para aceptar</Button>}
+              <p className="text-sm text-muted-foreground">
+                Esta invitación está dirigida a <span className="font-medium text-foreground">{preview.maskedEmail}</span>.
+                {preview.recipientRegistered
+                  ? " Debes iniciar sesión con ese correo."
+                  : " Crea una cuenta con ese correo para poder aceptarla."}
+              </p>
+              {accessToken ? (
+                <AcceptInvitationButton token={token!} />
+              ) : preview.recipientRegistered ? (
+                <Button className="w-full" render={<Link href={loginPath(returnPath)} />}>
+                  Iniciar sesión para aceptar
+                </Button>
+              ) : (
+                <Button className="w-full" render={<Link href={registrationPath(returnPath)} />}>
+                  Crear cuenta para aceptar
+                </Button>
+              )}
             </>
           ) : (
             <Button variant="outline" className="w-full" render={<Link href="/login" />}>Ir al inicio de sesión</Button>
