@@ -3,6 +3,7 @@
 import { useMemo } from "react";
 import { Label } from "@/contexts/shared/interfaces/components/ui/label";
 import { Input } from "@/contexts/shared/interfaces/components/ui/input";
+import { Textarea } from "@/contexts/shared/interfaces/components/ui/textarea";
 import type {
   SchedulingCustomerViewModel,
   SchedulingMemberViewModel,
@@ -147,6 +148,21 @@ export function AppointmentFormFields({
             onChange={(value) => onChange("startTime", value)}
           />
         </div>
+      </div>
+
+      <div className="space-y-1.5">
+        <Label htmlFor={`${idPrefix}-notes`}>{t.form.notesLabel}</Label>
+        <Textarea
+          id={`${idPrefix}-notes`}
+          name="notes"
+          placeholder={t.form.notesPlaceholder}
+          value={values.notes ?? ""}
+          onChange={(event) => onChange("notes", event.target.value)}
+          aria-invalid={Boolean(fieldErrors?.notes)}
+          aria-describedby={fieldErrors?.notes ? `${idPrefix}-notes-error` : undefined}
+          rows={3}
+        />
+        <FieldError id={`${idPrefix}-notes-error`} messages={fieldErrors?.notes} />
       </div>
 
       <div className="space-y-1 rounded-lg border border-border bg-muted/40 p-3">

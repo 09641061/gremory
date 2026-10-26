@@ -40,7 +40,13 @@ export function CreateEstablishmentForm({
   const nameErrorId = useId();
 
   const [name, setName] = useState("");
-  const [timeZone, setTimeZone] = useState("America/Lima");
+  const [timeZone, setTimeZone] = useState(() => {
+    try {
+      return Intl.DateTimeFormat().resolvedOptions().timeZone || "America/Lima";
+    } catch {
+      return "America/Lima";
+    }
+  });
   const [currency, setCurrency] = useState("USD");
 
   const [state, formAction, pending] = useActionState(

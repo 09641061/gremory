@@ -151,12 +151,18 @@ describe("NotificationDropdown (using NotificationsProvider)", () => {
     });
 
     try {
-      await user.click(screen.getByRole("button", { name: "Accept" }));
+      const acceptButton = await screen.findByRole("button", { name: "Accept" });
+      await waitFor(() => expect(acceptButton).toBeEnabled());
+      await user.click(acceptButton);
 
-      expect(mocks.acceptInvitationNotificationAction).toHaveBeenCalledWith("invite-1");
+      await waitFor(() => {
+        expect(mocks.acceptInvitationNotificationAction).toHaveBeenCalledWith("invite-1");
+      });
       // The post-acceptance workspace reload is a UI-level side effect that
       // belongs in the dropdown (the context is UI-agnostic).
-      expect(reloadSpy).toHaveBeenCalledTimes(1);
+      await waitFor(() => {
+        expect(reloadSpy).toHaveBeenCalledTimes(1);
+      });
     } finally {
       Object.defineProperty(window, "location", {
         configurable: true,

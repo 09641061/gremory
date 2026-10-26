@@ -45,37 +45,39 @@ export function computeAppointmentTimes({
   startDate,
   startTime,
   durationMinutes,
+  preparationMinutes = 0,
+  cleanupMinutes = 0,
   timeZone,
 }: {
   startDate: string;
   startTime: string;
   durationMinutes: number | null | undefined;
+  preparationMinutes?: number | null;
+  cleanupMinutes?: number | null;
   timeZone: string;
 }): AppointmentTimes {
   if (!startDate || !startTime || !durationMinutes) {
     return { startsAt: "", endsAt: "", formattedEnd: "" };
   }
 
+  const bufferMinutes = (preparationMinutes ?? 0) + (cleanupMinutes ?? 0);
+  const totalMinutes = durationMinutes + bufferMinutes;
+
   const [year, month, day] = startDate.split("-").map(Number);
   const [hour, minute] = startTime.split(":").map(Number);
   const startDateString = `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
   const startTimeString = `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}:00`;
-  const startInstant = new Date(
-    zonedDateTimeToIso({
-      dateString: startDateString,
-      timeString: startTimeString,
-      timeZone,
-    })
-  );
-  const endInstant = new Date(startInstant.getTime() + durationMinutes * 60 * 1000);
+  const startsAt = zonedDateTimeToIso({
+    dateString: startDateString,
+    timeString: startTimeString,
+    timeZone,
+  });
+  const startInstant = new Date(startsAt);
+  const endInstant = new Date(startInstant.getTime() + totalMinutes * 60 * 1000);
 
   return {
-    startsAt: zonedDateTimeToIso({
-      dateString: startDateString,
-      timeString: startTimeString,
-      timeZone,
-    }),
+    startsAt,
     endsAt: formatInstantAsZonedIso(endInstant, timeZone),
-    formattedEnd: `${formatTimeInTimeZone(endInstant, timeZone)} (${durationMinutes} mins duration)`,
+    formattedEnd: `${formatTimeInTimeZone(endInstant, timeZone)} (${totalMinutes} mins duration)`,
   };
 }

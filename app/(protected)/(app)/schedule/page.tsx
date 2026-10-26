@@ -65,6 +65,7 @@ async function SchedulePageContent({ searchParams }: SchedulePageProps) {
         canUpdateAppointment={canUpdateAppointment}
         canDeleteAppointment={canDeleteAppointment}
         timeZone={timeZone}
+        currency={establishment?.currency === "PEN" ? "PEN" : "USD"}
       />
     </main>
   );

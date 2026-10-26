@@ -6,5 +6,13 @@ export async function loadSchedulingServices(
   establishmentId: string,
   token?: string,
 ): Promise<SchedulingServiceViewModel[]> {
-  return reader.getSchedulingServices(establishmentId, token);
+  const services = await reader.getSchedulingServices(establishmentId, token);
+  return services.map((service) => ({
+    id: service.id,
+    name: service.name,
+    price: service.price,
+    durationMinutes: service.durationMinutes,
+    preparationMinutes: service.preparationMinutes ?? 0,
+    cleanupMinutes: service.cleanupMinutes ?? 0,
+  }));
 }

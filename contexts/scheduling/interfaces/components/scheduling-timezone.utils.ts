@@ -83,6 +83,16 @@ export function toTimeZoneDayKey(date: Date, timeZone: string) {
   return `${parts.year}-${pad(parts.month)}-${pad(parts.day)}`;
 }
 
+export function toTimeZoneDateInputValue(date: Date, timeZone: string): string {
+  const parts = getTimeZoneParts(date, timeZone);
+  return `${parts.year}-${pad(parts.month)}-${pad(parts.day)}`;
+}
+
+export function toTimeZoneTimeInputValue(date: Date, timeZone: string): string {
+  const parts = getTimeZoneParts(date, timeZone);
+  return `${pad(parts.hour)}:${pad(parts.minute)}`;
+}
+
 export function getCalendarAnchorDate(timeZone: string, baseDate = new Date()) {
   const parts = getTimeZoneParts(baseDate, timeZone);
   return new Date(Date.UTC(parts.year, parts.month - 1, parts.day, 12, 0, 0, 0));

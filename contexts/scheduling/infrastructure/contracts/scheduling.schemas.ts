@@ -10,6 +10,7 @@ export const appointmentResponseSchema = z.object({
   employeeId: z.string().nullable(),
   establishmentId: z.string().nullable(),
   status: z.enum(["CONFIRMED", "IN_PROGRESS", "COMPLETED", "CANCELLED", "NO_SHOW"]),
+  notes: z.string().nullable().optional(),
   createdBy: z.string().nullable(),
   cancelledBy: z.string().nullable(),
   deletedBy: z.string().nullable(),
@@ -44,6 +45,8 @@ export const schedulingServiceSchema = z.object({
   name: z.string(),
   price: z.number(),
   durationMinutes: z.number().int().positive(),
+  preparationMinutes: z.number().int().nonnegative().optional(),
+  cleanupMinutes: z.number().int().nonnegative().optional(),
 });
 
 export const schedulingServicesResponseSchema = z.array(schedulingServiceSchema);

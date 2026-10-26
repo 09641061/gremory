@@ -12,6 +12,8 @@ export type SchedulingService = Readonly<{
   name: string;
   price: number;
   durationMinutes: number;
+  preparationMinutes?: number;
+  cleanupMinutes?: number;
 }>;
 
 export type SchedulingCustomer = Readonly<{
