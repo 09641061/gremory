@@ -31,7 +31,6 @@ export const es: LocaleDictionary = {
   organizationSettings: {
     organization: "Organización",
     members: "Miembros",
-    roles: "Roles",
     invites: "Invitaciones",
     establishments: "Establecimientos",
   },

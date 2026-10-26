@@ -16,7 +16,7 @@ import { BackNavigationButton } from "@/contexts/shared/interfaces/components/na
 import { OrganizationSettingsShell } from "@/contexts/business/interfaces/components/organization/organization-settings-shell/organization-settings-shell";
 
 /**
- * Establishments and organization settings (Organization + Members + Roles +
+ * Establishments and organization settings (Organization + Members +
  * Invites). One-time organization creation lives in the onboarding route
  * group instead.
  *
@@ -28,12 +28,12 @@ import { OrganizationSettingsShell } from "@/contexts/business/interfaces/compon
  * are wrapped in a Suspense subtree so the App Shell can render instantly
  * under Cache Components (`blocking-prerender-dynamic`).
  *
- * The hub sidebar (Organization + Members + Roles + Invites + Establishments)
+ * The hub sidebar (Organization + Members + Invites + Establishments)
  * is attached here too: every route currently under `(configuration)/` is a
  * settings-hub screen, so wrapping `children` with
  * {@link OrganizationSettingsShell} keeps the sidebar mounted across
  * cross-section navigations like `/organization` → `/establishments` or
- * `/organization/members` → `/organization/roles`. Sibling configuration pages
+ * `/organization/members` → `/organization/invites`. Sibling configuration pages
  * outside this group (`/profile`, `/invoice`) live under `(profile)/` and
  * intentionally do not see the sidebar.
  */
