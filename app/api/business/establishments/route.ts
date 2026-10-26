@@ -8,10 +8,21 @@ import { requireBusinessAccessToken } from "@/contexts/business/infrastructure/s
 export async function POST(request: Request) {
   try {
     const body = await parseJsonBody(request);
+    const b = body as {
+      organizationId?: unknown;
+      name?: unknown;
+      photoUrl?: unknown;
+      timeZone?: unknown;
+      currency?: unknown;
+    } | undefined;
+    const rawTimeZone = b?.timeZone;
+    const rawCurrency = b?.currency;
     const parsed = createEstablishmentSchema.safeParse({
-      organizationId: (body as { organizationId?: unknown })?.organizationId,
-      name: (body as { name?: unknown })?.name,
-      photoUrl: (body as { photoUrl?: unknown })?.photoUrl ?? null,
+      organizationId: b?.organizationId,
+      name: b?.name,
+      photoUrl: b?.photoUrl ?? null,
+      timeZone: typeof rawTimeZone === "string" && rawTimeZone.trim() ? rawTimeZone.trim() : "America/Lima",
+      currency: typeof rawCurrency === "string" && rawCurrency.trim() ? rawCurrency : "USD",
     });
     if (!parsed.success) {
       return validationErrorResponse(parsed.error.issues[0]?.message);

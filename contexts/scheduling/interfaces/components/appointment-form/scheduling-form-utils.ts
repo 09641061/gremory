@@ -67,21 +67,16 @@ export function computeAppointmentTimes({
   const [hour, minute] = startTime.split(":").map(Number);
   const startDateString = `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
   const startTimeString = `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}:00`;
-  const startInstant = new Date(
-    zonedDateTimeToIso({
-      dateString: startDateString,
-      timeString: startTimeString,
-      timeZone,
-    })
-  );
+  const startsAt = zonedDateTimeToIso({
+    dateString: startDateString,
+    timeString: startTimeString,
+    timeZone,
+  });
+  const startInstant = new Date(startsAt);
   const endInstant = new Date(startInstant.getTime() + totalMinutes * 60 * 1000);
 
   return {
-    startsAt: zonedDateTimeToIso({
-      dateString: startDateString,
-      timeString: startTimeString,
-      timeZone,
-    }),
+    startsAt,
     endsAt: formatInstantAsZonedIso(endInstant, timeZone),
     formattedEnd: `${formatTimeInTimeZone(endInstant, timeZone)} (${totalMinutes} mins duration)`,
   };

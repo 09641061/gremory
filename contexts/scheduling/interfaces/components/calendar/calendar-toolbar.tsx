@@ -60,12 +60,12 @@ export function CalendarToolbar({
             render={
               <button
                 type="button"
-                className="flex items-center gap-1.5 text-lg sm:text-xl font-bold tracking-tight text-foreground transition-colors hover:text-foreground/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-md px-1"
+                className="flex items-center gap-1.5 text-lg sm:text-xl font-bold tracking-tight text-foreground transition-colors hover:text-foreground/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-md px-1 w-full sm:w-[290px] shrink-0 text-left justify-start"
               />
             }
           >
-            <span>{formattedDate}</span>
-            <ChevronDown className="h-4 w-4 opacity-50 transition-transform" />
+            <span className="truncate">{formattedDate}</span>
+            <ChevronDown className="h-4 w-4 shrink-0 opacity-50 transition-transform" />
           </PopoverTrigger>
           <PopoverContent className="w-auto p-0" align="start">
             <Calendar

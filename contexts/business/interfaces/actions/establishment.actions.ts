@@ -49,12 +49,13 @@ export async function createEstablishmentAction(
   _previous: BusinessActionResult,
   formData: FormData
 ): Promise<BusinessActionResult> {
+  const rawTimeZone = formData.get("timeZone");
   const rawCurrency = formData.get("currency");
   const parsed = createEstablishmentSchema.safeParse({
     organizationId: formData.get("organizationId"),
     name: formData.get("name"),
     photoUrl: formData.get("photoUrl"),
-    timeZone: formData.get("timeZone") ?? "America/Lima",
+    timeZone: typeof rawTimeZone === "string" && rawTimeZone.trim() ? rawTimeZone.trim() : "America/Lima",
     currency: typeof rawCurrency === "string" && rawCurrency.trim() ? rawCurrency : "USD",
   });
   if (!parsed.success) return actionError(parsed.error.issues[0]?.message);

@@ -25,7 +25,6 @@ import { DeleteConfirmDialog } from "../confirm-dialogs/delete-confirm-dialog";
 import { AppointmentFormFields } from "./appointment-form-fields";
 import { computeAppointmentTimes } from "./scheduling-form-utils";
 import type { AppointmentFormValues } from "./types";
-import { toDateInputValue, toTimeInputValue } from "../scheduling-datetime";
 import { getTimeZoneParts } from "../scheduling-timezone.utils";
 
 interface RescheduleFormModalProps {
@@ -49,15 +48,15 @@ const initialActionState: ActionState<Appointment> = {
 
 function toFormValues(appointment: Appointment, timeZone: string): AppointmentFormValues {
   const parts = getTimeZoneParts(new Date(appointment.startsAt), timeZone);
-  const localStart = new Date(Date.UTC(parts.year, parts.month - 1, parts.day, parts.hour, parts.minute));
+  const pad = (value: number) => String(value).padStart(2, "0");
 
   return {
     title: appointment.title,
     serviceId: appointment.serviceId ?? "",
     customerId: appointment.customerId ?? "",
     employeeId: appointment.employeeId ?? "",
-    startDate: toDateInputValue(localStart),
-    startTime: toTimeInputValue(localStart),
+    startDate: `${parts.year}-${pad(parts.month)}-${pad(parts.day)}`,
+    startTime: `${pad(parts.hour)}:${pad(parts.minute)}`,
     notes: appointment.notes ?? "",
   };
 }
