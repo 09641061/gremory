@@ -109,6 +109,8 @@ export function AppointmentFormModal({
     startDate,
     startTime,
     durationMinutes: selectedService?.durationMinutes,
+    preparationMinutes: selectedService?.preparationMinutes,
+    cleanupMinutes: selectedService?.cleanupMinutes,
     timeZone,
   });
 

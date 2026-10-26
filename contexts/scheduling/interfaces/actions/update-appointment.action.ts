@@ -24,6 +24,7 @@ export async function updateAppointmentAction(
     employeeId: formData.get("employeeId"),
     startsAt: formData.get("startsAt"),
     endsAt: formData.get("endsAt"),
+    notes: formData.get("notes") ? String(formData.get("notes")) : undefined,
   };
 
   const parsed = updateAppointmentSchema.safeParse(rawData);

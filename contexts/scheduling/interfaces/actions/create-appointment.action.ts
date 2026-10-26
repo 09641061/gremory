@@ -26,6 +26,7 @@ export async function createAppointmentAction(
     customerId: formData.get("customerId"),
     employeeId: formData.get("employeeId"),
     establishmentId: formData.get("establishmentId"),
+    notes: formData.get("notes") ? String(formData.get("notes")) : undefined,
   };
 
   const parsed = createAppointmentSchema.safeParse(rawData);

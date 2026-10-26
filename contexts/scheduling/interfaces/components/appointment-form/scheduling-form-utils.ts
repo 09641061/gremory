@@ -45,16 +45,23 @@ export function computeAppointmentTimes({
   startDate,
   startTime,
   durationMinutes,
+  preparationMinutes = 0,
+  cleanupMinutes = 0,
   timeZone,
 }: {
   startDate: string;
   startTime: string;
   durationMinutes: number | null | undefined;
+  preparationMinutes?: number | null;
+  cleanupMinutes?: number | null;
   timeZone: string;
 }): AppointmentTimes {
   if (!startDate || !startTime || !durationMinutes) {
     return { startsAt: "", endsAt: "", formattedEnd: "" };
   }
+
+  const bufferMinutes = (preparationMinutes ?? 0) + (cleanupMinutes ?? 0);
+  const totalMinutes = durationMinutes + bufferMinutes;
 
   const [year, month, day] = startDate.split("-").map(Number);
   const [hour, minute] = startTime.split(":").map(Number);
@@ -67,7 +74,7 @@ export function computeAppointmentTimes({
       timeZone,
     })
   );
-  const endInstant = new Date(startInstant.getTime() + durationMinutes * 60 * 1000);
+  const endInstant = new Date(startInstant.getTime() + totalMinutes * 60 * 1000);
 
   return {
     startsAt: zonedDateTimeToIso({
@@ -76,6 +83,6 @@ export function computeAppointmentTimes({
       timeZone,
     }),
     endsAt: formatInstantAsZonedIso(endInstant, timeZone),
-    formattedEnd: `${formatTimeInTimeZone(endInstant, timeZone)} (${durationMinutes} mins duration)`,
+    formattedEnd: `${formatTimeInTimeZone(endInstant, timeZone)} (${totalMinutes} mins duration)`,
   };
 }

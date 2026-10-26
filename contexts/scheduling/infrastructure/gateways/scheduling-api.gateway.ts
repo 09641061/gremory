@@ -10,7 +10,13 @@ import { SearchAppointmentsQuery } from "../../domain/model/queries/search-appoi
 import { SchedulingCommandService } from "../../application/services/scheduling-command.service";
 import { SchedulingQueryService } from "../../application/services/scheduling-query.service";
 import type { SchedulingAppointmentsReader, SchedulingAppointmentsWriter } from "../../application/ports/scheduling-appointments";
-import type { SchedulingRosterReader, SchedulingRosterWriter } from "../../application/ports/scheduling-roster";
+import type {
+  SchedulingCustomer,
+  SchedulingEmployee,
+  SchedulingRosterReader,
+  SchedulingRosterWriter,
+  SchedulingService,
+} from "../../application/ports/scheduling-roster";
 import { PageResponse } from "../../application/model/page-response";
 import { apiConfig } from "@/api.config";
 import { ApiError, apiClient } from "@/contexts/shared/infrastructure/http/api-client";
@@ -245,7 +251,7 @@ export class SchedulingApiGateway
   async getSchedulingEmployees(
     establishmentId: string,
     token?: string
-  ): Promise<{ userId: string; name: string; imageUrl: string | null; isOwner: boolean; availableForScheduling: boolean; visibleForScheduling: boolean }[]> {
+  ): Promise<SchedulingEmployee[]> {
     const authToken = await resolveAccessToken(token);
     const response = await apiClient.get<unknown>(
       `${apiConfig.routes.scheduling.appointments}/employees?establishmentId=${encodeURIComponent(establishmentId)}`,
@@ -300,7 +306,7 @@ export class SchedulingApiGateway
   async getSchedulingServices(
     establishmentId: string,
     token?: string
-  ): Promise<{ id: string; name: string; price: number; durationMinutes: number }[]> {
+  ): Promise<SchedulingService[]> {
     const authToken = await resolveAccessToken(token);
     const response = await apiClient.get<unknown>(
       `${apiConfig.routes.scheduling.appointments}/services?establishmentId=${encodeURIComponent(establishmentId)}`,
@@ -318,7 +324,7 @@ export class SchedulingApiGateway
     establishmentId: string,
     search?: string,
     token?: string
-  ): Promise<{ id: string; name: string; email: string | null; phone: string | null }[]> {
+  ): Promise<SchedulingCustomer[]> {
     const authToken = await resolveAccessToken(token);
     const params = new URLSearchParams();
     params.append("establishmentId", establishmentId);

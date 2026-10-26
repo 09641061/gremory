@@ -65,6 +65,8 @@ export function CreateAppointmentForm({
     startDate: values.startDate,
     startTime: values.startTime,
     durationMinutes: selectedService?.durationMinutes,
+    preparationMinutes: selectedService?.preparationMinutes,
+    cleanupMinutes: selectedService?.cleanupMinutes,
     timeZone,
   });
 

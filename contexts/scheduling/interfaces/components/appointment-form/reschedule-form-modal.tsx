@@ -58,6 +58,7 @@ function toFormValues(appointment: Appointment, timeZone: string): AppointmentFo
     employeeId: appointment.employeeId ?? "",
     startDate: toDateInputValue(localStart),
     startTime: toTimeInputValue(localStart),
+    notes: appointment.notes ?? "",
   };
 }
 
@@ -116,6 +117,8 @@ export function RescheduleFormModal({
     startDate: values.startDate,
     startTime: values.startTime,
     durationMinutes: selectedService?.durationMinutes,
+    preparationMinutes: selectedService?.preparationMinutes,
+    cleanupMinutes: selectedService?.cleanupMinutes,
     timeZone,
   });
 
