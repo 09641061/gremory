@@ -18,21 +18,34 @@ import {
 } from "../actions/request-email-sign-in.action";
 import { startGoogleAuthAction } from "../actions/start-google-auth.action";
 import { useIamI18n } from "../i18n";
+import type { AuthIntent } from "../../domain/model/valueobjects/auth-return-path";
 
-function GoogleSubmitButton() {
+function GoogleSubmitButton({ intent }: { intent: AuthIntent }) {
   const { pending } = useFormStatus();
   const { t } = useIamI18n();
+  const registering = intent === "register";
 
   return (
     <Button type="submit" variant="outline" disabled={pending} className="w-full gap-2">
       {pending ? <Spinner data-icon="inline-start" /> : <GoogleIcon className="size-4" />}
-      {pending ? t.auth.connecting : t.auth.continueWithGoogle}
+      {pending
+        ? t.auth.connecting
+        : registering
+          ? t.auth.registerWithGoogle
+          : t.auth.continueWithGoogle}
     </Button>
   );
 }
 
-export function AuthForm({ returnTo = null }: { returnTo?: string | null }) {
+export function AuthForm({
+  returnTo = null,
+  intent = "sign-in",
+}: {
+  returnTo?: string | null;
+  intent?: AuthIntent;
+}) {
   const { t } = useIamI18n();
+  const registering = intent === "register";
   const [state, formAction, pending] = useActionState(requestEmailSignInAction, {
     status: "idle",
     error: null,
@@ -48,15 +61,19 @@ export function AuthForm({ returnTo = null }: { returnTo?: string | null }) {
       <PageShell className="min-h-svh max-w-none justify-center">
         <section className="mx-auto w-full max-w-[440px]">
           <header className="mb-5 space-y-2 text-center">
-            <h1 className="page-title">{t.auth.continueToTakodu}</h1>
-            <p className="page-description">{t.auth.authDescription}</p>
+            <h1 className="page-title">
+              {registering ? t.auth.createYourAccount : t.auth.continueToTakodu}
+            </h1>
+            <p className="page-description">
+              {registering ? t.auth.registrationDescription : t.auth.authDescription}
+            </p>
           </header>
 
           <Card>
             <CardContent className="space-y-4 p-6 pt-0">
               <form action={startGoogleAuthAction}>
                 {returnTo ? <input type="hidden" name="returnTo" value={returnTo} /> : null}
-                <GoogleSubmitButton />
+                <GoogleSubmitButton intent={intent} />
               </form>
 
               <Separator className="my-4" />
@@ -76,7 +93,11 @@ export function AuthForm({ returnTo = null }: { returnTo?: string | null }) {
 
                 <Button type="submit" disabled={pending} className="w-full gap-2">
                   {pending ? <Spinner data-icon="inline-start" /> : null}
-                  {pending ? t.auth.sending : t.auth.continueWithEmail}
+                  {pending
+                    ? t.auth.sending
+                    : registering
+                      ? t.auth.registerWithEmail
+                      : t.auth.continueWithEmail}
                 </Button>
               </form>
 

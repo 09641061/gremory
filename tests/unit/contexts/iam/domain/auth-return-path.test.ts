@@ -1,6 +1,8 @@
 import {
   loginPath,
   normalizeAuthReturnPath,
+  normalizeAuthIntent,
+  registrationPath,
 } from "@/contexts/iam/domain/model/valueobjects/auth-return-path";
 
 describe("Authentication return path", () => {
@@ -13,6 +15,16 @@ describe("Authentication return path", () => {
     expect(loginPath(path)).toBe(
       "/login?next=%2Finvitations%2Faccept%3Ftoken%3Draw-token",
     );
+  });
+
+  it("should build a registration path that returns to the invitation", () => {
+    const returnTo = "/invitations/accept?token=raw-token";
+
+    expect(registrationPath(returnTo)).toBe(
+      "/login?intent=register&next=%2Finvitations%2Faccept%3Ftoken%3Draw-token",
+    );
+    expect(normalizeAuthIntent("register")).toBe("register");
+    expect(normalizeAuthIntent("unexpected")).toBe("sign-in");
   });
 
   it.each([

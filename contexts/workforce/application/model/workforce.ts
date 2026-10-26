@@ -16,6 +16,7 @@ export type WorkforceInvitationPreview = Readonly<{
   establishmentId: string;
   establishmentName: string;
   maskedEmail: string;
+  recipientRegistered: boolean;
   expiresAt: string;
 }>;
 

@@ -23,6 +23,7 @@ export const workforceInvitationPreviewSchema = z.object({
   establishmentId: uuid,
   establishmentName: z.string().min(1),
   maskedEmail: z.string().min(1),
+  recipientRegistered: z.boolean(),
   expiresAt: instant,
 });
 

@@ -48,6 +48,7 @@ describe("Workforce API gateway", () => {
       establishmentId,
       establishmentName: "Centro",
       maskedEmail: "p***@example.com",
+      recipientRegistered: false,
       expiresAt: "2026-10-27T12:00:00Z",
     }));
     vi.stubGlobal("fetch", fetchMock);
@@ -55,6 +56,7 @@ describe("Workforce API gateway", () => {
     const preview = await new WorkforceApiGateway().preview("tenant.invite.secret");
 
     expect(preview.maskedEmail).toBe("p***@example.com");
+    expect(preview.recipientRegistered).toBe(false);
     const [, request] = fetchMock.mock.calls[0] as [string, RequestInit];
     expect(new Headers(request.headers).has("Authorization")).toBe(false);
   });

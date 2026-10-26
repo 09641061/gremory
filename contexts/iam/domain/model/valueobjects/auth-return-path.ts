@@ -30,3 +30,15 @@ export function normalizeAuthReturnPath(value: unknown): string | null {
 export function loginPath(returnTo: string | null): string {
   return returnTo ? `/login?next=${encodeURIComponent(returnTo)}` : "/login";
 }
+
+export type AuthIntent = "sign-in" | "register";
+
+export function normalizeAuthIntent(value: unknown): AuthIntent {
+  return value === "register" ? "register" : "sign-in";
+}
+
+export function registrationPath(returnTo: string | null): string {
+  return returnTo
+    ? `/login?intent=register&next=${encodeURIComponent(returnTo)}`
+    : "/login?intent=register";
+}
