@@ -11,6 +11,6 @@ export interface CustomerResponse {
   phoneNumber?: string | null;
   /** Legacy combined value returned for records created before the phone split. */
   phone?: string | null;
-  email: string;
+  email?: string | null;
   notes?: string | null;
 }

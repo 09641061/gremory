@@ -11,7 +11,7 @@ export interface CustomerViewModel {
   phoneCountryCode?: string | null;
   phoneNumber?: string | null;
   phone?: string | null;
-  email: string;
+  email?: string | null;
   notes?: string | null;
 }
 

@@ -5,9 +5,11 @@ export type WhatsappDeliveryStatus = "SENT" | "DELIVERED" | "READ" | "FAILED";
 export interface ChatCustomerSummary {
   id: string;
   name: string;
-  documentType: string;
-  documentNumber: string;
+  documentType?: string | null;
+  documentNumber?: string | null;
   phoneNumber?: string | null;
+  phone?: string | null;
   phoneCountryCode?: string | null;
   email?: string | null;
+  notes?: string | null;
 }

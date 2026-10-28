@@ -52,7 +52,7 @@ export function EditCustomerForm({ customer }: EditCustomerFormProps) {
     docType: customer.documentType.toLowerCase(),
     docNumber: customer.documentNumber,
     name: customer.name,
-    email: customer.email,
+    email: customer.email ?? "",
     phoneCountryCode: customer.phoneCountryCode ?? legacyCountryCode,
     phoneNumber: customer.phoneNumber ?? (legacyCountryCode ? legacyPhone.slice(3) : legacyPhone.replace(/^\+/, "")),
   };

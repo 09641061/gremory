@@ -89,9 +89,16 @@ vi.mock("@/contexts/chat/interfaces/actions/whatsapp-conversations.action", () =
       },
     });
   }),
-  getWhatsappConversationDetailAction: vi.fn().mockResolvedValue({
-    status: "success",
-    data: mockDetail,
+  getWhatsappConversationDetailAction: vi.fn().mockImplementation((convId) => {
+    const conv = mockConversations.find((c) => c.id === convId) || mockConversations[0]!;
+    return Promise.resolve({
+      status: "success",
+      data: {
+        ...mockDetail,
+        conversation: conv,
+        customer: conv.id === "conv-1" ? mockDetail.customer : null,
+      },
+    });
   }),
   takeoverWhatsappConversationAction: vi.fn().mockResolvedValue({
     status: "success",
@@ -128,24 +135,52 @@ describe("ChatWhatsappInboxView", () => {
     vi.clearAllMocks();
   });
 
-  it("renders conversation list and selects the first conversation", async () => {
+  it("defaults to 'ALL' filter and renders all conversations including AI bot", async () => {
     render(<ChatWhatsappInboxView establishmentId="est-1" />);
 
+    // Both Maria (NEEDS_HUMAN) and Pedro (BOT_ACTIVE) are rendered immediately
     const mariaElements = await screen.findAllByText("Maria");
     expect(mariaElements.length).toBeGreaterThanOrEqual(1);
+
+    const pedroElements = await screen.findAllByText("Pedro");
+    expect(pedroElements.length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText("Necesito ayuda urgente")).toBeInTheDocument();
   });
 
-  it("filters conversations by 'ALL' tab", async () => {
+  it("filters conversations by 'Requieren Atención' tab and back to 'Todos / IA'", async () => {
     render(<ChatWhatsappInboxView establishmentId="est-1" />);
 
     await screen.findAllByText("Maria");
+    await screen.findAllByText("Pedro");
+
+    const needsAttentionButton = screen.getByRole("button", { name: /requieren atención|needs attention/i });
+    fireEvent.click(needsAttentionButton);
+
+    await waitFor(() => {
+      expect(screen.queryByText("Pedro")).not.toBeInTheDocument();
+      expect(screen.getAllByText("Maria").length).toBeGreaterThanOrEqual(1);
+    });
 
     const allFilterButton = screen.getByRole("button", { name: /all \/ ai|todos \/ ia/i });
     fireEvent.click(allFilterButton);
 
     await waitFor(() => {
-      expect(screen.getByText("Pedro")).toBeInTheDocument();
+      expect(screen.getAllByText("Pedro").length).toBeGreaterThanOrEqual(1);
+    });
+  });
+
+  it("filters conversations client-side with search input", async () => {
+    render(<ChatWhatsappInboxView establishmentId="est-1" />);
+
+    await screen.findAllByText("Maria");
+    await screen.findAllByText("Pedro");
+
+    const searchInput = screen.getByPlaceholderText(/buscar teléfono o nombre/i);
+    fireEvent.change(searchInput, { target: { value: "Pedro" } });
+
+    await waitFor(() => {
+      expect(screen.queryByText("Necesito ayuda urgente")).not.toBeInTheDocument();
+      expect(screen.getAllByText("Pedro").length).toBeGreaterThanOrEqual(1);
     });
   });
 
@@ -210,5 +245,38 @@ describe("ChatWhatsappInboxView", () => {
       const elements = screen.getAllByText("Nuevo mensaje entrante por WebSocket");
       expect(elements.length).toBeGreaterThanOrEqual(1);
     });
+  });
+
+  it("disables message input when bot is active until staff takes over", async () => {
+    const botDetail: WhatsappConversationDetail = {
+      conversation: mockConversations[1]!,
+      messages: [
+        {
+          id: "msg-bot-1",
+          conversationId: "conv-2",
+          direction: "INBOUND",
+          messageType: "text",
+          content: "¿A qué hora abren?",
+          deliveryStatus: "DELIVERED",
+          createdAt: new Date().toISOString(),
+        },
+      ],
+      customer: null,
+    };
+
+    const { getWhatsappConversationDetailAction } = await import(
+      "@/contexts/chat/interfaces/actions/whatsapp-conversations.action"
+    );
+    vi.mocked(getWhatsappConversationDetailAction).mockResolvedValueOnce({
+      status: "success",
+      data: botDetail,
+    });
+
+    render(<ChatWhatsappInboxView establishmentId="est-1" initialConversationId="conv-2" />);
+
+    await screen.findAllByText("Pedro");
+
+    const input = await screen.findByPlaceholderText(/toma el control para responder manualmente|take over conversation/i);
+    expect(input).toBeDisabled();
   });
 });

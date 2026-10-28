@@ -20,7 +20,8 @@ export async function getWhatsappConversationsAction(
   size = 20,
 ): Promise<ActionState<WhatsappConversationPageViewModel>> {
   const workspace = await composeBusinessAdapters().workspaceQueryService.getHeaderViewModel({ establishmentId });
-  if (!hasEstablishmentPermission(getWorkspaceEstablishment(workspace, establishmentId), "crm:read")) {
+  const isOwner = workspace.accountType === "OWNER";
+  if (!hasEstablishmentPermission(getWorkspaceEstablishment(workspace, establishmentId), "crm:read", isOwner)) {
     return {
       status: "error",
       data: null,
@@ -56,7 +57,8 @@ export async function getWhatsappConversationDetailAction(
   establishmentId: string,
 ): Promise<ActionState<WhatsappConversationDetail>> {
   const workspace = await composeBusinessAdapters().workspaceQueryService.getHeaderViewModel({ establishmentId });
-  if (!hasEstablishmentPermission(getWorkspaceEstablishment(workspace, establishmentId), "crm:read")) {
+  const isOwner = workspace.accountType === "OWNER";
+  if (!hasEstablishmentPermission(getWorkspaceEstablishment(workspace, establishmentId), "crm:read", isOwner)) {
     return {
       status: "error",
       data: null,
@@ -92,7 +94,12 @@ export async function takeoverWhatsappConversationAction(
   establishmentId: string,
 ): Promise<ActionState<WhatsappConversationSummary>> {
   const workspace = await composeBusinessAdapters().workspaceQueryService.getHeaderViewModel({ establishmentId });
-  if (!hasEstablishmentPermission(getWorkspaceEstablishment(workspace, establishmentId), "crm:update")) {
+  const isOwner = workspace.accountType === "OWNER";
+  const establishment = getWorkspaceEstablishment(workspace, establishmentId);
+  const authorized =
+    hasEstablishmentPermission(establishment, "crm:manage", isOwner) ||
+    hasEstablishmentPermission(establishment, "crm:update", isOwner);
+  if (!authorized) {
     return {
       status: "error",
       data: null,
@@ -128,7 +135,12 @@ export async function releaseWhatsappConversationAction(
   establishmentId: string,
 ): Promise<ActionState<WhatsappConversationSummary>> {
   const workspace = await composeBusinessAdapters().workspaceQueryService.getHeaderViewModel({ establishmentId });
-  if (!hasEstablishmentPermission(getWorkspaceEstablishment(workspace, establishmentId), "crm:update")) {
+  const isOwner = workspace.accountType === "OWNER";
+  const establishment = getWorkspaceEstablishment(workspace, establishmentId);
+  const authorized =
+    hasEstablishmentPermission(establishment, "crm:manage", isOwner) ||
+    hasEstablishmentPermission(establishment, "crm:update", isOwner);
+  if (!authorized) {
     return {
       status: "error",
       data: null,
@@ -165,7 +177,12 @@ export async function sendWhatsappMessageAction(
   text: string,
 ): Promise<ActionState<WhatsappMessageItem>> {
   const workspace = await composeBusinessAdapters().workspaceQueryService.getHeaderViewModel({ establishmentId });
-  if (!hasEstablishmentPermission(getWorkspaceEstablishment(workspace, establishmentId), "crm:update")) {
+  const isOwner = workspace.accountType === "OWNER";
+  const establishment = getWorkspaceEstablishment(workspace, establishmentId);
+  const authorized =
+    hasEstablishmentPermission(establishment, "crm:manage", isOwner) ||
+    hasEstablishmentPermission(establishment, "crm:update", isOwner);
+  if (!authorized) {
     return {
       status: "error",
       data: null,
@@ -199,9 +216,10 @@ export async function sendWhatsappMessageAction(
 export async function openWhatsappForCustomerAction(
   customerId: string,
   establishmentId: string,
-): Promise<ActionState<WhatsappConversationSummary>> {
+): Promise<ActionState<WhatsappConversationSummary | null>> {
   const workspace = await composeBusinessAdapters().workspaceQueryService.getHeaderViewModel({ establishmentId });
-  if (!hasEstablishmentPermission(getWorkspaceEstablishment(workspace, establishmentId), "crm:read")) {
+  const isOwner = workspace.accountType === "OWNER";
+  if (!hasEstablishmentPermission(getWorkspaceEstablishment(workspace, establishmentId), "crm:read", isOwner)) {
     return {
       status: "error",
       data: null,

@@ -31,17 +31,25 @@ export function ChatWhatsappInboxView({
   initialConversationId,
   onOpenCustomerDetail,
 }: ChatWhatsappInboxViewProps) {
-  const [filter, setFilter] = React.useState<"NEEDS_ATTENTION" | "ALL">("NEEDS_ATTENTION");
+  const [filter, setFilter] = React.useState<"NEEDS_ATTENTION" | "ALL">("ALL");
   const [search, setSearch] = React.useState("");
   const [conversations, setConversations] = React.useState<WhatsappConversationSummary[]>([]);
   const [selectedConversationId, setSelectedConversationId] = React.useState<string | null>(
     initialConversationId ?? null,
   );
   const [detail, setDetail] = React.useState<WhatsappConversationDetail | null>(null);
+  const [loadingDetail, setLoadingDetail] = React.useState(false);
 
   const [messageText, setMessageText] = React.useState("");
   const [sendingMessage, setSendingMessage] = React.useState(false);
   const [actionInProgress, setActionInProgress] = React.useState(false);
+
+  React.useEffect(() => {
+    if (initialConversationId) {
+      setSelectedConversationId(initialConversationId);
+      setFilter("ALL");
+    }
+  }, [initialConversationId]);
 
   const messagesEndRef = React.useRef<HTMLDivElement | null>(null);
 
@@ -134,27 +142,56 @@ export function ChatWhatsappInboxView({
     getWhatsappConversationsAction(establishmentId, filter, search).then((res) => {
       if (!ignore && res.status === "success" && res.data) {
         setConversations(res.data.content);
-        if (!selectedConversationId && res.data.content.length > 0) {
-          setSelectedConversationId(res.data.content[0]?.id ?? null);
-        }
       }
     });
     return () => {
       ignore = true;
     };
-  }, [establishmentId, filter, search, selectedConversationId]);
+  }, [establishmentId, filter, search]);
+
+  const filteredConversations = React.useMemo(() => {
+    if (!search.trim()) return conversations;
+    const query = search.trim().toLowerCase();
+    return conversations.filter((c) => {
+      const phoneMatch = c.contactPhone?.toLowerCase().includes(query);
+      const nameMatch = c.contactDisplayName?.toLowerCase().includes(query);
+      const customerMatch = c.customerName?.toLowerCase().includes(query);
+      const previewMatch = c.lastMessagePreview?.toLowerCase().includes(query);
+      return Boolean(phoneMatch || nameMatch || customerMatch || previewMatch);
+    });
+  }, [conversations, search]);
+
+  React.useEffect(() => {
+    if (filteredConversations.length > 0) {
+      const exists = filteredConversations.some((c) => c.id === selectedConversationId);
+      if (!selectedConversationId || !exists) {
+        setSelectedConversationId(filteredConversations[0]?.id ?? null);
+      }
+    } else if (conversations.length > 0) {
+      setSelectedConversationId(null);
+    }
+  }, [filteredConversations, selectedConversationId, conversations.length]);
 
   React.useEffect(() => {
     if (!selectedConversationId || !establishmentId) {
+      setDetail(null);
+      setLoadingDetail(false);
       return;
     }
     let ignore = false;
-    getWhatsappConversationDetailAction(selectedConversationId, establishmentId).then((res) => {
-      if (!ignore && res.status === "success" && res.data) {
-        setDetail(res.data);
-        setTimeout(scrollToBottom, 50);
-      }
-    });
+    setLoadingDetail(true);
+    getWhatsappConversationDetailAction(selectedConversationId, establishmentId)
+      .then((res) => {
+        if (!ignore && res.status === "success" && res.data) {
+          setDetail(res.data);
+          setTimeout(scrollToBottom, 50);
+        }
+      })
+      .finally(() => {
+        if (!ignore) {
+          setLoadingDetail(false);
+        }
+      });
     return () => {
       ignore = true;
     };
@@ -232,12 +269,14 @@ export function ChatWhatsappInboxView({
     }
   };
 
-  const selectedConv = conversations.find((c) => c.id === selectedConversationId);
+  const selectedConv =
+    conversations.find((c) => c.id === selectedConversationId) ??
+    (detail && detail.conversation.id === selectedConversationId ? detail.conversation : undefined);
 
   return (
     <div className="grid h-[780px] grid-cols-12 gap-4 rounded-xl border border-border/80 bg-background overflow-hidden">
       <ChatConversationList
-        conversations={conversations}
+        conversations={filteredConversations}
         selectedConversationId={selectedConversationId}
         onSelectConversation={setSelectedConversationId}
         filter={filter}
@@ -250,6 +289,7 @@ export function ChatWhatsappInboxView({
       <ChatMessageThread
         selectedConv={selectedConv}
         detail={detail}
+        loadingDetail={loadingDetail}
         actionInProgress={actionInProgress}
         sendingMessage={sendingMessage}
         messageText={messageText}

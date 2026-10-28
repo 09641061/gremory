@@ -50,20 +50,20 @@ export function ChatConversationList({
 
         <div className="flex gap-1.5">
           <Button
-            variant={filter === "NEEDS_ATTENTION" ? "default" : "outline"}
-            size="xs"
-            className="flex-1 text-xs"
-            onClick={() => onFilterChange("NEEDS_ATTENTION")}
-          >
-            {t.chat.filterNeedsAttention}
-          </Button>
-          <Button
             variant={filter === "ALL" ? "default" : "outline"}
             size="xs"
             className="flex-1 text-xs"
             onClick={() => onFilterChange("ALL")}
           >
             {t.chat.filterAll}
+          </Button>
+          <Button
+            variant={filter === "NEEDS_ATTENTION" ? "default" : "outline"}
+            size="xs"
+            className="flex-1 text-xs"
+            onClick={() => onFilterChange("NEEDS_ATTENTION")}
+          >
+            {t.chat.filterNeedsAttention}
           </Button>
         </div>
 
@@ -110,7 +110,7 @@ export function ChatConversationList({
                         {displayName}
                       </span>
                       <span className="text-[10px] text-muted-foreground shrink-0">
-                        {new Date(c.lastMessageAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                        {c.lastMessageAt ? new Date(c.lastMessageAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : ""}
                       </span>
                     </div>
 

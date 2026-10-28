@@ -7,25 +7,27 @@ export const whatsappDeliveryStatusSchema = z.enum(["SENT", "DELIVERED", "READ",
 export const chatCustomerSummarySchema = z.object({
   id: z.string(),
   name: z.string(),
-  documentType: z.string(),
-  documentNumber: z.string(),
+  documentType: z.string().nullable().optional(),
+  documentNumber: z.string().nullable().optional(),
   phoneNumber: z.string().nullable().optional(),
+  phone: z.string().nullable().optional(),
   phoneCountryCode: z.string().nullable().optional(),
   email: z.string().nullable().optional(),
+  notes: z.string().nullable().optional(),
 });
 
 export const whatsappConversationSummarySchema = z.object({
   id: z.string(),
   customerId: z.string().nullable().optional(),
   customerName: z.string().nullable().optional(),
-  contactPhone: z.string(),
+  contactPhone: z.string().nullish().transform((val) => val ?? ""),
   contactDisplayName: z.string().nullable().optional(),
   status: whatsappConversationStatusSchema,
   summaryTag: z.string().nullable().optional(),
-  unreadCount: z.number().int().nonnegative(),
+  unreadCount: z.number().int().nonnegative().default(0),
   lastMessagePreview: z.string().nullable().optional(),
-  lastMessageAt: z.string(),
-  customerServiceWindowOpen: z.boolean(),
+  lastMessageAt: z.string().nullable().optional(),
+  customerServiceWindowOpen: z.boolean().default(false),
 });
 
 export const whatsappMessageItemSchema = z.object({
@@ -33,11 +35,13 @@ export const whatsappMessageItemSchema = z.object({
   conversationId: z.string(),
   whatsappMessageId: z.string().nullable().optional(),
   direction: whatsappMessageDirectionSchema,
-  messageType: z.string(),
-  content: z.string(),
-  deliveryStatus: whatsappDeliveryStatusSchema,
+  messageType: z.string().default("text"),
+  content: z.string().default(""),
+  deliveryStatus: whatsappDeliveryStatusSchema.default("SENT"),
   sentByUserId: z.string().nullable().optional(),
   createdAt: z.string(),
+  mediaId: z.string().nullable().optional(),
+  mimeType: z.string().nullable().optional(),
 });
 
 export const whatsappConversationDetailSchema = z.object({

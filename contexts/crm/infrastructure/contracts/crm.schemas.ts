@@ -17,7 +17,7 @@ export const customerSchema = z.object({
   phoneCountryCode: z.string().nullable().optional(),
   phoneNumber: z.string().nullable().optional(),
   phone: z.string().nullable().optional(),
-  email: z.string().email(),
+  email: z.string().email().nullable().optional().or(z.literal("")),
   notes: z.string().nullable().optional(),
 });
 

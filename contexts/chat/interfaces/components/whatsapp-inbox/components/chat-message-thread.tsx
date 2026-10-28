@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Bot, Clock, Send, User } from "lucide-react";
+import { Bot, Clock, Loader2, MessageSquare, Send, User } from "lucide-react";
 import type {
   WhatsappConversationDetail,
   WhatsappConversationSummary,
@@ -16,6 +16,7 @@ import { ChatMessageBubble } from "./chat-message-bubble";
 export interface ChatMessageThreadProps {
   selectedConv?: WhatsappConversationSummary;
   detail: WhatsappConversationDetail | null;
+  loadingDetail?: boolean;
   actionInProgress: boolean;
   sendingMessage: boolean;
   messageText: string;
@@ -29,6 +30,7 @@ export interface ChatMessageThreadProps {
 export function ChatMessageThread({
   selectedConv,
   detail,
+  loadingDetail = false,
   actionInProgress,
   sendingMessage,
   messageText,
@@ -119,16 +121,28 @@ export function ChatMessageThread({
 
       {/* Messages Thread */}
       <ScrollArea className="flex-1 p-4 bg-muted/5">
-        <div className="space-y-3">
-          {detail?.messages.map((m) => (
-            <ChatMessageBubble
-              key={m.id}
-              message={m}
-              senderName={selectedConv.customerName || selectedConv.contactPhone}
-            />
-          ))}
-          <div ref={messagesEndRef} />
-        </div>
+        {loadingDetail ? (
+          <div className="flex flex-col items-center justify-center h-full min-h-[300px] text-muted-foreground gap-2">
+            <Loader2 className="size-6 animate-spin text-muted-foreground/60" />
+            <span className="text-xs">{t.chat.loadingMessages}</span>
+          </div>
+        ) : detail?.messages && detail.messages.length > 0 ? (
+          <div className="space-y-3">
+            {detail.messages.map((m) => (
+              <ChatMessageBubble
+                key={m.id}
+                message={m}
+                senderName={selectedConv.customerName || selectedConv.contactPhone}
+              />
+            ))}
+            <div ref={messagesEndRef} />
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center h-full min-h-[300px] text-muted-foreground gap-2">
+            <MessageSquare className="size-6 text-muted-foreground/40" />
+            <span className="text-xs">{t.chat.noMessages}</span>
+          </div>
+        )}
       </ScrollArea>
 
       {/* Message Input Footer */}
@@ -136,14 +150,14 @@ export function ChatMessageThread({
         <Input
           value={messageText}
           onChange={(e) => onMessageTextChange(e.target.value)}
-          placeholder={t.chat.typeMessagePlaceholder}
-          disabled={sendingMessage}
+          placeholder={isBotActive ? t.chat.botActiveInputPlaceholder : t.chat.typeMessagePlaceholder}
+          disabled={sendingMessage || isBotActive}
           className="flex-1 text-xs h-9"
         />
         <Button
           type="submit"
           size="sm"
-          disabled={sendingMessage || !messageText.trim()}
+          disabled={sendingMessage || !messageText.trim() || isBotActive}
           className="gap-1.5 px-3 h-9 text-xs"
         >
           <Send className="size-3.5" />

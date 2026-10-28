@@ -151,4 +151,32 @@ describe("CrmMasterDetailView", () => {
       expect(screen.getByText(/Notas guardadas|Notes saved/i)).toBeInTheDocument();
     });
   });
+
+  it("should render placeholder when customer email is null (e.g. WhatsApp customer)", async () => {
+    const whatsappCustomer: CustomerResponse = {
+      id: "cust-wa",
+      organizationId: "org-1",
+      establishmentId: "est-1",
+      documentType: "DNI",
+      documentNumber: "87654321",
+      name: "WhatsApp User",
+      phone: "+51912345678",
+      email: null,
+    };
+
+    render(
+      <CrmMasterDetailView
+        customers={[whatsappCustomer]}
+        establishmentId="est-1"
+        selectedCustomerId="cust-wa"
+        onSelectCustomer={vi.fn()}
+        onOpenWhatsapp={vi.fn()}
+        searchTerm=""
+        onSearchChange={vi.fn()}
+      />,
+    );
+
+    expect(screen.getAllByText("WhatsApp User").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("-").length).toBeGreaterThan(0);
+  });
 });
