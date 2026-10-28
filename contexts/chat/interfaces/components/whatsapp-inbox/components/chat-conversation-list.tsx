@@ -34,8 +34,8 @@ export function ChatConversationList({
   const t = useChatTranslations();
 
   return (
-    <div className="col-span-12 md:col-span-4 lg:col-span-3 border-r border-border/80 flex flex-col h-full bg-muted/10">
-      <div className="p-3 border-b border-border/80 space-y-2">
+    <div className="col-span-12 md:col-span-4 lg:col-span-3 border-r border-border/80 flex flex-col h-full min-h-0 overflow-hidden bg-card/30">
+      <div className="p-3 border-b border-border/80 space-y-2 shrink-0">
         <div className="flex items-center justify-between">
           <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
             {t.chat.inboxTitle}
@@ -78,7 +78,7 @@ export function ChatConversationList({
         </div>
       </div>
 
-      <ScrollArea className="flex-1">
+      <ScrollArea className="flex-1 min-h-0 overflow-y-auto">
         <div className="divide-y divide-border/40">
           {conversations.length === 0 ? (
             <div className="p-6 text-center text-xs text-muted-foreground">

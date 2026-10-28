@@ -276,7 +276,7 @@ export function ChatWhatsappInboxView({
     (detail && detail.conversation.id === effectiveSelectedId ? detail.conversation : undefined);
 
   return (
-    <div className="grid h-[780px] grid-cols-12 gap-4 rounded-xl border border-border/80 bg-background overflow-hidden">
+    <div className="grid h-[calc(100dvh-210px)] min-h-[520px] max-h-[780px] grid-cols-12 grid-rows-[minmax(0,1fr)] gap-0 rounded-xl border border-border/80 bg-background overflow-hidden">
       <ChatConversationList
         conversations={filteredConversations}
         selectedConversationId={effectiveSelectedId}

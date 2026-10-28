@@ -31,7 +31,7 @@ export function ChatCustomerQuickProfile({
   const t = useChatTranslations();
 
   return (
-    <div className="hidden lg:flex col-span-3 flex-col h-full bg-card/20 p-4 space-y-4">
+    <div className="hidden lg:flex col-span-3 flex-col h-full min-h-0 overflow-y-auto bg-card/20 p-4 space-y-4">
       <div>
         <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
           {t.chat.quickCrmTitle}
