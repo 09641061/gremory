@@ -10,6 +10,7 @@ import { requireBusinessAccessToken } from "@/contexts/business/infrastructure/s
 import { composeWorkforceAdapters } from "@/contexts/workforce/interfaces/server/workforce-composition";
 import { InviteCollaboratorForm } from "@/contexts/workforce/interfaces/components/invite-collaborator-form";
 import { InvitationRowActions } from "@/contexts/workforce/interfaces/components/invitation-row-actions";
+import { RoleAssignmentSelect } from "@/contexts/workforce/interfaces/components/role-assignment-select";
 import { Badge } from "@/contexts/shared/interfaces/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/contexts/shared/interfaces/components/ui/card";
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/contexts/shared/interfaces/components/ui/empty";
@@ -31,10 +32,13 @@ async function OrganizationInvitesPageContent() {
   const organization = workspace.organization;
   if (!organization || organization.id !== workspace.ownedOrganizationId) redirect("/access-denied");
 
-  const [invitations, establishmentsPage] = await Promise.all([
-    composeWorkforceAdapters().workforceService.listInvitations(accessToken, organization.id),
+  const workforce = composeWorkforceAdapters().workforceService;
+  const [invitations, establishmentsPage, roles] = await Promise.all([
+    workforce.listInvitations(accessToken, organization.id),
     business.establishmentQueryService.getByOrganization({ organizationId: organization.id, page: 0, size: 100 }),
+    workforce.listRoles(accessToken, organization.id),
   ]);
+  const activeRoles = roles.filter((role) => role.status === "ACTIVE");
   const dateFormatter = new Intl.DateTimeFormat("es-PE", { dateStyle: "medium", timeStyle: "short" });
 
   return (
@@ -46,7 +50,7 @@ async function OrganizationInvitesPageContent() {
           <CardDescription>La invitación expirará automáticamente y podrá revocarse antes de ser aceptada.</CardDescription>
         </CardHeader>
         <CardContent>
-          <InviteCollaboratorForm organizationId={organization.id} establishments={establishmentsPage.content.map(({ id, name }) => ({ id, name }))} />
+          <InviteCollaboratorForm organizationId={organization.id} establishments={establishmentsPage.content.map(({ id, name }) => ({ id, name }))} roles={activeRoles.map(({ id, name }) => ({ id, name }))} />
         </CardContent>
       </Card>
 
@@ -57,11 +61,12 @@ async function OrganizationInvitesPageContent() {
             <Empty className="border"><EmptyHeader><EmptyMedia variant="icon"><MailPlus /></EmptyMedia><EmptyTitle>Aún no hay invitaciones pendientes</EmptyTitle><EmptyDescription>Usa el formulario para enviar la primera.</EmptyDescription></EmptyHeader></Empty>
           ) : (
             <Table>
-              <TableHeader><TableRow><TableHead>Correo</TableHead><TableHead>Establecimiento</TableHead><TableHead>Estado</TableHead><TableHead>Expira</TableHead><TableHead className="text-right">Acciones</TableHead></TableRow></TableHeader>
+              <TableHeader><TableRow><TableHead>Correo</TableHead><TableHead>Establecimiento</TableHead><TableHead>Rol</TableHead><TableHead>Estado</TableHead><TableHead>Expira</TableHead><TableHead className="text-right">Acciones</TableHead></TableRow></TableHeader>
               <TableBody>{invitations.map((invitation) => (
                 <TableRow key={invitation.id}>
                   <TableCell className="font-medium">{invitation.email}</TableCell>
                   <TableCell>{invitation.establishmentName}</TableCell>
+                  <TableCell><RoleAssignmentSelect organizationId={organization.id} targetId={invitation.id} target="invitation" currentRoleId={invitation.role.id} roles={activeRoles} /></TableCell>
                   <TableCell><Badge variant="secondary">Pendiente</Badge></TableCell>
                   <TableCell>{dateFormatter.format(new Date(invitation.expiresAt))}</TableCell>
                   <TableCell><InvitationRowActions organizationId={organization.id} invitationId={invitation.id} /></TableCell>

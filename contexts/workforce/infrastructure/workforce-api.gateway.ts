@@ -9,6 +9,10 @@ import {
   workforceInvitationPreviewSchema,
   workforceInvitationSchema,
   workforceMemberListSchema,
+  workforceMemberSchema,
+  workforcePermissionListSchema,
+  workforceRoleListSchema,
+  workforceRoleSchema,
 } from "../interfaces/rest/workforce.schemas";
 
 export class WorkforceApiError extends ApiError {
@@ -26,7 +30,7 @@ export class WorkforceApiGateway implements WorkforceGateway {
     return workforceInvitationListSchema.parse(response);
   }
 
-  async invite(accessToken: string, organizationId: string, input: { email: string; establishmentId: string }) {
+  async invite(accessToken: string, organizationId: string, input: { email: string; establishmentId: string; roleId: string }) {
     const response = await apiClient.post<unknown>(this.invitations, input, this.auth(accessToken, organizationId));
     return workforceInvitationSchema.parse(response);
   }
@@ -72,6 +76,45 @@ export class WorkforceApiGateway implements WorkforceGateway {
       `${apiConfig.routes.workforce.members}/${encodeURIComponent(membershipId)}`,
       this.auth(accessToken, organizationId),
     );
+  }
+
+  async listPermissions(accessToken: string, organizationId: string) {
+    const response = await apiClient.get<unknown>(apiConfig.routes.workforce.permissions, this.auth(accessToken, organizationId));
+    return workforcePermissionListSchema.parse(response);
+  }
+
+  async listRoles(accessToken: string, organizationId: string) {
+    const response = await apiClient.get<unknown>(apiConfig.routes.workforce.roles, this.auth(accessToken, organizationId));
+    return workforceRoleListSchema.parse(response);
+  }
+
+  async getRole(accessToken: string, organizationId: string, roleId: string) {
+    const response = await apiClient.get<unknown>(`${apiConfig.routes.workforce.roles}/${encodeURIComponent(roleId)}`, this.auth(accessToken, organizationId));
+    return workforceRoleSchema.parse(response);
+  }
+
+  async createRole(accessToken: string, organizationId: string, input: import("../application/model/workforce").SaveWorkforceRole) {
+    const response = await apiClient.post<unknown>(apiConfig.routes.workforce.roles, input, this.auth(accessToken, organizationId));
+    return workforceRoleSchema.parse(response);
+  }
+
+  async updateRole(accessToken: string, organizationId: string, roleId: string, input: import("../application/model/workforce").SaveWorkforceRole) {
+    const response = await apiClient.put<unknown>(`${apiConfig.routes.workforce.roles}/${encodeURIComponent(roleId)}`, input, this.auth(accessToken, organizationId));
+    return workforceRoleSchema.parse(response);
+  }
+
+  async archiveRole(accessToken: string, organizationId: string, roleId: string, version: number) {
+    await apiClient.delete(`${apiConfig.routes.workforce.roles}/${encodeURIComponent(roleId)}?version=${encodeURIComponent(String(version))}`, this.auth(accessToken, organizationId));
+  }
+
+  async assignMemberRole(accessToken: string, organizationId: string, membershipId: string, roleId: string) {
+    const response = await apiClient.put<unknown>(`${apiConfig.routes.workforce.members}/${encodeURIComponent(membershipId)}/role`, { roleId }, this.auth(accessToken, organizationId));
+    return workforceMemberSchema.parse(response);
+  }
+
+  async assignInvitationRole(accessToken: string, organizationId: string, invitationId: string, roleId: string) {
+    const response = await apiClient.put<unknown>(`${this.invitations}/${encodeURIComponent(invitationId)}/role`, { roleId }, this.auth(accessToken, organizationId));
+    return workforceInvitationSchema.parse(response);
   }
 
   private auth(token: string, tenantId: string) {

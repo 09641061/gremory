@@ -7,6 +7,7 @@ const establishmentId = "22222222-2222-4222-8222-222222222222";
 const invitationId = "33333333-3333-4333-8333-333333333333";
 const userId = "44444444-4444-4444-8444-444444444444";
 const membershipId = "55555555-5555-4555-8555-555555555555";
+const roleId = "66666666-6666-4666-8666-666666666666";
 
 function response(body: unknown, status = 200) {
   return new Response(body === undefined ? null : JSON.stringify(body), { status });
@@ -24,6 +25,7 @@ describe("Workforce API gateway", () => {
       establishmentName: "Centro",
       email: "persona@example.com",
       status: "PENDING",
+      role: { id: roleId, name: "Recepción", status: "ACTIVE" },
       createdAt: "2026-10-20T12:00:00Z",
       expiresAt: "2026-10-27T12:00:00Z",
     }, 201));
@@ -32,13 +34,14 @@ describe("Workforce API gateway", () => {
     await new WorkforceApiGateway().invite("access-token", organizationId, {
       email: "persona@example.com",
       establishmentId,
+      roleId,
     });
 
     const [, request] = fetchMock.mock.calls[0] as [string, RequestInit];
     const headers = new Headers(request.headers);
     expect(headers.get("Authorization")).toBe("Bearer access-token");
     expect(headers.get("X-Organization-Id")).toBe(organizationId);
-    expect(JSON.parse(String(request.body))).toEqual({ email: "persona@example.com", establishmentId });
+    expect(JSON.parse(String(request.body))).toEqual({ email: "persona@example.com", establishmentId, roleId });
   });
 
   it("previews an invitation without credentials", async () => {

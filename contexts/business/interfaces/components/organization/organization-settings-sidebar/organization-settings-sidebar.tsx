@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import {
   Building2,
   Store,
+  ShieldCheck,
   UserPlus,
   Users,
   type LucideIcon,
@@ -23,6 +24,7 @@ type OrganizationSettingsHref =
   | "/organization"
   | "/organization/members"
   | "/organization/invites"
+  | "/organization/roles"
   | "/establishments";
 
 /**
@@ -58,6 +60,11 @@ export function OrganizationSettingsSidebar() {
       href: "/organization/members",
       label: t.organizationSettings.members,
       icon: Users,
+    },
+    {
+      href: "/organization/roles",
+      label: "Roles y permisos",
+      icon: ShieldCheck,
     },
     {
       href: "/organization/invites",

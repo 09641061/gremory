@@ -35,7 +35,9 @@ export type BusinessWorkspaceResource = {
     canReadAnalytics?: boolean;
   } | null;
   authorization?: {
-    role: "OWNER" | "MANAGER" | "WORKER";
+    role: "OWNER" | "CUSTOM";
+    roleId: string | null;
+    roleName: string;
     scope?: {
       type?: "ORGANIZATION" | "ESTABLISHMENT" | null;
       id?: string | null;
