@@ -160,6 +160,9 @@ describe("DailyStaffCalendar Redesign Views and Panel", () => {
   });
 
   it("opens AppointmentDetailPanel when clicking an appointment and displays customer, notes and price", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    vi.setSystemTime(new Date("2026-10-26T12:00:00Z"));
+
     render(
       <DailyStaffCalendar
         establishmentId="est-1"
@@ -215,9 +218,13 @@ describe("DailyStaffCalendar Redesign Views and Panel", () => {
     fireEvent.click(closeButton);
 
     expect(screen.queryByTestId("appointment-detail-panel")).toBeNull();
+    vi.useRealTimers();
   });
 
   it("renders currency in USD when specified", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    vi.setSystemTime(new Date("2026-10-26T12:00:00Z"));
+
     render(
       <DailyStaffCalendar
         establishmentId="est-1"
@@ -241,5 +248,6 @@ describe("DailyStaffCalendar Redesign Views and Panel", () => {
 
     const panel = screen.getByTestId("appointment-detail-panel");
     expect(within(panel).getByText(/\$ 150\.00/)).toBeDefined();
+    vi.useRealTimers();
   });
 });

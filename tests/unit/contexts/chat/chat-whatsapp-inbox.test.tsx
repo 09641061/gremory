@@ -144,7 +144,8 @@ describe("ChatWhatsappInboxView", () => {
 
     const pedroElements = await screen.findAllByText("Pedro");
     expect(pedroElements.length).toBeGreaterThanOrEqual(1);
-    expect(screen.getByText("Necesito ayuda urgente")).toBeInTheDocument();
+    const previews = await screen.findAllByText("Necesito ayuda urgente");
+    expect(previews.length).toBeGreaterThanOrEqual(1);
   });
 
   it("filters conversations by 'Requieren Atención' tab and back to 'Todos / IA'", async () => {
