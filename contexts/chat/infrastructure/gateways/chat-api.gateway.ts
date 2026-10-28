@@ -118,7 +118,7 @@ export class ChatApiGateway implements ChatWhatsappPort {
     const authToken = await resolveAccessToken(token);
     const response = await apiClient.post<unknown>(
       `/api/chat/whatsapp/conversations/${encodeURIComponent(id)}/messages`,
-      { establishmentId, text },
+      { establishmentId, content: text },
       {
         token: authToken,
         ...this.tenantOptions(),
