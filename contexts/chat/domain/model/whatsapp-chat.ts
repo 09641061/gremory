@@ -1,6 +1,6 @@
 export type WhatsappConversationStatus = "BOT_ACTIVE" | "NEEDS_HUMAN" | "HUMAN_TAKEN";
-export type WhatsappMessageDirection = "INBOUND" | "OUTBOUND_BOT" | "OUTBOUND_HUMAN";
-export type WhatsappDeliveryStatus = "SENT" | "DELIVERED" | "READ" | "FAILED";
+export type WhatsappMessageDirection = "INBOUND" | "OUTBOUND_BOT" | "OUTBOUND_HUMAN" | "OUTBOUND_BUSINESS_APP";
+export type WhatsappDeliveryStatus = "PENDING" | "SENT" | "DELIVERED" | "READ" | "FAILED";
 
 export interface ChatCustomerSummary {
   id: string;

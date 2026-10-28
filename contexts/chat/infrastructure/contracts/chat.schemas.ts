@@ -1,8 +1,8 @@
 import { z } from "zod";
 
 export const whatsappConversationStatusSchema = z.enum(["BOT_ACTIVE", "NEEDS_HUMAN", "HUMAN_TAKEN"]);
-export const whatsappMessageDirectionSchema = z.enum(["INBOUND", "OUTBOUND_BOT", "OUTBOUND_HUMAN"]);
-export const whatsappDeliveryStatusSchema = z.enum(["SENT", "DELIVERED", "READ", "FAILED"]);
+export const whatsappMessageDirectionSchema = z.enum(["INBOUND", "OUTBOUND_BOT", "OUTBOUND_HUMAN", "OUTBOUND_BUSINESS_APP"]);
+export const whatsappDeliveryStatusSchema = z.enum(["PENDING", "SENT", "DELIVERED", "READ", "FAILED"]);
 
 export const chatCustomerSummarySchema = z.object({
   id: z.string(),

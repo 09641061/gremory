@@ -123,4 +123,21 @@ describe("CRM Schemas", () => {
     expect(parsed.customer.email).toBeNull();
     expect(parsed.whatsappConversationId).toBe("conv-123");
   });
+
+  it("parses a WhatsApp lead without documentType and documentNumber (null/undefined)", () => {
+    const rawLead = {
+      id: "cust-wa-lead",
+      organizationId: "org-1",
+      establishmentId: "est-1",
+      name: "Cliente WhatsApp",
+      documentType: null,
+      documentNumber: null,
+      phone: "+51987654321",
+    };
+
+    const parsed = customerSchema.parse(rawLead);
+    expect(parsed.documentType).toBeNull();
+    expect(parsed.documentNumber).toBeNull();
+    expect(parsed.name).toBe("Cliente WhatsApp");
+  });
 });

@@ -102,12 +102,18 @@ export function CrmCustomerList({
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-1">
                       <span className="truncate text-sm font-medium">{c.name}</span>
-                      <Badge variant="outline" className="text-[10px] uppercase font-mono px-1.5 py-0">
-                        {c.documentType}
-                      </Badge>
+                      {c.documentType ? (
+                        <Badge variant="outline" className="text-[10px] uppercase font-mono px-1.5 py-0">
+                          {c.documentType}
+                        </Badge>
+                      ) : (
+                        <Badge variant="secondary" className="text-[10px] font-mono px-1.5 py-0">
+                          Sin doc
+                        </Badge>
+                      )}
                     </div>
                     <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
-                      <span className="font-mono">{c.documentNumber}</span>
+                      <span className="font-mono">{c.documentNumber || "Sin documento"}</span>
                       {c.phone && <span>• {c.phone}</span>}
                     </div>
                   </div>

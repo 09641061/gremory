@@ -5,8 +5,8 @@ export interface CustomerViewModel {
   id: string;
   organizationId: string;
   establishmentId: string;
-  documentType: CustomerDocumentType;
-  documentNumber: string;
+  documentType?: CustomerDocumentType | null;
+  documentNumber?: string | null;
   name: string;
   phoneCountryCode?: string | null;
   phoneNumber?: string | null;

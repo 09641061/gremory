@@ -161,6 +161,23 @@ describe("Chat Schemas Validation", () => {
       expect(parsed.customer?.phone).toBe("+51987654321");
       expect(parsed.customer?.notes).toBe("Interesada en corte y peinado");
     });
+
+    it("parses message with OUTBOUND_BUSINESS_APP direction and PENDING delivery status", () => {
+      const msg = {
+        id: "msg-echo-1",
+        conversationId: "conv-1",
+        direction: "OUTBOUND_BUSINESS_APP",
+        messageType: "text",
+        content: "Echo desde WhatsApp Business móvil",
+        deliveryStatus: "PENDING",
+        createdAt: "2026-10-27T12:00:00Z",
+      };
+
+      const parsed = whatsappMessageItemSchema.parse(msg);
+      expect(parsed.direction).toBe("OUTBOUND_BUSINESS_APP");
+      expect(parsed.deliveryStatus).toBe("PENDING");
+      expect(parsed.content).toBe("Echo desde WhatsApp Business móvil");
+    });
   });
 
   describe("whatsappConversationPageResponseSchema", () => {
