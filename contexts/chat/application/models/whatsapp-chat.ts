@@ -22,7 +22,7 @@ export interface WhatsappConversationSummary {
   summaryTag?: string | null;
   unreadCount: number;
   lastMessagePreview?: string | null;
-  lastMessageAt: string;
+  lastMessageAt?: string | null;
   customerServiceWindowOpen: boolean;
 }
 
@@ -36,6 +36,8 @@ export interface WhatsappMessageItem {
   deliveryStatus: WhatsappDeliveryStatus;
   sentByUserId?: string | null;
   createdAt: string;
+  mediaId?: string | null;
+  mimeType?: string | null;
 }
 
 export interface WhatsappConversationDetail {

@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { AlertCircle, Bot, Check, CheckCheck, UserCheck } from "lucide-react";
+import { AlertCircle, Bot, Check, CheckCheck, Clock, UserCheck } from "lucide-react";
 import type { WhatsappMessageItem } from "@/contexts/chat/application/models/whatsapp-chat";
 import { useChatTranslations } from "@/contexts/chat/interfaces/i18n";
 
@@ -15,6 +15,7 @@ export function ChatMessageBubble({ message, senderName }: ChatMessageBubbleProp
   const isInbound = message.direction === "INBOUND";
   const isBot = message.direction === "OUTBOUND_BOT";
   const isHuman = message.direction === "OUTBOUND_HUMAN";
+  const isBusinessApp = message.direction === "OUTBOUND_BUSINESS_APP";
 
   return (
     <div className={`flex flex-col ${isInbound ? "items-start" : "items-end"}`}>
@@ -35,9 +36,9 @@ export function ChatMessageBubble({ message, senderName }: ChatMessageBubbleProp
               <Bot className="size-2.5" /> {t.chat.assistantLabel}
             </span>
           )}
-          {isHuman && (
+          {(isHuman || isBusinessApp) && (
             <span className="flex items-center gap-1">
-              <UserCheck className="size-2.5" /> {t.chat.receptionLabel}
+              <UserCheck className="size-2.5" /> {isBusinessApp ? "WhatsApp Business" : t.chat.receptionLabel}
             </span>
           )}
         </div>
@@ -52,6 +53,7 @@ export function ChatMessageBubble({ message, senderName }: ChatMessageBubbleProp
           </span>
           {!isInbound && (
             <span>
+              {message.deliveryStatus === "PENDING" && <Clock className="size-2.5 opacity-60" />}
               {message.deliveryStatus === "SENT" && <Check className="size-2.5" />}
               {(message.deliveryStatus === "DELIVERED" || message.deliveryStatus === "READ") && (
                 <CheckCheck className="size-2.5" />

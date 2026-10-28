@@ -11,13 +11,13 @@ export const customerSchema = z.object({
   id: z.string().min(1),
   organizationId: z.string().min(1),
   establishmentId: z.string().min(1),
-  documentType: customerDocumentTypeSchema,
-  documentNumber: z.string().min(1),
+  documentType: customerDocumentTypeSchema.nullable().optional(),
+  documentNumber: z.string().nullable().optional(),
   name: z.string().min(1),
   phoneCountryCode: z.string().nullable().optional(),
   phoneNumber: z.string().nullable().optional(),
   phone: z.string().nullable().optional(),
-  email: z.string().email(),
+  email: z.string().email().nullable().optional().or(z.literal("")),
   notes: z.string().nullable().optional(),
 });
 

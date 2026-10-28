@@ -49,10 +49,10 @@ export function EditCustomerForm({ customer }: EditCustomerFormProps) {
   const legacyPhone = customer.phone ?? "";
   const legacyCountryCode = legacyPhone.startsWith("+51") ? "+51" : "";
   const initialData: CustomerFormData = {
-    docType: customer.documentType.toLowerCase(),
-    docNumber: customer.documentNumber,
+    docType: customer.documentType ? customer.documentType.toLowerCase() : "dni",
+    docNumber: customer.documentNumber ?? "",
     name: customer.name,
-    email: customer.email,
+    email: customer.email ?? "",
     phoneCountryCode: customer.phoneCountryCode ?? legacyCountryCode,
     phoneNumber: customer.phoneNumber ?? (legacyCountryCode ? legacyPhone.slice(3) : legacyPhone.replace(/^\+/, "")),
   };

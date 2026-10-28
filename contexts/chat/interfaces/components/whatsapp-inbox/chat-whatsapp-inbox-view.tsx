@@ -31,13 +31,24 @@ export function ChatWhatsappInboxView({
   initialConversationId,
   onOpenCustomerDetail,
 }: ChatWhatsappInboxViewProps) {
-  const [filter, setFilter] = React.useState<"NEEDS_ATTENTION" | "ALL">("NEEDS_ATTENTION");
+  const [filter, setFilter] = React.useState<"NEEDS_ATTENTION" | "ALL">("ALL");
   const [search, setSearch] = React.useState("");
   const [conversations, setConversations] = React.useState<WhatsappConversationSummary[]>([]);
   const [selectedConversationId, setSelectedConversationId] = React.useState<string | null>(
     initialConversationId ?? null,
   );
+  const [prevInitialId, setPrevInitialId] = React.useState(initialConversationId);
+
+  if (initialConversationId !== prevInitialId) {
+    setPrevInitialId(initialConversationId);
+    if (initialConversationId) {
+      setSelectedConversationId(initialConversationId);
+      setFilter("ALL");
+    }
+  }
+
   const [detail, setDetail] = React.useState<WhatsappConversationDetail | null>(null);
+  const [loadingDetailConversationId, setLoadingDetailConversationId] = React.useState<string | null>(null);
 
   const [messageText, setMessageText] = React.useState("");
   const [sendingMessage, setSendingMessage] = React.useState(false);
@@ -134,42 +145,70 @@ export function ChatWhatsappInboxView({
     getWhatsappConversationsAction(establishmentId, filter, search).then((res) => {
       if (!ignore && res.status === "success" && res.data) {
         setConversations(res.data.content);
-        if (!selectedConversationId && res.data.content.length > 0) {
-          setSelectedConversationId(res.data.content[0]?.id ?? null);
-        }
       }
     });
     return () => {
       ignore = true;
     };
-  }, [establishmentId, filter, search, selectedConversationId]);
+  }, [establishmentId, filter, search]);
+
+  const filteredConversations = React.useMemo(() => {
+    if (!search.trim()) return conversations;
+    const query = search.trim().toLowerCase();
+    return conversations.filter((c) => {
+      const phoneMatch = c.contactPhone?.toLowerCase().includes(query);
+      const nameMatch = c.contactDisplayName?.toLowerCase().includes(query);
+      const customerMatch = c.customerName?.toLowerCase().includes(query);
+      const previewMatch = c.lastMessagePreview?.toLowerCase().includes(query);
+      return Boolean(phoneMatch || nameMatch || customerMatch || previewMatch);
+    });
+  }, [conversations, search]);
+
+  const effectiveSelectedId = React.useMemo(() => {
+    if (!selectedConversationId) {
+      return filteredConversations[0]?.id ?? null;
+    }
+    const exists = filteredConversations.some((c) => c.id === selectedConversationId);
+    return exists ? selectedConversationId : (filteredConversations[0]?.id ?? null);
+  }, [selectedConversationId, filteredConversations]);
 
   React.useEffect(() => {
-    if (!selectedConversationId || !establishmentId) {
+    if (!effectiveSelectedId || !establishmentId) {
       return;
     }
     let ignore = false;
-    getWhatsappConversationDetailAction(selectedConversationId, establishmentId).then((res) => {
-      if (!ignore && res.status === "success" && res.data) {
-        setDetail(res.data);
-        setTimeout(scrollToBottom, 50);
-      }
-    });
+    getWhatsappConversationDetailAction(effectiveSelectedId, establishmentId)
+      .then((res) => {
+        if (!ignore && res.status === "success" && res.data) {
+          setDetail(res.data);
+          setTimeout(scrollToBottom, 50);
+        }
+      })
+      .finally(() => {
+        if (!ignore) {
+          setLoadingDetailConversationId(null);
+        }
+      });
     return () => {
       ignore = true;
     };
-  }, [selectedConversationId, establishmentId]);
+  }, [effectiveSelectedId, establishmentId]);
+
+  const activeDetail = effectiveSelectedId && detail?.conversation.id === effectiveSelectedId ? detail : null;
+  const isDetailLoading = Boolean(
+    effectiveSelectedId && (!activeDetail || loadingDetailConversationId === effectiveSelectedId),
+  );
 
   const handleTakeover = async () => {
-    if (!selectedConversationId || !establishmentId) return;
+    if (!effectiveSelectedId || !establishmentId) return;
     setActionInProgress(true);
     try {
-      const res = await takeoverWhatsappConversationAction(selectedConversationId, establishmentId);
+      const res = await takeoverWhatsappConversationAction(effectiveSelectedId, establishmentId);
       if (res.status === "success" && res.data) {
         setConversations((prev) =>
-          prev.map((c) => (c.id === selectedConversationId ? { ...c, status: "HUMAN_TAKEN" } : c)),
+          prev.map((c) => (c.id === effectiveSelectedId ? { ...c, status: "HUMAN_TAKEN" } : c)),
         );
-        if (detail) {
+        if (detail && detail.conversation.id === effectiveSelectedId) {
           setDetail({
             ...detail,
             conversation: {
@@ -185,15 +224,15 @@ export function ChatWhatsappInboxView({
   };
 
   const handleRelease = async () => {
-    if (!selectedConversationId || !establishmentId) return;
+    if (!effectiveSelectedId || !establishmentId) return;
     setActionInProgress(true);
     try {
-      const res = await releaseWhatsappConversationAction(selectedConversationId, establishmentId);
+      const res = await releaseWhatsappConversationAction(effectiveSelectedId, establishmentId);
       if (res.status === "success" && res.data) {
         setConversations((prev) =>
-          prev.map((c) => (c.id === selectedConversationId ? { ...c, status: "BOT_ACTIVE" } : c)),
+          prev.map((c) => (c.id === effectiveSelectedId ? { ...c, status: "BOT_ACTIVE" } : c)),
         );
-        if (detail) {
+        if (detail && detail.conversation.id === effectiveSelectedId) {
           setDetail({
             ...detail,
             conversation: {
@@ -210,16 +249,16 @@ export function ChatWhatsappInboxView({
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedConversationId || !establishmentId || !messageText.trim()) return;
+    if (!effectiveSelectedId || !establishmentId || !messageText.trim()) return;
 
     setSendingMessage(true);
     const textToSend = messageText.trim();
     setMessageText("");
 
     try {
-      const res = await sendWhatsappMessageAction(selectedConversationId, establishmentId, textToSend);
+      const res = await sendWhatsappMessageAction(effectiveSelectedId, establishmentId, textToSend);
       if (res.status === "success" && res.data) {
-        if (detail) {
+        if (detail && detail.conversation.id === effectiveSelectedId) {
           setDetail({
             ...detail,
             messages: [...detail.messages, res.data],
@@ -232,13 +271,15 @@ export function ChatWhatsappInboxView({
     }
   };
 
-  const selectedConv = conversations.find((c) => c.id === selectedConversationId);
+  const selectedConv =
+    conversations.find((c) => c.id === effectiveSelectedId) ??
+    (detail && detail.conversation.id === effectiveSelectedId ? detail.conversation : undefined);
 
   return (
-    <div className="grid h-[780px] grid-cols-12 gap-4 rounded-xl border border-border/80 bg-background overflow-hidden">
+    <div className="grid h-[calc(100dvh-210px)] min-h-[520px] max-h-[780px] grid-cols-12 grid-rows-[minmax(0,1fr)] gap-0 rounded-xl border border-border/80 bg-background overflow-hidden">
       <ChatConversationList
-        conversations={conversations}
-        selectedConversationId={selectedConversationId}
+        conversations={filteredConversations}
+        selectedConversationId={effectiveSelectedId}
         onSelectConversation={setSelectedConversationId}
         filter={filter}
         onFilterChange={setFilter}
@@ -249,7 +290,8 @@ export function ChatWhatsappInboxView({
 
       <ChatMessageThread
         selectedConv={selectedConv}
-        detail={detail}
+        detail={activeDetail}
+        loadingDetail={isDetailLoading}
         actionInProgress={actionInProgress}
         sendingMessage={sendingMessage}
         messageText={messageText}
@@ -261,7 +303,7 @@ export function ChatWhatsappInboxView({
       />
 
       <ChatCustomerQuickProfile
-        customer={detail?.customer}
+        customer={activeDetail?.customer}
         selectedConv={selectedConv}
         onOpenCustomerDetail={onOpenCustomerDetail}
       />

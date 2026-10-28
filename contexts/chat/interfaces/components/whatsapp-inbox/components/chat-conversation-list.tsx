@@ -34,8 +34,8 @@ export function ChatConversationList({
   const t = useChatTranslations();
 
   return (
-    <div className="col-span-12 md:col-span-4 lg:col-span-3 border-r border-border/80 flex flex-col h-full bg-muted/10">
-      <div className="p-3 border-b border-border/80 space-y-2">
+    <div className="col-span-12 md:col-span-4 lg:col-span-3 border-r border-border/80 flex flex-col h-full min-h-0 overflow-hidden bg-card/30">
+      <div className="p-3 border-b border-border/80 space-y-2 shrink-0">
         <div className="flex items-center justify-between">
           <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
             {t.chat.inboxTitle}
@@ -50,20 +50,20 @@ export function ChatConversationList({
 
         <div className="flex gap-1.5">
           <Button
-            variant={filter === "NEEDS_ATTENTION" ? "default" : "outline"}
-            size="xs"
-            className="flex-1 text-xs"
-            onClick={() => onFilterChange("NEEDS_ATTENTION")}
-          >
-            {t.chat.filterNeedsAttention}
-          </Button>
-          <Button
             variant={filter === "ALL" ? "default" : "outline"}
             size="xs"
             className="flex-1 text-xs"
             onClick={() => onFilterChange("ALL")}
           >
             {t.chat.filterAll}
+          </Button>
+          <Button
+            variant={filter === "NEEDS_ATTENTION" ? "default" : "outline"}
+            size="xs"
+            className="flex-1 text-xs"
+            onClick={() => onFilterChange("NEEDS_ATTENTION")}
+          >
+            {t.chat.filterNeedsAttention}
           </Button>
         </div>
 
@@ -78,7 +78,7 @@ export function ChatConversationList({
         </div>
       </div>
 
-      <ScrollArea className="flex-1">
+      <ScrollArea className="flex-1 min-h-0 overflow-y-auto">
         <div className="divide-y divide-border/40">
           {conversations.length === 0 ? (
             <div className="p-6 text-center text-xs text-muted-foreground">
@@ -110,7 +110,7 @@ export function ChatConversationList({
                         {displayName}
                       </span>
                       <span className="text-[10px] text-muted-foreground shrink-0">
-                        {new Date(c.lastMessageAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                        {c.lastMessageAt ? new Date(c.lastMessageAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : ""}
                       </span>
                     </div>
 

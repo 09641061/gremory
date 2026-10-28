@@ -118,7 +118,7 @@ export class ChatApiGateway implements ChatWhatsappPort {
     const authToken = await resolveAccessToken(token);
     const response = await apiClient.post<unknown>(
       `/api/chat/whatsapp/conversations/${encodeURIComponent(id)}/messages`,
-      { establishmentId, text },
+      { establishmentId, content: text },
       {
         token: authToken,
         ...this.tenantOptions(),
@@ -129,11 +129,10 @@ export class ChatApiGateway implements ChatWhatsappPort {
     return parseProviderResponse(whatsappMessageItemSchema, response, "whatsapp message item");
   }
 
-  async openForCustomer(customerId: string, establishmentId: string, token?: string): Promise<WhatsappConversationSummary> {
+  async openForCustomer(customerId: string, establishmentId: string, token?: string): Promise<WhatsappConversationSummary | null> {
     const authToken = await resolveAccessToken(token);
-    const response = await apiClient.post<unknown>(
+    const response = await apiClient.get<unknown>(
       `/api/chat/whatsapp/conversations/by-customer/${encodeURIComponent(customerId)}?establishmentId=${encodeURIComponent(establishmentId)}`,
-      {},
       {
         token: authToken,
         ...this.tenantOptions(),
@@ -141,6 +140,9 @@ export class ChatApiGateway implements ChatWhatsappPort {
         errorType: ChatApiError,
       },
     );
+    if (!response) {
+      return null;
+    }
     return parseProviderResponse(whatsappConversationSummarySchema, response, "whatsapp conversation summary");
   }
 }

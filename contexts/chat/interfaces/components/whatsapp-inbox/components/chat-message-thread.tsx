@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Bot, Clock, Send, User } from "lucide-react";
+import { Bot, Clock, Loader2, MessageSquare, Send, User } from "lucide-react";
 import type {
   WhatsappConversationDetail,
   WhatsappConversationSummary,
@@ -16,6 +16,7 @@ import { ChatMessageBubble } from "./chat-message-bubble";
 export interface ChatMessageThreadProps {
   selectedConv?: WhatsappConversationSummary;
   detail: WhatsappConversationDetail | null;
+  loadingDetail?: boolean;
   actionInProgress: boolean;
   sendingMessage: boolean;
   messageText: string;
@@ -29,6 +30,7 @@ export interface ChatMessageThreadProps {
 export function ChatMessageThread({
   selectedConv,
   detail,
+  loadingDetail = false,
   actionInProgress,
   sendingMessage,
   messageText,
@@ -42,7 +44,7 @@ export function ChatMessageThread({
 
   if (!selectedConv) {
     return (
-      <div className="col-span-12 md:col-span-8 lg:col-span-6 flex flex-col h-full bg-background border-r border-border/80">
+      <div className="col-span-12 md:col-span-8 lg:col-span-6 flex flex-col h-full min-h-0 overflow-hidden bg-background border-r border-border/80">
         <div className="flex-1 flex flex-col items-center justify-center p-6 text-center text-xs text-muted-foreground">
           <Bot className="size-8 text-muted-foreground/40 mb-2" />
           <p>{t.chat.selectConversationPrompt}</p>
@@ -56,9 +58,9 @@ export function ChatMessageThread({
   const displayName = selectedConv.customerName || selectedConv.contactDisplayName || selectedConv.contactPhone;
 
   return (
-    <div className="col-span-12 md:col-span-8 lg:col-span-6 flex flex-col h-full bg-background border-r border-border/80">
+    <div className="col-span-12 md:col-span-8 lg:col-span-6 flex flex-col h-full min-h-0 overflow-hidden bg-background border-r border-border/80">
       {/* Chat Header */}
-      <div className="p-3 border-b border-border/80 flex items-center justify-between bg-card/40">
+      <div className="p-3 border-b border-border/80 flex items-center justify-between bg-card/40 shrink-0">
         <div className="flex items-center gap-3">
           <Avatar className="size-9 border border-border/50">
             <AvatarFallback className="text-xs">
@@ -105,45 +107,57 @@ export function ChatMessageThread({
 
       {/* Banner: State Indicator */}
       {isBotActive && (
-        <div className="px-3 py-1.5 bg-muted/40 border-b border-border/50 text-[11px] text-muted-foreground flex items-center gap-2">
+        <div className="shrink-0 px-3 py-1.5 bg-muted/40 border-b border-border/50 text-[11px] text-muted-foreground flex items-center gap-2">
           <Bot className="size-3.5 text-primary" />
           <span>{t.chat.botManagingBanner}</span>
         </div>
       )}
       {!selectedConv.customerServiceWindowOpen && (
-        <div className="px-3 py-1.5 bg-amber-500/10 border-b border-amber-500/20 text-[11px] text-amber-600 dark:text-amber-400 flex items-center gap-2">
+        <div className="shrink-0 px-3 py-1.5 bg-amber-500/10 border-b border-amber-500/20 text-[11px] text-amber-600 dark:text-amber-400 flex items-center gap-2">
           <Clock className="size-3.5" />
           <span>{t.chat.windowExpiredBanner}</span>
         </div>
       )}
 
       {/* Messages Thread */}
-      <ScrollArea className="flex-1 p-4 bg-muted/5">
-        <div className="space-y-3">
-          {detail?.messages.map((m) => (
-            <ChatMessageBubble
-              key={m.id}
-              message={m}
-              senderName={selectedConv.customerName || selectedConv.contactPhone}
-            />
-          ))}
-          <div ref={messagesEndRef} />
-        </div>
+      <ScrollArea className="flex-1 min-h-0 overflow-y-auto p-4 bg-muted/5">
+        {loadingDetail ? (
+          <div className="flex flex-col items-center justify-center h-full min-h-[300px] text-muted-foreground gap-2">
+            <Loader2 className="size-6 animate-spin text-muted-foreground/60" />
+            <span className="text-xs">{t.chat.loadingMessages}</span>
+          </div>
+        ) : detail?.messages && detail.messages.length > 0 ? (
+          <div className="space-y-3">
+            {detail.messages.map((m) => (
+              <ChatMessageBubble
+                key={m.id}
+                message={m}
+                senderName={selectedConv.customerName || selectedConv.contactPhone}
+              />
+            ))}
+            <div ref={messagesEndRef} />
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center h-full min-h-[300px] text-muted-foreground gap-2">
+            <MessageSquare className="size-6 text-muted-foreground/40" />
+            <span className="text-xs">{t.chat.noMessages}</span>
+          </div>
+        )}
       </ScrollArea>
 
       {/* Message Input Footer */}
-      <form onSubmit={onSendMessage} className="p-3 border-t border-border/80 flex items-center gap-2 bg-card/30">
+      <form onSubmit={onSendMessage} className="p-3 border-t border-border/80 flex items-center gap-2 bg-card/30 shrink-0">
         <Input
           value={messageText}
           onChange={(e) => onMessageTextChange(e.target.value)}
-          placeholder={t.chat.typeMessagePlaceholder}
-          disabled={sendingMessage}
+          placeholder={isBotActive ? t.chat.botActiveInputPlaceholder : t.chat.typeMessagePlaceholder}
+          disabled={sendingMessage || isBotActive}
           className="flex-1 text-xs h-9"
         />
         <Button
           type="submit"
           size="sm"
-          disabled={sendingMessage || !messageText.trim()}
+          disabled={sendingMessage || !messageText.trim() || isBotActive}
           className="gap-1.5 px-3 h-9 text-xs"
         >
           <Send className="size-3.5" />

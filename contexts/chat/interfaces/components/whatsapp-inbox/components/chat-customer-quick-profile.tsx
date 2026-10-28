@@ -31,7 +31,7 @@ export function ChatCustomerQuickProfile({
   const t = useChatTranslations();
 
   return (
-    <div className="hidden lg:flex col-span-3 flex-col h-full bg-card/20 p-4 space-y-4">
+    <div className="hidden lg:flex col-span-3 flex-col h-full min-h-0 overflow-y-auto bg-card/20 p-4 space-y-4">
       <div>
         <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
           {t.chat.quickCrmTitle}
@@ -42,24 +42,44 @@ export function ChatCustomerQuickProfile({
             <CardHeader className="p-3 pb-2">
               <CardTitle className="text-xs font-semibold flex items-center justify-between">
                 <span>{customer.name}</span>
-                <Badge variant="outline" className="text-[10px] font-normal">
-                  {customer.documentType}
-                </Badge>
+                {customer.documentType && (
+                  <Badge variant="outline" className="text-[10px] font-normal">
+                    {customer.documentType}
+                  </Badge>
+                )}
               </CardTitle>
             </CardHeader>
             <CardContent className="p-3 pt-0 text-xs space-y-2">
-              <div className="text-muted-foreground">
-                <span className="block text-[10px] uppercase font-semibold text-muted-foreground/70">
-                  Documento
-                </span>
-                <span className="font-mono text-foreground">{customer.documentNumber}</span>
-              </div>
+              {customer.documentNumber && (
+                <div className="text-muted-foreground">
+                  <span className="block text-[10px] uppercase font-semibold text-muted-foreground/70">
+                    Documento
+                  </span>
+                  <span className="font-mono text-foreground">{customer.documentNumber}</span>
+                </div>
+              )}
+              {(customer.phone || customer.phoneNumber) && (
+                <div className="text-muted-foreground">
+                  <span className="block text-[10px] uppercase font-semibold text-muted-foreground/70">
+                    Teléfono
+                  </span>
+                  <span className="font-mono text-foreground">{customer.phone || customer.phoneNumber}</span>
+                </div>
+              )}
               {customer.email && (
                 <div className="text-muted-foreground">
                   <span className="block text-[10px] uppercase font-semibold text-muted-foreground/70">
                     Email
                   </span>
                   <span className="text-foreground truncate block">{customer.email}</span>
+                </div>
+              )}
+              {customer.notes && (
+                <div className="text-muted-foreground">
+                  <span className="block text-[10px] uppercase font-semibold text-muted-foreground/70">
+                    Notas
+                  </span>
+                  <p className="text-foreground text-[11px] leading-relaxed italic line-clamp-3">{customer.notes}</p>
                 </div>
               )}
               {onOpenCustomerDetail && (

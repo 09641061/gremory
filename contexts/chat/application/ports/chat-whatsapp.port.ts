@@ -44,5 +44,5 @@ export interface ChatWhatsappPort {
     customerId: string,
     establishmentId: string,
     token?: string,
-  ): Promise<WhatsappConversationSummary>;
+  ): Promise<WhatsappConversationSummary | null>;
 }

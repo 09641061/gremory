@@ -70,7 +70,11 @@ export function CrmCustomerDetailView({
             <div>
               <h2 className="text-xl font-semibold tracking-tight">{customer.name}</h2>
               <div className="text-xs text-muted-foreground flex items-center gap-2 mt-0.5 font-mono">
-                <span>{customer.documentType}: {customer.documentNumber}</span>
+                <span>
+                  {customer.documentType && customer.documentNumber
+                    ? `${customer.documentType}: ${customer.documentNumber}`
+                    : "Sin documento"}
+                </span>
               </div>
             </div>
           </div>
