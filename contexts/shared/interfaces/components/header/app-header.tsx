@@ -33,7 +33,7 @@ export function AppHeader({
   const requestedEstablishmentId = useSearchParams().get("establishmentId");
   const establishmentId = requestedEstablishmentId && workspace?.establishments.some((item) => item.id === requestedEstablishmentId)
     ? requestedEstablishmentId : workspace?.activeEstablishmentId;
-  const isAccountStateRoute = ["/welcome", "/organizations/new", "/invitations/pending", "/access-denied", "/no-access"].includes(pathname);
+  const isAccountStateRoute = ["/welcome", "/onboarding/profile", "/organizations/new", "/invitations/pending", "/access-denied", "/no-access"].includes(pathname);
   const canManageBilling = isAccountStateRoute || workspace?.accessPolicy?.canManageBilling === true;
 
   const resolvedHomeHref = homeHref ?? APP_HEADER_FALLBACK_HOME_HREF;

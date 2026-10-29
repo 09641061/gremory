@@ -15,12 +15,28 @@ describe("Profile Application Services", () => {
   };
 
   const createMockRepository = (): ProfileRepository => ({
+    createProfile: vi.fn(),
     getMyProfile: vi.fn(),
     updateProfile: vi.fn(),
     updatePreferences: vi.fn(),
   });
 
   describe("ProfileCommandServiceImpl", () => {
+    it("should delegate createProfile command to the repository", async () => {
+      const repository = createMockRepository();
+      vi.mocked(repository.createProfile).mockResolvedValue(dummyProfile);
+      const service = new ProfileCommandServiceImpl(repository);
+      const command = {
+        username: createUsername("user"),
+        imageUrl: createProfileImageUrl(null),
+      };
+
+      const result = await service.createProfile(command, "token-123");
+
+      expect(result).toEqual(dummyProfile);
+      expect(repository.createProfile).toHaveBeenCalledWith(command, "token-123");
+    });
+
     it("should delegate updateProfile command to the repository", async () => {
       // Arrange
       const repository = createMockRepository();

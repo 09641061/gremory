@@ -1,6 +1,7 @@
 export type WorkspaceAccountType = "OWNER" | "MEMBER" | "PENDING_INVITATION";
 
 export type WorkspaceOnboardingStatus =
+  | "PROFILE_PENDING"
   | "ORGANIZATION_PENDING"
   | "ESTABLISHMENT_PENDING"
   | "PAYMENT_PENDING"

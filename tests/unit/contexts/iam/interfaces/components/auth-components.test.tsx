@@ -101,7 +101,7 @@ describe("IAM client components", () => {
       accessToken: "a",
       refreshToken: "r",
     }));
-    await waitFor(() => expect(mocks.router.replace).toHaveBeenCalledWith("/welcome"));
+    await waitFor(() => expect(mocks.router.replace).toHaveBeenCalledWith("/"));
   });
 
   it("should exchange a Google callback code once and return to the requested path", async () => {
@@ -174,6 +174,6 @@ describe("IAM client components", () => {
     render(<AuthCallback />);
 
     // Assert
-    await waitFor(() => expect(mocks.router.replace).toHaveBeenCalledWith("/welcome"));
+    await waitFor(() => expect(mocks.router.replace).toHaveBeenCalledWith("/"));
   });
 });

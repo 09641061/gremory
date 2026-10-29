@@ -39,4 +39,13 @@ export const en = {
     saving: "Saving...",
     cancel: "Cancel",
   },
+  onboarding: {
+    title: "Create your profile",
+    description: "Tell us how your name should appear in Takodu.",
+    usernameLabel: "Display name",
+    usernameHint: "Only letters (A-Z, a-z), {min} to {max} characters.",
+    errorTitle: "Unable to create your profile",
+    continue: "Continue",
+    saving: "Creating profile...",
+  },
 } as const;

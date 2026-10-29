@@ -1,11 +1,21 @@
 import { describe, expect, it } from "vitest";
 import {
+  createProfileSchema,
   updateProfileSchema,
   updatePreferencesSchema,
 } from "@/contexts/profiles/interfaces/rest/schemas/profile.schemas";
 import { profileResponseSchema } from "@/contexts/profiles/infrastructure/contracts/profile.schemas";
 
 describe("Profile Validation Schemas", () => {
+  it("should validate the explicit profile creation payload", () => {
+    const result = createProfileSchema.safeParse({
+      username: "Gabriela",
+      imageUrl: null,
+    });
+
+    expect(result.success).toBe(true);
+  });
+
   it("should validate a correct profile payload when username and image are valid", () => {
     const result = updateProfileSchema.safeParse({
       username: "user",

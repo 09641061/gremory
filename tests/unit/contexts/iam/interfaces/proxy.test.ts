@@ -180,7 +180,7 @@ describe("IAM session proxy", () => {
     expect(response.headers.get("location")).toBe("http://localhost/schedule");
   });
 
-  it("should send an owner without an active subscription to welcome before organization setup", async () => {
+  it("should send an owner without an active subscription to plan selection before organization setup", async () => {
     stubFetch(
       workspace({
         organization: null,
@@ -194,10 +194,10 @@ describe("IAM session proxy", () => {
     const response = await proxy(requestWithSession("access-token", "refresh-token", "/"));
 
     expect(response.status).toBe(307);
-    expect(response.headers.get("location")).toBe("http://localhost/welcome");
+    expect(response.headers.get("location")).toBe("http://localhost/upgrade");
   });
 
-  it("should keep welcome reachable while an owner selects a subscription", async () => {
+  it("should keep plan selection reachable while an owner selects a subscription", async () => {
     stubFetch(
       workspace({
         organization: null,
@@ -208,10 +208,27 @@ describe("IAM session proxy", () => {
       billingSubscription({ active: false, status: "CANCELLED" }),
     );
 
-    const response = await proxy(requestWithSession("access-token", "refresh-token", "/welcome"));
+    const response = await proxy(requestWithSession("access-token", "refresh-token", "/upgrade"));
 
     expect(response.status).toBe(200);
     expect(response.headers.get("location")).toBeNull();
+  });
+
+  it("should send a paid owner without a profile to profile onboarding", async () => {
+    stubFetch(
+      workspace({
+        organization: null,
+        establishments: [],
+        activeEstablishmentId: null,
+        onboardingStatus: "PROFILE_PENDING",
+      }),
+      billingSubscription(),
+    );
+
+    const response = await proxy(requestWithSession("access-token", "refresh-token", "/"));
+
+    expect(response.status).toBe(307);
+    expect(response.headers.get("location")).toBe("http://localhost/onboarding/profile");
   });
 
   it("should send an active owner without an organization to organization setup", async () => {

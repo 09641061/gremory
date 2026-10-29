@@ -22,7 +22,12 @@ export type EntryRouteResolution =
   | { status: "ready"; homeHref: EntryRoutePath }
   | {
       status: "subscription-required";
-      setupHref: "/welcome";
+      setupHref: "/upgrade";
+      allowedPaths: ReadonlyArray<string>;
+    }
+  | {
+      status: "profile-required";
+      setupHref: "/onboarding/profile";
       allowedPaths: ReadonlyArray<string>;
     }
   | {

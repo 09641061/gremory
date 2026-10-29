@@ -3,6 +3,7 @@ import type { UpdateProfileCommand } from "../../../domain/model/commands/update
 import type { UpdateProfilePreferencesCommand } from "../../../domain/model/commands/update-profile-preferences.command";
 import type { ProfileCommandService } from "../../services/profile-command.service";
 import type { ProfileViewModel } from "../../services/profile.view-model";
+import type { CreateProfileCommand } from "../../model/create-profile.command";
 
 /**
  * Pure handler: receives the writer port via constructor injection. No
@@ -10,6 +11,10 @@ import type { ProfileViewModel } from "../../services/profile.view-model";
  */
 export class ProfileCommandServiceImpl implements ProfileCommandService {
   constructor(private readonly profileWriter: ProfileWriter) {}
+
+  createProfile(command: CreateProfileCommand, token: string): Promise<ProfileViewModel> {
+    return this.profileWriter.createProfile(command, token);
+  }
 
   updateProfile(command: UpdateProfileCommand, token: string): Promise<ProfileViewModel> {
     return this.profileWriter.updateProfile(command, token);

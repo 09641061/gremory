@@ -21,6 +21,7 @@ vi.mock("@/contexts/shared/infrastructure/http/api-client", async (importOrigina
     ...actual,
     apiClient: {
       get: vi.fn(),
+      post: vi.fn(),
       put: vi.fn(),
       requestMultipart: vi.fn(),
     },
@@ -40,6 +41,30 @@ describe("HttpProfileRepository", () => {
     vi.clearAllMocks();
     repository = new HttpProfileRepository();
     vi.mocked(apiClient.requestMultipart).mockResolvedValue(rawApiResponse);
+  });
+
+  describe("createProfile", () => {
+    it("should create a profile with the authenticated endpoint", async () => {
+      vi.mocked(apiClient.post).mockResolvedValue(rawApiResponse);
+      const command = {
+        username: createUsername("user"),
+        imageUrl: createProfileImageUrl(null),
+      };
+
+      const result = await repository.createProfile(command, "token-abc");
+
+      expect(result).toEqual({
+        username: "user",
+        imageUrl: "https://picsum.photos/seed/replik-test/800/600",
+        language: "ES",
+        theme: "LIGHT",
+      });
+      expect(apiClient.post).toHaveBeenCalledWith(
+        "/api/v1/profiles",
+        { username: "user", imageUrl: null },
+        expect.objectContaining({ token: "token-abc" }),
+      );
+    });
   });
 
   describe("getMyProfile", () => {

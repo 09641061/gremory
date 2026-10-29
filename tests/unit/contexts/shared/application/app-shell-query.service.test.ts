@@ -253,7 +253,7 @@ describe("app shell query service", () => {
     expect(shell.homeHref).toBe("/establishments/new");
   });
 
-  it("routes an owner without an active subscription to welcome and hides module navigation", async () => {
+  it("routes an owner without an active subscription to plan selection and hides module navigation", async () => {
     mocks.getCurrentSubscription.mockResolvedValue({
       active: false,
       status: "PAST_DUE",
@@ -262,7 +262,7 @@ describe("app shell query service", () => {
 
     const shell = await createAppShellQueryService().resolve();
 
-    expect(shell.homeHref).toBe("/welcome");
+    expect(shell.homeHref).toBe("/upgrade");
     expect(shell.visibleSidebarRoutes).toEqual([]);
     expect(shell.hasAssistantAccess).toBe(false);
   });

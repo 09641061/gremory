@@ -41,4 +41,13 @@ export const es: ProfilesDictionary = {
     saving: "Guardando...",
     cancel: "Cancelar",
   },
+  onboarding: {
+    title: "Crea tu perfil",
+    description: "Indica cómo quieres que aparezca tu nombre en Takodu.",
+    usernameLabel: "Nombre visible",
+    usernameHint: "Solo letras (A-Z, a-z), de {min} a {max} caracteres.",
+    errorTitle: "No pudimos crear tu perfil",
+    continue: "Continuar",
+    saving: "Creando perfil...",
+  },
 };

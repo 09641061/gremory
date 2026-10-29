@@ -35,10 +35,18 @@ export function resolveEntryRoutePolicy(
     if (subscription !== "active") {
       return {
         status: "subscription-required",
-        setupHref: "/welcome",
-        allowedPaths: ["/welcome"],
+        setupHref: "/upgrade",
+        allowedPaths: ["/upgrade"],
       };
     }
+  }
+
+  if (workspace.onboardingStatus === "PROFILE_PENDING") {
+    return {
+      status: "profile-required",
+      setupHref: "/onboarding/profile",
+      allowedPaths: ["/onboarding/profile"],
+    };
   }
 
   if (

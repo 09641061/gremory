@@ -30,7 +30,7 @@ export function AuthCallback({ returnTo = null }: { returnTo?: string | null }) 
       void (async () => {
         try {
           await createSessionAction({ accessToken, refreshToken });
-          router.replace(returnTo ?? "/welcome");
+          router.replace(returnTo ?? "/");
         } catch {
           redirectToLogin();
         }
@@ -42,7 +42,7 @@ export function AuthCallback({ returnTo = null }: { returnTo?: string | null }) 
       void (async () => {
         try {
           await exchangeGoogleCodeAction(code);
-          router.replace(returnTo ?? "/welcome");
+          router.replace(returnTo ?? "/");
         } catch {
           redirectToLogin();
         }
@@ -50,7 +50,7 @@ export function AuthCallback({ returnTo = null }: { returnTo?: string | null }) 
       return;
     }
 
-    router.replace("/welcome");
+    router.replace("/");
   }, [returnTo, router]);
 
   return (

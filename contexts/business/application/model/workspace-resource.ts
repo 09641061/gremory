@@ -12,6 +12,7 @@ export type BusinessWorkspaceResource = {
     | "ORGANIZATION_PENDING"
     | "ESTABLISHMENT_PENDING"
     | "PAYMENT_PENDING"
+    | "PROFILE_PENDING"
     | "COMPLETED"
     | null;
   onboardingCompleted: boolean;

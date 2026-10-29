@@ -73,7 +73,7 @@ export const businessWorkspaceResourceSchema = z.object({
   // Drives the mandatory setup steps for a freshly registered owner. A member
   // who joined by invitation always reads COMPLETED, immediately.
   onboardingStatus: z
-    .enum(["ORGANIZATION_PENDING", "ESTABLISHMENT_PENDING", "PAYMENT_PENDING", "COMPLETED"])
+    .enum(["PAYMENT_PENDING", "PROFILE_PENDING", "ORGANIZATION_PENDING", "ESTABLISHMENT_PENDING", "COMPLETED"])
     .nullable(),
   onboardingCompleted: z.boolean(),
   organization: z
