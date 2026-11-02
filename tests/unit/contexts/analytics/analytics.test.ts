@@ -185,4 +185,47 @@ describe("Analytics Schemas Validation", () => {
     expect(parsed.lostRevenue.totalLostRevenue).toBe(1000);
     expect(parsed.serviceFrictionMatrix[0].hasMinimumVolume).toBe(true);
   });
+
+  it("should validate real backend max analytics dashboard payload without workforceProductivity or botRoi", () => {
+    const realBackendPayload = {
+      from: "2026-01-01",
+      to: "2026-01-31",
+      establishmentId: "123e4567-e89b-12d3-a456-426614174000",
+      totalAppointments: 100,
+      completedAppointments: 80,
+      cancelledAppointments: 15,
+      noShowAppointments: 5,
+      inProgressAppointments: 0,
+      grossRevenue: 5000,
+      appointmentsTrend: [{ date: "2026-01-01", value: 5 }],
+      revenueTrend: [{ date: "2026-01-01", value: 250 }],
+      lostRevenue: {
+        totalLostRevenue: 1000,
+        cancelledLostRevenue: 750,
+        noShowLostRevenue: 250,
+      },
+      periodComparison: {
+        currentPeriodRevenue: 5000,
+        previousPeriodRevenue: 4000,
+        revenueGrowthPercentage: 25.0,
+        currentPeriodAppointments: 100,
+        previousPeriodAppointments: 90,
+        appointmentsGrowthPercentage: 11.1,
+      },
+      topServices: [],
+      serviceFrictionMatrix: [],
+      customerRetention: {
+        newCustomersCount: 20,
+        recurringCustomersCount: 40,
+        retentionRate: 66.6,
+      },
+      topCustomersBySpend: [],
+    };
+
+    const parsed = maxAnalyticsDashboardResponseSchema.parse(realBackendPayload);
+    expect(parsed.workforceProductivity).toEqual([]);
+    expect(parsed.botRoi.chatsCount).toBe(0);
+    expect(parsed.botRoi.grossRevenueAttributed).toBe(0);
+    expect(parsed.totalAppointments).toBe(100);
+  });
 });
