@@ -63,6 +63,7 @@ export async function proxy(request: NextRequest) {
 
   if (
     landing.status === "subscription-required" ||
+    landing.status === "profile-required" ||
     landing.status === "invitation-pending" ||
     landing.status === "organization-required" ||
     landing.status === "establishment-required"
@@ -101,6 +102,7 @@ function isPrivateRoute(pathname: string) {
     "/access-denied",
     "/no-access",
     "/welcome",
+    "/onboarding/profile",
     // Lives under app/(protected): plans are shown to signed-in users only.
     "/upgrade",
     "/invoice",
@@ -123,6 +125,7 @@ function resolveEstablishmentSelection(request: NextRequest, useCookie = true): 
 function isOnboardingPath(pathname: string) {
   return (
     pathname === "/welcome" ||
+    pathname === "/onboarding/profile" ||
     pathname === "/organizations/new" ||
     pathname === "/establishments/new" ||
     pathname === "/invitations/pending"
@@ -232,6 +235,7 @@ export const config = {
     "/login",
     "/upgrade",
     "/welcome",
+    "/onboarding/profile",
     "/invoice",
     "/chat/:path*",
     "/analytics/:path*",

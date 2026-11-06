@@ -9,6 +9,7 @@ import { profileFromApiResponse } from "../contracts/profile.mapper";
 import type { ProfileViewModel } from "../../application/services/profile.view-model";
 import type { ProfileReader } from "../../application/ports/profile-reader";
 import type { ProfileWriter } from "../../application/ports/profile-writer";
+import type { CreateProfileCommand } from "../../application/model/create-profile.command";
 
 export class ProfileApiError extends ApiError {
   constructor(message: string, status: number, details?: unknown) {
@@ -23,6 +24,23 @@ export class ProfileApiError extends ApiError {
  * `composeProfileAdapters()`.
  */
 export class HttpProfileRepository implements ProfileReader, ProfileWriter {
+  async createProfile(
+    command: CreateProfileCommand,
+    token: string,
+  ): Promise<ProfileViewModel> {
+    const response = await apiClient.post<unknown>(
+      apiConfig.routes.profiles.root,
+      { username: command.username.value, imageUrl: command.imageUrl.value },
+      {
+        token,
+        errorMessage: "Failed to create profile",
+        errorType: ProfileApiError,
+      },
+    );
+
+    return profileFromApiResponse(response);
+  }
+
   async getMyProfile(token: string): Promise<ProfileViewModel | null> {
     try {
       const response = await apiClient.get<unknown>(apiConfig.routes.profiles.root, {

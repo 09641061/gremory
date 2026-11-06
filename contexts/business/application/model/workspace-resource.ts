@@ -12,6 +12,7 @@ export type BusinessWorkspaceResource = {
     | "ORGANIZATION_PENDING"
     | "ESTABLISHMENT_PENDING"
     | "PAYMENT_PENDING"
+    | "PROFILE_PENDING"
     | "COMPLETED"
     | null;
   onboardingCompleted: boolean;
@@ -35,7 +36,9 @@ export type BusinessWorkspaceResource = {
     canReadAnalytics?: boolean;
   } | null;
   authorization?: {
-    role: "OWNER" | "MANAGER" | "WORKER";
+    role: "OWNER" | "CUSTOM";
+    roleId: string | null;
+    roleName: string;
     scope?: {
       type?: "ORGANIZATION" | "ESTABLISHMENT" | null;
       id?: string | null;

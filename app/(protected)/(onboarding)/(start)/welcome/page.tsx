@@ -54,6 +54,7 @@ async function WelcomePageContent({ searchParams }: WelcomePageProps) {
 
   if (
     landing.status === "invitation-pending" ||
+    landing.status === "profile-required" ||
     landing.status === "organization-required" ||
     landing.status === "establishment-required"
   ) {

@@ -19,7 +19,7 @@ export async function ProfilePageContent() {
   const profile = await getMyProfileServerQuery();
 
   if (!profile) {
-    redirect("/login");
+    redirect("/onboarding/profile");
   }
 
   const locale = await getServerLocale();

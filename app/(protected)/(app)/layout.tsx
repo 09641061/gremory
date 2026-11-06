@@ -57,6 +57,7 @@ async function AppLayoutContent({
   if (landing.status === "unauthenticated") redirect("/login");
   if (
     landing.status === "subscription-required" ||
+    landing.status === "profile-required" ||
     landing.status === "invitation-pending" ||
     landing.status === "organization-required" ||
     landing.status === "establishment-required"

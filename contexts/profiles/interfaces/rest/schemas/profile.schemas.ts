@@ -16,6 +16,10 @@ export const updateProfileSchema = z.object({
   imageUrl: z.string().trim().max(1000).nullish().or(z.literal("")),
 });
 
+export const createProfileSchema = updateProfileSchema;
+
+export type CreateProfileInput = z.infer<typeof createProfileSchema>;
+
 export type UpdateProfileInput = z.infer<typeof updateProfileSchema>;
 
 export const updatePreferencesSchema = z.object({

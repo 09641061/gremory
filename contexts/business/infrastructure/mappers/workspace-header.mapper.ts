@@ -136,6 +136,8 @@ function toWorkspaceAuthorization(
 
   return {
     role: authorization.role,
+    roleId: authorization.roleId,
+    roleName: authorization.roleName,
     scope: {
       type: authorization.scope.type,
       id: authorization.scope.id,

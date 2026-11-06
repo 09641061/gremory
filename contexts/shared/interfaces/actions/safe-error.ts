@@ -12,7 +12,9 @@ export function safePublicError(error: unknown, fallback = "Request could not be
 }
 
 function isApiError(error: unknown): error is { status: number } {
-  return error instanceof Error && error.name === "ApiError" && typeof (error as { status?: unknown }).status === "number";
+  return error instanceof Error
+    && error.name.endsWith("ApiError")
+    && typeof (error as { status?: unknown }).status === "number";
 }
 
 function isPublicHttpError(error: unknown): error is { status: number } {

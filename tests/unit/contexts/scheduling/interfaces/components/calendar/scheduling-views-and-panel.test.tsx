@@ -27,7 +27,7 @@ vi.mock("@/contexts/scheduling/interfaces/components/use-now", () => ({
 }));
 
 import { render, screen, waitFor, fireEvent, within } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { DailyStaffCalendar } from "@/contexts/scheduling/interfaces/components/calendar/daily-staff-calendar";
 import { computeAppointmentTimes } from "@/contexts/scheduling/interfaces/components/appointment-form/scheduling-form-utils";
@@ -81,8 +81,8 @@ const customers: SchedulingCustomerViewModel[] = [
 const mockAppointment: Appointment = {
   id: "apt-1",
   title: "Alice Consultation",
-  startsAt: "2026-10-26T10:00:00Z",
-  endsAt: "2026-10-26T11:00:00Z",
+startsAt: "2026-10-26T10:00:00Z",
+endsAt: "2026-10-26T11:00:00Z",
   serviceId: "service-1",
   customerId: "cust-1",
   employeeId: "user-1",
@@ -116,10 +116,19 @@ describe("Scheduling Form Utils: Buffers", () => {
 });
 
 describe("DailyStaffCalendar Redesign Views and Panel", () => {
-  beforeEach(() => {
+ beforeEach(() => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    vi.setSystemTime(new Date("2026-10-26T12:00:00Z"));
+
     vi.clearAllMocks();
-    mocks.listAppointmentsAction.mockResolvedValue({ content: [mockAppointment] });
+    mocks.listAppointmentsAction.mockResolvedValue({
+      content: [mockAppointment],
+    });
     mocks.useNow.mockReturnValue(null);
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   it("renders view mode controls and switches to week and month views", async () => {
@@ -182,7 +191,9 @@ describe("DailyStaffCalendar Redesign Views and Panel", () => {
     });
 
     // Find appointment block
-    const appointmentButton = screen.getByRole("button", { name: /Alice Smith/i });
+    const appointmentButton = await screen.findByRole("button", {
+  name: /Alice Smith/i,
+});
     expect(appointmentButton).toBeDefined();
 
     // Panel is not rendered initially
@@ -243,7 +254,7 @@ describe("DailyStaffCalendar Redesign Views and Panel", () => {
       expect(mocks.listAppointmentsAction).toHaveBeenCalled();
     });
 
-    const appointmentButton = screen.getByRole("button", { name: /Alice Smith/i });
+    const appointmentButton = await screen.findByRole("button", {   name: /Alice Smith/i, });
     fireEvent.click(appointmentButton);
 
     const panel = screen.getByTestId("appointment-detail-panel");

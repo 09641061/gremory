@@ -1,6 +1,7 @@
 export type WorkspaceAccountType = "OWNER" | "MEMBER" | "PENDING_INVITATION";
 
 export type WorkspaceOnboardingStatus =
+  | "PROFILE_PENDING"
   | "ORGANIZATION_PENDING"
   | "ESTABLISHMENT_PENDING"
   | "PAYMENT_PENDING"
@@ -40,7 +41,7 @@ export type WorkspaceAccessPolicy = Readonly<{
   canManageBilling: boolean;
 }>;
 
-export type WorkspaceAuthorizationRole = "OWNER" | "MANAGER" | "WORKER";
+export type WorkspaceAuthorizationRole = "OWNER" | "CUSTOM";
 
 export type WorkspaceAuthorizationScope = Readonly<{
   type: "ORGANIZATION" | "ESTABLISHMENT";
@@ -59,6 +60,8 @@ export type WorkspaceAuthorizationCapabilities = Readonly<{
 
 export type WorkspaceAuthorization = Readonly<{
   role: WorkspaceAuthorizationRole;
+  roleId: string | null;
+  roleName: string;
   scope: WorkspaceAuthorizationScope;
   capabilities: WorkspaceAuthorizationCapabilities;
 }>;
