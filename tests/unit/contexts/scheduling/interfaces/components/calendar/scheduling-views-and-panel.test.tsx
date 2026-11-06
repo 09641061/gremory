@@ -179,7 +179,7 @@ describe("DailyStaffCalendar Redesign Views and Panel", () => {
     });
 
     // Find appointment block
-    const appointmentButton = screen.getByRole("button", { name: /Alice Smith/i });
+    const appointmentButton = await screen.findByRole("button", {   name: /Alice Smith/i, });
     expect(appointmentButton).toBeDefined();
 
     // Panel is not rendered initially
@@ -236,7 +236,7 @@ describe("DailyStaffCalendar Redesign Views and Panel", () => {
       expect(mocks.listAppointmentsAction).toHaveBeenCalled();
     });
 
-    const appointmentButton = screen.getByRole("button", { name: /Alice Smith/i });
+    const appointmentButton = await screen.findByRole("button", {   name: /Alice Smith/i, });
     fireEvent.click(appointmentButton);
 
     const panel = screen.getByTestId("appointment-detail-panel");
