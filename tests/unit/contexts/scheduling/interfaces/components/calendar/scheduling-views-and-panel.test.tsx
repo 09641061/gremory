@@ -27,7 +27,7 @@ vi.mock("@/contexts/scheduling/interfaces/components/use-now", () => ({
 }));
 
 import { render, screen, waitFor, fireEvent, within } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { DailyStaffCalendar } from "@/contexts/scheduling/interfaces/components/calendar/daily-staff-calendar";
 import { computeAppointmentTimes } from "@/contexts/scheduling/interfaces/components/appointment-form/scheduling-form-utils";
@@ -116,10 +116,19 @@ describe("Scheduling Form Utils: Buffers", () => {
 });
 
 describe("DailyStaffCalendar Redesign Views and Panel", () => {
-  beforeEach(() => {
+ beforeEach(() => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    vi.setSystemTime(new Date("2026-10-26T12:00:00Z"));
+
     vi.clearAllMocks();
-    mocks.listAppointmentsAction.mockResolvedValue({ content: [mockAppointment] });
+    mocks.listAppointmentsAction.mockResolvedValue({
+      content: [mockAppointment],
+    });
     mocks.useNow.mockReturnValue(null);
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   it("renders view mode controls and switches to week and month views", async () => {
@@ -179,7 +188,9 @@ describe("DailyStaffCalendar Redesign Views and Panel", () => {
     });
 
     // Find appointment block
-    const appointmentButton = await screen.findByRole("button", {   name: /Alice Smith/i, });
+    const appointmentButton = await screen.findByRole("button", {
+  name: /Alice Smith/i,
+});
     expect(appointmentButton).toBeDefined();
 
     // Panel is not rendered initially
