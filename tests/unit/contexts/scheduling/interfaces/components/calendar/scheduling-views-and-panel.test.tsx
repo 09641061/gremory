@@ -77,12 +77,12 @@ const services: SchedulingServiceViewModel[] = [
 const customers: SchedulingCustomerViewModel[] = [
   { id: "cust-1", name: "Alice Smith", email: "alice@example.com", phone: "+51 987 654 321" },
 ];
-const appointmentDate = new Date().toISOString().slice(0, 10);
+
 const mockAppointment: Appointment = {
   id: "apt-1",
   title: "Alice Consultation",
-startsAt: `${appointmentDate}T10:00:00Z`,
-endsAt: `${appointmentDate}T11:00:00Z`,
+startsAt: "2026-10-26T10:00:00Z",
+endsAt: "2026-10-26T11:00:00Z",
   serviceId: "service-1",
   customerId: "cust-1",
   employeeId: "user-1",
