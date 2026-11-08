@@ -8,7 +8,7 @@ import {
 } from "@/contexts/iam/domain/model/valueobjects/auth-return-path";
 import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-session-cookie";
 import { PageShell } from "@/contexts/shared/interfaces/components/layout/page-shell";
-import { Button } from "@/contexts/shared/interfaces/components/ui/button";
+import { buttonVariants } from "@/contexts/shared/interfaces/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/contexts/shared/interfaces/components/ui/card";
 import { AcceptInvitationButton } from "@/contexts/workforce/interfaces/components/accept-invitation-button";
 import { composeWorkforceAdapters } from "@/contexts/workforce/interfaces/server/workforce-composition";
@@ -48,17 +48,17 @@ export default async function AcceptInvitationPage({ searchParams }: PageProps) 
               {accessToken ? (
                 <AcceptInvitationButton token={token!} />
               ) : preview.recipientRegistered ? (
-                <Button className="w-full" render={<Link href={loginPath(returnPath)} />}>
+                <Link className={buttonVariants({ className: "w-full" })} href={loginPath(returnPath)}>
                   Iniciar sesión para aceptar
-                </Button>
+                </Link>
               ) : (
-                <Button className="w-full" render={<Link href={registrationPath(returnPath)} />}>
+                <Link className={buttonVariants({ className: "w-full" })} href={registrationPath(returnPath)}>
                   Crear cuenta para aceptar
-                </Button>
+                </Link>
               )}
             </>
           ) : (
-            <Button variant="outline" className="w-full" render={<Link href="/login" />}>Ir al inicio de sesión</Button>
+            <Link className={buttonVariants({ variant: "outline", className: "w-full" })} href="/login">Ir al inicio de sesión</Link>
           )}
         </CardContent>
       </Card>

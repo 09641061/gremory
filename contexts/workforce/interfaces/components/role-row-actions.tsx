@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Archive, Pencil } from "lucide-react";
 import { useState, useTransition } from "react";
 
-import { Button } from "@/contexts/shared/interfaces/components/ui/button";
+import { Button, buttonVariants } from "@/contexts/shared/interfaces/components/ui/button";
 import { DeleteConfirmDialog } from "@/contexts/shared/interfaces/components/dialogs/delete-confirm-dialog";
 import { archiveWorkforceRoleAction } from "../actions/workforce.actions";
 
@@ -22,7 +22,7 @@ export function RoleRowActions({ organizationId, role }: {
   });
 
   return <div className="flex justify-end gap-2">
-    <Button variant="ghost" size="sm" render={<Link href={`/organization/roles/${role.id}`} />}><Pencil data-icon="inline-start" />Editar</Button>
+    <Link className={buttonVariants({ variant: "ghost", size: "sm" })} href={`/organization/roles/${role.id}`}><Pencil data-icon="inline-start" />Editar</Link>
     {role.status === "ACTIVE" && <Button variant="ghost" size="sm" disabled={inUse} onClick={() => setOpen(true)} title={inUse ? "Quita el rol de miembros e invitaciones antes de archivarlo" : undefined}><Archive data-icon="inline-start" />Archivar</Button>}
     <DeleteConfirmDialog open={open} onOpenChange={(next) => { setOpen(next); if (!next) setError(null); }} entityLabel="rol" entityName={role.name} pending={pending} error={error} confirmLabel="Archivar" pendingLabel="Archivando…" description="El rol dejará de estar disponible para nuevas asignaciones. Su historial se conservará." onConfirm={archive} />
   </div>;

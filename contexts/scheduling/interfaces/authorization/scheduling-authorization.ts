@@ -3,7 +3,10 @@ import { composeBusinessAdapters } from "@/contexts/business/interfaces/server/b
 import { getWorkspaceEstablishment, hasEstablishmentPermission } from "@/contexts/shared/application/services/workspace-establishment-permissions";
 import { composeSchedulingAdapters } from "@/contexts/scheduling/interfaces/server/scheduling-composition";
 import { OperationAuthorizationError, requireAuthenticatedToken } from "@/contexts/shared/interfaces/authorization/operation-authorization";
-export async function requireAppointmentOperationAuthorization(id: string, permission = "scheduling:manage") {
+export async function requireAppointmentOperationAuthorization(
+  id: string,
+  permission = "scheduling:appointments:read",
+) {
   const token = await requireAuthenticatedToken();
   const workspace = await composeBusinessAdapters().workspaceQueryService.getHeaderViewModel();
   const establishment = getWorkspaceEstablishment(workspace, workspace.activeEstablishmentId);
@@ -16,7 +19,10 @@ export async function requireAppointmentOperationAuthorization(id: string, permi
   }
   return { token, organizationId: workspace.organization?.id, establishmentId: establishment.id };
 }
-export async function requireSchedulingContext(permission = "scheduling:manage", requestedEstablishmentId?: string) {
+export async function requireSchedulingContext(
+  permission = "scheduling:appointments:read",
+  requestedEstablishmentId?: string,
+) {
   const token = await requireAuthenticatedToken();
   const workspace = await composeBusinessAdapters().workspaceQueryService.getHeaderViewModel({
     establishmentId: requestedEstablishmentId,

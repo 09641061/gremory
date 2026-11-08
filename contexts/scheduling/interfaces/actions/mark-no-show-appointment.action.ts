@@ -15,7 +15,7 @@ export async function markNoShowAppointmentAction(
   appointmentId: string
 ): Promise<ActionState<Appointment>> {
   try {
-    await requireAppointmentOperationAuthorization(appointmentId);
+    await requireAppointmentOperationAuthorization(appointmentId, "scheduling:appointments:status-update");
     const workspace = await composeBusinessAdapters().workspaceQueryService.getHeaderViewModel();
     const commandService = composeSchedulingAdapters(workspace.organization?.id).commandService;
     const result = await commandService.markNoShowAppointment(appointmentId);

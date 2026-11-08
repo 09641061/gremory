@@ -14,7 +14,7 @@ export async function deleteAppointmentAction(
   appointmentId: string
 ): Promise<ActionState<void>> {
   try {
-    await requireAppointmentOperationAuthorization(appointmentId);
+    await requireAppointmentOperationAuthorization(appointmentId, "scheduling:appointments:cancel");
     const workspace = await composeBusinessAdapters().workspaceQueryService.getHeaderViewModel();
     const commandService = composeSchedulingAdapters(workspace.organization?.id).commandService;
     await commandService.deleteAppointment(appointmentId);

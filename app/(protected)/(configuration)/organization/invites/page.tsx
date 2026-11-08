@@ -30,7 +30,7 @@ async function OrganizationInvitesPageContent() {
   const business = composeBusinessAdapters(accessToken);
   const workspace = await business.workspaceQueryService.getHeaderViewModel();
   const organization = workspace.organization;
-  if (!organization || organization.id !== workspace.ownedOrganizationId) redirect("/access-denied");
+  if (!organization || organization.id !== workspace.ownedOrganizationId) redirect("/");
 
   const workforce = composeWorkforceAdapters().workforceService;
   const [invitations, establishmentsPage, roles] = await Promise.all([

@@ -29,7 +29,10 @@ async function NewAppointmentPageContent({ searchParams }: NewAppointmentPagePro
 
   const establishmentId = query.establishmentId ?? workspace.activeEstablishmentId;
   const workspaceEstablishment = getWorkspaceEstablishment(workspace, establishmentId);
-  const canCreateAppointment = hasEstablishmentPermission(workspaceEstablishment, "scheduling:manage");
+  const canCreateAppointment = hasEstablishmentPermission(
+    workspaceEstablishment,
+    "scheduling:appointments:create",
+  );
 
   if (!canCreateAppointment || !establishmentId || !workspace.organization) {
     redirect("/access-denied");
@@ -40,8 +43,7 @@ async function NewAppointmentPageContent({ searchParams }: NewAppointmentPagePro
     workspace.organization.id,
     canCreateAppointment,
   );
-  const establishment = await business.establishmentQueryService.getById({ id: establishmentId });
-  const timeZone = establishment?.timeZone ?? "UTC";
+  const timeZone = workspaceEstablishment?.timeZone ?? "UTC";
 
   return (
     <main className="mx-auto w-full max-w-3xl px-4 py-8">

@@ -36,7 +36,7 @@ export async function rescheduleAppointmentAction(
   }
 
   try {
-    await requireAppointmentOperationAuthorization(appointmentId);
+    await requireAppointmentOperationAuthorization(appointmentId, "scheduling:appointments:reschedule");
     const workspace = await composeBusinessAdapters().workspaceQueryService.getHeaderViewModel();
     const commandService = composeSchedulingAdapters(workspace.organization?.id).commandService;
     const result = await commandService.rescheduleAppointment(appointmentId, parsed.data);

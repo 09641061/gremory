@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 
 import { OrganizationSettingsSidebar } from "@/contexts/business/interfaces/components/organization/organization-settings-sidebar/organization-settings-sidebar";
 import { SidebarProvider } from "@/contexts/shared/interfaces/components/ui/sidebar";
+import type { WorkspaceHeaderViewModel } from "@/contexts/business/application/model/business-workspace.view-models";
 
 /**
  * Visual shell for every "Organization settings" hub screen.
@@ -23,12 +24,18 @@ import { SidebarProvider } from "@/contexts/shared/interfaces/components/ui/side
  * here because this sidebar is always visible — there's no off-canvas
  * collapse on a configuration hub.
  */
-export function OrganizationSettingsShell({ children }: { children: ReactNode }) {
+export function OrganizationSettingsShell({
+  children,
+  workspace,
+}: {
+  children: ReactNode;
+  workspace: WorkspaceHeaderViewModel;
+}) {
   return (
     <div className="flex w-full flex-1 flex-col gap-6 lg:flex-row">
       <SidebarProvider className="w-full lg:w-60">
         <aside className="w-full shrink-0">
-          <OrganizationSettingsSidebar />
+          <OrganizationSettingsSidebar workspace={workspace} />
         </aside>
       </SidebarProvider>
       <div className="min-w-0 flex-1">{children}</div>

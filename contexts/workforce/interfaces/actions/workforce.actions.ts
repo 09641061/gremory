@@ -72,18 +72,22 @@ export async function saveWorkforceRoleAction(
       fieldErrors: parsed.success ? null : parsed.error.flatten().fieldErrors,
     };
   }
+  let savedRoleId: string;
   try {
     const accessToken = await requireBusinessAccessToken();
     const service = composeWorkforceAdapters().workforceService;
     const role = parsedRoleId
       ? await service.updateRole(accessToken, tenant.data, parsedRoleId.data, parsed.data)
       : await service.createRole(accessToken, tenant.data, parsed.data);
+    savedRoleId = role.id;
     revalidatePath("/organization/roles");
     revalidatePath(`/organization/roles/${role.id}`);
-    return { status: "success", data: { roleId: role.id }, error: null, fieldErrors: null };
   } catch (error) {
     return actionFailureForRole(error);
   }
+
+  if (!parsedRoleId) redirect("/organization/roles");
+  return { status: "success", data: { roleId: savedRoleId }, error: null, fieldErrors: null };
 }
 
 export async function archiveWorkforceRoleAction(organizationId: string, roleId: string, version: number) {

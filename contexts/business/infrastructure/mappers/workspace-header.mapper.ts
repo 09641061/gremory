@@ -20,16 +20,15 @@ export function toHeaderViewModel(
   requestedEstablishmentId?: string,
 ): WorkspaceHeaderViewModel {
   const allEstablishments = resource.establishments.map(toHeaderEstablishment);
-  const establishments = allEstablishments.filter(
-    (establishment) =>
-      establishment.canRead ||
-      establishment.id === requestedEstablishmentId ||
-      (resource.accountType === "OWNER" &&
-        resource.organization?.id !== undefined &&
-        establishment.organizationId === resource.organization.id),
-  );
+  // The backend already returns only establishments in the account's workspace.
+  // `canRead` controls access to establishment settings; it must not remove the
+  // operational context used by Agenda, CRM or Catalog.
+  const establishments = allEstablishments;
   const organization = resource.organization
-    ? toHeaderOrganization(resource.organization, establishments.length)
+    ? toHeaderOrganization(
+        resource.organization,
+        establishments.filter((establishment) => establishment.canRead).length,
+      )
     : undefined;
   const activeEstablishmentId =
     (requestedEstablishmentId &&

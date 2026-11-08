@@ -10,7 +10,7 @@ import { FormSubmitButton } from "@/contexts/shared/interfaces/components/form/f
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/contexts/shared/interfaces/components/ui/field";
 import { Input } from "@/contexts/shared/interfaces/components/ui/input";
 import { Alert, AlertDescription, AlertTitle } from "@/contexts/shared/interfaces/components/ui/alert";
-import { Button } from "@/contexts/shared/interfaces/components/ui/button";
+import { buttonVariants } from "@/contexts/shared/interfaces/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -39,7 +39,7 @@ export function InviteCollaboratorForm({ organizationId, establishments, roles }
 
   return (
     <form ref={formRef} action={formAction} className="flex flex-col gap-5">
-      {roles.length === 0 && <Alert><MailPlus /><AlertTitle>Crea al menos un rol antes de invitar personal</AlertTitle><AlertDescription>Las invitaciones necesitan definir el acceso antes de enviarse. <Button variant="link" render={<Link href="/organization/roles/new" />}>Crear rol</Button></AlertDescription></Alert>}
+      {roles.length === 0 && <Alert><MailPlus /><AlertTitle>Crea al menos un rol antes de invitar personal</AlertTitle><AlertDescription>Las invitaciones necesitan definir el acceso antes de enviarse. <Link className={buttonVariants({ variant: "link" })} href="/organization/roles/new">Crear rol</Link></AlertDescription></Alert>}
       <ErrorAlert
         title="No se pudo enviar la invitación"
         message={state.status === "error" ? state.error : undefined}
