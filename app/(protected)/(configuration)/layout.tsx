@@ -51,6 +51,8 @@ async function ConfigurationLayoutContent({ children }: { children: ReactNode })
   if (!accessToken) redirect("/login");
 
   const requestHeaders = await headers();
+  const establishmentId = requestHeaders.get("x-takodu-establishment-id") ?? undefined;
+  const organizationId = cookieStore.get(workspaceSelectionCookies.organizationId)?.value ?? undefined;
   const pathname =
     requestHeaders.get("x-takodu-pathname") ?? requestHeaders.get("x-invoke-path") ?? "";
 
@@ -60,8 +62,8 @@ async function ConfigurationLayoutContent({ children }: { children: ReactNode })
     const landing = await composeSharedAdapters().entryRouteQueryService
       .resolveRoute({
         accessToken,
-        organizationId: cookieStore.get(workspaceSelectionCookies.organizationId)?.value ?? undefined,
-        establishmentId: requestHeaders.get("x-takodu-establishment-id") ?? undefined,
+        organizationId,
+        establishmentId,
       })
       .catch(() => ({ status: "unavailable" as const }));
 
@@ -89,6 +91,11 @@ async function ConfigurationLayoutContent({ children }: { children: ReactNode })
     }
   }
 
+  const workspace = await composeBusinessAdapters(accessToken).workspaceQueryService.getHeaderViewModel({
+    organizationId,
+    establishmentId,
+  });
+
   return (
     <main
       className="flex min-w-0 flex-1 flex-col p-6"
@@ -107,7 +114,7 @@ async function ConfigurationLayoutContent({ children }: { children: ReactNode })
 
       <div className="mb-4 h-8" aria-hidden="true" />
 
-      <OrganizationSettingsShell>{children}</OrganizationSettingsShell>
+      <OrganizationSettingsShell workspace={workspace}>{children}</OrganizationSettingsShell>
     </main>
   );
 }

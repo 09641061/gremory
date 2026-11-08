@@ -16,7 +16,7 @@ export default async function OrganizationRoutePage({ searchParams }: Organizati
     });
 
     if (!organization) {
-      redirect("/access-denied");
+      redirect("/");
     }
 
     return (
@@ -34,7 +34,7 @@ export default async function OrganizationRoutePage({ searchParams }: Organizati
   const pageState = await composeBusinessAdapters().workspaceQueryService.getOrganizationPageState(query);
 
   if (pageState.status === "denied") {
-    redirect("/access-denied");
+    redirect("/");
   }
 
   return (

@@ -27,7 +27,7 @@ async function SchedulePageContent({ searchParams }: SchedulePageProps) {
   const establishmentId = query.establishmentId ?? workspace.activeEstablishmentId;
 
   if (!establishmentId) {
-    redirect("/establishments/new");
+    redirect(resolveModuleAccessFallback(workspace));
   }
   if (!workspace.organization) {
     redirect("/access-denied");
@@ -40,17 +40,17 @@ async function SchedulePageContent({ searchParams }: SchedulePageProps) {
   }
 
   const establishment = getWorkspaceEstablishment(workspace, establishmentId);
-  const canManageScheduling = hasEstablishmentPermission(establishment, "scheduling:manage");
-  const canCreateAppointment = canManageScheduling;
-  const canUpdateAppointment = canManageScheduling;
-  const canDeleteAppointment = canManageScheduling;
-
-  const establishmentDetails = await business.establishmentQueryService.getById({ id: establishmentId });
-  const timeZone = establishmentDetails?.timeZone ?? "UTC";
+  const canCreateAppointment = hasEstablishmentPermission(establishment, "scheduling:appointments:create");
+  const canUpdateAppointment =
+    hasEstablishmentPermission(establishment, "scheduling:appointments:reschedule") ||
+    hasEstablishmentPermission(establishment, "scheduling:appointments:status-update");
+  const canDeleteAppointment = hasEstablishmentPermission(establishment, "scheduling:appointments:cancel");
+  const canLoadAppointmentFormData = canCreateAppointment;
+  const timeZone = establishment?.timeZone ?? "UTC";
   const { services, members, customers } = await loadComposedSchedulingPageData(
     establishmentId,
     workspace.organization.id,
-    canManageScheduling,
+    canLoadAppointmentFormData,
   );
 
   return (

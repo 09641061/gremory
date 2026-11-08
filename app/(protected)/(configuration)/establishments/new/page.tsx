@@ -28,16 +28,20 @@ export default async function NewEstablishmentPage({ searchParams }: NewEstablis
       : workspace.organization;
 
   if (!organization) {
-    redirect("/access-denied");
+    redirect("/");
   }
 
   const organizationEstablishmentsCount = workspace.establishments.filter(
     (establishment) => establishment.organizationId === organization.id,
   ).length;
   const isFirstEstablishment = organizationEstablishmentsCount === 0;
+  const canCreateFirstEstablishment =
+    workspace.accountType === "OWNER" &&
+    workspace.ownedOrganizationId === organization.id &&
+    isFirstEstablishment;
 
-  if (!workspace.canCreateEstablishment && !isFirstEstablishment) {
-    redirect(workspace.subscription?.canManageBilling ? "/upgrade" : "/access-denied");
+  if (!workspace.canCreateEstablishment && !canCreateFirstEstablishment) {
+    redirect(workspace.subscription?.canManageBilling ? "/upgrade" : "/");
   }
 
   const showCancel = hasSomewhereToCancelTo(

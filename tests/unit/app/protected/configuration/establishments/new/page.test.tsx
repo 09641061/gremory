@@ -128,6 +128,7 @@ describe("NewEstablishmentPage", () => {
         canCreateEstablishment: false,
       },
       establishments: [],
+      ownedOrganizationId: "host-org",
       onboardingCompleted: false,
       canCreateEstablishment: false,
       subscription: { canManageBilling: true },
@@ -142,5 +143,31 @@ describe("NewEstablishmentPage", () => {
         organizationId: "host-org",
       }),
     });
+  });
+
+  it("does not let an invited member create a missing establishment", async () => {
+    mocks.workspace.getHeaderViewModel.mockResolvedValue({
+      accountType: "MEMBER",
+      organization: {
+        id: "host-org",
+        name: "Host Org",
+        imageUrl: null,
+        canRead: true,
+        canUpdate: false,
+        canReadEstablishments: false,
+        canCreateEstablishment: false,
+      },
+      establishments: [],
+      ownedOrganizationId: null,
+      onboardingCompleted: true,
+      canCreateEstablishment: false,
+      subscription: { canManageBilling: false },
+    });
+
+    await expect(
+      NewEstablishmentPage({
+        searchParams: Promise.resolve({ organizationId: "host-org" }),
+      }),
+    ).rejects.toThrow("REDIRECT:/");
   });
 });

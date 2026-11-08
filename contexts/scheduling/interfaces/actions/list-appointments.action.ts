@@ -18,7 +18,7 @@ export async function listAppointmentsAction(
   size = 100
 ): Promise<PageResponse<Appointment> | { status: "forbidden" | "not-found" | "error"; message: string }> {
   try {
-    const auth = await requireSchedulingContext("scheduling:read", establishmentId);
+    const auth = await requireSchedulingContext("scheduling:appointments:read", establishmentId);
     const queryService = composeSchedulingAdapters(auth.organizationId).queryService;
     return await queryService.searchAppointments({
       from,

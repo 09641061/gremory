@@ -15,7 +15,7 @@ export default async function EstablishmentsRoutePage({ searchParams }: Establis
     : null;
 
   if (!workspace.organization || !workspace.canReadEstablishments) {
-    redirect("/access-denied");
+    redirect("/");
   }
 
   return (

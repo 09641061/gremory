@@ -209,10 +209,16 @@ describe("business workspace query service", () => {
     });
   });
 
-  it("hides establishments the member cannot read", async () => {
+  it("keeps the assigned establishment as operational context without granting settings access", async () => {
     mocks.getWorkspace.mockResolvedValue(
       workspace({
         accountType: "MEMBER",
+        organization: {
+          id: organizationId,
+          name: "Takodu Studio",
+          imageUrl: null,
+          permissions: { canRead: true, canUpdate: false, canCreateEstablishment: false },
+        },
         establishments: [
           {
             id: establishmentId,
@@ -221,13 +227,6 @@ describe("business workspace query service", () => {
             effectivePermissions: [],
             permissions: { canRead: false, canUpdate: false, canDelete: false },
           },
-          {
-            id: secondEstablishmentId,
-            name: "Second branch",
-            photoUrl: null,
-            effectivePermissions: ["crm:read"],
-            permissions: { canRead: true, canUpdate: false, canDelete: false },
-          },
         ],
         activeEstablishmentId: establishmentId,
       }),
@@ -235,11 +234,9 @@ describe("business workspace query service", () => {
 
     const result = await createBusinessWorkspaceQueryService().getHeaderViewModel();
 
-    expect(result.establishments.map((establishment) => establishment.id)).toEqual([
-      secondEstablishmentId,
-    ]);
-    // The requested establishment is unreadable, so the first readable one wins.
-    expect(result.activeEstablishmentId).toBe(secondEstablishmentId);
+    expect(result.establishments.map((establishment) => establishment.id)).toEqual([establishmentId]);
+    expect(result.activeEstablishmentId).toBe(establishmentId);
+    expect(result.canReadEstablishments).toBe(false);
   });
 
   it("keeps an explicitly requested unreadable establishment so the sidebar can show context", async () => {
@@ -270,10 +267,7 @@ describe("business workspace query service", () => {
       establishmentId,
     });
 
-    expect(result.establishments.map((establishment) => establishment.id)).toEqual([
-      establishmentId,
-      secondEstablishmentId,
-    ]);
+    expect(result.establishments.map((establishment) => establishment.id)).toEqual([establishmentId, secondEstablishmentId]);
     expect(result.activeEstablishmentId).toBe(establishmentId);
   });
 

@@ -12,7 +12,7 @@ export type GetAppointmentResult =
 
 export async function getAppointmentAction(id: string): Promise<GetAppointmentResult> {
   try {
-    const auth = await requireAppointmentOperationAuthorization(id, "scheduling:read");
+    const auth = await requireAppointmentOperationAuthorization(id, "scheduling:appointments:read");
     const queryService = composeSchedulingAdapters(auth.organizationId).queryService;
     return await queryService.getAppointment(id, auth.token);
   } catch (error) {

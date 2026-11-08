@@ -14,8 +14,8 @@ import { useBusinessTranslations } from "@/contexts/business/interfaces/i18n";
  *
  * It sits above the search field because it scopes the list underneath it: the
  * establishments the menu offers are the ones inside this organization. It is
- * never the selector itself; it only opens the single organization settings
- * page.
+ * never the selector itself. It opens the first authorized settings page when
+ * one exists and stays as a non-interactive heading otherwise.
  */
 export function OrganizationBadge({
   organization,

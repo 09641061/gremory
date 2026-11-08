@@ -19,13 +19,11 @@ import {
   SidebarMenuItem,
 } from "@/contexts/shared/interfaces/components/ui/sidebar";
 import { useI18n } from "@/contexts/shared/interfaces/i18n";
-
-type OrganizationSettingsHref =
-  | "/organization"
-  | "/organization/members"
-  | "/organization/invites"
-  | "/organization/roles"
-  | "/establishments";
+import type { WorkspaceHeaderViewModel } from "@/contexts/business/application/model/business-workspace.view-models";
+import {
+  type OrganizationSettingsHref,
+  resolveOrganizationSettingsAccess,
+} from "@/contexts/business/application/services/organization-settings-navigation";
 
 /**
  * Navigation for the Organization settings hub.
@@ -38,43 +36,49 @@ type OrganizationSettingsHref =
  * configuration pages (`/profile`, `/permissions`, the legacy
  * `/organizations` redirect).
  *
- * Entries are hardcoded — no permission filtering for now because every owner
- * who reaches `/organization` is expected to manage these sections. Add
- * filtering here if/when granular per-section permissions are introduced.
+ * The owner sees the complete hub. Collaborators only see the sections granted
+ * by their role, so navigation never advertises a route they cannot open.
  */
-export function OrganizationSettingsSidebar() {
+export function OrganizationSettingsSidebar({ workspace }: { workspace: WorkspaceHeaderViewModel }) {
   const { t } = useI18n();
   const pathname = usePathname();
+  const access = resolveOrganizationSettingsAccess(workspace);
 
   const entries: ReadonlyArray<{
     href: OrganizationSettingsHref;
     label: string;
     icon: LucideIcon;
+    visible: boolean;
   }> = [
     {
       href: "/organization",
       label: t.organizationSettings.organization,
       icon: Building2,
+      visible: access.organization,
     },
     {
       href: "/organization/members",
       label: t.organizationSettings.members,
       icon: Users,
+      visible: access.members,
     },
     {
       href: "/organization/roles",
       label: "Roles y permisos",
       icon: ShieldCheck,
+      visible: access.roles,
     },
     {
       href: "/organization/invites",
       label: t.organizationSettings.invites,
       icon: UserPlus,
+      visible: access.invites,
     },
     {
       href: "/establishments",
       label: t.organizationSettings.establishments,
       icon: Store,
+      visible: access.establishments,
     },
   ];
 
@@ -82,7 +86,7 @@ export function OrganizationSettingsSidebar() {
     <SidebarGroup className="p-0">
       <SidebarGroupContent className="shrink-0">
         <SidebarMenu className="gap-(--app-sidebar-menu-gap)">
-          {entries.map(({ href, label, icon: Icon }) => {
+          {entries.filter((entry) => entry.visible).map(({ href, label, icon: Icon }) => {
             const active = pathname === href;
             return (
               <SidebarMenuItem key={href}>

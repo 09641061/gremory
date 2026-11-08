@@ -32,7 +32,7 @@ export async function updateEmployeeAvailabilityAction(
   if (!parsed.success) return { status: "error", error: "Invalid availability data." } as const;
 
   try {
-    const auth = await requireSchedulingContext("scheduling:manage", parsed.data.establishmentId);
+    const auth = await requireSchedulingContext("scheduling:availability:manage", parsed.data.establishmentId);
     await composeSchedulingAdapters(auth.organizationId).rosterCommandService.updateEmployeeAvailability(
       parsed.data.userId,
       parsed.data.establishmentId,

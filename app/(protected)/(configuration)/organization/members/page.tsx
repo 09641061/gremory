@@ -13,6 +13,7 @@ import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/contexts/shared/interfaces/components/ui/table";
 import { MemberRowActions } from "@/contexts/workforce/interfaces/components/member-row-actions";
 import { RoleAssignmentSelect } from "@/contexts/workforce/interfaces/components/role-assignment-select";
+import { getWorkspaceEstablishment, hasEstablishmentPermission } from "@/contexts/shared/application/services/workspace-establishment-permissions";
 
 export default function OrganizationMembersPage() {
   return (
@@ -27,11 +28,14 @@ async function OrganizationMembersPageContent() {
   const accessToken = await requireBusinessAccessToken();
   const workspace = await composeBusinessAdapters(accessToken).workspaceQueryService.getHeaderViewModel();
   const organization = workspace.organization;
-  if (!organization || organization.id !== workspace.ownedOrganizationId) redirect("/access-denied");
+  const owner = Boolean(organization && organization.id === workspace.ownedOrganizationId);
+  const establishment = getWorkspaceEstablishment(workspace, workspace.activeEstablishmentId);
+  const canReadTeam = owner || hasEstablishmentPermission(establishment, "workforce:members:read");
+  if (!organization || !canReadTeam) redirect("/");
   const workforce = composeWorkforceAdapters().workforceService;
   const [members, roles] = await Promise.all([
     workforce.listMembers(accessToken, organization.id),
-    workforce.listRoles(accessToken, organization.id),
+    owner ? workforce.listRoles(accessToken, organization.id) : Promise.resolve([]),
   ]);
   const activeRoles = roles.filter((role) => role.status === "ACTIVE");
   const dateFormatter = new Intl.DateTimeFormat("es-PE", { dateStyle: "medium" });
@@ -46,8 +50,8 @@ async function OrganizationMembersPageContent() {
             <Empty className="border"><EmptyHeader><EmptyMedia variant="icon"><Users /></EmptyMedia><EmptyTitle>Aún no hay colaboradores</EmptyTitle><EmptyDescription>Las personas aparecerán aquí después de aceptar su invitación.</EmptyDescription></EmptyHeader></Empty>
           ) : (
             <Table>
-              <TableHeader><TableRow><TableHead>Correo</TableHead><TableHead>Establecimiento</TableHead><TableHead>Rol</TableHead><TableHead>Se unió</TableHead><TableHead className="text-right">Acciones</TableHead></TableRow></TableHeader>
-              <TableBody>{members.map((member) => <TableRow key={member.id}><TableCell className="font-medium">{member.email}</TableCell><TableCell>{member.establishmentName}</TableCell><TableCell><RoleAssignmentSelect organizationId={organization.id} targetId={member.id} target="member" currentRoleId={member.role?.id ?? null} roles={activeRoles} /></TableCell><TableCell>{dateFormatter.format(new Date(member.joinedAt))}</TableCell><TableCell className="text-right"><MemberRowActions organizationId={organization.id} membershipId={member.id} email={member.email} /></TableCell></TableRow>)}</TableBody>
+              <TableHeader><TableRow><TableHead>Correo</TableHead><TableHead>Establecimiento</TableHead><TableHead>Rol</TableHead><TableHead>Se unió</TableHead>{owner && <TableHead className="text-right">Acciones</TableHead>}</TableRow></TableHeader>
+              <TableBody>{members.map((member) => <TableRow key={member.id}><TableCell className="font-medium">{member.email}</TableCell><TableCell>{member.establishmentName}</TableCell><TableCell>{owner ? <RoleAssignmentSelect organizationId={organization.id} targetId={member.id} target="member" currentRoleId={member.role?.id ?? null} roles={activeRoles} /> : member.role?.name ?? "Sin rol"}</TableCell><TableCell>{dateFormatter.format(new Date(member.joinedAt))}</TableCell>{owner && <TableCell className="text-right"><MemberRowActions organizationId={organization.id} membershipId={member.id} email={member.email} /></TableCell>}</TableRow>)}</TableBody>
             </Table>
           )}
         </CardContent>
