@@ -2,11 +2,7 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
-import {
-  I18nProvider,
-  useI18n,
-  LocaleSync,
-} from "@/contexts/shared/interfaces/i18n";
+import { I18nProvider, useI18n } from "@/contexts/shared/interfaces/i18n";
 import { LOCALE_COOKIE_NAME } from "@/contexts/shared/infrastructure/i18n/i18n-cookie";
 
 function TestConsumer() {
@@ -65,32 +61,6 @@ describe("I18nProvider and useI18n", () => {
 
     expect(screen.getByTestId("current-locale")).toHaveTextContent("en");
     expect(screen.getByTestId("save-text")).toHaveTextContent("Save");
-  });
-
-  it("should sync locale when LocaleSync receives a different profile language", async () => {
-    const { rerender } = render(
-      <I18nProvider initialLocale="es">
-        <LocaleSync profileLanguage="EN" />
-        <TestConsumer />
-      </I18nProvider>
-    );
-
-    await waitFor(() => {
-      expect(screen.getByTestId("current-locale")).toHaveTextContent("en");
-      expect(screen.getByTestId("save-text")).toHaveTextContent("Save");
-    });
-
-    rerender(
-      <I18nProvider initialLocale="es">
-        <LocaleSync profileLanguage="ES" />
-        <TestConsumer />
-      </I18nProvider>
-    );
-
-    await waitFor(() => {
-      expect(screen.getByTestId("current-locale")).toHaveTextContent("es");
-      expect(screen.getByTestId("save-text")).toHaveTextContent("Guardar");
-    });
   });
 
   it("should detect language from cookie when present", async () => {

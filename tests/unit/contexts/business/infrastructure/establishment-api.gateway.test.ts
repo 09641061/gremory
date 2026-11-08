@@ -23,10 +23,11 @@ describe("EstablishmentApiGateway", () => {
       `http://localhost:8080/api/business/establishments/${establishmentId.value}`,
       expect.objectContaining({
         method: "DELETE",
-        headers: {
+        headers: expect.objectContaining({
           Authorization: "Bearer access-token",
           "X-Organization-Id": organizationId.value,
-        },
+          "X-Correlation-Id": expect.any(String),
+        }),
       }),
     );
   });

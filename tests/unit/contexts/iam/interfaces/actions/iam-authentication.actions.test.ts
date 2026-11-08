@@ -1,12 +1,12 @@
 const mocks = vi.hoisted(() => ({
   cookies: { get: vi.fn(), set: vi.fn(), delete: vi.fn() },
-  service: { requestEmailSignIn: vi.fn(), confirmEmailSignIn: vi.fn(), signOut: vi.fn() },
+  writer: { requestEmailSignIn: vi.fn(), confirmEmailSignIn: vi.fn(), signOut: vi.fn() },
 }));
 
 vi.mock("next/navigation", () => ({ redirect: vi.fn() }));
 vi.mock("next/headers", () => ({ cookies: vi.fn(() => mocks.cookies) }));
-vi.mock("@/contexts/iam/application/internal/commandservices/iam-authentication-command.service", () => ({
-  createIamAuthenticationCommandService: () => mocks.service,
+vi.mock("@/contexts/iam/interfaces/server/iam-composition", () => ({
+  composeIamAdapters: () => ({ authenticationWriter: mocks.writer }),
 }));
 
 import { redirect } from "next/navigation";
@@ -28,17 +28,17 @@ describe("IAM Server Actions", () => {
     vi.clearAllMocks();
     vi.spyOn(console, "error").mockImplementation(() => undefined);
     mocks.cookies.get.mockReturnValue(undefined);
-    mocks.service.requestEmailSignIn.mockResolvedValue(undefined);
-    mocks.service.confirmEmailSignIn.mockResolvedValue({ accessToken: "a", refreshToken: "r" });
-    mocks.service.signOut.mockResolvedValue(undefined);
+    mocks.writer.requestEmailSignIn.mockResolvedValue(undefined);
+    mocks.writer.confirmEmailSignIn.mockResolvedValue({ accessToken: "a", refreshToken: "r" });
+    mocks.writer.signOut.mockResolvedValue(undefined);
   });
 
-  it("should return a validation error and skip the service when email is invalid", async () => {
+  it("should return a validation error and skip the writer when email is invalid", async () => {
     // Act
     const result = await requestEmailSignInAction({ status: "idle", error: null }, form({ email: "invalid" }));
     // Assert
     expect(result.status).toBe("error");
-    expect(mocks.service.requestEmailSignIn).not.toHaveBeenCalled();
+    expect(mocks.writer.requestEmailSignIn).not.toHaveBeenCalled();
   });
 
   it("should persist the pending email and redirect when sign-in succeeds", async () => {
@@ -64,12 +64,12 @@ describe("IAM Server Actions", () => {
     expect(redirect).toHaveBeenCalledWith("/auth/callback#access_token=a&refresh_token=r");
   });
 
-  it("should return a missing-token error and skip the service when no session exists", async () => {
+  it("should return a missing-token error and skip the writer when no session exists", async () => {
     // Act
     const result = await signOutAction();
     // Assert
     expect(result).toEqual({ status: "error", error: "Authentication tokens are missing" });
-    expect(mocks.service.signOut).not.toHaveBeenCalled();
+    expect(mocks.writer.signOut).not.toHaveBeenCalled();
   });
 
   it("should clear session cookies when sign-out succeeds", async () => {
@@ -79,12 +79,12 @@ describe("IAM Server Actions", () => {
     const result = await signOutAction();
     // Assert
     expect(result).toEqual({ status: "success", error: null });
-    expect(mocks.service.signOut).toHaveBeenCalledWith({ accessToken: "a", refreshToken: "r" });
+    expect(mocks.writer.signOut).toHaveBeenCalledWith({ accessToken: "a", refreshToken: "r" });
   });
 
-  it("should return an error when requesting sign-in fails in the application service", async () => {
+  it("should return an error when requesting sign-in fails in the application writer", async () => {
     // Arrange
-    mocks.service.requestEmailSignIn.mockRejectedValue(new Error("API unavailable"));
+    mocks.writer.requestEmailSignIn.mockRejectedValue(new Error("API unavailable"));
 
     // Act
     const result = await requestEmailSignInAction(
@@ -98,9 +98,9 @@ describe("IAM Server Actions", () => {
     expect(redirect).not.toHaveBeenCalled();
   });
 
-  it("should return an error when resending the email fails in the application service", async () => {
+  it("should return an error when resending the email fails in the application writer", async () => {
     // Arrange
-    mocks.service.requestEmailSignIn.mockRejectedValue(new Error("API unavailable"));
+    mocks.writer.requestEmailSignIn.mockRejectedValue(new Error("API unavailable"));
 
     // Act
     const result = await resendEmailSignInAction(
@@ -117,7 +117,7 @@ describe("IAM Server Actions", () => {
 
   it("should return an error and preserve cookies when code confirmation fails", async () => {
     // Arrange
-    mocks.service.confirmEmailSignIn.mockRejectedValue(new Error("Invalid code"));
+    mocks.writer.confirmEmailSignIn.mockRejectedValue(new Error("Invalid code"));
 
     // Act
     const result = await confirmEmailSignInAction(
@@ -136,7 +136,7 @@ describe("IAM Server Actions", () => {
   it("should return an error and keep cookies when sign-out fails", async () => {
     // Arrange
     mocks.cookies.get.mockReturnValueOnce({ value: "a" }).mockReturnValueOnce({ value: "r" });
-    mocks.service.signOut.mockRejectedValue(new Error("API unavailable"));
+    mocks.writer.signOut.mockRejectedValue(new Error("API unavailable"));
 
     // Act
     const result = await signOutAction();

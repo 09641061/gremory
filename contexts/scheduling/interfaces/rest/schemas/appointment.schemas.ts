@@ -6,6 +6,7 @@ export const appointmentResponseSchema = z.object({
   serviceId: z.string().nullable(), customerId: z.string().nullable(), employeeId: z.string().nullable(), establishmentId: z.string().nullable(),
   status: z.enum(["CONFIRMED", "IN_PROGRESS", "COMPLETED", "CANCELLED", "NO_SHOW"]), createdBy: z.string().nullable(), cancelledBy: z.string().nullable(), deletedBy: z.string().nullable(),
   cancellationReason: z.string().nullable(), cancelledAt: z.string().nullable(), deletedAt: z.string().nullable(),
+  notes: z.string().nullable().optional(),
   createdAt: z.string(), updatedAt: z.string(),
 });
 
@@ -23,6 +24,7 @@ export const createAppointmentSchema = z.object({
   customerId: z.string().uuid("Please select a valid customer"),
   employeeId: z.string().uuid("Please select a valid employee"),
   establishmentId: z.string().uuid("Establishment ID is required"),
+  notes: z.string().trim().max(1000, "Notes must be at most 1000 characters long").nullish(),
 }).refine(
   (data) => {
     const start = new Date(data.startsAt).getTime();
@@ -70,6 +72,7 @@ export const updateAppointmentSchema = z.object({
   serviceId: z.string().uuid("Please select a valid service"),
   customerId: z.string().uuid("Please select a valid customer"),
   employeeId: z.string().uuid("Please select a valid employee"),
+  notes: z.string().trim().max(1000, "Notes must be at most 1000 characters long").nullish(),
 }).refine(
   (data) => {
     const start = new Date(data.startsAt).getTime();

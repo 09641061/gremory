@@ -6,7 +6,7 @@ import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import { Spinner } from "@/contexts/shared/interfaces/components/ui/spinner";
 import { Textarea } from "@/contexts/shared/interfaces/components/ui/textarea";
 import { Label } from "@/contexts/shared/interfaces/components/ui/label";
-import { ErrorAlert } from "@/contexts/shared/interfaces/components/error";
+import { ErrorAlert } from "@/contexts/shared/interfaces/components/feedback/error";
 import { cancelAppointmentAction } from "../../actions/cancel-appointment.action";
 import type { Appointment } from "../../../domain/model/entities/appointment";
 import type { ActionState } from "../../actions/action-state";

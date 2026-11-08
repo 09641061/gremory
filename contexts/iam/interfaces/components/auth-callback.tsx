@@ -5,9 +5,11 @@ import { useRouter } from "next/navigation";
 import { Spinner } from "@/contexts/shared/interfaces/components/ui/spinner";
 import { createSessionAction } from "@/contexts/iam/interfaces/actions/create-session.action";
 import { exchangeGoogleCodeAction } from "@/contexts/iam/interfaces/actions/exchange-google-code.action";
+import { useIamI18n } from "../i18n";
 
 export function AuthCallback({ returnTo = null }: { returnTo?: string | null }) {
   const router = useRouter();
+  const { t } = useIamI18n();
   const consumed = useRef(false);
 
   useEffect(() => {
@@ -28,7 +30,7 @@ export function AuthCallback({ returnTo = null }: { returnTo?: string | null }) 
       void (async () => {
         try {
           await createSessionAction({ accessToken, refreshToken });
-          router.replace(returnTo ?? "/welcome");
+          router.replace(returnTo ?? "/");
         } catch {
           redirectToLogin();
         }
@@ -40,7 +42,7 @@ export function AuthCallback({ returnTo = null }: { returnTo?: string | null }) 
       void (async () => {
         try {
           await exchangeGoogleCodeAction(code);
-          router.replace(returnTo ?? "/welcome");
+          router.replace(returnTo ?? "/");
         } catch {
           redirectToLogin();
         }
@@ -48,7 +50,7 @@ export function AuthCallback({ returnTo = null }: { returnTo?: string | null }) 
       return;
     }
 
-    router.replace("/welcome");
+    router.replace("/");
   }, [returnTo, router]);
 
   return (
@@ -57,7 +59,7 @@ export function AuthCallback({ returnTo = null }: { returnTo?: string | null }) 
       aria-live="polite"
     >
       <Spinner className="size-8" />
-      <span className="sr-only">Signing you in</span>
+      <span className="sr-only">{t.auth.signingInSrOnly}</span>
     </main>
   );
 }

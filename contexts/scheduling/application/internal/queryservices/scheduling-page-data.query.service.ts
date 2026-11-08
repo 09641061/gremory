@@ -1,27 +1,22 @@
-import "server-only";
-
-import type {
-  SchedulingPageData,
-} from "../../model/scheduling-page-data.view-model";
+import type { SchedulingRosterReader } from "../../ports/scheduling-roster";
+import type { SchedulingPageData } from "../../model/scheduling-page-data.view-model";
 import { loadSchedulingCustomers } from "./scheduling-customers.query.service";
 import { loadSchedulingMembers } from "./scheduling-members.query.service";
 import { loadSchedulingServices } from "./scheduling-services.query.service";
 
 export async function loadSchedulingPageData(
+  reader: SchedulingRosterReader,
   establishmentId: string,
-  organizationId: string,
+  token: string | undefined,
   canManageScheduling: boolean,
 ): Promise<SchedulingPageData> {
   const [services, members, customers] = await Promise.all([
     canManageScheduling
-      ? loadSchedulingServices(establishmentId, organizationId)
+      ? loadSchedulingServices(reader, establishmentId, token)
       : Promise.resolve([]),
-    loadSchedulingMembers(establishmentId, organizationId).catch((error) => {
-      console.error("Failed to load scheduling members:", error);
-      return [];
-    }),
+    loadSchedulingMembers(reader, establishmentId, token),
     canManageScheduling
-      ? loadSchedulingCustomers(establishmentId, organizationId)
+      ? loadSchedulingCustomers(reader, establishmentId, token)
       : Promise.resolve([]),
   ]);
 

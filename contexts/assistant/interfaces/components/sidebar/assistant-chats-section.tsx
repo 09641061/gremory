@@ -11,6 +11,7 @@ import { AssistantConversationDeleteDialog } from "./assistant-conversation-dele
 import { AssistantConversationList } from "./assistant-conversation-list";
 import { AssistantConversationRenameModal } from "./assistant-conversation-rename-modal";
 import { useAssistantConversationSidebar } from "./use-assistant-conversation-sidebar";
+import { useAssistantTranslations } from "@/contexts/assistant/interfaces/i18n";
 
 export function AssistantChatsSection({
   className,
@@ -47,6 +48,7 @@ export function AssistantChatsSection({
     submitRenameConversation,
     toggleOpen,
   } = useAssistantConversationSidebar(initialConversations);
+  const { t } = useAssistantTranslations();
 
   return (
     <section
@@ -59,7 +61,7 @@ export function AssistantChatsSection({
         className="h-(--app-sidebar-control-height) shrink-0 justify-between rounded-(--app-sidebar-item-radius) px-(--app-sidebar-control-padding-x) text-sm font-medium"
         aria-expanded={isOpen}
       >
-        <span>Chats</span>
+        <span>{t.chat.sectionTitle}</span>
         <ChevronDown
           className={cn(
             "size-4 text-muted-foreground transition-transform",
@@ -88,7 +90,7 @@ export function AssistantChatsSection({
 
       <AssistantConversationRenameModal
         open={renameModalConversation !== null}
-        conversationTitle={renameModalConversation?.title ?? "New conversation"}
+        conversationTitle={renameModalConversation?.title ?? t.chat.newConversation}
         value={renameTitle}
         error={renameError}
         isSaving={isRenameSaving}
@@ -104,7 +106,7 @@ export function AssistantChatsSection({
 
       <AssistantConversationDeleteDialog
         open={deleteModalConversation !== null}
-        title={deleteModalConversation?.title ?? "New conversation"}
+        title={deleteModalConversation?.title ?? t.chat.newConversation}
         error={deleteError}
         isSaving={isDeleteSaving}
         onOpenChange={(open) => {

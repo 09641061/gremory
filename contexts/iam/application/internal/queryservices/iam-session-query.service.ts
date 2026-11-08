@@ -1,22 +1,21 @@
-import "server-only";
-
-import type { IamAuthenticationCommandService } from "../../../domain/services/iam-authentication-command.service";
+import type { IamAuthenticationWriter } from "../../ports/iam-authentication-writer";
+import type { RefreshCoordinator } from "../../ports/iam-session-coordinator";
 import type { IamAuthenticationQueryService } from "../../services/iam-authentication-query.service";
 import type { IamSessionQueryService } from "../../services/iam-session-query.service";
 import type { ResolvedSession } from "../../model/resolved-session";
 import type { ResolveSessionQuery } from "../../../domain/model/queries/resolve-session.query";
-import { IamApiError, IamApiGateway } from "../../../infrastructure/gateways/iam-api.gateway";
-import { coordinateRefresh } from "../../../infrastructure/session/iam-refresh-coordinator";
+import { isClientRejection } from "@/contexts/shared/application/errors/transport-error";
 
-type RefreshCoordinator = (
-  refreshToken: string,
-  refresh: (refreshToken: string) => Promise<import("../../../domain/model/entities/authentication-session").AuthenticationSession | null>,
-) => Promise<import("../../../domain/model/entities/authentication-session").AuthenticationSession | null>;
-
+/**
+ * Pure query handler. Infrastructure provides the gateway (typed as the
+ * Application port), the refresh coordinator function, and the access
+ * verifier; this service composes them. It must not import concrete
+ * gateways or cookies.
+ */
 export class IamSessionQueryServiceImpl implements IamSessionQueryService {
   constructor(
     private readonly authenticationQueries: IamAuthenticationQueryService,
-    private readonly authenticationCommands: IamAuthenticationCommandService,
+    private readonly authenticationCommands: IamAuthenticationWriter,
     private readonly refreshCoordinator: RefreshCoordinator,
   ) {}
 
@@ -44,10 +43,7 @@ export class IamSessionQueryServiceImpl implements IamSessionQueryService {
         try {
           return await this.authenticationCommands.refreshSession({ refreshToken });
         } catch (error) {
-          if (
-            error instanceof IamApiError &&
-            (error.status === 400 || error.status === 401)
-          ) {
+          if (isClientRejection(error, [400, 401])) {
             return null;
           }
           throw error;
@@ -69,9 +65,4 @@ export class IamSessionQueryServiceImpl implements IamSessionQueryService {
       rotatedSession,
     };
   }
-}
-
-export function createIamSessionQueryService(): IamSessionQueryService {
-  const gateway = new IamApiGateway();
-  return new IamSessionQueryServiceImpl(gateway, gateway, coordinateRefresh);
 }

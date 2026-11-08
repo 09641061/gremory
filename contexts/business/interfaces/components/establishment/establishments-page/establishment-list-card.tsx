@@ -4,7 +4,7 @@ import { PencilLine, Store, Trash2 } from "lucide-react";
 import type { EstablishmentListItem } from "./establishments-page";
 import { Card, CardContent } from "@/contexts/shared/interfaces/components/ui/card";
 import { StatusBadge } from "@/contexts/shared/interfaces/components/ui/status-badge";
-import { EntityListRow } from "@/contexts/shared/interfaces/components/entity-list-row";
+import { EntityListRow } from "@/contexts/shared/interfaces/components/lists/entity-list-row";
 import { useBusinessTranslations } from "@/contexts/business/interfaces/i18n";
 
 interface EstablishmentListCardProps {

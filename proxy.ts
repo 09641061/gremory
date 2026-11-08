@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { createIamSessionQueryService } from "@/contexts/iam/application/internal/queryservices/iam-session-query.service";
-import { createEntryRouteQueryService } from "@/contexts/shared/application/internal/queryservices/entry-route-query.service";
+import { composeIamAdapters } from "@/contexts/iam/interfaces/server/iam-composition";
+import { composeSharedAdapters } from "@/contexts/shared/interfaces/server/shared-composition";
 import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-session-cookie";
 import {
   workspaceSelectionCookieOptions,
@@ -22,13 +22,13 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  const session = await createIamSessionQueryService().resolveSession({
+  const session = await composeIamAdapters().sessionQueryService.resolveSession({
     accessToken,
     refreshToken,
   });
 
   if (session.status === "unauthenticated") {
-    if (accessToken || refreshToken || pathname === "/" || isPrivateRoute(pathname)) {
+    if (accessToken || refreshToken || isPrivateRoute(pathname)) {
       return redirectToLogin(request);
     }
     return NextResponse.next();
@@ -49,7 +49,7 @@ export async function proxy(request: NextRequest) {
     return continueWithWorkspaceContext(request, response, rotatedHeaders);
   }
 
-  const landing = await createEntryRouteQueryService().resolveRoute({
+  const landing = await composeSharedAdapters(accessToken).entryRouteQueryService.resolveRoute({
     accessToken,
     organizationId: resolveOrganizationSelection(request),
     establishmentId: resolveEstablishmentSelection(request, !isOnboardingPath(pathname)),
@@ -63,6 +63,7 @@ export async function proxy(request: NextRequest) {
 
   if (
     landing.status === "subscription-required" ||
+    landing.status === "profile-required" ||
     landing.status === "invitation-pending" ||
     landing.status === "organization-required" ||
     landing.status === "establishment-required"
@@ -93,7 +94,6 @@ function isPrivateRoute(pathname: string) {
     "/schedule",
     "/crm",
     "/catalog",
-    "/team",
     "/settings",
     "/organization",
     "/invitations/pending",
@@ -102,6 +102,7 @@ function isPrivateRoute(pathname: string) {
     "/access-denied",
     "/no-access",
     "/welcome",
+    "/onboarding/profile",
     // Lives under app/(protected): plans are shown to signed-in users only.
     "/upgrade",
     "/invoice",
@@ -124,6 +125,7 @@ function resolveEstablishmentSelection(request: NextRequest, useCookie = true): 
 function isOnboardingPath(pathname: string) {
   return (
     pathname === "/welcome" ||
+    pathname === "/onboarding/profile" ||
     pathname === "/organizations/new" ||
     pathname === "/establishments/new" ||
     pathname === "/invitations/pending"
@@ -233,13 +235,13 @@ export const config = {
     "/login",
     "/upgrade",
     "/welcome",
+    "/onboarding/profile",
     "/invoice",
     "/chat/:path*",
     "/analytics/:path*",
     "/schedule/:path*",
     "/crm/:path*",
     "/catalog/:path*",
-    "/team/:path*",
     "/settings/:path*",
     "/organization/:path*",
     "/invitations/pending",

@@ -15,6 +15,7 @@ export type AppointmentFormValues = Readonly<{
   startDate: string;
   /** Local 24h wall-clock time, `HH:MM`. */
   startTime: string;
+  notes?: string;
 }>;
 
 export const EMPTY_APPOINTMENT_FORM_VALUES: AppointmentFormValues = {
@@ -24,4 +25,5 @@ export const EMPTY_APPOINTMENT_FORM_VALUES: AppointmentFormValues = {
   employeeId: "",
   startDate: "",
   startTime: "",
+  notes: "",
 };

@@ -6,4 +6,5 @@ export type CreateAppointmentCommand = Readonly<{
   customerId: string;
   employeeId: string;
   establishmentId: string;
+  notes?: string | null;
 }>;

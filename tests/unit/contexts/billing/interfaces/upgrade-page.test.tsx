@@ -14,14 +14,19 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock("next/navigation", () => ({ redirect: mocks.redirect }));
 vi.mock("next/headers", () => ({ cookies: mocks.cookies, headers: mocks.headers }));
-vi.mock("@/contexts/billing/application/internal/queryservices/current-subscription-query.service", () => ({
-  createCurrentSubscriptionQueryService: () => mocks.subscription,
+vi.mock("@/contexts/billing/interfaces/server/billing-composition", () => ({
+  composeBillingAdapters: () => ({
+    currentSubscriptionService: mocks.subscription,
+    listPlansService: {},
+  }),
 }));
 vi.mock("@/contexts/shared/application/internal/queryservices/app-shell-query.service", () => ({
   createAppShellQueryService: () => mocks.workspace,
 }));
-vi.mock("@/contexts/business/application/internal/queryservices/business-workspace-query.service", () => ({
-  createBusinessWorkspaceQueryService: () => mocks.businessWorkspace,
+vi.mock("@/contexts/business/interfaces/server/business-composition", () => ({
+  composeBusinessAdapters: () => ({
+    workspaceQueryService: mocks.businessWorkspace,
+  }),
 }));
 vi.mock("@/contexts/billing/application/internal/queryservices/list-plans-query.service", () => ({
   listPlansByCurrencyQueryService: mocks.plans,

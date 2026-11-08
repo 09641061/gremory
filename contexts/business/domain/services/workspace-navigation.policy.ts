@@ -11,17 +11,55 @@ export type WorkspaceNavigationEstablishment = Readonly<{
  * link has to carry it. The organization never does: it is fixed for the
  * account, so a stale `organizationId` can only contradict the session.
  */
+type QueryEntry = readonly [key: string, value: string];
+
+function decodeQueryPart(value: string): string {
+  try {
+    return decodeURIComponent(value.replace(/\+/g, " "));
+  } catch {
+    return value;
+  }
+}
+
+function encodeQueryPart(value: string): string {
+  // URLSearchParams serializes spaces as `+`; preserving that convention keeps
+  // generated links compatible without importing the Web API into Domain.
+  return encodeURIComponent(value).replace(/%20/g, "+");
+}
+
+function parseQuery(query: string): QueryEntry[] {
+  const raw = query.startsWith("?") ? query.slice(1) : query;
+  if (!raw) return [];
+  return raw.split("&").filter(Boolean).map((part) => {
+    const separator = part.indexOf("=");
+    if (separator < 0) return [decodeQueryPart(part), ""] as const;
+    return [
+      decodeQueryPart(part.slice(0, separator)),
+      decodeQueryPart(part.slice(separator + 1)),
+    ] as const;
+  });
+}
+
+function serializeQuery(entries: ReadonlyArray<QueryEntry>): string {
+  return entries
+    .map(([key, value]) => `${encodeQueryPart(key)}=${encodeQueryPart(value)}`)
+    .join("&");
+}
+
 export function buildWorkspacePath(
   pathname: string,
   currentQuery: string,
   establishmentId?: string,
 ): string {
-  const params = new URLSearchParams(currentQuery);
-  params.delete("organizationId");
-  if (establishmentId) params.set("establishmentId", establishmentId);
-  else params.delete("establishmentId");
+  const existingEntries = parseQuery(currentQuery).filter(
+    ([key]) => key !== "organizationId" && key !== "establishmentId",
+  );
+  const entries = establishmentId
+    ? ([ ["establishmentId", establishmentId] as const, ...existingEntries ])
+    : existingEntries;
 
-  return params.toString() ? `${pathname}?${params.toString()}` : pathname;
+  const query = serializeQuery(entries);
+  return query ? `${pathname}?${query}` : pathname;
 }
 
 /**

@@ -3,6 +3,8 @@ import {
   en,
   es,
   getNotificationDictionary,
+  getNotificationsDictionary,
+  useNotificationsI18n,
 } from "@/contexts/notifications/interfaces/i18n";
 
 describe("Notifications i18n translations", () => {
@@ -34,5 +36,11 @@ describe("Notifications i18n translations", () => {
     expect(getNotificationDictionary("es")).toBe(es);
     expect(getNotificationDictionary("en")).toBe(en);
     expect(getNotificationDictionary(null)).toBe(en);
+    expect(getNotificationsDictionary("es")).toBe(es);
+    expect(getNotificationsDictionary("en")).toBe(en);
+  });
+
+  it("should export useNotificationsI18n hook", () => {
+    expect(typeof useNotificationsI18n).toBe("function");
   });
 });

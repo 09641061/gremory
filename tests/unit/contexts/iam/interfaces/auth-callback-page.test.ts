@@ -10,7 +10,7 @@ vi.mock("@/contexts/iam/interfaces/components/auth-callback", () => ({
   AuthCallback: mocks.authCallback,
 }));
 
-import AuthCallbackPage, * as authCallbackPageModule from "@/app/auth/callback/page";
+import AuthCallbackPage, * as authCallbackPageModule from "@/app/(auth)/auth/callback/page";
 
 const returnToCookie = (value?: string) => ({
   get: () => (value === undefined ? undefined : { value }),

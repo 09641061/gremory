@@ -1,7 +1,6 @@
 import { redirect } from "next/navigation";
 import { OrganizationSettingsCard } from "@/contexts/business/interfaces/components/organization/organization-settings/organization-settings-card";
-import { createBusinessWorkspaceQueryService } from "@/contexts/business/application/internal/queryservices/business-workspace-query.service";
-import { createOrganizationQueryService } from "@/contexts/business/application/internal/queryservices/organization-query.service";
+import { composeBusinessAdapters } from "@/contexts/business/interfaces/server/business-composition";
 
 interface OrganizationPageProps {
   searchParams: Promise<{ establishmentId?: string; organizationId?: string }>;
@@ -9,15 +8,15 @@ interface OrganizationPageProps {
 
 export default async function OrganizationRoutePage({ searchParams }: OrganizationPageProps) {
   const query = await searchParams;
-  const workspace = await createBusinessWorkspaceQueryService().getHeaderViewModel(query);
+  const workspace = await composeBusinessAdapters().workspaceQueryService.getHeaderViewModel(query);
 
   if (query.organizationId && query.organizationId === workspace.ownedOrganizationId) {
-    const organization = await createOrganizationQueryService().getById({
+    const organization = await composeBusinessAdapters().organizationQueryService.getById({
       id: query.organizationId,
     });
 
     if (!organization) {
-      redirect("/access-denied");
+      redirect("/");
     }
 
     return (
@@ -32,10 +31,10 @@ export default async function OrganizationRoutePage({ searchParams }: Organizati
     );
   }
 
-  const pageState = await createBusinessWorkspaceQueryService().getOrganizationPageState(query);
+  const pageState = await composeBusinessAdapters().workspaceQueryService.getOrganizationPageState(query);
 
   if (pageState.status === "denied") {
-    redirect("/access-denied");
+    redirect("/");
   }
 
   return (

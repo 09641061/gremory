@@ -4,13 +4,8 @@ const mocks = vi.hoisted(() => ({
   getCurrentSubscription: vi.fn(),
 }));
 
-vi.mock("@/contexts/billing/infrastructure/adapters/billing-subscription.adapter", () => ({
-  createBillingSubscriptionAdapter: () => ({
-    getCurrentSubscription: mocks.getCurrentSubscription,
-  }),
-}));
-
-import { createCurrentSubscriptionQueryService } from "@/contexts/billing/application/internal/queryservices/current-subscription-query.service";
+import { CurrentSubscriptionQueryService } from "@/contexts/billing/application/internal/queryservices/current-subscription-query.service";
+import type { BillingSubscriptionReader } from "@/contexts/billing/application/ports/billing-readers-writers";
 
 describe("current subscription query service", () => {
   beforeEach(() => {
@@ -20,7 +15,8 @@ describe("current subscription query service", () => {
   it("returns the snapshot when Billing reports a subscription", async () => {
     mocks.getCurrentSubscription.mockResolvedValue({ active: true, status: "ACTIVE", planId: 1 });
 
-    const snapshot = await createCurrentSubscriptionQueryService()
+    const reader: BillingSubscriptionReader = { getCurrentSubscription: mocks.getCurrentSubscription };
+    const snapshot = await new CurrentSubscriptionQueryService(reader)
       .getCurrentSubscriptionSnapshot("token");
 
     expect(snapshot).toEqual({ active: true, status: "ACTIVE", planId: 1 });
@@ -29,7 +25,8 @@ describe("current subscription query service", () => {
   it("returns null instead of throwing when the user owns no subscription", async () => {
     mocks.getCurrentSubscription.mockRejectedValue({ status: 404 });
 
-    const snapshot = await createCurrentSubscriptionQueryService()
+    const reader: BillingSubscriptionReader = { getCurrentSubscription: mocks.getCurrentSubscription };
+    const snapshot = await new CurrentSubscriptionQueryService(reader)
       .getCurrentSubscriptionSnapshot("token");
 
     expect(snapshot).toBeNull();
@@ -38,8 +35,10 @@ describe("current subscription query service", () => {
   it("keeps propagating the failure on the strict read used by route handlers", async () => {
     mocks.getCurrentSubscription.mockRejectedValue(new Error("billing down"));
 
+    const reader: BillingSubscriptionReader = { getCurrentSubscription: mocks.getCurrentSubscription };
+
     await expect(
-      createCurrentSubscriptionQueryService().getCurrentSubscription("token"),
+      new CurrentSubscriptionQueryService(reader).getCurrentSubscription("token"),
     ).rejects.toThrow("billing down");
   });
 });

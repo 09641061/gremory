@@ -11,6 +11,11 @@ export function getWorkspaceEstablishment(
 export function hasEstablishmentPermission(
   establishment: WorkspaceHeaderEstablishment | undefined,
   permission: string,
+  isOwner?: boolean,
 ): boolean {
+  if (isOwner) return true;
+  if (establishment?.canRead && establishment?.canUpdate && establishment?.canDelete) {
+    return true;
+  }
   return establishment?.effectivePermissions?.includes(permission) ?? false;
 }

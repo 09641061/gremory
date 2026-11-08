@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
+import { safePublicError } from "@/contexts/shared/interfaces/actions/safe-error";
 import { z } from "zod";
 import { updateOrganizationCommand } from "@/contexts/business/domain/model/commands/business.commands";
-import { createOrganizationCommandService } from "@/contexts/business/application/internal/commandservices/organization-command.service";
-import { createOrganizationQueryService } from "@/contexts/business/application/internal/queryservices/organization-query.service";
+import { composeBusinessAdapters } from "@/contexts/business/interfaces/server/business-composition";
 import { updateOrganizationSchema } from "@/contexts/business/interfaces/rest/schemas/organization.schemas";
+import { requireOrganizationCapability } from "@/contexts/business/interfaces/authorization/business-authorization";
 
 const uuidSchema = z.string().uuid();
 
@@ -18,7 +19,8 @@ export async function GET(
       return validationErrorResponse(parsed.error.issues[0]?.message);
     }
 
-    const organization = await createOrganizationQueryService().getById({
+    await requireOrganizationCapability(parsed.data, "canRead");
+    const organization = await composeBusinessAdapters().organizationQueryService.getById({
       id: parsed.data,
     });
 
@@ -50,38 +52,9 @@ function validationErrorResponse(message?: string) {
   );
 }
 
-function routeErrorResponse(error: unknown): Response {
-  if (error instanceof Error) {
-    const status = readStatus(error);
-    if (status !== undefined) {
-      const details = readDetails(error);
-      return NextResponse.json(
-        details === undefined
-          ? { message: error.message }
-          : { message: error.message, details },
-        { status },
-      );
-    }
-
-    if (error.message === "Authentication is required") {
-      return NextResponse.json({ message: error.message }, { status: 401 });
-    }
-
-    return NextResponse.json({ message: error.message }, { status: 400 });
-  }
-
-  return NextResponse.json({ message: "Unexpected error" }, { status: 500 });
-}
-
-function readStatus(error: Error): number | undefined {
-  const status = (error as Error & { status?: unknown }).status;
-  if (typeof status !== "number" || Number.isNaN(status)) return undefined;
-  if (status <= 0) return 502;
-  return status;
-}
-
-function readDetails(error: Error): unknown {
-  return (error as Error & { details?: unknown }).details;
+function routeErrorResponse(error: unknown, fallback = "Request could not be completed"): Response {
+  const safe = safePublicError(error, fallback);
+  return NextResponse.json({ message: safe.message }, { status: safe.status });
 }
 
 export async function PUT(
@@ -105,11 +78,12 @@ export async function PUT(
       return validationErrorResponse(parsed.error.issues[0]?.message);
     }
 
-    await createOrganizationCommandService().update(
+    await requireOrganizationCapability(idParsed.data, "canUpdate");
+    await composeBusinessAdapters().organizationCommandService.update(
       updateOrganizationCommand(parsed.data),
     );
 
-    const organization = await createOrganizationQueryService().getById({
+    const organization = await composeBusinessAdapters().organizationQueryService.getById({
       id: idParsed.data,
     });
     if (!organization) {

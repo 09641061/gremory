@@ -17,7 +17,13 @@ vi.mock("@/contexts/billing/application/internal/queryservices/current-subscript
   }),
 }));
 
-import { createEntryRouteQueryService } from "@/contexts/shared/application/internal/queryservices/entry-route-query.service";
+import { createEntryRouteQueryService as createEntryRouteQueryServiceImpl } from "@/contexts/shared/application/internal/queryservices/entry-route-query.service";
+
+const createEntryRouteQueryService = () =>
+  createEntryRouteQueryServiceImpl(
+    { getWorkspace: mocks.getWorkspace } as never,
+    { getCurrentSubscription: mocks.getCurrentSubscription } as never,
+  );
 
 describe("entry route query service", () => {
   beforeEach(() => {
@@ -29,7 +35,7 @@ describe("entry route query service", () => {
     });
   });
 
-  it("sends an owner without an active subscription to welcome before workspace setup", async () => {
+  it("sends an owner without an active subscription to plan selection before workspace setup", async () => {
     mocks.getWorkspace.mockResolvedValue({
       accountType: "OWNER",
       onboardingStatus: "ORGANIZATION_PENDING",
@@ -43,8 +49,27 @@ describe("entry route query service", () => {
 
     expect(result).toEqual({
       status: "subscription-required",
-      setupHref: "/welcome",
-      allowedPaths: ["/welcome"],
+      setupHref: "/upgrade",
+      allowedPaths: ["/upgrade"],
+    });
+  });
+
+  it("requires an active owner to create a profile before creating an organization", async () => {
+    mocks.getWorkspace.mockResolvedValue({
+      accountType: "OWNER",
+      onboardingStatus: "PROFILE_PENDING",
+      organization: undefined,
+      establishments: [],
+    });
+
+    const result = await createEntryRouteQueryService().resolveRoute({
+      accessToken: "access-token",
+    });
+
+    expect(result).toEqual({
+      status: "profile-required",
+      setupHref: "/onboarding/profile",
+      allowedPaths: ["/onboarding/profile"],
     });
   });
 

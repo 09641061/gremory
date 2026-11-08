@@ -3,19 +3,19 @@ import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { vi } from "vitest";
 
-import { AccessDeniedActions } from "@/contexts/shared/interfaces/components/access-denied-actions";
+import { AccessDeniedActions } from "@/contexts/shared/interfaces/components/actions/access-denied-actions";
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }),
 }));
 
 describe("AccessDeniedActions", () => {
-  it("offers a direct path to the organizations hub", () => {
+  it("offers a direct path to organization settings", () => {
     render(<AccessDeniedActions />);
 
     expect(screen.getByRole("link", { name: /manage organizations/i })).toHaveAttribute(
       "href",
-      "/organizations",
+      "/organization",
     );
     expect(screen.getByRole("button", { name: /try again/i })).toBeTruthy();
   });

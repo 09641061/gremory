@@ -1,5 +1,5 @@
 /** @vitest-environment jsdom */
-import { render, screen, within } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { WorkspaceHeaderViewModel } from "@/contexts/business/application/model/business-workspace.view-models";
 
@@ -10,8 +10,8 @@ vi.mock("@/contexts/notifications/interfaces/components/notification-dropdown", 
 vi.mock("@/contexts/shared/interfaces/components/header/app-header-server", () => ({ AppHeaderServer: () => <AppHeader profile={{ username: "Ada", imageUrl: null }} workspace={workspace} homeHref={mocks.homeHref} /> }));
 vi.mock("@/contexts/shared/interfaces/components/sidebar/app-sidebar-shell-server", () => ({ AppShellSidebarServer: () => { mocks.sidebar(); return <aside>Navigation</aside>; } }));
 import { AppHeader } from "@/contexts/shared/interfaces/components/header/app-header";
-import WelcomeLayout from "@/app/(protected)/(welcome)/layout";
-import ProtectedAppShell from "@/contexts/shared/interfaces/components/protected-app-shell";
+import WelcomeLayout from "@/app/(protected)/(onboarding)/(start)/layout";
+import ProtectedAppShell from "@/contexts/shared/interfaces/components/layout/protected-app-shell";
 const workspace = { establishments: [{ id: "branch" }], accessPolicy: { canManageBilling: false } } as WorkspaceHeaderViewModel;
 
 beforeEach(() => {
@@ -83,7 +83,9 @@ describe("shared account header and route shells", () => {
     expect(await screen.findByRole("menuitem", { name: "Profile" })).toBeVisible();
     expect(screen.queryByRole("menuitem", { name: "Invoices" })).toBeNull();
     await user.keyboard("{Escape}");
-    expect(screen.getByRole("button", { name: "Ada" })).toHaveFocus();
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: "Ada" })).toHaveFocus();
+    });
   });
 
   it("should expose the Takodu brand link in the header pointing at the server-resolved home", () => {

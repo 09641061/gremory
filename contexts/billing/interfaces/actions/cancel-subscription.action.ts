@@ -1,13 +1,18 @@
 "use server";
 
+import { safePublicError } from "@/contexts/shared/interfaces/actions/safe-error";
+
+
 import "server-only";
 import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-session-cookie";
-import { createBillingSubscriptionAdapter, type BillingSubscriptionSnapshot } from "@/contexts/billing/infrastructure/adapters/billing-subscription.adapter";
+import type { BillingSubscriptionReadModel } from "../../application/ports/billing-readers-writers";
+import { composeBillingAdapters } from "../server/billing-composition";
+import { requireSubscriptionOwnerAccess } from "../authorization/billing-authorization";
 
 export type CancelSubscriptionActionResult =
-  | { status: "success"; data: BillingSubscriptionSnapshot; error: null }
+  | { status: "success"; data: BillingSubscriptionReadModel; error: null }
   | { status: "error"; data: null; error: string };
 
 /**
@@ -26,18 +31,24 @@ export async function cancelSubscriptionAction(): Promise<CancelSubscriptionActi
       };
     }
 
-    const result = await createBillingSubscriptionAdapter().cancelSubscription(accessToken);
+    const billingContext = await requireSubscriptionOwnerAccess();
+    const result = await composeBillingAdapters().subscriptionCommandService.cancel(accessToken, billingContext);
 
-    revalidatePath("/upgrade");
-    revalidatePath("/chat");
-    revalidatePath("/schedule");
+    try {
+      revalidatePath("/upgrade");
+      revalidatePath("/chat");
+      revalidatePath("/schedule");
+      revalidatePath("/invoice");
+    } catch {
+      // A confirmed cancellation remains successful if cache invalidation fails.
+    }
 
     return { status: "success", data: result, error: null };
   } catch (error) {
     return {
       status: "error",
       data: null,
-      error: error instanceof Error ? error.message : "An error occurred while cancelling the subscription.",
+      error: safePublicError(error, "An error occurred while cancelling the subscription.").message,
     };
   }
 }

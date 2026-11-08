@@ -9,6 +9,8 @@ export const en = {
     actionsAria: "Notification actions",
     markAsRead: "Mark as read",
     delete: "Delete",
+    previousPage: "Previous page",
+    nextPage: "Next page",
   },
 } as const;
 

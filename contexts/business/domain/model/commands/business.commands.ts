@@ -8,6 +8,9 @@ export type CommandFileMetadata = Readonly<{
   name: string;
   type: string;
   size: number;
+  /** Raw bytes are transport-neutral; Interfaces reads them from File and
+   * Infrastructure turns them into a Blob/FormData part. */
+  bytes: Uint8Array;
 }>;
 
 export type CreateOrganizationCommand = Readonly<{
@@ -29,6 +32,7 @@ export type CreateEstablishmentCommand = Readonly<{
   name: string;
   photoUrl?: string | null;
   timeZone?: string | null;
+  currency?: "USD" | "PEN" | null;
   /** New photo picked by the account, stored before the write lands. */
   photoFile?: CommandFileMetadata | null;
 }>;
@@ -37,6 +41,7 @@ export type UpdateEstablishmentCommand = Readonly<{
   name: string;
   photoUrl?: string | null;
   timeZone?: string | null;
+  currency?: "USD" | "PEN" | null;
   photoFile?: CommandFileMetadata | null;
   /** Drops the stored photo when no replacement is provided. */
   removePhoto?: boolean;

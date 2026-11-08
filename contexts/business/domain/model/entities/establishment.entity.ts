@@ -9,6 +9,7 @@ export interface EstablishmentProps {
   name: EstablishmentName;
   photoUrl: EstablishmentPhoto;
   timeZone?: string | null;
+  currency?: "USD" | "PEN" | null;
   active: boolean;
   ownerAvailableForScheduling?: boolean;
 }
@@ -20,6 +21,7 @@ export class Establishment {
     private currentName: EstablishmentName,
     private currentPhotoUrl: EstablishmentPhoto,
     private currentTimeZone: string,
+    private currentCurrency: "USD" | "PEN",
     public readonly active: boolean,
     private currentOwnerAvailableForScheduling: boolean,
   ) {}
@@ -31,6 +33,7 @@ export class Establishment {
       props.name,
       props.photoUrl ?? createEstablishmentPhoto(),
       props.timeZone?.trim() || "UTC",
+      props.currency ?? "USD",
       props.active,
       props.ownerAvailableForScheduling ?? true,
     );
@@ -48,6 +51,10 @@ export class Establishment {
     return this.currentTimeZone;
   }
 
+  get currency(): "USD" | "PEN" {
+    return this.currentCurrency;
+  }
+
   get ownerAvailableForScheduling(): boolean {
     return this.currentOwnerAvailableForScheduling;
   }
@@ -57,10 +64,14 @@ export class Establishment {
     photoUrl?: string | null,
     timeZone?: string | null,
     ownerAvailableForScheduling?: boolean,
+    currency?: "USD" | "PEN" | null,
   ): void {
     this.currentName = createEstablishmentName(name);
     this.currentPhotoUrl = createEstablishmentPhoto(photoUrl);
     this.currentTimeZone = timeZone?.trim() || this.currentTimeZone;
+    if (currency) {
+      this.currentCurrency = currency;
+    }
     if (ownerAvailableForScheduling !== undefined) {
       this.currentOwnerAvailableForScheduling = ownerAvailableForScheduling;
     }

@@ -25,7 +25,7 @@ vi.mock("@/contexts/profiles/interfaces/components/profile/profile-card", () => 
 
 import ProfilePage, {
   ProfilePageContent,
-} from "@/app/(protected)/(configuration)/profile/page";
+} from "@/app/(protected)/(profile)/profile/page";
 
 describe("Profile Route Page", () => {
   beforeEach(() => {
@@ -37,11 +37,11 @@ describe("Profile Route Page", () => {
     expect(element).toBeTruthy();
   });
 
-  it("should redirect to /login when user has no active profile", async () => {
+  it("should redirect to profile onboarding when user has no active profile", async () => {
     mocks.getMyProfileServerQuery.mockResolvedValue(null);
 
-    await expect(ProfilePageContent()).rejects.toThrow("REDIRECT:/login");
-    expect(mocks.redirect).toHaveBeenCalledWith("/login");
+    await expect(ProfilePageContent()).rejects.toThrow("REDIRECT:/onboarding/profile");
+    expect(mocks.redirect).toHaveBeenCalledWith("/onboarding/profile");
   });
 
   it("should render ProfileCard with fetched profile data when profile exists", async () => {

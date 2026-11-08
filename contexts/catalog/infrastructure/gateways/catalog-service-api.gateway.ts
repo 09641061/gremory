@@ -2,13 +2,13 @@ import "server-only";
 
 import { cookies } from "next/headers";
 import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-session-cookie";
+import { workspaceSelectionCookies } from "@/contexts/business/infrastructure/session/workspace-selection-cookie";
 import { CatalogService } from "../../domain/model/entities/catalog-service.entity";
 import { createCatalogServiceId } from "../../domain/model/valueobjects/catalog-service-id.vo";
 import { createPrice } from "../../domain/model/valueobjects/price.vo";
 import type {
   CatalogServiceCommandService,
   CatalogServiceSearchParams,
-  PageResponse,
 } from "../../domain/services/catalog-service.services";
 import type {
   CreateCatalogServiceCommand,
@@ -19,17 +19,25 @@ import type {
 import { apiConfig } from "@/api.config";
 import { apiClient } from "@/contexts/shared/infrastructure/http/api-client";
 import { catalogServiceResponseSchema } from "../../interfaces/rest/schemas/catalog-service.schemas";
+import { catalogServicePageResponseSchema } from "../contracts/catalog-response.contracts";
+import type { PageResponse } from "@/contexts/shared/domain/model/page-response";
+import type { DetailedServiceDTO } from "../../domain/model/view-models";
+import type {
+  CatalogServiceApiPort,
+  CatalogServiceCommandPort,
+} from "../../application/ports/catalog-service-port";
+import type {
+  CatalogServiceQueryService,
+} from "../../domain/services/catalog-service.services";
 
 type RawCatalogService = {
   id: string;
   establishmentId: string;
   name: string;
-  description: string;
+  description?: string | null;
   price: number;
   durationMinutes: number;
   categoryId?: string | null;
-  preServiceInstructions?: string | null;
-  postServiceRecommendations?: string | null;
   preparationMinutes: number;
   cleanupMinutes: number;
   status: "ACTIVE" | "INACTIVE" | "DELETED";
@@ -40,16 +48,29 @@ function mapServiceToEntity(raw: RawCatalogService): CatalogService {
     id: createCatalogServiceId(raw.id),
     establishmentId: raw.establishmentId,
     name: raw.name,
-    description: raw.description,
+    description: raw.description ?? "",
     price: createPrice(raw.price),
     durationMinutes: raw.durationMinutes,
     categoryId: raw.categoryId ?? null,
-    preServiceInstructions: raw.preServiceInstructions ?? null,
-    postServiceRecommendations: raw.postServiceRecommendations ?? null,
     preparationMinutes: raw.preparationMinutes ?? 0,
     cleanupMinutes: raw.cleanupMinutes ?? 0,
     status: raw.status,
   });
+}
+
+function mapServiceToDTO(raw: RawCatalogService): DetailedServiceDTO {
+  return {
+    id: raw.id,
+    establishmentId: raw.establishmentId,
+    name: raw.name,
+    description: raw.description ?? "",
+    price: raw.price,
+    durationMinutes: raw.durationMinutes,
+    preparationMinutes: raw.preparationMinutes ?? 0,
+    cleanupMinutes: raw.cleanupMinutes ?? 0,
+    categoryId: raw.categoryId ?? null,
+    status: raw.status,
+  };
 }
 
 async function resolveAccessToken(providedToken?: string): Promise<string | undefined> {
@@ -63,18 +84,39 @@ async function resolveAccessToken(providedToken?: string): Promise<string | unde
 }
 
 export class CatalogServiceApiGateway
-  implements CatalogServiceCommandService
+  implements CatalogServiceCommandService, CatalogServiceQueryService, CatalogServiceApiPort, CatalogServiceCommandPort
 {
-  constructor(private readonly organizationId?: string) {}
+  constructor(
+    private readonly organizationId?: string,
+    private readonly establishmentId?: string,
+  ) {}
 
-  private tenantHeaders() {
-    return this.organizationId ? { "X-Organization-Id": this.organizationId } : undefined;
+  private async tenantOptions(): Promise<{
+    tenantId?: string;
+    headers?: HeadersInit;
+  }> {
+    let organizationId = this.organizationId;
+    if (!organizationId) {
+      try {
+        const cookieStore = await cookies();
+        organizationId = cookieStore.get(workspaceSelectionCookies.organizationId)?.value;
+      } catch {
+        // Cookie access is unavailable outside a request.
+      }
+    }
+
+    return {
+      tenantId: organizationId,
+      headers: this.establishmentId
+        ? { "X-Establishment-Id": this.establishmentId }
+        : undefined,
+    };
   }
 
   async search(
     params: CatalogServiceSearchParams,
-    token?: string
-  ): Promise<PageResponse<CatalogService>> {
+    token?: string,
+  ): Promise<PageResponse<DetailedServiceDTO>> {
     const authToken = await resolveAccessToken(token);
     const query = new URLSearchParams();
     query.append("establishmentId", params.establishmentId);
@@ -88,33 +130,34 @@ export class CatalogServiceApiGateway
     query.append("page", String(params.page ?? 0));
     query.append("size", String(params.size ?? 20));
 
-    const data = await apiClient.get<PageResponse<RawCatalogService>>(
+    const resource = await apiClient.get<unknown>(
       `${apiConfig.routes.catalogServices}?${query}`,
       {
         token: authToken,
-        headers: this.tenantHeaders(),
+        ...(await this.tenantOptions()),
         errorMessage: "Failed to fetch catalog services",
       },
     );
 
+    const data = catalogServicePageResponseSchema.parse(resource);
     return {
       ...data,
-      content: data.content.map(mapServiceToEntity),
+      content: data.content.map(mapServiceToDTO),
     };
   }
 
-  async getById(id: string, establishmentId: string, token?: string): Promise<CatalogService> {
+  async getById(id: string, establishmentId: string, token?: string): Promise<DetailedServiceDTO> {
     const authToken = await resolveAccessToken(token);
     const query = new URLSearchParams({ establishmentId });
     const resource = await apiClient.get<RawCatalogService>(
       `${apiConfig.routes.catalogServices}/${encodeURIComponent(id)}?${query}`,
       {
         token: authToken,
-        headers: this.tenantHeaders(),
+        ...(await this.tenantOptions()),
         errorMessage: "Service not found",
       },
     );
-    return mapServiceToEntity(catalogServiceResponseSchema.parse(resource));
+    return mapServiceToDTO(catalogServiceResponseSchema.parse(resource));
   }
 
   async create(command: CreateCatalogServiceCommand, token?: string): Promise<CatalogService> {
@@ -124,7 +167,7 @@ export class CatalogServiceApiGateway
       command,
       {
         token: authToken,
-        headers: this.tenantHeaders(),
+        ...(await this.tenantOptions()),
         errorMessage: "Failed to create catalog service",
       },
     );
@@ -139,7 +182,7 @@ export class CatalogServiceApiGateway
       payload,
       {
         token: authToken,
-        headers: this.tenantHeaders(),
+        ...(await this.tenantOptions()),
         errorMessage: "Failed to update service",
       },
     );
@@ -154,7 +197,7 @@ export class CatalogServiceApiGateway
       undefined,
       {
         token: authToken,
-        headers: this.tenantHeaders(),
+        ...(await this.tenantOptions()),
         errorMessage: "Failed to change service status",
       },
     );
@@ -166,8 +209,8 @@ export class CatalogServiceApiGateway
       `${apiConfig.routes.catalogServices}/${encodeURIComponent(command.id)}`,
       {
         token: authToken,
-        headers: this.tenantHeaders(),
-        errorMessage: "Failed to delete service",
+        ...(await this.tenantOptions()),
+        errorMessage: "Failed to delete service"
       },
     );
   }

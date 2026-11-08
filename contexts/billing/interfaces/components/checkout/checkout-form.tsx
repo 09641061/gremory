@@ -10,6 +10,7 @@ import {
   Alert,
   AlertDescription,
 } from "@/contexts/shared/interfaces/components/ui/alert";
+import { useBillingI18n } from "@/contexts/billing/interfaces/i18n";
 
 interface CheckoutFormProps {
   onClose: () => void;
@@ -24,6 +25,7 @@ export function CheckoutForm({
   amountFormatted,
   onSuccessStateChange,
 }: CheckoutFormProps) {
+  const { t } = useBillingI18n();
   const stripe = useStripe();
   const elements = useElements();
   const [isProcessing, setIsProcessing] = useState(false);
@@ -54,7 +56,7 @@ export function CheckoutForm({
       if (result.error) {
         setErrorMessage(
           result.error.message ??
-            "Could not process payment with the provided card. Please verify your details and try again."
+            t.checkout.cardError
         );
         setIsProcessing(false);
       } else {
@@ -62,7 +64,7 @@ export function CheckoutForm({
       }
     } catch {
       setErrorMessage(
-        "An issue occurred while processing the transaction. Please try again."
+        t.checkout.genericError
       );
       setIsProcessing(false);
     }
@@ -72,7 +74,7 @@ export function CheckoutForm({
     <form onSubmit={handleSubmit} className="space-y-6">
       <Card className="rounded-lg border-border p-4 shadow-xs">
         <Label className="mb-2 text-xs text-foreground">
-          Card Details
+          {t.checkout.cardDetails}
         </Label>
 
         <CardElement
@@ -110,7 +112,7 @@ export function CheckoutForm({
           variant="outline"
           className="h-10 flex-1 rounded-md px-4 text-sm"
         >
-          Cancel
+          {t.checkout.cancel}
         </Button>
         <Button
           type="submit"
@@ -120,12 +122,12 @@ export function CheckoutForm({
           {isProcessing ? (
             <>
               <Loader2 className="size-4 animate-spin" />
-              <span>Processing...</span>
+              <span>{t.checkout.processing}</span>
             </>
           ) : (
             <>
               <Lock className="size-4" />
-              <span>Pay {amountFormatted ? amountFormatted : ""}</span>
+              <span>{t.checkout.payButton.replace("{amount}", amountFormatted ? amountFormatted : "")}</span>
             </>
           )}
         </Button>

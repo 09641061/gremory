@@ -12,7 +12,7 @@ import {
 } from "@/contexts/shared/interfaces/components/ui/dialog";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import { Spinner } from "@/contexts/shared/interfaces/components/ui/spinner";
-import { ErrorAlert } from "@/contexts/shared/interfaces/components/error";
+import { ErrorAlert } from "@/contexts/shared/interfaces/components/feedback/error";
 import { updateAppointmentAction } from "../../actions/update-appointment.action";
 import type { Appointment } from "../../../domain/model/entities/appointment";
 import type { ActionState } from "../../actions/action-state";
@@ -25,7 +25,6 @@ import { DeleteConfirmDialog } from "../confirm-dialogs/delete-confirm-dialog";
 import { AppointmentFormFields } from "./appointment-form-fields";
 import { computeAppointmentTimes } from "./scheduling-form-utils";
 import type { AppointmentFormValues } from "./types";
-import { toDateInputValue, toTimeInputValue } from "../scheduling-datetime";
 import { getTimeZoneParts } from "../scheduling-timezone.utils";
 
 interface RescheduleFormModalProps {
@@ -49,15 +48,16 @@ const initialActionState: ActionState<Appointment> = {
 
 function toFormValues(appointment: Appointment, timeZone: string): AppointmentFormValues {
   const parts = getTimeZoneParts(new Date(appointment.startsAt), timeZone);
-  const localStart = new Date(Date.UTC(parts.year, parts.month - 1, parts.day, parts.hour, parts.minute));
+  const pad = (value: number) => String(value).padStart(2, "0");
 
   return {
     title: appointment.title,
     serviceId: appointment.serviceId ?? "",
     customerId: appointment.customerId ?? "",
     employeeId: appointment.employeeId ?? "",
-    startDate: toDateInputValue(localStart),
-    startTime: toTimeInputValue(localStart),
+    startDate: `${parts.year}-${pad(parts.month)}-${pad(parts.day)}`,
+    startTime: `${pad(parts.hour)}:${pad(parts.minute)}`,
+    notes: appointment.notes ?? "",
   };
 }
 
@@ -116,6 +116,8 @@ export function RescheduleFormModal({
     startDate: values.startDate,
     startTime: values.startTime,
     durationMinutes: selectedService?.durationMinutes,
+    preparationMinutes: selectedService?.preparationMinutes,
+    cleanupMinutes: selectedService?.cleanupMinutes,
     timeZone,
   });
 

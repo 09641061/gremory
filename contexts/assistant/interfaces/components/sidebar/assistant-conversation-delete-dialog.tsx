@@ -1,6 +1,6 @@
 "use client";
 
-import { DeleteConfirmDialog } from "@/contexts/shared/interfaces/components/delete-confirm-dialog";
+import { DeleteConfirmDialog } from "@/contexts/shared/interfaces/components/dialogs/delete-confirm-dialog";
 import { useAssistantTranslations } from "@/contexts/assistant/interfaces/i18n";
 
 type AssistantConversationDeleteDialogProps = {

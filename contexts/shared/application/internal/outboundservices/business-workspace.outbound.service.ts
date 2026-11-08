@@ -1,26 +1,26 @@
-import "server-only";
-
-import { BusinessWorkspaceApiGateway } from "@/contexts/business/infrastructure/gateways/business-workspace-api.gateway";
-import { toHeaderViewModel } from "@/contexts/business/application/internal/queryservices/business-workspace-query.service";
 import type { WorkspaceHeaderViewModel } from "@/contexts/business/application/model/business-workspace.view-models";
-import type { BusinessWorkspaceSelection } from "@/contexts/business/infrastructure/gateways/business-workspace-api.gateway";
+import type { BusinessWorkspaceSelection } from "@/contexts/business/application/model/workspace-selection";
+import type { BusinessWorkspaceReader } from "@/contexts/business/application/ports/business-workspace-reader";
 
 /**
  * ACL towards Business for routing decisions. It exposes the workspace view
- * model only, so routing never reaches into Business transport shapes.
+ * model only, so routing never reaches into Business transport shapes. The
+ * consumer-owned port is provided by composition; this service is a pure
+ * adapter over the workspace reader.
  */
 export class BusinessWorkspaceOutboundService {
+  constructor(private readonly workspace: BusinessWorkspaceReader) {}
+
   async getWorkspace(
-    accessToken: string,
+    _accessToken: string,
     selection: BusinessWorkspaceSelection = {},
   ): Promise<WorkspaceHeaderViewModel> {
-    return toHeaderViewModel(
-      await new BusinessWorkspaceApiGateway(accessToken).getWorkspace(selection),
-      selection.establishmentId,
-    );
+    return this.workspace.getHeaderViewModel(selection);
   }
 }
 
-export function createBusinessWorkspaceOutboundService() {
-  return new BusinessWorkspaceOutboundService();
+export function createBusinessWorkspaceOutboundService(
+  workspace: BusinessWorkspaceReader,
+): BusinessWorkspaceOutboundService {
+  return new BusinessWorkspaceOutboundService(workspace);
 }

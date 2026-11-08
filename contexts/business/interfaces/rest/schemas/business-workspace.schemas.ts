@@ -27,7 +27,9 @@ const workspaceAccessPolicySchema = z
 
 const workspaceAuthorizationSchema = z
   .object({
-    role: z.enum(["OWNER", "MANAGER", "WORKER"]),
+    role: z.enum(["OWNER", "CUSTOM"]),
+    roleId: uuidSchema.nullable(),
+    roleName: z.string().min(1),
     scope: z.object({
       type: z.enum(["ORGANIZATION", "ESTABLISHMENT"]).nullish(),
       id: uuidSchema.nullish(),
@@ -36,10 +38,10 @@ const workspaceAuthorizationSchema = z
     capabilities: z.object({
       canEditOrganizationProfile: z.boolean(),
       canEditEstablishmentProfile: z.boolean(),
-      canManageMembers: z.boolean(),
+      canManageMembers: z.boolean().optional(),
       canManageBilling: z.boolean(),
       canOpenModules: z.boolean(),
-      canInviteUsers: z.boolean(),
+      canInviteUsers: z.boolean().optional(),
     }),
   })
   .nullable()
@@ -50,6 +52,7 @@ const establishmentResourceSchema = z.object({
   name: z.string().trim().min(1),
   photoUrl: z.string().nullable(),
   timeZone: z.string().nullable().optional(),
+  currency: z.enum(["USD", "PEN"]).nullish().default("USD"),
   effectivePermissions: z.array(z.string()).default([]),
   permissions: z.object({
     canRead: z.boolean(),
@@ -70,7 +73,7 @@ export const businessWorkspaceResourceSchema = z.object({
   // Drives the mandatory setup steps for a freshly registered owner. A member
   // who joined by invitation always reads COMPLETED, immediately.
   onboardingStatus: z
-    .enum(["ORGANIZATION_PENDING", "ESTABLISHMENT_PENDING", "PAYMENT_PENDING", "COMPLETED"])
+    .enum(["PAYMENT_PENDING", "PROFILE_PENDING", "ORGANIZATION_PENDING", "ESTABLISHMENT_PENDING", "COMPLETED"])
     .nullable(),
   onboardingCompleted: z.boolean(),
   organization: z

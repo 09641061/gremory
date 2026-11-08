@@ -15,9 +15,9 @@ export function useChangeCatalogServiceStatus(onSuccess?: () => void) {
     error: null,
   });
 
-  const changeStatus = (id: string, active: boolean) => {
+  const changeStatus = (id: string, active: boolean, establishmentId?: string) => {
     startTransition(async () => {
-      const result = await changeCatalogServiceStatusAction(id, active);
+      const result = await changeCatalogServiceStatusAction(id, active, establishmentId);
       setState(result);
 
       if (result.status === "success") {

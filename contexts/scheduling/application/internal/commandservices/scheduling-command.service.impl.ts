@@ -1,6 +1,4 @@
-import "server-only";
-
-import { SchedulingApiGateway } from "@/contexts/scheduling/infrastructure/gateways/scheduling-api.gateway";
+import type { SchedulingAppointmentsWriter } from "../../ports/scheduling-appointments";
 import { Appointment } from "../../../domain/model/entities/appointment";
 import { CreateAppointmentCommand } from "../../../domain/model/commands/create-appointment.command";
 import { RescheduleAppointmentCommand } from "../../../domain/model/commands/reschedule-appointment.command";
@@ -9,11 +7,7 @@ import { UpdateAppointmentCommand } from "../../../domain/model/commands/update-
 import { SchedulingCommandService } from "../../services/scheduling-command.service";
 
 export class SchedulingCommandServiceImpl implements SchedulingCommandService {
-  private readonly gateway: SchedulingApiGateway;
-
-  constructor(organizationId?: string) {
-    this.gateway = new SchedulingApiGateway(organizationId);
-  }
+  constructor(private readonly gateway: SchedulingAppointmentsWriter) {}
 
   createAppointment(command: CreateAppointmentCommand, token?: string): Promise<Appointment> {
     return this.gateway.createAppointment(command, token);
@@ -58,8 +52,4 @@ export class SchedulingCommandServiceImpl implements SchedulingCommandService {
   deleteAppointment(id: string, token?: string): Promise<void> {
     return this.gateway.deleteAppointment(id, token);
   }
-}
-
-export function createSchedulingCommandService(organizationId?: string) {
-  return new SchedulingCommandServiceImpl(organizationId);
 }

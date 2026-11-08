@@ -3,14 +3,14 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
-import { ErrorAlert } from "@/contexts/shared/interfaces/components/error";
+import { ErrorAlert } from "@/contexts/shared/interfaces/components/feedback/error";
 import { Spinner } from "@/contexts/shared/interfaces/components/ui/spinner";
 import { signOutAction } from "../actions/sign-out.action";
-import { useI18n } from "@/contexts/shared/interfaces/i18n";
+import { useIamI18n } from "../i18n";
 
 export function LogoutButton() {
   const router = useRouter();
-  const { t } = useI18n();
+  const { t } = useIamI18n();
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 

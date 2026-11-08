@@ -1,0 +1,9 @@
+export { LandingNavbar } from "./landing-navbar";
+export { HeroSection } from "./hero/hero-section";
+export { WhatsappMockup } from "./hero/whatsapp-mockup";
+export { HowItWorksSection } from "./how-it-works/how-it-works-section";
+export { OwnerSection } from "./owner/owner-section";
+export { PricingSection } from "./pricing/pricing-section";
+export { FaqSection } from "./faq/faq-section";
+export { FaqAccordion } from "./faq/faq-accordion";
+export { FinalCtaSection } from "./cta/final-cta-section";

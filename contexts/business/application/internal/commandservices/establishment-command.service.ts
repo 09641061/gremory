@@ -1,5 +1,3 @@
-import "server-only";
-
 import type {
   CreateEstablishmentCommand,
   DeleteEstablishmentCommand,
@@ -14,8 +12,6 @@ import type {
   EstablishmentCommandService,
   EstablishmentPhotoStorage,
 } from "../../services/business.services";
-import { EstablishmentApiGateway } from "@/contexts/business/infrastructure/gateways/establishment-api.gateway";
-import { createEstablishmentPhotoAdapter } from "@/contexts/business/infrastructure/adapters/establishment-photo.adapter";
 
 export class EstablishmentCommandServiceImpl implements EstablishmentCommandService {
   constructor(
@@ -26,7 +22,7 @@ export class EstablishmentCommandServiceImpl implements EstablishmentCommandServ
   async create(command: CreateEstablishmentCommand) {
     const organizationId = createOrganizationId(command.organizationId);
     const photo = command.photoFile
-      ? await this.photos.upload(command.photoFile as File, organizationId)
+      ? await this.photos.upload(command.photoFile, organizationId)
       : createEstablishmentPhoto(command.photoUrl);
 
     const establishment = await this.establishments.create(
@@ -34,6 +30,7 @@ export class EstablishmentCommandServiceImpl implements EstablishmentCommandServ
       createEstablishmentName(command.name),
       photo,
       command.timeZone ?? "UTC",
+      command.currency ?? "USD",
     );
     return establishment.id;
   }
@@ -44,7 +41,7 @@ export class EstablishmentCommandServiceImpl implements EstablishmentCommandServ
     if (!establishment) throw new Error("Establishment not found");
 
     const photo = await this.resolvePhoto(id, establishment.organizationId, command);
-    establishment.update(command.name, photo.value, command.timeZone, command.ownerAvailableForScheduling);
+    establishment.update(command.name, photo.value, command.timeZone, command.ownerAvailableForScheduling, command.currency);
     const saved = await this.establishments.save(establishment);
     return saved.id;
   }
@@ -54,7 +51,7 @@ export class EstablishmentCommandServiceImpl implements EstablishmentCommandServ
     const establishment = await this.establishments.findById(id);
     if (!establishment) throw new Error("Establishment not found");
 
-    return this.establishments.delete(id, establishment.organizationId);
+    await this.establishments.delete(id, establishment.organizationId);
   }
 
   /** A replacement wins over a removal: both together is a contradictory intent. */
@@ -63,7 +60,7 @@ export class EstablishmentCommandServiceImpl implements EstablishmentCommandServ
     organizationId: ReturnType<typeof createOrganizationId>,
     command: UpdateEstablishmentCommand,
   ) {
-    if (command.photoFile) return this.photos.upload(command.photoFile as File, organizationId);
+    if (command.photoFile) return this.photos.upload(command.photoFile, organizationId);
 
     if (command.removePhoto) {
       await this.photos.remove(id);
@@ -74,9 +71,9 @@ export class EstablishmentCommandServiceImpl implements EstablishmentCommandServ
   }
 }
 
-export function createEstablishmentCommandService(): EstablishmentCommandService {
-  return new EstablishmentCommandServiceImpl(
-    new EstablishmentApiGateway(),
-    createEstablishmentPhotoAdapter(),
-  );
+export function createEstablishmentCommandService(
+  establishments: EstablishmentRepository,
+  photos: EstablishmentPhotoStorage,
+): EstablishmentCommandService {
+  return new EstablishmentCommandServiceImpl(establishments, photos);
 }

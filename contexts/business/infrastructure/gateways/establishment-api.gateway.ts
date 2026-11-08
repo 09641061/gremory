@@ -19,7 +19,11 @@ import {
 } from "../http/business-api.client";
 import { requireBusinessAccessToken } from "../session/business-session";
 import { apiConfig } from "@/api.config";
-import { establishmentResponseSchema } from "../../interfaces/rest/schemas/establishment.schemas";
+import {
+  establishmentResponseSchema,
+  whatsappStatusResponseSchema,
+  type WhatsappStatusResponse,
+} from "../../interfaces/rest/schemas/establishment.schemas";
 
 export class EstablishmentApiGateway implements EstablishmentRepository {
   constructor(private readonly providedToken?: string) {}
@@ -29,6 +33,7 @@ export class EstablishmentApiGateway implements EstablishmentRepository {
     name: EstablishmentName,
     photoUrl: EstablishmentPhoto,
     timeZone: string,
+    currency?: "USD" | "PEN",
   ): Promise<Establishment> {
     const authToken = await requireBusinessAccessToken(this.providedToken);
     const resource = await businessPost<EstablishmentResource>(
@@ -38,9 +43,11 @@ export class EstablishmentApiGateway implements EstablishmentRepository {
         name: name.value,
         photoUrl: photoUrl.value,
         timeZone,
+        currency: currency ?? "USD",
       },
       authToken,
-      { "X-Organization-Id": organizationId.value },
+      undefined,
+      { tenantId: organizationId.value },
     );
     return toEstablishment(establishmentResponseSchema.parse(resource));
   }
@@ -72,7 +79,8 @@ export class EstablishmentApiGateway implements EstablishmentRepository {
     const resource = await businessGet<PageResource<EstablishmentResource>>(
       `${apiConfig.routes.establishments}/organization/${encodeURIComponent(organizationId.value)}?${params}`,
       authToken,
-      { "X-Organization-Id": organizationId.value },
+      undefined,
+      { tenantId: organizationId.value },
     );
     return {
       ...resource,
@@ -88,9 +96,11 @@ export class EstablishmentApiGateway implements EstablishmentRepository {
         name: establishment.name.value,
         photoUrl: establishment.photoUrl.value,
         timeZone: establishment.timeZone,
+        currency: establishment.currency,
       },
       authToken,
-      { "X-Organization-Id": establishment.organizationId.value },
+      undefined,
+      { tenantId: establishment.organizationId.value },
     );
     return toEstablishment(establishmentResponseSchema.parse(resource));
   }
@@ -108,7 +118,51 @@ export class EstablishmentApiGateway implements EstablishmentRepository {
     await businessDelete(
       `${apiConfig.routes.establishments}/${encodeURIComponent(id.value)}`,
       authToken,
-      { "X-Organization-Id": organizationId.value },
+      undefined,
+      { tenantId: organizationId.value },
+    );
+  }
+
+  async getWhatsappStatus(id: EstablishmentId, organizationId?: OrganizationId): Promise<WhatsappStatusResponse> {
+    const authToken = await requireBusinessAccessToken(this.providedToken);
+    const resource = await businessGet<unknown>(
+      `${apiConfig.routes.establishments}/${encodeURIComponent(id.value)}/whatsapp`,
+      authToken,
+      undefined,
+      organizationId ? { tenantId: organizationId.value } : undefined,
+    );
+    return whatsappStatusResponseSchema.parse(resource);
+  }
+
+  async connectWhatsapp(
+    id: EstablishmentId,
+    code: string,
+    organizationId?: OrganizationId,
+    wabaId?: string | null,
+    phoneNumberId?: string | null,
+  ): Promise<WhatsappStatusResponse> {
+    const authToken = await requireBusinessAccessToken(this.providedToken);
+    const resource = await businessPost<unknown>(
+      `${apiConfig.routes.establishments}/${encodeURIComponent(id.value)}/whatsapp/connect`,
+      {
+        code,
+        ...(wabaId ? { wabaId } : {}),
+        ...(phoneNumberId ? { phoneNumberId } : {}),
+      },
+      authToken,
+      undefined,
+      organizationId ? { tenantId: organizationId.value } : undefined,
+    );
+    return whatsappStatusResponseSchema.parse(resource);
+  }
+
+  async disconnectWhatsapp(id: EstablishmentId, organizationId?: OrganizationId): Promise<void> {
+    const authToken = await requireBusinessAccessToken(this.providedToken);
+    await businessDelete(
+      `${apiConfig.routes.establishments}/${encodeURIComponent(id.value)}/whatsapp`,
+      authToken,
+      undefined,
+      organizationId ? { tenantId: organizationId.value } : undefined,
     );
   }
 }
@@ -120,6 +174,7 @@ function toEstablishment(resource: EstablishmentResource): Establishment {
     name: createEstablishmentName(resource.name),
     photoUrl: createEstablishmentPhoto(resource.photoUrl),
     timeZone: resource.timeZone ?? "UTC",
+    currency: resource.currency === "PEN" ? "PEN" : "USD",
     active: true,
     ownerAvailableForScheduling: resource.ownerAvailableForScheduling,
   });

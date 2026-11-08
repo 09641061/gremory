@@ -16,12 +16,17 @@ vi.mock("next/headers", () => ({
   headers: mocks.headers,
 }));
 
-vi.mock("@/contexts/business/application/internal/queryservices/business-workspace-query.service", () => ({
-  createBusinessWorkspaceQueryService: () => mocks.workspace,
+vi.mock("@/contexts/business/interfaces/server/business-composition", () => ({
+  composeBusinessAdapters: () => ({
+    workspaceQueryService: mocks.workspace,
+  }),
 }));
 
-vi.mock("@/contexts/shared/application/internal/queryservices/plan-home-route-query.service", () => ({
-  createPlanHomeRouteQueryService: () => mocks.planHome,
+vi.mock("@/contexts/shared/interfaces/server/shared-composition", () => ({
+  composeSharedAdapters: () => ({
+    planHomeRouteQueryService: mocks.planHome,
+    entryRouteQueryService: { resolveRoute: vi.fn() },
+  }),
 }));
 
 import { resolveConfigurationBackHref } from "@/app/(protected)/(configuration)/layout";

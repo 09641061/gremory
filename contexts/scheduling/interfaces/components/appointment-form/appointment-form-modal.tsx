@@ -7,7 +7,7 @@ import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import { Label } from "@/contexts/shared/interfaces/components/ui/label";
 import { Input } from "@/contexts/shared/interfaces/components/ui/input";
 import { createAppointmentAction } from "../../actions/create-appointment.action";
-import { ErrorAlert } from "@/contexts/shared/interfaces/components/error";
+import { ErrorAlert } from "@/contexts/shared/interfaces/components/feedback/error";
 import { Appointment } from "../../../domain/model/entities/appointment";
 import { ActionState } from "../../actions/action-state";
 import type {
@@ -109,6 +109,8 @@ export function AppointmentFormModal({
     startDate,
     startTime,
     durationMinutes: selectedService?.durationMinutes,
+    preparationMinutes: selectedService?.preparationMinutes,
+    cleanupMinutes: selectedService?.cleanupMinutes,
     timeZone,
   });
 

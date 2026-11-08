@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import { describe, expect, it } from "vitest";
 
 import * as upgradePageModule from "@/app/(protected)/upgrade/page";
-import { PageLoading } from "@/contexts/shared/interfaces/components/page-loading";
+import { PageLoading } from "@/contexts/shared/interfaces/components/feedback/page-loading";
 
 describe("UpgradePage cache strategy", () => {
   it("keeps request-bound billing work behind a Suspense boundary", () => {

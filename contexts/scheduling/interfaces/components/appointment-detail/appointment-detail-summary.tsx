@@ -1,6 +1,7 @@
 "use client";
 
 import { CalendarCheck, Tag } from "lucide-react";
+import { useSchedulingTranslations } from "../../i18n";
 
 interface AppointmentDetailSummaryProps {
   title: string;
@@ -15,6 +16,7 @@ export function AppointmentDetailSummary({
   statusLabel,
   statusClassName,
 }: AppointmentDetailSummaryProps) {
+  const { t } = useSchedulingTranslations();
   return (
     <div className="flex items-start justify-between gap-4">
       <div className="flex-1">
@@ -26,7 +28,7 @@ export function AppointmentDetailSummary({
           <div className="flex items-center gap-1.5">
             <Tag className="size-3.5 text-muted-foreground" />
             <span>
-              Service: <span className="font-medium text-foreground">{serviceName}</span>
+              {t.form.serviceLabel}: <span className="font-medium text-foreground">{serviceName}</span>
             </span>
           </div>
         </div>

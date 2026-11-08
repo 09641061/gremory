@@ -15,9 +15,9 @@ export function useDeleteServiceCategory(onSuccess?: () => void) {
     error: null,
   });
 
-  const deleteCategory = (id: string) => {
+  const deleteCategory = (id: string, establishmentId?: string) => {
     startTransition(async () => {
-      const result = await deleteServiceCategoryAction(id);
+      const result = await deleteServiceCategoryAction(id, establishmentId);
       setState(result);
 
       if (result.status === "success") {

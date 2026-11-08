@@ -1,20 +1,13 @@
 import { NextResponse } from "next/server";
+import { safePublicError } from "@/contexts/shared/interfaces/actions/safe-error";
 import { z } from "zod";
-import { ListPlansQueryService } from "@/contexts/billing/application/internal/queryservices/list-plans-query.service";
+import { composeBillingAdapters } from "@/contexts/billing/interfaces/server/billing-composition";
 
 const currencySchema = z.enum(["PEN", "USD", "EUR"]);
 
-function routeErrorResponse(error: unknown): Response {
-  if (error instanceof Error) {
-    const status = (error as Error & { status?: unknown }).status;
-    if (typeof status === "number" && !Number.isNaN(status)) {
-      return NextResponse.json({ message: error.message }, { status });
-    }
-
-    return NextResponse.json({ message: error.message }, { status: 400 });
-  }
-
-  return NextResponse.json({ message: "Unexpected error" }, { status: 500 });
+function routeErrorResponse(error: unknown, fallback = "Request could not be completed"): Response {
+  const safe = safePublicError(error, fallback);
+  return NextResponse.json({ message: safe.message }, { status: safe.status });
 }
 
 export async function GET(request: Request) {
@@ -27,7 +20,7 @@ export async function GET(request: Request) {
       return NextResponse.json({ message: parsedCurrency.error.issues[0]?.message ?? "Invalid currency" }, { status: 400 });
     }
 
-    const plans = new ListPlansQueryService().getAvailablePlans(parsedCurrency.data ?? "USD");
+    const plans = await composeBillingAdapters().listPlansService.getAvailablePlans(parsedCurrency.data ?? "USD");
     return NextResponse.json(plans);
   } catch (error) {
     return routeErrorResponse(error);

@@ -15,9 +15,9 @@ export function useDeleteCatalogService(onSuccess?: () => void) {
     error: null,
   });
 
-  const deleteService = (id: string) => {
+  const deleteService = (id: string, establishmentId?: string) => {
     startTransition(async () => {
-      const result = await deleteCatalogServiceAction(id);
+      const result = await deleteCatalogServiceAction(id, establishmentId);
       setState(result);
 
       if (result.status === "success") {

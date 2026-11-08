@@ -45,6 +45,22 @@ describe("IAM client components", () => {
     expect(screen.getByRole("button", { name: "Continue with email" })).toBeEnabled();
   });
 
+  it("should present registration controls for a new invitation recipient", () => {
+    render(
+      <AuthForm
+        intent="register"
+        returnTo="/invitations/accept?token=raw-token"
+      />,
+    );
+
+    expect(screen.getByRole("heading", { name: "Create your Takodu account" })).toBeVisible();
+    expect(screen.getByRole("button", { name: "Sign up with Google" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Sign up with email" })).toBeEnabled();
+    expect(document.querySelector('input[name="returnTo"]')).toHaveValue(
+      "/invitations/accept?token=raw-token",
+    );
+  });
+
   it("should navigate to login when sign-out succeeds", async () => {
     // Arrange
     const user = userEvent.setup();
@@ -85,7 +101,7 @@ describe("IAM client components", () => {
       accessToken: "a",
       refreshToken: "r",
     }));
-    await waitFor(() => expect(mocks.router.replace).toHaveBeenCalledWith("/welcome"));
+    await waitFor(() => expect(mocks.router.replace).toHaveBeenCalledWith("/"));
   });
 
   it("should exchange a Google callback code once and return to the requested path", async () => {
@@ -158,6 +174,6 @@ describe("IAM client components", () => {
     render(<AuthCallback />);
 
     // Assert
-    await waitFor(() => expect(mocks.router.replace).toHaveBeenCalledWith("/welcome"));
+    await waitFor(() => expect(mocks.router.replace).toHaveBeenCalledWith("/"));
   });
 });

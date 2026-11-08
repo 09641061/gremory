@@ -10,6 +10,7 @@ export type Appointment = Readonly<{
   employeeId: string | null;
   establishmentId: string | null;
   status: AppointmentStatusType;
+  notes?: string | null;
   createdBy: string | null;
   cancellationReason: string | null;
   cancelledAt: string | null;

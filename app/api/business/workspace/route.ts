@@ -1,27 +1,16 @@
 import { NextResponse } from "next/server";
+import { safePublicError } from "@/contexts/shared/interfaces/actions/safe-error";
 
-import { BusinessWorkspaceApiGateway } from "@/contexts/business/infrastructure/gateways/business-workspace-api.gateway";
+import { composeBusinessAdapters } from "@/contexts/business/interfaces/server/business-composition";
 
-function routeErrorResponse(error: unknown): Response {
-  if (error instanceof Error) {
-    const status = (error as Error & { status?: unknown }).status;
-    if (typeof status === "number" && !Number.isNaN(status)) {
-      return NextResponse.json({ message: error.message }, { status });
-    }
-
-    if (error.message === "Authentication is required") {
-      return NextResponse.json({ message: error.message }, { status: 401 });
-    }
-
-    return NextResponse.json({ message: error.message }, { status: 500 });
-  }
-
-  return NextResponse.json({ message: "Unexpected error" }, { status: 500 });
+function routeErrorResponse(error: unknown, fallback = "Request could not be completed"): Response {
+  const safe = safePublicError(error, fallback);
+  return NextResponse.json({ message: safe.message }, { status: safe.status });
 }
 
 export async function GET() {
   try {
-    const workspace = await new BusinessWorkspaceApiGateway().getWorkspace();
+    const workspace = await composeBusinessAdapters().workspaceReader.fetchResource();
     return NextResponse.json(workspace);
   } catch (error) {
     return routeErrorResponse(error);

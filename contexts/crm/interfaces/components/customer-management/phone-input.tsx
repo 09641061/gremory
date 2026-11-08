@@ -4,6 +4,7 @@ import * as React from "react";
 
 import { Input } from "@/contexts/shared/interfaces/components/ui/input";
 import { Label } from "@/contexts/shared/interfaces/components/ui/label";
+import { useCrmTranslations } from "@/contexts/crm/interfaces/i18n";
 
 interface PhoneInputProps {
   id: string;
@@ -22,19 +23,20 @@ export function PhoneInput({
   onCountryCodeChange,
   required = false,
 }: PhoneInputProps) {
+  const t = useCrmTranslations();
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     onChange(e.target.value.replace(/\D/g, ""));
   };
 
   return (
     <div className="space-y-1.5">
-      <Label htmlFor={id}>Phone number</Label>
+      <Label htmlFor={id}>{t.form.phoneLabel}</Label>
       <div className="flex items-center gap-2">
         <Input
-          aria-label="Country code"
+          aria-label={t.form.countryCodeLabel}
           value={countryCode}
           onChange={(e) => onCountryCodeChange(e.target.value.replace(/[^+\d]/g, ""))}
-          placeholder="+51"
+          placeholder={t.form.countryCodePlaceholder}
           className="w-24"
           required={required}
         />
@@ -42,7 +44,7 @@ export function PhoneInput({
           id={id}
           value={value}
           onChange={handlePhoneChange}
-          placeholder="Phone number"
+          placeholder={t.form.phonePlaceholder}
           required={required}
         />
       </div>

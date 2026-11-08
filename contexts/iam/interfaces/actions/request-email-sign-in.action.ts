@@ -4,7 +4,7 @@ import "server-only";
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { createEmail } from "../../domain/model/valueobjects/email";
-import { createIamAuthenticationCommandService } from "../../application/internal/commandservices/iam-authentication-command.service";
+import { composeIamAdapters } from "../server/iam-composition";
 import {
   iamSessionCookieOptions,
   iamSessionCookies,
@@ -31,8 +31,7 @@ export async function requestEmailSignInAction(
 
     await sendSignInEmail(input.email, returnTo);
 
-  } catch (error) {
-    console.error("Request email sign-in failed", error);
+  } catch {
     return {
       status: "error",
       error: "Unable to send the sign-in email. Please try again.",
@@ -45,7 +44,7 @@ export async function requestEmailSignInAction(
 }
 
 export async function sendSignInEmail(email: string, returnTo: string | null = null) {
-  await createIamAuthenticationCommandService().requestEmailSignIn({
+  await composeIamAdapters().authenticationWriter.requestEmailSignIn({
     email: createEmail(email),
   });
 

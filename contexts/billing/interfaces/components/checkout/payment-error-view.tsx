@@ -8,6 +8,7 @@ import {
   AlertDescription,
   AlertTitle,
 } from "@/contexts/shared/interfaces/components/ui/alert";
+import { useBillingI18n } from "@/contexts/billing/interfaces/i18n";
 
 interface PaymentErrorViewProps {
   message?: string;
@@ -15,14 +16,15 @@ interface PaymentErrorViewProps {
 }
 
 export function PaymentErrorView({ message, onClose }: PaymentErrorViewProps) {
+  const { t } = useBillingI18n();
+
   return (
     <div className="space-y-4 py-5 text-center">
       <Alert variant="destructive" className="justify-items-center border-destructive/20 bg-destructive/10 text-center">
         <AlertCircle className="size-5" />
-        <AlertTitle>Payment unavailable</AlertTitle>
+        <AlertTitle>{t.checkout.paymentUnavailable}</AlertTitle>
         <AlertDescription className="text-destructive">
-          {message ??
-            "Could not retrieve payment credentials. Please try again or contact support."}
+          {message ?? t.checkout.credentialsError}
         </AlertDescription>
       </Alert>
       <Button
@@ -31,7 +33,7 @@ export function PaymentErrorView({ message, onClose }: PaymentErrorViewProps) {
         variant="secondary"
         className="h-10 rounded-md px-4 text-sm"
       >
-        Close
+        {t.checkout.close}
       </Button>
     </div>
   );

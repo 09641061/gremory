@@ -5,10 +5,10 @@ import Link from "next/link";
 import { Card, CardContent } from "@/contexts/shared/interfaces/components/ui/card";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import { Sparkles, ArrowRight } from "lucide-react";
-import { useAnalyticsTranslations } from "../../i18n";
+import { useAnalyticsI18n } from "../../i18n";
 
 export function AnalyticsPlanGate() {
-  const { t } = useAnalyticsTranslations();
+  const { t } = useAnalyticsI18n();
 
   return (
     <Card className="mt-8 border-primary/20 bg-linear-to-r from-primary/5 via-primary/10 to-transparent">

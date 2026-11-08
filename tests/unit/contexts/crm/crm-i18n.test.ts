@@ -3,6 +3,8 @@ import {
   en,
   es,
   getCrmDictionary,
+  useCrmI18n,
+  useCrmTranslations,
 } from "@/contexts/crm/interfaces/i18n";
 
 describe("CRM i18n translations", () => {
@@ -34,5 +36,10 @@ describe("CRM i18n translations", () => {
     expect(getCrmDictionary("es")).toBe(es);
     expect(getCrmDictionary("en")).toBe(en);
     expect(getCrmDictionary(null)).toBe(en);
+  });
+
+  it("should export useCrmI18n and useCrmTranslations hooks", () => {
+    expect(typeof useCrmI18n).toBe("function");
+    expect(useCrmTranslations).toBe(useCrmI18n);
   });
 });

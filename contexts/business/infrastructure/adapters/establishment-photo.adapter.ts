@@ -1,6 +1,7 @@
 import "server-only";
 
 import type { EstablishmentPhotoStorage } from "@/contexts/business/application/services/business.services";
+import type { CommandFileMetadata } from "@/contexts/business/domain/model/commands/business.commands";
 import { EstablishmentApiGateway } from "@/contexts/business/infrastructure/gateways/establishment-api.gateway";
 import type { EstablishmentId } from "@/contexts/business/domain/model/valueobjects/establishment-id.vo";
 import type { OrganizationId } from "@/contexts/business/domain/model/valueobjects/organization-id.vo";
@@ -10,46 +11,44 @@ import {
 } from "@/contexts/business/domain/model/valueobjects/establishment-photo.vo";
 import { requireBusinessAccessToken } from "@/contexts/business/infrastructure/session/business-session";
 import { apiConfig } from "@/api.config";
+import { apiClient } from "@/contexts/shared/infrastructure/http/api-client";
+import { z } from "zod";
+import { BusinessApiError } from "../http/business-api.client";
 
-type EstablishmentPhotoUploadResponse = {
-  message?: unknown;
-  detail?: unknown;
-  storedPath?: string;
-  photoUrl?: string;
-};
+const establishmentPhotoUploadResponseSchema = z
+  .object({
+    storedPath: z.string().optional(),
+    photoUrl: z.string().optional(),
+  })
+  .strict();
 
 export class EstablishmentPhotoAdapter implements EstablishmentPhotoStorage {
   constructor(private readonly providedToken?: string) {}
 
-  async upload(photo: File, organizationId: OrganizationId): Promise<EstablishmentPhoto> {
+  async upload(
+    photo: CommandFileMetadata | File,
+    organizationId: OrganizationId,
+  ): Promise<EstablishmentPhoto> {
     const authToken = await requireBusinessAccessToken(this.providedToken);
     const formData = new FormData();
-    formData.set("file", photo);
-
-    const response = await fetch(`${apiConfig.baseUrl}${apiConfig.routes.establishmentImages}`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${authToken}`,
-        "X-Organization-Id": organizationId.value,
-      },
-      body: formData,
-    });
-
-    const data = (await response.json().catch(() => null)) as EstablishmentPhotoUploadResponse | null;
-
-    if (!response.ok) {
-      const message =
-        typeof data?.message === "string" && data.message.trim()
-          ? data.message
-          : typeof data?.detail === "string" && data.detail.trim()
-            ? data.detail
-            : "Failed to upload establishment image";
-      throw new Error(message);
+    if (photo instanceof File) {
+      formData.set("file", photo);
+    } else {
+      const blob = new Blob([photo.bytes.buffer as ArrayBuffer], { type: photo.type });
+      formData.set("file", blob, photo.name);
     }
 
-    const storedReference = data?.photoUrl ?? data?.storedPath;
+    const raw = await apiClient.requestMultipart<unknown>(apiConfig.routes.establishmentImages, formData, {
+      method: "POST",
+      token: authToken,
+      tenantId: organizationId.value,
+      errorMessage: "Failed to upload establishment image",
+      errorType: BusinessApiError,
+    });
+    const data = establishmentPhotoUploadResponseSchema.parse(raw);
+    const storedReference = data.photoUrl ?? data.storedPath;
     if (!storedReference) {
-      throw new Error("Failed to upload establishment image");
+      throw new BusinessApiError("Failed to upload establishment image", 502);
     }
 
     return createEstablishmentPhoto(storedReference);

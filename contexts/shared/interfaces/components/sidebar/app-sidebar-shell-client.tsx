@@ -28,7 +28,7 @@ export function AppShellSidebarClient({
   // Use client pathname for active state detection and route checks
   const pathname = usePathname();
 
-  const isSetupRoute = pathname === "/organizations/new";
+  const isSetupRoute = pathname === "/onboarding/profile" || pathname === "/organizations/new";
 
   return (
     <AppSidebar

@@ -6,6 +6,8 @@ import type { EstablishmentListItem } from "./establishments-page";
 import { updateEstablishmentAction } from "@/contexts/business/interfaces/actions/establishment.actions";
 import { EntityProfileCard } from "@/contexts/business/interfaces/components/entity-profile-card/entity-profile-card";
 import { TimeZoneField } from "../time-zone-field";
+import { CurrencyField } from "../currency-field";
+import { EstablishmentWhatsappSection } from "./establishment-whatsapp-section";
 import { cn } from "@/lib/utils";
 import { useBusinessTranslations } from "@/contexts/business/interfaces/i18n";
 
@@ -24,11 +26,13 @@ export function EstablishmentDetailCard({
 }: EstablishmentDetailCardProps) {
   const { t } = useBusinessTranslations();
   const [timeZone, setTimeZone] = useState(establishment?.timeZone ?? "America/Lima");
+  const [currency, setCurrency] = useState(establishment?.currency ?? "USD");
   const [prevEstablishmentId, setPrevEstablishmentId] = useState(establishment?.id ?? null);
 
   if ((establishment?.id ?? null) !== prevEstablishmentId) {
     setPrevEstablishmentId(establishment?.id ?? null);
     setTimeZone(establishment?.timeZone ?? "America/Lima");
+    setCurrency(establishment?.currency ?? "USD");
   }
 
   if (!establishment) {
@@ -51,8 +55,8 @@ export function EstablishmentDetailCard({
     <div className={cn("hidden flex-1 lg:block", className)}>
       <EntityProfileCard
         key={establishment.id}
-        entityLabel="Establishment"
-        photoNoun="photo"
+        entityLabel={t.establishments.singleLabel}
+        photoNoun={t.establishments.photoNoun}
         icon={Store}
         entityId={establishment.id}
         entityName={establishment.name}
@@ -62,24 +66,49 @@ export function EstablishmentDetailCard({
         onCancel={onCancel}
         className="lg:ml-3 lg:h-(--app-page-viewport-height)"
         extraFields={
-          <div className="flex flex-col border-t border-border">
-            <div className="space-y-4 p-6">
-              <div className="space-y-1">
-                <h3 className="text-base font-semibold text-foreground">{t.establishments.timeZoneTitle}</h3>
-                <p className="text-sm text-muted-foreground">
-                  {t.establishments.timeZoneDescription}
-                </p>
-              </div>
-              <div className="max-w-xs">
-                <TimeZoneField
-                  name="timeZone"
-                  value={timeZone}
-                  onChange={setTimeZone}
-                  disabled={!canUpdate}
-                />
+          <>
+            <div className="flex flex-col border-t border-border">
+              <div className="space-y-4 p-6">
+                <div className="space-y-1">
+                  <h3 className="text-base font-semibold text-foreground">{t.establishments.timeZoneTitle}</h3>
+                  <p className="text-sm text-muted-foreground">
+                    {t.establishments.timeZoneDescription}
+                  </p>
+                </div>
+                <div className="max-w-xs">
+                  <TimeZoneField
+                    name="timeZone"
+                    value={timeZone}
+                    onChange={setTimeZone}
+                    disabled={!canUpdate}
+                  />
+                </div>
               </div>
             </div>
-          </div>
+            <div className="flex flex-col border-t border-border">
+              <div className="space-y-4 p-6">
+                <div className="space-y-1">
+                  <h3 className="text-base font-semibold text-foreground">{t.establishments.currencyTitle}</h3>
+                  <p className="text-sm text-muted-foreground">
+                    {t.establishments.currencyDescription}
+                  </p>
+                </div>
+                <div className="max-w-xs">
+                  <CurrencyField
+                    name="currency"
+                    value={currency}
+                    onChange={setCurrency}
+                    disabled={!canUpdate}
+                  />
+                </div>
+              </div>
+            </div>
+            <EstablishmentWhatsappSection
+              key={`whatsapp-${establishment.id}`}
+              establishmentId={establishment.id}
+              canUpdate={canUpdate}
+            />
+          </>
         }
       />
     </div>

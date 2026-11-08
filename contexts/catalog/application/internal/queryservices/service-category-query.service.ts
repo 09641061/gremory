@@ -1,42 +1,40 @@
-import "server-only";
-
-import type { PageResponse } from "../../../domain/services/catalog-service.services";
 import type { ServiceCategoryQueryService } from "../../../domain/services/service-category.services";
+import type { PageResponse } from "@/contexts/shared/application/model/page-response";
 import type { CategoryDTO } from "../../model/catalog-view.models";
-import { ServiceCategoryApiGateway } from "../../../infrastructure/gateways/service-category-api.gateway";
-import { createServiceCategoryReadModel } from "../../model/service-category.read-model";
+import {
+  type ServiceCategoryApiPort,
+  type CatalogAccessContext,
+} from "../../ports/service-category-port";
 
 export class ServiceCategoryQueryServiceImpl implements ServiceCategoryQueryService {
-  constructor(private readonly organizationId?: string) {}
+  constructor(
+    private readonly gateway: ServiceCategoryApiPort,
+    private readonly access: CatalogAccessContext,
+  ) {}
 
   async list(
     establishmentId: string,
     page?: number,
     size?: number,
-    token?: string
+    token?: string,
   ): Promise<PageResponse<CategoryDTO>> {
-    const authToken = await resolveAccessToken(token);
-    const result = await new ServiceCategoryApiGateway(this.organizationId).list(
-      establishmentId,
-      page,
-      size,
-      authToken,
-    );
-    return {
-      ...result,
-      content: result.content.map(createServiceCategoryReadModel),
-    };
+    const authToken = token ?? (await this.access.getAccessToken());
+    return this.gateway.list(establishmentId, page, size, authToken);
+  }
+
+  async getById(
+    id: string,
+    establishmentId: string,
+    token?: string,
+  ): Promise<CategoryDTO | null> {
+    const authToken = token ?? (await this.access.getAccessToken());
+    return this.gateway.getById(id, establishmentId, authToken);
   }
 }
 
-export function createServiceCategoryQueryService(organizationId?: string) {
-  return new ServiceCategoryQueryServiceImpl(organizationId);
-}
-
-async function resolveAccessToken(providedToken?: string): Promise<string | undefined> {
-  if (providedToken) return providedToken;
-  const { cookies } = await import("next/headers");
-  const { iamSessionCookies } = await import("@/contexts/iam/infrastructure/session/iam-session-cookie");
-  const cookieStore = await cookies();
-  return cookieStore.get(iamSessionCookies.accessToken)?.value;
+export function createServiceCategoryQueryService(
+  gateway: ServiceCategoryApiPort,
+  access: CatalogAccessContext,
+): ServiceCategoryQueryService {
+  return new ServiceCategoryQueryServiceImpl(gateway, access);
 }

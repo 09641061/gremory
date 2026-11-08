@@ -2,13 +2,14 @@
 
 import { useEffect } from "react";
 import { useDeleteCatalogService } from "../../hooks/use-delete-catalog-service";
-import { DeleteConfirmDialog } from "@/contexts/shared/interfaces/components/delete-confirm-dialog";
+import { DeleteConfirmDialog } from "@/contexts/shared/interfaces/components/dialogs/delete-confirm-dialog";
 
 import { useCatalogTranslations } from "../../i18n";
 
 interface DeleteServiceDialogProps {
   serviceId: string;
   serviceName: string;
+  establishmentId?: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess?: () => void;
@@ -17,6 +18,7 @@ interface DeleteServiceDialogProps {
 export function DeleteServiceDialog({
   serviceId,
   serviceName,
+  establishmentId,
   open,
   onOpenChange,
   onSuccess,
@@ -46,7 +48,7 @@ export function DeleteServiceDialog({
       entityName={serviceName}
       pending={pending}
       error={state.status === "error" ? state.error : null}
-      onConfirm={() => deleteService(serviceId)}
+      onConfirm={() => deleteService(serviceId, establishmentId)}
     />
   );
 }

@@ -1,21 +1,13 @@
 import "server-only";
 
-import { createBusinessWorkspaceQueryService } from "@/contexts/business/application/internal/queryservices/business-workspace-query.service";
-import { AssistantApiGateway } from "@/contexts/assistant/infrastructure/gateways/assistant-api.gateway";
-import { AssistantConversationRepositoryImpl } from "@/contexts/assistant/infrastructure/repositories/assistant-conversation.repository";
+import { composeAssistantAdapters } from "../server/assistant-composition";
+import type { AssistantConversationsPort } from "../../application/ports/assistant-port";
 
-export async function createAssistantConversationRepository(
-  establishmentId?: string | null,
-): Promise<AssistantConversationRepositoryImpl> {
-  const workspace = await createBusinessWorkspaceQueryService().getHeaderViewModel({
-    establishmentId: establishmentId ?? undefined,
-  });
-
-  if (!workspace.organization) {
-    throw new Error("An active organization is required to use the assistant");
-  }
-
-  return new AssistantConversationRepositoryImpl(
-    new AssistantApiGateway(workspace.organization.id),
-  );
+/**
+ * Resolves the assistant conversation port for an action. The current
+ * composition ignores the establishmentId (it is provided per-call); callers
+ * pass it explicitly to the command service.
+ */
+export async function createAssistantConversationRepository(): Promise<AssistantConversationsPort> {
+  return composeAssistantAdapters().conversations;
 }

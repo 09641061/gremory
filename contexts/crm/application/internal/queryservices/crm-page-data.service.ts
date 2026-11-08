@@ -1,6 +1,4 @@
-import "server-only";
-
-import { createCrmQueryService } from "./crm-query.service";
+import type { CrmQueryService } from "../../services/crm-query.service";
 import { createCrmAccessPolicyService, CrmPermissions } from "./crm-access-policy.service";
 import { PageResponse } from "../../services/crm-query.service";
 import { CustomerResponse } from "../../../domain/model/entities/customer";
@@ -26,7 +24,8 @@ export async function getCrmPageData(
   search: string,
   page: number,
   size: number,
-  providedPermissions?: CrmPermissions,
+  providedPermissions: CrmPermissions | undefined,
+  queryService: CrmQueryService,
 ): Promise<CrmPageData> {
   const policyService = createCrmAccessPolicyService();
   const establishmentId = requestedEstablishmentId;
@@ -38,11 +37,9 @@ export async function getCrmPageData(
   }
 
   try {
-    const queryService = createCrmQueryService(organizationId);
     const customersPage = await queryService.search(establishmentId, search, page, size);
     return { establishmentId, permissions, customersPage, searchFailed: false };
-  } catch (error) {
-    console.error("Failed to fetch CRM customers:", error);
+  } catch {
     return { establishmentId, permissions, customersPage: EMPTY_PAGE, searchFailed: true };
   }
 }

@@ -1,8 +1,11 @@
 import { NextResponse } from "next/server";
+import { safePublicError } from "@/contexts/shared/interfaces/actions/safe-error";
 import { z } from "zod";
-import { createBillingInvoicesAdapter } from "@/contexts/billing/infrastructure/adapters/billing-invoices.adapter";
+import { composeBillingAdapters } from "@/contexts/billing/interfaces/server/billing-composition";
 import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-session-cookie";
 import { cookies } from "next/headers";
+import { requireSubscriptionOwnerAccess } from "@/contexts/billing/interfaces/authorization/billing-authorization";
+import { createCorrelationId } from "@/contexts/shared/infrastructure/http/api-client";
 
 const uuidSchema = z.string().uuid();
 
@@ -30,9 +33,11 @@ export async function GET(
       return NextResponse.json({ message: "Authentication is required" }, { status: 401 });
     }
 
-    const invoice = await createBillingInvoicesAdapter().getInvoiceById(
+    const billingContext = await requireSubscriptionOwnerAccess(createCorrelationId());
+    const invoice = await composeBillingAdapters().invoiceQueryService.getInvoiceById(
       accessToken,
       parsed.data,
+      billingContext,
     );
     return NextResponse.json(invoice);
   } catch (error) {
@@ -40,36 +45,7 @@ export async function GET(
   }
 }
 
-function routeErrorResponse(error: unknown): Response {
-  if (error instanceof Error) {
-    const status = readStatus(error);
-    if (status !== undefined) {
-      const details = readDetails(error);
-      return NextResponse.json(
-        details === undefined
-          ? { message: error.message }
-          : { message: error.message, details },
-        { status },
-      );
-    }
-
-    if (error.message === "Authentication is required") {
-      return NextResponse.json({ message: error.message }, { status: 401 });
-    }
-
-    return NextResponse.json({ message: error.message }, { status: 400 });
-  }
-
-  return NextResponse.json({ message: "Unexpected error" }, { status: 500 });
-}
-
-function readStatus(error: Error): number | undefined {
-  const status = (error as Error & { status?: unknown }).status;
-  if (typeof status !== "number" || Number.isNaN(status)) return undefined;
-  if (status <= 0) return 502;
-  return status;
-}
-
-function readDetails(error: Error): unknown {
-  return (error as Error & { details?: unknown }).details;
+function routeErrorResponse(error: unknown, fallback = "Request could not be completed"): Response {
+  const safe = safePublicError(error, fallback);
+  return NextResponse.json({ message: safe.message }, { status: safe.status });
 }

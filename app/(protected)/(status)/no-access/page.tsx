@@ -1,7 +1,7 @@
 import { KeyRound } from "lucide-react";
 
 import { getServerDictionary } from "@/contexts/shared/infrastructure/i18n/server";
-import { AccessDeniedActions } from "@/contexts/shared/interfaces/components/access-denied-actions";
+import { AccessDeniedActions } from "@/contexts/shared/interfaces/components/actions/access-denied-actions";
 import { Card, CardContent } from "@/contexts/shared/interfaces/components/ui/card";
 
 export default async function NoAccessPage() {

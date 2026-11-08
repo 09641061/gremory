@@ -10,8 +10,9 @@ import type {
   PlansByCurrencyReadModel,
 } from "../../../application/internal/queryservices/list-plans-query.service";
 import type { SubscriptionAccessSnapshot } from "../../../domain/services/subscription-access.policy";
-import { ErrorAlert } from "@/contexts/shared/interfaces/components/error";
-import { BackNavigationButton } from "@/contexts/shared/interfaces/components/back-navigation-button";
+import type { CreateSubscriptionActionErrorKind } from "../../actions/create-subscription.action";
+import { ErrorAlert } from "@/contexts/shared/interfaces/components/feedback/error";
+import { BackNavigationButton } from "@/contexts/shared/interfaces/components/navigation/back-navigation-button";
 import { SubscribeHero } from "./subscribe-hero";
 import { PlanCard } from "./plan-card";
 import { PaymentModal } from "../checkout/payment-modal";
@@ -25,7 +26,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/contexts/shared/interfaces/components/ui/alert-dialog";
-import { useBillingTranslations } from "@/contexts/billing/interfaces/i18n";
+import { useBillingI18n } from "@/contexts/billing/interfaces/i18n";
 
 interface ActivePaymentState {
   clientSecret: string | null | undefined;
@@ -35,8 +36,9 @@ interface ActivePaymentState {
 }
 
 interface FeedbackState {
-  type: "success" | "error";
+  type: "error";
   text: string;
+  kind: CreateSubscriptionActionErrorKind;
   id: number;
 }
 
@@ -48,35 +50,47 @@ type BillingPlanMetadata = {
 
 type BillingPlanViewModel = PlanReadModel & BillingPlanMetadata;
 
-/**
- * Paid plans only. Membership here is what puts a plan on the page.
- */
-const PLAN_METADATA: Record<number, BillingPlanMetadata> = {
-  1: {
-    description: "Perfect for startups and local shops.",
-    features: [
-      "1 establishment included",
-      "Core billing tools",
-      "Standard API access",
-      "Email support",
-    ],
-    isPopular: false,
-  },
-  2: {
-    description: "For growing enterprises with complex needs.",
-    features: [
-      "Unlimited establishments",
-      "Advanced analytics dashboard",
-      "Custom domain integration",
-      "24/7 Priority support",
-      "Bulk invoice management",
-    ],
-    isPopular: true,
-  },
-};
+function getPlanMetadata(
+  planId: number,
+  t: ReturnType<typeof useBillingI18n>["t"]
+): BillingPlanMetadata | null {
+  if (planId === 1) {
+    return {
+      description: t.subscribe.metadata.standardDescription,
+      features: [
+        t.subscribe.metadata.standardFeature1,
+        t.subscribe.metadata.standardFeature2,
+        t.subscribe.metadata.standardFeature3,
+        t.subscribe.metadata.standardFeature4,
+        t.subscribe.metadata.standardFeature5,
+        t.subscribe.metadata.standardFeature6,
+      ],
+      isPopular: false,
+    };
+  }
+  if (planId === 2) {
+    return {
+      description: t.subscribe.metadata.premiumDescription,
+      features: [
+        t.subscribe.metadata.premiumFeature1,
+        t.subscribe.metadata.premiumFeature2,
+        t.subscribe.metadata.premiumFeature3,
+        t.subscribe.metadata.premiumFeature4,
+        t.subscribe.metadata.premiumFeature5,
+        t.subscribe.metadata.premiumFeature6,
+        t.subscribe.metadata.premiumFeature7,
+      ],
+      isPopular: true,
+    };
+  }
+  return null;
+}
 
-function enrichPlan(plan: PlanReadModel): BillingPlanViewModel | null {
-  const metadata = PLAN_METADATA[plan.id];
+function enrichPlan(
+  plan: PlanReadModel,
+  t: ReturnType<typeof useBillingI18n>["t"]
+): BillingPlanViewModel | null {
+  const metadata = getPlanMetadata(plan.id, t);
   if (!metadata) return null;
 
   return {
@@ -94,7 +108,7 @@ interface SubscribeViewProps {
 }
 
 export function SubscribeView({ backHref, plansByCurrency, currentSubscription }: SubscribeViewProps) {
-  const { t } = useBillingTranslations();
+  const { t } = useBillingI18n();
   const [billingCycle, setBillingCycle] = useState<BillingCycleType>("MONTHLY");
   const [currency, setCurrency] = useState<CurrencyCode>("USD");
   const [feedbackMessage, setFeedbackMessage] = useState<FeedbackState | null>(null);
@@ -108,10 +122,10 @@ export function SubscribeView({ backHref, plansByCurrency, currentSubscription }
   const plans = useMemo(
     () =>
       (plansByCurrency[currency] ?? [])
-        .map(enrichPlan)
+        .map((p) => enrichPlan(p, t))
         .filter((plan): plan is BillingPlanViewModel => plan !== null)
         .sort((left, right) => left.id - right.id),
-    [plansByCurrency, currency]
+    [plansByCurrency, currency, t]
   );
 
   const toggleCycle = () => {
@@ -146,7 +160,13 @@ export function SubscribeView({ backHref, plansByCurrency, currentSubscription }
       {feedbackMessage ? (
         <ErrorAlert
           key={feedbackMessage.id}
-          title={feedbackMessage.type === "error" ? t.subscribe.signInRequired : t.subscribe.notification}
+          title={
+            feedbackMessage.kind === "authentication"
+              ? t.subscribe.signInRequired
+              : feedbackMessage.kind === "authorization"
+              ? t.subscribe.billingAccessRequired
+              : t.subscribe.operationError
+          }
           message={feedbackMessage.text}
         />
       ) : null}
@@ -177,7 +197,7 @@ export function SubscribeView({ backHref, plansByCurrency, currentSubscription }
             const buttonLabel = isCurrent
               ? t.subscribe.currentPlan
               : isPendingThisPlan
-              ? "Reintentar pago"
+              ? t.subscribe.retryPayment
               : t.subscribe.getPlan.replace("{name}", plan.name);
 
             const localizedMetadata =
@@ -224,7 +244,8 @@ export function SubscribeView({ backHref, plansByCurrency, currentSubscription }
                 onError={(err) =>
                   setFeedbackMessage({
                     type: "error",
-                    text: err || t.subscribe.signInRequiredMessage,
+                    text: err.message || t.subscribe.operationError,
+                    kind: err.kind,
                     id: Date.now(),
                   })
                 }

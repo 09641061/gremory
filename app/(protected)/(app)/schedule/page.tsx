@@ -1,12 +1,11 @@
 import { Suspense } from "react";
-import { createEstablishmentQueryService } from "@/contexts/business/application/internal/queryservices/establishment-query.service";
-import { loadSchedulingPageData } from "@/contexts/scheduling/application/internal/queryservices/scheduling-page-data.query.service";
+import { composeBusinessAdapters } from "@/contexts/business/interfaces/server/business-composition";
+import { loadComposedSchedulingPageData } from "@/contexts/scheduling/interfaces/server/scheduling-composition";
 import { DailyStaffCalendar } from "@/contexts/scheduling/interfaces/components/calendar/daily-staff-calendar";
 import { redirect } from "next/navigation";
-import { createBusinessWorkspaceQueryService } from "@/contexts/business/application/internal/queryservices/business-workspace-query.service";
 import { resolveModuleAccessFallback } from "@/contexts/shared/application/services/module-access.policy";
 import { getWorkspaceEstablishment, hasEstablishmentPermission } from "@/contexts/shared/application/services/workspace-establishment-permissions";
-import { PageLoading } from "@/contexts/shared/interfaces/components/page-loading";
+import { PageLoading } from "@/contexts/shared/interfaces/components/feedback/page-loading";
 
 interface SchedulePageProps {
   searchParams: Promise<{ establishmentId?: string }>;
@@ -22,12 +21,13 @@ export default function SchedulePage({ searchParams }: SchedulePageProps) {
 
 async function SchedulePageContent({ searchParams }: SchedulePageProps) {
   const query = await searchParams;
-  const workspace = await createBusinessWorkspaceQueryService().getHeaderViewModel(query);
+  const business = composeBusinessAdapters();
+  const workspace = await business.workspaceQueryService.getHeaderViewModel(query);
 
   const establishmentId = query.establishmentId ?? workspace.activeEstablishmentId;
 
   if (!establishmentId) {
-    redirect("/establishments/new");
+    redirect(resolveModuleAccessFallback(workspace));
   }
   if (!workspace.organization) {
     redirect("/access-denied");
@@ -40,17 +40,17 @@ async function SchedulePageContent({ searchParams }: SchedulePageProps) {
   }
 
   const establishment = getWorkspaceEstablishment(workspace, establishmentId);
-  const canManageScheduling = hasEstablishmentPermission(establishment, "scheduling:manage");
-  const canCreateAppointment = canManageScheduling;
-  const canUpdateAppointment = canManageScheduling;
-  const canDeleteAppointment = canManageScheduling;
-
-  const establishmentDetails = await createEstablishmentQueryService().getById({ id: establishmentId });
-  const timeZone = establishmentDetails?.timeZone ?? "UTC";
-  const { services, members, customers } = await loadSchedulingPageData(
+  const canCreateAppointment = hasEstablishmentPermission(establishment, "scheduling:appointments:create");
+  const canUpdateAppointment =
+    hasEstablishmentPermission(establishment, "scheduling:appointments:reschedule") ||
+    hasEstablishmentPermission(establishment, "scheduling:appointments:status-update");
+  const canDeleteAppointment = hasEstablishmentPermission(establishment, "scheduling:appointments:cancel");
+  const canLoadAppointmentFormData = canCreateAppointment;
+  const timeZone = establishment?.timeZone ?? "UTC";
+  const { services, members, customers } = await loadComposedSchedulingPageData(
     establishmentId,
     workspace.organization.id,
-    canManageScheduling,
+    canLoadAppointmentFormData,
   );
 
   return (
@@ -65,6 +65,7 @@ async function SchedulePageContent({ searchParams }: SchedulePageProps) {
         canUpdateAppointment={canUpdateAppointment}
         canDeleteAppointment={canDeleteAppointment}
         timeZone={timeZone}
+        currency={establishment?.currency === "PEN" ? "PEN" : "USD"}
       />
     </main>
   );

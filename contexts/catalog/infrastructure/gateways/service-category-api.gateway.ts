@@ -2,6 +2,7 @@ import "server-only";
 
 import { cookies } from "next/headers";
 import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-session-cookie";
+import { workspaceSelectionCookies } from "@/contexts/business/infrastructure/session/workspace-selection-cookie";
 import { ServiceCategory } from "../../domain/model/entities/service-category.entity";
 import { createCategoryId } from "../../domain/model/valueobjects/category-id.vo";
 import type {
@@ -12,15 +13,19 @@ import type {
   UpdateServiceCategoryCommand,
   DeleteServiceCategoryCommand,
 } from "../../domain/model/commands/service-category.commands";
-import type { PageResponse } from "../../domain/services/catalog-service.services";
+import type { PageResponse } from "@/contexts/shared/domain/model/page-response";
+import type { CategoryDTO } from "../../domain/model/view-models";
 import { apiConfig } from "@/api.config";
 import { apiClient } from "@/contexts/shared/infrastructure/http/api-client";
 import { serviceCategoryResponseSchema } from "../../interfaces/rest/schemas/service-category.schemas";
+import { serviceCategoryPageResponseSchema } from "../contracts/catalog-response.contracts";
+import type { ServiceCategoryApiPort } from "../../application/ports/service-category-port";
 
 type RawServiceCategory = {
   id: string;
   establishmentId: string;
   name: string;
+  displayOrder?: number;
 };
 
 function mapCategoryToEntity(raw: RawServiceCategory): ServiceCategory {
@@ -29,6 +34,15 @@ function mapCategoryToEntity(raw: RawServiceCategory): ServiceCategory {
     establishmentId: raw.establishmentId,
     name: raw.name,
   });
+}
+
+function mapCategoryToDTO(raw: RawServiceCategory): CategoryDTO {
+  return {
+    id: raw.id,
+    establishmentId: raw.establishmentId,
+    name: raw.name,
+    displayOrder: raw.displayOrder ?? 0,
+  };
 }
 
 async function resolveAccessToken(providedToken?: string): Promise<string | undefined> {
@@ -42,39 +56,73 @@ async function resolveAccessToken(providedToken?: string): Promise<string | unde
 }
 
 export class ServiceCategoryApiGateway
-  implements ServiceCategoryCommandService
+  implements ServiceCategoryCommandService, ServiceCategoryApiPort
 {
   constructor(private readonly organizationId?: string) {}
 
-  private tenantHeaders() {
-    return this.organizationId ? { "X-Organization-Id": this.organizationId } : undefined;
+  private async tenantOptions(): Promise<{ tenantId?: string }> {
+    let organizationId = this.organizationId;
+    if (!organizationId) {
+      try {
+        const cookieStore = await cookies();
+        organizationId = cookieStore.get(workspaceSelectionCookies.organizationId)?.value;
+      } catch {
+        // Cookie access is unavailable outside a request.
+      }
+    }
+    return { tenantId: organizationId };
   }
 
   async list(
     establishmentId: string,
-    page = 0,
-    size = 20,
+    page: number | undefined = 0,
+    size: number | undefined = 20,
     token?: string
-  ): Promise<PageResponse<ServiceCategory>> {
+  ): Promise<PageResponse<CategoryDTO>> {
     const authToken = await resolveAccessToken(token);
     const query = new URLSearchParams({
       establishmentId,
       page: String(page),
       size: String(size),
     });
-    const data = await apiClient.get<PageResponse<RawServiceCategory>>(
+    const resource = await apiClient.get<unknown>(
       `${apiConfig.routes.catalogCategories}?${query}`,
       {
         token: authToken,
-        headers: this.tenantHeaders(),
+        ...(await this.tenantOptions()),
         errorMessage: "Failed to list categories",
       },
     );
 
+    const data = serviceCategoryPageResponseSchema.parse(resource);
     return {
       ...data,
-      content: data.content.map(mapCategoryToEntity),
+      content: data.content.map(mapCategoryToDTO),
     };
+  }
+
+  async getById(
+    id: string,
+    establishmentId: string,
+    token?: string,
+  ): Promise<CategoryDTO | null> {
+    const authToken = await resolveAccessToken(token);
+    try {
+      const resource = await apiClient.get<unknown>(
+        `${apiConfig.routes.catalogCategories}/${encodeURIComponent(id)}?establishmentId=${encodeURIComponent(establishmentId)}`,
+        {
+          token: authToken,
+          ...(await this.tenantOptions()),
+          errorMessage: "Failed to fetch category",
+        },
+      );
+      return mapCategoryToDTO(serviceCategoryResponseSchema.parse(resource));
+    } catch (error) {
+      if (error instanceof Error && "status" in error && (error as { status?: unknown }).status === 404) {
+        return null;
+      }
+      throw error;
+    }
   }
 
   async create(command: CreateServiceCategoryCommand, token?: string): Promise<ServiceCategory> {
@@ -84,7 +132,7 @@ export class ServiceCategoryApiGateway
       command,
       {
         token: authToken,
-        headers: this.tenantHeaders(),
+        ...(await this.tenantOptions()),
         errorMessage: "Failed to create category",
       },
     );
@@ -98,7 +146,7 @@ export class ServiceCategoryApiGateway
       { name: command.name },
       {
         token: authToken,
-        headers: this.tenantHeaders(),
+        ...(await this.tenantOptions()),
         errorMessage: "Failed to update category",
       },
     );
@@ -111,9 +159,23 @@ export class ServiceCategoryApiGateway
       `${apiConfig.routes.catalogCategories}/${encodeURIComponent(command.id)}`,
       {
         token: authToken,
-        headers: this.tenantHeaders(),
-        errorMessage: "Failed to delete category",
+        ...(await this.tenantOptions()),
+        errorMessage: "Failed to delete category"
       },
     );
+  }
+
+  async reorder(establishmentId: string, categoryIds: string[], token?: string): Promise<CategoryDTO[]> {
+    const authToken = await resolveAccessToken(token);
+    const resources = await apiClient.put<RawServiceCategory[]>(
+      `${apiConfig.routes.catalogCategories}/reorder`,
+      { establishmentId, categoryIds },
+      {
+        token: authToken,
+        ...(await this.tenantOptions()),
+        errorMessage: "Failed to reorder categories",
+      },
+    );
+    return Array.isArray(resources) ? resources.map(mapCategoryToDTO) : [];
   }
 }

@@ -11,7 +11,17 @@ export interface EstablishmentResource {
   name: string;
   photoUrl: string | null;
   timeZone: string | null;
+  currency?: "USD" | "PEN" | null;
   ownerAvailableForScheduling?: boolean;
+}
+
+export interface WhatsappStatusResource {
+  establishmentId: string;
+  connected: boolean;
+  status: string | null;
+  displayPhoneNumber: string | null;
+  wabaId: string | null;
+  phoneNumberId: string | null;
 }
 
 export interface PageResource<T> {

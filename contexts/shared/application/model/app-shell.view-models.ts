@@ -5,7 +5,6 @@ export type SidebarRouteId =
   | "/schedule"
   | "/crm"
   | "/catalog"
-  | "/team"
   | "/analytics";
 
 export type AppShellHomeHref =
@@ -13,13 +12,14 @@ export type AppShellHomeHref =
   | "/schedule"
   | "/crm"
   | "/catalog"
-  | "/team"
   | "/analytics"
   | "/organization"
   | "/establishments"
   | "/organizations/new"
   | "/establishments/new"
+  | "/onboarding/profile"
   | "/establishments/setup"
+  | "/upgrade"
   | "/welcome"
   | "/invitations/pending"
   | "/access-denied"

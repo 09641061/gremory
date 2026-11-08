@@ -1,14 +1,18 @@
-import "server-only";
-
 import { createAssistantConversationId } from "../../../domain/model/value-objects/assistant-conversation-id";
 import type { DeleteConversationCommand } from "../../../domain/model/commands/delete-conversation.command";
-import { AssistantConversationRepositoryImpl } from "@/contexts/assistant/infrastructure/repositories/assistant-conversation.repository";
+import type { AssistantConversationsPort } from "../../ports/assistant-port";
 
 export class DeleteConversationCommandService {
-  constructor(private readonly repository: AssistantConversationRepositoryImpl = new AssistantConversationRepositoryImpl()) {}
+  constructor(private readonly repository: AssistantConversationsPort) {}
 
   async handle(command: DeleteConversationCommand, token?: string): Promise<void> {
     const conversationId = createAssistantConversationId(command.conversationId).value;
-    await this.repository.deleteConversation({ conversationId }, token);
+    await this.repository.deleteConversation(conversationId, token);
   }
+}
+
+export function createDeleteConversationCommandService(
+  repository: AssistantConversationsPort,
+): DeleteConversationCommandService {
+  return new DeleteConversationCommandService(repository);
 }

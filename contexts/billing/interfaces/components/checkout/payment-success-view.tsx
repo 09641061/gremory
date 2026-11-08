@@ -10,8 +10,10 @@ import {
   AlertDescription,
   AlertTitle,
 } from "@/contexts/shared/interfaces/components/ui/alert";
+import { useBillingI18n } from "@/contexts/billing/interfaces/i18n";
 
 export function PaymentSuccessView() {
+  const { t } = useBillingI18n();
   const [activationPending, setActivationPending] = useState(true);
 
   useEffect(() => {
@@ -65,11 +67,11 @@ export function PaymentSuccessView() {
         ) : (
           <CheckCircle2 className="size-5 text-primary" />
         )}
-        <AlertTitle>Payment received</AlertTitle>
+        <AlertTitle>{t.checkout.paymentReceived}</AlertTitle>
         <AlertDescription>
           {activationPending
-            ? "Your payment was received. We are activating your subscription."
-            : "Your payment was received. Activation is taking longer than usual."}
+            ? t.checkout.activatingSubscription
+            : t.checkout.activatingTakingLonger}
         </AlertDescription>
       </Alert>
     </div>

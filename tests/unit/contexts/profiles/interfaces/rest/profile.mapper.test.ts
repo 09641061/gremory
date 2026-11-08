@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { profileFromApiResponse } from "@/contexts/profiles/interfaces/rest/mappers/profile.mapper";
+import { profileFromApiResponse } from "@/contexts/profiles/infrastructure/contracts/profile.mapper";
 
 describe("Profile Mapper", () => {
   it("should map valid API response to ProfileViewModel", () => {

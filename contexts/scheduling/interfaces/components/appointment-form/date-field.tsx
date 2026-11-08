@@ -17,8 +17,8 @@ import {
   toDateInputValue,
 } from "../scheduling-datetime";
 import { useNow } from "../use-now";
+import { useSchedulingTranslations } from "../../i18n";
 
-const WEEK_DAYS = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"] as const;
 const GRID_CELLS = 42;
 
 interface DateFieldProps {
@@ -46,6 +46,8 @@ function buildMonthGrid(month: Date): Date[] {
 }
 
 export function DateField({ id, name, placeholder, value, onChange, min }: DateFieldProps) {
+  const { t, locale } = useSchedulingTranslations();
+  const intlLocale = locale === "es" ? "es-ES" : "en-US";
   const [isOpen, setIsOpen] = useState(false);
   const selectedDate = parseDateInputValue(value);
   const [visibleMonth, setVisibleMonth] = useState(() =>
@@ -79,7 +81,7 @@ export function DateField({ id, name, placeholder, value, onChange, min }: DateF
         >
           <span className={cn("truncate", !selectedDate && "text-muted-foreground")}>
             {selectedDate
-              ? selectedDate.toLocaleDateString("en-US", {
+              ? selectedDate.toLocaleDateString(intlLocale, {
                   month: "short",
                   day: "numeric",
                   year: "numeric",
@@ -96,19 +98,19 @@ export function DateField({ id, name, placeholder, value, onChange, min }: DateF
               variant="ghost"
               size="icon-xs"
               onClick={() => setVisibleMonth((current) => addMonths(current, -1))}
-              aria-label="Previous month"
+              aria-label={t.calendar.prevMonth}
             >
               <ChevronLeft className="size-4" />
             </Button>
             <div aria-live="polite" className="text-sm font-medium">
-              {visibleMonth.toLocaleDateString("en-US", { month: "long", year: "numeric" })}
+              {visibleMonth.toLocaleDateString(intlLocale, { month: "long", year: "numeric" })}
             </div>
             <Button
               type="button"
               variant="ghost"
               size="icon-xs"
               onClick={() => setVisibleMonth((current) => addMonths(current, 1))}
-              aria-label="Next month"
+              aria-label={t.calendar.nextMonth}
             >
               <ChevronRight className="size-4" />
             </Button>
@@ -116,13 +118,13 @@ export function DateField({ id, name, placeholder, value, onChange, min }: DateF
 
           <div
             role="grid"
-            aria-label={visibleMonth.toLocaleDateString("en-US", {
+            aria-label={visibleMonth.toLocaleDateString(intlLocale, {
               month: "long",
               year: "numeric",
             })}
           >
             <div role="row" className="grid grid-cols-7 gap-1 pb-1">
-              {WEEK_DAYS.map((day) => (
+              {t.calendar.weekDays.map((day) => (
                 <div
                   key={day}
                   role="columnheader"
@@ -150,7 +152,7 @@ export function DateField({ id, name, placeholder, value, onChange, min }: DateF
                     role="gridcell"
                     disabled={isDisabled}
                     aria-selected={isSelected}
-                    aria-label={day.toLocaleDateString("en-US", {
+                    aria-label={day.toLocaleDateString(intlLocale, {
                       weekday: "long",
                       month: "long",
                       day: "numeric",

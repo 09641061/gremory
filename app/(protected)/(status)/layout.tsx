@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 
-import ProtectedAppShell from "@/contexts/shared/interfaces/components/protected-app-shell";
+import ProtectedAppShell from "@/contexts/shared/interfaces/components/layout/protected-app-shell";
 
 /** Terminal states keep the account sidebar available without opening a module. */
 export default function StatusLayout({ children }: { children: ReactNode }) {

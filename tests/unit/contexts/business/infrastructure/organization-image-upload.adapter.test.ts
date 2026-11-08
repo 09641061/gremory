@@ -48,10 +48,11 @@ describe("OrganizationImageUploadAdapter", () => {
       "http://localhost:8080/api/business/organizations/11111111-1111-4111-8111-111111111111",
       expect.objectContaining({
         method: "PUT",
-        headers: {
+        headers: expect.objectContaining({
           Authorization: "Bearer access-token",
           "X-Organization-Id": organizationId.value,
-        },
+          "X-Correlation-Id": expect.any(String),
+        }),
         body: expect.any(FormData),
       }),
     );

@@ -1,9 +1,9 @@
 "use client";
 
 import { CatalogLayout } from "@/contexts/catalog/interfaces/components/catalog/catalog-layout";
-import type { DetailedServiceDTO } from "@/contexts/catalog/interfaces/components/catalog/service-detail-view";
-import type { CategoryDTO } from "@/contexts/catalog/interfaces/components/catalog/category-sidebar";
+import type { CategoryDTO, DetailedServiceDTO } from "@/contexts/catalog/application/model/catalog-view.models";
 interface CatalogClientWrapperProps {
+  currency?: "USD" | "PEN";
   initialEstablishmentId?: string;
   initialSelectedServiceId?: string;
   initialCategories: CategoryDTO[];
@@ -17,6 +17,7 @@ interface CatalogClientWrapperProps {
 }
 
 export function CatalogClientWrapper({
+  currency = "USD",
   initialEstablishmentId,
   initialSelectedServiceId,
   initialCategories,
@@ -38,6 +39,7 @@ export function CatalogClientWrapper({
       // this prop; keying on it too meant selecting a service threw away the
       // expanded categories and the pending edits along with it.
       key={activeEstablishmentId ?? "none"}
+      currency={currency}
       categories={initialCategories}
       services={initialServices}
       activeEstablishmentId={activeEstablishmentId}

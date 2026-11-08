@@ -3,6 +3,8 @@ import {
   en,
   es,
   getCatalogDictionary,
+  useCatalogI18n,
+  useCatalogTranslations,
 } from "@/contexts/catalog/interfaces/i18n";
 
 describe("Catalog i18n translations", () => {
@@ -34,5 +36,10 @@ describe("Catalog i18n translations", () => {
     expect(getCatalogDictionary("es")).toBe(es);
     expect(getCatalogDictionary("en")).toBe(en);
     expect(getCatalogDictionary(null)).toBe(en);
+  });
+
+  it("should export useCatalogI18n and useCatalogTranslations hooks", () => {
+    expect(typeof useCatalogI18n).toBe("function");
+    expect(useCatalogTranslations).toBe(useCatalogI18n);
   });
 });

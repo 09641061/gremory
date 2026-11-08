@@ -5,4 +5,5 @@ export type UpdateAppointmentCommand = Readonly<{
   employeeId: string;
   startsAt: string;
   endsAt: string;
+  notes?: string | null;
 }>;

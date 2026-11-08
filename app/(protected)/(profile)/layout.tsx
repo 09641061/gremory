@@ -1,0 +1,159 @@
+import type { CSSProperties, ReactNode } from "react";
+import { Suspense } from "react";
+import { cookies, headers } from "next/headers";
+import { redirect } from "next/navigation";
+
+import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-session-cookie";
+import { workspaceSelectionCookies } from "@/contexts/business/infrastructure/session/workspace-selection-cookie";
+import { composeSharedAdapters } from "@/contexts/shared/interfaces/server/shared-composition";
+import { getServerDictionary } from "@/contexts/shared/infrastructure/i18n/server";
+import { EntryRouteUnavailable } from "@/contexts/shared/interfaces/components/feedback/entry-route-unavailable";
+import { PageLoading } from "@/contexts/shared/interfaces/components/feedback/page-loading";
+
+import { composeBusinessAdapters } from "@/contexts/business/interfaces/server/business-composition";
+import { hasSomewhereToCancelTo } from "@/contexts/business/domain/services/workspace-navigation.policy";
+import { BackNavigationButton } from "@/contexts/shared/interfaces/components/navigation/back-navigation-button";
+
+/**
+ * Establishments, organization settings and permissions. One-time
+ * organization creation lives in the onboarding route group instead.
+ *
+ * These are settings reached from the app and left again, so the back arrow is
+ * their only chrome, exactly as on `/upgrade`. It streams behind its own
+ * boundary so resolving the plan never delays the page underneath it.
+ *
+ * The entry-guard reads (cookies, headers, resolveRoute, server dictionary)
+ * are wrapped in a Suspense subtree so the App Shell can render instantly
+ * under Cache Components (`blocking-prerender-dynamic`).
+ */
+export default function ConfigurationLayout({ children }: { children: ReactNode }) {
+  return (
+    <Suspense fallback={<PageLoading />}>
+      <ConfigurationLayoutContent>{children}</ConfigurationLayoutContent>
+    </Suspense>
+  );
+}
+
+async function ConfigurationLayoutContent({ children }: { children: ReactNode }) {
+  const cookieStore = await cookies();
+  const accessToken = cookieStore.get(iamSessionCookies.accessToken)?.value;
+  if (!accessToken) redirect("/login");
+
+  const requestHeaders = await headers();
+  const pathname =
+    requestHeaders.get("x-takodu-pathname") ?? requestHeaders.get("x-invoke-path") ?? "";
+
+  // Profile is an account-level screen. It must remain reachable from the
+  // header even before an owner activates Billing or creates a workspace.
+  if (pathname !== "/profile") {
+    const landing = await composeSharedAdapters().entryRouteQueryService
+      .resolveRoute({
+        accessToken,
+        organizationId: cookieStore.get(workspaceSelectionCookies.organizationId)?.value ?? undefined,
+        establishmentId: requestHeaders.get("x-takodu-establishment-id") ?? undefined,
+      })
+      .catch(() => ({ status: "unavailable" as const }));
+
+    if (landing.status === "unauthenticated") redirect("/login");
+    if (
+      landing.status === "subscription-required" ||
+      landing.status === "profile-required" ||
+      landing.status === "invitation-pending" ||
+      landing.status === "organization-required" ||
+      landing.status === "establishment-required"
+    ) {
+      if (!landing.allowedPaths.includes(pathname)) {
+        redirect(landing.setupHref);
+      }
+    }
+    if (landing.status === "unavailable") {
+      const dictionary = await getServerDictionary();
+      return (
+        <EntryRouteUnavailable
+          title={dictionary.onboarding.serviceUnavailableTitle}
+          description={dictionary.onboarding.unavailableDescription}
+          retryLabel={dictionary.onboarding.retry}
+        />
+      );
+    }
+  }
+
+  return (
+    <main
+      className="flex min-w-0 flex-1 flex-col p-6"
+      // The back bar takes room the app routes do not spend, so the columns
+      // that size themselves against the viewport have to discount it too.
+      // The variable is owned by this layout; it is only read by configuration
+      // routes, and removing the `:root` default from `globals.css` means this
+      // inline value is the only place the constant is defined.
+      style={{ "--app-page-viewport-height": "calc(100vh - 9.5rem)" } as CSSProperties}
+    >
+      <div className="absolute left-6 top-6 z-20 sm:left-8">
+        <Suspense fallback={null}>
+          <BackToHomeLink />
+        </Suspense>
+      </div>
+
+      <div className="mb-4 h-8" aria-hidden="true" />
+
+      {children}
+    </main>
+  );
+}
+
+async function BackToHomeLink() {
+  const href = await resolveConfigurationBackHref();
+  if (!href) return null;
+
+  // `BackNavigationButton` detects the org settings hub internally via
+  // `usePathname()`, so this layout only has to hand over the resolved
+  // workspace home as the fallback URL.
+  return <BackNavigationButton fallbackHref={href} />;
+}
+
+export async function resolveConfigurationBackHref() {
+  // Read outside any cached scope: the session is per-request.
+  const cookieStore = await cookies();
+  const accessToken = cookieStore.get(iamSessionCookies.accessToken)?.value;
+  const requestHeaders = await headers();
+  const establishmentId = requestHeaders.get("x-takodu-establishment-id") ?? undefined;
+  const pathname =
+    requestHeaders.get("x-takodu-pathname") ?? requestHeaders.get("x-invoke-path") ?? "";
+  const organizationId = cookieStore.get(workspaceSelectionCookies.organizationId)?.value ?? undefined;
+  const previewOrganizationId =
+    cookieStore.get(workspaceSelectionCookies.previewOrganizationId)?.value ?? undefined;
+
+  // Every other screen under this layout is only reachable once onboarding is
+  // complete (the guard restricts `/establishments/new` to the mandatory,
+  // nowhere-to-go-back-to state), so this same check
+  // naturally covers the whole group: it only ever hides the arrow on the
+  // mandatory first-establishment screen.
+  const workspace = await composeBusinessAdapters().workspaceQueryService
+    .getHeaderViewModel({ establishmentId })
+    .catch(() => null);
+  // Mandatory onboarding screens have no valid destination to return to.
+  // Other configuration pages, including `/profile`, must always expose the
+  // same back button as `/upgrade`, even when the workspace has no
+  // establishment yet.
+  const isMandatoryOnboardingPath =
+    pathname === "/establishments/new";
+  if (
+    isMandatoryOnboardingPath &&
+    workspace &&
+    !hasSomewhereToCancelTo(workspace.establishments, workspace.organization?.id, workspace.onboardingCompleted)
+  ) {
+    return null;
+  }
+
+  if (organizationId) {
+    const searchParams = new URLSearchParams({ organizationId });
+    if (establishmentId) {
+      searchParams.set("establishmentId", establishmentId);
+    } else if (previewOrganizationId && previewOrganizationId !== organizationId) {
+      searchParams.set("previewOrganizationId", previewOrganizationId);
+    }
+    return `/?${searchParams.toString()}`;
+  }
+
+  return await composeSharedAdapters().planHomeRouteQueryService.handle({ accessToken, establishmentId });
+}

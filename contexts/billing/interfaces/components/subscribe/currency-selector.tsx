@@ -32,7 +32,7 @@ export function CurrencySelector({
             size="sm"
             onClick={() => onCurrencyChange(code)}
             className={cn(
-              "h-7 px-2.5 text-xs font-semibold transition-all duration-150",
+              "h-7 px-2.5 text-xs font-semibold transition-[color,background-color,border-color,box-shadow] duration-150",
               isSelected
                 ? "font-bold shadow-xs"
                 : "text-muted-foreground"

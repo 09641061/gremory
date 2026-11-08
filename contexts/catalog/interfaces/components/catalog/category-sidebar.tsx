@@ -23,11 +23,12 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/contexts/shared/interfaces/components/ui/sheet";
-import { ErrorAlert } from "@/contexts/shared/interfaces/components/error";
+import { ErrorAlert } from "@/contexts/shared/interfaces/components/feedback/error";
 import { CategoryItem } from "./category-item";
 import { ServiceRow } from "./service-row";
 import { DeleteCategoryDialog } from "./delete-category-dialog";
 import { useCatalogTranslations } from "../../i18n";
+import type { DetailedServiceDTO } from "@/contexts/catalog/application/model/catalog-view.models";
 
 // Sentinel used as drop-target key for the "Uncategorized" bucket, which has no real category id
 const UNCATEGORIZED_DROP_ID = "__uncategorized__";
@@ -46,6 +47,7 @@ export type ServiceSummaryDTO = {
 interface CategorySidebarProps {
   categories: CategoryDTO[];
   services: ServiceSummaryDTO[];
+  establishmentId?: string;
   selectedServiceId?: string;
   selectedCategoryId?: string;
   onSelectService: (id: string) => void;
@@ -63,6 +65,7 @@ interface CategorySidebarProps {
 export function CategorySidebar({
   categories,
   services,
+  establishmentId,
   selectedServiceId,
   selectedCategoryId,
   onSelectService,
@@ -227,7 +230,7 @@ export function CategorySidebar({
             {uncategorizedServices.map((svc) => (
               <ServiceRow
                 key={svc.id}
-                svc={svc}
+                svc={svc as unknown as DetailedServiceDTO}
                 isSelected={selectedServiceId === svc.id}
                 onSelectService={onSelectService}
                 onDragStart={handleDragStart}
@@ -240,7 +243,7 @@ export function CategorySidebar({
               <CategoryItem
                 key={cat.id}
                 cat={cat}
-                services={services}
+                services={services as unknown as DetailedServiceDTO[]}
                 selectedCategoryId={selectedCategoryId}
                 selectedServiceId={selectedServiceId}
                 isExpanded={expandedCategoryIds.has(cat.id)}
@@ -286,7 +289,7 @@ export function CategorySidebar({
           className="w-(--app-category-sidebar-mobile-width) gap-0 p-0 md:hidden"
         >
           <SheetHeader className="sr-only">
-            <SheetTitle>Categories</SheetTitle>
+            <SheetTitle>{t.sidebar.categoriesTitle}</SheetTitle>
           </SheetHeader>
           {sidebarContent}
         </SheetContent>
@@ -304,6 +307,7 @@ export function CategorySidebar({
         <DeleteCategoryDialog
           categoryId={categoryToDelete.id}
           categoryName={categoryToDelete.name}
+          establishmentId={establishmentId}
           open={!!categoryToDelete}
           onOpenChange={(open) => {
             if (!open) setCategoryToDelete(null);

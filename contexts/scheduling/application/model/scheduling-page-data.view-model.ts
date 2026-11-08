@@ -3,6 +3,8 @@ export type SchedulingServiceViewModel = Readonly<{
   name: string;
   price: number;
   durationMinutes: number;
+  preparationMinutes?: number;
+  cleanupMinutes?: number;
 }>;
 
 export type SchedulingMemberViewModel = Readonly<{

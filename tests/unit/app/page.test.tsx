@@ -1,69 +1,58 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+// @vitest-environment jsdom
+import "@testing-library/jest-dom";
+import { beforeAll, describe, expect, it, vi } from "vitest";
+import { render, screen } from "@testing-library/react";
 
-const mocks = vi.hoisted(() => ({
-  redirect: vi.fn((href: string) => {
-    throw new Error(`REDIRECT:${href}`);
-  }),
-  cookies: vi.fn(),
-  landing: {
-    resolveRoute: vi.fn(),
-  },
-}));
-
-vi.mock("next/navigation", () => ({
-  redirect: mocks.redirect,
-}));
-
-vi.mock("next/headers", () => ({
-  cookies: mocks.cookies,
-}));
-
-vi.mock("@/contexts/shared/application/internal/queryservices/entry-route-query.service", () => ({
-  createEntryRouteQueryService: () => mocks.landing,
-}));
-
-import HomePage from "@/app/page";
-
-describe("HomePage", () => {
-  beforeEach(() => {
-    vi.resetAllMocks();
-    mocks.cookies.mockResolvedValue({
-      get: () => ({ value: "access-token" }),
-    });
+beforeAll(() => {
+  Object.defineProperty(window, "matchMedia", {
+    writable: true,
+    value: (query: string) => ({
+      matches: false,
+      media: query,
+      onchange: null,
+      addListener: () => {},
+      removeListener: () => {},
+      addEventListener: () => {},
+      removeEventListener: () => {},
+      dispatchEvent: () => false,
+    }),
   });
+});
 
-  it("sends an authenticated owner without a subscription to welcome", async () => {
-    mocks.landing.resolveRoute.mockResolvedValue({
-      status: "subscription-required",
-      setupHref: "/welcome",
-      allowedPaths: ["/welcome"],
-    });
+vi.mock("@/contexts/shared/infrastructure/i18n/server", () => ({
+  getServerLocale: vi.fn(async () => "es"),
+}));
 
-    await expect(
-      HomePage({ searchParams: Promise.resolve({}) }),
-    ).rejects.toThrow("REDIRECT:/welcome");
-  });
+import LandingPage from "@/app/(landing)/page";
 
-  it("sends an active owner without an organization to organization onboarding", async () => {
-    mocks.landing.resolveRoute.mockResolvedValue({
-      status: "organization-required",
-      setupHref: "/organizations/new",
-      allowedPaths: ["/organizations/new"],
-    });
+describe("Landing page", () => {
+  it("renders every landing section", async () => {
+    const element = await LandingPage();
+    render(element);
 
-    await expect(
-      HomePage({ searchParams: Promise.resolve({}) }),
-    ).rejects.toThrow("REDIRECT:/organizations/new");
-  });
-
-  it("uses the resolved workspace home when the account is ready", async () => {
-    mocks.landing.resolveRoute.mockResolvedValue({
-      status: "ready",
-      homeHref: "/chat",
-    });
-
-    await expect(
-      HomePage({ searchParams: Promise.resolve({}) }),
-    ).rejects.toThrow("REDIRECT:/chat");
+    expect(
+      screen.getByRole("heading", {
+        level: 1,
+        name: "Tu agenda se llena sola por WhatsApp.",
+      }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", {
+        level: 2,
+        name: "Listo en una tarde, sin cambiar cómo trabajas.",
+      }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", {
+        level: 2,
+        name: "Paga por el tamaño de tu negocio.",
+      }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", {
+        level: 2,
+        name: "Lo que más nos preguntan.",
+      }),
+    ).toBeInTheDocument();
   });
 });

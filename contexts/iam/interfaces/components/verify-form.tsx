@@ -3,7 +3,7 @@
 import { ClipboardEvent, KeyboardEvent, useRef, useState } from "react";
 import { useActionState } from "react";
 import { useRouter } from "next/navigation";
-import { ErrorAlert } from "@/contexts/shared/interfaces/components/error";
+import { ErrorAlert } from "@/contexts/shared/interfaces/components/feedback/error";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import { Spinner } from "@/contexts/shared/interfaces/components/ui/spinner";
 import {
@@ -20,7 +20,7 @@ import {
   resendEmailSignInAction,
   type ResendEmailSignInActionState,
 } from "../actions/resend-email-sign-in.action";
-import { useI18n } from "@/contexts/shared/interfaces/i18n";
+import { useIamI18n } from "../i18n";
 
 const verificationCodeLength = 6;
 const initialActionState: ConfirmEmailSignInActionState = {
@@ -42,7 +42,7 @@ export function VerifyForm({
   initialError?: string;
 }) {
   const router = useRouter();
-  const { t } = useI18n();
+  const { t, interpolate } = useIamI18n();
   const [digits, setDigits] = useState<string[]>(
     Array(verificationCodeLength).fill("")
   );
@@ -144,7 +144,7 @@ export function VerifyForm({
                           inputRefs.current[index] = element;
                         }}
                         value={digits[index]}
-                        aria-label={`Verification digit ${index + 1}`}
+                        aria-label={interpolate(t.auth.verificationDigitAria, { digit: index + 1 })}
                         inputMode="numeric"
                         maxLength={1}
                         type="text"

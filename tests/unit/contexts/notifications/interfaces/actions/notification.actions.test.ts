@@ -4,23 +4,28 @@ const mocks = vi.hoisted(() => ({
     getNotifications: vi.fn(),
     getUnreadCount: vi.fn(),
   },
-  createNotificationQueryService: vi.fn(),
+  composeNotificationAdapters: vi.fn(),
 }));
 
 vi.mock("next/headers", () => ({ cookies: vi.fn(() => mocks.cookies) }));
-vi.mock("@/contexts/notifications/application/factory", () => ({
-  createNotificationQueryService: mocks.createNotificationQueryService,
+vi.mock("@/contexts/notifications/interfaces/server/notification-composition", () => ({
+  composeNotificationAdapters: mocks.composeNotificationAdapters,
 }));
 
 import { ApiError } from "@/contexts/shared/infrastructure/http/api-client";
-import { fetchNotificationsAction, fetchUnreadNotificationsCountAction } from "@/contexts/notifications/interfaces/actions/notification.actions";
+import {
+  acceptInvitationNotificationAction,
+  fetchNotificationsAction,
+  fetchUnreadNotificationsCountAction,
+  registerDeviceTokenAction,
+} from "@/contexts/notifications/interfaces/actions/notification.actions";
 
 describe("Notification server actions", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.spyOn(console, "error").mockImplementation(() => undefined);
     mocks.cookies.get.mockReturnValue({ value: "access-token" });
-    mocks.createNotificationQueryService.mockReturnValue(mocks.queryService);
+    mocks.composeNotificationAdapters.mockReturnValue({ queryService: mocks.queryService });
   });
 
   it("should return notifications when the query service succeeds", async () => {
@@ -34,6 +39,45 @@ describe("Notification server actions", () => {
     // Assert
     expect(result).toEqual(notifications);
     expect(mocks.queryService.getNotifications).toHaveBeenCalledWith("access-token", 0, 5);
+  });
+
+  it("does not expose invitation tokens to the client action result", async () => {
+    mocks.queryService.getNotifications.mockResolvedValue({
+      content: [{ id: "inv-1", targetToken: "server-only-token" }],
+      page: 0,
+      size: 5,
+      totalElements: 1,
+      totalPages: 1,
+    });
+
+    const result = await fetchNotificationsAction(0, 5);
+
+    expect(result?.content[0]).not.toHaveProperty("targetToken");
+  });
+
+  it("resolves the invitation token on the server before accepting", async () => {
+    mocks.queryService.getNotifications.mockResolvedValue({
+      content: [{ id: "inv-1", targetToken: "server-only-token" }],
+      page: 0,
+      size: 100,
+      totalElements: 1,
+      totalPages: 1,
+    });
+    const commandService = {
+      acceptInvitation: vi.fn().mockResolvedValue({}),
+    };
+    mocks.composeNotificationAdapters.mockReturnValue({
+      queryService: mocks.queryService,
+      commandService,
+    });
+
+    const result = await acceptInvitationNotificationAction("inv-1");
+
+    expect(result).toEqual({ success: true });
+    expect(commandService.acceptInvitation).toHaveBeenCalledWith(
+      { notificationId: "inv-1", invitationToken: "server-only-token" },
+      "access-token",
+    );
   });
 
   it("should return null without logging when notifications are forbidden", async () => {
@@ -58,6 +102,26 @@ describe("Notification server actions", () => {
     // Assert
     expect(result).toBe(3);
     expect(mocks.queryService.getUnreadCount).toHaveBeenCalledWith("access-token");
+  });
+
+  it("routes device registration through the composed application command service", async () => {
+    const commandService = { registerDeviceToken: vi.fn().mockResolvedValue(undefined) };
+    mocks.composeNotificationAdapters.mockReturnValue({ queryService: mocks.queryService, commandService });
+
+    const result = await registerDeviceTokenAction("device-token", "WEB");
+
+    expect(result).toEqual({ success: true });
+    expect(commandService.registerDeviceToken).toHaveBeenCalledWith("device-token", "WEB", "access-token");
+  });
+
+  it("rejects invalid device tokens before reaching the application", async () => {
+    const commandService = { registerDeviceToken: vi.fn() };
+    mocks.composeNotificationAdapters.mockReturnValue({ commandService });
+
+    const result = await registerDeviceTokenAction(" ", "WEB");
+
+    expect(result.success).toBe(false);
+    expect(commandService.registerDeviceToken).not.toHaveBeenCalled();
   });
 
   it("should return zero without logging when unread count is forbidden", async () => {

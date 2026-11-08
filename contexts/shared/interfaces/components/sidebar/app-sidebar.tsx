@@ -1,15 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useSearchParams } from "next/navigation";
-import {
-  BarChart3,
-  CalendarDays,
-  ContactRound,
-  MessageCircle,
-  Package,
-  Users,
-} from "lucide-react";
+import { usePathname } from "next/navigation";
 
 import {
   Sidebar as ShadcnSidebar,
@@ -28,10 +20,14 @@ import type { SidebarRouteId } from "@/contexts/shared/application/model/app-she
 import type { WorkspaceHeaderViewModel } from "@/contexts/business/application/model/business-workspace.view-models";
 import { WorkspaceSwitcher } from "@/contexts/business/interfaces/components/workspace/workspace-switcher/workspace-switcher";
 
-import { useI18n } from "@/contexts/shared/interfaces/i18n";
+import { useSidebarRoutes } from "./use-sidebar-routes";
 
 /**
  * Workspace and application navigation. Account controls live in AppHeader.
+ *
+ * Renders navigation exclusively through `useSidebarRoutes`, which owns the
+ * permission filtering, active-link resolution and establishment-id wiring so
+ * this component stays focused on composition and presentation.
  */
 export function AppSidebar({
   initialAssistantConversations,
@@ -50,39 +46,22 @@ export function AppSidebar({
   showWorkspaceSwitcher?: boolean;
   pathname?: string;
 }) {
-  const { t } = useI18n();
   const currentPathname = usePathname();
   const pathname = pathnameProp ?? currentPathname;
-  const searchParams = useSearchParams();
-  const selectedConversationId = pathname.startsWith("/chat")
-    ? searchParams.get("conversationId")
-    : null;
-  const requestedEstablishmentId = searchParams.get("establishmentId");
-  const establishmentId =
-    requestedEstablishmentId &&
-    workspace.establishments.some((item) => item.id === requestedEstablishmentId)
-      ? requestedEstablishmentId
-      : workspace.activeEstablishmentId ?? null;
+
+  const { entries: navigationEntries, establishmentId } = useSidebarRoutes({
+    visibleRoutes,
+    showAssistantNavigation,
+    pathname,
+    workspace,
+  });
+
+  // Stable key for the assistant chats section so it re-mounts when the list
+  // shape changes (new conversation, title update, etc.).
   const assistantChatsSectionKey = initialAssistantConversations
     .map((conversation) => `${conversation.id}:${conversation.updatedAt}:${conversation.title ?? ""}`)
     .join("|");
 
-  const navigation = [
-    { label: t.navigation.newChat, href: "/chat", icon: MessageCircle },
-    { label: t.navigation.schedule, href: "/schedule", icon: CalendarDays },
-    { label: t.navigation.crm, href: "/crm", icon: ContactRound },
-    { label: t.navigation.catalog, href: "/catalog", icon: Package },
-    { label: t.navigation.team, href: "/team", icon: Users },
-    { label: t.navigation.analytics, href: "/analytics", icon: BarChart3 },
-  ];
-
-  const visibleRouteSet = new Set(visibleRoutes);
-  const filteredNavigation = navigation.filter((item) => {
-    if (!showAssistantNavigation && item.href === "/chat") {
-      return false;
-    }
-    return visibleRouteSet.has(item.href as SidebarRouteId);
-  });
   return (
     <ShadcnSidebar collapsible="offcanvas" className="top-16 h-[calc(100svh-4rem)]">
       {showWorkspaceSwitcher && (
@@ -95,35 +74,25 @@ export function AppSidebar({
         <SidebarGroup className="mt-2 p-0">
           <SidebarGroupContent className="shrink-0">
             <SidebarMenu className="gap-(--app-sidebar-menu-gap)">
-              {filteredNavigation.map(({ label, href, icon: Icon }) => {
-                const active =
-                  href === "/chat"
-                    ? pathname === href && !selectedConversationId
-                    : pathname === href || pathname.startsWith(`${href}/`);
-                const linkHref = establishmentId
-                  ? `${href}?establishmentId=${establishmentId}`
-                  : href;
-
-                return (
-                  <SidebarMenuItem key={label}>
-                    <SidebarMenuButton
-                      render={
-                        <Link
-                          href={linkHref}
-                          aria-current={active ? "page" : undefined}
-                        />
-                      }
-                      isActive={active}
-                      size="default"
-                      tooltip={label}
-                      className="h-(--app-sidebar-control-height)"
-                    >
-                      <Icon strokeWidth={2} />
-                      <span>{label}</span>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                );
-              })}
+              {navigationEntries.map(({ label, href, icon: Icon, active, linkHref }) => (
+                <SidebarMenuItem key={href}>
+                  <SidebarMenuButton
+                    render={
+                      <Link
+                        href={linkHref}
+                        aria-current={active ? "page" : undefined}
+                      />
+                    }
+                    isActive={active}
+                    size="default"
+                    tooltip={label}
+                    className="h-(--app-sidebar-control-height)"
+                  >
+                    <Icon strokeWidth={2} />
+                    <span>{label}</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

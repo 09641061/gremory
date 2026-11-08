@@ -5,18 +5,20 @@ import { redirect } from "next/navigation";
 
 import { iamSessionCookies } from "@/contexts/iam/infrastructure/session/iam-session-cookie";
 import { workspaceSelectionCookies } from "@/contexts/business/infrastructure/session/workspace-selection-cookie";
-import { createEntryRouteQueryService } from "@/contexts/shared/application/internal/queryservices/entry-route-query.service";
+import { composeSharedAdapters } from "@/contexts/shared/interfaces/server/shared-composition";
 import { getServerDictionary } from "@/contexts/shared/infrastructure/i18n/server";
-import { EntryRouteUnavailable } from "@/contexts/shared/interfaces/components/entry-route-unavailable";
-import { PageLoading } from "@/contexts/shared/interfaces/components/page-loading";
-import { createPlanHomeRouteQueryService } from "@/contexts/shared/application/internal/queryservices/plan-home-route-query.service";
-import { createBusinessWorkspaceQueryService } from "@/contexts/business/application/internal/queryservices/business-workspace-query.service";
+import { EntryRouteUnavailable } from "@/contexts/shared/interfaces/components/feedback/entry-route-unavailable";
+import { PageLoading } from "@/contexts/shared/interfaces/components/feedback/page-loading";
+
+import { composeBusinessAdapters } from "@/contexts/business/interfaces/server/business-composition";
 import { hasSomewhereToCancelTo } from "@/contexts/business/domain/services/workspace-navigation.policy";
-import { BackNavigationButton } from "@/contexts/shared/interfaces/components/back-navigation-button";
+import { BackNavigationButton } from "@/contexts/shared/interfaces/components/navigation/back-navigation-button";
+import { OrganizationSettingsShell } from "@/contexts/business/interfaces/components/organization/organization-settings-shell/organization-settings-shell";
 
 /**
- * Establishments, organization settings and permissions. One-time
- * organization creation lives in the onboarding route group instead.
+ * Establishments and organization settings (Organization + Members +
+ * Invites). One-time organization creation lives in the onboarding route
+ * group instead.
  *
  * These are settings reached from the app and left again, so the back arrow is
  * their only chrome, exactly as on `/upgrade`. It streams behind its own
@@ -25,6 +27,15 @@ import { BackNavigationButton } from "@/contexts/shared/interfaces/components/ba
  * The entry-guard reads (cookies, headers, resolveRoute, server dictionary)
  * are wrapped in a Suspense subtree so the App Shell can render instantly
  * under Cache Components (`blocking-prerender-dynamic`).
+ *
+ * The hub sidebar (Organization + Members + Invites + Establishments)
+ * is attached here too: every route currently under `(configuration)/` is a
+ * settings-hub screen, so wrapping `children` with
+ * {@link OrganizationSettingsShell} keeps the sidebar mounted across
+ * cross-section navigations like `/organization` → `/establishments` or
+ * `/organization/members` → `/organization/invites`. Sibling configuration pages
+ * outside this group (`/profile`, `/invoice`) live under `(profile)/` and
+ * intentionally do not see the sidebar.
  */
 export default function ConfigurationLayout({ children }: { children: ReactNode }) {
   return (
@@ -40,23 +51,26 @@ async function ConfigurationLayoutContent({ children }: { children: ReactNode })
   if (!accessToken) redirect("/login");
 
   const requestHeaders = await headers();
+  const establishmentId = requestHeaders.get("x-takodu-establishment-id") ?? undefined;
+  const organizationId = cookieStore.get(workspaceSelectionCookies.organizationId)?.value ?? undefined;
   const pathname =
     requestHeaders.get("x-takodu-pathname") ?? requestHeaders.get("x-invoke-path") ?? "";
 
   // Profile is an account-level screen. It must remain reachable from the
   // header even before an owner activates Billing or creates a workspace.
   if (pathname !== "/profile") {
-    const landing = await createEntryRouteQueryService()
+    const landing = await composeSharedAdapters().entryRouteQueryService
       .resolveRoute({
         accessToken,
-        organizationId: cookieStore.get(workspaceSelectionCookies.organizationId)?.value ?? undefined,
-        establishmentId: requestHeaders.get("x-takodu-establishment-id") ?? undefined,
+        organizationId,
+        establishmentId,
       })
       .catch(() => ({ status: "unavailable" as const }));
 
     if (landing.status === "unauthenticated") redirect("/login");
     if (
       landing.status === "subscription-required" ||
+      landing.status === "profile-required" ||
       landing.status === "invitation-pending" ||
       landing.status === "organization-required" ||
       landing.status === "establishment-required"
@@ -77,6 +91,11 @@ async function ConfigurationLayoutContent({ children }: { children: ReactNode })
     }
   }
 
+  const workspace = await composeBusinessAdapters(accessToken).workspaceQueryService.getHeaderViewModel({
+    organizationId,
+    establishmentId,
+  });
+
   return (
     <main
       className="flex min-w-0 flex-1 flex-col p-6"
@@ -95,7 +114,7 @@ async function ConfigurationLayoutContent({ children }: { children: ReactNode })
 
       <div className="mb-4 h-8" aria-hidden="true" />
 
-      {children}
+      <OrganizationSettingsShell workspace={workspace}>{children}</OrganizationSettingsShell>
     </main>
   );
 }
@@ -104,6 +123,9 @@ async function BackToHomeLink() {
   const href = await resolveConfigurationBackHref();
   if (!href) return null;
 
+  // `BackNavigationButton` detects the org settings hub internally via
+  // `usePathname()`, so this layout only has to hand over the resolved
+  // workspace home as the fallback URL.
   return <BackNavigationButton fallbackHref={href} />;
 }
 
@@ -124,7 +146,7 @@ export async function resolveConfigurationBackHref() {
   // nowhere-to-go-back-to state), so this same check
   // naturally covers the whole group: it only ever hides the arrow on the
   // mandatory first-establishment screen.
-  const workspace = await createBusinessWorkspaceQueryService()
+  const workspace = await composeBusinessAdapters().workspaceQueryService
     .getHeaderViewModel({ establishmentId })
     .catch(() => null);
   // Mandatory onboarding screens have no valid destination to return to.
@@ -142,15 +164,14 @@ export async function resolveConfigurationBackHref() {
   }
 
   if (organizationId) {
-    const href = new URL("/", "http://localhost");
-    href.searchParams.set("organizationId", organizationId);
+    const searchParams = new URLSearchParams({ organizationId });
     if (establishmentId) {
-      href.searchParams.set("establishmentId", establishmentId);
+      searchParams.set("establishmentId", establishmentId);
     } else if (previewOrganizationId && previewOrganizationId !== organizationId) {
-      href.searchParams.set("previewOrganizationId", previewOrganizationId);
+      searchParams.set("previewOrganizationId", previewOrganizationId);
     }
-    return `${href.pathname}${href.search}`;
+    return `/?${searchParams.toString()}`;
   }
 
-  return await createPlanHomeRouteQueryService().handle({ accessToken, establishmentId });
+  return await composeSharedAdapters().planHomeRouteQueryService.handle({ accessToken, establishmentId });
 }

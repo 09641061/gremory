@@ -2,7 +2,7 @@
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
-import { SearchableOptions } from "@/contexts/shared/interfaces/components/searchable-options";
+import { SearchableOptions } from "@/contexts/shared/interfaces/components/form/searchable-options";
 import type { WorkspaceHeaderViewModel } from "@/contexts/business/application/model/business-workspace.view-models";
 import {
   buildWorkspacePath,
@@ -11,13 +11,13 @@ import {
 import { OrganizationBadge } from "@/contexts/business/interfaces/components/workspace/organization-badge/organization-badge";
 import { WorkspaceAvatar } from "@/contexts/business/interfaces/components/workspace/workspace-avatar/workspace-avatar";
 import { useBusinessTranslations } from "@/contexts/business/interfaces/i18n";
+import { resolveOrganizationSettingsHome } from "@/contexts/business/application/services/organization-settings-navigation";
 
 /**
  * The sidebar answers one question only: which establishment am I working in?
  *
- * The organization remains visible as context, but changing organizations now
- * happens in `/organizations` so the workspace selector stays focused and easy
- * to scan.
+ * The organization remains visible as context. Its settings link only exists
+ * when the current account can access at least one organization setting.
  */
 export function WorkspaceSwitcher({
   workspace,
@@ -39,6 +39,7 @@ export function WorkspaceSwitcher({
   const activeEstablishment = establishments.find(
     (establishment) => establishment.id === selectedEstablishmentId,
   );
+  const organizationSettingsHref = resolveOrganizationSettingsHome(workspace);
 
   // The selector only lists establishments that belong to the active
   // organization, so it never turns into a second organization switcher.
@@ -88,7 +89,7 @@ export function WorkspaceSwitcher({
               <div className="flex w-full flex-col">
                 <OrganizationBadge
                   organization={organization}
-                  href="/organizations"
+                  href={organizationSettingsHref}
                   onNavigate={close}
                 />
               </div>

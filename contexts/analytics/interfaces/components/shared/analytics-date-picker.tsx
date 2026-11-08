@@ -5,7 +5,7 @@ import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import { ButtonGroup } from "@/contexts/shared/interfaces/components/ui/button-group";
 import { Calendar, Download } from "lucide-react";
 import type { AnalyticsPreset } from "../../../domain/model/value-objects/analytics-date-range";
-import { useAnalyticsTranslations } from "../../i18n";
+import { useAnalyticsI18n } from "../../i18n";
 
 export interface AnalyticsDatePickerProps {
   currentPreset: AnalyticsPreset;
@@ -22,7 +22,7 @@ export function AnalyticsDatePicker({
   onExport,
   maxDays = 30,
 }: AnalyticsDatePickerProps) {
-  const { t } = useAnalyticsTranslations();
+  const { t } = useAnalyticsI18n();
 
   return (
     <div className="flex flex-wrap items-center justify-between gap-3">

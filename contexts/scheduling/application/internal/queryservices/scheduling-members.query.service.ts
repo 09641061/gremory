@@ -1,15 +1,13 @@
-import "server-only";
-
-import { SchedulingApiGateway } from "@/contexts/scheduling/infrastructure/gateways/scheduling-api.gateway";
+import type { SchedulingRosterReader } from "../../ports/scheduling-roster";
 import type { SchedulingMemberViewModel } from "../../model/scheduling-page-data.view-model";
 
 export async function loadSchedulingMembers(
+  reader: SchedulingRosterReader,
   establishmentId: string,
-  organizationId: string,
+  token?: string,
   includeHidden = false,
 ): Promise<SchedulingMemberViewModel[]> {
-  const gateway = new SchedulingApiGateway(organizationId);
-  const employees = await gateway.getSchedulingEmployees(establishmentId);
+  const employees = await reader.getSchedulingEmployees(establishmentId, token);
   return employees.filter((employee) => includeHidden || employee.visibleForScheduling !== false).map((employee) => ({
     id: employee.userId,
     userId: employee.userId,

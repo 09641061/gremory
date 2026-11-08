@@ -1,5 +1,6 @@
 "use server";
 
+import { recordSafely } from "@/contexts/shared/interfaces/observability/sanitize-error";
 import { sendSignInEmail } from "./request-email-sign-in.action";
 import { requestEmailSignInSchema } from "../rest/schemas/authentication.schemas";
 import { normalizeAuthReturnPath } from "../../domain/model/valueobjects/auth-return-path";
@@ -23,7 +24,7 @@ export async function resendEmailSignInAction(
     );
     return { status: "success", error: null };
   } catch (error) {
-    console.error("Resend email sign-in failed", error);
+    recordSafely("iam.resend.email.sign.in.action", { cause: error });
     return {
       status: "error",
       error: "Unable to resend the sign-in email. Please try again.",

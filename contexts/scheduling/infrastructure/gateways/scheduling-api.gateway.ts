@@ -9,13 +9,24 @@ import { CancelAppointmentCommand } from "../../domain/model/commands/cancel-app
 import { SearchAppointmentsQuery } from "../../domain/model/queries/search-appointments.query";
 import { SchedulingCommandService } from "../../application/services/scheduling-command.service";
 import { SchedulingQueryService } from "../../application/services/scheduling-query.service";
+import type { SchedulingAppointmentsReader, SchedulingAppointmentsWriter } from "../../application/ports/scheduling-appointments";
+import type {
+  SchedulingCustomer,
+  SchedulingEmployee,
+  SchedulingRosterReader,
+  SchedulingRosterWriter,
+  SchedulingService,
+} from "../../application/ports/scheduling-roster";
 import { PageResponse } from "../../application/model/page-response";
 import { apiConfig } from "@/api.config";
 import { ApiError, apiClient } from "@/contexts/shared/infrastructure/http/api-client";
 import {
   appointmentPageResponseSchema,
   appointmentResponseSchema,
-} from "../../interfaces/rest/schemas/appointment.schemas";
+  schedulingCustomersResponseSchema,
+  schedulingEmployeesResponseSchema,
+  schedulingServicesResponseSchema,
+} from "../contracts/scheduling.schemas";
 
 export class SchedulingApiError extends ApiError {
   constructor(message: string, status: number, details?: unknown) {
@@ -35,12 +46,18 @@ async function resolveAccessToken(providedToken?: string): Promise<string | unde
 }
 
 export class SchedulingApiGateway
-  implements SchedulingCommandService, SchedulingQueryService
+  implements
+    SchedulingCommandService,
+    SchedulingQueryService,
+    SchedulingAppointmentsReader,
+    SchedulingAppointmentsWriter,
+    SchedulingRosterReader,
+    SchedulingRosterWriter
 {
   constructor(private readonly organizationId?: string) {}
 
-  private tenantHeaders() {
-    return this.organizationId ? { "X-Organization-Id": this.organizationId } : undefined;
+  private tenantOptions(): { tenantId?: string } {
+    return { tenantId: this.organizationId };
   }
 
   async createAppointment(
@@ -53,7 +70,7 @@ export class SchedulingApiGateway
       command,
       {
         token: authToken,
-        headers: this.tenantHeaders(),
+        ...this.tenantOptions(),
         errorMessage: "Failed to create appointment",
         errorType: SchedulingApiError,
       }
@@ -70,7 +87,7 @@ export class SchedulingApiGateway
       `${apiConfig.routes.scheduling.appointments}/${encodeURIComponent(id)}`,
       {
         token: authToken,
-        headers: this.tenantHeaders(),
+        ...this.tenantOptions(),
         errorMessage: "Appointment not found",
         errorType: SchedulingApiError,
       }
@@ -96,7 +113,7 @@ export class SchedulingApiGateway
       `${apiConfig.routes.scheduling.appointments}?${params.toString()}`,
       {
         token: authToken,
-        headers: this.tenantHeaders(),
+        ...this.tenantOptions(),
         errorMessage: "Failed to fetch appointments",
         errorType: SchedulingApiError,
       }
@@ -113,7 +130,7 @@ export class SchedulingApiGateway
       `${apiConfig.routes.scheduling.appointments}/${encodeURIComponent(id)}`,
       {
         token: authToken,
-        headers: this.tenantHeaders(),
+        ...this.tenantOptions(),
         errorMessage: "Failed to delete appointment",
         errorType: SchedulingApiError,
       }
@@ -131,7 +148,7 @@ export class SchedulingApiGateway
       command,
       {
         token: authToken,
-        headers: this.tenantHeaders(),
+        ...this.tenantOptions(),
         errorMessage: "Failed to reschedule appointment",
         errorType: SchedulingApiError,
       }
@@ -150,7 +167,7 @@ export class SchedulingApiGateway
       command,
       {
         token: authToken,
-        headers: this.tenantHeaders(),
+        ...this.tenantOptions(),
         errorMessage: "Failed to update appointment details",
         errorType: SchedulingApiError,
       }
@@ -169,7 +186,7 @@ export class SchedulingApiGateway
       command,
       {
         token: authToken,
-        headers: this.tenantHeaders(),
+        ...this.tenantOptions(),
         errorMessage: "Failed to cancel appointment",
         errorType: SchedulingApiError,
       }
@@ -187,7 +204,7 @@ export class SchedulingApiGateway
       {},
       {
         token: authToken,
-        headers: this.tenantHeaders(),
+        ...this.tenantOptions(),
         errorMessage: "Failed to complete appointment",
         errorType: SchedulingApiError,
       }
@@ -205,7 +222,7 @@ export class SchedulingApiGateway
       {},
       {
         token: authToken,
-        headers: this.tenantHeaders(),
+        ...this.tenantOptions(),
         errorMessage: "Failed to start appointment",
         errorType: SchedulingApiError,
       }
@@ -223,7 +240,7 @@ export class SchedulingApiGateway
       {},
       {
         token: authToken,
-        headers: this.tenantHeaders(),
+        ...this.tenantOptions(),
         errorMessage: "Failed to mark appointment as no-show",
         errorType: SchedulingApiError,
       }
@@ -234,17 +251,18 @@ export class SchedulingApiGateway
   async getSchedulingEmployees(
     establishmentId: string,
     token?: string
-  ): Promise<{ userId: string; name: string; imageUrl: string | null; isOwner: boolean; availableForScheduling: boolean; visibleForScheduling: boolean }[]> {
+  ): Promise<SchedulingEmployee[]> {
     const authToken = await resolveAccessToken(token);
-    return apiClient.get<{ userId: string; name: string; imageUrl: string | null; isOwner: boolean; availableForScheduling: boolean; visibleForScheduling: boolean }[]>(
+    const response = await apiClient.get<unknown>(
       `${apiConfig.routes.scheduling.appointments}/employees?establishmentId=${encodeURIComponent(establishmentId)}`,
       {
         token: authToken,
-        headers: this.tenantHeaders(),
+        ...this.tenantOptions(),
         errorMessage: "Failed to fetch scheduling employees",
         errorType: SchedulingApiError,
       }
     );
+    return schedulingEmployeesResponseSchema.parse(response);
   }
 
   async updateEmployeeVisibility(
@@ -259,7 +277,7 @@ export class SchedulingApiGateway
       undefined,
       {
         token: authToken,
-        headers: this.tenantHeaders(),
+        ...this.tenantOptions(),
         errorMessage: "Failed to update scheduling visibility",
         errorType: SchedulingApiError,
       },
@@ -278,7 +296,7 @@ export class SchedulingApiGateway
       undefined,
       {
         token: authToken,
-        headers: this.tenantHeaders(),
+        ...this.tenantOptions(),
         errorMessage: "Failed to update employee availability",
         errorType: SchedulingApiError,
       },
@@ -288,36 +306,38 @@ export class SchedulingApiGateway
   async getSchedulingServices(
     establishmentId: string,
     token?: string
-  ): Promise<{ id: string; name: string; price: number; durationMinutes: number }[]> {
+  ): Promise<SchedulingService[]> {
     const authToken = await resolveAccessToken(token);
-    return apiClient.get<{ id: string; name: string; price: number; durationMinutes: number }[]>(
+    const response = await apiClient.get<unknown>(
       `${apiConfig.routes.scheduling.appointments}/services?establishmentId=${encodeURIComponent(establishmentId)}`,
       {
         token: authToken,
-        headers: this.tenantHeaders(),
+        ...this.tenantOptions(),
         errorMessage: "Failed to fetch scheduling services",
         errorType: SchedulingApiError,
       }
     );
+    return schedulingServicesResponseSchema.parse(response);
   }
 
   async getSchedulingCustomers(
     establishmentId: string,
     search?: string,
     token?: string
-  ): Promise<{ id: string; name: string; email: string | null; phone: string | null }[]> {
+  ): Promise<SchedulingCustomer[]> {
     const authToken = await resolveAccessToken(token);
     const params = new URLSearchParams();
     params.append("establishmentId", establishmentId);
     if (search) params.append("search", search);
-    return apiClient.get<{ id: string; name: string; email: string | null; phone: string | null }[]>(
+    const response = await apiClient.get<unknown>(
       `${apiConfig.routes.scheduling.appointments}/customers?${params.toString()}`,
       {
         token: authToken,
-        headers: this.tenantHeaders(),
+        ...this.tenantOptions(),
         errorMessage: "Failed to fetch scheduling customers",
         errorType: SchedulingApiError,
       }
     );
+    return schedulingCustomersResponseSchema.parse(response);
   }
 }

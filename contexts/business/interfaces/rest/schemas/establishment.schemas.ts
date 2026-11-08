@@ -22,6 +22,7 @@ export const createEstablishmentSchema = z.object({
     .regex(ESTABLISHMENT_NAME_REGEX, "Establishment name must contain only letters (A-Z, a-z)"),
   photoUrl: z.string().trim().max(500).optional().nullable(),
   timeZone: z.string().trim().min(1, "Time zone is required").max(100),
+  currency: z.enum(["USD", "PEN"]).optional().default("USD"),
 });
 
 export const updateEstablishmentSchema = z.object({
@@ -41,6 +42,7 @@ export const updateEstablishmentSchema = z.object({
     .regex(ESTABLISHMENT_NAME_REGEX, "Establishment name must contain only letters (A-Z, a-z)"),
   photoUrl: z.string().trim().max(500).optional().nullable(),
   timeZone: z.string().trim().min(1, "Time zone is required").max(100).optional().nullable(),
+  currency: z.enum(["USD", "PEN"]).optional().nullable(),
   ownerAvailableForScheduling: z.boolean().optional(),
 });
 
@@ -54,6 +56,31 @@ export type UpdateEstablishmentInput = z.infer<typeof updateEstablishmentSchema>
 export const establishmentResponseSchema = z.object({
   id: z.string().min(1), organizationId: z.string().min(1), name: z.string().min(1),
   photoUrl: z.string().nullable(), timeZone: z.string().nullable(),
+  currency: z.enum(["USD", "PEN"]).optional().nullable().default("USD"),
   // Older business API responses do not include this field; the aggregate defaults it to true.
   ownerAvailableForScheduling: z.boolean().optional(),
 });
+
+export const whatsappStatusResponseSchema = z.object({
+  establishmentId: z.string().uuid(),
+  connected: z.boolean(),
+  status: z.string().nullable().optional(),
+  displayPhoneNumber: z.string().nullable().optional(),
+  wabaId: z.string().nullable().optional(),
+  phoneNumberId: z.string().nullable().optional(),
+});
+
+export const connectWhatsappSchema = z.object({
+  establishmentId: z.string().uuid("Invalid establishment ID"),
+  code: z.string().trim().min(1, "Authorization code is required"),
+  wabaId: z.string().trim().optional().nullable(),
+  phoneNumberId: z.string().trim().optional().nullable(),
+});
+
+export const disconnectWhatsappSchema = z.object({
+  establishmentId: z.string().uuid("Invalid establishment ID"),
+});
+
+export type WhatsappStatusResponse = z.infer<typeof whatsappStatusResponseSchema>;
+export type ConnectWhatsappInput = z.infer<typeof connectWhatsappSchema>;
+export type DisconnectWhatsappInput = z.infer<typeof disconnectWhatsappSchema>;

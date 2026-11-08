@@ -45,10 +45,11 @@ describe("EstablishmentPhotoAdapter", () => {
       "http://localhost:8080/api/business/establishments/images",
       expect.objectContaining({
         method: "POST",
-        headers: {
+        headers: expect.objectContaining({
           Authorization: "Bearer access-token",
           "X-Organization-Id": organizationId.value,
-        },
+          "X-Correlation-Id": expect.any(String),
+        }),
         body: expect.any(FormData),
       }),
     );

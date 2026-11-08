@@ -1,7 +1,7 @@
 "use client";
 
 import { Save } from "lucide-react";
-import { ErrorAlert } from "@/contexts/shared/interfaces/components/error";
+import { ErrorAlert } from "@/contexts/shared/interfaces/components/feedback/error";
 import { Button } from "@/contexts/shared/interfaces/components/ui/button";
 import { Input } from "@/contexts/shared/interfaces/components/ui/input";
 import { Label } from "@/contexts/shared/interfaces/components/ui/label";
@@ -14,12 +14,14 @@ interface EditCategoryModalProps {
   isOpen: boolean;
   onClose: () => void;
   category: { id: string; name: string } | null;
+  establishmentId?: string;
 }
 
 export function EditCategoryModal({
   isOpen,
   onClose,
   category,
+  establishmentId,
 }: EditCategoryModalProps) {
   const { t } = useCatalogTranslations();
   const { state: updateState, formAction, pending: updatePending } = useUpdateServiceCategory(onClose);
@@ -42,6 +44,7 @@ export function EditCategoryModal({
           {category && (
             <form action={formAction} key={category.id} className="space-y-6 mt-4">
               <input type="hidden" name="id" value={category.id} />
+              <input type="hidden" name="establishmentId" value={establishmentId ?? ""} />
 
               <div className="space-y-2">
                 <Label htmlFor="edit-category-name">{t.dialogs.categoryNameLabel}</Label>

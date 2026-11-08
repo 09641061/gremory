@@ -3,6 +3,7 @@ import {
   en,
   es,
   getBusinessDictionary,
+  useBusinessI18n,
 } from "@/contexts/business/interfaces/i18n";
 
 describe("Business i18n translations", () => {
@@ -34,5 +35,9 @@ describe("Business i18n translations", () => {
     expect(getBusinessDictionary("es")).toBe(es);
     expect(getBusinessDictionary("en")).toBe(en);
     expect(getBusinessDictionary(null)).toBe(en);
+  });
+
+  it("should export useBusinessI18n hook", () => {
+    expect(typeof useBusinessI18n).toBe("function");
   });
 });

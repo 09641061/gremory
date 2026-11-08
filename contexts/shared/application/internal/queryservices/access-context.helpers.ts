@@ -1,5 +1,3 @@
-import "server-only";
-
 export function pickActiveEstablishment<T extends { establishmentId: string }>(
   establishments: ReadonlyArray<T>,
   activeEstablishmentId?: string,
