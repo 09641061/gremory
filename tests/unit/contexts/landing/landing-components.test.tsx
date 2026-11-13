@@ -11,6 +11,7 @@ import {
   HowItWorksSection,
   OwnerSection,
   PricingSection,
+  VideoSection,
 } from "@/contexts/landing/interfaces/components";
 import { getLandingDictionary } from "@/contexts/landing/interfaces/i18n";
 
@@ -43,6 +44,18 @@ describe("Landing sections", () => {
     expect(screen.getByText(es.hero.description)).toBeInTheDocument();
     expect(screen.getAllByText(es.hero.primaryCta).length).toBeGreaterThan(0);
     expect(screen.getByText(es.hero.secondaryCta)).toBeInTheDocument();
+  });
+
+  it("renders the video presentation section", () => {
+    render(<VideoSection video={es.video} />);
+
+    expect(
+      screen.getByRole("heading", { level: 2, name: es.video.title }),
+    ).toBeInTheDocument();
+    expect(screen.getByText(es.video.description)).toBeInTheDocument();
+    expect(
+      screen.getByTitle("Takodu - Video de producto"),
+    ).toBeInTheDocument();
   });
 
   it("renders the three how-it-works steps", () => {

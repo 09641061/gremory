@@ -1,6 +1,7 @@
 export { LandingNavbar } from "./landing-navbar";
 export { HeroSection } from "./hero/hero-section";
 export { WhatsappMockup } from "./hero/whatsapp-mockup";
+export { VideoSection } from "./video/video-section";
 export { HowItWorksSection } from "./how-it-works/how-it-works-section";
 export { OwnerSection } from "./owner/owner-section";
 export { PricingSection } from "./pricing/pricing-section";

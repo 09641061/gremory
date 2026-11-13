@@ -40,6 +40,12 @@ export const en = {
         consultorios: "Clinics",
       },
     },
+    video: {
+      eyebrow: "Meet Takodu",
+      title: "Three businesses, one challenge: how Takodu solves it.",
+      description:
+        "Discover how barbershops, spas, and clinics stop losing appointments and automate their WhatsApp customer care.",
+    },
     howItWorks: {
       eyebrow: "How it works",
       title: "Ready in one afternoon, without changing how you work.",
