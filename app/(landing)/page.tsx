@@ -7,6 +7,7 @@ import {
   HowItWorksSection,
   OwnerSection,
   PricingSection,
+  VideoSection,
 } from "@/contexts/landing/interfaces/components";
 import { getLandingDictionary } from "@/contexts/landing/interfaces/i18n";
 
@@ -22,6 +23,7 @@ export default async function LandingPage() {
   return (
     <>
       <HeroSection hero={dictionary.hero} />
+      <VideoSection video={dictionary.video} />
       <HowItWorksSection howItWorks={dictionary.howItWorks} />
       <OwnerSection owner={dictionary.owner} />
       <PricingSection pricing={dictionary.pricing} />

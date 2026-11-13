@@ -45,6 +45,12 @@ export const es = {
         consultorios: "Consultorios",
       },
     },
+    video: {
+      eyebrow: "Conoce Takodu",
+      title: "Tres negocios, un mismo desafío: cómo Takodu lo soluciona.",
+      description:
+        "Descubre cómo barberías, spas y consultorios dejan de perder citas y automatizan su atención por WhatsApp.",
+    },
     howItWorks: {
       eyebrow: "Cómo funciona",
       title: "Listo en una tarde, sin cambiar cómo trabajas.",

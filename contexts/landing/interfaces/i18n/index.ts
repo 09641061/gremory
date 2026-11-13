@@ -16,6 +16,7 @@ export type LandingDictionary = StringLeaf<typeof es.landing>;
 
 export type LandingNav = LandingDictionary["nav"];
 export type LandingHero = LandingDictionary["hero"];
+export type LandingVideo = LandingDictionary["video"];
 export type LandingHowItWorks = LandingDictionary["howItWorks"];
 export type LandingOwner = LandingDictionary["owner"];
 export type LandingPricing = LandingDictionary["pricing"];
